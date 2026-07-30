@@ -3,6 +3,48 @@ import 'dart:math';
 import '../models/channel.dart';
 import '../models/channel_group.dart';
 
+final RegExp _legacyPeerGroupKeyPattern = RegExp(
+  r'^(?:room|contact):([0-9a-f]{64})$',
+  caseSensitive: false,
+);
+
+String normalizeChannelGroupItemKey(String value) {
+  final trimmed = value.trim();
+  final match = _legacyPeerGroupKeyPattern.firstMatch(trimmed);
+  if (match == null) return trimmed;
+  return 'peer:${match.group(1)!.toLowerCase()}';
+}
+
+List<ChannelGroup> normalizeChannelGroupsForPeers(List<ChannelGroup> groups) {
+  final claimedItemKeys = <String>{};
+  final normalizedGroups = <ChannelGroup>[];
+  for (final group in orderedChannelGroups(groups)) {
+    final normalizedNames = <String>[];
+    for (final rawName in group.channelNames) {
+      final normalizedName = normalizeChannelGroupItemKey(rawName);
+      if (normalizedName.isEmpty) continue;
+      if (claimedItemKeys.add(normalizedName.toLowerCase())) {
+        normalizedNames.add(normalizedName);
+      }
+    }
+    normalizedGroups.add(group.copyWith(channelNames: normalizedNames));
+  }
+  return normalizedGroups;
+}
+
+List<String> normalizeChannelScreenOrderForPeers(List<String> order) {
+  final seenKeys = <String>{};
+  final normalizedOrder = <String>[];
+  for (final rawKey in order) {
+    final normalizedKey = normalizeChannelGroupItemKey(rawKey);
+    if (normalizedKey.isEmpty) continue;
+    if (seenKeys.add(normalizedKey.toLowerCase())) {
+      normalizedOrder.add(normalizedKey);
+    }
+  }
+  return normalizedOrder;
+}
+
 class ChannelGroupListEntry {
   const ChannelGroupListEntry._({this.group, this.channel});
 

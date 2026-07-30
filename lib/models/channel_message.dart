@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
@@ -43,6 +44,23 @@ class ChannelMessage {
   final int? compressionSavingsPercent;
   final int? compressionOriginalBytes;
   final int? compressionPayloadBytes;
+  final McmpSignatureStatus mcmpSignatureStatus;
+
+  // MCMP v3 metadata exactly as transmitted in the packet body. Kept verbatim
+  // so reply anchors resolve precisely and signatures can be re-checked later.
+  final int? mcmpTimestamp;
+  final String? mcmpSenderName;
+  final bool mcmpIsSigned;
+  final Uint8List? mcmpSignature;
+  final String? mcmpReplyAuthorName;
+  final int? mcmpReplyTimestamp;
+
+  /// Hex of the contact key that successfully verified the signature.
+  final String? verifiedSenderKeyHex;
+
+  /// True when the sender name belonged to more than one contact at the time
+  /// the signature was checked.
+  final bool mcmpNameCollision;
   final bool wasBinaryTransport;
   final int? binaryPacketBytes;
   final DateTime timestamp;
@@ -61,6 +79,7 @@ class ChannelMessage {
   final int? channelIndex;
   final String? packetRegion;
   final bool packetRegionInfoAvailable;
+  final bool packetRegionNotMatched;
   final int? noRetransmissionWarningSeconds;
   final String messageId;
   final String? packetHash;
@@ -84,6 +103,15 @@ class ChannelMessage {
     this.compressionSavingsPercent,
     this.compressionOriginalBytes,
     this.compressionPayloadBytes,
+    this.mcmpSignatureStatus = McmpSignatureStatus.none,
+    this.mcmpTimestamp,
+    this.mcmpSenderName,
+    this.mcmpIsSigned = false,
+    this.mcmpSignature,
+    this.mcmpReplyAuthorName,
+    this.mcmpReplyTimestamp,
+    this.verifiedSenderKeyHex,
+    this.mcmpNameCollision = false,
     this.wasBinaryTransport = false,
     this.binaryPacketBytes,
     required this.timestamp,
@@ -101,6 +129,7 @@ class ChannelMessage {
     this.channelIndex,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
+    this.packetRegionNotMatched = false,
     this.noRetransmissionWarningSeconds,
     String? messageId,
     this.packetHash,
@@ -126,6 +155,7 @@ class ChannelMessage {
 
   ChannelMessage copyWith({
     ChannelMessageStatus? status,
+    DateTime? timestamp,
     List<Repeat>? repeats,
     int? repeatCount,
     int? pathLength,
@@ -135,6 +165,7 @@ class ChannelMessage {
     int? channelIndex,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
+    bool? packetRegionNotMatched,
     Object? noRetransmissionWarningSeconds = _unset,
     String? packetHash,
     String? replyToMessageId,
@@ -150,6 +181,15 @@ class ChannelMessage {
     Object? compressionSavingsPercent = _unset,
     Object? compressionOriginalBytes = _unset,
     Object? compressionPayloadBytes = _unset,
+    McmpSignatureStatus? mcmpSignatureStatus,
+    Object? mcmpTimestamp = _unset,
+    Object? mcmpSenderName = _unset,
+    bool? mcmpIsSigned,
+    Object? mcmpSignature = _unset,
+    Object? mcmpReplyAuthorName = _unset,
+    Object? mcmpReplyTimestamp = _unset,
+    Object? verifiedSenderKeyHex = _unset,
+    bool? mcmpNameCollision,
     bool? wasBinaryTransport,
     Object? binaryPacketBytes = _unset,
     Object? sharedHistorySourceName = _unset,
@@ -188,6 +228,27 @@ class ChannelMessage {
       compressionPayloadBytes: compressionPayloadBytes == _unset
           ? this.compressionPayloadBytes
           : compressionPayloadBytes as int?,
+      mcmpSignatureStatus: mcmpSignatureStatus ?? this.mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp == _unset
+          ? this.mcmpTimestamp
+          : mcmpTimestamp as int?,
+      mcmpSenderName: mcmpSenderName == _unset
+          ? this.mcmpSenderName
+          : mcmpSenderName as String?,
+      mcmpIsSigned: mcmpIsSigned ?? this.mcmpIsSigned,
+      mcmpSignature: mcmpSignature == _unset
+          ? this.mcmpSignature
+          : mcmpSignature as Uint8List?,
+      mcmpReplyAuthorName: mcmpReplyAuthorName == _unset
+          ? this.mcmpReplyAuthorName
+          : mcmpReplyAuthorName as String?,
+      mcmpReplyTimestamp: mcmpReplyTimestamp == _unset
+          ? this.mcmpReplyTimestamp
+          : mcmpReplyTimestamp as int?,
+      verifiedSenderKeyHex: verifiedSenderKeyHex == _unset
+          ? this.verifiedSenderKeyHex
+          : verifiedSenderKeyHex as String?,
+      mcmpNameCollision: mcmpNameCollision ?? this.mcmpNameCollision,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
       binaryPacketBytes: binaryPacketBytes == _unset
           ? this.binaryPacketBytes
@@ -195,7 +256,7 @@ class ChannelMessage {
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
-      timestamp: timestamp,
+      timestamp: timestamp ?? this.timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
       sentByRadioAt: sentByRadioAt == _unset
           ? this.sentByRadioAt
@@ -216,6 +277,8 @@ class ChannelMessage {
           : packetRegion as String?,
       packetRegionInfoAvailable:
           packetRegionInfoAvailable ?? this.packetRegionInfoAvailable,
+      packetRegionNotMatched:
+          packetRegionNotMatched ?? this.packetRegionNotMatched,
       noRetransmissionWarningSeconds: noRetransmissionWarningSeconds == _unset
           ? this.noRetransmissionWarningSeconds
           : noRetransmissionWarningSeconds as int?,
@@ -296,8 +359,10 @@ class ChannelMessage {
         }
       }
 
-      final decodedText =
-          MessageTextCodec.tryDecodeKnownCompression(actualText) ?? actualText;
+      final decodedDetails = MessageTextCodec.tryDecodeKnownCompressionDetails(
+        actualText,
+      );
+      final decodedText = decodedDetails?.text ?? actualText;
       final compression = MessageCompressionMetadata.fromEncodedText(
         encodedText: actualText,
         decodedText: decodedText,
@@ -306,15 +371,26 @@ class ChannelMessage {
             : 0,
       );
 
+      final mcmpMessage = decodedDetails?.mcmpMessage;
       return ChannelMessage(
         senderKey: null,
         senderName: senderName,
         text: decodedText,
-        wasMcmpCompressed: MeshCompressor.instance.hasPrefix(actualText),
+        wasMcmpCompressed:
+            MeshCompressor.instance.hasPrefix(actualText) ||
+            McmpAppCodec.isTextPayload(actualText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
+        mcmpSignatureStatus:
+            mcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
+        mcmpTimestamp: mcmpMessage?.timestamp,
+        mcmpSenderName: mcmpMessage?.senderName,
+        mcmpIsSigned: mcmpMessage?.isSigned ?? false,
+        mcmpSignature: mcmpMessage?.signature,
+        mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
+        mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         status: ChannelMessageStatus.sent,
@@ -334,6 +410,9 @@ class ChannelMessage {
     String text,
     String senderName,
     int channelIndex, {
+    String? messageId,
+    DateTime? timestamp,
+    DateTime? receivedAt,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
@@ -345,10 +424,18 @@ class ChannelMessage {
     int? compressionSavingsPercent,
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
+    int? mcmpTimestamp,
+    String? mcmpSenderName,
+    bool mcmpIsSigned = false,
+    Uint8List? mcmpSignature,
+    String? mcmpReplyAuthorName,
+    int? mcmpReplyTimestamp,
     bool wasBinaryTransport = false,
     int? binaryPacketBytes,
     String? packetRegion,
     bool packetRegionInfoAvailable = false,
+    bool packetRegionNotMatched = false,
   }) {
     return ChannelMessage(
       senderKey: null,
@@ -362,17 +449,27 @@ class ChannelMessage {
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
+      mcmpSignatureStatus: mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp,
+      mcmpSenderName: mcmpSenderName,
+      mcmpIsSigned: mcmpIsSigned,
+      mcmpSignature: mcmpSignature,
+      mcmpReplyAuthorName: mcmpReplyAuthorName,
+      mcmpReplyTimestamp: mcmpReplyTimestamp,
       wasBinaryTransport: wasBinaryTransport,
       binaryPacketBytes: binaryPacketBytes,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
+      receivedAt: receivedAt,
       isOutgoing: true,
       status: ChannelMessageStatus.pending,
+      messageId: messageId,
       pathLength: null,
       pathBytes: Uint8List(0),
       pathVariants: const [],
       channelIndex: channelIndex,
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
+      packetRegionNotMatched: packetRegionNotMatched,
       replyToMessageId: replyToMessageId,
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,

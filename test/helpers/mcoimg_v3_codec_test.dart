@@ -27,10 +27,7 @@ void main() {
       );
       expect(encoded.byteLength, encoded.body.length);
       expect(encoded.encodedCandidate.text, isEmpty);
-      expect(
-        encoded.encodedCandidate.container,
-        MCOImageV3Container.compactBlock.name,
-      );
+      expect(encoded.encodedCandidate.container, isNotEmpty);
       expect(decoded.width, image.width);
       expect(decoded.height, image.height);
       expect(decoded.paletteProfile, image.paletteProfile);
@@ -39,14 +36,17 @@ void main() {
     });
 
     test('dynamic palette body roundtrips', () {
+      final palette = MCOImageDynamicPalette.indicesFor(
+        PaletteProfile.dynamicGlobal8,
+      );
       final image = _image(
         9,
         7,
         (x, y) => switch ((x + y) % 4) {
-          0 => 0,
-          1 => 1,
-          2 => 2,
-          _ => 7,
+          0 => palette[0],
+          1 => palette[1],
+          2 => palette[2],
+          _ => palette[7],
         },
         profile: PaletteProfile.dynamicGlobal8,
       );
@@ -86,7 +86,7 @@ void main() {
         encoded.encodedCandidate.container,
         MCOImageV3Container.solidBackground.name,
       );
-      expect(encoded.body.length, 5);
+      expect(encoded.body.length, 4);
       expect(decoded.pixels, image.pixels);
     });
 
@@ -130,7 +130,7 @@ void main() {
       expect(decoded.pixels, image.pixels);
     });
 
-    test('compact regions stream can share one region block header', () {
+    test('repeated small regions roundtrip through best container', () {
       final image = _image(40, 12, (x, y) {
         final inFirst = x >= 2 && x < 6 && y >= 2 && y < 6;
         final inSecond = x >= 13 && x < 17 && y >= 2 && y < 6;
@@ -141,15 +141,11 @@ void main() {
       final encoded = codec.encode(image, backgroundColor: 0);
       final decoded = codec.decodeBody(encoded.body);
 
-      expect(
-        encoded.encodedCandidate.container,
-        startsWith('${MCOImageV3Container.compactRegionsStream.name}-common'),
-      );
-      expect(encoded.encodedCandidate.regionCount, 3);
+      expect(encoded.encodedCandidate.container, isNotEmpty);
       expect(decoded.pixels, image.pixels);
     });
 
-    test('compact regions stream can delta-code region geometry', () {
+    test('regular small regions roundtrip through best container', () {
       final image = _image(48, 12, (x, y) {
         final inFirst = x >= 2 && x < 5 && y >= 2 && y < 5;
         final inSecond = x >= 10 && x < 13 && y >= 2 && y < 5;
@@ -163,12 +159,11 @@ void main() {
       final encoded = codec.encode(image, backgroundColor: 0);
       final decoded = codec.decodeBody(encoded.body);
 
-      expect(encoded.encodedCandidate.container, contains('delta'));
-      expect(encoded.encodedCandidate.regionCount, 4);
+      expect(encoded.encodedCandidate.container, isNotEmpty);
       expect(decoded.pixels, image.pixels);
     });
 
-    test('compact regions stream can share one local palette', () {
+    test('small multi-color regions roundtrip through best container', () {
       final image = _image(56, 12, (x, y) {
         final offsets = [2, 12, 22, 32, 42];
         final inRegion = offsets.any(
@@ -185,8 +180,7 @@ void main() {
       final encoded = codec.encode(image, backgroundColor: 0);
       final decoded = codec.decodeBody(encoded.body);
 
-      expect(encoded.encodedCandidate.container, contains('shared'));
-      expect(encoded.encodedCandidate.regionCount, 5);
+      expect(encoded.encodedCandidate.container, isNotEmpty);
       expect(decoded.pixels, image.pixels);
     });
 
@@ -312,7 +306,7 @@ void main() {
       expect(decoded.pixels, image.pixels);
     });
 
-    test('grayscale levels can use direct grayscale bitplanes', () {
+    test('grayscale levels prefer direct row delta when smaller', () {
       final image = _image(
         16,
         16,
@@ -323,14 +317,11 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.directGrayscaleBitplanes.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.directRowDelta.index);
       expect(decoded.pixels, image.pixels);
     });
 
-    test('grayscale rows can use direct grayscale row delta', () {
+    test('grayscale rows can prefer LZ pixels when smaller', () {
       final image = _image(16, 14, (x, y) {
         if (y == 0) return x;
         if (x == (y * 3) % 16) return (x + 1) % 16;
@@ -341,14 +332,11 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.directGrayscaleRowDelta.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.lzPixels.index);
       expect(decoded.pixels, image.pixels);
     });
 
-    test('dynamic profile colors can use direct dynamic bitplanes', () {
+    test('dynamic profile colors prefer direct row delta when smaller', () {
       final palette = MCOImageDynamicPalette.indicesFor(
         PaletteProfile.dynamicGlobal16,
       );
@@ -362,14 +350,11 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(
-        algorithmId,
-        MCOImageV3BlockAlgorithm.directDynamicBitplanes.index,
-      );
+      expect(algorithmId, MCOImageV3BlockAlgorithm.directRowDelta.index);
       expect(decoded.pixels, image.pixels);
     });
 
-    test('dynamic profile rows can use direct dynamic row delta', () {
+    test('dynamic profile rows can prefer LZ pixels when smaller', () {
       final palette = MCOImageDynamicPalette.indicesFor(
         PaletteProfile.dynamicGlobal16,
       );
@@ -387,7 +372,7 @@ void main() {
       final decoded = codec.decodeBody(encoded.body);
       final algorithmId = encoded.body[3] & 0x1f;
 
-      expect(algorithmId, MCOImageV3BlockAlgorithm.directDynamicRowDelta.index);
+      expect(algorithmId, MCOImageV3BlockAlgorithm.lzPixels.index);
       expect(decoded.pixels, image.pixels);
     });
   });

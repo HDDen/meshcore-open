@@ -6,6 +6,8 @@ import 'prefs_manager.dart';
 class ChannelSettingsStore with ChannelNameKeyedStore {
   static const String _keyPrefix = 'channel_smaz_';
   static const String _mcmpKeyPrefix = 'channel_mcmp_';
+  static const String _mcmpVersionKeyPrefix = 'channel_mcmp_version_';
+  static const String _mcmpUseSignKeyPrefix = 'channel_mcmp_use_sign_';
   static const String _cyr2latKeyPrefix = 'channel_cyr2lat_';
   static const String _sendingDelayKeyPrefix = 'channel_sending_delay_';
   static const String _quickAnswersKeyPrefix = 'channel_quick_answer_ids_';
@@ -18,6 +20,8 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
+  String get keyForMcmpVersion => '$_mcmpVersionKeyPrefix$publicKeyHex';
+  String get keyForMcmpUseSign => '$_mcmpUseSignKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
@@ -106,6 +110,40 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         nameKeyPrefix: keyForMcmp,
         channelIndex: channelIndex,
         value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
+
+  Future<int> loadMcmpVersion(int channelIndex) async =>
+      await _loadValue<int>(
+        nameKeyPrefix: keyForMcmpVersion,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getInt,
+        write: PrefsManager.instance.setInt,
+      ) ??
+      2;
+
+  Future<void> saveMcmpVersion(int channelIndex, int version) =>
+      _saveValue<int>(
+        nameKeyPrefix: keyForMcmpVersion,
+        channelIndex: channelIndex,
+        value: version,
+        write: PrefsManager.instance.setInt,
+      );
+
+  Future<bool> loadMcmpUseSign(int channelIndex) async =>
+      await _loadValue<bool>(
+        nameKeyPrefix: keyForMcmpUseSign,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getBool,
+        write: PrefsManager.instance.setBool,
+      ) ??
+      true;
+
+  Future<void> saveMcmpUseSign(int channelIndex, bool useSign) =>
+      _saveValue<bool>(
+        nameKeyPrefix: keyForMcmpUseSign,
+        channelIndex: channelIndex,
+        value: useSign,
         write: PrefsManager.instance.setBool,
       );
 
@@ -210,6 +248,8 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
     final prefixes = <String>[
       keyFor,
       keyForMcmp,
+      keyForMcmpVersion,
+      keyForMcmpUseSign,
       keyForCyr2Lat,
       '${keyForCyr2Lat}profile_',
       keyForSendingDelay,

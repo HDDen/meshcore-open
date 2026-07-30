@@ -19,7 +19,8 @@ Future<void> main(List<String> arguments) async {
         ? arguments.first
         : '${scriptDirectory.path}/v3-js-encoder-fixtures.json',
   );
-  final document = jsonDecode(await fixtureFile.readAsString()) as Map<String, dynamic>;
+  final document =
+      jsonDecode(await fixtureFile.readAsString()) as Map<String, dynamic>;
   final fixtures = document['fixtures'] as List<dynamic>;
   final codec = MCOImageV3Codec();
   final summaries = <Map<String, dynamic>>[];
@@ -27,7 +28,9 @@ Future<void> main(List<String> arguments) async {
   for (final raw in fixtures) {
     final fixture = Map<String, dynamic>.from(raw as Map);
     final name = fixture['name'] as String;
-    final body = Uint8List.fromList(base64Decode(fixture['bodyBase64'] as String));
+    final body = Uint8List.fromList(
+      base64Decode(fixture['bodyBase64'] as String),
+    );
     final appPayload = Uint8List.fromList(
       base64Decode(fixture['appPayloadBase64'] as String),
     );
@@ -50,7 +53,10 @@ Future<void> main(List<String> arguments) async {
         throw StateError('$name: Dart ${entry.key} decode mismatch');
       }
     }
-    if (!_sameInts(MCOImageV3Codec.bodyFromText(fixture['text'] as String), body)) {
+    if (!_sameInts(
+      MCOImageV3Codec.bodyFromText(fixture['text'] as String),
+      body,
+    )) {
       throw StateError('$name: Dart text/body conversion mismatch');
     }
     summaries.add(<String, dynamic>{
@@ -61,11 +67,13 @@ Future<void> main(List<String> arguments) async {
     });
   }
 
-  stdout.writeln(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-    'fixtureFile': fixtureFile.path,
-    'generator': document['generator'] ?? 'unknown',
-    'fixtures': summaries,
-  }));
+  stdout.writeln(
+    const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      'fixtureFile': fixtureFile.path,
+      'generator': document['generator'] ?? 'unknown',
+      'fixtures': summaries,
+    }),
+  );
 }
 
 bool _sameInts(List<int> left, List<int> right) {

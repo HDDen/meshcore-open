@@ -529,6 +529,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Добавлять местоположение в анонс.';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate =>
+      'Авто-объявление без хопов при обновлении GPS';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      'Когда GPS-местоположение меняется, отправлять объявление без хопов (требуется геопозиция в объявлении).';
+
+  @override
   String get settings_multiAck => 'Несколько подтверждений';
 
   @override
@@ -542,7 +550,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_deleteAllPathsSubtitle =>
-      'Очистить все данные о маршрутах в контактах.';
+      'Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.';
 
   @override
   String get settings_sendAdvertisement => 'Отправить анонс';
@@ -619,7 +627,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Группа модификации в TG: https://t.me/mcoadvanced';
+      'Релизы на Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГруппа модификации в TG: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -630,6 +638,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'Наименование платы';
 
   @override
   String get settings_infoStatus => 'Статус';
@@ -645,6 +656,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_infoChannelCount => 'Количество каналов';
+
+  @override
+  String get settings_infoFirmware => 'Версия прошивки';
 
   @override
   String get settings_presets => 'Пресеты';
@@ -1030,6 +1044,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_lastWeek => 'Последнюю неделю';
 
   @override
+  String get appSettings_rasterTileSource => 'Источник растровых тайлов';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Конечная точка Stadia';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Ключ API Stadia';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired =>
+      'Требуется для использования Stadia Maps';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return 'Настроено: $maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      'Введите свой ключ API Stadia Maps. Приложение использует его для запросов растровых тайлов.';
+
+  @override
   String get appSettings_offlineMapCache => 'Кэш офлайн-карты';
 
   @override
@@ -1147,6 +1183,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_newGroup => 'Новая группа';
+
+  @override
+  String get contacts_newGroupDescription =>
+      'Объединяет каналы/контакты в папку';
 
   @override
   String get contacts_moreOptions => 'Больше вариантов';
@@ -1431,7 +1471,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не фильтровать собственные пакеты сообщений на этих каналах';
+      'Не фильтровать собственные пакеты сообщений на этих каналах и считать сообщения безусловно доставленными';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
@@ -1568,6 +1608,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Отправить GIF';
+
+  @override
+  String get chat_receivedGif => 'Получен GIF';
 
   @override
   String get chat_reply => 'Ответить';
@@ -2574,6 +2617,42 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
+  }
+
+  @override
   String mapCache_boundsLabel(
     String north,
     String south,
@@ -3115,6 +3194,41 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       'Байты, используемые для кодирования идентификатора этого ретранслятора в тегах flood-маршрута/обнаружения циклов. 0 = 1 байт (256 идентификаторов, до 64 переходов), 1 = 2 байта (65 000 идентификаторов, до 32 переходов), 2 = 3 байта (16 миллионов идентификаторов, до 21 перехода). Прошивки до v1.14 всегда использовали 1-байтовые маршруты; v1.14 и новее можно настроить на 2- или 3-байтовые маршруты.';
+
+  @override
+  String get repeater_keySettings => 'Смена ключей узла';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Изменить пару публичного и приватного ключей';
+
+  @override
+  String get repeater_prvKey => 'Приватный ключ';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'Новый приватный ключ ретранслятора — hex-строка из 128 символов.';
+
+  @override
+  String get repeater_generatePrvKey => 'Сгенерировать случайную пару ключей';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Прервать поиск пары ключей';
+
+  @override
+  String get repeater_pubKey => 'Публичный ключ';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'Это публичный ключ, соответствующий сгенерированному приватному. Задать его напрямую нельзя.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Желаемый префикс';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Поиск публичного ключа, начинающегося с этих hex-символов. Ожидаемое число попыток: $tries.';
+  }
 
   @override
   String get repeater_txDelay => 'Задержка в работе системы Flood TX';
@@ -4012,7 +4126,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Соседи репитеров';
+  String get neighbors_repeatersNeighbors => 'Соседи репитера';
 
   @override
   String get neighbors_noData => 'Данные о соседях недоступны.';
@@ -4054,7 +4168,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_senderLabel => 'Отправитель';
 
   @override
-  String get channelPath_timeLabel => 'Время';
+  String get channelPath_timeLabel => 'Время получения/создания';
 
   @override
   String get channelPath_repeatsLabel => 'Повторы';
@@ -4784,7 +4898,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.';
 
   @override
-  String get discoveredContacts_Title => 'Обнаруженные контакты';
+  String get discoveredContacts_Title => 'Добавить обнаруженные контакты';
 
   @override
   String get discoveredContacts_noMatching => 'Нет совпадающих контактов';
@@ -5018,7 +5132,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get background_serviceTitle => 'MeshCore работает';
 
   @override
-  String get background_serviceText => 'Поддерживает BLE-соединение';
+  String get background_serviceText => 'Поддерживаем соединение с нодой';
 
   @override
   String appSettings_translationModelDeleted(String name) {
@@ -5086,7 +5200,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отправлять расширенные форматы в бинарном виде (личные сообщения)';
 
   @override
-  String get contact_typeChat => 'Чат';
+  String get contact_typeChat => 'Пользователь';
 
   @override
   String get contact_typeRepeater => 'Репитер';
@@ -5380,7 +5494,106 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsMessaging => 'Обмен сообщениями';
 
   @override
+  String get settings_modSettingsMCMP => 'MCMP';
+
+  @override
+  String get settings_mcmp_version => 'Версия';
+
+  @override
+  String get settings_mcmp_useSign => 'Проверка подписи';
+
+  @override
+  String get settings_mcmp_signed => 'С проверкой подписи';
+
+  @override
+  String get settings_mcmp_noSign => 'Без проверки подписи';
+
+  @override
+  String get settings_mcmp_senderNameCollision =>
+      'Имя отправителя не уникально!';
+
+  @override
+  String get chat_mcmpSignatureValid => 'Подпись действительна';
+
+  @override
+  String get chat_mcmpSignatureInvalid => 'Недействительная подпись!';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable =>
+      'Подпись нельзя проверить — отправителя нет в контактах';
+
+  @override
+  String get chat_mcmpSignatureTransport =>
+      'Подтверждено шифрованием транспорта';
+
+  @override
+  String get chat_mcmpManualRecheckSign => 'Перепроверить подпись';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => 'Проверка подписи';
+
+  @override
+  String get chat_mcmpSigningFailed => 'Не удалось подписать сообщение';
+
+  @override
+  String get chat_mcmpAnswerTo => 'MCMPv3 ответ на';
+
+  @override
+  String get chat_timestampPacket => 'Timestamp пакета';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat =>
+      'MCOimg: отображать бейдж версии формата';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo =>
+      'MCOimg: отображать бейдж алгоритма кодирования';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes =>
+      'MCOimg: отображать информационный вес картинки (байт)';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution =>
+      'MCOimg: отображать разрешение';
+
+  @override
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Отображать оригиналы картинок вместо LoRa-версий';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Масштабировать оригиналы в чатах';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Ограничение размеров lottie-замен';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Масштабировать как Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Повысить резкость оригиналов в чатах';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Внимание! Отключает анимирование GIF!';
+
+  @override
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
+
+  @override
+  String get settings_modSettingsHideRadioStats =>
+      'Скрыть статистику радиовещания в шапке';
+
+  @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'Индикатор SNR: срабатывать на все ответы репитеров, не только advert';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions =>
@@ -5422,22 +5635,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Скрыть на карте панель зума';
 
   @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: отображать бейдж версии формата';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: отображать бейдж алгоритма кодирования';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: отображать информационный вес картинки (байт)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: отображать разрешение';
-
-  @override
   String get settings_modSettingsVisualShowMsgRegion =>
       'Отображать регион сообщения';
 
@@ -5448,6 +5645,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channels_messageRegionUnknown => 'неизвестно';
+
+  @override
+  String get channels_messageRegionNotMatchesWithKnown => 'не знаком';
 
   @override
   String get channels_messageRegionEmpty => 'отсутствует';
@@ -5501,6 +5701,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удерживать TCP-соединение в фоне';
 
   @override
+  String get settings_modSettingsDPIchange => 'Регулировка DPI';
+
+  @override
+  String get settings_modSettingsDPIchangeToIcons => 'Применять к иконкам';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Открыть галерею MCOimg';
 
   @override
@@ -5525,6 +5731,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mcogallery_removeGroup => 'Удалить группу';
+
+  @override
+  String get mcogallery_showLora => 'Отобразить LoRa-вариант';
+
+  @override
+  String get mcogallery_showPacked => 'Отобразить улучшенный вариант';
 
   @override
   String get chat_sendSelfContact => 'Отправить свой контакт';
@@ -5569,4 +5781,111 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_locationFromMap => 'Отправить координаты с карты';
+
+  @override
+  String get settings_modSettingsRoomServer => 'Room-серверы и контакты';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
+      'Отображать серверы с историей в одном экране с каналами';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
+      'Отображать контакты с историей в одном экране с каналами';
+
+  @override
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
+      'Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера';
+
+  @override
+  String get settings_appSettingsCustomChemistry => 'Своя';
+
+  @override
+  String get map_clearDiscoveredContactsCache => 'Очистить локальный кэш узлов';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
+      'Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Активность репитеров';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Потеряно соединение с нодой, выполняется переподключение...';
+
+  @override
+  String get app_connectionLostReconnected =>
+      'Соединение с нодой восстановлено';
+
+  @override
+  String get contacts_batchOperations => 'Массовые операции';
+
+  @override
+  String get contacts_batchOperations_notSelected =>
+      'Вы не выбрали контакты для обработки!';
+
+  @override
+  String get contacts_batchOperations_removeConfirm =>
+      'Удалить выбранные контакты из памяти ноды?';
+
+  @override
+  String get contacts_batchOperations_removeSuccess =>
+      'Выбранные контакты удалены';
+
+  @override
+  String get contacts_batchOperations_removeFail =>
+      'Не удалось удалить контакты - проверьте их список снова';
+
+  @override
+  String get contacts_batchOperations_commonSuccess =>
+      'Операция прошла успешно';
+
+  @override
+  String get contacts_batchOperations_commonFail =>
+      'Не удалось завершить операцию';
+
+  @override
+  String get contacts_batchOperations_selectFiltered =>
+      'Выбрать отфильтрованные';
+
+  @override
+  String get chat_searchMessages => 'Поиск сообщений';
+
+  @override
+  String get chat_searchMessages_placeholder =>
+      'От 3 символов, регистронезависимо';
+
+  @override
+  String get chat_searchMessages_results => 'Результаты поиска';
+
+  @override
+  String chat_searchMessages_results_found(int count) {
+    return 'Найдено $count сообщений';
+  }
+
+  @override
+  String chat_searchMessages_results_channel(String name) {
+    return 'Канал $name';
+  }
+
+  @override
+  String chat_searchMessages_results_room(String name) {
+    return 'Комната $name';
+  }
+
+  @override
+  String chat_searchMessages_results_contact(String name) {
+    return 'Диалог с $name';
+  }
+
+  @override
+  String get app_offline => 'Оффлайн';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме';
+
+  @override
+  String get app_offline_sharedMode => 'Объединённая история';
 }

@@ -8,6 +8,8 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/region_store.dart';
+import 'package:meshcore_open/theme/mesh_theme.dart';
+import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:provider/provider.dart';
 
 Future<void> pushRegionManagementScreen(BuildContext context) {
@@ -27,7 +29,7 @@ class RegionManagementScreen extends StatefulWidget {
 }
 
 class _RegionManagementScreenState extends State<RegionManagementScreen> {
-  static final RegExp _validFetchedRegion = RegExp(r'^[a-z0-9-]{1,30}$');
+  static const Duration _repeaterDiscoveryTimeout = Duration(seconds: 15);
 
   final RegionStore _regionStore = RegionStore();
   final TextEditingController _defaultScopeController = TextEditingController();
@@ -35,8 +37,6 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   bool _isFetchingRegions = false;
   bool _isDefaultScopeBusy = false;
   bool _hasLoadedDefaultScope = false;
-
-  String region = '';
 
   @override
   void initState() {
@@ -54,8 +54,6 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   void _loadRegions() {
-    context.read<MeshCoreConnector>().loadChannelSettings();
-
     final regions = _regionStore.loadRegions();
     if (mounted) {
       setState(() {
@@ -287,7 +285,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
 
   void _showAddRegionDialog(BuildContext context) {
     final l10n = context.l10n;
-    final controller = TextEditingController(text: region);
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -357,32 +355,48 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                       itemBuilder: (context, index) {
                         final fetchedRegion = sortedRegions[index];
                         final alreadyExists = _regions.contains(fetchedRegion);
-                        return Card(
-                          child: ListTile(
-                            title: Text(fetchedRegion),
-                            trailing: TextButton(
-                              style: alreadyExists
-                                  ? TextButton.styleFrom(
-                                      foregroundColor: Theme.of(
-                                        context,
-                                      ).disabledColor,
-                                    )
-                                  : null,
-                              onPressed: () {
-                                if (alreadyExists) {
-                                  _showDialogSnackBar(
-                                    context,
-                                    l10n.settings_regionFetchRegionsAlreadyExists,
-                                  );
-                                  return;
-                                }
+                        return MeshCard(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.only(left: 14, right: 4),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.landscape,
+                                color: MeshPalette.blue,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  fetchedRegion,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              TextButton(
+                                style: alreadyExists
+                                    ? TextButton.styleFrom(
+                                        foregroundColor: Theme.of(
+                                          context,
+                                        ).disabledColor,
+                                      )
+                                    : null,
+                                onPressed: () {
+                                  if (alreadyExists) {
+                                    _showDialogSnackBar(
+                                      context,
+                                      l10n.settings_regionFetchRegionsAlreadyExists,
+                                    );
+                                    return;
+                                  }
 
-                                _regionStore.addRegion(fetchedRegion);
-                                _loadRegions();
-                                setDialogState(() {});
-                              },
-                              child: Text(l10n.common_add),
-                            ),
+                                  _regionStore.addRegion(fetchedRegion);
+                                  _loadRegions();
+                                  setDialogState(() {});
+                                },
+                                child: Text(l10n.common_add),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -449,22 +463,22 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Future<List<Contact>> _discoverNearbyRepeaters(
     MeshCoreConnector connector,
   ) async {
-    final repeaters = connector.contacts
+    final knownRepeaters = connector.contacts
         .where((contact) => contact.type == advTypeRepeater)
         .toList();
-    if (repeaters.isEmpty || !connector.isConnected) return <Contact>[];
+    if (!connector.isConnected) return <Contact>[];
 
     StreamSubscription<Uint8List>? subscription;
     Timer? timeout;
-    final completer = Completer<Set<String>>();
-    final respondingPrefixes = <String>{};
+    final completer = Completer<Map<String, Uint8List>>();
+    final respondingPublicKeys = <String, Uint8List>{};
     final tag = DateTime.now().microsecondsSinceEpoch & 0xFFFFFFFF;
 
     void complete() {
       if (completer.isCompleted) return;
       timeout?.cancel();
       subscription?.cancel();
-      completer.complete(respondingPrefixes);
+      completer.complete(respondingPublicKeys);
     }
 
     subscription = connector.receivedFrames.listen((frame) {
@@ -485,23 +499,44 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         reader.skipBytes(1); // Inbound SNR reported by the responding repeater.
         if (reader.readUInt32LE() != tag) return;
 
-        final publicKeyPrefix = reader.readRemainingBytes();
-        if (publicKeyPrefix.isEmpty) return;
-        respondingPrefixes.add(pubKeyToHex(publicKeyPrefix));
+        final publicKey = reader.readRemainingBytes();
+        if (publicKey.length != pubKeySize) return;
+        final publicKeyCopy = Uint8List.fromList(publicKey);
+        respondingPublicKeys[pubKeyToHex(publicKeyCopy).toLowerCase()] =
+            publicKeyCopy;
       } catch (_) {
         // Ignore malformed discovery frames; another response may still arrive.
       }
     });
 
     try {
-      final payload = buildDiscoveryRequestPayload(tag, prefixOnly: true);
+      final payload = buildDiscoveryRequestPayload(tag);
       await connector.sendFrame(buildSendControlDataFrame(payload));
-      timeout = Timer(const Duration(seconds: 10), complete);
-      final prefixes = await completer.future;
-      return repeaters.where((contact) {
-        final contactKey = contact.publicKeyHex.toLowerCase();
-        return prefixes.any((prefix) => contactKey.startsWith(prefix));
-      }).toList();
+      timeout = Timer(_repeaterDiscoveryTimeout, complete);
+      final publicKeys = await completer.future;
+      final knownByPublicKey = <String, Contact>{
+        for (final repeater in knownRepeaters)
+          repeater.publicKeyHex.toLowerCase(): repeater,
+      };
+      final supportsUnknownRepeaters = (connector.firmwareVerCode ?? 0) >= 13;
+      final discoveredAt = DateTime.now();
+      return publicKeys.entries
+          .map((entry) {
+            final known = knownByPublicKey[entry.key];
+            if (known != null) return known;
+            if (!supportsUnknownRepeaters) return null;
+            return Contact(
+              publicKey: entry.value,
+              name: entry.key.substring(0, 12).toUpperCase(),
+              type: advTypeRepeater,
+              pathLength: 0,
+              path: Uint8List(0),
+              lastSeen: discoveredAt,
+              isActive: false,
+            );
+          })
+          .whereType<Contact>()
+          .toList();
     } catch (_) {
       timeout?.cancel();
       await subscription.cancel();
@@ -519,7 +554,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     int? expectedTag;
     final originalPath = Uint8List.fromList(repeater.path);
     final originalPathLength = repeater.pathLength;
+    final isKnownRepeater = connector.contacts.any(
+      (contact) => contact.publicKeyHex == repeater.publicKeyHex,
+    );
     var pathChangedForRequest = false;
+    var awaitingSentResponse = false;
 
     void complete(Set<Region> regions) {
       if (completer.isCompleted) return;
@@ -536,8 +575,10 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     try {
       final replyPath = Uint8List(0);
       const replyHopCount = 0;
-      await connector.setContactPath(repeater, replyPath, replyHopCount);
-      pathChangedForRequest = true;
+      if (isKnownRepeater) {
+        await connector.setContactPath(repeater, replyPath, replyHopCount);
+        pathChangedForRequest = true;
+      }
 
       subscription = connector.receivedFrames.listen((frame) {
         if (frame.isEmpty || completer.isCompleted) return;
@@ -545,10 +586,31 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         final reader = BufferReader(frame);
         try {
           final cmd = reader.readByte();
+          if (cmd == respCodeErr) {
+            if (awaitingSentResponse && expectedTag == null) {
+              awaitingSentResponse = false;
+              complete(<Region>{});
+            }
+            return;
+          }
+
           if (cmd == respCodeSent) {
-            reader.skipBytes(1);
+            if (!awaitingSentResponse ||
+                expectedTag != null ||
+                reader.remaining < 9) {
+              return;
+            }
+            // RESP_CODE_SENT has no request identifier. Restricting capture to
+            // this response window narrows, but cannot eliminate, overlap with
+            // another command that is awaiting its own RESP_CODE_SENT.
+            awaitingSentResponse = false;
+            final sentAsFlood = reader.readByte() != 0;
             expectedTag = reader.readUInt32LE();
             final estimatedTimeoutMs = reader.readUInt32LE();
+            if (sentAsFlood) {
+              complete(<Region>{});
+              return;
+            }
             restartTimeout(
               Duration(
                 milliseconds: estimatedTimeoutMs > 0
@@ -559,11 +621,6 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
             return;
           }
 
-          if (cmd == respCodeErr) {
-            complete(<Region>{});
-            return;
-          }
-
           if (cmd != pushCodeBinaryResponse || expectedTag == null) return;
 
           reader.skipBytes(1);
@@ -571,9 +628,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           if (tag != expectedTag) return;
 
           complete(_parseRegionsResponse(reader.readRemainingBytes()));
-        } catch (_) {
-          complete(<Region>{});
-        }
+        } catch (_) {}
       });
 
       restartTimeout(const Duration(seconds: 10));
@@ -584,6 +639,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         replyHopCount: replyHopCount,
         pathHashWidth: connector.pathHashByteWidth,
       );
+      awaitingSentResponse = true;
       await connector.sendFrame(frame);
       final regions = await completer.future;
       if (pathChangedForRequest && connector.isConnected) {
@@ -631,8 +687,24 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         .split(',');
     return names
         .map((name) => name.trim())
-        .where((name) => _validFetchedRegion.hasMatch(name))
+        .where(_isValidFetchedRegion)
         .toSet();
+  }
+
+  static bool _isValidFetchedRegion(String name) {
+    // Private regions use keys stored on the repeater; the app cannot recreate
+    // them from the region name alone.
+    if (name.startsWith(r'$') || name.contains('\uFFFD')) return false;
+    final bytes = utf8.encode(name);
+    if (bytes.isEmpty || bytes.length > 30) return false;
+    return bytes.every(
+      (byte) =>
+          byte == 0x2D || // -
+          byte == 0x24 || // $
+          byte == 0x23 || // #
+          (byte >= 0x30 && byte <= 0x39) || // 0-9
+          byte >= 0x41,
+    );
   }
 
   void _handleAddRegion(Region region, BuildContext context) {
@@ -642,10 +714,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   Widget _buildRegionTile(BuildContext context, Region region) {
-    return Card(
+    return MeshCard(
       key: ValueKey(region),
       child: ListTile(
         dense: false,
+        leading: const Icon(Icons.landscape, color: MeshPalette.blue),
         title: Text(region),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -658,6 +731,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                   : () => _setDefaultRegionScopeFromRegion(region),
             ),
             IconButton(
+              tooltip: context.l10n.settings_deleteRegion,
               icon: const Icon(Icons.delete_outline),
               onPressed: _isDefaultScopeBusy
                   ? null
@@ -682,8 +756,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final connector = context.read<MeshCoreConnector>();
               Navigator.pop(dialogContext);
               await _regionStore.removeRegion(region);
+              // Deleting a region clears it from any channels that used it;
+              // refresh the connector's in-memory channel regions to match.
+              await connector.loadChannelSettings();
               _loadRegions();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
@@ -692,7 +770,9 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
             },
             child: Text(
               context.l10n.common_delete,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],

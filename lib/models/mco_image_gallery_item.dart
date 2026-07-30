@@ -14,7 +14,13 @@ class MCOImageGalleryItem {
   final String? packFolderName;
   final int? previewMaxSize;
   final Uint8List binaryPayload;
+
+  /// Materialized original bytes, or empty for a lazily loaded pack item. The
+  /// legacy name is kept so stored records and existing call sites remain
+  /// compatible.
   final Uint8List pngBytes;
+  final String originalFileName;
+  final List<String> originalRelativePaths;
   final int width;
   final int height;
   final int byteLength;
@@ -32,6 +38,8 @@ class MCOImageGalleryItem {
     this.previewMaxSize,
     required this.binaryPayload,
     required this.pngBytes,
+    this.originalFileName = 'mcoimg.png',
+    this.originalRelativePaths = const [],
     required this.width,
     required this.height,
     required this.byteLength,
@@ -48,6 +56,9 @@ class MCOImageGalleryItem {
     String? packFolderName,
     int? previewMaxSize,
     bool? showPngFallback,
+    String? originalFileName,
+    List<String>? originalRelativePaths,
+    Uint8List? pngBytes,
   }) {
     return MCOImageGalleryItem(
       id: id,
@@ -57,7 +68,10 @@ class MCOImageGalleryItem {
       packFolderName: packFolderName ?? this.packFolderName,
       previewMaxSize: previewMaxSize ?? this.previewMaxSize,
       binaryPayload: binaryPayload,
-      pngBytes: pngBytes,
+      pngBytes: pngBytes ?? this.pngBytes,
+      originalFileName: originalFileName ?? this.originalFileName,
+      originalRelativePaths:
+          originalRelativePaths ?? this.originalRelativePaths,
       width: width,
       height: height,
       byteLength: byteLength,
@@ -69,6 +83,11 @@ class MCOImageGalleryItem {
   }
 
   bool get isPackItem => packFolderName != null && packFolderName!.isNotEmpty;
+
+  bool get originalIsLottie {
+    final lower = originalFileName.toLowerCase();
+    return lower.endsWith('.lottie.json') || lower.endsWith('.lottie');
+  }
 
   bool get isV3 {
     if (codecVersion == ChannelAppDataHelper.mcoImageV3Version) return true;

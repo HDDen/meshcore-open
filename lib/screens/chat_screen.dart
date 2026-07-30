@@ -13,12 +13,14 @@ import '../utils/platform_info.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../config/build_features.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
@@ -36,6 +38,7 @@ import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
@@ -51,7 +54,10 @@ import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mco_image_original.dart';
+import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
@@ -71,11 +77,13 @@ import '../widgets/pending_send_cancel_bar.dart';
 class ChatScreen extends StatefulWidget {
   final Contact contact;
   final int initialUnreadCount;
+  final String? initialMessageId;
 
   const ChatScreen({
     super.key,
     required this.contact,
     this.initialUnreadCount = 0,
+    this.initialMessageId,
   });
 
   @override
@@ -88,14 +96,32 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
+  final Map<String, GlobalKey> _messageKeys = {};
   bool _keyboardNavigationActive = true;
   bool _ignoreNextTextFieldFocus = false;
   String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   MeshCoreConnector? _connector;
+  StreamSubscription<void>? _mcmpSigningFailedSubscription;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+  String? _highlightedMessageId;
+  int _highlightSequence = 0;
+  int _messageScrollGeneration = 0;
+
+  /// Message ids whose MCOimg variant the user flipped away from the default
+  /// (the default is "show pack original" when the mod setting is enabled,
+  /// otherwise "show received LoRa version").
+  final Set<String> _mcoVariantOverridden = {};
+
+  /// Effective "render the received LoRa version" flag for a message,
+  /// combining the mod setting default with the per-message override.
+  bool _mcoForceLora(String messageId, bool showReplacements) {
+    final defaultLora = !showReplacements;
+    final overridden = _mcoVariantOverridden.contains(messageId);
+    return defaultLora != overridden;
+  }
 
   @override
   void initState() {
@@ -114,24 +140,40 @@ class _ChatScreenState extends State<ChatScreen> {
       final keyHex = widget.contact.publicKeyHex;
       final unread = widget.initialUnreadCount;
       final messages = connector.getMessages(widget.contact);
+      final initialMessageId = widget.initialMessageId;
       Message? anchor;
       if (unread > 0) {
         anchor = _findOldestUnreadAnchor(messages, unread);
       }
       setState(() {
         if (anchor != null) _unreadDividerMessageId = anchor.messageId;
-        if (anchor != null && settings.jumpToOldestUnread) {
+        if (initialMessageId == null &&
+            anchor != null &&
+            settings.jumpToOldestUnread) {
           _pendingUnreadScrollTarget = anchor;
         }
       });
       connector.setActiveContact(keyHex);
       _connector = connector;
-      if (PlatformInfo.isDesktop) {
+      _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
+        (_) => _showMcmpSigningFailed(),
+      );
+      if (PlatformInfo.isDesktop && !connector.isOfflineMode) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
         _keyboardNavigationActive = true;
       }
-      if (anchor != null && settings.jumpToOldestUnread) {
+      if (initialMessageId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToMessage(
+            initialMessageId,
+            animate: false,
+            stabilize: true,
+            highlightOnSuccess: true,
+          );
+        });
+      } else if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           _scrollController.jumpToEstimatedOffset(
@@ -155,6 +197,239 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     });
+  }
+
+  BuildContext? _tryGetMessageContext(String messageId) {
+    final key = _messageKeys[messageId];
+    return key?.currentContext;
+  }
+
+  List<Message> _messagesForDisplay(MeshCoreConnector connector) {
+    return [
+      ...connector.getMessages(widget.contact),
+      ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
+    ];
+  }
+
+  Future<BuildContext?> _materializeMessageContext(String messageId) async {
+    final connector = context.read<MeshCoreConnector>();
+    var emptyOlderLoads = 0;
+    var loadedTargetRetries = 0;
+
+    while (mounted) {
+      final targetContext = _tryGetMessageContext(messageId);
+      if (targetContext != null && targetContext.mounted) {
+        return targetContext;
+      }
+
+      final messages = _messagesForDisplay(connector);
+      final targetIndex = messages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (targetIndex >= 0) {
+        if (_scrollController.hasClients) {
+          final targetOffset = messages.length > 1
+              ? _scrollController.position.maxScrollExtent *
+                    ((messages.length - 1 - targetIndex) /
+                        (messages.length - 1))
+              : 0.0;
+          final materializedContext = await _probeMessageContextAroundOffset(
+            messageId,
+            targetOffset,
+          );
+          if (materializedContext != null && materializedContext.mounted) {
+            return materializedContext;
+          }
+        }
+        if (loadedTargetRetries < 2) {
+          loadedTargetRetries++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        // The message is already loaded, so loading older history cannot make
+        // it materialize.
+        return null;
+      }
+      loadedTargetRetries = 0;
+
+      final olderMessages = await connector.loadOlderMessages(
+        widget.contact.publicKeyHex,
+      );
+      if (olderMessages.isEmpty) {
+        if (emptyOlderLoads < 5) {
+          emptyOlderLoads++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        return null;
+      }
+      emptyOlderLoads = 0;
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    return null;
+  }
+
+  // Keep in sync with ChannelChatScreen._probeMessageContextAroundOffset.
+  Future<BuildContext?> _probeMessageContextAroundOffset(
+    String messageId,
+    double estimatedOffset,
+  ) async {
+    if (!_scrollController.hasClients) return null;
+    final position = _scrollController.position;
+    final viewport = position.viewportDimension;
+    final offsetsInViewports = <double>[
+      0,
+      -0.75,
+      0.75,
+      -1.5,
+      1.5,
+      -2.5,
+      2.5,
+      -4,
+      4,
+    ];
+    for (final multiplier in offsetsInViewports) {
+      if (!mounted || !_scrollController.hasClients) return null;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = (estimatedOffset + viewport * multiplier).clamp(
+        0.0,
+        maxExtent,
+      );
+      _scrollController.jumpTo(offset);
+      await WidgetsBinding.instance.endOfFrame;
+      final context = _tryGetMessageContext(messageId);
+      if (context != null && context.mounted) return context;
+    }
+    return null;
+  }
+
+  Future<bool> _scrollToMessage(
+    String messageId, {
+    bool animate = true,
+    bool stabilize = false,
+    bool highlightOnSuccess = false,
+  }) async {
+    final scrollGeneration = ++_messageScrollGeneration;
+    final targetContext = await _materializeMessageContext(messageId);
+
+    if (!mounted || scrollGeneration != _messageScrollGeneration) return false;
+
+    if (targetContext == null) {
+      return false;
+    }
+
+    if (!targetContext.mounted) {
+      return false;
+    }
+
+    await _ensureMessageVisible(
+      messageId,
+      initialContext: targetContext,
+      animate: animate,
+      stabilize: stabilize,
+      scrollGeneration: scrollGeneration,
+      onInitialPositioned: highlightOnSuccess
+          ? () => _highlightMessage(messageId)
+          : null,
+    );
+    return true;
+  }
+
+  Future<void> _showMessageSearch() {
+    final connector = context.read<MeshCoreConnector>();
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.contacts,
+      contactFilter: _resolveContact(connector),
+      onOpenResult: (result) async {
+        if (!mounted || result.type == MessageSearchEntryType.channel) return;
+        Navigator.of(context).pop();
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        await _scrollToMessage(
+          result.messageId,
+          highlightOnSuccess: true,
+          animate: false,
+          stabilize: true,
+        );
+      },
+    );
+  }
+
+  // Keep in sync with ChannelChatScreen._ensureMessageVisible.
+  Future<void> _ensureMessageVisible(
+    String messageId, {
+    required BuildContext initialContext,
+    required bool animate,
+    required bool stabilize,
+    required int scrollGeneration,
+    VoidCallback? onInitialPositioned,
+  }) async {
+    await Scrollable.ensureVisible(
+      initialContext,
+      duration: animate ? const Duration(milliseconds: 300) : Duration.zero,
+      curve: Curves.easeInOut,
+      alignment: 0.3,
+    );
+    await WidgetsBinding.instance.endOfFrame;
+    onInitialPositioned?.call();
+    if (!stabilize) return;
+
+    const checks = [
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 500),
+      Duration(milliseconds: 1000),
+    ];
+    for (final delay in checks) {
+      await Future<void>.delayed(delay);
+      if (!mounted || scrollGeneration != _messageScrollGeneration) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (scrollGeneration != _messageScrollGeneration) return;
+      var context = _tryGetMessageContext(messageId);
+      if (context == null || !context.mounted) {
+        context = await _materializeMessageContext(messageId);
+      }
+      if (context == null ||
+          !context.mounted ||
+          !mounted ||
+          scrollGeneration != _messageScrollGeneration) {
+        return;
+      }
+      await Scrollable.ensureVisible(
+        context,
+        duration: Duration.zero,
+        alignment: 0.3,
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
+  void _cancelMessageScrollStabilization() {
+    _messageScrollGeneration++;
+  }
+
+  void _highlightMessage(String messageId) {
+    final sequence = ++_highlightSequence;
+    if (mounted) {
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+    }
+
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 1000)).then((_) {
+        if (!mounted || _highlightSequence != sequence) return;
+        setState(() {
+          if (_highlightedMessageId == messageId) {
+            _highlightedMessageId = null;
+          }
+        });
+      }),
+    );
   }
 
   Message? _findOldestUnreadAnchor(List<Message> messages, int unreadCount) {
@@ -217,6 +492,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveContact(null);
+    _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -228,6 +504,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showMcmpSigningFailed() {
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_mcmpSigningFailed),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
   }
 
   @override
@@ -296,57 +581,68 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, connector, _) {
                 return PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
-                  onSelected: (value) async {
-                    if (value == 'info') {
-                      _showContactInfo(context);
-                    }
-                    if (value == 'settings') {
-                      _showContactSettings(context);
-                    }
-                    if (value == 'telemetry') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TelemetryScreen(contact: widget.contact),
-                        ),
-                      );
-                    }
-                    if (value == 'clearChat') {
-                      _confirmClearChat(context, connector);
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'searchMessages':
+                        unawaited(_showMessageSearch());
+                      case 'info':
+                        _showContactInfo(context);
+                      case 'settings':
+                        _showContactSettings(context);
+                      case 'telemetry':
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TelemetryScreen(contact: widget.contact),
+                          ),
+                        );
+                      case 'clearChat':
+                        _confirmClearChat(context, connector);
                     }
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: 'info',
+                      value: 'searchMessages',
                       child: PopupMenuRow(
-                        icon: Icons.info_outline,
-                        text: context.l10n.contact_info,
+                        icon: Icons.search,
+                        text: context.l10n.chat_searchMessages,
                       ),
                     ),
-                    PopupMenuItem(
-                      value: 'telemetry',
-                      child: PopupMenuRow(
-                        icon: Icons.bar_chart,
-                        text: context.l10n.contact_telemetry,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'info',
+                        child: PopupMenuRow(
+                          icon: Icons.info_outline,
+                          text: context.l10n.contact_info,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'settings',
-                      child: PopupMenuRow(
-                        icon: Icons.settings,
-                        text: context.l10n.contact_settings,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'telemetry',
+                        child: PopupMenuRow(
+                          icon: Icons.bar_chart,
+                          text: context.l10n.contact_telemetry,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'clearChat',
-                      child: PopupMenuRow(
-                        icon: Icons.delete,
-                        iconColor: Colors.red,
-                        text: context.l10n.contact_clearChat,
-                        textStyle: const TextStyle(color: Colors.red),
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: PopupMenuRow(
+                          icon: Icons.settings,
+                          text: context.l10n.contact_settings,
+                        ),
                       ),
-                    ),
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'clearChat',
+                        child: PopupMenuRow(
+                          icon: Icons.delete,
+                          iconColor: Colors.red,
+                          text: context.l10n.contact_clearChat,
+                          textStyle: const TextStyle(color: Colors.red),
+                        ),
+                      ),
                   ],
                 );
               },
@@ -355,12 +651,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Consumer<MeshCoreConnector>(
           builder: (context, connector, child) {
-            final messages = [
-              ...connector.getMessages(widget.contact),
-              ...connector.getPendingContactMessages(
-                widget.contact.publicKeyHex,
-              ),
-            ];
+            final messages = _messagesForDisplay(connector);
             return Column(
               children: [
                 Expanded(
@@ -388,6 +679,13 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
       return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch());
+      return true;
     }
     final isNavigationKeyDown = event is KeyDownEvent;
     final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;
@@ -420,12 +718,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _scrollMessagesByPage(int direction) {
     if (!_scrollController.hasClients) return false;
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(
       _scrollController.position.viewportDimension * 0.85 * direction,
     );
   }
 
   bool _scrollMessagesByLine(int direction) {
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(72.0 * direction);
   }
 
@@ -459,6 +759,23 @@ class _ChatScreenState extends State<ChatScreen> {
     // Reverse messages so newest appear at bottom with reverse: true
     final reversedMessages = messages.reversed.toList();
     final itemCount = reversedMessages.length + (_isLoadingOlder ? 1 : 0);
+    final liveIds = reversedMessages
+        .map((message) => message.messageId)
+        .toSet();
+    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+    final keyedIndices = <int>{};
+    final duplicateKeys = <int, ValueKey<String>>{};
+    final occurrencesById = <String, int>{};
+    for (var i = 0; i < reversedMessages.length; i++) {
+      final messageId = reversedMessages[i].messageId;
+      final occurrence = occurrencesById[messageId] ?? 0;
+      occurrencesById[messageId] = occurrence + 1;
+      if (occurrence == 0) {
+        keyedIndices.add(i);
+      } else {
+        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
+      }
+    }
 
     // Auto-scroll to bottom if user is already at bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -473,95 +790,110 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (context, padding, bottomReservedExtent) {
         final hasBottomSpacer = bottomReservedExtent > 0;
         final spacerItemCount = hasBottomSpacer ? 1 : 0;
-        return ChatZoomWrapper(
-          child: ListView.builder(
-            reverse: true, // List grows from bottom up
-            controller: _scrollController,
-            padding: padding,
-            itemCount: itemCount + spacerItemCount,
-            itemBuilder: (context, index) {
-              if (hasBottomSpacer && index == 0) {
-                return SizedBox(height: bottomReservedExtent);
-              }
-              final adjustedIndex = index - spacerItemCount;
+        return Listener(
+          onPointerDown: (_) => _cancelMessageScrollStabilization(),
+          onPointerSignal: (_) => _cancelMessageScrollStabilization(),
+          child: ChatZoomWrapper(
+            child: ListView.builder(
+              reverse: true, // List grows from bottom up
+              controller: _scrollController,
+              padding: padding,
+              itemCount: itemCount + spacerItemCount,
+              itemBuilder: (context, index) {
+                if (hasBottomSpacer && index == 0) {
+                  return SizedBox(height: bottomReservedExtent);
+                }
+                final adjustedIndex = index - spacerItemCount;
 
-              // Loading indicator now appears at end (bottom) of reversed list
-              if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                // Loading indicator now appears at end (bottom) of reversed list
+                if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ),
-                  ),
-                );
-              }
-              final messageIndex = adjustedIndex;
-              Contact contact = _resolveContact(connector);
-              final message = reversedMessages[messageIndex];
-              String fourByteHex = '';
-              if (contact.type == advTypeRoom) {
-                // Room-server messages carry the original author's 4-byte prefix
-                // separately from message.text; use it only for resolving the name.
-                contact =
-                    _resolveContactFrom4Bytes(
-                      connector,
-                      message.fourByteRoomContactKey.isEmpty
-                          ? Uint8List.fromList([0, 0, 0, 0])
-                          : message.fourByteRoomContactKey,
-                    ) ??
-                    contact;
-                fourByteHex = message.fourByteRoomContactKey
-                    .map((b) => b.toRadixString(16).padLeft(2, '0'))
-                    .join()
-                    .toUpperCase();
-              }
-
-              return Builder(
-                builder: (context) {
-                  final textScale = context
-                      .select<ChatTextScaleService, double>(
-                        (service) => service.scale,
-                      );
-                  final resolvedContact = _resolveContact(connector);
-                  final bubble = _MessageBubble(
-                    message: message,
-                    senderName: resolvedContact.type == advTypeRoom
-                        ? "${contact.name} [$fourByteHex]"
-                        : contact.name,
-                    sourceId: widget.contact.publicKeyHex,
-                    textScale: textScale,
-                    onTap: () => _openMessagePath(message, contact),
-                    onLongPress: () => _showMessageActions(message, contact),
-                    onRetryReaction: (msg, emoji) =>
-                        _sendReaction(msg, contact, emoji),
-                    onAddSharedContact: _addSharedContact,
-                    pendingSendAt: connector.pendingContactSendAt(
-                      message.messageId,
-                    ),
-                    pendingSendDelaySeconds: connector
-                        .pendingContactSendDelaySeconds(message.messageId),
-                    onCancelPendingSend: () =>
-                        _cancelPendingContactSend(connector, message.messageId),
                   );
-                  final isUnreadAnchor =
-                      _unreadDividerMessageId != null &&
-                      message.messageId == _unreadDividerMessageId;
-                  final child = isUnreadAnchor
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [const UnreadDivider(), bubble],
-                        )
-                      : bubble;
-                  if (identical(message, _pendingUnreadScrollTarget)) {
-                    return KeyedSubtree(key: _unreadScrollKey, child: child);
-                  }
-                  return child;
-                },
-              );
-            },
+                }
+                final messageIndex = adjustedIndex;
+                Contact contact = _resolveContact(connector);
+                final message = reversedMessages[messageIndex];
+                final Key messageKey = keyedIndices.contains(messageIndex)
+                    ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
+                    : duplicateKeys[messageIndex]!;
+                String fourByteHex = '';
+                if (contact.type == advTypeRoom) {
+                  // Room-server messages carry the original author's 4-byte prefix
+                  // separately from message.text; use it only for resolving the name.
+                  contact =
+                      _resolveContactFrom4Bytes(
+                        connector,
+                        message.fourByteRoomContactKey.isEmpty
+                            ? Uint8List.fromList([0, 0, 0, 0])
+                            : message.fourByteRoomContactKey,
+                      ) ??
+                      contact;
+                  fourByteHex = message.fourByteRoomContactKey
+                      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+                      .join()
+                      .toUpperCase();
+                }
+
+                return Builder(
+                  builder: (context) {
+                    final textScale = context
+                        .select<ChatTextScaleService, double>(
+                          (service) => service.scale,
+                        );
+                    final resolvedContact = _resolveContact(connector);
+                    final bubble = _MessageBubble(
+                      message: message,
+                      isHighlighted: _highlightedMessageId == message.messageId,
+                      senderName: resolvedContact.type == advTypeRoom
+                          ? "${contact.name} [$fourByteHex]"
+                          : contact.name,
+                      sourceId: widget.contact.publicKeyHex,
+                      isRoomChat: resolvedContact.type == advTypeRoom,
+                      mcoVariantOverridden: _mcoVariantOverridden.contains(
+                        message.messageId,
+                      ),
+                      textScale: textScale,
+                      onTap: () => _openMessagePath(message, contact),
+                      onLongPress: () =>
+                          unawaited(_showMessageActions(message, contact)),
+                      onRetryReaction: (msg, emoji) =>
+                          _sendReaction(msg, contact, emoji),
+                      onAddSharedContact: _addSharedContact,
+                      pendingSendAt: connector.pendingContactSendAt(
+                        message.messageId,
+                      ),
+                      pendingSendDelaySeconds: connector
+                          .pendingContactSendDelaySeconds(message.messageId),
+                      onCancelPendingSend: () => _cancelPendingContactSend(
+                        connector,
+                        message.messageId,
+                      ),
+                    );
+                    final isUnreadAnchor =
+                        _unreadDividerMessageId != null &&
+                        message.messageId == _unreadDividerMessageId;
+                    final child = isUnreadAnchor
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [const UnreadDivider(), bubble],
+                          )
+                        : bubble;
+                    if (identical(message, _pendingUnreadScrollTarget)) {
+                      return KeyedSubtree(key: _unreadScrollKey, child: child);
+                    }
+                    return KeyedSubtree(key: messageKey, child: child);
+                  },
+                );
+              },
+            ),
           ),
         );
       },
@@ -617,9 +949,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ChatComposerSideAction(
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
+                offlineMode: connector.isOfflineMode,
                 onSendSelfContact: () => _insertSelfContact(connector),
-                onSendMyLocation: () =>
-                    unawaited(_insertMyLocation(connector)),
+                onSendMyLocation: () => unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
                 onPickLocationFromMap: () =>
                     unawaited(_pickAndInsertLocationFromMap()),
@@ -629,7 +961,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     _showMcoImageGallery(connector, maxBytes),
               ),
             ),
-            if (settings.translationEnabled)
+            if (BuildFeatures.llmTranslationEnabled &&
+                settings.translationEnabled)
               MessageTranslationButton(
                 enabled: settings.composerTranslationEnabled,
                 languageCode: settings.translationTargetLanguageCode,
@@ -685,6 +1018,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     maxBytes: maxBytes,
                     controller: _textController,
                     focusNode: _textFieldFocusNode,
+                    enabled: !connector.isOfflineMode,
                     maxHeight: maxInputHeight,
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
@@ -717,7 +1051,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       hintText: context.l10n.chat_typeMessage,
                       hintMaxLines: 1,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(MeshRadii.md),
                       ),
                       filled: true,
                       fillColor: Theme.of(
@@ -740,11 +1074,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   _resolveContact(connector).name,
                 ),
                 child: GestureDetector(
-                  onLongPress: () => _showQuickAnswersPicker(connector),
-                  onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                  onLongPress: connector.isOfflineMode
+                      ? null
+                      : () => _showQuickAnswersPicker(connector),
+                  onSecondaryTap: connector.isOfflineMode
+                      ? null
+                      : () => _showQuickAnswersPicker(connector),
                   child: IconButton.filled(
                     icon: const Icon(Icons.send),
-                    onPressed: () => _sendMessage(connector),
+                    onPressed: connector.isOfflineMode
+                        ? null
+                        : () => _sendMessage(connector),
                   ),
                 ),
               ),
@@ -882,12 +1222,15 @@ class _ChatScreenState extends State<ChatScreen> {
     int maxTextChars,
     MCOImageGalleryItem item,
   ) async {
-    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    final useRasterOriginal = item.showPngFallback && !item.originalIsLottie;
+    final image = useRasterOriginal ? null : item.tryDecodeImage();
     await _showCanvasEditor(
       connector,
       maxTextChars,
       initialImage: image,
-      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageBytes: image == null && !item.originalIsLottie
+          ? item.pngBytes
+          : null,
       initialImageWidth: item.width,
       initialImageHeight: item.height,
       initialPaletteProfile: item.paletteProfile,
@@ -965,6 +1308,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
+    if (blockIfOffline(context, connector)) return;
 
     final now = DateTime.now();
     if (_lastTextSendAt != null &&
@@ -983,7 +1327,9 @@ class _ChatScreenState extends State<ChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled && !skipTranslation) {
+    if (BuildFeatures.llmTranslationEnabled &&
+        settings.translationEnabled &&
+        !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -1024,6 +1370,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
           !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          // Shared contact payloads must stay untouched.
+          parseSharedContactText(outgoingText) == null &&
           connector.isContactCyr2LatEnabled(
             _resolveContact(connector).publicKeyHex,
           )) {
@@ -1078,7 +1426,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   int _maxContactInputBytes(MeshCoreConnector connector) {
-    final limit = maxContactMessageBytes();
+    // Room servers store posts in a 151-byte buffer and silently truncate
+    // longer texts, which would destroy an MCMP container and its signature.
+    final limit = _resolveContact(connector).type == advTypeRoom
+        ? math.min(maxContactMessageBytes(), maxRoomServerTextBytes)
+        : maxContactMessageBytes();
     if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex)) {
       return math.max(0, limit - 2);
     }
@@ -1210,6 +1562,10 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
+    int selectedMcmpVersion = connector.contactMcmpVersion(
+      contact.publicKeyHex,
+    );
+    bool mcmpUseSign = connector.contactMcmpUseSign(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
@@ -1274,6 +1630,63 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
+                if (mcmpEnabled) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                    child: DropdownButtonFormField<int>(
+                      initialValue: selectedMcmpVersion,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.settings_mcmp_version,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 2, child: Text('v2 (legacy)')),
+                        DropdownMenuItem(value: 3, child: Text('v3')),
+                      ],
+                      onChanged: (value) {
+                        final normalized = value == 3 ? 3 : 2;
+                        connector.setContactMcmpVersion(
+                          contact.publicKeyHex,
+                          normalized,
+                        );
+                        setDialogState(() {
+                          selectedMcmpVersion = normalized;
+                        });
+                      },
+                    ),
+                  ),
+                  if (contact.type == advTypeRoom && selectedMcmpVersion == 3)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                      child: DropdownButtonFormField<bool>(
+                        initialValue: mcmpUseSign,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.settings_mcmp_useSign,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: true,
+                            child: Text(context.l10n.settings_mcmp_signed),
+                          ),
+                          DropdownMenuItem(
+                            value: false,
+                            child: Text(context.l10n.settings_mcmp_noSign),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          final normalized = value ?? true;
+                          connector.setContactMcmpUseSign(
+                            contact.publicKeyHex,
+                            normalized,
+                          );
+                          setDialogState(() {
+                            mcmpUseSign = normalized;
+                          });
+                        },
+                      ),
+                    ),
+                ],
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -1525,7 +1938,19 @@ class _ChatScreenState extends State<ChatScreen> {
       compressionSavingsPercent: message.compressionSavingsPercent,
       compressionOriginalBytes: message.compressionOriginalBytes,
       compressionPayloadBytes: message.compressionPayloadBytes,
+      mcmpSignatureStatus: message.mcmpSignatureStatus,
+      mcmpTimestamp: message.mcmpTimestamp,
+      mcmpSenderName: message.mcmpSenderName,
+      mcmpIsSigned: message.mcmpIsSigned,
+      mcmpSignature: message.mcmpSignature,
+      mcmpReplyAuthorName: message.mcmpReplyAuthorName,
+      mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+      verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+      mcmpNameCollision: message.mcmpNameCollision,
       timestamp: message.timestamp,
+      // Room-server posts / outgoing have no receive time → epoch 0 renders
+      // as a dash on the path screen; contacts carry the real receivedAt.
+      receivedAt: message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
@@ -1570,9 +1995,13 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _showMessageActions(Message message, Contact contact) {
+  Future<void> _showMessageActions(Message message, Contact contact) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final hasMcoOriginal = mcoImage == null
+        ? false
+        : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
+    if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
@@ -1621,6 +2050,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     _copyMessageText(message.text);
                   },
                 ),
+                if (hasMcoOriginal)
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                      _mcoForceLora(
+                            message.messageId,
+                            settings.showMcoImagePackReplacements,
+                          )
+                          ? context.l10n.mcogallery_showPacked
+                          : context.l10n.mcogallery_showLora,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMcoImageVariant(message.messageId);
+                    },
+                  ),
                 if (mcoImage != null)
                   ListTile(
                     leading: const Icon(Icons.photo_library_outlined),
@@ -1718,6 +2163,19 @@ class _ChatScreenState extends State<ChatScreen> {
                       _openChat(context, contact);
                     },
                   ),
+                if (!message.isOutgoing &&
+                    message.mcmpIsSigned &&
+                    message.mcmpSignature != null &&
+                    _resolveContact(context.read<MeshCoreConnector>()).type ==
+                        advTypeRoom)
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(context.l10n.chat_mcmpManualRecheckSign),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_recheckMessageSignature(message));
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.close),
                   title: Text(context.l10n.common_cancel),
@@ -1728,6 +2186,19 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _recheckMessageSignature(Message message) async {
+    final connector = context.read<MeshCoreConnector>();
+    final status = await connector.recheckContactMessageSignature(
+      _resolveContact(connector).publicKeyHex,
+      message.messageId,
+    );
+    if (!mounted || status == null) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(McmpSignatureBadge.statusLabel(context, status)),
     );
   }
 
@@ -1750,6 +2221,14 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  void _toggleMcoImageVariant(String messageId) {
+    setState(() {
+      if (!_mcoVariantOverridden.add(messageId)) {
+        _mcoVariantOverridden.remove(messageId);
+      }
+    });
   }
 
   Future<void> _saveMcoImageToGallery(String text) async {
@@ -1784,7 +2263,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _deleteMessage(Message message) async {
-    await context.read<MeshCoreConnector>().deleteMessage(message);
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
+    await connector.deleteMessage(message);
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
@@ -1794,6 +2275,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -1851,6 +2333,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _retryMessage(Message message) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    if (blockIfOffline(context, connector)) return;
+    connector.cancelPendingContactSend(message.messageId);
     // Retry using the contact's current path override setting
     connector.sendMessage(_resolveContact(connector), message.text);
     showDismissibleSnackBar(
@@ -1873,6 +2357,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendReaction(Message message, Contact senderContact, String emoji) {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
     if (emojiIndex == null) return; // Unknown emoji, skip
     final timestampSecs = message.timestamp.millisecondsSinceEpoch ~/ 1000;
@@ -1905,12 +2390,24 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onCancelPendingSend;
   final double textScale;
   final String sourceId;
+  final bool isHighlighted;
+
+  /// Signature badges are shown only in room-server chats; direct messages
+  /// are authenticated by the ECDH transport and show no badge at all.
+  final bool isRoomChat;
+
+  /// Per-message override flipping the MCOimg variant away from the default
+  /// chosen by the mod setting.
+  final bool mcoVariantOverridden;
 
   const _MessageBubble({
     required this.message,
     required this.senderName,
     required this.sourceId,
     required this.textScale,
+    this.isHighlighted = false,
+    this.isRoomChat = false,
+    this.mcoVariantOverridden = false,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -1924,8 +2421,17 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    // flutter_linkify ignores the ambient MediaQuery scaler, so the message
+    // body must apply the global UI scale explicitly (as an additional
+    // multiplier for backward compatibility with the untouched system scale).
+    final bodyTextScaler = TextScaler.linear(settingsService.settings.uiScale);
     final showCompressionRatio = settingsService.settings.showCompressionRatio;
     final enableTimeSeconds = settingsService.settings.enableTimeSeconds;
+    // Default is "show pack original" when replacements are enabled; the
+    // per-message override flips it.
+    final mcoForceLora =
+        !settingsService.settings.showMcoImagePackReplacements !=
+        mcoVariantOverridden;
     final isOutgoing = message.isOutgoing;
     final compressionType =
         message.compressionType ??
@@ -1934,9 +2440,15 @@ class _MessageBubble extends StatelessWidget {
         showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
-    final compressionLabel = compressionType == null
+    // MCMP labels carry the format version: "mcmp3" / "mcmp2".
+    final compressionTypeLabel = compressionType == null
         ? null
-        : '$compressionRatioPrefix${compressionType.label}';
+        : compressionType == MessageCompressionType.mcmp
+        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        : compressionType.label;
+    final compressionLabel = compressionTypeLabel == null
+        ? null
+        : '$compressionRatioPrefix$compressionTypeLabel';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
@@ -2028,7 +2540,9 @@ class _MessageBubble extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 Flexible(
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeInOut,
                     padding: isMediaMessage
                         ? const EdgeInsets.all(4)
                         : const EdgeInsets.symmetric(
@@ -2039,7 +2553,12 @@ class _MessageBubble extends StatelessWidget {
                       maxWidth: MediaQuery.of(context).size.width * 0.72,
                     ),
                     decoration: BoxDecoration(
-                      color: bubbleColor,
+                      color: isHighlighted
+                          ? Color.alphaBlend(
+                              Colors.green.withValues(alpha: 0.5),
+                              bubbleColor,
+                            )
+                          : bubbleColor,
                       borderRadius: borderRadius,
                       border: Border.all(color: bubbleBorder, width: 1),
                     ),
@@ -2119,6 +2638,33 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2173,9 +2719,19 @@ class _MessageBubble extends StatelessWidget {
                         else if (mcoImage != null)
                           Stack(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: MCOImageMessage(image: mcoImage),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: MCOImageOriginalOrFallback(
+                                    text: message.text,
+                                    image: mcoImage,
+                                    forceLora: mcoForceLora,
+                                  ),
+                                ),
                               ),
                               if (!enableTracing && isOutgoing)
                                 Positioned(
@@ -2200,7 +2756,7 @@ class _MessageBubble extends StatelessWidget {
                                           MessageStatus.failed,
                                     ),
                                   ),
-                              ),
+                                ),
                             ],
                           )
                         else if (sharedContact != null)
@@ -2238,6 +2794,33 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -2258,6 +2841,10 @@ class _MessageBubble extends StatelessWidget {
                                     color: textColor.withValues(alpha: 0.78),
                                     fontSize: bodyFontSize * textScale,
                                   ),
+                                  textScaler: bodyTextScaler,
+                                  onSecondaryTap: PlatformInfo.isDesktop
+                                      ? onLongPress
+                                      : null,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
@@ -2273,9 +2860,71 @@ class _MessageBubble extends StatelessWidget {
                                         message.status == MessageStatus.failed,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon (room chats only).
+                                if (isRoomChat &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      showFingerprint: false,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
+                        // Incoming signature badge: room-server chats only,
+                        // on its own line above the message time, independent
+                        // of the message-tracing setting. Direct messages
+                        // never show the badge; outgoing messages show their
+                        // lock in the meta row after the compression label.
+                        if (isRoomChat &&
+                            !isOutgoing &&
+                            McmpSignatureBadge.isVisible(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: isOutgoing,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                            )) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: McmpSignatureBadge(
+                              status: message.mcmpSignatureStatus,
+                              isOutgoing: isOutgoing,
+                              isSigned: message.mcmpIsSigned,
+                              wasMcmpV3: message.mcmpTimestamp != null,
+                              verifiedSenderKeyHex:
+                                  message.verifiedSenderKeyHex,
+                              nameCollision: message.mcmpNameCollision,
+                              // Direct messages never show a fingerprint;
+                              // room posts do.
+                              showFingerprint:
+                                  message.fourByteRoomContactKey.isNotEmpty,
+                              textScale: textScale,
+                              color: metaColor,
+                              errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
                         if (enableTracing) ...[
                           if (isOutgoing && message.retryCount > 0) ...[
                             const SizedBox(height: 4),
@@ -2377,6 +3026,30 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                // Outgoing signing lock (room chats), right
+                                // after the compression-type label.
+                                if (isRoomChat &&
+                                    isOutgoing &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 4),
+                                  McmpSignatureBadge(
+                                    status: message.mcmpSignatureStatus,
+                                    isOutgoing: true,
+                                    isSigned: message.mcmpIsSigned,
+                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    verifiedSenderKeyHex:
+                                        message.verifiedSenderKeyHex,
+                                    nameCollision: message.mcmpNameCollision,
+                                    showFingerprint: false,
+                                    textScale: textScale,
+                                    color: metaColor,
+                                    errorColor: scheme.error,
+                                  ),
+                                ],
                                 if (sharedHistorySourceName != null &&
                                     sharedHistorySourceName.isNotEmpty) ...[
                                   const SizedBox(width: 4),
@@ -2400,6 +3073,9 @@ class _MessageBubble extends StatelessWidget {
                             delaySeconds: pendingSendDelaySeconds!,
                             onCancel: onCancelPendingSend!,
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),

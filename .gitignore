@@ -97,6 +97,10 @@ keystore.properties
 __build-apk
 __build-ios
 
+# special
+lib_serv
+pubspec_overrides.yaml
+
 # except
 !docs/mcoimg-js
 !docs/mcoimg-js/mcoimg-codec.global.js

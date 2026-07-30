@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -31,6 +32,7 @@ import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
@@ -50,14 +52,27 @@ enum RoomLoginDestination { chat, management }
 
 enum ContactOperationType { import, export, zeroHopShare }
 
+enum _BatchContactOperation { delete }
+
+class ContactsBatchOperationsScreen extends StatelessWidget {
+  const ContactsBatchOperationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ContactsScreen(batchOperationsMode: true);
+  }
+}
+
 class ContactsScreen extends StatefulWidget {
   final bool hideBackButton;
   final bool selectionMode;
+  final bool batchOperationsMode;
 
   const ContactsScreen({
     super.key,
     this.hideBackButton = false,
     this.selectionMode = false,
+    this.batchOperationsMode = false,
   });
 
   @override
@@ -75,6 +90,11 @@ class _ContactsScreenState extends State<ContactsScreen>
   Timer? _searchDebounce;
 
   final List<ContactOperationType> _pendingOperations = [];
+  final Set<String> _selectedBatchContactKeys = {};
+  bool _batchOperationInProgress = false;
+  bool _batchOperationCancellationRequested = false;
+  bool _allowBatchOperationPop = false;
+  String? _activeBatchFailureMessage;
 
   StreamSubscription<Uint8List>? _frameSubscription;
 
@@ -112,6 +132,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   @override
   void dispose() {
+    _batchOperationCancellationRequested = true;
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -126,11 +147,20 @@ class _ContactsScreenState extends State<ContactsScreen>
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop ||
         widget.selectionMode ||
-        event is! KeyDownEvent ||
-        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+        widget.batchOperationsMode ||
+        event is! KeyDownEvent) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch(context));
+      return true;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
     }
     if (_searchFocusNode.hasFocus) {
@@ -160,6 +190,33 @@ class _ContactsScreenState extends State<ContactsScreen>
       ),
     );
     return true;
+  }
+
+  Future<void> _showMessageSearch(BuildContext context) {
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.contacts,
+      onOpenResult: (result) async {
+        if (!context.mounted) return;
+        final contact = result.contact;
+        if (contact == null) return;
+        final connector = context.read<MeshCoreConnector>();
+        final unread = connector.getUnreadCountForContactKey(
+          contact.publicKeyHex,
+        );
+        connector.markContactRead(contact.publicKeyHex);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              contact: contact,
+              initialUnreadCount: unread,
+              initialMessageId: result.messageId,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _handleConnectorScopeChange() {
@@ -398,131 +455,384 @@ class _ContactsScreenState extends State<ContactsScreen>
       return const SizedBox.shrink();
     }
 
-    final allowBack = !connector.isConnected;
+    final allowBack = widget.batchOperationsMode || !connector.isConnected;
+    final canPop =
+        allowBack && (!_batchOperationInProgress || _allowBatchOperationPop);
     final lockContactList =
-        connector.isLoadingContacts && connector.contacts.isNotEmpty;
+        _batchOperationInProgress ||
+        (connector.isLoadingContacts && connector.contacts.isNotEmpty);
     return PopScope(
-      canPop: allowBack,
+      canPop: canPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop &&
+            widget.batchOperationsMode &&
+            _batchOperationInProgress) {
+          _cancelBatchOperationAndPop();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
-          title: AppBarTitle(context.l10n.contacts_title),
-          automaticallyImplyLeading: false,
+          title: AppBarTitle(
+            widget.batchOperationsMode
+                ? context.l10n.contacts_batchOperations
+                : context.l10n.contacts_title,
+          ),
+          automaticallyImplyLeading: widget.batchOperationsMode,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
-            PopupMenuButton(
-              tooltip: context.l10n.contacts_moreOptions,
-              itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.person_add_rounded,
-                    text: context.l10n.discoveredContacts_Title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DiscoveryScreen(),
+            if (widget.batchOperationsMode)
+              PopupMenuButton<_BatchContactOperation>(
+                enabled: !_batchOperationInProgress,
+                tooltip: context.l10n.contacts_moreOptions,
+                onSelected: (operation) {
+                  switch (operation) {
+                    case _BatchContactOperation.delete:
+                      unawaited(_confirmBatchDelete(context, connector));
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _BatchContactOperation.delete,
+                    child: PopupMenuRow(
+                      icon: Icons.delete_outline,
+                      iconColor: Theme.of(context).colorScheme.error,
+                      text: context.l10n.common_delete,
                     ),
                   ),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.vpn_key,
-                    text: context.l10n.contacts_addContactByPubkey,
-                  ),
-                  onTap: () => _showAddContactByPubkeyDialog(context),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.paste,
-                    text: context.l10n.contacts_addContactFromClipboard,
-                  ),
-                  onTap: () => _contactImport(),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.connect_without_contact,
-                    text: context.l10n.contacts_zeroHopAdvert,
-                  ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: false),
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.settings_advertisementSent),
+                ],
+                icon: const Icon(Icons.more_vert),
+              )
+            else
+              PopupMenuButton(
+                tooltip: context.l10n.contacts_moreOptions,
+                itemBuilder: (context) {
+                  if (connector.isOfflineMode) {
+                    return <PopupMenuEntry<dynamic>>[
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.logout,
+                          iconColor: Theme.of(context).colorScheme.error,
+                          text: context.l10n.common_disconnect,
+                        ),
+                        onTap: () => _disconnect(context, connector),
+                      ),
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.search,
+                          text: context.l10n.chat_searchMessages,
+                        ),
+                        onTap: () => _showMessageSearch(this.context),
+                      ),
+                    ];
+                  }
+                  return <PopupMenuEntry<dynamic>>[
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.person_add_rounded,
+                        text: context.l10n.discoveredContacts_Title,
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DiscoveryScreen(),
+                        ),
+                      ),
                     ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.cell_tower,
-                    text: context.l10n.contacts_floodAdvert,
-                  ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: true),
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.settings_advertisementSent),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.vpn_key,
+                        text: context.l10n.contacts_addContactByPubkey,
+                      ),
+                      onTap: () => _showAddContactByPubkeyDialog(context),
                     ),
-                  },
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.copy,
-                    text: context.l10n.contacts_copyAdvertToClipboard,
-                  ),
-                  onTap: () => _contactExport(Uint8List.fromList([])),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.logout,
-                    iconColor: Theme.of(context).colorScheme.error,
-                    text: context.l10n.common_disconnect,
-                  ),
-                  onTap: () => _disconnect(context, connector),
-                ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.settings,
-                    text: context.l10n.settings_title,
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsScreen(),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.paste,
+                        text: context.l10n.contacts_addContactFromClipboard,
+                      ),
+                      onTap: () => _contactImport(),
                     ),
-                  ),
-                ),
-              ],
-              icon: const Icon(Icons.more_vert),
-            ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.checklist,
+                        text: context.l10n.contacts_batchOperations,
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ContactsBatchOperationsScreen(),
+                        ),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.search,
+                        text: context.l10n.chat_searchMessages,
+                      ),
+                      onTap: () => _showMessageSearch(this.context),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.connect_without_contact,
+                        text: context.l10n.contacts_zeroHopAdvert,
+                      ),
+                      onTap: () => {
+                        connector.sendSelfAdvert(flood: false),
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(
+                            context.l10n.settings_advertisementSent,
+                          ),
+                        ),
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.cell_tower,
+                        text: context.l10n.contacts_floodAdvert,
+                      ),
+                      onTap: () => {
+                        connector.sendSelfAdvert(flood: true),
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(
+                            context.l10n.settings_advertisementSent,
+                          ),
+                        ),
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.copy,
+                        text: context.l10n.contacts_copyAdvertToClipboard,
+                      ),
+                      onTap: () => _contactExport(Uint8List.fromList([])),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.logout,
+                        iconColor: Theme.of(context).colorScheme.error,
+                        text: context.l10n.common_disconnect,
+                      ),
+                      onTap: () => _disconnect(context, connector),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.settings_title,
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      ),
+                    ),
+                  ];
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
           ],
         ),
         body: IgnorePointer(
           ignoring: lockContactList,
-          child: AnimatedOpacity(
-            opacity: lockContactList ? 0.45 : 1,
-            duration: const Duration(milliseconds: 160),
-            child: _buildContactsBody(context, connector),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: lockContactList ? 0.45 : 1,
+                  duration: const Duration(milliseconds: 160),
+                  child: _buildContactsBody(context, connector),
+                ),
+              ),
+              if (_batchOperationInProgress)
+                const Positioned.fill(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: connector.isLoadingContacts
-              ? null
-              : () => _showAddContactSheet(context),
-          child: const Icon(Icons.person_add),
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: QuickSwitchBar(
-            selectedIndex: 0,
-            onDestinationSelected: (index) =>
-                _handleQuickSwitch(index, context),
-            contactsUnreadCount: connector.getTotalContactsUnreadCount(),
-            channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
-          ),
-        ),
+        floatingActionButton:
+            widget.batchOperationsMode || connector.isOfflineMode
+            ? null
+            : FloatingActionButton(
+                onPressed: connector.isLoadingContacts
+                    ? null
+                    : () => _showAddContactSheet(context),
+                child: const Icon(Icons.person_add),
+              ),
+        bottomNavigationBar: widget.batchOperationsMode
+            ? null
+            : SafeArea(
+                top: false,
+                child: QuickSwitchBar(
+                  selectedIndex: 0,
+                  onDestinationSelected: (index) =>
+                      _handleQuickSwitch(index, context),
+                  contactsUnreadCount: connector.getTotalContactsUnreadCount(),
+                  channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
+                ),
+              ),
       ),
+    );
+  }
+
+  void _toggleBatchContact(Contact contact) {
+    if (_batchOperationInProgress) return;
+    setState(() {
+      if (!_selectedBatchContactKeys.add(contact.publicKeyHex)) {
+        _selectedBatchContactKeys.remove(contact.publicKeyHex);
+      }
+    });
+  }
+
+  void _toggleAllFilteredBatchContacts(List<Contact> filteredContacts) {
+    if (_batchOperationInProgress || filteredContacts.isEmpty) return;
+    final filteredKeys = filteredContacts
+        .map((contact) => contact.publicKeyHex)
+        .toSet();
+    final allFilteredSelected = filteredKeys.every(
+      _selectedBatchContactKeys.contains,
+    );
+    setState(() {
+      if (allFilteredSelected) {
+        _selectedBatchContactKeys.removeAll(filteredKeys);
+      } else {
+        _selectedBatchContactKeys.addAll(filteredKeys);
+      }
+    });
+  }
+
+  List<Contact> _selectedBatchContacts(MeshCoreConnector connector) {
+    return connector.contacts
+        .where(
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
+        )
+        .toList(growable: false);
+  }
+
+  Future<void> _confirmBatchDelete(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) async {
+    final selectedContacts = _selectedBatchContacts(connector);
+    if (selectedContacts.isEmpty) {
+      _showBatchResult(
+        context,
+        context.l10n.contacts_batchOperations_notSelected,
+        isError: true,
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(context.l10n.contacts_batchOperations_removeConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              context.l10n.common_delete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final successMessage = context.l10n.contacts_batchOperations_removeSuccess;
+    final failureMessage = context.l10n.contacts_batchOperations_removeFail;
+
+    await _runBatchOperation(
+      contacts: selectedContacts,
+      operation: (contact) =>
+          connector.removeContact(contact, waitForAck: true),
+      successMessage: successMessage,
+      failureMessage: failureMessage,
+    );
+  }
+
+  Future<void> _runBatchOperation({
+    required List<Contact> contacts,
+    required Future<void> Function(Contact contact) operation,
+    required String successMessage,
+    required String failureMessage,
+  }) async {
+    if (_batchOperationInProgress) return;
+    setState(() {
+      _batchOperationInProgress = true;
+      _batchOperationCancellationRequested = false;
+      _allowBatchOperationPop = false;
+      _activeBatchFailureMessage = failureMessage;
+    });
+
+    final failedKeys = <String>{};
+    for (final contact in contacts) {
+      if (_batchOperationCancellationRequested) break;
+      try {
+        await operation(contact);
+      } catch (error) {
+        failedKeys.add(contact.publicKeyHex);
+        appLogger.error(
+          'Batch contact operation failed for ${contact.publicKeyHex}: $error',
+          tag: 'ContactsScreen',
+          noNotify: true,
+        );
+      }
+    }
+
+    if (_batchOperationCancellationRequested) return;
+    if (!mounted) return;
+    setState(() {
+      _batchOperationInProgress = false;
+      _activeBatchFailureMessage = null;
+      _selectedBatchContactKeys
+        ..clear()
+        ..addAll(failedKeys);
+    });
+    _showBatchResult(
+      context,
+      failedKeys.isEmpty ? successMessage : failureMessage,
+      isError: failedKeys.isNotEmpty,
+    );
+  }
+
+  void _cancelBatchOperationAndPop() {
+    if (_batchOperationCancellationRequested || !mounted) return;
+    final failureMessage =
+        _activeBatchFailureMessage ??
+        context.l10n.contacts_batchOperations_commonFail;
+    setState(() {
+      _batchOperationCancellationRequested = true;
+      _allowBatchOperationPop = true;
+    });
+    _showBatchResult(context, failureMessage, isError: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(Navigator.of(context).maybePop());
+    });
+  }
+
+  void _showBatchResult(
+    BuildContext context,
+    String message, {
+    required bool isError,
+  }) {
+    showDismissibleSnackBar(
+      context,
+      content: Text(message),
+      backgroundColor: isError
+          ? Theme.of(context).colorScheme.error
+          : MeshPalette.signal,
     );
   }
 
@@ -989,6 +1299,16 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector,
       viewState,
     );
+    final batchSelectableContacts = _contactsMatchingBatchFilter(
+      contacts,
+      connector,
+      viewState,
+    );
+    final allFilteredBatchContactsSelected =
+        batchSelectableContacts.isNotEmpty &&
+        batchSelectableContacts.every(
+          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
+        );
 
     String hintText = "";
 
@@ -1043,14 +1363,17 @@ class _ContactsScreenState extends State<ContactsScreen>
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final searchExpandedWidth = (screenWidth * 0.52).clamp(
-      97.0,
-      double.infinity,
-    ); // allow expansion up to 52% of screen width, but not less than the collapsed width
+    final searchControlsMinWidth = widget.batchOperationsMode ? 146.0 : 97.0;
+    final searchControlsMaxWidth = widget.batchOperationsMode ? 169.0 : 120.0;
+    final compactGroupWidth = (screenWidth * 0.21).clamp(76.0, 128.0);
+    final searchExpandedWidth = (screenWidth - 24 - compactGroupWidth).clamp(
+      searchControlsMinWidth,
+      520.0,
+    );
     final searchCollapsedWidth = (screenWidth * 0.22).clamp(
-      97.0,
-      120.0,
-    ); //two 48px icon buttons + 1px divider
+      searchControlsMinWidth,
+      searchControlsMaxWidth,
+    );
 
     return Column(
       children: [
@@ -1144,6 +1467,31 @@ class _ContactsScreenState extends State<ContactsScreen>
                         height: 48,
                         child: _buildFilterButton(context, viewState),
                       ),
+                      if (widget.batchOperationsMode) ...[
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: IconButton(
+                            tooltip: context.l10n.listFilter_all,
+                            isSelected: allFilteredBatchContactsSelected,
+                            onPressed: batchSelectableContacts.isEmpty
+                                ? null
+                                : () => _toggleAllFilteredBatchContacts(
+                                    batchSelectableContacts,
+                                  ),
+                            icon: const Icon(Icons.done_all),
+                            selectedIcon: Icon(
+                              Icons.done_all,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1188,11 +1536,30 @@ class _ContactsScreenState extends State<ContactsScreen>
                         lastSeen: _resolveLastSeen(contact),
                         unreadCount: unreadCount,
                         isFavorite: contact.isFavorite,
-                        onTap: () => widget.selectionMode
-                            ? Navigator.pop(context, contact)
-                            : _openChat(context, contact),
-                        onLongPress: () =>
-                            _showContactOptions(context, connector, contact),
+                        isSelected: widget.batchOperationsMode
+                            ? _selectedBatchContactKeys.contains(
+                                contact.publicKeyHex,
+                              )
+                            : null,
+                        onSelectionChanged: widget.batchOperationsMode
+                            ? (_) => _toggleBatchContact(contact)
+                            : null,
+                        onTap: () {
+                          if (widget.batchOperationsMode) {
+                            _toggleBatchContact(contact);
+                          } else if (widget.selectionMode) {
+                            Navigator.pop(context, contact);
+                          } else {
+                            _openChat(context, contact);
+                          }
+                        },
+                        onLongPress: connector.isOfflineMode
+                            ? null
+                            : () => _showContactOptions(
+                                context,
+                                connector,
+                                contact,
+                              ),
                       );
                     },
                   ),
@@ -1266,6 +1633,30 @@ class _ContactsScreenState extends State<ContactsScreen>
     return filtered;
   }
 
+  List<Contact> _contactsMatchingBatchFilter(
+    List<Contact> contacts,
+    MeshCoreConnector connector,
+    UiViewStateService viewState,
+  ) {
+    final selfPubKeyHex = connector.selfPublicKey == null
+        ? null
+        : pubKeyToHex(connector.selfPublicKey!);
+    return contacts
+        .where((contact) {
+          if (contact.publicKeyHex == selfPubKeyHex) return false;
+          if (viewState.contactsTypeFilter != ContactTypeFilter.all &&
+              !_matchesTypeFilter(contact, viewState.contactsTypeFilter)) {
+            return false;
+          }
+          if (viewState.contactsShowUnreadOnly &&
+              connector.getUnreadCountForContact(contact) == 0) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
+  }
+
   bool _matchesTypeFilter(Contact contact, ContactTypeFilter typeFilter) {
     switch (typeFilter) {
       case ContactTypeFilter.all:
@@ -1289,13 +1680,31 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   void _openChat(BuildContext context, Contact contact) {
+    final connector = context.read<MeshCoreConnector>();
+    if (connector.isOfflineMode) {
+      if (contact.type == advTypeRepeater) {
+        blockIfOffline(context, connector);
+        return;
+      }
+      final unread = connector.getUnreadCountForContactKey(
+        contact.publicKeyHex,
+      );
+      connector.markContactRead(contact.publicKeyHex);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ChatScreen(contact: contact, initialUnreadCount: unread),
+        ),
+      );
+      return;
+    }
     // Check if this is a repeater
     if (contact.type == advTypeRepeater) {
       _showRepeaterLogin(context, contact);
     } else if (contact.type == advTypeRoom) {
       _showRoomLogin(context, contact, RoomLoginDestination.chat);
     } else {
-      final connector = context.read<MeshCoreConnector>();
       final unread = connector.getUnreadCountForContactKey(
         contact.publicKeyHex,
       );
@@ -1625,6 +2034,12 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
+    int selectedMcmpVersion = isRoom
+        ? connector.contactMcmpVersion(contact.publicKeyHex)
+        : 2;
+    bool mcmpUseSign = isRoom
+        ? connector.contactMcmpUseSign(contact.publicKeyHex)
+        : true;
     bool smazEnabled =
         isRoom && connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled =
@@ -1768,6 +2183,66 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
+                  if (mcmpEnabled) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedMcmpVersion,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.settings_mcmp_version,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 2,
+                            child: Text('v2 (legacy)'),
+                          ),
+                          DropdownMenuItem(value: 3, child: Text('v3')),
+                        ],
+                        onChanged: (value) {
+                          final normalized = value == 3 ? 3 : 2;
+                          connector.setContactMcmpVersion(
+                            contact.publicKeyHex,
+                            normalized,
+                          );
+                          setSheetState(() {
+                            selectedMcmpVersion = normalized;
+                          });
+                        },
+                      ),
+                    ),
+                    if (selectedMcmpVersion == 3)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: DropdownButtonFormField<bool>(
+                          initialValue: mcmpUseSign,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.settings_mcmp_useSign,
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: true,
+                              child: Text(context.l10n.settings_mcmp_signed),
+                            ),
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text(context.l10n.settings_mcmp_noSign),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            final normalized = value ?? true;
+                            connector.setContactMcmpUseSign(
+                              contact.publicKeyHex,
+                              normalized,
+                            );
+                            setSheetState(() {
+                              mcmpUseSign = normalized;
+                            });
+                          },
+                        ),
+                      ),
+                  ],
                   SwitchListTile(
                     title: Text(context.l10n.channels_smazCompression),
                     subtitle: Text(context.l10n.chat_compressOutgoingMessages),
@@ -2057,8 +2532,10 @@ class _ContactTile extends StatelessWidget {
   final DateTime lastSeen;
   final int unreadCount;
   final bool isFavorite;
+  final bool? isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const _ContactTile({
     required this.contact,
@@ -2066,8 +2543,10 @@ class _ContactTile extends StatelessWidget {
     required this.lastSeen,
     required this.unreadCount,
     required this.isFavorite,
+    this.isSelected,
+    this.onSelectionChanged,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
   });
 
   /// Node-type avatar color per design language.
@@ -2115,7 +2594,9 @@ class _ContactTile extends StatelessWidget {
           ).length;
 
     return GestureDetector(
-      onSecondaryTapUp: PlatformInfo.isDesktop ? (_) => onLongPress() : null,
+      onSecondaryTapUp: PlatformInfo.isDesktop && onLongPress != null
+          ? (_) => onLongPress!()
+          : null,
       child: MeshCard(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -2149,7 +2630,7 @@ class _ContactTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name row + route chip
+                  // Name row + favorite + unread badge
                   Row(
                     children: [
                       Expanded(
@@ -2170,8 +2651,57 @@ class _ContactTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Icon(Icons.star, size: 13, color: MeshPalette.warn),
                       ],
+                      if (unreadCount > 0) ...[
+                        const SizedBox(width: 6),
+                        UnreadBadge(count: unreadCount),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  // Public key of the contact, small monospace. When it does
+                  // not fit, the middle is elided (start…end) so both ends stay
+                  // visible.
+                  _MiddleEllipsisText(
+                    text: contact.publicKeyHex.toUpperCase(),
+                    style: MeshTheme.mono(
+                      fontSize: 9,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  // Path / subtitle row: path label + route chip, then
+                  // location marker and last-seen time (right-aligned).
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                contact.pathLabel(
+                                  context.l10n,
+                                  pathHashByteWidth: pathHashByteWidth,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            if (hasPath) ...[
+                              const SizedBox(width: 6),
+                              RouteChip(
+                                isDirect: isDirect,
+                                hops: isDirect ? displayHopCount : null,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                       if (contact.hasLocation) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Icon(
                           Icons.location_on,
                           size: 13,
@@ -2180,71 +2710,30 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  // Path / subtitle row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          contact.pathLabel(
-                            context.l10n,
-                            pathHashByteWidth: pathHashByteWidth,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatLastSeen(context, lastSeen),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          color: unreadCount > 0
+                              ? MeshPalette.blue
+                              : scheme.onSurfaceVariant,
                         ),
                       ),
-                      if (hasPath) ...[
-                        const SizedBox(width: 6),
-                        RouteChip(
-                          isDirect: isDirect,
-                          hops: isDirect ? displayHopCount : null,
-                        ),
-                      ],
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            // Trailing: time + unread badge
-            // Clamp text scale to prevent overflow in trailing section.
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
-                ),
+            if (onSelectionChanged != null) ...[
+              const SizedBox(width: 4),
+              Checkbox(
+                value: isSelected ?? false,
+                onChanged: onSelectionChanged,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (unreadCount > 0) ...[
-                    UnreadBadge(count: unreadCount),
-                    const SizedBox(height: 4),
-                  ],
-                  Text(
-                    _formatLastSeen(context, lastSeen),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.right,
-                    style: MeshTheme.mono(
-                      fontSize: 11,
-                      color: unreadCount > 0
-                          ? MeshPalette.blue
-                          : scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -2282,8 +2771,10 @@ class _ContactTileEntrance extends StatelessWidget {
   final DateTime lastSeen;
   final int unreadCount;
   final bool isFavorite;
+  final bool? isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const _ContactTileEntrance({
     required this.index,
@@ -2292,8 +2783,10 @@ class _ContactTileEntrance extends StatelessWidget {
     required this.lastSeen,
     required this.unreadCount,
     required this.isFavorite,
+    this.isSelected,
+    this.onSelectionChanged,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
   });
 
   @override
@@ -2306,9 +2799,70 @@ class _ContactTileEntrance extends StatelessWidget {
         lastSeen: lastSeen,
         unreadCount: unreadCount,
         isFavorite: isFavorite,
+        isSelected: isSelected,
+        onSelectionChanged: onSelectionChanged,
         onTap: onTap,
         onLongPress: onLongPress,
       ),
+    );
+  }
+}
+
+/// Single-line text that elides the middle («start…end») when it does not fit
+/// the available width, keeping both ends visible.
+class _MiddleEllipsisText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+
+  const _MiddleEllipsisText({required this.text, required this.style});
+
+  static const String _ellipsis = '…';
+
+  double _measure(String value, TextDirection direction) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      maxLines: 1,
+      textDirection: direction,
+    )..layout();
+    return painter.width;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final direction = Directionality.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        if (!maxWidth.isFinite || _measure(text, direction) <= maxWidth) {
+          return Text(text, maxLines: 1, softWrap: false, style: style);
+        }
+        // Binary search for the largest number of original characters that fit
+        // once the middle is replaced by the ellipsis.
+        var lo = 0;
+        var hi = text.length;
+        var best = _ellipsis;
+        while (lo <= hi) {
+          final keep = (lo + hi) ~/ 2;
+          final head = (keep + 1) ~/ 2;
+          final tail = keep ~/ 2;
+          final candidate =
+              '${text.substring(0, head)}$_ellipsis'
+              '${text.substring(text.length - tail)}';
+          if (_measure(candidate, direction) <= maxWidth) {
+            best = candidate;
+            lo = keep + 1;
+          } else {
+            hi = keep - 1;
+          }
+        }
+        return Text(
+          best,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.clip,
+          style: style,
+        );
+      },
     );
   }
 }

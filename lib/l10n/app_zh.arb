@@ -105,6 +105,8 @@
   "settings_locationIntervalInvalid": "间隔时间必须至少为 60 秒，但不超过 86400 秒。",
   "settings_latitude": "纬度",
   "settings_longitude": "经度",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "GPS 更新时自动发送零跳广告",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "当 GPS 位置变化时，发送零跳广告（需要在广告中包含位置）。",
   "settings_privacyMode": "隐私模式",
   "settings_privacyModeSubtitle": "在广告中隐藏姓名/位置",
   "settings_privacyModeToggle": "切换隐私模式以在广告中隐藏姓名和位置，保护个人信息。",
@@ -125,8 +127,6 @@
   "settings_rebootDeviceSubtitle": "重启 MeshCore 设备",
   "settings_rebootDeviceConfirm": "确定要重启设备吗？这将断开与设备的连接。",
   "settings_debug": "调试",
-  "settings_bleDebugLog": "BLE 调试日志",
-  "settings_bleDebugLogSubtitle": "BLE 命令、响应和原始数据",
   "settings_appDebugLog": "应用调试日志",
   "settings_appDebugLogSubtitle": "应用调试消息",
   "settings_about": "关于",
@@ -148,9 +148,6 @@
   "settings_infoContactsCount": "联系人数量",
   "settings_infoChannelCount": "频道数量",
   "settings_presets": "预设",
-  "settings_preset915Mhz": "915 MHz",
-  "settings_preset868Mhz": "868 MHz",
-  "settings_preset433Mhz": "433 MHz",
   "settings_frequency": "频率 (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
   "settings_frequencyInvalid": "无效频率范围（300-2500 MHz）",
@@ -160,8 +157,6 @@
   "settings_txPower": "TX 功率 (dBm)",
   "settings_txPowerHelper": "0 - 22",
   "settings_txPowerInvalid": "无效的发射功率（0-22 dBm）",
-  "settings_longRange": "远距离",
-  "settings_fastSpeed": "高速",
   "settings_error": "错误：{message}",
   "@settings_error": {
     "placeholders": {
@@ -190,7 +185,7 @@
   "settings_sendingDelayForCancellation": "用于取消的发送延迟",
   "settings_useSendingDelay": "使用发送延迟",
   "chat_cancelSend": "取消发送",
-  "settings_doNotFilterMessagesOnChannels": "不要过滤频道中的自己消息",
+  "settings_doNotFilterMessagesOnChannels": "不过滤这些频道中自己的消息包，并将消息视为无条件已送达",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题",
   "chat_retryingMessageWait": "请等待 {seconds} 秒后再重新发送",
   "channels_mcmpCompression": "MCMP 压缩",
@@ -279,6 +274,19 @@
   "appSettings_last6Hours": "过去6小时",
   "appSettings_last24Hours": "过去24小时",
   "appSettings_lastWeek": "上周",
+  "appSettings_rasterTileSource": "栅格瓦片源",
+  "appSettings_stadiaEndpoint": "Stadia 端点",
+  "appSettings_stadiaApiKey": "Stadia API 密钥",
+  "appSettings_stadiaApiKeyRequired": "使用 Stadia Maps 时必需",
+  "appSettings_stadiaApiKeyConfigured": "已配置：{maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。",
   "appSettings_offlineMapCache": "离线地图缓存",
   "appSettings_noAreaSelected": "未选择任何区域",
   "appSettings_areaSelectedZoom": "已选择区域（缩放 {minZoom} - {maxZoom}）",
@@ -615,14 +623,6 @@
     }
   },
   "debugFrame_hexDump": "十六进制数据：",
-  "chat_pathManagement": "路径管理",
-  "chat_routingMode": "路由模式",
-  "chat_autoUseSavedPath": "自动（使用保存的路径）",
-  "chat_forceFloodMode": "强制泛洪模式",
-  "chat_recentAckPaths": "最近使用的 ACK 路径（点击使用）：",
-  "chat_pathHistoryFull": "路径历史已满，请删除后再添加。",
-  "chat_hopSingular": "跳",
-  "chat_hopPlural": "跳",
   "chat_hopsCount": "{count} 跳",
   "@chat_hopsCount": {
     "placeholders": {
@@ -631,30 +631,10 @@
       }
     }
   },
-  "chat_successes": "成功",
   "chat_removePath": "移除路径",
   "chat_noPathHistoryYet": "暂无路径历史。\n发送消息以探索路径。",
-  "chat_pathActions": "路径操作：",
-  "chat_setCustomPath": "设置自定义路径",
-  "chat_setCustomPathSubtitle": "手动指定路由路径",
-  "chat_clearPath": "清除路径",
-  "chat_clearPathSubtitle": "清除当前路径，下次发送将重新尝试。",
   "chat_pathCleared": "路径已清除。下一条消息将重新路由。",
-  "chat_floodModeSubtitle": "在应用栏中切换路由模式。",
-  "chat_floodModeEnabled": "泛洪模式已启用。可通过应用栏的路由图标切换。",
   "chat_fullPath": "完整路径",
-  "chat_pathDetailsNotAvailable": "路径信息暂不可用，请尝试发送消息刷新。",
-  "chat_pathSetHops": "路径设置：{hopCount} 跳 - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "已本地保存，连接设备后可同步。",
   "chat_pathDeviceConfirmed": "设备已确认。",
   "chat_pathDeviceNotConfirmed": "设备尚未确认。",
@@ -825,6 +805,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "北 {north}, 南 {south}, 东 {east}, 西 {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -915,41 +945,8 @@
   "login_failedMessage": "登录失败。可能是密码错误或无法连接到服务器。",
   "common_reload": "重新加载",
   "common_clear": "清除",
-  "path_currentPath": "当前路径：{path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "使用 {count} 跳路径",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "输入自定义路径",
   "path_currentPathLabel": "当前路径",
-  "path_hexPrefixInstructions": "请输入每个中继节点的2字符十六进制前缀，用逗号分隔。",
-  "path_hexPrefixExample": "例如：A1, F2, 3C（每个节点使用其公钥的第一字节）",
-  "path_labelHexPrefixes": "路径（十六进制前缀）",
-  "path_helperMaxHops": "最多 64 跳。每个前缀由 2 个十六进制字符（1 字节）组成。",
-  "path_selectFromContacts": "或从联系人列表中选择：",
   "path_noRepeatersFound": "未找到任何转发节点或房间服务器。",
-  "path_customPathsRequire": "自定义路径需要中间节点转发消息。",
-  "path_invalidHexPrefixes": "无效的十六进制前缀：{prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "路径过长，最多允许 64 跳。",
-  "path_setPath": "设置路径",
   "repeater_management": "转发节点管理",
   "room_management": "房间服务器管理",
   "repeater_managementTools": "管理工具",
@@ -965,9 +962,6 @@
   "repeater_settingsSubtitle": "配置转发节点参数",
   "repeater_statusTitle": "转发节点状态",
   "repeater_routingMode": "路由模式",
-  "repeater_autoUseSavedPath": "自动（使用保存的路径）",
-  "repeater_forceFloodMode": "强制泛洪模式",
-  "repeater_pathManagement": "路径管理",
   "repeater_refresh": "刷新",
   "repeater_statusRequestTimeout": "状态请求超时",
   "repeater_errorLoadingStatus": "加载状态时出错：{error}",
@@ -1500,7 +1494,7 @@
   "channelPath_noHopDetails": "此数据包未提供详细信息",
   "channelPath_messageDetails": "消息详情",
   "channelPath_senderLabel": "发送者",
-  "channelPath_timeLabel": "时间",
+  "channelPath_timeLabel": "接收/创建时间",
   "channelPath_repeatsLabel": "重复",
   "channelPath_pathLabel": "路径 {index}",
   "channelPath_observedLabel": "观察到的",
@@ -1807,7 +1801,6 @@
   "scanner_enableBluetooth": "启用蓝牙",
   "snrIndicator_lastSeen": "最近访问",
   "snrIndicator_nearByRepeaters": "附近的重复器",
-  "chat_ShowAllPaths": "显示所有路径",
   "settings_clientRepeat": "离网重复",
   "settings_clientRepeatSubtitle": "允许此设备重复发送网状数据包给其他设备",
   "settings_clientRepeatFreqWarning": "离网重复通信需要使用 433、869 或 918 兆赫兹的频率。",
@@ -2086,16 +2079,6 @@
   "tcpConnectionFailed": "TCP 连接失败：{error}",
   "map_showDiscoveryContacts": "显示发现联系人",
   "map_setAsMyLocation": "设置为我的位置",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "settings_privacySubtitle": "控制要共享的信息。",
   "settings_privacySettingsDescription": "选择您的设备与他人共享的信息。",
   "settings_telemetryBaseMode": "遥测基础模式",
@@ -2128,7 +2111,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "从一条路径上移除的货物，由于无法成功交付而移除。",
   "appSettings_maxMessageRetries": "最大消息重试次数",
   "appSettings_maxMessageRetriesSubtitle": "在将消息标记为失败之前，允许尝试的次数",
-  "path_routeWeight": "{weight}/{max}",
   "settings_multiAck": "多重ACK",
   "settings_telemetryModeUpdated": "遥测模式已更新",
   "map_showOverlaps": "重复键重叠",
@@ -2376,7 +2358,6 @@
   "contact_typeSensor": "Sensor",
   "contact_typeUnknown": "Unknown",
   "channels_via": "via {path}",
-  "chat_score": "Score",
   "map_sharedAt": "已分享",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2872,5 +2853,234 @@
     }
   },
   "map_wardriveSamplesCleared": "Wardrive 样本已清除。",
-  "channelPath_outgoingSentByRadioAt": "等待通过无线电发送，秒"
+  "channelPath_outgoingSentByRadioAt": "等待通过无线电发送，秒",
+  "common_default": "默认",
+  "common_send": "发送",
+  "common_apply": "应用",
+  "settings_regionSettings": "区域",
+  "settings_regionSettingsSubtitle": "管理已保存的区域",
+  "settings_regionManagement_screenTitle": "区域管理",
+  "settings_regionNameHint": "请输入区域名称",
+  "settings_regionAddRegion": "添加区域",
+  "settings_regionFetchRegions": "从中继器获取区域",
+  "settings_regionFetchRegionsFail": "未找到区域",
+  "settings_regionFetchRegionsAlreadyExists": "该区域已添加",
+  "settings_regionName": "区域名称",
+  "settings_regionDeleted": "区域已删除",
+  "settings_deleteRegion": "删除区域",
+  "settings_deleteRegionConfirm": "要从区域列表中删除“{region}”吗？",
+  "settings_aboutModDescription": "「Advanced」修改版基于原版 meshcore_open，包含在原应用仓库中提出的更改，或针对使用地区的特定更改，因此未以 PR 形式提交。",
+  "settings_aboutModLink": "Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced",
+  "settings_infoFirmware": "固件版本",
+  "contact_clearChatConfirm": "要删除聊天中的消息吗？",
+  "channels_regionSetTo": "区域：{region}",
+  "channels_regionNotSet": "区域：无",
+  "channels_regionSelect_Title": "分配区域",
+  "channels_clearRegion": "清除区域",
+  "chat_receivedGif": "收到了 GIF",
+  "map_wardriveReUpload": "重新上传",
+  "map_wardriveSamplesNoNew": "没有新的样本可上传",
+  "map_wardriveCoverageResolution": "覆盖精细度",
+  "map_wardriveCoverageResolutionPrompt": "请选择覆盖区块的大小（大小 = 区块边长）：",
+  "map_wardriveCoverageRegional": "区域级",
+  "map_wardriveCoverageRegionalSubtitle": "约 20 公里（精度 4）",
+  "map_wardriveCoverageCity": "城市级",
+  "map_wardriveCoverageCitySubtitle": "约 5 公里（精度 5）",
+  "map_wardriveCoverageNeighborhood": "街区",
+  "map_wardriveCoverageNeighborhoodSubtitle": "约 1.2 公里（精度 6）",
+  "map_wardriveCoverageStreet": "街道级",
+  "map_wardriveCoverageStreetSubtitle": "约 153 米（精度 7）",
+  "map_wardriveCoverageBuilding": "建筑级",
+  "map_wardriveCoverageBuildingSubtitle": "约 38 米（精度 8）",
+  "map_wardriveRepNoLocation": "中继器未提供位置信息",
+  "map_wardriveDiscoveryWait": "请等待 {seconds} 秒后再重试",
+  "map_wardriveFollowMe": "跟随我的位置",
+  "map_wardriveDeleteBlock": "删除区块",
+  "map_wardriveInBackground": "在后台运行",
+  "map_wardriveContinuousGPS": "持续获取 GPS 位置",
+  "map_wardriveShowRepeaterCoverage": "显示覆盖区块",
+  "map_wardriveHideRepeaterCoverage": "隐藏覆盖区块",
+  "repeater_keySettings": "更改节点密钥",
+  "repeater_keySettingsSubtitle": "更改公钥/私钥对",
+  "repeater_prvKey": "私钥",
+  "repeater_prvKeyHelper": "中继器的新私钥——128 个字符的十六进制字符串。",
+  "repeater_generatePrvKey": "生成随机密钥对",
+  "repeater_stopGeneratingPrvKey": "中断密钥对搜索",
+  "repeater_pubKey": "公钥",
+  "repeater_pubKeyHelper": "这是与生成的私钥对应的公钥，无法直接设置。",
+  "repeater_pubKeyPrefix": "期望的前缀",
+  "repeater_pubKeyPrefixHelper": "搜索以这些十六进制字符开头的公钥。预计尝试次数：{tries}。",
+  "channelPath_repeaterHopsHighTimeout": "延长路径追踪超时（10 秒 × 跳数）",
+  "listFilter_removeFromWardrive": "在 Wardrive 中忽略",
+  "listFilter_returnToWardrive": "在 Wardrive 中计入",
+  "channels_copyPath": "复制消息路径",
+  "channels_copyPathExtended": "复制消息路径（扩展）",
+  "channels_copiedPath": "消息路径已复制",
+  "channels_copyPathFailed": "复制消息路径失败",
+  "settings_copyMsgPathTitle": "配置消息路径的复制",
+  "settings_copyMsgPathDscr": "编辑用于生成频道消息路径信息的模板",
+  "settings_copyMsgPathEditTemplateTitle": "编辑模板",
+  "settings_copyMsgPathEditTemplateDscr": "请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的密钥\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行",
+  "settings_copyMsgPathEditFinalTitle": "最终消息",
+  "settings_copyMsgPathEditFinalDscr": "可用模板：\n%senderName% - 发送者名称\n%path% - 已生成的路径\n%hops% - 跳数\n\\n - 换行",
+  "settings_channelsSendAsBinary": "以二进制发送扩展格式（频道）",
+  "settings_dmSendAsBinary": "以二进制发送扩展格式（私聊消息）",
+  "chat_canvas": "MCOimg 画布",
+  "chat_canvasCrop": "裁剪/扩展",
+  "chat_canvasResize": "压缩/拉伸",
+  "chat_canvasUnlockSize": "解锁画布尺寸",
+  "chat_canvasFormatVer": "编解码器版本",
+  "chat_canvasPalette": "调色板",
+  "chat_canvasPaletteShow": "显示调色板",
+  "chat_canvasPaletteMode": "调色板配置",
+  "chat_canvasPaletteDynamic": "动态",
+  "chat_canvasPaletteDynamicProfile": "动态调色板的基础色集",
+  "chat_canvasPaletteDynamicUsed": "实际使用的颜色",
+  "chat_canvasPaletteDynamicDscr": "请注意！请谨慎使用动态调色板！它主要用于带渐变的图像，以便构建更小的调色板并使用不属于同一基础调色板的颜色。供参考：基础调色板越小，编码所用色调信息的开销就越低；颜色总数越少，画布上每个像素的开销就越低。",
+  "chat_canvasPaletteAlpha": "透明色",
+  "chat_canvasChangeSize": "更改画布尺寸",
+  "chat_canvasTrim": "裁掉空白",
+  "chat_canvasWidth": "宽度",
+  "chat_canvasHeight": "高度",
+  "chat_canvasGridShow": "显示网格",
+  "chat_canvasRulerShow": "显示标尺",
+  "chat_canvasGridColor": "网格颜色",
+  "chat_canvasSave": "保存到文件",
+  "chat_canvasLoad": "从文件加载",
+  "chat_canvasSendPayloadExceed": "发送失败——负载超出 {count} 字节。请减少细节数量或画布尺寸。",
+  "chat_canvasCurrentPayload": "当前负载：{payload}",
+  "chat_canvasActive": "显示画布",
+  "chat_canvasShowLockBtn": "显示画布锁定按钮",
+  "chat_canvasSendToEdit": "发送到画布",
+  "chat_canvasSendToGallery": "保存到图库",
+  "chat_canvasGalleryShowPNG": "显示原图（PNG）",
+  "chat_canvasGalleryShowBIN": "以 Bin 显示",
+  "chat_canvasGalleryRemove": "删除",
+  "chat_canvasGalleryRemoveConfirm": "要从图库中删除该图片吗？",
+  "chat_canvasFormatNotSupported": "MCOimg 版本：{received}，当前编解码器最高支持 {current}",
+  "chat_canvasSaveBinary": "保存为二进制文件",
+  "chat_canvasCannotSend": "发送失败——负载超出 {count} 字节。请编辑图片后重试。",
+  "chat_canvasCompressionLevel": "压缩级别",
+  "chat_canvasCompressionLevelNormal": "普通",
+  "chat_canvasCompressionLevelHigh": "高",
+  "chat_canvasCompressionLevelExtreme": "极限",
+  "chat_showHops": "显示跳数",
+  "settings_modSettings": "修改版设置",
+  "settings_modSettingsSubtitle": "本节汇集了原版 meshcore_open 中没有的选项",
+  "settings_modSettingsVisual": "外观",
+  "settings_modSettingsMessaging": "消息",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "版本",
+  "settings_mcmp_useSign": "签名校验",
+  "settings_mcmp_signed": "启用签名校验",
+  "settings_mcmp_noSign": "不校验签名",
+  "settings_mcmp_senderNameCollision": "发送者名称不唯一！",
+  "chat_mcmpSignatureValid": "签名有效",
+  "chat_mcmpSignatureInvalid": "签名无效！",
+  "chat_mcmpSignatureUnverifiable": "无法校验签名——发送者不在联系人中",
+  "chat_mcmpSignatureTransport": "已由传输层加密确认",
+  "chat_mcmpManualRecheckSign": "重新校验签名",
+  "chat_mcmpSignatureCheckStatus": "签名校验",
+  "chat_mcmpSigningFailed": "无法为消息签名",
+  "chat_mcmpAnswerTo": "MCMPv3 回复对象",
+  "chat_timestampPacket": "数据包时间戳",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg：显示格式版本标记",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg：显示编码算法标记",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg：显示图片体积（字节）",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg：显示分辨率",
+  "settings_modSettingsMCOimg_showReplacements": "显示图片原图，而非 LoRa 版本",
+  "settings_modSettingsMCOimg_replacementsScale": "在聊天中缩放原图",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "使用 Nearest Neighbor 缩放",
+  "settings_modSettingsMCOimg_replacementsSharp": "在聊天中锐化原图",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "注意！会关闭 GIF 动画！",
+  "settings_modSettingsHideChInd": "隐藏频道序号",
+  "settings_modSettingsHideRadioStats": "隐藏顶栏的无线电统计",
+  "settings_modSettingsSNRindicatorAllRepActivity": "SNR 指示器：对中继器的所有响应都触发，而不只是 advert",
+  "settings_modSettingsIncomingQuoteAsMentions": "将收到消息中的引用显示为提及",
+  "settings_modSettingsSimplifiedMentions": "消息中提及的简化样式",
+  "settings_modSettingsSharedMsgHistory": "共享消息历史",
+  "settings_modSettingsSharedMsgHistoryDscr": "合并从不同设备接收到的消息历史；最终的历史仅保存在应用中",
+  "settings_modSettingsSharedMsgHistoryDisabled": "已关闭",
+  "settings_modSettingsSharedMsgHistoryChannels": "仅频道",
+  "settings_modSettingsSharedMsgHistoryContacts": "仅联系人",
+  "settings_modSettingsSharedMsgHistoryAll": "所有聊天",
+  "settings_modSettingsMessagingShowCompressionRatio": "显示压缩率",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "计算时也计入节点名称",
+  "settings_modSettingsVisualHideMapZoomControls": "隐藏地图上的缩放面板",
+  "settings_modSettingsVisualShowMsgRegion": "显示消息的区域",
+  "channels_messageRegion": "区域：{region}",
+  "channels_messageRegionUnknown": "未知",
+  "channels_messageRegionEmpty": "未设置",
+  "settings_defaultRegionScope": "节点的默认区域",
+  "settings_defaultRegionScopeChanged": "默认区域已更改",
+  "settings_defaultRegionScopeChangeFailed": "无法更改区域",
+  "settings_defaultRegionScopeEmpty": "未设置",
+  "settings_defaultRegionScopeWaitForSync": "请等待同步完成",
+  "common_reset": "重置",
+  "connection_autoconnect": "自动连接",
+  "settings_modSettingsNoRetraInfo": "已有 {time} 秒未听到转发。",
+  "settings_modSettingsNoRetraHeading": "若在这么多秒内未听到转发，则将消息标记为未发送：",
+  "settings_modSettingsNoRetraDscr": "注意！由于节点固件的机制，大于约 133 字节的频道消息在物理上无法收到确认，将始终被标记为失败！请与应用设置中的负载限制一起使用此选项！",
+  "settings_selfTelemetryShow": "查看传感器",
+  "settings_modSettingsVisualChannelsUnreadSorting": "按未读消息排序频道",
+  "settings_modSettingsMessagingBackgroundTCP": "在后台保持 TCP 连接",
+  "settings_modSettingsDPIchange": "DPI 调整",
+  "settings_modSettingsDPIchangeToIcons": "同时应用于图标",
+  "chat_MCOimgOpenGallery": "打开 MCOimg 图库",
+  "chat_additionalActions": "操作菜单",
+  "mcogallery_common": "通用",
+  "mcogallery_addPack": "添加图包",
+  "mcogallery_removePack": "删除图包",
+  "mcogallery_removePackConfirm": "请确认删除图包“{name}”",
+  "mcogallery_addGroup": "添加分组",
+  "mcogallery_removeGroup": "删除分组",
+  "mcogallery_showLora": "显示 LoRa 版本",
+  "mcogallery_showPacked": "显示增强版本",
+  "chat_sendSelfContact": "发送我的联系人",
+  "chat_sendContact": "分享联系人",
+  "chat_addContact": "添加联系人",
+  "chat_sureToReplaceContact": "联系人已存在，要替换吗？",
+  "contacts_addContactByPubkey": "通过密钥添加联系人",
+  "contacts_addContactByPubkey_contactType": "联系人类型",
+  "chat_contactIsYou": "这是你自己的联系人",
+  "chat_contactType": "联系人类型：{contacttype}",
+  "chat_contactTypeNode": "节点",
+  "chat_contactTypeRepeater": "中继器",
+  "chat_contactTypeRoom": "房间服务器",
+  "chat_contactTypeSensor": "传感器",
+  "chat_myLocation": "发送我的位置",
+  "chat_locationFromMap": "从地图发送坐标",
+  "settings_modSettingsRoomServer": "房间服务器与联系人",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "将有历史记录的服务器与频道显示在同一屏幕",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "将有历史记录的联系人与频道显示在同一屏幕",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "保留原有的拖放机制：更改频道顺序会同时更改其在节点上的顺序，并且无法排序联系人或服务器",
+  "settings_appSettingsCustomChemistry": "自定义",
+  "map_clearDiscoveredContactsCache": "清除节点本地缓存",
+  "map_clearDiscoveredContactsCacheDisclaimer": "确定要清除已发现联系人的缓存吗？这不会影响节点上的联系人。",
+  "snrIndicator_v2_nearByRepeaters": "中继器活动",
+  "app_connectionLostReconnect": "与节点的连接已断开，正在重新连接……",
+  "app_connectionLostReconnected": "与节点的连接已恢复",
+  "contacts_batchOperations": "批量操作",
+  "contacts_batchOperations_notSelected": "你还没有选择要处理的联系人！",
+  "contacts_batchOperations_removeConfirm": "要从节点内存中删除选中的联系人吗？",
+  "contacts_batchOperations_removeSuccess": "选中的联系人已删除",
+  "contacts_batchOperations_removeFail": "删除联系人失败——请再次检查列表",
+  "contacts_batchOperations_commonSuccess": "操作已成功完成",
+  "contacts_batchOperations_commonFail": "操作未能完成",
+  "contacts_batchOperations_selectFiltered": "选择筛选结果",
+  "contacts_newGroupDescription": "将频道/联系人合并到文件夹中",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "lottie 替换图的尺寸限制",
+  "channels_messageRegionNotMatchesWithKnown": "无匹配",
+  "chat_searchMessages": "搜索消息",
+  "chat_searchMessages_placeholder": "从 3 个字符起，不区分大小写",
+  "chat_searchMessages_results": "搜索结果",
+  "chat_searchMessages_results_found": "找到 {count} 条消息",
+  "chat_searchMessages_results_channel": "频道 {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "与 {name} 的对话",
+  "app_offline": "离线",
+  "app_offline_unableToMessage": "离线模式下无法发送消息或执行其他操作",
+  "app_offline_sharedMode": "合并历史",
+  "settings_infoDeviceName": "板卡名称"
 }

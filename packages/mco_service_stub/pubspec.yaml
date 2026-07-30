@@ -1,0 +1,14 @@
+name: mco_service
+description: Dummy example implementation.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0

@@ -7,6 +7,7 @@ import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/path_selection.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
@@ -87,12 +88,23 @@ class MessageRetryService extends ChangeNotifier {
   /// shared globally; cap at 6 to leave two slots of headroom.
   static const int _maxGlobalInFlight = 6;
 
+  /// Fallback timeouts for attempts that never got RESP_CODE_SENT: a quick
+  /// retry when the transport write never happened, and a generous ceiling
+  /// for a lost node response (normally answered in well under a second).
+  static const int _failedSendRetryMs = 2000;
+  static const int _sentRespFallbackMs = 15000;
+
   int _maxRetries = 5;
   int get maxRetries => _maxRetries;
 
   final Map<String, Timer> _timeoutTimers = {};
   final Map<String, Message> _pendingMessages = {};
   final Map<String, Contact> _pendingContacts = {};
+
+  /// Exact wire text prepared (and possibly signed) once at compose time.
+  /// Automatic retries must reuse it byte-for-byte: re-encoding a signed MCMP
+  /// container would produce a new timestamp and invalidate the signature.
+  final Map<String, String> _preparedOutboundTexts = {};
   final Map<String, List<PathSelection>> _attemptPathHistory = {};
   final Map<String, AckHashMapping> _ackHashToMessageId = {};
   final Map<String, List<int>> _expectedAckHashes = {};
@@ -101,6 +113,8 @@ class MessageRetryService extends ChangeNotifier {
   final Set<String> _activeMessages = {};
   final Set<String> _resolvedMessages = {};
   final Map<String, String> _expectedHashToMessageId = {};
+  bool _sendingPaused = false;
+  int _sendingGeneration = 0;
 
   RetryServiceConfig? _config;
 
@@ -112,6 +126,50 @@ class MessageRetryService extends ChangeNotifier {
 
   void setMaxRetries(int value) {
     _maxRetries = value.clamp(2, 10);
+  }
+
+  void setSendingPaused(bool paused) {
+    if (_sendingPaused == paused) return;
+    _sendingPaused = paused;
+    if (paused) {
+      _sendingGeneration++;
+      for (final timer in _timeoutTimers.values) {
+        timer.cancel();
+      }
+      _timeoutTimers.clear();
+      return;
+    }
+
+    for (final messageId in List<String>.from(_activeMessages)) {
+      final pendingMessage = _pendingMessages[messageId];
+      if (pendingMessage == null) continue;
+      if (pendingMessage.status == MessageStatus.sent) {
+        _startTimeoutTimer(
+          messageId,
+          pendingMessage.estimatedTimeoutMs ?? _sentRespFallbackMs,
+        );
+        continue;
+      }
+      unawaited(
+        _attemptSend(messageId).catchError((e) {
+          debugPrint('_attemptSend threw for $messageId after resume: $e');
+          if (_sendingPaused) return;
+          final message = _pendingMessages[messageId];
+          final contactKey = _pendingContacts[messageId]?.publicKeyHex;
+          if (message != null) {
+            final failed = message.copyWith(status: MessageStatus.failed);
+            _pendingMessages[messageId] = failed;
+            _config?.updateMessage(failed);
+          }
+          if (contactKey != null) {
+            _onMessageResolved(messageId, contactKey);
+          }
+        }),
+      );
+    }
+    for (final contactKey in List<String>.from(_sendQueue.keys)) {
+      _sendNextForContact(contactKey);
+    }
   }
 
   /// Compute expected ACK hash using same algorithm as firmware:
@@ -151,6 +209,9 @@ class MessageRetryService extends ChangeNotifier {
   Future<void> sendMessageWithRetry({
     required Contact contact,
     required String text,
+    String? messageId,
+    DateTime? timestamp,
+    String? preparedOutboundText,
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
@@ -158,39 +219,57 @@ class MessageRetryService extends ChangeNotifier {
     int? compressionSavingsPercent,
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
+    McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
+    int? mcmpTimestamp,
+    String? mcmpSenderName,
+    bool mcmpIsSigned = false,
+    Uint8List? mcmpSignature,
     Uint8List? pathBytes,
     int? pathLength,
   }) async {
-    final messageId = const Uuid().v4();
+    final resolvedMessageId = messageId ?? const Uuid().v4();
     final resolved = resolvePathSelection(contact);
     final messagePathBytes =
         pathBytes ?? Uint8List.fromList(resolved.pathBytes);
     final messagePathLength =
         pathLength ?? (resolved.useFlood ? -1 : resolved.hopCount);
+    final effectiveOutbound =
+        preparedOutboundText ??
+        _config?.prepareContactOutboundText?.call(contact, text) ??
+        text;
     final message = Message(
       senderKey: contact.publicKey,
       text: text,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
-      wasMcmpCompressed: MeshCompressor.instance.hasPrefix(
-        _config?.prepareContactOutboundText?.call(contact, text) ?? text,
-      ),
+      wasMcmpCompressed:
+          compressionType == MessageCompressionType.mcmp ||
+          MeshCompressor.instance.hasPrefix(effectiveOutbound) ||
+          McmpAppCodec.isTextPayload(effectiveOutbound),
       compressionType: compressionType,
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
-      timestamp: DateTime.now(),
+      mcmpSignatureStatus: mcmpSignatureStatus,
+      mcmpTimestamp: mcmpTimestamp,
+      mcmpSenderName: mcmpSenderName,
+      mcmpIsSigned: mcmpIsSigned,
+      mcmpSignature: mcmpSignature,
+      timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,
-      messageId: messageId,
+      messageId: resolvedMessageId,
       retryCount: 0,
       pathLength: messagePathLength,
       pathBytes: messagePathBytes,
     );
 
-    _pendingMessages[messageId] = message;
-    _pendingContacts[messageId] = contact;
+    _pendingMessages[resolvedMessageId] = message;
+    _pendingContacts[resolvedMessageId] = contact;
+    if (preparedOutboundText != null) {
+      _preparedOutboundTexts[resolvedMessageId] = preparedOutboundText;
+    }
 
     _config?.addMessage(contact.publicKeyHex, message);
 
@@ -199,7 +278,7 @@ class MessageRetryService extends ChangeNotifier {
     // overflow the firmware's 8-entry global expected_ack_table.
     final contactKey = contact.publicKeyHex;
     _sendQueue[contactKey] ??= [];
-    _sendQueue[contactKey]!.add(messageId);
+    _sendQueue[contactKey]!.add(resolvedMessageId);
 
     if (!_activeMessages.any(
       (id) => _pendingContacts[id]?.publicKeyHex == contactKey,
@@ -209,6 +288,12 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _sendNextForContact(String contactKey) {
+    if (_sendingPaused) return;
+    if (_activeMessages.any(
+      (id) => _pendingContacts[id]?.publicKeyHex == contactKey,
+    )) {
+      return;
+    }
     // Enforce the global in-flight cap before starting a new send.
     // The firmware's expected_ack_table is a single 8-entry circular buffer
     // shared across all contacts; exceeding it silently evicts an older slot.
@@ -224,6 +309,7 @@ class MessageRetryService extends ChangeNotifier {
         _activeMessages.add(messageId);
         _attemptSend(messageId).catchError((e) {
           debugPrint('_attemptSend threw for $messageId: $e');
+          if (_sendingPaused) return;
           final msg = _pendingMessages[messageId];
           if (msg != null) {
             final failed = msg.copyWith(status: MessageStatus.failed);
@@ -291,6 +377,8 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   Future<void> _attemptSend(String messageId) async {
+    if (_sendingPaused) return;
+    final sendingGeneration = _sendingGeneration;
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
     final config = _config;
@@ -361,6 +449,7 @@ class MessageRetryService extends ChangeNotifier {
       );
       return;
     }
+    if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
 
     if (currentSelection != null) {
       _recordAttemptPathHistory(messageId, currentSelection);
@@ -374,6 +463,7 @@ class MessageRetryService extends ChangeNotifier {
     final selfPubKey = config.getSelfPublicKey?.call();
     if (selfPubKey != null) {
       final outboundText =
+          _preparedOutboundTexts[messageId] ??
           config.prepareContactOutboundText?.call(contact, message.text) ??
           message.text;
       final expectedHash = MessageRetryService.computeExpectedAckHash(
@@ -394,12 +484,16 @@ class MessageRetryService extends ChangeNotifier {
       );
     }
 
+    // Send the exact prepared wire text when available; the connector's
+    // prepare step is a no-op on already-encoded containers, so automatic
+    // retries reuse the signed body byte-for-byte.
     final sentByRadioAt = await config.sendMessage(
       contact,
-      message.text,
+      _preparedOutboundTexts[messageId] ?? message.text,
       attempt,
       timestampSeconds,
     );
+    if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
     if (sentByRadioAt != null) {
       final currentMessage = _pendingMessages[messageId];
       if (currentMessage != null) {
@@ -418,6 +512,22 @@ class MessageRetryService extends ChangeNotifier {
         _pendingMessages[messageId] = updatedMessage;
         config.updateMessage(updatedMessage);
       }
+    }
+
+    // updateMessageFromSent (RESP_CODE_SENT) is the only place that arms the
+    // retry timer. If the send silently failed or the response was lost to a
+    // disconnect, the message would stay pending forever and leak its
+    // in-flight slot — arm a fallback so every pending message always has a
+    // live timer.
+    final finalMessage = _pendingMessages[messageId];
+    if (finalMessage != null &&
+        !_resolvedMessages.contains(messageId) &&
+        finalMessage.status == MessageStatus.pending &&
+        finalMessage.retryCount == attempt) {
+      _startTimeoutTimer(
+        messageId,
+        sentByRadioAt == null ? _failedSendRetryMs : _sentRespFallbackMs,
+      );
     }
   }
 
@@ -479,6 +589,7 @@ class MessageRetryService extends ChangeNotifier {
     // Calculate timeout: prefer ML prediction, then device-provided, then physics fallback
     final pathLengthValue = message.pathLength ?? contact.pathLength;
     final outboundTextForTimeout =
+        _preparedOutboundTexts[messageId] ??
         config.prepareContactOutboundText?.call(contact, message.text) ??
         message.text;
     final messageBytesForTimeout = utf8.encode(outboundTextForTimeout).length;
@@ -521,7 +632,12 @@ class MessageRetryService extends ChangeNotifier {
     }
   }
 
+  void clearPathAttemptHistory() {
+    _attemptPathHistory.clear();
+  }
+
   void _startTimeoutTimer(String messageId, int timeoutMs) {
+    if (_sendingPaused) return;
     _timeoutTimers[messageId]?.cancel();
     _timeoutTimers[messageId] = Timer(Duration(milliseconds: timeoutMs), () {
       _handleTimeout(messageId);
@@ -542,6 +658,7 @@ class MessageRetryService extends ChangeNotifier {
     final contactKey = _pendingContacts[messageId]?.publicKeyHex;
     _pendingMessages.remove(messageId);
     _pendingContacts.remove(messageId);
+    _preparedOutboundTexts.remove(messageId);
     _attemptPathHistory.remove(messageId);
     _timeoutTimers.remove(messageId);
     _resolvedMessages.remove(messageId);
@@ -553,6 +670,7 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _handleTimeout(String messageId) {
+    if (_sendingPaused) return;
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
     final config = _config;
@@ -600,9 +718,19 @@ class MessageRetryService extends ChangeNotifier {
       );
 
       _timeoutTimers[messageId] = Timer(Duration(milliseconds: backoffMs), () {
-        if (_pendingMessages.containsKey(messageId)) {
-          _attemptSend(messageId);
-        }
+        if (_sendingPaused) return;
+        if (!_pendingMessages.containsKey(messageId)) return;
+        _attemptSend(messageId).catchError((e) {
+          debugPrint('_attemptSend threw for $messageId: $e');
+          if (_sendingPaused) return;
+          final msg = _pendingMessages[messageId];
+          if (msg != null) {
+            final failed = msg.copyWith(status: MessageStatus.failed);
+            _pendingMessages[messageId] = failed;
+            _config?.updateMessage(failed);
+          }
+          _onMessageResolved(messageId, contact.publicKeyHex);
+        });
       });
     } else {
       // Max retries reached - mark as failed
@@ -754,12 +882,13 @@ class MessageRetryService extends ChangeNotifier {
             tripTimeMs > 0 &&
             message.pathLength != null) {
           final outboundTextForObserved =
+              _preparedOutboundTexts[matchedMessageId] ??
               config!.prepareContactOutboundText?.call(contact, message.text) ??
               message.text;
           final messageBytesForObserved = utf8
               .encode(outboundTextForObserved)
               .length;
-          config.onDeliveryObserved!(
+          config!.onDeliveryObserved!(
             contact.publicKeyHex,
             message.pathLength!,
             messageBytesForObserved,
@@ -844,6 +973,7 @@ class MessageRetryService extends ChangeNotifier {
     _timeoutTimers.clear();
     _pendingMessages.clear();
     _pendingContacts.clear();
+    _preparedOutboundTexts.clear();
     _attemptPathHistory.clear();
     _expectedAckHashes.clear();
     _ackHistory.clear();

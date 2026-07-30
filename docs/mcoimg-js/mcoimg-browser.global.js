@@ -1018,6 +1018,109 @@
     return rows.join('\n');
   }
 
+  // --- MD5 (RFC 1321) over a byte array; returns lowercase hex. Used for the
+  // *.mcoimg.pack identity hash below. Payloads are tiny (<200 bytes), so a
+  // plain synchronous implementation is more than enough.
+  const MD5_SHIFTS = [
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
+  ];
+  const MD5_CONSTANTS = (() => {
+    const table = new Uint32Array(64);
+    for (let i = 0; i < 64; i++) {
+      table[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0;
+    }
+    return table;
+  })();
+
+  function md5Hex(bytesLike) {
+    const bytes = binaryBytes(bytesLike, 'md5 input');
+    const messageLength = bytes.length;
+    const paddedLength = (((messageLength + 8) >> 6) + 1) << 6;
+    const buffer = new Uint8Array(paddedLength);
+    buffer.set(bytes);
+    buffer[messageLength] = 0x80;
+    const view = new DataView(buffer.buffer);
+    const bitLength = messageLength * 8;
+    view.setUint32(paddedLength - 8, bitLength >>> 0, true);
+    view.setUint32(paddedLength - 4, Math.floor(bitLength / 4294967296), true);
+
+    let a0 = 0x67452301;
+    let b0 = 0xefcdab89;
+    let c0 = 0x98badcfe;
+    let d0 = 0x10325476;
+    const words = new Uint32Array(16);
+
+    for (let offset = 0; offset < paddedLength; offset += 64) {
+      for (let i = 0; i < 16; i++) {
+        words[i] = view.getUint32(offset + i * 4, true);
+      }
+      let a = a0;
+      let b = b0;
+      let c = c0;
+      let d = d0;
+      for (let i = 0; i < 64; i++) {
+        let f;
+        let g;
+        if (i < 16) {
+          f = (b & c) | (~b & d);
+          g = i;
+        } else if (i < 32) {
+          f = (d & b) | (~d & c);
+          g = (5 * i + 1) % 16;
+        } else if (i < 48) {
+          f = b ^ c ^ d;
+          g = (3 * i + 5) % 16;
+        } else {
+          f = c ^ (b | ~d);
+          g = (7 * i) % 16;
+        }
+        f = (f + a + MD5_CONSTANTS[i] + words[g]) >>> 0;
+        a = d;
+        d = c;
+        c = b;
+        const shift = MD5_SHIFTS[i];
+        b = (b + (((f << shift) | (f >>> (32 - shift))) >>> 0)) >>> 0;
+      }
+      a0 = (a0 + a) >>> 0;
+      b0 = (b0 + b) >>> 0;
+      c0 = (c0 + c) >>> 0;
+      d0 = (d0 + d) >>> 0;
+    }
+
+    const digest = new Uint8Array(16);
+    const digestView = new DataView(digest.buffer);
+    digestView.setUint32(0, a0, true);
+    digestView.setUint32(4, b0, true);
+    digestView.setUint32(8, c0, true);
+    digestView.setUint32(12, d0, true);
+    return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  // Identity hash used by *.mcoimg.pack sets: lowercase hex MD5 of the binary
+  // payload (appPayloadWithoutSender, i.e. the .mcoimg.bin file contents)
+  // with the one-byte v3 packet nonce zeroed before hashing (payload[1] when
+  // the payload starts with subtypeVersion 0x13). Legacy v1/v2 payloads are
+  // hashed as-is. This mirrors MCOImageIdentity in the MeshCore Open app.
+  function packIdentityHash(payloadLike) {
+    const payload = binaryBytes(payloadLike, 'MCOimg payload').slice();
+    if (
+      payload.length >= 2 &&
+      payload[0] === ChannelBinaryDataFormat.mcoImageV3SubtypeVersion
+    ) {
+      payload[1] = 0;
+    }
+    return md5Hex(payload);
+  }
+
+  // Same identity hash computed from a text payload (im: / im3:).
+  function packIdentityHashFromText(text, options = {}) {
+    return packIdentityHash(payloadToBinary(text, options));
+  }
+
   function findCodecScriptUrl(formatVersion = MCOImageFormatVersion.v2) {
     if (typeof document === 'undefined') return null;
     const scripts = Array.from(document.getElementsByTagName('script'));
@@ -1462,6 +1565,9 @@
     inspectMcoImageChannelPacket,
     extractMcoImagePayload,
     bytesToHex,
+    md5Hex,
+    packIdentityHash,
+    packIdentityHashFromText,
     findCodecScriptUrl,
     findV3WorkerScriptUrl,
     defaultWorkerCount,

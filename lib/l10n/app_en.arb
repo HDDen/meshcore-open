@@ -213,11 +213,13 @@
   "settings_telemetryEnvironmentMode": "Telemetry Environment Mode",
   "settings_advertLocation": "Advert Location",
   "settings_advertLocationSubtitle": "Include location in advert.",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Auto Zero-Hop Advert On GPS Update",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "When GPS location changes, send a zero-hop advert (requires Advert Location).",
   "settings_multiAck": "Multi-ACKs",
   "settings_telemetryModeUpdated": "Telemetry mode updated",
   "settings_actions": "Actions",
   "settings_deleteAllPaths": "Delete All Paths",
-  "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
+  "settings_deleteAllPathsSubtitle": "Clear all local route data from contacts. Routes on the node will not be affected.",
   "settings_sendAdvertisement": "Send Advertisement",
   "settings_sendAdvertisementSubtitle": "Broadcast presence now",
   "settings_advertisementSent": "Advertisement sent",
@@ -246,15 +248,17 @@
   "settings_aboutLegalese": "2026 MeshCore Open Source Project",
   "settings_aboutDescription": "An open-source Flutter client for MeshCore LoRa mesh networking devices.",
   "settings_aboutModDescription": "The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application's repository or specific to the area of use, and therefore not submitted as pull requests.",
-  "settings_aboutModLink": "Mod group on Telegram: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced",
   "settings_aboutOpenMeteoAttribution": "LOS elevation data: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Name",
   "settings_infoId": "ID",
+  "settings_infoDeviceName": "Board name",
   "settings_infoStatus": "Status",
   "settings_infoBattery": "Battery",
   "settings_infoPublicKey": "Public Key",
   "settings_infoContactsCount": "Contacts Count",
   "settings_infoChannelCount": "Channel Count",
+  "settings_infoFirmware": "Firmware version",
   "settings_presets": "Presets",
   "settings_frequency": "Frequency (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
@@ -388,6 +392,19 @@
   "appSettings_last6Hours": "Last 6 hours",
   "appSettings_last24Hours": "Last 24 hours",
   "appSettings_lastWeek": "Last week",
+  "appSettings_rasterTileSource": "Raster Tile Source",
+  "appSettings_stadiaEndpoint": "Stadia Endpoint",
+  "appSettings_stadiaApiKey": "Stadia API Key",
+  "appSettings_stadiaApiKeyRequired": "Required for Stadia Maps usage",
+  "appSettings_stadiaApiKeyConfigured": "Configured: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Enter your Stadia Maps API key. This app uses it for raster tile requests.",
   "appSettings_offlineMapCache": "Offline Map Cache",
   "appSettings_unitsTitle": "Units",
   "appSettings_unitsMetric": "Metric (m / km)",
@@ -495,6 +512,7 @@
     }
   },
   "contacts_newGroup": "New Group",
+  "contacts_newGroupDescription": "Combines channels/contacts into a folder",
   "contacts_moreOptions": "More options",
   "contacts_searchOpen": "Search contacts",
   "contacts_searchClose": "Close search",
@@ -672,7 +690,7 @@
   "settings_sendingDelayForCancellation": "Sending delay for cancellation",
   "settings_useSendingDelay": "Use sending delay",
   "chat_cancelSend": "cancel sending",
-  "settings_doNotFilterMessagesOnChannels": "Do not filter selfmessages on channels",
+  "settings_doNotFilterMessagesOnChannels": "Do not filter selfmessages on channels and consider messages as definitely delivered",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI",
   "channels_publicChannelAdded": "Public channel added",
   "channels_sortBy": "Sort by",
@@ -758,6 +776,7 @@
     }
   },
   "chat_sendGif": "Send GIF",
+  "chat_receivedGif": "Received a GIF",
   "chat_reply": "Reply",
   "chat_addReaction": "Add Reaction",
   "chat_me": "Me",
@@ -1409,6 +1428,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -1727,6 +1796,23 @@
   "repeater_advancedSettingsSubtitle": "Tuning knobs for experienced operators",
   "repeater_pathHashMode": "Path hash mode",
   "repeater_pathHashModeHelper": "Bytes used to encode this repeater's ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). Firmware before v1.14 always used 1-byte paths; v1.14 and newer can be configured for 2- or 3-byte paths.",
+  "repeater_keySettings": "Change Identity Keys",
+  "repeater_keySettingsSubtitle": "Change the public/private keypair",
+  "repeater_prvKey": "Private key",
+  "repeater_prvKeyHelper": "A new private key for the repeater, a 128-character hex string.",
+  "repeater_generatePrvKey": "Generate a random keypair",
+  "repeater_stopGeneratingPrvKey": "Interrupt search for keypair",
+  "repeater_pubKey": "Public key",
+  "repeater_pubKeyHelper": "This is the public key that goes with the generated private key. You can't set this directly.",
+  "repeater_pubKeyPrefix": "Desired prefix",
+  "repeater_pubKeyPrefixHelper": "Find a public key that starts with these hex digits. Expected tries needed: {tries}.",
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
   "repeater_txDelay": "Flood TX delay",
   "repeater_txDelayHelper": "Retransmit spacing for flood traffic, as a multiplier of the packet's airtime (0-2, default 0.5). Higher = fewer collisions but slower delivery.",
   "repeater_directTxDelay": "Direct TX delay",
@@ -1907,7 +1993,7 @@
   "repeater_cliHelpPowersavingOnOff": "Enables or disables powersaving mode (where supported).",
   "repeater_cliHelpErase": "(Serial only) Formats the device file system. Wipes all settings and contacts.",
   "repeater_cliHelpSetDutyCycle": "Sets the maximum allowed transmit duty cycle as a percentage (1-100). Internally adjusts the airtime factor.",
-  "repeater_cliHelpSetPrvKey": "(Serial only) Replaces the device identity private key. Reboot required to apply. Generates a new public key.",
+  "repeater_cliHelpSetPrvKey": "Replaces the device identity private key. Reboot required to apply. Generates a new public key.",
   "repeater_cliHelpSetRadioRxGain": "(SX126x only) Toggles boosted RX gain for improved sensitivity at higher current draw.",
   "repeater_cliHelpSetOwnerInfo": "Sets the owner contact info string included in adverts. Use '|' for newlines.",
   "repeater_cliHelpSetPathHashMode": "Sets the path-hash mode. 0 = legacy, 1 = standard, 2 = strict. Affects how routing paths are matched.",
@@ -2176,7 +2262,7 @@
   "channelPath_noHopDetails": "Hop details are not provided for this packet.",
   "channelPath_messageDetails": "Message Details",
   "channelPath_senderLabel": "Sender",
-  "channelPath_timeLabel": "Time",
+  "channelPath_timeLabel": "Time (received at)",
   "channelPath_repeatsLabel": "Repeats",
   "channelPath_pathLabel": "Path {index}",
   "channelPath_observedLabel": "Observed",
@@ -2694,7 +2780,7 @@
   "contactsSettings_autoAddSensorsSubtitle": "Allow the companion to automatically add discovered sensors.",
   "contactsSettings_overwriteOldestTitle": "Overwrite Oldest",
   "contactsSettings_overwriteOldestSubtitle": "When the contact list is full, the oldest non-favorited contact will be replaced.",
-  "discoveredContacts_Title": "Discovered Contacts",
+  "discoveredContacts_Title": "Add discovered contacts",
   "discoveredContacts_noMatching": "No matching contacts",
   "discoveredContacts_searchHint": "Search discovered contacts",
   "discoveredContacts_contactAdded": "Contact added",
@@ -2823,7 +2909,7 @@
   "translation_translationOptions": "Translation options",
   "translation_systemLanguage": "System language",
   "background_serviceTitle": "MeshCore running",
-  "background_serviceText": "Keeping BLE connected",
+  "background_serviceText": "Keeping node connected",
   "appSettings_translationModelDeleted": "Deleted {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
@@ -2985,7 +3071,7 @@
   "chat_canvasGridColor": "Grid color",
   "chat_canvasSave": "Save to file",
   "chat_canvasLoad": "Load from file",
-  "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.",
+  "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded by {count} bytes. Please reduce the number of details or the canvas size.",
   "@chat_canvasSendPayloadExceed": {
     "placeholders": {
       "count": {
@@ -3020,8 +3106,8 @@
       }
     }
   },
-  "chat_canvasSaveBinary": "Save fo binary file",
-  "chat_canvasCannotSend": "Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.",
+  "chat_canvasSaveBinary": "Save to binary file",
+  "chat_canvasCannotSend": "Failed to send – payload exceeded by {count} bytes. Please edit the image and try again.",
   "@chat_canvasCannotSend": {
     "placeholders": {
       "count": {
@@ -3035,10 +3121,38 @@
   "chat_canvasCompressionLevelExtreme": "Extreme",
   "chat_showHops": "Show hops",
   "settings_modSettings": "Modification Settings",
-  "settings_modSettingsSubtitle": "This section contains options that are brings by MCOa and not included in the original meshcore_open",
+  "settings_modSettingsSubtitle": "This section contains options added by MCOa that are not part of the original meshcore_open",
   "settings_modSettingsVisual": "Visual",
   "settings_modSettingsMessaging": "Messaging",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "Version",
+  "settings_mcmp_useSign": "Message signing",
+  "settings_mcmp_signed": "Using signature verification",
+  "settings_mcmp_noSign": "No signature",
+  "settings_mcmp_senderNameCollision": "Sender isn't unique!",
+  "chat_mcmpSignatureValid": "Signature is valid",
+  "chat_mcmpSignatureInvalid": "Invalid signature!",
+  "chat_mcmpSignatureUnverifiable": "Signature can't be verified — sender is not in contacts",
+  "chat_mcmpSignatureTransport": "Authenticated by encrypted transport",
+  "chat_mcmpManualRecheckSign": "Manually recheck signature",
+  "chat_mcmpSignatureCheckStatus": "Signature checking",
+  "chat_mcmpSigningFailed": "Failed to sign the message",
+  "chat_mcmpAnswerTo": "MCMPv3 answer to",
+  "chat_timestampPacket": "Packet timestamp",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: show coding algorithm badge",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: show image weight (bytes)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution",
+  "settings_modSettingsMCOimg_showReplacements": "Display original images instead of LoRa versions",
+  "settings_modSettingsMCOimg_replacementsScale": "Scale original images in chats",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Limiting of lottie-replacements size",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Scale as Nearest Neighbor",
+  "settings_modSettingsMCOimg_replacementsSharp": "Sharp original images in chats",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "Attention! Disables GIF animation!",
   "settings_modSettingsHideChInd": "Hide channel index",
+  "settings_modSettingsHideRadioStats": "Hide header radio stats",
+  "settings_modSettingsSNRindicatorAllRepActivity": "SNR indicator: trigger on all repeater responses, not just adverts",
   "settings_modSettingsIncomingQuoteAsMentions": "Show quotes in incoming messages as mentions",
   "settings_modSettingsSimplifiedMentions": "Simplified style of mentions in messages visual",
   "settings_modSettingsSharedMsgHistory": "Shared messages history",
@@ -3050,10 +3164,6 @@
   "settings_modSettingsMessagingShowCompressionRatio": "Show compression ratio",
   "settings_modSettingsMessagingCompressionRatioWithSendername": "Also take into account senderName",
   "settings_modSettingsVisualHideMapZoomControls": "Hide map zoom panel",
-  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",
-  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: show coding algorythm badge",
-  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: show image weight (bytes)",
-  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: show resolution",
   "settings_modSettingsVisualShowMsgRegion": "Show message region",
   "channels_messageRegion": "Region: {region}",
   "@channels_messageRegion": {
@@ -3064,6 +3174,7 @@
     }
   },
   "channels_messageRegionUnknown": "unknown",
+  "channels_messageRegionNotMatchesWithKnown": "no matches",
   "channels_messageRegionEmpty": "unset",
   "settings_defaultRegionScope": "Default region scope",
   "settings_defaultRegionScopeChanged": "Default region scope changed",
@@ -3085,12 +3196,14 @@
   "settings_selfTelemetryShow": "Check sensors",
   "settings_modSettingsVisualChannelsUnreadSorting": "Channels sorting by unread messages",
   "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background",
+  "settings_modSettingsDPIchange": "DPI change",
+  "settings_modSettingsDPIchangeToIcons": "Apply to icons",
   "chat_MCOimgOpenGallery": "Open MCOimg gallery",
   "chat_additionalActions": "Chat actions menu",
   "mcogallery_common": "Common",
   "mcogallery_addPack": "Add package",
   "mcogallery_removePack": "Remove package",
-  "mcogallery_removePackConfirm": "Подтвердите удаление пакета «{name}»",
+  "mcogallery_removePackConfirm": "Confirm removal of the «{name}» pack?",
   "@mcogallery_removePackConfirm": {
     "placeholders": {
       "name": {
@@ -3100,6 +3213,8 @@
   },
   "mcogallery_addGroup": "Add group",
   "mcogallery_removeGroup": "Remove group",
+  "mcogallery_showLora": "Show LoRa-variant",
+  "mcogallery_showPacked": "Show improved variant",
   "chat_sendSelfContact": "Send self contact",
   "chat_sendContact": "Share contact",
   "chat_addContact": "Add contact",
@@ -3120,5 +3235,61 @@
   "chat_contactTypeRoom": "Room-server",
   "chat_contactTypeSensor": "Sensor",
   "chat_myLocation": "Share my location",
-  "chat_locationFromMap": "Share location from map"
+  "chat_locationFromMap": "Share location from map",
+  "settings_modSettingsRoomServer": "Room-servers and contacts",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Show room-servers with messages history against channels in single screen",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Show contacts with messages history against channels in single screen",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers",
+  "settings_appSettingsCustomChemistry": "Custom",
+  "map_clearDiscoveredContactsCache": "Clear nodes local cache",
+  "map_clearDiscoveredContactsCacheDisclaimer": "Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.",
+  "snrIndicator_v2_nearByRepeaters": "Repeater's activity",
+  "app_connectionLostReconnect": "Connection to node is lost; reconnecting...",
+  "app_connectionLostReconnected": "Reconnected to node",
+  "contacts_batchOperations": "Batch operations",
+  "contacts_batchOperations_notSelected": "You have not selected any contacts for processing!",
+  "contacts_batchOperations_removeConfirm": "Remove selected contacts from node?",
+  "contacts_batchOperations_removeSuccess": "Selected contacts have been removed",
+  "contacts_batchOperations_removeFail": "Failed to remove contacts – please check the contact list again",
+  "contacts_batchOperations_commonSuccess": "Operation completed successfully",
+  "contacts_batchOperations_commonFail": "Operation failed",
+  "contacts_batchOperations_selectFiltered": "Select filtered",
+  "chat_searchMessages": "Search messages",
+  "chat_searchMessages_placeholder": "From 3 characters, case-insensitive",
+  "chat_searchMessages_results": "Search results",
+  "chat_searchMessages_results_found": "{count} messages found",
+  "@chat_searchMessages_results_found": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_searchMessages_results_channel": "Channel {name}",
+  "@chat_searchMessages_results_channel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_searchMessages_results_room": "Room {name}",
+  "@chat_searchMessages_results_room": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_searchMessages_results_contact": "Chat with {name}",
+  "@chat_searchMessages_results_contact": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "You cannot send messages or perform other actions while offline",
+  "app_offline_sharedMode": "Combined history"
 }

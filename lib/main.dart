@@ -26,6 +26,7 @@ import 'services/window_activation_service.dart';
 import 'services/map_tile_cache_service.dart';
 import 'services/chat_text_scale_service.dart';
 import 'services/translation_service.dart';
+import 'package:mco_service/mco_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
@@ -35,6 +36,7 @@ import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/app_route_observer.dart';
+import 'widgets/edge_swipe_pop.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,10 +63,13 @@ void main() async {
   final bleDebugLogService = BleDebugLogService();
   final appDebugLogService = AppDebugLogService();
   final backgroundService = BackgroundService();
-  final mapTileCacheService = MapTileCacheService();
+  final mapTileCacheService = MapTileCacheService(
+    appSettingsService: appSettingsService,
+  );
   final chatTextScaleService = ChatTextScaleService();
   final translationService = TranslationService(appSettingsService);
   final uiViewStateService = UiViewStateService();
+  final settingsSectionsService = SettingsSectionsService();
   final timeoutPredictionService = TimeoutPredictionService(storage);
   final wardriveService = WardriveService(
     connector,
@@ -73,6 +78,28 @@ void main() async {
 
   // Load settings
   await appSettingsService.loadSettings();
+  await settingsSectionsService.initialize();
+  appSettingsService.setExtraBatteryProfilesProvider(
+    (deviceId) =>
+        settingsSectionsService.batteryChemistryProfilesForDevice(deviceId),
+  );
+  settingsSectionsService.setBatteryProfileApplier((
+    deviceKey,
+    chemistry,
+    minVolts,
+    maxVolts,
+  ) async {
+    final batteryDeviceKey = connector.batteryDeviceKey ?? deviceKey;
+    await appSettingsService.setBatteryChemistryForDevice(
+      batteryDeviceKey,
+      chemistry,
+    );
+    await appSettingsService.setBatteryCustomRangeForDevice(
+      batteryDeviceKey,
+      minVolts,
+      maxVolts,
+    );
+  });
 
   // Initialize app logger
   appLogger.initialize(
@@ -114,6 +141,7 @@ void main() async {
     retryService: retryService,
     pathHistoryService: pathHistoryService,
     appSettingsService: appSettingsService,
+    settingsSectionsService: settingsSectionsService,
     translationService: translationService,
     bleDebugLogService: bleDebugLogService,
     appDebugLogService: appDebugLogService,
@@ -142,6 +170,7 @@ void main() async {
       chatTextScaleService: chatTextScaleService,
       translationService: translationService,
       uiViewStateService: uiViewStateService,
+      settingsSectionsService: settingsSectionsService,
       timeoutPredictionService: timeoutPredictionService,
       wardriveService: wardriveService,
     ),
@@ -172,6 +201,8 @@ https://creativecommons.org/licenses/by/4.0/
 class MeshCoreApp extends StatefulWidget {
   static final GlobalKey<NavigatorState> _navigatorKey =
       GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   final MeshCoreConnector connector;
   final MessageRetryService retryService;
@@ -184,6 +215,7 @@ class MeshCoreApp extends StatefulWidget {
   final ChatTextScaleService chatTextScaleService;
   final TranslationService translationService;
   final UiViewStateService uiViewStateService;
+  final SettingsSectionsService settingsSectionsService;
   final TimeoutPredictionService timeoutPredictionService;
   final WardriveService wardriveService;
 
@@ -200,6 +232,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.chatTextScaleService,
     required this.translationService,
     required this.uiViewStateService,
+    required this.settingsSectionsService,
     required this.timeoutPredictionService,
     required this.wardriveService,
   });
@@ -209,16 +242,133 @@ class MeshCoreApp extends StatefulWidget {
 }
 
 class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
+  bool _hadReadyConnection = false;
+  bool _recoveringConnection = false;
+  bool _scannerNavigationScheduled = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.settingsSectionsService.setUiContextProvider(
+      () => MeshCoreApp._navigatorKey.currentContext,
+    );
+    widget.connector.addListener(_handleConnectionStateChanged);
+    _hadReadyConnection = widget.connector.isSessionReady;
+    if (_hadReadyConnection) {
+      unawaited(widget.connector.resumePendingOutgoingMessages());
+    } else {
+      widget.connector.pausePendingOutgoingMessages();
+    }
   }
 
   @override
   void dispose() {
+    widget.connector.removeListener(_handleConnectionStateChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handleConnectionStateChanged() {
+    final connector = widget.connector;
+    if (connector.isOfflineMode) {
+      _scannerNavigationScheduled = false;
+      return;
+    }
+    if (connector.wasManuallyDisconnected) {
+      _hadReadyConnection = false;
+      _recoveringConnection = false;
+      _scheduleScannerNavigation();
+      return;
+    }
+    if (connector.isConnected) {
+      _scannerNavigationScheduled = false;
+    }
+
+    if (_hadReadyConnection &&
+        !connector.isConnected &&
+        !connector.isRecoveringConnection) {
+      _hadReadyConnection = false;
+      _recoveringConnection = false;
+      MeshCoreApp._scaffoldMessengerKey.currentState?.clearSnackBars();
+      _scheduleScannerNavigation();
+      return;
+    }
+
+    if (_hadReadyConnection &&
+        !connector.isConnected &&
+        connector.isRecoveringConnection &&
+        !_recoveringConnection) {
+      _recoveringConnection = true;
+      connector.pausePendingOutgoingMessages();
+      _showConnectionSnackBar(
+        isError: true,
+        text: (l10n) => l10n.app_connectionLostReconnect,
+      );
+      return;
+    }
+
+    if (connector.hasCompletedSelfInfoHandshake && _recoveringConnection) {
+      _recoveringConnection = false;
+      _showConnectionSnackBar(
+        isError: false,
+        text: (l10n) => l10n.app_connectionLostReconnected,
+      );
+    }
+
+    if (connector.isSessionReady) {
+      _hadReadyConnection = true;
+      unawaited(connector.resumePendingOutgoingMessages());
+    }
+  }
+
+  void _scheduleScannerNavigation() {
+    if (_scannerNavigationScheduled) return;
+    _scannerNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      MeshCoreApp._navigatorKey.currentState?.popUntil(
+        (route) => route.isFirst,
+      );
+    });
+  }
+
+  void _showConnectionSnackBar({
+    required bool isError,
+    required String Function(AppLocalizations l10n) text,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = MeshCoreApp._navigatorKey.currentContext;
+      final messenger = MeshCoreApp._scaffoldMessengerKey.currentState;
+      if (context == null || messenger == null) return;
+      final l10n = AppLocalizations.of(context);
+      final content = Text(text(l10n));
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: isError
+                ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: messenger.hideCurrentSnackBar,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: content,
+                    ),
+                  )
+                : content,
+            backgroundColor: isError ? Colors.red : Colors.green,
+            padding: isError ? EdgeInsets.zero : null,
+            duration: isError
+                ? const Duration(days: 1)
+                : const Duration(seconds: 4),
+          ),
+        );
+    });
   }
 
   @override
@@ -255,8 +405,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.chatTextScaleService),
         ChangeNotifierProvider.value(value: widget.translationService),
         ChangeNotifierProvider.value(value: widget.uiViewStateService),
+        ChangeNotifierProvider.value(value: widget.settingsSectionsService),
         Provider.value(value: widget.storage),
-        Provider.value(value: widget.mapTileCacheService),
+        ChangeNotifierProvider.value(value: widget.mapTileCacheService),
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
         ChangeNotifierProvider.value(value: widget.wardriveService),
       ],
@@ -265,10 +416,12 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           return MaterialApp(
             title: 'MeshCore Open (Advanced mod)',
             navigatorKey: MeshCoreApp._navigatorKey,
+            scaffoldMessengerKey: MeshCoreApp._scaffoldMessengerKey,
             navigatorObservers: [appRouteObserver],
             debugShowCheckedModeBanner: false,
-            localizationsDelegates: const [
+            localizationsDelegates: [
               AppLocalizations.delegate,
+              ...widget.settingsSectionsService.localizationsDelegates,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
@@ -286,9 +439,46 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
               // Update notification service with resolved locale
               final locale = Localizations.localeOf(context);
               NotificationService().setLocale(locale);
+
+              final settings = settingsService.settings;
+              Widget content = child ?? const SizedBox.shrink();
+
+              // Global UI scale: multiply the user's factor on top of the
+              // system text scale so accessibility settings are still honored.
+              // Icons follow when enabled via IconThemeData.applyTextScaling.
+              if (settings.uiScale != 1.0 || settings.uiScaleApplyToIcons) {
+                final mediaQuery = MediaQuery.of(context);
+                final systemScale = mediaQuery.textScaler.scale(1.0);
+                final theme = Theme.of(context);
+                content = MediaQuery(
+                  data: mediaQuery.copyWith(
+                    textScaler: TextScaler.linear(
+                      systemScale * settings.uiScale,
+                    ),
+                  ),
+                  child: Theme(
+                    data: theme.copyWith(
+                      iconTheme: theme.iconTheme.copyWith(
+                        applyTextScaling: settings.uiScaleApplyToIcons,
+                      ),
+                      primaryIconTheme: theme.primaryIconTheme.copyWith(
+                        applyTextScaling: settings.uiScaleApplyToIcons,
+                      ),
+                    ),
+                    child: content,
+                  ),
+                );
+              }
+
+              content = EdgeSwipePop(
+                navigatorKey: MeshCoreApp._navigatorKey,
+                enabled: PlatformInfo.isMobile,
+                child: content,
+              );
+
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: _systemUiOverlayStyle(context),
-                child: child ?? const SizedBox.shrink(),
+                child: content,
               );
             },
             home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)

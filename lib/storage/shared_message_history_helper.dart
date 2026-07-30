@@ -9,26 +9,26 @@ import 'node_identity_store.dart';
 import 'prefs_manager.dart';
 
 class SharedMessageHistoryHelper {
-  static const int _scopeLength = 10;
+  static const int scopeLength = 10;
   static final RegExp _channelsKeyPattern = RegExp(
     r'^channels([0-9a-fA-F]{10})$',
   );
   static final RegExp _channelMessagesKeyPattern = RegExp(
-    r'^channel_messages_([0-9a-fA-F]{10})(?:\d+|name_)',
+    r'^channel_messages_([0-9a-fA-F]{10})(?:\d+|name_[A-Za-z0-9_-]+)$',
   );
   static final RegExp _messagesKeyPattern = RegExp(
-    r'^messages_([0-9a-fA-F]{10}).+',
+    r'^messages_([0-9a-fA-F]{10})[0-9a-fA-F]{64}$',
   );
 
   Future<List<ChannelMessage>> loadSecondaryChannelMessages({
     required String currentPublicKeyHex,
     required Channel channel,
   }) async {
-    final currentScope = _scopeFor(currentPublicKeyHex);
+    final currentScope = scopeFor(currentPublicKeyHex);
     if (currentScope.isEmpty) return const [];
 
     final result = <ChannelMessage>[];
-    for (final scope in _knownScopes()) {
+    for (final scope in knownScopes()) {
       if (scope == currentScope) continue;
 
       final channelStore = ChannelStore()..setPublicKeyHex = scope;
@@ -42,7 +42,10 @@ class SharedMessageHistoryHelper {
 
       final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
       messageStore.replaceChannels(channels);
-      final messages = await messageStore.loadChannelMessages(matchedIndex);
+      final messages = await messageStore.loadChannelMessages(
+        matchedIndex,
+        allowLegacyMigration: false,
+      );
       final sourceName = _sourceNameForScope(scope);
       result.addAll(
         messages.map(
@@ -59,15 +62,15 @@ class SharedMessageHistoryHelper {
     required String currentPublicKeyHex,
     required String contactKeyHex,
   }) async {
-    final currentScope = _scopeFor(currentPublicKeyHex);
+    final currentScope = scopeFor(currentPublicKeyHex);
     if (currentScope.isEmpty || contactKeyHex.isEmpty) return const [];
 
     final result = <Message>[];
-    for (final scope in _knownScopes()) {
+    for (final scope in knownScopes()) {
       if (scope == currentScope) continue;
 
       final messageStore = MessageStore()..setPublicKeyHex = scope;
-      final messages = await messageStore.loadMessages(contactKeyHex);
+      final messages = await messageStore.loadScopedMessages(contactKeyHex);
       final sourceName = _sourceNameForScope(scope);
       result.addAll(
         messages.map(
@@ -80,7 +83,42 @@ class SharedMessageHistoryHelper {
     return result;
   }
 
-  Set<String> _knownScopes() {
+  Future<MessageStoreSummary?> loadSecondaryContactMessageSummary({
+    required String currentPublicKeyHex,
+    required String contactKeyHex,
+  }) async {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || contactKeyHex.isEmpty) return null;
+
+    DateTime? latestMessageAt;
+    String latestMessageText = '';
+    var messageCount = 0;
+    for (final scope in knownScopes()) {
+      if (scope == currentScope) continue;
+
+      final messageStore = MessageStore()..setPublicKeyHex = scope;
+      final summary = await messageStore.loadMessageSummary(
+        contactKeyHex,
+        includeLegacyUnscoped: false,
+      );
+      if (summary == null) continue;
+      messageCount += summary.messageCount;
+      if (latestMessageAt == null ||
+          summary.latestMessageAt.isAfter(latestMessageAt)) {
+        latestMessageAt = summary.latestMessageAt;
+        latestMessageText = summary.latestMessageText;
+      }
+    }
+
+    if (messageCount == 0 || latestMessageAt == null) return null;
+    return MessageStoreSummary(
+      messageCount: messageCount,
+      latestMessageAt: latestMessageAt,
+      latestMessageText: latestMessageText,
+    );
+  }
+
+  static Set<String> knownScopes() {
     final result = <String>{};
     for (final key in PrefsManager.instance.getKeys()) {
       final channelsMatch = _channelsKeyPattern.firstMatch(key);
@@ -103,9 +141,10 @@ class SharedMessageHistoryHelper {
     return result;
   }
 
-  String _scopeFor(String publicKeyHex) {
-    if (publicKeyHex.length < _scopeLength) return '';
-    return publicKeyHex.substring(0, _scopeLength).toLowerCase();
+  static String scopeFor(String publicKeyHex) {
+    final value = publicKeyHex.trim();
+    if (value.length < scopeLength) return '';
+    return value.substring(0, scopeLength).toLowerCase();
   }
 
   String _sourceNameForScope(String scope) {

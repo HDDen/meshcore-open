@@ -359,44 +359,64 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                         itemBuilder: (context) => [
                           PopupMenuItem(
                             value: 'auto',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.auto_mode,
-                                  size: 20,
-                                  color: !isFloodMode ? scheme.primary : null,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.login_autoUseSavedPath,
-                                  style: TextStyle(
-                                    fontWeight: !isFloodMode
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.sizeOf(context).width * 0.72,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.auto_mode,
+                                    size: 20,
+                                    color: !isFloodMode ? scheme.primary : null,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.login_autoUseSavedPath,
+                                      softWrap: true,
+                                      style: TextStyle(
+                                        fontWeight: !isFloodMode
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           PopupMenuItem(
                             value: 'flood',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.waves,
-                                  size: 20,
-                                  color: isFloodMode ? scheme.primary : null,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.login_forceFloodMode,
-                                  style: TextStyle(
-                                    fontWeight: isFloodMode
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.sizeOf(context).width * 0.72,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.waves,
+                                    size: 20,
+                                    color: isFloodMode ? scheme.primary : null,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.login_forceFloodMode,
+                                      softWrap: true,
+                                      style: TextStyle(
+                                        fontWeight: isFloodMode
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -405,7 +425,10 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    repeater.pathLabel(context.l10n),
+                    repeater.pathLabel(
+                      context.l10n,
+                      pathHashByteWidth: connector.pathHashByteWidth,
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       color: scheme.onSurfaceVariant,

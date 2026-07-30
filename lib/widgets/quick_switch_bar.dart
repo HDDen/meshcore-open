@@ -24,13 +24,22 @@ class QuickSwitchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final brightness = theme.brightness;
     final labelStyle = theme.textTheme.labelMedium ?? const TextStyle();
-    final background = highContrast ? MapPalette.panelDark : Colors.transparent;
-    final selectedColor = highContrast
-        ? MapPalette.textPrimary
+    final background = highContrast
+        ? MapPalette.panelOn(brightness)
+        : Colors.transparent;
+    // The selected icon sits on the primary indicator pill (needs onPrimary),
+    // but the label sits on the transparent nav background (needs onSurface,
+    // otherwise it is white/invisible in light theme).
+    final selectedIconColor = highContrast
+        ? MapPalette.textPrimaryOn(brightness)
         : colorScheme.onPrimary;
+    final selectedLabelColor = highContrast
+        ? MapPalette.textPrimaryOn(brightness)
+        : colorScheme.onSurface;
     final unselectedColor = highContrast
-        ? MapPalette.textSecondary
+        ? MapPalette.textSecondaryOn(brightness)
         : colorScheme.onSurfaceVariant;
     final indicator = highContrast ? MapPalette.selected : colorScheme.primary;
 
@@ -45,7 +54,7 @@ class QuickSwitchBar extends StatelessWidget {
               color: background,
               border: Border.all(
                 color: highContrast
-                    ? MapPalette.border
+                    ? MapPalette.borderOn(brightness)
                     : colorScheme.outlineVariant.withValues(alpha: 0.4),
               ),
             ),
@@ -59,13 +68,13 @@ class QuickSwitchBar extends StatelessWidget {
                   final isSelected = states.contains(WidgetState.selected);
                   return labelStyle.copyWith(
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? selectedColor : unselectedColor,
+                    color: isSelected ? selectedLabelColor : unselectedColor,
                   );
                 }),
                 iconTheme: WidgetStateProperty.resolveWith((states) {
                   final isSelected = states.contains(WidgetState.selected);
                   return IconThemeData(
-                    color: isSelected ? selectedColor : unselectedColor,
+                    color: isSelected ? selectedIconColor : unselectedColor,
                   );
                 }),
               ),

@@ -7,10 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../helpers/channel_app_data_helper.dart';
+import '../helpers/mco_image_identity.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../models/mco_image_pack.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../widgets/mco_image_message.dart';
 import 'prefs_manager.dart';
 
@@ -20,6 +22,10 @@ class MCOImageGalleryStore {
       'mco_image_gallery_collapsed_groups';
   static const String _packsDirectoryName = 'mcoimg_packs';
   static const String _bundledPacksDirectory = 'assets/mcopacks/';
+
+  /// Persisted "identity hash -> ordered pack original paths" table; see
+  /// [rebuildPackOriginalsIndex] and [McoImagePackOriginals].
+  static const String packOriginalsIndexKey = 'mco_image_pack_originals_index';
   static Future<void>? _bundledPacksInstallFuture;
 
   Future<List<MCOImageGalleryItem>> loadItems() async {
@@ -76,11 +82,12 @@ class MCOImageGalleryStore {
   }
 
   Future<void> saveCollapsedGroupIds(Set<String> groupIds) async {
-    final jsonList = groupIds
-        .map((entry) => entry.trim())
-        .where((entry) => entry.isNotEmpty)
-        .toList()
-      ..sort();
+    final jsonList =
+        groupIds
+            .map((entry) => entry.trim())
+            .where((entry) => entry.isNotEmpty)
+            .toList()
+          ..sort();
     await PrefsManager.instance.setString(
       _collapsedGroupsKey,
       jsonEncode(jsonList),
@@ -101,8 +108,6 @@ class MCOImageGalleryStore {
 
   Future<void> _installBundledPacks() async {
     final assetPaths = await _loadBundledPackAssetPaths();
-    if (assetPaths.isEmpty) return;
-
     final packsDir = await _packsDirectory();
     for (final assetPath in assetPaths) {
       try {
@@ -118,6 +123,20 @@ class MCOImageGalleryStore {
       } catch (_) {
         continue;
       }
+    }
+    if (_packOriginalsIndexNeedsRebuild()) {
+      await rebuildPackOriginalsIndex();
+    }
+  }
+
+  bool _packOriginalsIndexNeedsRebuild() {
+    final encoded = PrefsManager.instance.getString(packOriginalsIndexKey);
+    if (encoded == null || encoded.isEmpty) return true;
+    try {
+      final decoded = jsonDecode(encoded);
+      return mcoImageOriginalsIndexNeedsRebuild(decoded);
+    } catch (_) {
+      return true;
     }
   }
 
@@ -156,27 +175,112 @@ class MCOImageGalleryStore {
     }
     await packDir.create(recursive: true);
 
-    await File(_joinPath(packDir.path, 'info.json')).writeAsBytes(
-      _archiveFileBytes(infoFile),
-      flush: true,
-    );
+    await File(
+      _joinPath(packDir.path, 'info.json'),
+    ).writeAsBytes(_archiveFileBytes(infoFile), flush: true);
 
     for (final pair in imagePairs) {
       final imageDir = Directory(
         _joinPath(_joinPath(packDir.path, 'images'), pair.directoryName),
       );
       await imageDir.create(recursive: true);
-      await File(_joinPath(imageDir.path, pair.pngFileName)).writeAsBytes(
-        _archiveFileBytes(pair.pngFile),
-        flush: true,
-      );
-      await File(_joinPath(imageDir.path, pair.binFileName)).writeAsBytes(
-        _archiveFileBytes(pair.binFile),
-        flush: true,
-      );
+      for (final original in pair.originals) {
+        await File(
+          _joinPath(imageDir.path, original.fileName),
+        ).writeAsBytes(_archiveFileBytes(original.file), flush: true);
+      }
+      await File(
+        _joinPath(imageDir.path, pair.binFileName),
+      ).writeAsBytes(_archiveFileBytes(pair.binFile), flush: true);
+      final md5File = pair.md5File;
+      final md5FileName = pair.md5FileName;
+      if (md5File != null && md5FileName != null) {
+        await File(
+          _joinPath(imageDir.path, md5FileName),
+        ).writeAsBytes(_archiveFileBytes(md5File), flush: true);
+      }
     }
 
+    await rebuildPackOriginalsIndex();
     return metadata;
+  }
+
+  /// Absolute path of the installed packs directory.
+  Future<String> packsDirectoryPath() async {
+    return (await _packsDirectory(create: false)).path;
+  }
+
+  /// Rebuilds the persisted "identity hash -> ordered original files" table
+  /// over all
+  /// installed packs. Hashes come from the *.md5 file inside each image
+  /// folder when present (precomputed by pack tooling) and are otherwise
+  /// computed from the image's .mcoimg.bin using the canonical
+  /// [MCOImageIdentity] formula. Called on pack install/remove so message
+  /// rendering never rescans the disk.
+  Future<void> rebuildPackOriginalsIndex() async {
+    final index = <String, List<String>>{};
+    final packsDir = await _packsDirectory(create: false);
+    if (await packsDir.exists()) {
+      await for (final packEntity in packsDir.list()) {
+        if (packEntity is! Directory) continue;
+        final packFolderName = _fileNameFromPath(packEntity.path);
+        final imagesDir = Directory(_joinPath(packEntity.path, 'images'));
+        if (!await imagesDir.exists()) continue;
+
+        await for (final imageEntity in imagesDir.list()) {
+          if (imageEntity is! Directory) continue;
+          final imageDirName = _fileNameFromPath(imageEntity.path);
+          String? hash;
+          final originalFileNames = <String>[];
+          File? binFile;
+
+          await for (final entity in imageEntity.list()) {
+            if (entity is! File) continue;
+            final fileName = _fileNameFromPath(entity.path);
+            final lower = fileName.toLowerCase();
+            if (lower.endsWith('.md5')) {
+              if (hash == null) {
+                try {
+                  final value = (await entity.readAsString())
+                      .trim()
+                      .toLowerCase();
+                  if (MCOImageIdentity.isValidHash(value)) hash = value;
+                } catch (_) {
+                  // Ignore unreadable hash files; fall back to computing.
+                }
+              }
+            } else if (isMcoImageOriginalFileName(lower)) {
+              originalFileNames.add(fileName);
+            } else if (lower.endsWith('.mcoimg.bin')) {
+              binFile ??= entity;
+            }
+          }
+
+          if (originalFileNames.isEmpty) continue;
+          if (hash == null && binFile != null) {
+            try {
+              hash = MCOImageIdentity.hashFromBinaryPayload(
+                await binFile.readAsBytes(),
+              );
+            } catch (_) {
+              continue;
+            }
+          }
+          if (hash == null) continue;
+          originalFileNames.sort(_compareOriginalFileNames);
+          index[hash] = [
+            for (final originalFileName in originalFileNames)
+              '$packFolderName/images/$imageDirName/$originalFileName',
+          ];
+        }
+      }
+    }
+
+    await PrefsManager.instance.setString(
+      packOriginalsIndexKey,
+      jsonEncode(index),
+    );
+    McoImagePackOriginals.instance.replaceIndex(index);
   }
 
   Future<List<String>> _loadBundledPackAssetPaths() async {
@@ -235,9 +339,7 @@ class MCOImageGalleryStore {
       }
     }
 
-    packs.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    packs.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return packs;
   }
 
@@ -247,6 +349,7 @@ class MCOImageGalleryStore {
     if (await packDir.exists()) {
       await packDir.delete(recursive: true);
     }
+    await rebuildPackOriginalsIndex();
   }
 
   Future<MCOImageGalleryItem> createFromText(String text) async {
@@ -311,6 +414,9 @@ class MCOImageGalleryStore {
         'groupName': item.groupName,
       'binaryPayload': base64Encode(item.binaryPayload),
       'pngBytes': base64Encode(item.pngBytes),
+      'originalFileName': item.originalFileName,
+      if (item.originalRelativePaths.isNotEmpty)
+        'originalRelativePaths': item.originalRelativePaths,
       'width': item.width,
       'height': item.height,
       'byteLength': item.byteLength,
@@ -358,6 +464,12 @@ class MCOImageGalleryStore {
         groupName: groupName,
         binaryPayload: binaryPayload,
         pngBytes: pngBytes,
+        originalFileName: json['originalFileName'] as String? ?? 'mcoimg.png',
+        originalRelativePaths: [
+          for (final path
+              in json['originalRelativePaths'] as List<dynamic>? ?? const [])
+            if (path is String) path,
+        ],
         width: json['width'] as int? ?? 0,
         height: json['height'] as int? ?? 0,
         byteLength: json['byteLength'] as int? ?? binaryPayload.length,
@@ -406,38 +518,45 @@ class MCOImageGalleryStore {
         final files = await imageDir.list().where((entity) {
           if (entity is! File) return false;
           final name = _fileNameFromPath(entity.path).toLowerCase();
-          return _isPackPreviewFileName(name) ||
+          return isMcoImageOriginalFileName(name) ||
               name.endsWith('.mcoimg.bin');
         }).toList();
-        File? pngFile;
         File? binFile;
+        final originalFileNames = <String>[];
         for (final entity in files) {
           if (entity is! File) continue;
-          final name = _fileNameFromPath(entity.path).toLowerCase();
-          if (pngFile == null && _isPackPreviewFileName(name)) {
-            pngFile = entity;
+          final fileName = _fileNameFromPath(entity.path);
+          final name = fileName.toLowerCase();
+          if (isMcoImageOriginalFileName(name)) {
+            originalFileNames.add(fileName);
           } else if (binFile == null && name.endsWith('.mcoimg.bin')) {
             binFile = entity;
           }
         }
-        if (pngFile == null || binFile == null) continue;
+        if (binFile == null || originalFileNames.isEmpty) continue;
 
         try {
           final binaryPayload = await binFile.readAsBytes();
-          final pngBytes = await pngFile.readAsBytes();
           final decoded = _decodeGalleryPayload(binaryPayload);
+          originalFileNames.sort(_compareOriginalFileNames);
+          final imageDirName = _fileNameFromPath(imageDir.path);
+          final originalRelativePaths = [
+            for (final fileName in originalFileNames)
+              '${pack.folderName}/images/$imageDirName/$fileName',
+          ];
           final stat = await binFile.stat();
           items.add(
             MCOImageGalleryItem(
-              id:
-                  'pack:${pack.folderName}:${_fileNameFromPath(imageDir.path)}',
+              id: 'pack:${pack.folderName}:${_fileNameFromPath(imageDir.path)}',
               createdAt: stat.modified,
               groupId: pack.groupId,
               groupName: pack.groupTitle,
               packFolderName: pack.folderName,
               previewMaxSize: pack.maxImageSize,
               binaryPayload: binaryPayload,
-              pngBytes: pngBytes,
+              pngBytes: Uint8List(0),
+              originalFileName: originalFileNames.first,
+              originalRelativePaths: originalRelativePaths,
               width: decoded.image.width,
               height: decoded.image.height,
               byteLength: binaryPayload.length,
@@ -495,8 +614,8 @@ class MCOImageGalleryStore {
     }
     final author = (infoJson['author'] as String?)?.trim();
     return 'mcoimgpack_'
-        '${_sanitizePathSegment(author?.isNotEmpty == true ? author! : 'unknown')}_'
         '${_sanitizePathSegment(id)}_'
+        '${_sanitizePathSegment(author?.isNotEmpty == true ? author! : 'unknown')}_'
         '${_sanitizePathSegment(version)}';
   }
 
@@ -515,26 +634,32 @@ class MCOImageGalleryStore {
         directoryName,
         () => _MutablePackImagePair(directoryName),
       );
-      if (_isPackPreviewFileName(lowerFileName) && pair.pngFile == null) {
-        pair.pngFile = file;
-        pair.pngFileName = fileName;
+      if (isMcoImageOriginalFileName(lowerFileName)) {
+        pair.originals.add(_PackOriginalFile(file: file, fileName: fileName));
       } else if (lowerFileName.endsWith('.mcoimg.bin') &&
           pair.binFile == null) {
         pair.binFile = file;
         pair.binFileName = fileName;
+      } else if (lowerFileName.endsWith('.md5') && pair.md5File == null) {
+        pair.md5File = file;
+        pair.md5FileName = fileName;
       }
     }
 
     final pairs = <_PackImagePair>[];
     for (final pair in byDirectory.values) {
-      if (pair.pngFile == null || pair.binFile == null) continue;
+      if (pair.originals.isEmpty || pair.binFile == null) continue;
+      pair.originals.sort(
+        (a, b) => _compareOriginalFileNames(a.fileName, b.fileName),
+      );
       pairs.add(
         _PackImagePair(
           directoryName: pair.directoryName,
-          pngFile: pair.pngFile!,
-          pngFileName: pair.pngFileName!,
+          originals: List.of(pair.originals),
           binFile: pair.binFile!,
           binFileName: pair.binFileName!,
+          md5File: pair.md5File,
+          md5FileName: pair.md5FileName,
         ),
       );
     }
@@ -548,11 +673,8 @@ class MCOImageGalleryStore {
     return file.content;
   }
 
-  bool _isPackPreviewFileName(String fileName) {
-    return fileName.endsWith('.png') ||
-        fileName.endsWith('.jpg') ||
-        fileName.endsWith('.jpeg') ||
-        fileName.endsWith('.gif');
+  int _compareOriginalFileNames(String left, String right) {
+    return compareMcoImageOriginalFileNames(left, right);
   }
 
   String _normalizedZipPath(String path) {
@@ -678,26 +800,36 @@ class _DecodedGalleryPayload {
 
 class _MutablePackImagePair {
   final String directoryName;
-  ArchiveFile? pngFile;
-  String? pngFileName;
+  final List<_PackOriginalFile> originals = [];
   ArchiveFile? binFile;
   String? binFileName;
+  ArchiveFile? md5File;
+  String? md5FileName;
 
   _MutablePackImagePair(this.directoryName);
 }
 
 class _PackImagePair {
   final String directoryName;
-  final ArchiveFile pngFile;
-  final String pngFileName;
+  final List<_PackOriginalFile> originals;
   final ArchiveFile binFile;
   final String binFileName;
+  final ArchiveFile? md5File;
+  final String? md5FileName;
 
   const _PackImagePair({
     required this.directoryName,
-    required this.pngFile,
-    required this.pngFileName,
+    required this.originals,
     required this.binFile,
     required this.binFileName,
+    this.md5File,
+    this.md5FileName,
   });
+}
+
+class _PackOriginalFile {
+  final ArchiveFile file;
+  final String fileName;
+
+  const _PackOriginalFile({required this.file, required this.fileName});
 }

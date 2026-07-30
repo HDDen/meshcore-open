@@ -5,6 +5,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/screens/companion_radio_stats_screen.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/mesh_theme.dart';
@@ -47,6 +48,10 @@ class _RadioStatsIconButtonState extends State<RadioStatsIconButton> {
 
   @override
   Widget build(BuildContext context) {
+    final hidden = context.select<AppSettingsService, bool>(
+      (s) => s.settings.hideRadioStatsButton,
+    );
+    if (hidden) return const SizedBox.shrink();
     return Selector<MeshCoreConnector, ({bool connected, bool supported})>(
       selector: (_, c) =>
           (connected: c.isConnected, supported: c.supportsCompanionRadioStats),

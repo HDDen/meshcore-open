@@ -13,6 +13,7 @@ import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
@@ -36,6 +37,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   bool _autoconnectEnabled = false;
   bool _startupAutoconnectAttempted = false;
   bool _isAutoconnecting = false;
+  bool _isOpeningOfflineHistory = false;
 
   @override
   void initState() {
@@ -124,9 +126,10 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
             // Connect is only available from a fully disconnected state —
             // scanning, connecting, or an active session must settle first.
             final isButtonDisabled =
+                _isOpeningOfflineHistory ||
                 connector.state != MeshCoreConnectionState.disconnected;
             return ListView(
-              padding: const EdgeInsets.only(bottom: 32),
+              padding: const EdgeInsets.only(bottom: 96),
               children: [
                 // Status header
                 Padding(
@@ -266,6 +269,15 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
             );
           },
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: OfflineHistoryButton(
+        connector: _connector,
+        onLoadingChanged: (value) {
+          if (mounted) {
+            setState(() => _isOpeningOfflineHistory = value);
+          }
+        },
       ),
     );
   }
@@ -612,7 +624,13 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _maybeAutoconnect({bool startup = false}) async {
-    if (!mounted || !_autoconnectEnabled || _isAutoconnecting) return;
+    if (!mounted ||
+        !_autoconnectEnabled ||
+        _isAutoconnecting ||
+        _isOpeningOfflineHistory ||
+        _connector.isOfflineMode) {
+      return;
+    }
     if (startup) {
       if (_startupAutoconnectAttempted) return;
       _startupAutoconnectAttempted = true;
@@ -646,7 +664,9 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _connectTcp({bool showErrors = true}) async {
-    if (_connector.state == MeshCoreConnectionState.connecting ||
+    if (_isOpeningOfflineHistory ||
+        _connector.isOfflineMode ||
+        _connector.state == MeshCoreConnectionState.connecting ||
         _connector.state == MeshCoreConnectionState.connected ||
         _connector.state == MeshCoreConnectionState.disconnecting) {
       return;

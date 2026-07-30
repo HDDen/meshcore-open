@@ -167,6 +167,8 @@
   "settings_locationIntervalInvalid": "間隔は少なくとも60秒で、86400秒未満でなければなりません。",
   "settings_latitude": "緯度",
   "settings_longitude": "経度",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "GPS更新時にゼロホップ広告を自動送信",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "GPS位置が変化したときにゼロホップ広告を送信します（広告への位置情報の含有が必要）。",
   "settings_contactSettings": "連絡先設定",
   "settings_contactSettingsSubtitle": "連絡先の追加方法に関する設定",
   "settings_privacyMode": "プライバシーモード",
@@ -189,8 +191,6 @@
   "settings_rebootDeviceSubtitle": "MeshCore デバイスを再起動します",
   "settings_rebootDeviceConfirm": "本当にデバイスを再起動したいですか？ その場合、接続が切断されます。",
   "settings_debug": "デバッグ",
-  "settings_bleDebugLog": "BLE デバッグログ",
-  "settings_bleDebugLogSubtitle": "BLE コマンド、応答、および生データ",
   "settings_appDebugLog": "アプリのデバッグログ",
   "settings_appDebugLogSubtitle": "アプリケーションのデバッグメッセージ",
   "settings_about": "概要",
@@ -253,7 +253,7 @@
   "settings_sendingDelayForCancellation": "キャンセル用の送信遅延",
   "settings_useSendingDelay": "送信遅延を使用",
   "chat_cancelSend": "送信をキャンセル",
-  "settings_doNotFilterMessagesOnChannels": "チャンネルで自分のメッセージをフィルターしない",
+  "settings_doNotFilterMessagesOnChannels": "これらのチャンネルで自分のメッセージパケットをフィルターせず、メッセージを無条件に配信済みとみなす",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "既定では、自分のノードからのメッセージは無視されます。組み込みTerminalCLIを持つ一部のファームウェアでは問題が発生します",
   "chat_retryingMessageWait": "再送信する前に{seconds}秒待ってください",
   "channels_mcmpCompression": "MCMP圧縮",
@@ -314,17 +314,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "失敗配送後に経路から差し引く重み",
   "appSettings_maxMessageRetries": "最大メッセージ再試行回数",
   "appSettings_maxMessageRetriesSubtitle": "メッセージを失敗として扱うまでの再試行回数",
-  "path_routeWeight": "{weight}/{max}",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "appSettings_battery": "バッテリー",
   "appSettings_batteryChemistry": "バッテリー種別",
   "appSettings_batteryChemistryPerDevice": "{deviceName} ごとに設定",
@@ -363,6 +352,19 @@
   "appSettings_last6Hours": "過去6時間",
   "appSettings_last24Hours": "過去24時間",
   "appSettings_lastWeek": "過去1週間",
+  "appSettings_rasterTileSource": "ラスタタイルのソース",
+  "appSettings_stadiaEndpoint": "Stadia エンドポイント",
+  "appSettings_stadiaApiKey": "Stadia API キー",
+  "appSettings_stadiaApiKeyRequired": "Stadia Maps の利用に必要です",
+  "appSettings_stadiaApiKeyConfigured": "設定済み: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。",
   "appSettings_offlineMapCache": "オフライン地図キャッシュ",
   "appSettings_unitsTitle": "単位",
   "appSettings_unitsMetric": "メートル法 (m / km)",
@@ -778,15 +780,6 @@
     }
   },
   "debugFrame_hexDump": "16 進ダンプ:",
-  "chat_pathManagement": "経路管理",
-  "chat_ShowAllPaths": "すべての経路を表示",
-  "chat_routingMode": "ルーティングモード",
-  "chat_autoUseSavedPath": "自動（保存済みの経路を使用）",
-  "chat_forceFloodMode": "フラッドモードを強制",
-  "chat_recentAckPaths": "最近使った ACK 経路（タップして使用）:",
-  "chat_pathHistoryFull": "経路履歴がいっぱいです。既存の項目を削除すると新しい項目を追加できます。",
-  "chat_hopSingular": "ホップ",
-  "chat_hopPlural": "ホップ",
   "chat_hopsCount": "{count} {count, plural, =1{ホップ} other{ホップ}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -795,30 +788,10 @@
       }
     }
   },
-  "chat_successes": "成功回数",
   "chat_removePath": "経路を削除",
   "chat_noPathHistoryYet": "まだ経路履歴はありません。\n経路を見つけるにはメッセージを送信してください。",
-  "chat_pathActions": "経路の操作:",
-  "chat_setCustomPath": "カスタム経路を設定",
-  "chat_setCustomPathSubtitle": "手動で経路を指定します",
-  "chat_clearPath": "経路をクリア",
-  "chat_clearPathSubtitle": "次回送信時に前回の経路情報を再取得します",
   "chat_pathCleared": "経路をクリアしました。次のメッセージで再探索します。",
-  "chat_floodModeSubtitle": "アプリのバーにあるルーティング切り替えを使用します",
-  "chat_floodModeEnabled": "フラッドモードが有効です。アプリのメニューバーにあるルートアイコンでモードを切り替えられます。",
   "chat_fullPath": "完全な経路",
-  "chat_pathDetailsNotAvailable": "経路の詳細はまだありません。「更新」を押してもう一度お試しください。",
-  "chat_pathSetHops": "経路を設定しました: {hopCount} {hopCount, plural, =1{ホップ} other{ホップ}} - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "ローカルに保存しました。同期するには接続してください。",
   "chat_pathDeviceConfirmed": "デバイスで確認済み",
   "chat_pathDeviceNotConfirmed": "デバイスではまだ確認されていません",
@@ -999,6 +972,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -1089,41 +1112,8 @@
   "login_failedMessage": "ログインに失敗しました。パスワードが間違っているか、または接続が確立されていません。",
   "common_reload": "再読み込み",
   "common_clear": "クリア",
-  "path_currentPath": "現在のパス: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "{count} {count, plural, =1{ホップ} other{ホップ}}のパスを使用",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "カスタムパスを入力",
   "path_currentPathLabel": "現在の経路",
-  "path_hexPrefixInstructions": "各ホップに対して、2文字の16進数プレフィックスをカンマで区切って入力してください。",
-  "path_hexPrefixExample": "例：A1, F2, 3C (各ノードは、自身の公開鍵の最初のバイトを使用)",
-  "path_labelHexPrefixes": "パス (ヘックスプレフィックス)",
-  "path_helperMaxHops": "最大64個のホップ。各プレフィックスは2つの16進数文字（1バイト）で構成されています。",
-  "path_selectFromContacts": "または、連絡先リストから選択してください：",
   "path_noRepeatersFound": "繰り返し機能やルームサーバーは見つかりませんでした。",
-  "path_customPathsRequire": "カスタムパスには、メッセージを中継できるリピータが必要です。",
-  "path_invalidHexPrefixes": "無効な16進数プレフィックス: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "経路が長すぎる。最大64回のジャンプのみ許可。",
-  "path_setPath": "パスを設定",
   "repeater_management": "リピータ管理",
   "room_management": "ルームサーバーの管理",
   "repeater_managementTools": "管理ツール",
@@ -1139,9 +1129,6 @@
   "repeater_settingsSubtitle": "リピータのパラメータを設定する",
   "repeater_statusTitle": "再送ステータス",
   "repeater_routingMode": "ルーティングモード",
-  "repeater_autoUseSavedPath": "自動 (保存されたパスを使用)",
-  "repeater_forceFloodMode": "強制的にフラッドモードを起動",
-  "repeater_pathManagement": "経路管理",
   "repeater_refresh": "リフレッシュ",
   "repeater_statusRequestTimeout": "ステータス情報の取得に失敗しました。",
   "repeater_errorLoadingStatus": "ステータス読み込みエラー: {error}",
@@ -1691,7 +1678,7 @@
       }
     }
   },
-  "neighbors_repeatersNeighbors": "近隣のリピータ",
+  "neighbors_repeatersNeighbors": "リピータの隣接ノード",
   "neighbors_noData": "近隣のデータは利用できません。",
   "neighbors_unknownContact": "不明な {pubkey}",
   "@neighbors_unknownContact": {
@@ -1716,7 +1703,7 @@
   "channelPath_noHopDetails": "このパッケージに関する詳細な情報は提供されていません。",
   "channelPath_messageDetails": "メッセージの詳細",
   "channelPath_senderLabel": "送信者",
-  "channelPath_timeLabel": "時間",
+  "channelPath_timeLabel": "受信/作成時刻",
   "channelPath_repeatsLabel": "リピータ",
   "channelPath_pathLabel": "{index} 番目の経路",
   "channelPath_observedLabel": "観察",
@@ -2475,7 +2462,6 @@
       }
     }
   },
-  "chat_score": "スコア",
   "settings_multiAck": "マルチ ACK",
   "map_sharedAt": "共有済み",
   "@losBlockedSpotChip": {
@@ -2972,5 +2958,234 @@
     }
   },
   "map_wardriveSamplesCleared": "Wardrive サンプルを削除しました。",
-  "channelPath_outgoingSentByRadioAt": "無線送信待ち、秒"
+  "channelPath_outgoingSentByRadioAt": "無線送信待ち、秒",
+  "common_default": "デフォルト",
+  "common_send": "送信",
+  "common_apply": "適用",
+  "settings_regionSettings": "リージョン",
+  "settings_regionSettingsSubtitle": "保存済みリージョンの管理",
+  "settings_regionManagement_screenTitle": "リージョン管理",
+  "settings_regionNameHint": "リージョン名を入力",
+  "settings_regionAddRegion": "リージョンを追加",
+  "settings_regionFetchRegions": "リピーターからリージョンを取得",
+  "settings_regionFetchRegionsFail": "リージョンが見つかりません",
+  "settings_regionFetchRegionsAlreadyExists": "このリージョンは既に追加されています",
+  "settings_regionName": "リージョン名",
+  "settings_regionDeleted": "リージョンを削除しました",
+  "settings_deleteRegion": "リージョンを削除",
+  "settings_deleteRegionConfirm": "「{region}」をリージョン一覧から削除しますか？",
+  "settings_aboutModDescription": "「Advanced」改造版はオリジナルの meshcore_open をベースに、オリジナルアプリのリポジトリに提案された変更や利用地域に固有の変更を取り込んでおり、そのため PR としては提出されていません。",
+  "settings_aboutModLink": "Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced",
+  "settings_infoFirmware": "ファームウェアのバージョン",
+  "contact_clearChatConfirm": "チャットからメッセージを削除しますか？",
+  "channels_regionSetTo": "リージョン: {region}",
+  "channels_regionNotSet": "リージョン: なし",
+  "channels_regionSelect_Title": "リージョンを割り当て",
+  "channels_clearRegion": "リージョンをクリア",
+  "chat_receivedGif": "GIF を受信しました",
+  "map_wardriveReUpload": "再アップロード",
+  "map_wardriveSamplesNoNew": "アップロードする新しいサンプルはありません",
+  "map_wardriveCoverageResolution": "カバレッジの詳細度",
+  "map_wardriveCoverageResolutionPrompt": "カバレッジブロックのサイズを選択してください（サイズ = ブロックの一辺）:",
+  "map_wardriveCoverageRegional": "地域レベル",
+  "map_wardriveCoverageRegionalSubtitle": "約20 km（精度 4）",
+  "map_wardriveCoverageCity": "都市レベル",
+  "map_wardriveCoverageCitySubtitle": "約5 km（精度 5）",
+  "map_wardriveCoverageNeighborhood": "地区",
+  "map_wardriveCoverageNeighborhoodSubtitle": "約1.2 km（精度 6）",
+  "map_wardriveCoverageStreet": "街路レベル",
+  "map_wardriveCoverageStreetSubtitle": "約153 m（精度 7）",
+  "map_wardriveCoverageBuilding": "建物レベル",
+  "map_wardriveCoverageBuildingSubtitle": "約38 m（精度 8）",
+  "map_wardriveRepNoLocation": "リピーターの位置情報が提供されていません",
+  "map_wardriveDiscoveryWait": "再試行まで {seconds} 秒お待ちください",
+  "map_wardriveFollowMe": "現在地を追従",
+  "map_wardriveDeleteBlock": "ブロックを削除",
+  "map_wardriveInBackground": "バックグラウンドで実行",
+  "map_wardriveContinuousGPS": "GPS 位置情報を継続取得",
+  "map_wardriveShowRepeaterCoverage": "カバレッジブロックを表示",
+  "map_wardriveHideRepeaterCoverage": "カバレッジブロックを非表示",
+  "repeater_keySettings": "ノードの鍵を変更",
+  "repeater_keySettingsSubtitle": "公開鍵／秘密鍵のペアを変更",
+  "repeater_prvKey": "秘密鍵",
+  "repeater_prvKeyHelper": "リピーター用の新しい秘密鍵。128 文字の 16 進文字列です。",
+  "repeater_generatePrvKey": "ランダムな鍵ペアを生成",
+  "repeater_stopGeneratingPrvKey": "鍵ペアの探索を中断",
+  "repeater_pubKey": "公開鍵",
+  "repeater_pubKeyHelper": "生成された秘密鍵に対応する公開鍵です。直接設定することはできません。",
+  "repeater_pubKeyPrefix": "希望するプレフィックス",
+  "repeater_pubKeyPrefixHelper": "これらの 16 進文字で始まる公開鍵を探索します。予想試行回数: {tries}。",
+  "channelPath_repeaterHopsHighTimeout": "経路トレースのタイムアウトを延長（10秒 × ホップ数）",
+  "listFilter_removeFromWardrive": "Wardrive で無視",
+  "listFilter_returnToWardrive": "Wardrive で考慮",
+  "channels_copyPath": "メッセージの経路をコピー",
+  "channels_copyPathExtended": "メッセージの経路をコピー（詳細）",
+  "channels_copiedPath": "メッセージの経路をコピーしました",
+  "channels_copyPathFailed": "メッセージの経路をコピーできませんでした",
+  "settings_copyMsgPathTitle": "メッセージ経路のコピー設定",
+  "settings_copyMsgPathDscr": "チャンネルのメッセージ経路情報を組み立てるテンプレートを編集します",
+  "settings_copyMsgPathEditTemplateTitle": "テンプレートの編集",
+  "settings_copyMsgPathEditTemplateDscr": "置換テンプレートを使用してください:\n%hopInd% - ホップの順番\n%hopKey% - ホップの鍵\n%hopName% - ホップの名前\n%collisionMarker% - リピーター衝突のマーク\n%div% - 区切り文字（最後のホップでは省略）\n%hops% - ホップ数\n\\n - 改行",
+  "settings_copyMsgPathEditFinalTitle": "最終メッセージ",
+  "settings_copyMsgPathEditFinalDscr": "利用できるテンプレート:\n%senderName% - 送信者名\n%path% - 組み立てられた経路\n%hops% - ホップ数\n\\n - 改行",
+  "settings_channelsSendAsBinary": "拡張フォーマットをバイナリで送信（チャンネル）",
+  "settings_dmSendAsBinary": "拡張フォーマットをバイナリで送信（ダイレクトメッセージ）",
+  "chat_canvas": "MCOimg キャンバス",
+  "chat_canvasCrop": "切り抜き／拡張",
+  "chat_canvasResize": "縮小／拡大",
+  "chat_canvasUnlockSize": "キャンバスサイズのロックを解除",
+  "chat_canvasFormatVer": "コーデックのバージョン",
+  "chat_canvasPalette": "パレット",
+  "chat_canvasPaletteShow": "パレットを表示",
+  "chat_canvasPaletteMode": "パレットのプロファイル",
+  "chat_canvasPaletteDynamic": "ダイナミック",
+  "chat_canvasPaletteDynamicProfile": "ダイナミックパレットの基本セット",
+  "chat_canvasPaletteDynamicUsed": "実際に使用されている色",
+  "chat_canvasPaletteDynamicDscr": "ご注意ください。ダイナミックパレットは慎重に使用してください。主にグラデーションのある画像向けで、より小さなパレットを作り、同じ基本パレットに属さない色を使うためのものです。参考: 基本パレットが小さいほど使用した色調の情報を符号化するコストが下がり、色数の合計が少ないほどキャンバスの各ピクセルのコストが下がります。",
+  "chat_canvasPaletteAlpha": "透過色",
+  "chat_canvasChangeSize": "キャンバスサイズを変更",
+  "chat_canvasTrim": "余白を切り取る",
+  "chat_canvasWidth": "幅",
+  "chat_canvasHeight": "高さ",
+  "chat_canvasGridShow": "グリッドを表示",
+  "chat_canvasRulerShow": "ルーラーを表示",
+  "chat_canvasGridColor": "グリッドの色",
+  "chat_canvasSave": "ファイルに保存",
+  "chat_canvasLoad": "ファイルから読み込む",
+  "chat_canvasSendPayloadExceed": "送信できません — ペイロードが {count} バイト超過しています。ディテールの数かキャンバスサイズを減らしてください。",
+  "chat_canvasCurrentPayload": "現在のペイロード: {payload}",
+  "chat_canvasActive": "キャンバスを表示",
+  "chat_canvasShowLockBtn": "キャンバスのロックボタンを表示",
+  "chat_canvasSendToEdit": "キャンバスへ送る",
+  "chat_canvasSendToGallery": "ギャラリーに保存",
+  "chat_canvasGalleryShowPNG": "元画像を表示（PNG）",
+  "chat_canvasGalleryShowBIN": "Bin として表示",
+  "chat_canvasGalleryRemove": "削除",
+  "chat_canvasGalleryRemoveConfirm": "ギャラリーから画像を削除しますか？",
+  "chat_canvasFormatNotSupported": "MCOimg のバージョン: {received}、現在のコーデックは {current} まで対応しています",
+  "chat_canvasSaveBinary": "バイナリファイルに保存",
+  "chat_canvasCannotSend": "送信できません — ペイロードが {count} バイト超過しています。画像を編集して再度お試しください。",
+  "chat_canvasCompressionLevel": "圧縮レベル",
+  "chat_canvasCompressionLevelNormal": "標準",
+  "chat_canvasCompressionLevelHigh": "高",
+  "chat_canvasCompressionLevelExtreme": "最高",
+  "chat_showHops": "ホップを表示",
+  "settings_modSettings": "改造版の設定",
+  "settings_modSettingsSubtitle": "オリジナルの meshcore_open にはない項目をまとめたセクションです",
+  "settings_modSettingsVisual": "表示",
+  "settings_modSettingsMessaging": "メッセージ",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "バージョン",
+  "settings_mcmp_useSign": "署名の検証",
+  "settings_mcmp_signed": "署名の検証あり",
+  "settings_mcmp_noSign": "署名の検証なし",
+  "settings_mcmp_senderNameCollision": "送信者名が一意ではありません！",
+  "chat_mcmpSignatureValid": "署名は有効です",
+  "chat_mcmpSignatureInvalid": "署名が無効です！",
+  "chat_mcmpSignatureUnverifiable": "署名を検証できません — 送信者が連絡先にありません",
+  "chat_mcmpSignatureTransport": "トランスポートの暗号化により確認済み",
+  "chat_mcmpManualRecheckSign": "署名を再検証",
+  "chat_mcmpSignatureCheckStatus": "署名の検証",
+  "chat_mcmpSigningFailed": "メッセージに署名できませんでした",
+  "chat_mcmpAnswerTo": "MCMPv3 の返信先",
+  "chat_timestampPacket": "パケットのタイムスタンプ",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: フォーマットバージョンのバッジを表示",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: 符号化アルゴリズムのバッジを表示",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: 画像のサイズを表示（バイト）",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: 解像度を表示",
+  "settings_modSettingsMCOimg_showReplacements": "LoRa 版の代わりに画像の原本を表示",
+  "settings_modSettingsMCOimg_replacementsScale": "チャットで原本を拡大縮小",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Nearest Neighbor で拡大縮小",
+  "settings_modSettingsMCOimg_replacementsSharp": "チャットで原本をシャープ化",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "注意！ GIF のアニメーションが無効になります！",
+  "settings_modSettingsHideChInd": "チャンネル番号を非表示",
+  "settings_modSettingsHideRadioStats": "ヘッダーの無線統計を非表示",
+  "settings_modSettingsSNRindicatorAllRepActivity": "SNR インジケーター: advert だけでなく、リピーターのすべての応答で反応する",
+  "settings_modSettingsIncomingQuoteAsMentions": "受信メッセージの引用をメンションとして表示",
+  "settings_modSettingsSimplifiedMentions": "メッセージ内のメンションを簡略表示",
+  "settings_modSettingsSharedMsgHistory": "共有メッセージ履歴",
+  "settings_modSettingsSharedMsgHistoryDscr": "異なる端末から受信したメッセージ履歴の統合。最終的な履歴はアプリ内にのみ保存されます",
+  "settings_modSettingsSharedMsgHistoryDisabled": "無効",
+  "settings_modSettingsSharedMsgHistoryChannels": "チャンネルのみ",
+  "settings_modSettingsSharedMsgHistoryContacts": "連絡先のみ",
+  "settings_modSettingsSharedMsgHistoryAll": "すべてのチャット",
+  "settings_modSettingsMessagingShowCompressionRatio": "圧縮率を表示",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "ノード名も計算に含める",
+  "settings_modSettingsVisualHideMapZoomControls": "地図のズームパネルを非表示",
+  "settings_modSettingsVisualShowMsgRegion": "メッセージのリージョンを表示",
+  "channels_messageRegion": "リージョン: {region}",
+  "channels_messageRegionUnknown": "不明",
+  "channels_messageRegionEmpty": "未設定",
+  "settings_defaultRegionScope": "ノードの既定リージョン",
+  "settings_defaultRegionScopeChanged": "既定のリージョンを変更しました",
+  "settings_defaultRegionScopeChangeFailed": "リージョンを変更できませんでした",
+  "settings_defaultRegionScopeEmpty": "未設定",
+  "settings_defaultRegionScopeWaitForSync": "同期が完了するまでお待ちください",
+  "common_reset": "リセット",
+  "connection_autoconnect": "自動接続",
+  "settings_modSettingsNoRetraInfo": "{time} 秒間、再送信が確認できません。",
+  "settings_modSettingsNoRetraHeading": "この秒数の間に再送信が確認できない場合、メッセージを未送信として表示する:",
+  "settings_modSettingsNoRetraDscr": "注意！ ノードのファームウェアの仕組みにより、約133バイトを超えるチャンネルメッセージは物理的に確認応答を受け取れず、常に失敗として表示されます。このオプションはアプリ設定のペイロード制限と併用してください。",
+  "settings_selfTelemetryShow": "センサーを表示",
+  "settings_modSettingsVisualChannelsUnreadSorting": "未読メッセージでチャンネルを並べ替え",
+  "settings_modSettingsMessagingBackgroundTCP": "バックグラウンドで TCP 接続を維持",
+  "settings_modSettingsDPIchange": "DPI の調整",
+  "settings_modSettingsDPIchangeToIcons": "アイコンにも適用",
+  "chat_MCOimgOpenGallery": "MCOimg ギャラリーを開く",
+  "chat_additionalActions": "アクションメニュー",
+  "mcogallery_common": "共通",
+  "mcogallery_addPack": "パックを追加",
+  "mcogallery_removePack": "パックを削除",
+  "mcogallery_removePackConfirm": "パック「{name}」の削除を確認してください",
+  "mcogallery_addGroup": "グループを追加",
+  "mcogallery_removeGroup": "グループを削除",
+  "mcogallery_showLora": "LoRa 版を表示",
+  "mcogallery_showPacked": "高品質版を表示",
+  "chat_sendSelfContact": "自分の連絡先を送信",
+  "chat_sendContact": "連絡先を共有",
+  "chat_addContact": "連絡先を追加",
+  "chat_sureToReplaceContact": "連絡先は既に存在します。置き換えますか？",
+  "contacts_addContactByPubkey": "鍵から連絡先を追加",
+  "contacts_addContactByPubkey_contactType": "連絡先の種類",
+  "chat_contactIsYou": "これはあなた自身の連絡先です",
+  "chat_contactType": "連絡先の種類: {contacttype}",
+  "chat_contactTypeNode": "ノード",
+  "chat_contactTypeRepeater": "リピーター",
+  "chat_contactTypeRoom": "ルームサーバー",
+  "chat_contactTypeSensor": "センサー",
+  "chat_myLocation": "現在地を送信",
+  "chat_locationFromMap": "地図から座標を送信",
+  "settings_modSettingsRoomServer": "ルームサーバーと連絡先",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "履歴のあるサーバーをチャンネルと同じ画面に表示",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "履歴のある連絡先をチャンネルと同じ画面に表示",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "従来のドラッグ＆ドロップの動作を維持する: チャンネルの並べ替えはノード上の並び順も変更し、連絡先やサーバーは並べ替えできません",
+  "settings_appSettingsCustomChemistry": "カスタム",
+  "map_clearDiscoveredContactsCache": "ノードのローカルキャッシュを消去",
+  "map_clearDiscoveredContactsCacheDisclaimer": "検出された連絡先のキャッシュを消去してもよろしいですか？ ノード本体の連絡先には影響しません。",
+  "snrIndicator_v2_nearByRepeaters": "リピーターの活動",
+  "app_connectionLostReconnect": "ノードとの接続が切断されました。再接続しています...",
+  "app_connectionLostReconnected": "ノードとの接続が復旧しました",
+  "contacts_batchOperations": "一括操作",
+  "contacts_batchOperations_notSelected": "処理する連絡先が選択されていません！",
+  "contacts_batchOperations_removeConfirm": "選択した連絡先をノードのメモリーから削除しますか？",
+  "contacts_batchOperations_removeSuccess": "選択した連絡先を削除しました",
+  "contacts_batchOperations_removeFail": "連絡先を削除できませんでした — 一覧をもう一度確認してください",
+  "contacts_batchOperations_commonSuccess": "操作は正常に完了しました",
+  "contacts_batchOperations_commonFail": "操作を完了できませんでした",
+  "contacts_batchOperations_selectFiltered": "絞り込み結果を選択",
+  "contacts_newGroupDescription": "チャンネル/連絡先をフォルダーにまとめます",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "lottie 置き換えのサイズ制限",
+  "channels_messageRegionNotMatchesWithKnown": "一致なし",
+  "chat_searchMessages": "メッセージ検索",
+  "chat_searchMessages_placeholder": "3文字以上、大文字小文字を区別しません",
+  "chat_searchMessages_results": "検索結果",
+  "chat_searchMessages_results_found": "{count} 件のメッセージが見つかりました",
+  "chat_searchMessages_results_channel": "チャンネル {name}",
+  "chat_searchMessages_results_room": "ルーム {name}",
+  "chat_searchMessages_results_contact": "{name} との会話",
+  "app_offline": "オフライン",
+  "app_offline_unableToMessage": "オフラインモードではメッセージの送信やその他の操作はできません",
+  "app_offline_sharedMode": "統合履歴",
+  "settings_infoDeviceName": "ボード名"
 }

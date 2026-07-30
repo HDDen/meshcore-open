@@ -136,16 +136,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_interval => '间隔';
 
   @override
-  String get common_default => 'Default';
+  String get common_default => '默认';
 
   @override
   String get common_clear => '清除';
 
   @override
-  String get common_send => 'Send';
+  String get common_send => '发送';
 
   @override
-  String get common_apply => 'Apply';
+  String get common_apply => '应用';
 
   @override
   String get scanner_title => '连接设备';
@@ -372,42 +372,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_radioSettingsUpdated => '无线电设置已更新';
 
   @override
-  String get settings_regionSettings => 'Regions';
+  String get settings_regionSettings => '区域';
 
   @override
-  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+  String get settings_regionSettingsSubtitle => '管理已保存的区域';
 
   @override
-  String get settings_regionManagement_screenTitle => 'Region Management';
+  String get settings_regionManagement_screenTitle => '区域管理';
 
   @override
-  String get settings_regionNameHint => 'Enter region name';
+  String get settings_regionNameHint => '请输入区域名称';
 
   @override
-  String get settings_regionAddRegion => 'Add region';
+  String get settings_regionAddRegion => '添加区域';
 
   @override
-  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+  String get settings_regionFetchRegions => '从中继器获取区域';
 
   @override
-  String get settings_regionFetchRegionsFail => 'No regions were found';
+  String get settings_regionFetchRegionsFail => '未找到区域';
 
   @override
-  String get settings_regionFetchRegionsAlreadyExists =>
-      'This region has already been added';
+  String get settings_regionFetchRegionsAlreadyExists => '该区域已添加';
 
   @override
-  String get settings_regionName => 'Region Name';
+  String get settings_regionName => '区域名称';
 
   @override
-  String get settings_regionDeleted => 'Region deleted';
+  String get settings_regionDeleted => '区域已删除';
 
   @override
-  String get settings_deleteRegion => 'Delete Region';
+  String get settings_deleteRegion => '删除区域';
 
   @override
   String settings_deleteRegionConfirm(String region) {
-    return 'Remove \"$region\" from region list?';
+    return '要从区域列表中删除“$region”吗？';
   }
 
   @override
@@ -498,6 +497,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_advertLocationSubtitle => '在广告中包含位置';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS 更新时自动发送零跳广告';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      '当 GPS 位置变化时，发送零跳广告（需要在广告中包含位置）。';
+
+  @override
   String get settings_multiAck => '多重ACK';
 
   @override
@@ -578,11 +584,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_aboutModDescription =>
-      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+      '「Advanced」修改版基于原版 meshcore_open，包含在原应用仓库中提出的更改，或针对使用地区的特定更改，因此未以 PR 形式提交。';
 
   @override
   String get settings_aboutModLink =>
-      'Mod group on Telegram: https://t.me/mcoadvanced';
+      'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -593,6 +599,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_infoId => 'MAC ID';
+
+  @override
+  String get settings_infoDeviceName => '板卡名称';
 
   @override
   String get settings_infoStatus => '状态';
@@ -608,6 +617,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_infoChannelCount => '频道数量';
+
+  @override
+  String get settings_infoFirmware => '固件版本';
 
   @override
   String get settings_presets => '预设';
@@ -964,6 +976,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_lastWeek => '上周';
 
   @override
+  String get appSettings_rasterTileSource => '栅格瓦片源';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Stadia 端点';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Stadia API 密钥';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired => '使用 Stadia Maps 时必需';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return '已配置：$maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      '请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。';
+
+  @override
   String get appSettings_offlineMapCache => '离线地图缓存';
 
   @override
@@ -1079,6 +1112,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_newGroup => '新建群聊';
 
   @override
+  String get contacts_newGroupDescription => '将频道/联系人合并到文件夹中';
+
+  @override
   String get contacts_moreOptions => '更多选择';
 
   @override
@@ -1150,7 +1186,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contact_clearChat => '清除聊天记录';
 
   @override
-  String get contact_clearChatConfirm => 'Confirm chat clear';
+  String get contact_clearChatConfirm => '要删除聊天中的消息吗？';
 
   @override
   String get contact_teleBase => '遥测基站';
@@ -1350,7 +1386,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_cancelSend => '取消发送';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels => '不要过滤频道中的自己消息';
+  String get settings_doNotFilterMessagesOnChannels =>
+      '不过滤这些频道中自己的消息包，并将消息视为无条件已送达';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
@@ -1412,17 +1449,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String channels_regionSetTo(String region) {
-    return 'Region: $region';
+    return '区域：$region';
   }
 
   @override
-  String get channels_regionNotSet => 'Region: none';
+  String get channels_regionNotSet => '区域：无';
 
   @override
-  String get channels_regionSelect_Title => 'Select a region';
+  String get channels_regionSelect_Title => '分配区域';
 
   @override
-  String get channels_clearRegion => 'Clear region';
+  String get channels_clearRegion => '清除区域';
 
   @override
   String get chat_noMessages => '暂无消息';
@@ -1483,6 +1520,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_sendGif => '发送 GIF';
+
+  @override
+  String get chat_receivedGif => '收到了 GIF';
 
   @override
   String get chat_reply => '回复';
@@ -2099,7 +2139,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardriveAutoUpload => '自动上传';
 
   @override
-  String get map_wardriveReUpload => 'Reupload';
+  String get map_wardriveReUpload => '重新上传';
 
   @override
   String get map_wardriveScreenWakelock => '屏幕保持唤醒';
@@ -2117,7 +2157,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardriveSecondsSuffix => '秒';
 
   @override
-  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+  String get map_wardriveSamplesNoNew => '没有新的样本可上传';
 
   @override
   String map_wardriveSamplesSaved(int count) {
@@ -2140,41 +2180,40 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+  String get map_wardriveCoverageResolution => '覆盖精细度';
 
   @override
-  String get map_wardriveCoverageResolutionPrompt =>
-      'Choose the size of coverage squares (size = block side length):';
+  String get map_wardriveCoverageResolutionPrompt => '请选择覆盖区块的大小（大小 = 区块边长）：';
 
   @override
-  String get map_wardriveCoverageRegional => 'Regional';
+  String get map_wardriveCoverageRegional => '区域级';
 
   @override
-  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+  String get map_wardriveCoverageRegionalSubtitle => '约 20 公里（精度 4）';
 
   @override
-  String get map_wardriveCoverageCity => 'City-level';
+  String get map_wardriveCoverageCity => '城市级';
 
   @override
-  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+  String get map_wardriveCoverageCitySubtitle => '约 5 公里（精度 5）';
 
   @override
-  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+  String get map_wardriveCoverageNeighborhood => '街区';
 
   @override
-  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+  String get map_wardriveCoverageNeighborhoodSubtitle => '约 1.2 公里（精度 6）';
 
   @override
-  String get map_wardriveCoverageStreet => 'Street-level';
+  String get map_wardriveCoverageStreet => '街道级';
 
   @override
-  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+  String get map_wardriveCoverageStreetSubtitle => '约 153 米（精度 7）';
 
   @override
-  String get map_wardriveCoverageBuilding => 'Building-level';
+  String get map_wardriveCoverageBuilding => '建筑级';
 
   @override
-  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+  String get map_wardriveCoverageBuildingSubtitle => '约 38 米（精度 8）';
 
   @override
   String get map_wardriveAutoUploadEnabled => '自动上传已启用。';
@@ -2351,32 +2390,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive 样本已清除。';
 
   @override
-  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+  String get map_wardriveRepNoLocation => '中继器未提供位置信息';
 
   @override
   String map_wardriveDiscoveryWait(Object seconds) {
-    return 'Please wait $seconds seconds before retrying discovery';
+    return '请等待 $seconds 秒后再重试';
   }
 
   @override
-  String get map_wardriveFollowMe => 'Follow my location';
+  String get map_wardriveFollowMe => '跟随我的位置';
 
   @override
-  String get map_wardriveDeleteBlock => 'Delete block';
+  String get map_wardriveDeleteBlock => '删除区块';
 
   @override
-  String get map_wardriveInBackground => 'Run in background';
+  String get map_wardriveInBackground => '在后台运行';
 
   @override
-  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+  String get map_wardriveContinuousGPS => '持续获取 GPS 位置';
 
   @override
-  String get map_wardriveShowRepeaterCoverage =>
-      'Show wardrive\'s coverage blocks';
+  String get map_wardriveShowRepeaterCoverage => '显示覆盖区块';
 
   @override
-  String get map_wardriveHideRepeaterCoverage =>
-      'Hide wardrive\'s coverage blocks';
+  String get map_wardriveHideRepeaterCoverage => '隐藏覆盖区块';
 
   @override
   String get mapCache_title => '离线地图缓存';
@@ -2448,6 +2485,42 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String mapCache_failedDownloads(int count) {
     return '下载失败：$count';
+  }
+
+  @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
   }
 
   @override
@@ -2962,6 +3035,38 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       '用于在洪泛路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
+
+  @override
+  String get repeater_keySettings => '更改节点密钥';
+
+  @override
+  String get repeater_keySettingsSubtitle => '更改公钥/私钥对';
+
+  @override
+  String get repeater_prvKey => '私钥';
+
+  @override
+  String get repeater_prvKeyHelper => '中继器的新私钥——128 个字符的十六进制字符串。';
+
+  @override
+  String get repeater_generatePrvKey => '生成随机密钥对';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => '中断密钥对搜索';
+
+  @override
+  String get repeater_pubKey => '公钥';
+
+  @override
+  String get repeater_pubKeyHelper => '这是与生成的私钥对应的公钥，无法直接设置。';
+
+  @override
+  String get repeater_pubKeyPrefix => '期望的前缀';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return '搜索以这些十六进制字符开头的公钥。预计尝试次数：$tries。';
+  }
 
   @override
   String get repeater_txDelay => '洪水（德克萨斯州）延误';
@@ -3771,8 +3876,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_repeaterHops => '转发节点跳数';
 
   @override
-  String get channelPath_repeaterHopsHighTimeout =>
-      'Increased path trace timeout (10s*hops)';
+  String get channelPath_repeaterHopsHighTimeout => '延长路径追踪超时（10 秒 × 跳数）';
 
   @override
   String get channelPath_noHopDetails => '此数据包未提供详细信息';
@@ -3784,7 +3888,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_senderLabel => '发送者';
 
   @override
-  String get channelPath_timeLabel => '时间';
+  String get channelPath_timeLabel => '接收/创建时间';
 
   @override
   String get channelPath_repeatsLabel => '重复';
@@ -4057,10 +4161,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get listFilter_removeFromFavorites => '从收藏中移除';
 
   @override
-  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+  String get listFilter_removeFromWardrive => '在 Wardrive 中忽略';
 
   @override
-  String get listFilter_returnToWardrive => 'Return to Wardrive';
+  String get listFilter_returnToWardrive => '在 Wardrive 中计入';
 
   @override
   String get listFilter_users => '用户';
@@ -4687,45 +4791,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_mcmpCompressionDescription => '使用 mesh-compressor 模型';
 
   @override
-  String get channels_copyPath => 'Copy message path';
+  String get channels_copyPath => '复制消息路径';
 
   @override
-  String get channels_copyPathExtended => 'Copy message path (extended)';
+  String get channels_copyPathExtended => '复制消息路径（扩展）';
 
   @override
-  String get channels_copiedPath => 'Message path copied';
+  String get channels_copiedPath => '消息路径已复制';
 
   @override
-  String get channels_copyPathFailed => 'Copying message path failed';
+  String get channels_copyPathFailed => '复制消息路径失败';
 
   @override
-  String get settings_copyMsgPathTitle => 'Configure message path copying';
+  String get settings_copyMsgPathTitle => '配置消息路径的复制';
 
   @override
-  String get settings_copyMsgPathDscr =>
-      'Edit the template for generating message path information from the channel';
+  String get settings_copyMsgPathDscr => '编辑用于生成频道消息路径信息的模板';
 
   @override
-  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+  String get settings_copyMsgPathEditTemplateTitle => '编辑模板';
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+      '请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的密钥\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行';
 
   @override
-  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+  String get settings_copyMsgPathEditFinalTitle => '最终消息';
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+      '可用模板：\n%senderName% - 发送者名称\n%path% - 已生成的路径\n%hops% - 跳数\n\\n - 换行';
 
   @override
-  String get settings_channelsSendAsBinary =>
-      'Send extended data as binary (channels)';
+  String get settings_channelsSendAsBinary => '以二进制发送扩展格式（频道）';
 
   @override
-  String get settings_dmSendAsBinary =>
-      'Send extended data as binary (direct messages)';
+  String get settings_dmSendAsBinary => '以二进制发送扩展格式（私聊消息）';
 
   @override
   String get contact_typeChat => 'Chat';
@@ -4874,335 +4975,506 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathMap_unfollowPacket => '解锁视图跟随';
 
   @override
-  String get chat_canvas => 'MCOimg canvas';
+  String get chat_canvas => 'MCOimg 画布';
 
   @override
-  String get chat_canvasCrop => 'Crop/expand';
+  String get chat_canvasCrop => '裁剪/扩展';
 
   @override
-  String get chat_canvasResize => 'Scale';
+  String get chat_canvasResize => '压缩/拉伸';
 
   @override
-  String get chat_canvasUnlockSize => 'Unlock canvas size';
+  String get chat_canvasUnlockSize => '解锁画布尺寸';
 
   @override
-  String get chat_canvasFormatVer => 'Codec version';
+  String get chat_canvasFormatVer => '编解码器版本';
 
   @override
-  String get chat_canvasPalette => 'Palette';
+  String get chat_canvasPalette => '调色板';
 
   @override
-  String get chat_canvasPaletteShow => 'Show palette';
+  String get chat_canvasPaletteShow => '显示调色板';
 
   @override
-  String get chat_canvasPaletteMode => 'Palette preset';
+  String get chat_canvasPaletteMode => '调色板配置';
 
   @override
-  String get chat_canvasPaletteDynamic => 'Dynamic';
+  String get chat_canvasPaletteDynamic => '动态';
 
   @override
-  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+  String get chat_canvasPaletteDynamicProfile => '动态调色板的基础色集';
 
   @override
-  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+  String get chat_canvasPaletteDynamicUsed => '实际使用的颜色';
 
   @override
   String get chat_canvasPaletteDynamicDscr =>
-      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+      '请注意！请谨慎使用动态调色板！它主要用于带渐变的图像，以便构建更小的调色板并使用不属于同一基础调色板的颜色。供参考：基础调色板越小，编码所用色调信息的开销就越低；颜色总数越少，画布上每个像素的开销就越低。';
 
   @override
-  String get chat_canvasPaletteAlpha => 'Transparency color';
+  String get chat_canvasPaletteAlpha => '透明色';
 
   @override
-  String get chat_canvasChangeSize => 'Change canvas size';
+  String get chat_canvasChangeSize => '更改画布尺寸';
 
   @override
-  String get chat_canvasTrim => 'Trim empty';
+  String get chat_canvasTrim => '裁掉空白';
 
   @override
-  String get chat_canvasWidth => 'Width';
+  String get chat_canvasWidth => '宽度';
 
   @override
-  String get chat_canvasHeight => 'Height';
+  String get chat_canvasHeight => '高度';
 
   @override
-  String get chat_canvasGridShow => 'Show grid';
+  String get chat_canvasGridShow => '显示网格';
 
   @override
-  String get chat_canvasRulerShow => 'Show ruler';
+  String get chat_canvasRulerShow => '显示标尺';
 
   @override
-  String get chat_canvasGridColor => 'Grid color';
+  String get chat_canvasGridColor => '网格颜色';
 
   @override
-  String get chat_canvasSave => 'Save to file';
+  String get chat_canvasSave => '保存到文件';
 
   @override
-  String get chat_canvasLoad => 'Load from file';
+  String get chat_canvasLoad => '从文件加载';
 
   @override
   String chat_canvasSendPayloadExceed(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+    return '发送失败——负载超出 $count 字节。请减少细节数量或画布尺寸。';
   }
 
   @override
   String chat_canvasCurrentPayload(int payload) {
-    return 'Current payload: $payload';
+    return '当前负载：$payload';
   }
 
   @override
-  String get chat_canvasActive => 'Show canvas';
+  String get chat_canvasActive => '显示画布';
 
   @override
-  String get chat_canvasShowLockBtn => 'Show canvas block button';
+  String get chat_canvasShowLockBtn => '显示画布锁定按钮';
 
   @override
-  String get chat_canvasSendToEdit => 'Send to canvas';
+  String get chat_canvasSendToEdit => '发送到画布';
 
   @override
-  String get chat_canvasSendToGallery => 'Save to gallery';
+  String get chat_canvasSendToGallery => '保存到图库';
 
   @override
-  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+  String get chat_canvasGalleryShowPNG => '显示原图（PNG）';
 
   @override
-  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+  String get chat_canvasGalleryShowBIN => '以 Bin 显示';
 
   @override
-  String get chat_canvasGalleryRemove => 'Remove';
+  String get chat_canvasGalleryRemove => '删除';
 
   @override
-  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+  String get chat_canvasGalleryRemoveConfirm => '要从图库中删除该图片吗？';
 
   @override
   String chat_canvasFormatNotSupported(int received, int current) {
-    return 'MCOimg format version: $received, current codec supports up to $current';
+    return 'MCOimg 版本：$received，当前编解码器最高支持 $current';
   }
 
   @override
-  String get chat_canvasSaveBinary => 'Save fo binary file';
+  String get chat_canvasSaveBinary => '保存为二进制文件';
 
   @override
   String chat_canvasCannotSend(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+    return '发送失败——负载超出 $count 字节。请编辑图片后重试。';
   }
 
   @override
-  String get chat_canvasCompressionLevel => 'Compression level';
+  String get chat_canvasCompressionLevel => '压缩级别';
 
   @override
-  String get chat_canvasCompressionLevelNormal => 'Normal';
+  String get chat_canvasCompressionLevelNormal => '普通';
 
   @override
-  String get chat_canvasCompressionLevelHigh => 'High';
+  String get chat_canvasCompressionLevelHigh => '高';
 
   @override
-  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+  String get chat_canvasCompressionLevelExtreme => '极限';
 
   @override
-  String get chat_showHops => 'Show hops';
+  String get chat_showHops => '显示跳数';
 
   @override
-  String get settings_modSettings => 'Modification Settings';
+  String get settings_modSettings => '修改版设置';
 
   @override
-  String get settings_modSettingsSubtitle =>
-      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+  String get settings_modSettingsSubtitle => '本节汇集了原版 meshcore_open 中没有的选项';
 
   @override
-  String get settings_modSettingsVisual => 'Visual';
+  String get settings_modSettingsVisual => '外观';
 
   @override
-  String get settings_modSettingsMessaging => 'Messaging';
+  String get settings_modSettingsMessaging => '消息';
 
   @override
-  String get settings_modSettingsHideChInd => 'Hide channel index';
+  String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_modSettingsIncomingQuoteAsMentions =>
-      'Show quotes in incoming messages as mentions';
+  String get settings_mcmp_version => '版本';
 
   @override
-  String get settings_modSettingsSimplifiedMentions =>
-      'Simplified style of mentions in messages visual';
+  String get settings_mcmp_useSign => '签名校验';
 
   @override
-  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+  String get settings_mcmp_signed => '启用签名校验';
+
+  @override
+  String get settings_mcmp_noSign => '不校验签名';
+
+  @override
+  String get settings_mcmp_senderNameCollision => '发送者名称不唯一！';
+
+  @override
+  String get chat_mcmpSignatureValid => '签名有效';
+
+  @override
+  String get chat_mcmpSignatureInvalid => '签名无效！';
+
+  @override
+  String get chat_mcmpSignatureUnverifiable => '无法校验签名——发送者不在联系人中';
+
+  @override
+  String get chat_mcmpSignatureTransport => '已由传输层加密确认';
+
+  @override
+  String get chat_mcmpManualRecheckSign => '重新校验签名';
+
+  @override
+  String get chat_mcmpSignatureCheckStatus => '签名校验';
+
+  @override
+  String get chat_mcmpSigningFailed => '无法为消息签名';
+
+  @override
+  String get chat_mcmpAnswerTo => 'MCMPv3 回复对象';
+
+  @override
+  String get chat_timestampPacket => '数据包时间戳';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgFormat => 'MCOimg：显示格式版本标记';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgAlgo => 'MCOimg：显示编码算法标记';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgBytes => 'MCOimg：显示图片体积（字节）';
+
+  @override
+  String get settings_modSettingsVisualShowMCOimgResolution => 'MCOimg：显示分辨率';
+
+  @override
+  String get settings_modSettingsMCOimg_showReplacements => '显示图片原图，而非 LoRa 版本';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale => '在聊天中缩放原图';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'lottie 替换图的尺寸限制';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      '使用 Nearest Neighbor 缩放';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp => '在聊天中锐化原图';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      '注意！会关闭 GIF 动画！';
+
+  @override
+  String get settings_modSettingsHideChInd => '隐藏频道序号';
+
+  @override
+  String get settings_modSettingsHideRadioStats => '隐藏顶栏的无线电统计';
+
+  @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'SNR 指示器：对中继器的所有响应都触发，而不只是 advert';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions => '将收到消息中的引用显示为提及';
+
+  @override
+  String get settings_modSettingsSimplifiedMentions => '消息中提及的简化样式';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory => '共享消息历史';
 
   @override
   String get settings_modSettingsSharedMsgHistoryDscr =>
-      'Combining the history of messages received from different devices; the final history is stored only in the application';
+      '合并从不同设备接收到的消息历史；最终的历史仅保存在应用中';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+  String get settings_modSettingsSharedMsgHistoryDisabled => '已关闭';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+  String get settings_modSettingsSharedMsgHistoryChannels => '仅频道';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+  String get settings_modSettingsSharedMsgHistoryContacts => '仅联系人';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+  String get settings_modSettingsSharedMsgHistoryAll => '所有聊天';
 
   @override
-  String get settings_modSettingsMessagingShowCompressionRatio =>
-      'Show compression ratio';
+  String get settings_modSettingsMessagingShowCompressionRatio => '显示压缩率';
 
   @override
   String get settings_modSettingsMessagingCompressionRatioWithSendername =>
-      'Also take into account senderName';
+      '计算时也计入节点名称';
 
   @override
-  String get settings_modSettingsVisualHideMapZoomControls =>
-      'Hide map zoom panel';
+  String get settings_modSettingsVisualHideMapZoomControls => '隐藏地图上的缩放面板';
 
   @override
-  String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
-
-  @override
-  String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
-
-  @override
-  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+  String get settings_modSettingsVisualShowMsgRegion => '显示消息的区域';
 
   @override
   String channels_messageRegion(String region) {
-    return 'Region: $region';
+    return '区域：$region';
   }
 
   @override
-  String get channels_messageRegionUnknown => 'unknown';
+  String get channels_messageRegionUnknown => '未知';
 
   @override
-  String get channels_messageRegionEmpty => 'unset';
+  String get channels_messageRegionNotMatchesWithKnown => '无匹配';
 
   @override
-  String get settings_defaultRegionScope => 'Default region scope';
+  String get channels_messageRegionEmpty => '未设置';
 
   @override
-  String get settings_defaultRegionScopeChanged =>
-      'Default region scope changed';
+  String get settings_defaultRegionScope => '节点的默认区域';
 
   @override
-  String get settings_defaultRegionScopeChangeFailed =>
-      'Change default region scope failed';
+  String get settings_defaultRegionScopeChanged => '默认区域已更改';
 
   @override
-  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+  String get settings_defaultRegionScopeChangeFailed => '无法更改区域';
 
   @override
-  String get settings_defaultRegionScopeWaitForSync =>
-      'Please wait until synchronization complete';
+  String get settings_defaultRegionScopeEmpty => '未设置';
 
   @override
-  String get common_reset => 'Reset';
+  String get settings_defaultRegionScopeWaitForSync => '请等待同步完成';
 
   @override
-  String get connection_autoconnect => 'Autoconnect';
+  String get common_reset => '重置';
+
+  @override
+  String get connection_autoconnect => '自动连接';
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'No retranslations heard for $time seconds.';
+    return '已有 $time 秒未听到转发。';
   }
 
   @override
-  String get settings_modSettingsNoRetraHeading =>
-      'Display messages as unsent if no retranslations heard within seconds:';
+  String get settings_modSettingsNoRetraHeading => '若在这么多秒内未听到转发，则将消息标记为未发送：';
 
   @override
   String get settings_modSettingsNoRetraDscr =>
-      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+      '注意！由于节点固件的机制，大于约 133 字节的频道消息在物理上无法收到确认，将始终被标记为失败！请与应用设置中的负载限制一起使用此选项！';
 
   @override
-  String get settings_selfTelemetryShow => 'Check sensors';
+  String get settings_selfTelemetryShow => '查看传感器';
 
   @override
-  String get settings_modSettingsVisualChannelsUnreadSorting =>
-      'Channels sorting by unread messages';
+  String get settings_modSettingsVisualChannelsUnreadSorting => '按未读消息排序频道';
 
   @override
-  String get settings_modSettingsMessagingBackgroundTCP =>
-      'Keep TCP-connection alive in background';
+  String get settings_modSettingsMessagingBackgroundTCP => '在后台保持 TCP 连接';
 
   @override
-  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+  String get settings_modSettingsDPIchange => 'DPI 调整';
 
   @override
-  String get chat_additionalActions => 'Chat actions menu';
+  String get settings_modSettingsDPIchangeToIcons => '同时应用于图标';
 
   @override
-  String get mcogallery_common => 'Common';
+  String get chat_MCOimgOpenGallery => '打开 MCOimg 图库';
 
   @override
-  String get mcogallery_addPack => 'Add package';
+  String get chat_additionalActions => '操作菜单';
 
   @override
-  String get mcogallery_removePack => 'Remove package';
+  String get mcogallery_common => '通用';
+
+  @override
+  String get mcogallery_addPack => '添加图包';
+
+  @override
+  String get mcogallery_removePack => '删除图包';
 
   @override
   String mcogallery_removePackConfirm(String name) {
-    return 'Подтвердите удаление пакета «$name»';
+    return '请确认删除图包“$name”';
   }
 
   @override
-  String get mcogallery_addGroup => 'Add group';
+  String get mcogallery_addGroup => '添加分组';
 
   @override
-  String get mcogallery_removeGroup => 'Remove group';
+  String get mcogallery_removeGroup => '删除分组';
 
   @override
-  String get chat_sendSelfContact => 'Send self contact';
+  String get mcogallery_showLora => '显示 LoRa 版本';
 
   @override
-  String get chat_sendContact => 'Share contact';
+  String get mcogallery_showPacked => '显示增强版本';
 
   @override
-  String get chat_addContact => 'Add contact';
+  String get chat_sendSelfContact => '发送我的联系人';
 
   @override
-  String get chat_sureToReplaceContact =>
-      'Contact is already exists, replace it?';
+  String get chat_sendContact => '分享联系人';
 
   @override
-  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+  String get chat_addContact => '添加联系人';
 
   @override
-  String get contacts_addContactByPubkey_contactType => 'Contact type';
+  String get chat_sureToReplaceContact => '联系人已存在，要替换吗？';
 
   @override
-  String get chat_contactIsYou => 'It is you';
+  String get contacts_addContactByPubkey => '通过密钥添加联系人';
+
+  @override
+  String get contacts_addContactByPubkey_contactType => '联系人类型';
+
+  @override
+  String get chat_contactIsYou => '这是你自己的联系人';
 
   @override
   String chat_contactType(String contacttype) {
-    return 'Contact type: $contacttype';
+    return '联系人类型：$contacttype';
   }
 
   @override
-  String get chat_contactTypeNode => 'Node';
+  String get chat_contactTypeNode => '节点';
 
   @override
-  String get chat_contactTypeRepeater => 'Repeater';
+  String get chat_contactTypeRepeater => '中继器';
 
   @override
-  String get chat_contactTypeRoom => 'Room-server';
+  String get chat_contactTypeRoom => '房间服务器';
 
   @override
-  String get chat_contactTypeSensor => 'Sensor';
+  String get chat_contactTypeSensor => '传感器';
 
   @override
-  String get chat_myLocation => 'Share my location';
+  String get chat_myLocation => '发送我的位置';
 
   @override
-  String get chat_locationFromMap => 'Share location from map';
+  String get chat_locationFromMap => '从地图发送坐标';
+
+  @override
+  String get settings_modSettingsRoomServer => '房间服务器与联系人';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
+      '将有历史记录的服务器与频道显示在同一屏幕';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
+      '将有历史记录的联系人与频道显示在同一屏幕';
+
+  @override
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
+      '保留原有的拖放机制：更改频道顺序会同时更改其在节点上的顺序，并且无法排序联系人或服务器';
+
+  @override
+  String get settings_appSettingsCustomChemistry => '自定义';
+
+  @override
+  String get map_clearDiscoveredContactsCache => '清除节点本地缓存';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
+      '确定要清除已发现联系人的缓存吗？这不会影响节点上的联系人。';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => '中继器活动';
+
+  @override
+  String get app_connectionLostReconnect => '与节点的连接已断开，正在重新连接……';
+
+  @override
+  String get app_connectionLostReconnected => '与节点的连接已恢复';
+
+  @override
+  String get contacts_batchOperations => '批量操作';
+
+  @override
+  String get contacts_batchOperations_notSelected => '你还没有选择要处理的联系人！';
+
+  @override
+  String get contacts_batchOperations_removeConfirm => '要从节点内存中删除选中的联系人吗？';
+
+  @override
+  String get contacts_batchOperations_removeSuccess => '选中的联系人已删除';
+
+  @override
+  String get contacts_batchOperations_removeFail => '删除联系人失败——请再次检查列表';
+
+  @override
+  String get contacts_batchOperations_commonSuccess => '操作已成功完成';
+
+  @override
+  String get contacts_batchOperations_commonFail => '操作未能完成';
+
+  @override
+  String get contacts_batchOperations_selectFiltered => '选择筛选结果';
+
+  @override
+  String get chat_searchMessages => '搜索消息';
+
+  @override
+  String get chat_searchMessages_placeholder => '从 3 个字符起，不区分大小写';
+
+  @override
+  String get chat_searchMessages_results => '搜索结果';
+
+  @override
+  String chat_searchMessages_results_found(int count) {
+    return '找到 $count 条消息';
+  }
+
+  @override
+  String chat_searchMessages_results_channel(String name) {
+    return '频道 $name';
+  }
+
+  @override
+  String chat_searchMessages_results_room(String name) {
+    return 'Room $name';
+  }
+
+  @override
+  String chat_searchMessages_results_contact(String name) {
+    return '与 $name 的对话';
+  }
+
+  @override
+  String get app_offline => '离线';
+
+  @override
+  String get app_offline_unableToMessage => '离线模式下无法发送消息或执行其他操作';
+
+  @override
+  String get app_offline_sharedMode => '合并历史';
 }

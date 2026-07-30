@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/app_logger.dart';
+import '../utils/battery_utils.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
 
@@ -11,13 +13,71 @@ class AppSettingsService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
 
   AppSettings _settings = AppSettings();
+  List<McoBatteryChemistryProfile> Function(String deviceId)?
+  _extraBatteryProfilesForDevice;
 
   AppSettings get settings => _settings;
+
+  void setExtraBatteryProfilesProvider(
+    List<McoBatteryChemistryProfile> Function(String deviceId)? provider,
+  ) {
+    _extraBatteryProfilesForDevice = provider;
+  }
+
+  McoBatteryChemistryProfile? _extraBatteryProfileForDevice(
+    String deviceId,
+    String chemistry,
+  ) {
+    final profiles = _extraBatteryProfilesForDevice?.call(deviceId);
+    if (profiles == null) return null;
+    McoBatteryChemistryProfile? match;
+    for (final profile in profiles) {
+      if (profile.id == chemistry) match = profile;
+    }
+    return match;
+  }
+
+  int resolvedGpsIntervalSeconds(Map<String, String>? deviceCustomVars) {
+    final deviceValue = int.tryParse(deviceCustomVars?['gps_interval'] ?? '');
+    if (deviceValue != null && deviceValue >= 0) {
+      return deviceValue;
+    }
+    return _settings.gpsIntervalSeconds;
+  }
 
   String batteryChemistryForDevice(String deviceId) {
     final stored = _settings.batteryChemistryByDeviceId[deviceId];
     if (stored == 'liion') return 'nmc';
     return stored ?? 'nmc';
+  }
+
+  ({double minVolts, double maxVolts})? batteryCustomRangeForDevice(
+    String deviceId,
+  ) {
+    final minVolts = _settings.batteryCustomMinVoltsByDeviceId[deviceId];
+    final maxVolts = _settings.batteryCustomMaxVoltsByDeviceId[deviceId];
+    if (minVolts == null || maxVolts == null) return null;
+    if (minVolts <= 0 || maxVolts <= 0 || minVolts >= maxVolts) return null;
+    return (minVolts: minVolts, maxVolts: maxVolts);
+  }
+
+  BatteryVoltageRange? batteryVoltageRangeForDevice(String deviceId) {
+    final chemistry = batteryChemistryForDevice(deviceId);
+    if (chemistry != batteryChemistryCustom) {
+      final profile = _extraBatteryProfileForDevice(deviceId, chemistry);
+      if (profile == null) return null;
+      final minMv = (profile.minVolts * 1000).round();
+      final maxMv = (profile.maxVolts * 1000).round();
+      if (minMv >= maxMv) return null;
+      return (minMv: minMv, maxMv: maxMv);
+    } else {
+      final range = batteryCustomRangeForDevice(deviceId);
+      if (range == null) return null;
+      final minMv = (range.minVolts * 1000).round();
+      final maxMv = (range.maxVolts * 1000).round();
+      if (minMv >= maxMv) return null;
+      return (minMv: minMv, maxMv: maxMv);
+    }
   }
 
   String batteryChemistryForRepeater(String repeaterPubKeyHex) {
@@ -152,6 +212,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setHideRadioStatsButton(bool value) async {
+    await updateSettings(_settings.copyWith(hideRadioStatsButton: value));
+  }
+
+  Future<void> setSnrIndicatorAllRepActivity(bool value) async {
+    await updateSettings(_settings.copyWith(snrIndicatorAllRepActivity: value));
+  }
+
   Future<void> setHideMapZoomControls(bool value) async {
     await updateSettings(_settings.copyWith(hideMapZoomControls: value));
   }
@@ -170,6 +238,44 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setShowMcoImageBytes(bool value) async {
     await updateSettings(_settings.copyWith(showMcoImageBytes: value));
+  }
+
+  Future<void> setShowMcoImagePackReplacements(bool value) async {
+    await updateSettings(
+      _settings.copyWith(showMcoImagePackReplacements: value),
+    );
+  }
+
+  Future<void> setMcoImageReplacementsScale(double value) async {
+    await updateSettings(_settings.copyWith(mcoImageReplacementsScale: value));
+  }
+
+  Future<void> setMcoImageReplacementsLottieScalePercent(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        mcoImageReplacementsLottieScalePercent: value.clamp(10, 100).toInt(),
+      ),
+    );
+  }
+
+  Future<void> setMcoImageScaleNearestNeighbor(bool value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageScaleNearestNeighbor: value),
+    );
+  }
+
+  Future<void> setMcoImageReplacementsSharpness(int value) async {
+    await updateSettings(
+      _settings.copyWith(mcoImageReplacementsSharpness: value),
+    );
+  }
+
+  Future<void> setUiScale(double value) async {
+    await updateSettings(_settings.copyWith(uiScale: value));
+  }
+
+  Future<void> setUiScaleApplyToIcons(bool value) async {
+    await updateSettings(_settings.copyWith(uiScaleApplyToIcons: value));
   }
 
   Future<void> setShowCompressionRatio(bool value) async {
@@ -214,6 +320,24 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(backgroundTcpEnabled: value));
   }
 
+  Future<void> setRoomServerShowNotemptyOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerShowNotemptyContactsOnChatscreen(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerShowNotemptyContactsOnChatscreen: value),
+    );
+  }
+
+  Future<void> setRoomServerDisableRoomAndContactsSorting(bool value) async {
+    await updateSettings(
+      _settings.copyWith(roomServerDisableRoomAndContactsSorting: value),
+    );
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }
@@ -223,6 +347,25 @@ class AppSettingsService extends ChangeNotifier {
     final safeMax = minZoom <= maxZoom ? maxZoom : minZoom;
     await updateSettings(
       _settings.copyWith(mapCacheMinZoom: safeMin, mapCacheMaxZoom: safeMax),
+    );
+  }
+
+  Future<void> setMapRasterSourceId(String value) async {
+    await updateSettings(_settings.copyWith(mapRasterSourceId: value));
+  }
+
+  Future<void> setMapTileEndpointId(String value) async {
+    await updateSettings(_settings.copyWith(mapTileEndpointId: value));
+  }
+
+  Future<void> setMapTileApiKey(String? value) async {
+    final normalized = value?.trim();
+    await updateSettings(
+      _settings.copyWith(
+        mapTileApiKey: (normalized == null || normalized.isEmpty)
+            ? null
+            : normalized,
+      ),
     );
   }
 
@@ -240,6 +383,28 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setNotifyOnNewAdvert(bool value) async {
     await updateSettings(_settings.copyWith(notifyOnNewAdvert: value));
+  }
+
+  Future<void> setAutoSendZeroHopAdvertOnGpsUpdate(bool value) async {
+    await updateSettings(
+      _settings.copyWith(autoSendZeroHopAdvertOnGpsUpdate: value),
+    );
+  }
+
+  Future<void> setGpsIntervalSeconds(
+    int value, {
+    Future<void> Function(int value)? writeToDevice,
+  }) async {
+    await updateSettings(_settings.copyWith(gpsIntervalSeconds: value));
+    if (writeToDevice == null) return;
+    try {
+      await writeToDevice(value);
+    } catch (e) {
+      appLogger.warn(
+        'Failed to write GPS interval to device: $e',
+        tag: 'AppSettings',
+      );
+    }
   }
 
   Future<void> setAutoRouteRotationEnabled(bool value) async {
@@ -307,6 +472,28 @@ class AppSettingsService extends ChangeNotifier {
     updated[deviceId] = chemistry;
     await updateSettings(
       _settings.copyWith(batteryChemistryByDeviceId: updated),
+    );
+  }
+
+  Future<void> setBatteryCustomRangeForDevice(
+    String deviceId,
+    double minVolts,
+    double maxVolts,
+  ) async {
+    if (minVolts <= 0 || maxVolts <= 0 || minVolts >= maxVolts) return;
+    final updatedMin = Map<String, double>.from(
+      _settings.batteryCustomMinVoltsByDeviceId,
+    );
+    final updatedMax = Map<String, double>.from(
+      _settings.batteryCustomMaxVoltsByDeviceId,
+    );
+    updatedMin[deviceId] = minVolts;
+    updatedMax[deviceId] = maxVolts;
+    await updateSettings(
+      _settings.copyWith(
+        batteryCustomMinVoltsByDeviceId: updatedMin,
+        batteryCustomMaxVoltsByDeviceId: updatedMax,
+      ),
     );
   }
 

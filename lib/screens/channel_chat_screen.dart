@@ -11,6 +11,7 @@ import 'package:meshcore_open/screens/region_management_screen.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:provider/provider.dart';
 
+import '../config/build_features.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
@@ -26,6 +27,7 @@ import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
@@ -40,10 +42,12 @@ import '../models/contact.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
@@ -51,8 +55,11 @@ import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
+import '../widgets/mco_image_original.dart';
+import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
@@ -74,11 +81,13 @@ import '../widgets/pending_send_cancel_bar.dart';
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
   final int initialUnreadCount;
+  final String? initialMessageId;
 
   const ChannelChatScreen({
     super.key,
     required this.channel,
     this.initialUnreadCount = 0,
+    this.initialMessageId,
   });
 
   @override
@@ -97,14 +106,30 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
+
+  /// Message ids whose MCOimg variant the user flipped away from the default
+  /// (the default is "show pack original" when the mod setting is enabled,
+  /// otherwise "show received LoRa version").
+  final Set<String> _mcoVariantOverridden = {};
+
+  /// Effective "render the received LoRa version" flag for a message,
+  /// combining the mod setting default with the per-message override.
+  bool _mcoForceLora(String messageId, bool showReplacements) {
+    final defaultLora = !showReplacements;
+    final overridden = _mcoVariantOverridden.contains(messageId);
+    return defaultLora != overridden;
+  }
+
   bool _isLoadingOlder = false;
   bool _communitiesLoaded = false;
   Region region = '';
   String? _highlightedMessageId;
   int _highlightSequence = 0;
+  int _messageScrollGeneration = 0;
   String? _replyReturnMessageId;
 
   MeshCoreConnector? _connector;
+  StreamSubscription<void>? _mcmpSigningFailedSubscription;
   DateTime? _lastChannelSendAt;
   String? _lastChannelSentText;
   bool _channelSkipNextBottomSnap = false;
@@ -135,6 +160,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       final idx = widget.channel.index;
       final unread = widget.initialUnreadCount;
       final messages = connector.getChannelMessages(widget.channel);
+      final initialMessageId = widget.initialMessageId;
       _loadCommunities();
       ChannelMessage? anchor;
       if (unread > 0) {
@@ -145,12 +171,25 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       });
       connector.setActiveChannel(idx);
       _connector = connector;
-      if (PlatformInfo.isDesktop) {
+      _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
+        (_) => _showMcmpSigningFailed(),
+      );
+      if (PlatformInfo.isDesktop && !connector.isOfflineMode) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
         _keyboardNavigationActive = true;
       }
-      if (anchor != null && settings.jumpToOldestUnread) {
+      if (initialMessageId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToMessage(
+            initialMessageId,
+            highlightOnSuccess: true,
+            animate: false,
+            stabilize: true,
+          );
+        });
+      } else if (anchor != null && settings.jumpToOldestUnread) {
         _channelSkipNextBottomSnap = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -243,6 +282,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   @override
   void dispose() {
     _connector?.setActiveChannel(null);
+    _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
@@ -254,6 +294,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showMcmpSigningFailed() {
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_mcmpSigningFailed),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
   }
 
   void _setReplyingTo(ChannelMessage message) {
@@ -333,8 +382,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return key?.currentContext;
   }
 
+  List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
+    return [
+      ...connector.getChannelMessages(widget.channel),
+      ...connector.getPendingChannelMessages(widget.channel.index),
+    ];
+  }
+
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
     final connector = context.read<MeshCoreConnector>();
+    var emptyOlderLoads = 0;
+    var loadedTargetRetries = 0;
 
     while (mounted) {
       final targetContext = _tryGetMessageContext(messageId);
@@ -342,36 +400,86 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         return targetContext;
       }
 
-      final messages = connector.getChannelMessages(widget.channel);
+      final messages = _messagesForDisplay(connector);
       final targetIndex = messages.indexWhere(
         (message) => message.messageId == messageId,
       );
-      if (targetIndex >= 0 &&
-          _scrollController.hasClients &&
-          messages.length > 1) {
-        final reversedIndex = messages.length - 1 - targetIndex;
-        final targetOffset =
-            _scrollController.position.maxScrollExtent *
-            (reversedIndex / (messages.length - 1));
-        _scrollController.jumpTo(
-          targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        );
-        await WidgetsBinding.instance.endOfFrame;
-        final materializedContext = _tryGetMessageContext(messageId);
-        if (materializedContext != null && materializedContext.mounted) {
-          return materializedContext;
+      if (targetIndex >= 0) {
+        if (_scrollController.hasClients) {
+          final targetOffset = messages.length > 1
+              ? _scrollController.position.maxScrollExtent *
+                    ((messages.length - 1 - targetIndex) /
+                        (messages.length - 1))
+              : 0.0;
+          final materializedContext = await _probeMessageContextAroundOffset(
+            messageId,
+            targetOffset,
+          );
+          if (materializedContext != null && materializedContext.mounted) {
+            return materializedContext;
+          }
         }
+        if (loadedTargetRetries < 2) {
+          loadedTargetRetries++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
+        // The message is already loaded, so loading older history cannot make
+        // it materialize.
+        return null;
       }
-
+      loadedTargetRetries = 0;
       final olderMessages = await connector.loadOlderChannelMessages(
         widget.channel.index,
       );
       if (olderMessages.isEmpty) {
+        if (emptyOlderLoads < 5) {
+          emptyOlderLoads++;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+          await WidgetsBinding.instance.endOfFrame;
+          continue;
+        }
         return null;
       }
+      emptyOlderLoads = 0;
       await WidgetsBinding.instance.endOfFrame;
     }
 
+    return null;
+  }
+
+  // Keep in sync with ChatScreen._probeMessageContextAroundOffset.
+  Future<BuildContext?> _probeMessageContextAroundOffset(
+    String messageId,
+    double estimatedOffset,
+  ) async {
+    if (!_scrollController.hasClients) return null;
+    final position = _scrollController.position;
+    final viewport = position.viewportDimension;
+    final offsetsInViewports = <double>[
+      0,
+      -0.75,
+      0.75,
+      -1.5,
+      1.5,
+      -2.5,
+      2.5,
+      -4,
+      4,
+    ];
+    for (final multiplier in offsetsInViewports) {
+      if (!mounted || !_scrollController.hasClients) return null;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = (estimatedOffset + viewport * multiplier).clamp(
+        0.0,
+        maxExtent,
+      );
+      _scrollController.jumpTo(offset);
+      await WidgetsBinding.instance.endOfFrame;
+      final context = _tryGetMessageContext(messageId);
+      if (context != null && context.mounted) return context;
+    }
     return null;
   }
 
@@ -407,13 +515,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String messageId, {
     bool highlightOnSuccess = false,
     bool quiet = false,
+    bool animate = true,
+    bool stabilize = false,
   }) async {
+    final scrollGeneration = ++_messageScrollGeneration;
     final messenger = ScaffoldMessenger.of(context);
     final originalMessageNotFoundText =
         context.l10n.chat_originalMessageNotFound;
     final targetContext = await _materializeMessageContext(messageId);
 
-    if (!mounted) return false;
+    if (!mounted || scrollGeneration != _messageScrollGeneration) return false;
 
     if (targetContext == null) {
       if (quiet) return false;
@@ -435,16 +546,90 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return false;
     }
 
-    Scrollable.ensureVisible(
-      targetContext,
-      duration: const Duration(milliseconds: 300),
+    await _ensureMessageVisible(
+      messageId,
+      initialContext: targetContext,
+      animate: animate,
+      stabilize: stabilize,
+      scrollGeneration: scrollGeneration,
+      onInitialPositioned: highlightOnSuccess
+          ? () => _highlightMessage(messageId)
+          : null,
+    );
+    return true;
+  }
+
+  Future<void> _showMessageSearch() {
+    return MessageSearchSheet.show(
+      context,
+      scope: MessageSearchScope.channels,
+      channelFilter: widget.channel,
+      onOpenResult: (result) async {
+        if (!mounted || result.type != MessageSearchEntryType.channel) return;
+        Navigator.of(context).pop();
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        await _scrollToMessage(
+          result.messageId,
+          highlightOnSuccess: true,
+          animate: false,
+          stabilize: true,
+        );
+      },
+    );
+  }
+
+  // Keep in sync with ChatScreen._ensureMessageVisible.
+  Future<void> _ensureMessageVisible(
+    String messageId, {
+    required BuildContext initialContext,
+    required bool animate,
+    required bool stabilize,
+    required int scrollGeneration,
+    VoidCallback? onInitialPositioned,
+  }) async {
+    await Scrollable.ensureVisible(
+      initialContext,
+      duration: animate ? const Duration(milliseconds: 300) : Duration.zero,
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
-    if (highlightOnSuccess) {
-      _highlightMessage(messageId);
+    await WidgetsBinding.instance.endOfFrame;
+    onInitialPositioned?.call();
+    if (!stabilize) return;
+
+    const checks = [
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 500),
+      Duration(milliseconds: 1000),
+    ];
+    for (final delay in checks) {
+      await Future<void>.delayed(delay);
+      if (!mounted || scrollGeneration != _messageScrollGeneration) return;
+      await WidgetsBinding.instance.endOfFrame;
+      if (scrollGeneration != _messageScrollGeneration) return;
+      var context = _tryGetMessageContext(messageId);
+      if (context == null || !context.mounted) {
+        context = await _materializeMessageContext(messageId);
+      }
+      if (context == null ||
+          !context.mounted ||
+          !mounted ||
+          scrollGeneration != _messageScrollGeneration) {
+        return;
+      }
+      await Scrollable.ensureVisible(
+        context,
+        duration: Duration.zero,
+        alignment: 0.3,
+      );
+      await WidgetsBinding.instance.endOfFrame;
     }
-    return true;
+  }
+
+  void _cancelMessageScrollStabilization() {
+    _messageScrollGeneration++;
   }
 
   Future<void> _scrollToReplyTarget(ChannelMessage reply) async {
@@ -585,21 +770,43 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             const RadioStatsIconButton(),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
-              onSelected: (value) async {
-                if (value == 'clearChat') {
-                  _confirmClearChat();
+              onSelected: (value) {
+                switch (value) {
+                  case 'searchMessages':
+                    unawaited(_showMessageSearch());
+                  case 'editChannel':
+                    final connector = context.read<MeshCoreConnector>();
+                    showChannelEditSheet(context, connector, widget.channel);
+                  case 'clearChat':
+                    _confirmClearChat();
                 }
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'clearChat',
+                  value: 'searchMessages',
                   child: PopupMenuRow(
-                    icon: Icons.delete,
-                    iconColor: Colors.red,
-                    text: context.l10n.contact_clearChat,
-                    textStyle: const TextStyle(color: Colors.red),
+                    icon: Icons.search,
+                    text: context.l10n.chat_searchMessages,
                   ),
                 ),
+                if (!context.read<MeshCoreConnector>().isOfflineMode)
+                  PopupMenuItem(
+                    value: 'editChannel',
+                    child: PopupMenuRow(
+                      icon: Icons.edit_outlined,
+                      text: context.l10n.channels_editChannel,
+                    ),
+                  ),
+                if (!context.read<MeshCoreConnector>().isOfflineMode)
+                  PopupMenuItem(
+                    value: 'clearChat',
+                    child: PopupMenuRow(
+                      icon: Icons.delete,
+                      iconColor: Colors.red,
+                      text: context.l10n.contact_clearChat,
+                      textStyle: const TextStyle(color: Colors.red),
+                    ),
+                  ),
               ],
             ),
           ],
@@ -611,12 +818,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               Expanded(
                 child: Consumer<MeshCoreConnector>(
                   builder: (context, connector, child) {
-                    final messages = [
-                      ...connector.getChannelMessages(widget.channel),
-                      ...connector.getPendingChannelMessages(
-                        widget.channel.index,
-                      ),
-                    ];
+                    final messages = _messagesForDisplay(connector);
 
                     if (messages.isEmpty) {
                       return Center(
@@ -665,11 +867,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
                     // Rare messageId collisions must not reuse the same
                     // GlobalKey in the list.
-                    final seenIds = <String>{};
                     final keyedIndices = <int>{};
+                    final duplicateKeys = <int, ValueKey<String>>{};
+                    final occurrencesById = <String, int>{};
                     for (var i = 0; i < reversedMessages.length; i++) {
-                      if (seenIds.add(reversedMessages[i].messageId)) {
+                      final messageId = reversedMessages[i].messageId;
+                      final occurrence = occurrencesById[messageId] ?? 0;
+                      occurrencesById[messageId] = occurrence + 1;
+                      if (occurrence == 0) {
                         keyedIndices.add(i);
+                      } else {
+                        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
                       }
                     }
 
@@ -690,79 +898,86 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           builder: (context, padding, bottomReservedExtent) {
                             final hasBottomSpacer = bottomReservedExtent > 0;
                             final spacerItemCount = hasBottomSpacer ? 1 : 0;
-                            return ChatZoomWrapper(
-                              child: ListView.builder(
-                                reverse: true, // List grows from bottom up
-                                controller: _scrollController,
-                                padding: padding,
-                                itemCount: itemCount + spacerItemCount,
-                                itemBuilder: (context, index) {
-                                  if (hasBottomSpacer && index == 0) {
-                                    return SizedBox(
-                                      height: bottomReservedExtent,
-                                    );
-                                  }
-                                  final adjustedIndex = index - spacerItemCount;
+                            return Listener(
+                              onPointerDown: (_) =>
+                                  _cancelMessageScrollStabilization(),
+                              onPointerSignal: (_) =>
+                                  _cancelMessageScrollStabilization(),
+                              child: ChatZoomWrapper(
+                                child: ListView.builder(
+                                  reverse: true, // List grows from bottom up
+                                  controller: _scrollController,
+                                  padding: padding,
+                                  itemCount: itemCount + spacerItemCount,
+                                  itemBuilder: (context, index) {
+                                    if (hasBottomSpacer && index == 0) {
+                                      return SizedBox(
+                                        height: bottomReservedExtent,
+                                      );
+                                    }
+                                    final adjustedIndex =
+                                        index - spacerItemCount;
 
-                                  // Loading indicator now appears at end (bottom) of reversed list
-                                  if (_isLoadingOlder &&
-                                      adjustedIndex == itemCount - 1) {
-                                    return const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                    // Loading indicator now appears at end (bottom) of reversed list
+                                    if (_isLoadingOlder &&
+                                        adjustedIndex == itemCount - 1) {
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                         ),
+                                      );
+                                    }
+                                    final messageIndex = adjustedIndex;
+                                    final message =
+                                        reversedMessages[messageIndex];
+                                    final Key messageKey =
+                                        keyedIndices.contains(messageIndex)
+                                        ? _messageKeys.putIfAbsent(
+                                            message.messageId,
+                                            GlobalKey.new,
+                                          )
+                                        : duplicateKeys[messageIndex]!;
+                                    final isUnreadAnchor =
+                                        _unreadDividerMessageId != null &&
+                                        message.messageId ==
+                                            _unreadDividerMessageId;
+                                    return Container(
+                                      key: messageKey,
+                                      child: Builder(
+                                        builder: (context) {
+                                          final textScale = context
+                                              .select<
+                                                ChatTextScaleService,
+                                                double
+                                              >((service) => service.scale);
+                                          final bubble = _buildMessageBubble(
+                                            message,
+                                            textScale,
+                                          );
+                                          if (isUnreadAnchor) {
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const UnreadDivider(),
+                                                bubble,
+                                              ],
+                                            );
+                                          }
+                                          return bubble;
+                                        },
                                       ),
                                     );
-                                  }
-                                  final messageIndex = adjustedIndex;
-                                  final message =
-                                      reversedMessages[messageIndex];
-                                  final messageKey =
-                                      keyedIndices.contains(messageIndex)
-                                      ? _messageKeys.putIfAbsent(
-                                          message.messageId,
-                                          GlobalKey.new,
-                                        )
-                                      : GlobalKey();
-                                  final isUnreadAnchor =
-                                      _unreadDividerMessageId != null &&
-                                      message.messageId ==
-                                          _unreadDividerMessageId;
-                                  return Container(
-                                    key: messageKey,
-                                    child: Builder(
-                                      builder: (context) {
-                                        final textScale = context
-                                            .select<
-                                              ChatTextScaleService,
-                                              double
-                                            >((service) => service.scale);
-                                        final bubble = _buildMessageBubble(
-                                          message,
-                                          textScale,
-                                        );
-                                        if (isUnreadAnchor) {
-                                          return Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const UnreadDivider(),
-                                              bubble,
-                                            ],
-                                          );
-                                        }
-                                        return bubble;
-                                      },
-                                    ),
-                                  );
-                                },
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -787,6 +1002,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
       return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch());
+      return true;
     }
     final isNavigationKeyDown = event is KeyDownEvent;
     final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;
@@ -819,12 +1041,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   bool _scrollMessagesByPage(int direction) {
     if (!_scrollController.hasClients) return false;
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(
       _scrollController.position.viewportDimension * 0.85 * direction,
     );
   }
 
   bool _scrollMessagesByLine(int direction) {
+    _cancelMessageScrollStabilization();
     return _scrollController.scrollBy(72.0 * direction);
   }
 
@@ -862,6 +1086,36 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  /// Signature status badge shown next to the sender name of incoming
+  /// messages: status icon, verified-key fingerprint and the name-collision
+  /// warning. Outgoing messages show their signed/unsigned badge in the meta
+  /// row instead.
+  Widget _buildMcmpSignatureIcon(ChannelMessage message) {
+    if (message.isOutgoing ||
+        !McmpSignatureBadge.isVisible(
+          status: message.mcmpSignatureStatus,
+          isOutgoing: false,
+          wasMcmpV3: message.mcmpTimestamp != null,
+        )) {
+      return const SizedBox.shrink();
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: McmpSignatureBadge(
+        status: message.mcmpSignatureStatus,
+        isOutgoing: false,
+        isSigned: message.mcmpIsSigned,
+        wasMcmpV3: message.mcmpTimestamp != null,
+        verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+        nameCollision: message.mcmpNameCollision,
+        textScale: 1.0,
+        color: scheme.onSurface.withValues(alpha: 0.65),
+        errorColor: scheme.error,
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChannelMessage message, double textScale) {
     final connector = context.watch<MeshCoreConnector>();
     final settingsService = context.watch<AppSettingsService>();
@@ -883,9 +1137,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         showCompressionRatio && message.compressionSavingsPercent != null
         ? '${message.compressionSavingsPercent}% '
         : '';
-    final compressionLabel = compressionType == null
+    // MCMP labels carry the format version: "mcmp3" / "mcmp2".
+    final compressionTypeLabel = compressionType == null
         ? null
-        : '$compressionRatioPrefix${compressionType.label}'
+        : compressionType == MessageCompressionType.mcmp
+        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        : compressionType.label;
+    final compressionLabel = compressionTypeLabel == null
+        ? null
+        : '$compressionRatioPrefix$compressionTypeLabel'
               '${message.wasBinaryTransport ? ' bin' : ''}';
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
@@ -932,11 +1192,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : (translatedDisplayText != message.text ? message.text : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final packetRegion = message.packetRegion?.trim();
-    final packetRegionLabel = packetRegion != null && packetRegion.isNotEmpty
-        ? packetRegion
-        : (message.packetRegionInfoAvailable
-              ? context.l10n.channels_messageRegionEmpty
-              : context.l10n.channels_messageRegionUnknown);
+    final String packetRegionLabel;
+    if (packetRegion != null && packetRegion.isNotEmpty) {
+      packetRegionLabel = packetRegion;
+    } else if (message.packetRegionNotMatched) {
+      packetRegionLabel =
+          context.l10n.channels_messageRegionNotMatchesWithKnown;
+    } else if (message.packetRegionInfoAvailable) {
+      packetRegionLabel = context.l10n.channels_messageRegionEmpty;
+    } else {
+      packetRegionLabel = context.l10n.channels_messageRegionUnknown;
+    }
     final displayPath = message.pathBytes.isNotEmpty
         ? message.pathBytes
         : (message.pathVariants.isNotEmpty
@@ -1019,9 +1285,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onTap: PlatformInfo.isDesktop
                       ? null
                       : () => _showMessagePathInfo(message),
-                  onLongPress: () => _showMessageActions(message),
+                  onLongPress: () => unawaited(_showMessageActions(message)),
                   onSecondaryTapUp: PlatformInfo.isDesktop
-                      ? (_) => _showMessageActions(message)
+                      ? (_) => unawaited(_showMessageActions(message))
                       : null,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 1000),
@@ -1057,13 +1323,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     bottom: 4,
                                   )
                                 : EdgeInsets.zero,
-                            child: Text(
-                              message.senderName,
-                              style: MeshTheme.mono(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: _colorForName(message.senderName),
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    message.senderName,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: MeshTheme.mono(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _colorForName(message.senderName),
+                                    ),
+                                  ),
+                                ),
+                                _buildMcmpSignatureIcon(message),
+                              ],
                             ),
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
@@ -1135,6 +1410,31 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -1186,9 +1486,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         else if (mcoImage != null)
                           Stack(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: MCOImageMessage(image: mcoImage),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: MCOImageOriginalOrFallback(
+                                    text: message.text,
+                                    image: mcoImage,
+                                    forceLora: _mcoForceLora(
+                                      message.messageId,
+                                      settingsService
+                                          .settings
+                                          .showMcoImagePackReplacements,
+                                    ),
+                                  ),
+                                ),
                               ),
                               if (!enableTracing && isOutgoing)
                                 Positioned(
@@ -1211,7 +1526,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       isFailed: showFailureVisual,
                                     ),
                                   ),
-                              ),
+                                ),
                             ],
                           )
                         else if (sharedContact != null)
@@ -1245,6 +1560,31 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           )
@@ -1288,9 +1628,52 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isFailed: showFailureVisual,
                                   ),
                                 ),
+                                // With tracing off the meta row is hidden, so
+                                // the signing lock rides next to the inline
+                                // status icon.
+                                if (McmpSignatureBadge.isVisible(
+                                  status: message.mcmpSignatureStatus,
+                                  isOutgoing: true,
+                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                )) ...[
+                                  const SizedBox(width: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: McmpSignatureBadge(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      isSigned: message.mcmpIsSigned,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      verifiedSenderKeyHex:
+                                          message.verifiedSenderKeyHex,
+                                      nameCollision: message.mcmpNameCollision,
+                                      textScale: textScale,
+                                      color: metaColor,
+                                      errorColor: scheme.error,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ],
                           ),
+                        // Standalone textual signing badge for outgoing
+                        // messages, kept commented in case it comes back —
+                        // the lock icon now lives in the meta row after the
+                        // compression label.
+                        // if (isOutgoing &&
+                        //     McmpSignatureBadge.isVisible(
+                        //       status: message.mcmpSignatureStatus,
+                        //       isOutgoing: true,
+                        //       wasMcmpV3: message.mcmpTimestamp != null,
+                        //     )) ...[
+                        //   const SizedBox(height: 3),
+                        //   Padding(
+                        //     padding: isMediaMessage
+                        //         ? const EdgeInsets.symmetric(horizontal: 8)
+                        //         : EdgeInsets.zero,
+                        //     child: McmpSignatureBadge(...),
+                        //   ),
+                        // ],
                         if (enableTracing) ...[
                           if (showHops && displayPath.isNotEmpty) ...[
                             const SizedBox(height: 4),
@@ -1354,9 +1737,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
+                                  // Show the real receive time (matches the
+                                  // list ordering), not the sender's packet
+                                  // timestamp.
                                   _formatTime(
                                     context,
-                                    message.timestamp,
+                                    message.receivedAt,
                                     enableSeconds: enableTimeSeconds,
                                   ),
                                   style: MeshTheme.mono(
@@ -1429,6 +1815,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
+                                // Outgoing signing lock, right after the
+                                // compression-type label.
+                                if (isOutgoing &&
+                                    McmpSignatureBadge.isVisible(
+                                      status: message.mcmpSignatureStatus,
+                                      isOutgoing: true,
+                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                    )) ...[
+                                  const SizedBox(width: 6),
+                                  McmpSignatureBadge(
+                                    status: message.mcmpSignatureStatus,
+                                    isOutgoing: true,
+                                    isSigned: message.mcmpIsSigned,
+                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    verifiedSenderKeyHex:
+                                        message.verifiedSenderKeyHex,
+                                    nameCollision: message.mcmpNameCollision,
+                                    textScale: textScale,
+                                    color: metaColor,
+                                    errorColor: scheme.error,
+                                  ),
+                                ],
                                 if (sharedHistorySourceName != null &&
                                     sharedHistorySourceName.isNotEmpty) ...[
                                   const SizedBox(width: 6),
@@ -1471,6 +1879,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               message.messageId,
                             ),
                             foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
                           ),
                       ],
                     ),
@@ -1573,12 +1984,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required bool simplifiedMention,
     required double textScale,
   }) {
+    // flutter_linkify ignores the ambient MediaQuery scaler, so the message
+    // body must apply the global UI scale explicitly (as an additional
+    // multiplier for backward compatibility with the untouched system scale).
+    final uiScale = context.read<AppSettingsService>().settings.uiScale;
+    final bodyTextScaler = TextScaler.linear(uiScale);
     if (replyMentionName == null || replyMentionName.isEmpty) {
       return TranslatedMessageContent(
         displayText: displayText,
         originalText: originalText,
         style: textStyle,
         originalStyle: originalStyle,
+        textScaler: bodyTextScaler,
+        onSecondaryTap: PlatformInfo.isDesktop
+            ? () => unawaited(_showMessageActions(message))
+            : null,
       );
     }
 
@@ -1719,7 +2139,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } else if (mcoImage != null) {
       contentPreview = ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: MCOImageMessage(image: mcoImage, maxSize: 80),
+        child: MCOImageOriginalOrFallback(
+          text: replyText,
+          image: mcoImage,
+          maxSize: 80,
+          forceLora: _mcoForceLora(
+            message.replyToMessageId ?? '${message.messageId}:reply',
+            context
+                .watch<AppSettingsService>()
+                .settings
+                .showMcoImagePackReplacements,
+          ),
+        ),
       );
     } else if (unsupportedMcoImageVersion != null) {
       contentPreview = _buildUnsupportedMcoImageMessage(
@@ -2020,11 +2451,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     int maxTextChars,
     MCOImageGalleryItem item,
   ) async {
-    final image = item.showPngFallback ? null : item.tryDecodeImage();
+    final useRasterOriginal = item.showPngFallback && !item.originalIsLottie;
+    final image = useRasterOriginal ? null : item.tryDecodeImage();
     await _showCanvasEditor(
       maxTextChars,
       initialImage: image,
-      initialImageBytes: image == null ? item.pngBytes : null,
+      initialImageBytes: image == null && !item.originalIsLottie
+          ? item.pngBytes
+          : null,
       initialImageWidth: item.width,
       initialImageHeight: item.height,
       initialPaletteProfile: item.paletteProfile,
@@ -2137,9 +2571,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               child: SizedBox(
                 width: width,
                 height: height,
-                child: MCOImageMessage(
+                child: MCOImageOriginalOrFallback(
+                  text: message.text,
                   image: mcoImage,
                   maxSize: width > height ? width : height,
+                  forceLora: _mcoForceLora(
+                    message.messageId,
+                    context
+                        .watch<AppSettingsService>()
+                        .settings
+                        .showMcoImagePackReplacements,
+                  ),
                 ),
               ),
             ),
@@ -2271,6 +2713,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ChatComposerSideAction(
                   child: ChatAdditionalActionsButton(
                     canvasActive: settings.canvasActive,
+                    offlineMode: connector.isOfflineMode,
                     onSendSelfContact: () => _insertSelfContact(connector),
                     onSendMyLocation: () =>
                         unawaited(_insertMyLocation(connector)),
@@ -2279,11 +2722,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         unawaited(_pickAndInsertLocationFromMap()),
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
-                    onOpenMcoImageGallery: () =>
-                        _showMcoImageGallery(maxBytes),
+                    onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
                 ),
-                if (settings.translationEnabled)
+                if (BuildFeatures.llmTranslationEnabled &&
+                    settings.translationEnabled)
                   MessageTranslationButton(
                     enabled: settings.composerTranslationEnabled,
                     languageCode: settings.translationTargetLanguageCode,
@@ -2339,6 +2782,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         maxBytes: maxBytes,
                         controller: _textController,
                         focusNode: _textFieldFocusNode,
+                        enabled: !connector.isOfflineMode,
                         maxHeight: maxInputHeight,
                         hintText: context.l10n.chat_typeMessage,
                         onSubmitted: (_) => _sendMessage(),
@@ -2358,7 +2802,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           hintText: context.l10n.chat_typeMessage,
                           hintMaxLines: 1,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(MeshRadii.md),
                           ),
                           filled: true,
                           fillColor: scheme.surfaceContainerLow,
@@ -2378,8 +2822,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     builder: (context, value, _) {
                       final hasText = value.text.trim().isNotEmpty;
                       return GestureDetector(
-                        onLongPress: _showQuickAnswersPicker,
-                        onSecondaryTap: _showQuickAnswersPicker,
+                        onLongPress: connector.isOfflineMode
+                            ? null
+                            : _showQuickAnswersPicker,
+                        onSecondaryTap: connector.isOfflineMode
+                            ? null
+                            : _showQuickAnswersPicker,
                         child: IconButton.filled(
                           icon: const Icon(Icons.send, size: 20),
                           tooltip: context.l10n.chat_sendMessage,
@@ -2393,7 +2841,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             minimumSize: const Size(40, 40),
                             shape: const CircleBorder(),
                           ),
-                          onPressed: hasText
+                          onPressed: hasText && !connector.isOfflineMode
                               ? () {
                                   HapticFeedback.lightImpact();
                                   _sendMessage();
@@ -2465,6 +2913,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
 
     final now = DateTime.now();
     if (_lastChannelSendAt != null &&
@@ -2477,7 +2927,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     _lastChannelSendAt = now;
 
-    final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
     final translationService = context.read<TranslationService>();
 
@@ -2485,7 +2934,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? originalText;
     String? translatedLanguageCode;
     String? translationModelId;
-    if (settings.translationEnabled && !skipTranslation) {
+    if (BuildFeatures.llmTranslationEnabled &&
+        settings.translationEnabled &&
+        !skipTranslation) {
       final targetLanguageCode = translationService.resolvedTargetLanguageCode(
         Localizations.localeOf(context).languageCode,
       );
@@ -2538,7 +2989,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // but we getting messages doubles in chat screen (source text and transformed).
     // To prevent, we'll perform transform of source before pass to main sender logic.
     // We can pass whole text, senderName will be kept intact
-    if (connector.isChannelCyr2LatEnabled(widget.channel.index)) {
+    if (connector.isChannelCyr2LatEnabled(widget.channel.index) &&
+        // Shared contact payloads must stay untouched.
+        parseSharedContactText(messageText) == null) {
       messageText = Cyr2Lat.encode(messageText);
     }
     // end transform
@@ -2558,6 +3011,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         widget.channel,
         messageText,
         inputText: text,
+        mcoImageV3: mcoImageV3,
         uncompressedText: compressionSourceText,
         delaySeconds: settings.sendingDelayForCancellationSeconds,
         originalText: originalText,
@@ -2566,6 +3020,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyToMessageId: replyTarget?.messageId,
         replyToSenderName: replyTarget?.senderName,
         replyToText: replyTarget?.text,
+        // Prefer the timestamp transmitted in the quoted MCMP body: for
+        // binary transports the outer timestamp is receiver-local and would
+        // not resolve on other devices.
+        replyToTimestamp: replyTarget == null
+            ? null
+            : replyTarget.mcmpTimestamp ??
+                  replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     } else {
       connector.sendChannelMessage(
@@ -2579,6 +3040,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyToMessageId: replyTarget?.messageId,
         replyToSenderName: replyTarget?.senderName,
         replyToText: replyTarget?.text,
+        // Prefer the timestamp transmitted in the quoted MCMP body: for
+        // binary transports the outer timestamp is receiver-local and would
+        // not resolve on other devices.
+        replyToTimestamp: replyTarget == null
+            ? null
+            : replyTarget.mcmpTimestamp ??
+                  replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     }
   }
@@ -2622,6 +3090,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     if (imagePayloadBytes != null) return imagePayloadBytes;
     if (!connector.isChannelMcmpEnabled(widget.channel.index)) return null;
+    if (connector.channelMcmpVersion(widget.channel.index) == 3) {
+      return ChannelBinaryDataHelper.mcmpV3AppPayloadLength(
+        text,
+        senderName,
+        includeSignature: connector.channelMcmpUseSign(widget.channel.index),
+      );
+    }
     return ChannelBinaryDataHelper.mcmpPayloadLength(text, senderName);
   }
 
@@ -2718,9 +3193,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  void _showMessageActions(ChannelMessage message) {
+  Future<void> _showMessageActions(ChannelMessage message) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
+    final hasMcoOriginal = mcoImage == null
+        ? false
+        : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
+    if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
@@ -2812,6 +3291,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       _markAsUnread(message);
                     },
                   ),
+                if (!message.isOutgoing &&
+                    message.mcmpIsSigned &&
+                    message.mcmpSignature != null)
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(context.l10n.chat_mcmpManualRecheckSign),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(_recheckMessageSignature(message));
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.route_outlined),
                   title: Text(context.l10n.channels_copyPath),
@@ -2828,6 +3318,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     unawaited(_copyMessagePath(message, extended: true));
                   },
                 ),
+                if (hasMcoOriginal)
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                      _mcoForceLora(
+                            message.messageId,
+                            settings.showMcoImagePackReplacements,
+                          )
+                          ? context.l10n.mcogallery_showPacked
+                          : context.l10n.mcogallery_showLora,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMcoImageVariant(message.messageId);
+                    },
+                  ),
                 if (mcoImage != null)
                   ListTile(
                     leading: const Icon(Icons.photo_library_outlined),
@@ -2906,6 +3412,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   void _sendReaction(ChannelMessage message, String emoji) {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
     if (emojiIndex == null) return; // Unknown emoji, skip
     final timestampSecs = message.timestamp.millisecondsSinceEpoch ~/ 1000;
@@ -2937,6 +3444,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  void _toggleMcoImageVariant(String messageId) {
+    setState(() {
+      if (!_mcoVariantOverridden.add(messageId)) {
+        _mcoVariantOverridden.remove(messageId);
+      }
+    });
   }
 
   Future<void> _saveMcoImageToGallery(String text) async {
@@ -2994,7 +3509,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _deleteMessage(ChannelMessage message) async {
-    await context.read<MeshCoreConnector>().deleteChannelMessage(message);
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
+    await connector.deleteChannelMessage(message);
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
@@ -3004,6 +3521,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -3059,7 +3577,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
+  Future<void> _recheckMessageSignature(ChannelMessage message) async {
+    final connector = context.read<MeshCoreConnector>();
+    final status = await connector.recheckChannelMessageSignature(
+      widget.channel.index,
+      message.messageId,
+    );
+    if (!mounted || status == null) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(McmpSignatureBadge.statusLabel(context, status)),
+    );
+  }
+
   void _resendMessage(ChannelMessage message) {
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    if (blockIfOffline(context, connector)) return;
     final remainingSeconds = _remainingResendWaitSeconds(message);
     if (remainingSeconds != null) {
       showDismissibleSnackBar(
@@ -3069,13 +3602,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return;
     }
 
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    connector.cancelPendingChannelSend(message.messageId);
     _lastChannelSendAt = DateTime.now();
-    _lastChannelSentText = message.text;
     final mcoImageV3 = _mcoImageV3ForResend(message.text);
+    final resendText = mcoImageV3 == null
+        ? _restoreReplyMentionForResend(message)
+        : message.text;
+    _lastChannelSentText = resendText;
     connector.sendChannelMessage(
       widget.channel,
-      message.text,
+      resendText,
       mcoImageV3: mcoImageV3,
       originalText: message.originalText,
       translatedLanguageCode: message.translatedLanguageCode,
@@ -3083,11 +3619,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       replyToMessageId: message.replyToMessageId,
       replyToSenderName: message.replyToSenderName,
       replyToText: message.replyToText,
+      // Keep the reply anchor on manual resend (metadata is rebuilt and the
+      // message re-signed, but the quoted target stays the same).
+      replyToTimestamp: message.mcmpReplyTimestamp,
     );
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.chat_retryingMessage),
     );
+  }
+
+  String _restoreReplyMentionForResend(ChannelMessage message) {
+    if (ChannelMessage.parseReplyMention(message.text) != null) {
+      return message.text;
+    }
+    final replySenderName =
+        (message.replyToSenderName ?? message.mcmpReplyAuthorName)?.trim();
+    if (replySenderName == null || replySenderName.isEmpty) {
+      return message.text;
+    }
+    return '@[$replySenderName] ${message.text}';
   }
 
   EncodedMCOImageV3? _mcoImageV3ForResend(String text) {
@@ -3154,10 +3705,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   String _formatPathPrefixes(Uint8List pathBytes, int pathHashByteWidth) {
+    // Keep the compact comma-separated form while still allowing long paths
+    // to wrap inside the message bubble.
     return PathHelper.splitPathBytes(
       pathBytes,
       pathHashByteWidth,
-    ).map(PathHelper.formatHopHex).join(', ');
+    ).map(PathHelper.formatHopHex).join(',\u200B');
   }
 
   int _displayHopCount(

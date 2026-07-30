@@ -50,6 +50,7 @@ class MeshCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onSecondaryTap;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Color? color;
@@ -61,6 +62,7 @@ class MeshCard extends StatelessWidget {
     required this.child,
     this.onTap,
     this.onLongPress,
+    this.onSecondaryTap,
     this.padding = const EdgeInsets.all(14),
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     this.color,
@@ -89,6 +91,7 @@ class MeshCard extends StatelessWidget {
                   HapticFeedback.selectionClick();
                   onLongPress!();
                 },
+          onSecondaryTap: onSecondaryTap,
           child: Padding(padding: padding, child: child),
         ),
       ),
@@ -180,6 +183,7 @@ class StatTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 14, color: accent),
               const SizedBox(width: 6),
@@ -190,7 +194,6 @@ class StatTile extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                     fontSize: 9,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -199,11 +202,7 @@ class StatTile extends StatelessWidget {
           Text.rich(
             TextSpan(
               text: value,
-              style: MeshTheme.mono(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
-              ),
+              style: MeshTheme.mono(fontSize: 14, color: scheme.onSurface),
               children: [
                 if (unit != null)
                   TextSpan(
@@ -215,8 +214,6 @@ class StatTile extends StatelessWidget {
                   ),
               ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

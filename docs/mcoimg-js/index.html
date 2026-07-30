@@ -674,6 +674,16 @@
           <div id="binaryHex" class="hex-strip"></div>
           <div id="binaryLegend" class="hex-legend"></div>
         </div>
+
+        <div class="pack-md5-section" aria-label="MCOimg.pack md5">
+          <h2 class="section-title" style="margin-top: 8px;">MCOimg.pack md5</h2>
+          <div id="packMd5Value" class="binary-summary"></div>
+          <div class="actions">
+            <button id="downloadHashfile" type="button" class="secondary">
+              Download hashfile
+            </button>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -963,6 +973,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     const binarySummary = document.getElementById('binarySummary');
     const binaryHex = document.getElementById('binaryHex');
     const binaryLegend = document.getElementById('binaryLegend');
+    const packMd5Value = document.getElementById('packMd5Value');
     const widthInput = document.getElementById('width');
     const heightInput = document.getElementById('height');
     const imageFileInput = document.getElementById('imageFile');
@@ -1189,6 +1200,9 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
       document.addEventListener('paste', handleClipboardImagePaste);
       document.getElementById('savePng').addEventListener('click', savePng);
       document.getElementById('saveBinary').addEventListener('click', saveBinary);
+      document
+        .getElementById('downloadHashfile')
+        .addEventListener('click', downloadHashfile);
       imageFileInput.addEventListener('cancel', () => {
         console.log('[mcoimg-demo] file picker cancelled');
       });
@@ -1794,7 +1808,11 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
     }
 
     function suggestedDownloadName(kind) {
-      const extension = kind === 'png' ? '.png' : '.mcoimg.bin';
+      const extension = kind === 'png'
+        ? '.png'
+        : kind === 'md5'
+          ? '.md5'
+          : '.mcoimg.bin';
       const sourceStem = loadedSourceFileStem(state.loadedSourceFileName);
       if (sourceStem) {
         return `${sourceStem}${extension}`;
@@ -2132,12 +2150,21 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           binarySummary.textContent = 'No encoded payload yet.';
           binaryHex.textContent = '';
           binaryLegend.textContent = '';
+          packMd5Value.textContent = 'No encoded payload yet.';
           return;
         }
 
         const bytes = Array.from(browserCodec.payloadToBinary(text));
         const parsed = parseBinarySegments(bytes, text);
         const segments = normalizeSegments(parsed.segments, bytes.length);
+
+        // *.mcoimg.pack identity hash: MD5 of the binary payload with the v3
+        // packet nonce zeroed (see MCOImgBrowser.packIdentityHash).
+        try {
+          packMd5Value.textContent = browserCodec.packIdentityHash(bytes);
+        } catch (hashError) {
+          packMd5Value.textContent = `md5 error: ${hashError.message}`;
+        }
 
         binarySummary.textContent = parsed.summary;
         binaryHex.textContent = '';
@@ -2173,6 +2200,7 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
         binarySummary.textContent = `Binary inspector error: ${error.message}`;
         binaryHex.textContent = '';
         binaryLegend.textContent = '';
+        packMd5Value.textContent = '';
       }
     }
 
@@ -2258,6 +2286,27 @@ console.log(packetInfo.payload);      // чистый Uint8Array MCOimg
           `Saved binary ${state.width}×${state.height}, ${bytes.length} bytes`;
       } catch (error) {
         encodedMeta.textContent = `Binary export failed: ${error.message}`;
+      }
+    }
+
+    async function downloadHashfile() {
+      try {
+        const encoded = await getCurrentEncodedForSave();
+        const bytes = encoded.appPayloadWithoutSender
+          ? new Uint8Array(encoded.appPayloadWithoutSender)
+          : (encoded.payload
+            ? new Uint8Array(encoded.payload)
+            : browserCodec.payloadToBinary(encoded.text));
+        const hash = browserCodec.packIdentityHash(bytes);
+        packMd5Value.textContent = hash;
+        browserCodec.downloadBytes(
+          new TextEncoder().encode(hash),
+          suggestedDownloadName('md5'),
+          'text/plain',
+        );
+        encodedMeta.textContent = `Saved hashfile ${hash}`;
+      } catch (error) {
+        encodedMeta.textContent = `Hashfile export failed: ${error.message}`;
       }
     }
 

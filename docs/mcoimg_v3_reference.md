@@ -7,6 +7,10 @@ The older v1/v2 formats are intentionally not specified here. They remain in
 the project for compatibility with old messages and clients, but new
 implementations should target v3.
 
+A browser-oriented JavaScript implementation of the v3 encoder/decoder is also
+available in `docs/mcoimg-js/`. It is useful as a porting reference,
+cross-runtime test target and web integration example.
+
 ## Reference implementation
 
 The normative implementation files are:
@@ -23,9 +27,59 @@ The normative implementation files are:
 When this document and the Dart code disagree, treat the Dart code as the
 reference until the document is updated.
 
+### Normative palette data
+
+The profile ids and profile sizes in this document are not enough to reproduce
+rendered colors. A conforming implementation must copy the exact palette data
+from:
+
+- `lib/helpers/mcoimg_palette.dart` for the nine fixed profiles (`mono`,
+  `master4` through `master64`, and `grayscale8`, `grayscale16`,
+  `grayscale32`);
+- `lib/helpers/mcoimg_dynamic_palettes.dart` for the Dynamic Global 512 RGB
+  table and the `dynamicGlobal8Indices` through `dynamicGlobal512Indices`
+  profile-local-to-global mappings.
+
+The mappings for `dynamicGlobal8` through `dynamicGlobal256` are explicit
+lookup tables, not the first `N` entries of Dynamic Global 512.
+`dynamicGlobal512Indices` is the identity mapping `[0, 1, ..., 511]`. Ports
+should vendor these arrays unchanged. Using different RGB values changes
+rendering and quantization results; using a different dynamic mapping also
+assigns serialized profile-local references to the wrong colors.
+
+### Interoperability fixtures
+
+Ready cross-runtime fixtures are stored in `docs/mcoimg-js/tests/`:
+
+- `v3-js-decoder-fixtures.json` contains canonical bodies, app payloads, text
+  forms and expected decoded images across the v3 containers, algorithms,
+  scans and local-palette descriptors;
+- `v3-js-encoder-fixtures.json` contains payloads produced by the JavaScript
+  encoder for verification by Dart;
+- `generate_v3_dart_fixtures.dart`, `verify-v3-dart-fixtures.js`,
+  `generate-v3-js-encoder-fixtures.js`, `verify_v3_js_encoder_fixtures.dart`
+  and the adjacent scripts perform Dart/JavaScript cross-verification.
+
+From the repository root, the JavaScript v3 suite can be run with:
+
+```text
+node docs/mcoimg-js/tests/run-v3-tests.js
+```
+
+The complete v3 Dart/JavaScript fixture exchange can be run with:
+
+```text
+node docs/mcoimg-js/tests/run-cross-runtime-tests.js --v3-only
+```
+
+The latter command requires `dart` on `PATH`, or `DART_BIN` pointing to the
+Dart executable bundled with Flutter.
+
 There is also a ready browser JavaScript port in `docs/mcoimg-js/`. It is useful
-as an integration example and for browser-side testing. The hosted HTML demo is
-available at https://hdden.ru/MCOimg.
+as an integration example and for browser-side testing. The hosted web version
+of the MCOimg encoder/decoder is available at:
+
+https://hdden.ru/MCOimg/
 
 ## Concept
 
@@ -63,8 +117,52 @@ The channel app payload under this data type is:
 senderNameLen(varuint) | senderName(UTF-8) | subtypeVersion(u8) | packetNonce(u8) + compressed image body
 ```
 
+The outer `senderNameLen` varuint is unsigned LEB128, independent of the
+bit-packed integer primitives inside the MCOimg body:
+
+```text
+repeat:
+  byte bits 0..6: next 7 low bits of the value
+  byte bit 7:     1 when another byte follows, otherwise 0
+  value >>= 7
+until value == 0
+```
+
+Zero is encoded as one zero byte. The reference envelope decoder accepts at
+most five bytes.
+
 `packetNonce` is refreshed for every send so the same image does not produce an
 identical radio payload when resent.
+
+The complete channel app payload, including the sender-name envelope, must fit
+the current MeshCore channel-data limit of 165 bytes:
+
+```text
+bodyMax = 165 - varuintLength(senderNameUtf8.length)
+              - senderNameUtf8.length
+              - 1 // subtypeVersion
+```
+
+The radio frame limit is 176 bytes. Applications should use the protocol
+helpers rather than assuming that the entire frame is available to app data.
+
+When talking directly to companion firmware, the outer command frame is:
+
+```text
+CMD_SEND_CHANNEL_DATA(u8 = 62)
+channelIndex(u8)
+pathLength(u8)
+path[pathLength]?               // absent when pathLength == 0xFF
+dataTypeLE(u16 = 0x0120)
+channelAppPayload
+```
+
+`pathLength = 0xFF` means an unknown output path and requests flood delivery.
+When a concrete path is supplied, `pathLength` is its byte length and the path
+bytes immediately follow. The data type is little-endian, so `0x0120` is sent
+as `0x20, 0x01`. A client library that already exposes a channel `group_data`
+or channel-data API should receive only `dataType = 0x0120` and the channel app
+payload; it normally constructs this command frame itself.
 
 For MCOimg v3:
 
@@ -101,10 +199,67 @@ The text form is:
 im3:<Base91(0x13 | v3 body)>
 ```
 
-The Base91 alphabet and bit queue are implemented by `_V3Base91` in
-`mcoimg_v3_codec.dart`. It is the same style of Base91 transport wrapper used
-by previous MCOimg text formats, but the decoded payload is v3
-`subtypeVersion | body`, not a v1/v2 body.
+The exact Base91 alphabet, in index order, is:
+
+```text
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"
+```
+
+Encoding uses the standard basE91 queue:
+
+```text
+queue = 0
+bitCount = 0
+
+for each input byte:
+  queue |= byte << bitCount
+  bitCount += 8
+  if bitCount > 13:
+    value = queue & 8191
+    if value > 88:
+      queue >>= 13
+      bitCount -= 13
+    else:
+      value = queue & 16383
+      queue >>= 14
+      bitCount -= 14
+    emit alphabet[value % 91]
+    emit alphabet[value / 91]
+
+if bitCount > 0:
+  emit alphabet[queue % 91]
+  if bitCount > 7 or queue > 90:
+    emit alphabet[queue / 91]
+```
+
+Integer division is used for `value / 91`. The decoder reverses the same
+13/14-bit queue rule:
+
+```text
+value = -1
+queue = 0
+bitCount = 0
+
+for each input character:
+  decoded = alphabet index of character
+  reject when character is absent
+  if value < 0:
+    value = decoded
+  else:
+    value += decoded * 91
+    queue |= value << bitCount
+    bitCount += ((value & 8191) > 88) ? 13 : 14
+    while bitCount > 7:
+      emit queue & 0xff
+      queue >>= 8
+      bitCount -= 8
+    value = -1
+
+if value >= 0:
+  emit (queue | (value << bitCount)) & 0xff
+```
+
+The decoded payload is v3 `subtypeVersion | body`, not a v1/v2 body.
 
 ## Public Dart API
 
@@ -139,6 +294,30 @@ final text = MCOImageV3Codec.textFromBody(body);        // im3:...
 - `subtypeVersion`: normally `0x13`;
 - `encodedCandidate`: diagnostic metadata for the selected candidate.
 
+Optional encoder controls are:
+
+```dart
+MCOImageV3Codec().encode(
+  image,
+  backgroundColor: preferredBackground,
+  backgroundCandidates: backgroundSlice,
+  scanModes: scanSlice,
+  includeNonScanCandidates: true,
+  compressionLevel: mcoImageCompressionLevelHigh,
+);
+```
+
+- `backgroundColor` sets the preferred candidate background.
+- `backgroundCandidates` and `scanModes` restrict candidate evaluation. They
+  are primarily used by worker slicing.
+- `includeNonScanCandidates` controls whether the slice also evaluates
+  candidates that are independent of a particular scan.
+- Unknown compression-level integers are normalized to High.
+
+`debugEncode()` accepts the same arguments and returns full candidate
+diagnostics. `backgroundCandidatesFor()` exposes the canonical background
+candidate list used to partition work.
+
 ### Decoding
 
 ```dart
@@ -153,6 +332,8 @@ final imageFromText = MCOImageV3Codec().decodeText(text);
 ```dart
 final info = MCOImageV3Codec.inspectBody(body);
 final infoFromText = MCOImageV3Codec.inspectText(text);
+final infoFromAppPayload =
+    MCOImageV3Codec.inspectAppPayloadWithoutSender(appPayload);
 ```
 
 `MCOImagePayloadInfo` reports:
@@ -160,6 +341,18 @@ final infoFromText = MCOImageV3Codec.inspectText(text);
 - `version`: `3`;
 - `algorithm`: a human-readable selected algorithm/container label;
 - `binaryLength`: body length in bytes.
+
+Useful payload helpers are:
+
+```dart
+final isV3Text = MCOImageV3Codec.isTextPayload(text);
+final appPayload =
+    MCOImageV3Codec.appPayloadWithoutSenderFromText(text);
+final body = MCOImageV3Codec.bodyFromText(text);
+final textAgain =
+    MCOImageV3Codec.textFromAppPayloadWithoutSender(appPayload);
+final nonce = MCOImageV3Codec.nextPacketNonce();
+```
 
 ### Packet nonce
 
@@ -295,7 +488,7 @@ connectedComponentCount <= 20
 When enabled, it uses:
 
 ```text
-max search regions: min(32, 20)
+max search regions: 20
 beam width:         10
 beam depth:         8
 neighbors/state:    32
@@ -312,8 +505,11 @@ search for that background candidate.
 ### Threading and workers
 
 Threading is not part of the MCOimg v3 wire format. It is an implementation
-detail of the encoder and must not change the selected best candidate or the
-decoded image.
+detail of the encoder and must not change the decoded image or the validity of
+the emitted payload. Candidate slices should produce equivalent compression
+quality, but byte-identical output is not guaranteed: the packet nonce is
+generated independently, and equal-cost candidates may be observed in a
+different order.
 
 The Dart reference codec API, `MCOImageV3Codec.encode()`, is synchronous. The
 Flutter canvas integration runs encode jobs through cancellable background
@@ -335,7 +531,7 @@ them with a worker pool:
 
 Browser or JavaScript ports may use Web Workers for the same kind of candidate
 partitioning. This is optional implementation behavior: worker use must remain
-result-equivalent to a single-threaded encode.
+decode-equivalent to a single-threaded encode.
 
 ## Bit order and integer primitives
 
@@ -428,12 +624,16 @@ bits 3..0:  palette profile id
 
 Scan ids follow `ScanMode.index`:
 
-| id | scan |
-| -- | ---- |
-| 0 | `h` |
-| 1 | `v` |
-| 2 | `s` |
-| 3 | `sv` |
+| id | scan | traversal from row-major pixels | row length for row codecs |
+| -- | ---- | ------------------------------- | ------------------------- |
+| 0 | `h` | rows top-to-bottom, every row left-to-right | image/block width |
+| 1 | `v` | columns left-to-right, every column top-to-bottom | image/block height |
+| 2 | `s` | horizontal snake: even rows left-to-right, odd rows right-to-left | image/block width |
+| 3 | `sv` | vertical snake: even columns top-to-bottom, odd columns bottom-to-top | image/block height |
+
+Rows and columns are zero-based when deciding whether they are even. Block
+algorithms consume the resulting one-dimensional sequence. Decoders reconstruct
+the same traversal and scatter the decoded values back into row-major order.
 
 Profile ids follow `PaletteProfile.index`:
 
@@ -456,9 +656,17 @@ Profile ids follow `PaletteProfile.index`:
 | 14 | `dynamicGlobal256` | 256 | 8 |
 | 15 | `dynamicGlobal512` | 512 | 9 |
 
-Color references are profile-local fixed palette indexes for fixed profiles.
-For dynamic profiles, pixels use Dynamic Global palette indexes, while some
-direct algorithms convert them to profile-local color ids internally.
+For fixed profiles, in-memory pixels and serialized color references both use
+indexes in that fixed profile. For dynamic profiles there is an important
+distinction:
+
+- `MCOImage.pixels` and decoded output use Dynamic Global 512 palette indexes;
+- every color reference written to the payload uses a profile-local color id;
+- decoding maps the profile-local id back to its Dynamic Global 512 index.
+
+This mapping applies to headers, backgrounds, transparency, local palettes and
+direct algorithms. A dynamic input color that is unavailable in the selected
+dynamic profile is invalid.
 
 ### Dimensions
 
@@ -527,6 +735,27 @@ high bit is written in the body when needed.
 
 ## Containers
 
+### Background ownership and inheritance
+
+Background-bearing block algorithms are `compactSparse`, `varUintSparse` and
+`biColorMask`. Their background reference is owned as follows:
+
+- in a full-image `block` or `compactBlock`, the block body writes its own
+  `backgroundRef`, unless the implicit-white flag omits it;
+- `boundsBlock` and `compactBoundsBlock` write one container background before
+  the geometry and pass it into the nested block body, which must not write a
+  second background;
+- `regions` and `compactRegionsStream` write one stream background and pass it
+  into every region block;
+- shared-palette sparse and bicolor region bodies inherit that same stream
+  background;
+- `solidBackground` stores its color in the context and optional context tail;
+  `solidRects` writes one container background before its local palette.
+
+Algorithms without a background field neither write nor inherit one. The
+implicit-white flag is valid only where the selected container or block
+algorithm has such a background role.
+
 ### `block`
 
 `block` stores a full-image block with a scan-dependent algorithm. The pixels
@@ -580,6 +809,22 @@ as horizontal. For other algorithms, the normal top-level scan is used.
 non-compact 8-bit axis fields. This container exists for the same logical
 layout as `compactRegionsStream`, but the compact stream is normally preferred.
 
+It has no stream flags, common header, delta geometry or shared palette:
+
+```text
+backgroundRef?                  // absent for implicit white
+repeat regionCount times:
+  x:8
+  y:8
+  widthMinus1:8
+  heightMinus1:8
+  algorithm:5
+  scan:2?                       // omitted for compact-header algorithms
+  block body
+```
+
+Every region therefore has an individual block header.
+
 ### `compactRegionsStream`
 
 `compactRegionsStream` stores multiple rectangular blocks over a background
@@ -599,9 +844,34 @@ For each region:
 
 ```text
 geometry                        // first full geometry, later delta if enabled
-usesIndividualHeader?           // only when common header is enabled
-algorithm/scan?                 // absent when common header applies
+usesIndividualHeader:1?         // hybrid common header only
+algorithm:5?                    // absent when the common header applies
+scan:2?                         // absent for compact-header algorithms
 block body
+```
+
+A region algorithm is always stored in 5 bits. Its scan is stored in 2 bits
+unless `_canUseCompactBlockHeader(algorithm)` is true (`rawGlobal`,
+`rawLocal`, or `biColorMask`), in which case horizontal scan is implied.
+
+When `hasCommonBlockHeader` is false, every region has its own
+`algorithm:5` and optional `scan:2`; there is no
+`usesIndividualHeader` bit. With a strict common header, the common
+algorithm/scan is written once and no region carries a header-selection bit.
+
+The common-header field itself is:
+
+```text
+commonAlgorithm:5
+commonScan:2?                    // omitted for compact-header algorithms
+```
+
+For a strict header, `commonAlgorithm` is the real algorithm id. For a hybrid
+header, `commonAlgorithm` is the reserved marker 31, followed by:
+
+```text
+realCommonAlgorithm:5
+realCommonScan:2?                // omitted for compact-header algorithms
 ```
 
 When `hasDeltaGeometry` is true, region 0 uses full compact geometry and each
@@ -622,9 +892,27 @@ and stores `encoded` as `compactUint`.
 When `hasSharedLocalPalette` is true, compatible region block bodies reuse one
 local palette stored before the region list.
 
+The shared-palette block-body grammar omits each block's own local palette.
+It is valid for:
+
+```text
+rawLocal, compactRle, varUintRle, compactSparse, varUintSparse,
+lzPixels, quadtree, bitplanes, adaptiveBitplanes, compactRowDelta,
+rowDelta, rowRepeat, biColorMask
+```
+
+It is not valid for `rawGlobal`, `directBitplanes` or `directRowDelta`. Sparse
+and bicolor bodies inherit the stream background. For shared `biColorMask`,
+the foreground is a local palette index rather than a profile color reference.
+
 `hasCommonBlockHeader` can be either strict or hybrid. A common algorithm id of
-31 is a hybrid marker: the real common algorithm follows, then every region has
-one override bit. Only override regions serialize their own algorithm/scan.
+31 is a 5-bit hybrid marker: the real common `algorithm:5` and optional
+`scan:2` follow. Every region then has one `usesIndividualHeader` bit:
+
+```text
+0 => use the common algorithm and scan
+1 => read this region's algorithm:5 and optional scan:2
+```
 
 ### `solidBackground`
 
@@ -672,13 +960,14 @@ heightMinus1:8
 Compact geometry uses:
 
 ```text
-x:bitLength(imageWidth)
-y:bitLength(imageHeight)
-widthMinus1:bitLength(imageWidth - x)
-heightMinus1:bitLength(imageHeight - y)
+x:bitLength(imageWidth - 1)
+y:bitLength(imageHeight - 1)
+widthMinus1:bitLength(imageWidth - x - 1)
+heightMinus1:bitLength(imageHeight - y - 1)
 ```
 
-The decoded rectangle must stay within the image.
+Here `bitLength(0) = 0`, so a field whose only legal value is zero occupies no
+bits. The decoded rectangle must stay within the image.
 
 ## Local palettes
 
@@ -723,6 +1012,14 @@ The encoder also has an internal ordered-banked descriptor variant. On the
 wire it is selected through descriptor id 3 and then by the first bit inside
 the banked descriptor body.
 
+Bitmap, sorted-delta, range-runs and bank-bitmap descriptors reconstruct colors
+in ascending profile-local reference order. An encoder may therefore use these
+descriptors only when its local palette is already strictly increasing in that
+order. Otherwise local pixel indexes would refer to different colors after
+decoding. The ordered-banked 8x64 variant preserves arbitrary local-palette
+order and is the only descriptor form that may represent a non-sorted palette.
+The flat local-palette form also preserves arbitrary order.
+
 Descriptor bodies:
 
 - bitmap: one bit per profile color, in profile order.
@@ -732,9 +1029,54 @@ Descriptor bodies:
   by `start:globalBits` and `compactUint(length - 1)` for each run.
 - bank bitmaps: selector bit `0`, `bankMask:8`, then per selected 64-color bank
   a 64-bit bitmap.
-- ordered banked 8x64: selector bit `1`, local palette length, then either one
-  explicit bank plus 6-bit offsets or a bank mask plus compact bank indexes and
-  6-bit offsets.
+- ordered banked 8x64: selector bit `1`, followed by:
+
+```text
+localPaletteLength
+multipleBanks:1
+
+if multipleBanks == 0:
+  bank:3
+  repeat localPaletteLength times:
+    offsetInBank:6
+else:
+  bankMask:8
+  banks = ascending set-bit indexes from bankMask
+  bankBits = bitLength(banks.length - 1)
+  repeat localPaletteLength times:
+    bankIndex:bankBits
+    offsetInBank:6
+```
+
+`bankIndex` addresses the compact ascending `banks` list, not the original
+0..7 bank number. The decoder applies these additional validity rules:
+
+- when `multipleBanks == 0`, `localPaletteLength` must not exceed 64 and all
+  entries use the one explicit bank;
+- when `multipleBanks == 1`, `bankMask` must select at least two banks;
+- `localPaletteLength` must not exceed `popcount(bankMask) * 64`;
+- every decoded `bankIndex` must be within the compact selected-bank list;
+- every bank selected by `bankMask` must be used by at least one palette entry.
+
+As with every local-palette descriptor, duplicate reconstructed color
+references are invalid.
+
+The descriptor-specific `local palette length` used by sorted-delta and
+ordered-banked bodies is:
+
+```text
+if profileSize <= 64:
+  lengthMinus1:globalBits(profile)
+else:
+  0  + value:6 => length = value + 1       // 1..64
+  10 + value:6 => length = value + 65      // 65..128
+  11 + value:bitLength(profileSize - 129)
+                => length = value + 129    // 129..profileSize
+```
+
+The final `11` branch is invalid for profiles of size at most 128. The banked
+descriptor and its ordered-banked variant are valid only for
+`dynamicGlobal512`; its eight banks contain 64 profile-local references each.
 
 Decoders must reject duplicate local colors and references outside the profile.
 
@@ -847,11 +1189,13 @@ if isRle == 0:
   raw bit for every pixel
 else:
   startingBit:1
-  residual run lengths with rangeCompactUint
+  repeat until pixelCount is filled:
+    runLengthMinus1:rangeCompactUint(remainingPixels - 1)
 ```
 
-RLE run lengths fill the whole pixel count and alternate bit value after every
-run.
+Each decoded run length is `runLengthMinus1 + 1`. RLE run lengths fill the
+whole pixel count and alternate bit value after every run. No run-count field
+or terminator is stored.
 
 ### `adaptiveBitplanes`
 
@@ -897,75 +1241,132 @@ position = previous + gap + 1
 ### `directBitplanes`
 
 This algorithm is valid only for grayscale and dynamic profiles. It skips a
-local palette and runs `adaptiveBitplanes` directly on profile-local values.
+local palette and runs `adaptiveBitplanes` directly on profile-local values,
+with:
+
+```text
+valueBits = globalBits(profile)
+```
 
 For dynamic profiles, the body uses dynamic-profile color ids and maps them
 back through `MCOImageDynamicPalette.globalIndexForProfileColorId()`.
 
 ### `rowDelta`
 
-Store a local palette. The body stores rows relative to predicted rows. First:
+Store a local palette. Convert the block to the selected scan order and split
+it into rows using the scan row length from the scan table. `valueBits` is the
+local-palette index width.
+
+The body starts with:
 
 ```text
 useVirtualBaseRow:1
 allowShiftPredictors:1
-first row values?        // absent when useVirtualBaseRow is true
+firstRow[valueBits]?      // rowLength values; absent for a virtual base row
 row operations...
 ```
 
-Operations are 2-bit:
+When `useVirtualBaseRow` is true, row 0 is encoded relative to an all-zero
+virtual row and no raw first row is present. Otherwise the first row is stored
+raw and operations start at row 1.
 
-| id | operation |
-| -- | --------- |
-| 0 | raw row |
-| 1 | repeat predicted row |
-| 2 | indexed changes |
-| 3 | extended |
+Each following operation starts with `op:2`:
 
-Extended operations are 2-bit:
+| id | operation | following payload |
+| -- | --------- | ----------------- |
+| 0 | raw row | `rowLength` values in `valueBits` |
+| 1 | repeat previous row | none; predictor is always `same` |
+| 2 | indexed changes | optional predictor, change count and changed positions/values |
+| 3 | extended | `extendedOp:2`, then operation-specific payload |
 
-| id | operation |
-| -- | --------- |
-| 0 | mask |
-| 1 | segments |
-| 2 | same-scalar mask |
-| 3 | repeat run |
+For indexed changes:
+
+```text
+predictor?                         // only when allowShiftPredictors == 1
+changeCount:bitLength(rowLength)
+repeat changeCount times:
+  x:bitLength(rowLength - 1)       // strictly increasing
+  value:valueBits
+```
+
+`changeCount` may be zero. Start with the predicted row and replace the listed
+positions.
+
+Extended operations are:
+
+| id | operation | following payload |
+| -- | --------- | ----------------- |
+| 0 | mask | optional predictor, `rowLength` mask bits, then one value per set bit |
+| 1 | segments | optional predictor, segment geometry and values |
+| 2 | same-scalar mask | optional predictor, `rowLength` mask bits, one shared value |
+| 3 | repeat run | repeat count only; predictor is always `same` |
+
+The mask must contain at least one set bit. Segment payload is:
+
+```text
+segmentCountMinus1:bitLength(rowLength - 1)
+repeat segmentCount times:
+  start:bitLength(rowLength - 1)
+  lengthMinus1:bitLength(rowLength - 1)
+  value[length]:valueBits
+```
+
+Segments must be non-empty, ordered, non-overlapping and within the row.
+
+A repeat run represents at least two consecutive rows, each equal to its
+immediately preceding row:
+
+```text
+repeatCountMinus2:
+  rangeCompactUint(remainingRowCount - 2)
+```
 
 Predictors are:
 
-| id | predictor |
-| -- | --------- |
-| 0 | same previous row |
-| 1 | left-shifted previous row |
-| 2 | right-shifted previous row |
+| compact prefix | predictor |
+| -------------- | --------- |
+| `0` | same previous row |
+| `10` | left-shifted previous row |
+| `11` | right-shifted previous row |
 
-The full row-delta grammar is in `_writeRowDeltaBody` and
-`_readRowDeltaBody`.
+Prefix bits are shown in read/write order. Shift predictors wrap at the row
+edge:
+
+```text
+same[x]  = previous[x]
+left[x]  = previous[(x - 1) mod rowLength]
+right[x] = previous[(x + 1) mod rowLength]
+```
+
+Predictor bits are completely absent when `allowShiftPredictors` is false; the
+same-row predictor is then implied. A shifted predictor is invalid for row 0
+when that row uses the virtual base.
 
 ### `compactRowDelta`
 
-Store a local palette. The body is a denser row-delta grammar:
+Store a local palette and use the same scan-row construction and wraparound
+predictors as `rowDelta`. The body starts with:
 
 ```text
 useVirtualBaseRow:1
-first row values?        // absent when useVirtualBaseRow is true
+firstRow[valueBits]?      // rowLength values; absent for a virtual base row
 row operations...
 ```
 
-Operations are 3-bit:
+Each operation starts with `op:3`:
 
-| id | operation |
-| -- | --------- |
-| 0 | repeat predicted row |
-| 1 | raw row |
-| 2 | indexed changes |
-| 3 | same scalar |
-| 4 | segments |
-| 5 | trimmed mask |
-| 6 | repeat run |
-| 7 | predicted row, no changes |
+| id | operation | following payload |
+| -- | --------- | ----------------- |
+| 0 | repeat previous row | none; same predictor is implied |
+| 1 | raw row | `rowLength` values in `valueBits` |
+| 2 | indexed changes | predictor, optional residual flag, positions and values |
+| 3 | same scalar | predictor, optional residual flag, positions and one shared value/delta |
+| 4 | segments | predictor, optional residual flag, segment geometry and values |
+| 5 | trimmed mask | predictor, optional residual flag, mask geometry and values |
+| 6 | repeat run | `rangeCompactUint(remainingRowCount - 2) + 2` |
+| 7 | predicted row, no changes | predictor only |
 
-For operations 2, 3, 4, 5 and 7, a compact predictor is read first:
+For operations 2, 3, 4, 5 and 7, read the compact predictor first:
 
 ```text
 0   => same
@@ -973,13 +1374,72 @@ For operations 2, 3, 4, 5 and 7, a compact predictor is read first:
 1,1 => right
 ```
 
-For direct grayscale use, changed values may be residual-coded from the
-predicted value.
+For operations 2 through 5, direct grayscale bodies then store
+`useResidual:1`; local-palette and direct-dynamic bodies omit this bit and use
+absolute values.
+
+Indexed and same-scalar positions are gap-coded:
+
+```text
+changeCountMinus1:rangeCompactUint(rowLength - 1)
+previousX = -1
+for each changed position i:
+  remaining = changeCount - i - 1
+  maxGap = rowLength - previousX - remaining - 2
+  gap:rangeCompactUint(maxGap)
+  x = previousX + 1 + gap
+  previousX = x
+```
+
+Indexed mode then stores one changed value for each position. Same-scalar mode
+stores one absolute value or one shared residual delta and applies it to every
+position.
+
+Segments use:
+
+```text
+segmentCountMinus1:rangeCompactUint(rowLength - 1)
+previousEnd = 0
+repeat segmentCount times:
+  remaining = segmentCount - currentIndex - 1
+  gap:rangeCompactUint(rowLength - previousEnd - remaining - 1)
+  start = previousEnd + gap
+  lengthMinus1:rangeCompactUint(rowLength - start - remaining - 1)
+  previousEnd = start + length
+changed values in position order
+```
+
+Trimmed-mask mode uses:
+
+```text
+start:rangeCompactUint(rowLength - 1)
+spanMinus1:rangeCompactUint(rowLength - start - 1)
+changedMask[span]:1
+changed values for set bits, in position order
+```
+
+The trimmed mask must have at least one set bit.
+
+When `useResidual` is set, each changed grayscale value is represented by a
+non-zero delta from the predicted value:
+
+```text
+deltaCode = delta > 0 ? delta * 2 - 1 : -delta * 2
+stored = compactUint(deltaCode - 1)
+decodedValue = predictedValue + decodedDelta
+```
+
+The reconstructed value must remain inside the selected profile.
 
 ### `directRowDelta`
 
 This algorithm is valid only for grayscale and dynamic profiles. It skips a
-local palette and runs `compactRowDelta` directly on profile-local values.
+local palette and runs `compactRowDelta` directly on profile-local values,
+with:
+
+```text
+valueBits = globalBits(profile)
+```
 
 For grayscale profiles, residual value coding is enabled. For dynamic profiles,
 the body uses dynamic-profile color ids without grayscale residuals.
@@ -1022,9 +1482,20 @@ selects background. This algorithm uses a compact block header when possible.
 
 ### `rowRepeat`
 
-Store a local palette. Store the first row raw, then for each following row
-store whether each pixel equals the pixel above it. Pixels that differ carry a
-new local color index. See `_writeRowRepeat` and `_readRowRepeat`.
+Store a local palette and split the selected scan sequence into scan rows.
+Store the first row raw. Every following row begins with one bit for the entire
+row:
+
+```text
+firstRow[rowLength]:localColorIndex
+repeat for each remaining row:
+  sameAsPreviousRow:1
+  if sameAsPreviousRow == 0:
+    row[rowLength]:localColorIndex
+```
+
+When `sameAsPreviousRow` is set, the complete preceding row is copied. There
+are no per-pixel equality bits in this algorithm.
 
 ## Implicit white background
 
@@ -1047,6 +1518,435 @@ If the transparent-color flag is set, one color reference is stored after the
 container/context byte and before the container body. This is metadata only.
 The pixel stream still contains normal palette references. A renderer should
 draw pixels equal to `transparentColor` with alpha zero.
+
+## Encoding and preparing for transmission
+
+### What an encoder is responsible for
+
+The v3 codec starts from an already indexed `MCOImage`. Converting an arbitrary
+PNG, JPEG or RGBA bitmap into a supported palette profile is a separate
+quantization step and is not part of the v3 wire format.
+
+Before encoding:
+
+1. Validate `width` and `height` in `1..256`.
+2. Validate `pixels.length == width * height`.
+3. Keep the input pixels in row-major order.
+4. Select one `PaletteProfile` that contains every pixel color and the optional
+   transparent color.
+5. For fixed profiles, use that profile's indexes directly.
+6. For dynamic profiles, keep Dynamic Global 512 indexes in `MCOImage.pixels`,
+   but map each serialized reference to the selected profile-local id.
+7. Treat `transparentColor` as rendering metadata. Do not remove those pixels
+   from the pixel sequence.
+
+An encoder may emit any valid container and algorithm combination. It does not
+have to reproduce the Dart candidate search. Candidate search affects payload
+size, not decoding semantics.
+
+### Minimal compatible encoder
+
+A small implementation can support every valid indexed input with one
+combination:
+
+```text
+container = compactBlock (id 1)
+algorithm = rawGlobal (id 0)
+scan      = h (id 0)
+implicitWhiteBackground = false
+```
+
+This is not always compact enough for radio transport, but it is a useful
+baseline and fallback. Its body can be written as follows:
+
+For `rawGlobal`, `rawLocal` and `biColorMask`, `compactBlock` is required rather
+than merely preferred. Encoding any of these scan-independent algorithms in an
+ordinary `block` container is non-canonical and the reference decoder rejects
+it.
+
+```text
+writer.writeBits(packetNonce, 8)
+
+imageHeader =
+    (hasTransparentColor ? 0x80 : 0)
+  | (0 << 6)                         // no implicit white background
+  | (scanH << 4)
+  | paletteProfileId
+writer.writeBits(imageHeader, 8)
+
+writeCanonicalDimensions(writer, width, height)
+
+containerContext =
+    (compactBlockId << 5)
+  | rawGlobalAlgorithmId             // 0x20
+writer.writeBits(containerContext, 8)
+
+if hasTransparentColor:
+  writer.writeBits(
+    profileLocalRef(transparentColor),
+    globalBits(profile),
+  )
+
+for pixel in rowMajorPixels:
+  writer.writeBits(profileLocalRef(pixel), globalBits(profile))
+
+body = writer.toBytes()              // zero-pad the final partial byte
+```
+
+`containerContext` is a logical 8-bit field written at the current bit offset;
+it is not necessarily aligned to a physical byte after the packed dimensions.
+The same applies to every later field.
+
+This baseline is canonical when scan is `h`. If it exceeds the transport
+budget, add compact candidates incrementally, for example:
+
+1. `solidBackground` for one-color images.
+2. `rawLocal`, `compactRle` and `varUintRle`.
+3. `biColorMask` and sparse modes for background-heavy images.
+4. bounds containers when non-background pixels occupy a smaller rectangle.
+5. bitplane, row-delta, quadtree and LZ candidates.
+6. region containers and alternative palette orders.
+
+Always retain `rawGlobal` as the valid fallback even when it is too large for
+the intended transport. That lets the encoder distinguish “cannot represent
+this image” from “valid image, but no candidate fits the current payload
+limit”.
+
+### Building and selecting candidates
+
+For every candidate:
+
+1. Choose the top-level scan and convert row-major pixels to that traversal.
+2. Choose a container and an algorithm legal for that container.
+3. Choose or inherit a background where required.
+4. Build local palettes where required and map pixels to local indexes.
+5. Encode the complete nonce-prefixed body, including zero padding.
+6. Reject the candidate if any color, local index, geometry or algorithm
+   constraint is violated.
+
+Local-palette order does not affect the rendered image, but it changes local
+indexes and therefore compression. A basic encoder may use first-use or
+frequency order. The reference encoder additionally tries profile, transition,
+RGB and bitplane-optimized orders where useful.
+
+Use one packet nonce while comparing candidates, or use a placeholder byte:
+the nonce contributes the same one-byte cost to every candidate. After choosing
+the winner, refresh its nonce immediately before each actual send or resend.
+
+The direct `MCOImageV3Codec.encode()` call selects the shortest binary body.
+When two bodies have equal byte length, it compares only the image-mode rank:
+
+```text
+biColorMask, sparseBg, rowRepeat, rleLocal, rawLocal,
+rawGlobal, extended, rowDelta, regionsBg
+```
+
+If byte length and image-mode rank are both equal, the first observed candidate
+remains selected.
+
+The broader `MCOImageCodec.selectBestCandidate()` helper is used when a caller,
+such as the Flutter canvas, combines candidates produced by independent worker
+slices. Its tie-break order is:
+
+1. smaller target length: `byteLength` for `MCOImageOutputTarget.binary`, or
+   `charLength` for `MCOImageOutputTarget.text`;
+2. lower background-candidate rank;
+3. bounds candidate before a non-bounds candidate;
+4. container rank: bounds, then ordinary full-image, then regions;
+5. image-mode rank:
+   `extended`, `biColorMask`, `sparseBg`, `rowRepeat`, `rowDelta`,
+   `rleLocal`, `rawLocal`, `rawGlobal`, `regionsBg`;
+6. lower scan id.
+
+If every field ties, the first observed candidate remains selected. Other
+encoders may select any valid equal-size candidate; these preferences do not
+change wire compatibility. If text transport has its own character limit,
+measure the final `im3:` Base91 string after selection as well.
+
+The compression levels in this document are recommended search policies:
+
+- Normal evaluates a reduced candidate table.
+- High is the default full non-Extreme search.
+- Extreme adds bounded deep region search.
+
+They are not stored in the body and do not change decoder behavior.
+
+### Canonical payloads
+
+After encoding, keep the three layers distinct:
+
+```text
+bare body:
+  packetNonce | imageHeader | dimensions | containerContext | image data
+
+app payload without sender:
+  0x13 | bare body
+
+channel app payload:
+  senderNameLen(ULEB128) | senderNameUtf8 | 0x13 | bare body
+```
+
+Use the app payload without sender for portable `.mcoimg.bin` files and gallery
+storage. Do not store the sender envelope in those files.
+
+For text transport:
+
+```text
+im3: + Base91(0x13 | bare body)
+```
+
+For binary channel transport:
+
+```text
+dataType = 0x0120
+payload  = senderNameLen | senderNameUtf8 | 0x13 | bare body
+```
+
+Reject binary output when the complete channel app payload exceeds 165 bytes.
+The sender-name envelope therefore reduces the body budget. A body that fits
+for a short sender name may not fit for a longer one.
+
+### Dart encoding flow
+
+The direct reference call is synchronous:
+
+```dart
+final image = MCOImage(
+  width: width,
+  height: height,
+  paletteProfile: paletteProfile,
+  pixels: List<int>.unmodifiable(pixels),
+  transparentColor: transparentColor,
+  encodingVersion: MCOImageEncodingVersion.v3,
+);
+
+final encoded = MCOImageV3Codec().encode(
+  image,
+  backgroundColor:
+      transparentColor ?? MCOImagePalette.whiteIndexFor(paletteProfile),
+  compressionLevel: mcoImageCompressionLevelHigh,
+);
+```
+
+Prepare a binary send through the app helper:
+
+```dart
+final outbound = ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
+  image: encoded,
+  senderName: senderName,
+);
+
+if (outbound == null) {
+  // Unsupported transport or payload exceeds the current binary limit.
+  return;
+}
+
+// outbound.dataType == 0x0120
+// outbound.payload is the complete sender-name app envelope.
+```
+
+`tryEncodeMcoImageV3Outbound()` copies the selected body and refreshes its nonce
+before constructing the envelope. For manual envelope construction, call
+`MCOImageV3Codec.refreshPacketNonce()` first.
+
+A low-level companion client can then build the command frame:
+
+```dart
+final frame = buildSendChannelDataFrame(
+  channelIndex,
+  outbound.dataType,
+  outbound.payload,
+  pathBytes: selectedPath, // null/empty uses flood delivery
+);
+```
+
+The MeshCore app normally passes the encoded result through
+`MeshCoreConnector`'s channel-send path instead of calling `sendFrame`
+directly. That higher-level path also applies the selected flood scope,
+radio-quiet delay, pending-message tracking and retransmission bookkeeping;
+those behaviors are outside the MCOimg format.
+
+### Interactive encoder UI pattern
+
+`lib/screens/canvas_editor_screen.dart` is the reference UI integration. It
+keeps the synchronous codec away from the Flutter UI isolate and follows this
+pattern:
+
+1. Capture an immutable encode request containing dimensions, palette profile,
+   pixels, transparency, preferred background, output target and compression
+   level.
+2. Debounce canvas changes and wait until the active drawing gesture ends.
+3. Run `MCOImageV3Codec.encode()` in a cancellable background compute task.
+4. Cancel old tasks when pixels or settings change.
+5. Associate every refresh with a monotonically increasing request id and
+   discard results for stale canvas state.
+6. Cache the encoded result using all fields that affect encoding, including
+   the complete pixel list.
+7. Keep the previous valid size/result visible while a replacement encode is
+   running or fails.
+8. Before sending, await the current encode, recalculate the real transport
+   size, enforce the limit, and only then return the encoded result to the chat.
+
+Normal and High use one background compute task for the complete search.
+Extreme may partition work into independent slices:
+
+```text
+one non-scan/regions slice per background candidate
+one scan slice per (background candidate, scan mode)
+```
+
+The UI gathers the candidates from all completed slices and selects the best
+one. On cancellation or worker failure it stops remaining tasks; the current
+implementation can fall back to a single encode when parallel Extreme
+evaluation fails.
+
+The displayed payload size must match the chosen transport:
+
+```text
+binary:
+  uleb128ByteLength(senderNameUtf8.length)
+  + senderNameUtf8.length
+  + 1                         // subtypeVersion
+  + body.length
+
+text:
+  length("im3:" + Base91(0x13 | body))
+```
+
+The canvas itself can continue rendering and editing ordinary indexed pixels
+while compression runs in the background. Encoding progress and payload size
+are UI state; they are not part of the MCOimg v3 format.
+
+The same screen also demonstrates reusable `.mcoimg.bin` import/export. Export
+stores the canonical app payload without sender, not a channel transport
+envelope. For v3 this is:
+
+```text
+0x13 | packetNonce | imageHeader | dimensions | containerContext | image data
+```
+
+When that file is imported back into the editor, the app decodes it for the
+canvas but also adopts the imported binary body as the current encoded
+candidate. As long as the user does not change pixels, dimensions, palette,
+transparency, output target or compression settings, the editor can reuse that
+exact compressed representation instead of running the candidate search again.
+Before a later send, only the one-byte v3 `packetNonce` is refreshed; the
+compressed image bitstream remains byte-for-byte intact.
+
+### Built-in MCOimg gallery pattern
+
+`lib/screens/mco_image_gallery_screen.dart` and
+`lib/storage/mco_image_gallery_store.dart` are the reference app-side gallery
+integration. The gallery is not part of the wire format; it is a convenience UI
+for selecting already encoded MCOimg payloads.
+
+The app keeps two sources of gallery items:
+
+- user/imported items stored in app preferences;
+- installed image packs stored under the app support directory in
+  `mcoimg_packs/`.
+
+Every gallery item carries the `.mcoimg.bin` bytes that will be sent over the
+network. Pack items can also carry ordered "original" candidates, such as
+Lottie, PNG, GIF or JPEG files, which are used only for local preview and for
+replacing received LoRa-quality MCOimg messages with a higher-quality original
+when the receiver has the same pack installed.
+
+On gallery open, pack groups are loaded as ordinary collapsible gallery groups.
+The required default group for non-pack imports is the localized "common"
+group. Bundled packs may be shipped as Flutter assets under `assets/mcopacks/`;
+on startup/gallery access the store installs missing bundled `.mcoimg.pack`
+archives into the same app-support pack directory.
+
+### `*.mcoimg.pack` image packs
+
+An MCOimg image pack is a ZIP archive with the extension `*.mcoimg.pack`. The
+archive root contains `info.json` and an `images/` directory. Each direct
+subdirectory of `images/` represents one gallery item:
+
+```text
+/
+  info.json
+  images/
+    arbitrary-folder-name-1/
+      arbitrary-name.lottie.json | arbitrary-name.lottie |
+      arbitrary-name.webp |
+      arbitrary-name.png | arbitrary-name.gif |
+      arbitrary-name.jpg | arbitrary-name.jpeg
+      arbitrary-name.mcoimg.bin
+      arbitrary-name.md5?
+    arbitrary-folder-name-2/
+      ...
+```
+
+Every image folder must contain:
+
+- one `*.mcoimg.bin` file: the canonical MCOimg payload sent over the network;
+- at least one supported original file:
+  `*.lottie.json`, `*.lottie`, `*.webp`, `*.png`, `*.gif`, `*.jpg` or
+  `*.jpeg`.
+
+An image folder without a valid original file or without a `*.mcoimg.bin` file
+is skipped. Folder and file names are arbitrary, but import sanitizes them for
+safe filesystem storage. Items are ordered by the natural/alphanumeric order of
+their image folder names, so folders named `1`, `2`, `10` display in that order.
+
+If multiple original files are present for one item, the receiver tries them in
+this priority order:
+
+```text
+.lottie.json, .lottie, .webp, .png, .gif, .jpg, .jpeg
+```
+
+Files with the same format priority are ordered by natural filename order. If a
+higher-priority original cannot be loaded, the renderer falls back to the next
+candidate. If no original candidate works, the decoded MCOimg image is shown.
+
+The optional `*.md5` file stores the identity hash used to match a received
+MCOimg message to the pack original. Its content is a 32-character hexadecimal
+MD5 string. The canonical formula is implemented by
+`lib/helpers/mco_image_identity.dart`: lowercase MD5 of the `.mcoimg.bin` bytes,
+with the v3 body nonce byte zeroed before hashing. If the `*.md5` file is
+missing, the app computes the same hash from the `.mcoimg.bin` file while
+building the pack-originals index.
+
+`info.json` contains pack metadata:
+
+```json
+{
+  "name": "Pack name, for example Smiles",
+  "id": "Internal pack id, for example smiles",
+  "ver": "Pack version, for example 1.0.0",
+  "author": "Author name, for example Aiwan",
+  "authorUrl": "Optional author website URL",
+  "packUrl": "Optional URL where this pack can be downloaded",
+  "maxImageSize": 48
+}
+```
+
+Required fields are `name`, `id` and `ver`. `author`, `authorUrl`, `packUrl`
+and `maxImageSize` are optional. `maxImageSize`, when present and positive,
+limits the longest side of the gallery preview for that pack.
+
+The installed folder name is derived from metadata:
+
+```text
+mcoimgpack_<id>_<author-or-unknown>_<ver>
+```
+
+If a pack with the same derived folder name is imported again, the old installed
+folder is deleted and replaced by the new archive contents. Installed packs are
+listed alphabetically by `name`; the gallery group title is:
+
+```text
+name (author, ver. version)
+```
+
+or, when the author is absent:
+
+```text
+name (ver. version)
+```
 
 ## Encoder candidate search
 
@@ -1204,12 +2104,16 @@ print('${info.algorithm}, ${info.binaryLength} bytes');
 
 1. Port palette tables exactly, including dynamic profile mapping.
 2. Implement the LSB-first bit reader/writer and integer primitives.
-3. Implement app payload parsing: `0x13 | body`.
-4. Implement the v3 body preamble, dimensions and container/context byte.
-5. Implement local palette descriptors.
-6. Implement block algorithms.
-7. Implement containers, especially compact bounds and compact regions.
-8. Add fixture tests against the Dart implementation.
-9. Add roundtrip tests for every palette profile and every block/container
-   family.
-10. Only after decoder parity is solid, port encoder candidate search.
+3. Implement the minimal `compactBlock + rawGlobal` encoder and decoder.
+4. Implement app payload parsing and creation: `0x13 | body`.
+5. Implement sender-envelope ULEB128 and the `0x0120` binary route.
+6. Implement the v3 body preamble, dimensions and container/context byte.
+7. Implement local palette descriptors.
+8. Implement additional block algorithms.
+9. Implement containers, especially compact bounds and compact regions.
+10. Run the existing fixtures in `docs/mcoimg-js/tests/` against the port and
+    add fixtures for any new wire cases.
+11. Add roundtrip tests for every palette profile and every block/container
+    family.
+12. Only after basic encoder/decoder parity is solid, port the full encoder
+    candidate search and UI worker slicing.

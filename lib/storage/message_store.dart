@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../utils/app_logger.dart';
@@ -32,9 +33,47 @@ class MessageStore {
   }
 
   Future<List<Message>> loadMessages(String contactKeyHex) async {
+    final jsonString = await _loadMessagesJson(contactKeyHex);
+    return _messagesFromJson(jsonString);
+  }
+
+  Future<List<Message>> loadScopedMessages(String contactKeyHex) async {
+    final jsonString = await loadMessagesJsonForSearch(contactKeyHex);
+    return _messagesFromJson(jsonString);
+  }
+
+  List<Message> _messagesFromJson(String? jsonString) {
+    if (jsonString == null) return [];
+
+    try {
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      return jsonList.map((json) => _messageFromJson(json)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<String?> loadMessagesJsonForSearch(
+    String contactKeyHex, {
+    bool includeLegacyUnscoped = false,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
-      return [];
+      return null;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyFor$contactKeyHex';
+    var jsonString = prefs.getString(key);
+    if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
+      jsonString = prefs.getString('$_keyPrefix$contactKeyHex');
+    }
+    return jsonString == null || jsonString.isEmpty ? null : jsonString;
+  }
+
+  Future<String?> _loadMessagesJson(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot load messages.');
+      return null;
     }
     final prefs = PrefsManager.instance;
     final key = '$keyFor$contactKeyHex';
@@ -56,18 +95,15 @@ class MessageStore {
       jsonString = prefs.getString(keyFor);
     }
     if (jsonString == null || jsonString.isEmpty) {
-      return [];
+      return null;
     }
-
-    try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
-    } catch (e) {
-      return [];
-    }
+    return jsonString;
   }
 
-  Future<MessageStoreSummary?> loadMessageSummary(String contactKeyHex) async {
+  Future<MessageStoreSummary?> loadMessageSummary(
+    String contactKeyHex, {
+    bool includeLegacyUnscoped = true,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
@@ -76,7 +112,7 @@ class MessageStore {
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
     var jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
       final legacyJsonString = prefs.getString(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         jsonString = legacyJsonString;
@@ -89,6 +125,7 @@ class MessageStore {
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       DateTime? latestMessageAt;
+      String latestRawMessageText = '';
       var messageCount = 0;
       for (final entry in jsonList) {
         if (entry is! Map<String, dynamic>) continue;
@@ -99,12 +136,18 @@ class MessageStore {
         final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
         if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
           latestMessageAt = timestamp;
+          final rawText = entry['text'];
+          latestRawMessageText = rawText is String ? rawText : '';
         }
       }
       if (messageCount == 0 || latestMessageAt == null) return null;
+      final latestMessageText =
+          MessageTextCodec.tryDecodeKnownCompression(latestRawMessageText) ??
+          latestRawMessageText;
       return MessageStoreSummary(
         messageCount: messageCount,
         latestMessageAt: latestMessageAt,
+        latestMessageText: latestMessageText,
       );
     } catch (_) {
       return null;
@@ -126,6 +169,7 @@ class MessageStore {
       'senderKey': base64Encode(msg.senderKey),
       'text': msg.text,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
+      'receivedAt': msg.receivedAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
       'isCli': msg.isCli,
       'status': msg.status.index,
@@ -140,6 +184,20 @@ class MessageStore {
       'compressionSavingsPercent': msg.compressionSavingsPercent,
       'compressionOriginalBytes': msg.compressionOriginalBytes,
       'compressionPayloadBytes': msg.compressionPayloadBytes,
+      'mcmpSignatureStatus': msg.mcmpSignatureStatus.name,
+      'mcmpTimestamp': msg.mcmpTimestamp,
+      'mcmpSenderName': msg.mcmpSenderName,
+      'mcmpIsSigned': msg.mcmpIsSigned,
+      'mcmpSignature': msg.mcmpSignature != null
+          ? base64Encode(msg.mcmpSignature!)
+          : null,
+      'mcmpReplyAuthorName': msg.mcmpReplyAuthorName,
+      'mcmpReplyTimestamp': msg.mcmpReplyTimestamp,
+      'verifiedSenderKeyHex': msg.verifiedSenderKeyHex,
+      'mcmpNameCollision': msg.mcmpNameCollision,
+      'replyToMessageId': msg.replyToMessageId,
+      'replyToSenderName': msg.replyToSenderName,
+      'replyToText': msg.replyToText,
       'retryCount': msg.retryCount,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
@@ -208,6 +266,9 @@ class MessageStore {
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      receivedAt: json['receivedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['receivedAt'] as int)
+          : null,
       isOutgoing: json['isOutgoing'] as bool,
       isCli: isCli,
       status: MessageStatus.values[json['status'] as int],
@@ -233,6 +294,22 @@ class MessageStore {
       compressionPayloadBytes:
           json['compressionPayloadBytes'] as int? ??
           detectedCompression?.payloadBytes,
+      mcmpSignatureStatus: _parseMcmpSignatureStatus(
+        json['mcmpSignatureStatus'],
+      ),
+      mcmpTimestamp: json['mcmpTimestamp'] as int?,
+      mcmpSenderName: json['mcmpSenderName'] as String?,
+      mcmpIsSigned: json['mcmpIsSigned'] as bool? ?? false,
+      mcmpSignature: json['mcmpSignature'] != null
+          ? Uint8List.fromList(base64Decode(json['mcmpSignature'] as String))
+          : null,
+      mcmpReplyAuthorName: json['mcmpReplyAuthorName'] as String?,
+      mcmpReplyTimestamp: json['mcmpReplyTimestamp'] as int?,
+      verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
+      mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
+      replyToMessageId: json['replyToMessageId'] as String?,
+      replyToSenderName: json['replyToSenderName'] as String?,
+      replyToText: json['replyToText'] as String?,
       retryCount: json['retryCount'] as int? ?? 0,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,
@@ -268,14 +345,24 @@ class MessageStore {
           : null,
     );
   }
+
+  McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
+    if (value is! String) return McmpSignatureStatus.none;
+    for (final status in McmpSignatureStatus.values) {
+      if (status.name == value) return status;
+    }
+    return McmpSignatureStatus.none;
+  }
 }
 
 class MessageStoreSummary {
   const MessageStoreSummary({
     required this.messageCount,
     required this.latestMessageAt,
+    required this.latestMessageText,
   });
 
   final int messageCount;
   final DateTime latestMessageAt;
+  final String latestMessageText;
 }

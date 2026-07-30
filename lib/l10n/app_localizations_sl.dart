@@ -137,16 +137,16 @@ class AppLocalizationsSl extends AppLocalizations {
   String get common_interval => 'Časovni interval';
 
   @override
-  String get common_default => 'Default';
+  String get common_default => 'Privzeto';
 
   @override
   String get common_clear => 'Ponoviti';
 
   @override
-  String get common_send => 'Send';
+  String get common_send => 'Pošlji';
 
   @override
-  String get common_apply => 'Apply';
+  String get common_apply => 'Uporabi';
 
   @override
   String get scanner_title => 'MeshCore – Odprto (Advanced mod)';
@@ -389,42 +389,42 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'Radio nastavitve posodobljene';
 
   @override
-  String get settings_regionSettings => 'Regions';
+  String get settings_regionSettings => 'Regije';
 
   @override
-  String get settings_regionSettingsSubtitle => 'Manage stored regions';
+  String get settings_regionSettingsSubtitle => 'Upravljanje shranjenih regij';
 
   @override
-  String get settings_regionManagement_screenTitle => 'Region Management';
+  String get settings_regionManagement_screenTitle => 'Upravljanje regij';
 
   @override
-  String get settings_regionNameHint => 'Enter region name';
+  String get settings_regionNameHint => 'Vnesite ime regije';
 
   @override
-  String get settings_regionAddRegion => 'Add region';
+  String get settings_regionAddRegion => 'Dodaj regijo';
 
   @override
-  String get settings_regionFetchRegions => 'Fetch regions from repeaters';
+  String get settings_regionFetchRegions => 'Pridobi regije od repetitorjev';
 
   @override
-  String get settings_regionFetchRegionsFail => 'No regions were found';
+  String get settings_regionFetchRegionsFail => 'Nobena regija ni bila najdena';
 
   @override
   String get settings_regionFetchRegionsAlreadyExists =>
-      'This region has already been added';
+      'Ta regija je že dodana';
 
   @override
-  String get settings_regionName => 'Region Name';
+  String get settings_regionName => 'Ime regije';
 
   @override
-  String get settings_regionDeleted => 'Region deleted';
+  String get settings_regionDeleted => 'Regija je izbrisana';
 
   @override
-  String get settings_deleteRegion => 'Delete Region';
+  String get settings_deleteRegion => 'Izbriši regijo';
 
   @override
   String settings_deleteRegionConfirm(String region) {
-    return 'Remove \"$region\" from region list?';
+    return 'Ali naj se \"$region\" odstrani s seznama regij?';
   }
 
   @override
@@ -523,6 +523,14 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_advertLocationSubtitle => 'Vključi lokacijo v oglas.';
 
   @override
+  String get settings_autoZeroHopAdvertOnGpsUpdate =>
+      'Samodejni zero-hop oglas ob posodobitvi GPS';
+
+  @override
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
+      'Ko se GPS lokacija spremeni, pošlji zero-hop oglas (zahteva lokacijo v oglasu).';
+
+  @override
   String get settings_multiAck => 'Več potrdil';
 
   @override
@@ -607,11 +615,11 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_aboutModDescription =>
-      'The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application\'s repository or specific to the area of use, and therefore not submitted as pull requests.';
+      'Modifikacija «Advanced» temelji na izvirnem meshcore_open in vsebuje spremembe, predlagane v repozitoriju izvirne aplikacije ali specifične za območje uporabe, zato niso bile oddane kot pull request.';
 
   @override
   String get settings_aboutModLink =>
-      'Mod group on Telegram: https://t.me/mcoadvanced';
+      'Izdaje na Githubu: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikacije na Telegramu: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -622,6 +630,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'Ime plošče';
 
   @override
   String get settings_infoStatus => 'Stanje';
@@ -637,6 +648,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_infoChannelCount => 'Število kanalov';
+
+  @override
+  String get settings_infoFirmware => 'Različica vdelane programske opreme';
 
   @override
   String get settings_presets => 'Prednastavitve';
@@ -1026,6 +1040,28 @@ class AppLocalizationsSl extends AppLocalizations {
   String get appSettings_lastWeek => 'Prejšnji teden';
 
   @override
+  String get appSettings_rasterTileSource => 'Vir rastrskih ploščic';
+
+  @override
+  String get appSettings_stadiaEndpoint => 'Končna točka Stadia';
+
+  @override
+  String get appSettings_stadiaApiKey => 'Ključ API Stadia';
+
+  @override
+  String get appSettings_stadiaApiKeyRequired =>
+      'Obvezno za uporabo Stadia Maps';
+
+  @override
+  String appSettings_stadiaApiKeyConfigured(String maskedKey) {
+    return 'Nastavljeno: $maskedKey';
+  }
+
+  @override
+  String get appSettings_stadiaApiKeyDialogDescription =>
+      'Vnesite svoj ključ API za Stadia Maps. Aplikacija ga uporablja za zahteve rastrskih ploščic.';
+
+  @override
   String get appSettings_offlineMapCache => 'Shramba zemljevidov brez povezave';
 
   @override
@@ -1145,6 +1181,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get contacts_newGroup => 'Nova skupina';
 
   @override
+  String get contacts_newGroupDescription => 'Združi kanale/stike v mapo';
+
+  @override
   String get contacts_moreOptions => 'Več možnosti';
 
   @override
@@ -1217,7 +1256,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String get contact_clearChat => 'Počisti klepet';
 
   @override
-  String get contact_clearChatConfirm => 'Confirm chat clear';
+  String get contact_clearChatConfirm =>
+      'Ali naj se sporočila izbrišejo iz klepeta?';
 
   @override
   String get contact_teleBase => 'Baza telemetrije';
@@ -1427,7 +1467,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne filtriraj lastnih sporočil v kanalih';
+      'Ne filtriraj lastnih paketov sporočil v teh kanalih in obravnavaj sporočila kot brezpogojno dostavljena';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
@@ -1492,17 +1532,17 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String channels_regionSetTo(String region) {
-    return 'Region: $region';
+    return 'Regija: $region';
   }
 
   @override
-  String get channels_regionNotSet => 'Region: none';
+  String get channels_regionNotSet => 'Regija: brez';
 
   @override
-  String get channels_regionSelect_Title => 'Select a region';
+  String get channels_regionSelect_Title => 'Dodeli regijo';
 
   @override
-  String get channels_clearRegion => 'Clear region';
+  String get channels_clearRegion => 'Počisti regijo';
 
   @override
   String get chat_noMessages => 'Še ni sporočil.';
@@ -1564,6 +1604,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Pošlji GIF';
+
+  @override
+  String get chat_receivedGif => 'Prejet GIF';
 
   @override
   String get chat_reply => 'Odgovori';
@@ -2202,7 +2245,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get map_wardriveAutoUpload => 'Samodejno nalaganje';
 
   @override
-  String get map_wardriveReUpload => 'Reupload';
+  String get map_wardriveReUpload => 'Znova naloži';
 
   @override
   String get map_wardriveScreenWakelock => 'Wakelock zaslona';
@@ -2220,7 +2263,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get map_wardriveSecondsSuffix => 's';
 
   @override
-  String get map_wardriveSamplesNoNew => 'No new samples to upload';
+  String get map_wardriveSamplesNoNew => 'Ni novih vzorcev za nalaganje';
 
   @override
   String map_wardriveSamplesSaved(int count) {
@@ -2243,41 +2286,42 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get map_wardriveCoverageResolution => 'Coverage Resolution';
+  String get map_wardriveCoverageResolution => 'Podrobnost pokritosti';
 
   @override
   String get map_wardriveCoverageResolutionPrompt =>
-      'Choose the size of coverage squares (size = block side length):';
+      'Izberite velikost blokov pokritosti (velikost = stranica bloka):';
 
   @override
-  String get map_wardriveCoverageRegional => 'Regional';
+  String get map_wardriveCoverageRegional => 'Regionalno';
 
   @override
-  String get map_wardriveCoverageRegionalSubtitle => '~20km (precision 4)';
+  String get map_wardriveCoverageRegionalSubtitle => '~20 km (natančnost 4)';
 
   @override
-  String get map_wardriveCoverageCity => 'City-level';
+  String get map_wardriveCoverageCity => 'Raven mesta';
 
   @override
-  String get map_wardriveCoverageCitySubtitle => '~5km (precision 5)';
+  String get map_wardriveCoverageCitySubtitle => '~5 km (natančnost 5)';
 
   @override
-  String get map_wardriveCoverageNeighborhood => 'Neighborhood';
+  String get map_wardriveCoverageNeighborhood => 'Soseska';
 
   @override
-  String get map_wardriveCoverageNeighborhoodSubtitle => '~1.2km (precision 6)';
+  String get map_wardriveCoverageNeighborhoodSubtitle =>
+      '~1,2 km (natančnost 6)';
 
   @override
-  String get map_wardriveCoverageStreet => 'Street-level';
+  String get map_wardriveCoverageStreet => 'Raven ulice';
 
   @override
-  String get map_wardriveCoverageStreetSubtitle => '~153m (precision 7)';
+  String get map_wardriveCoverageStreetSubtitle => '~153 m (natančnost 7)';
 
   @override
-  String get map_wardriveCoverageBuilding => 'Building-level';
+  String get map_wardriveCoverageBuilding => 'Raven stavbe';
 
   @override
-  String get map_wardriveCoverageBuildingSubtitle => '~38m (precision 8)';
+  String get map_wardriveCoverageBuildingSubtitle => '~38 m (natančnost 8)';
 
   @override
   String get map_wardriveAutoUploadEnabled => 'Samodejno nalaganje omogočeno.';
@@ -2464,32 +2508,31 @@ class AppLocalizationsSl extends AppLocalizations {
   String get map_wardriveSamplesCleared => 'Wardrive vzorci izbrisani.';
 
   @override
-  String get map_wardriveRepNoLocation => 'Repeater location not provided';
+  String get map_wardriveRepNoLocation =>
+      'Repetitor ni sporočil svoje lokacije';
 
   @override
   String map_wardriveDiscoveryWait(Object seconds) {
-    return 'Please wait $seconds seconds before retrying discovery';
+    return 'Počakajte $seconds sekund pred ponovnim poskusom';
   }
 
   @override
-  String get map_wardriveFollowMe => 'Follow my location';
+  String get map_wardriveFollowMe => 'Sledi moji lokaciji';
 
   @override
-  String get map_wardriveDeleteBlock => 'Delete block';
+  String get map_wardriveDeleteBlock => 'Izbriši blok';
 
   @override
-  String get map_wardriveInBackground => 'Run in background';
+  String get map_wardriveInBackground => 'Izvajaj v ozadju';
 
   @override
-  String get map_wardriveContinuousGPS => 'Continuous GPS location';
+  String get map_wardriveContinuousGPS => 'Neprekinjena lokacija GPS';
 
   @override
-  String get map_wardriveShowRepeaterCoverage =>
-      'Show wardrive\'s coverage blocks';
+  String get map_wardriveShowRepeaterCoverage => 'Prikaži bloke pokritosti';
 
   @override
-  String get map_wardriveHideRepeaterCoverage =>
-      'Hide wardrive\'s coverage blocks';
+  String get map_wardriveHideRepeaterCoverage => 'Skrij bloke pokritosti';
 
   @override
   String get mapCache_title =>
@@ -2567,6 +2610,42 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String mapCache_failedDownloads(int count) {
     return 'Poslovniški izniki: $count';
+  }
+
+  @override
+  String get mapCache_cachedTilesLabel => 'Cached tiles';
+
+  @override
+  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+
+  @override
+  String mapCache_bulkDownloadDisabledForSource(String source) {
+    return 'Offline bulk downloads are disabled for $source.';
+  }
+
+  @override
+  String mapCache_bulkDownloadDisabledInConfig(String source) {
+    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+  }
+
+  @override
+  String mapCache_summarySource(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String mapCache_summaryCachedTilesForSource(int count) {
+    return 'Cached tiles for source: $count';
+  }
+
+  @override
+  String mapCache_summaryCachedInSelection(int count) {
+    return 'Cached in selected area/zoom: $count';
+  }
+
+  @override
+  String mapCache_summaryApproxCacheSize(String size) {
+    return 'Approx cache size: $size';
   }
 
   @override
@@ -3108,6 +3187,41 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get repeater_pathHashModeHelper =>
       'Bajti, uporabljeni za kodiranje ID-ja tega repetitorja v oznakah flood poti/zaznavanja zank. 0=1 bajt (256 ID-jev, do 64 skokov), 1=2 bajta (65.000 ID-jev, do 32 skokov), 2=3 bajti (16 milijonov ID-jev, do 21 skokov). Vdelana programska oprema pred v1.14 je vedno uporabljala 1-bajtne poti; v1.14 in novejše je mogoče nastaviti na 2- ali 3-bajtne poti.';
+
+  @override
+  String get repeater_keySettings => 'Sprememba ključev vozlišča';
+
+  @override
+  String get repeater_keySettingsSubtitle =>
+      'Spremeni par javnega in zasebnega ključa';
+
+  @override
+  String get repeater_prvKey => 'Zasebni ključ';
+
+  @override
+  String get repeater_prvKeyHelper =>
+      'Nov zasebni ključ repetitorja — šestnajstiški niz s 128 znaki.';
+
+  @override
+  String get repeater_generatePrvKey => 'Ustvari naključni par ključev';
+
+  @override
+  String get repeater_stopGeneratingPrvKey => 'Prekini iskanje para ključev';
+
+  @override
+  String get repeater_pubKey => 'Javni ključ';
+
+  @override
+  String get repeater_pubKeyHelper =>
+      'To je javni ključ, ki pripada ustvarjenemu zasebnemu ključu. Ni ga mogoče nastaviti neposredno.';
+
+  @override
+  String get repeater_pubKeyPrefix => 'Želena predpona';
+
+  @override
+  String repeater_pubKeyPrefixHelper(int tries) {
+    return 'Iskanje javnega ključa, ki se začne s temi šestnajstiškimi znaki. Pričakovano število poskusov: $tries.';
+  }
 
   @override
   String get repeater_txDelay => 'Zatemnitevanje zaradi poplav v Texasu';
@@ -4005,7 +4119,7 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Ponovitve Sosedi';
+  String get neighbors_repeatersNeighbors => 'Sosedje ponavljalnika';
 
   @override
   String get neighbors_noData => 'Niso na voljo podatki o sosedih.';
@@ -4034,7 +4148,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channelPath_repeaterHopsHighTimeout =>
-      'Increased path trace timeout (10s*hops)';
+      'Podaljšana časovna omejitev sledenja poti (10 s × skoki)';
 
   @override
   String get channelPath_noHopDetails =>
@@ -4047,7 +4161,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channelPath_senderLabel => 'Pošiljatelj';
 
   @override
-  String get channelPath_timeLabel => 'Ura';
+  String get channelPath_timeLabel => 'Čas prejema/nastanka';
 
   @override
   String get channelPath_repeatsLabel => 'Ponovitve';
@@ -4331,10 +4445,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get listFilter_removeFromFavorites => 'Odstrani iz priljubljenih';
 
   @override
-  String get listFilter_removeFromWardrive => 'Ignore in Wardrive';
+  String get listFilter_removeFromWardrive => 'Prezri v Wardrive';
 
   @override
-  String get listFilter_returnToWardrive => 'Return to Wardrive';
+  String get listFilter_returnToWardrive => 'Upoštevaj v Wardrive';
 
   @override
   String get listFilter_users => 'Uporabniki';
@@ -5027,45 +5141,46 @@ class AppLocalizationsSl extends AppLocalizations {
       'Uporaba modela mesh-compressor';
 
   @override
-  String get channels_copyPath => 'Copy message path';
+  String get channels_copyPath => 'Kopiraj pot sporočila';
 
   @override
-  String get channels_copyPathExtended => 'Copy message path (extended)';
+  String get channels_copyPathExtended => 'Kopiraj pot sporočila (razširjeno)';
 
   @override
-  String get channels_copiedPath => 'Message path copied';
+  String get channels_copiedPath => 'Pot sporočila je kopirana';
 
   @override
-  String get channels_copyPathFailed => 'Copying message path failed';
+  String get channels_copyPathFailed =>
+      'Poti sporočila ni bilo mogoče kopirati';
 
   @override
-  String get settings_copyMsgPathTitle => 'Configure message path copying';
+  String get settings_copyMsgPathTitle => 'Nastavitev kopiranja poti sporočila';
 
   @override
   String get settings_copyMsgPathDscr =>
-      'Edit the template for generating message path information from the channel';
+      'Uredi predlogo za sestavljanje informacij o poti sporočila iz kanala';
 
   @override
-  String get settings_copyMsgPathEditTemplateTitle => 'Edit template';
+  String get settings_copyMsgPathEditTemplateTitle => 'Urejanje predloge';
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Use placeholder templates:\n%hopInd% - hop index\n%hopKey% - hop prefix\n%hopName% - hop name\n%collisionMarker% - repeater collision marker\n%div% - divider (skips for last hop)\n%hops% - hops quantity\n\\n - line break';
+      'Uporabite nadomestne predloge:\n%hopInd% - zaporedje skoka\n%hopKey% - ključ skoka\n%hopName% - ime skoka\n%collisionMarker% - oznaka trka repetitorjev\n%div% - ločilo (pri zadnjem skoku se izpusti)\n%hops% - število skokov\n\\n - prelom vrstice';
 
   @override
-  String get settings_copyMsgPathEditFinalTitle => 'Final message';
+  String get settings_copyMsgPathEditFinalTitle => 'Končno sporočilo';
 
   @override
   String get settings_copyMsgPathEditFinalDscr =>
-      'Placeholders:\n%senderName% - visible sender name\n%path% - final formed path\n%hops% - hops quantity\n\\n - line break';
+      'Razpoložljive predloge:\n%senderName% - ime pošiljatelja\n%path% - sestavljena pot\n%hops% - število skokov\n\\n - prelom vrstice';
 
   @override
   String get settings_channelsSendAsBinary =>
-      'Send extended data as binary (channels)';
+      'Pošiljaj razširjene formate binarno (kanali)';
 
   @override
   String get settings_dmSendAsBinary =>
-      'Send extended data as binary (direct messages)';
+      'Pošiljaj razširjene formate binarno (zasebna sporočila)';
 
   @override
   String get contact_typeChat => 'Chat';
@@ -5218,335 +5333,543 @@ class AppLocalizationsSl extends AppLocalizations {
   String get pathMap_unfollowPacket => 'Odkleni pogled od paketa';
 
   @override
-  String get chat_canvas => 'MCOimg canvas';
+  String get chat_canvas => 'Platno MCOimg';
 
   @override
-  String get chat_canvasCrop => 'Crop/expand';
+  String get chat_canvasCrop => 'Obreži/razširi';
 
   @override
-  String get chat_canvasResize => 'Scale';
+  String get chat_canvasResize => 'Stisni/raztegni';
 
   @override
-  String get chat_canvasUnlockSize => 'Unlock canvas size';
+  String get chat_canvasUnlockSize => 'Odkleni velikost platna';
 
   @override
-  String get chat_canvasFormatVer => 'Codec version';
+  String get chat_canvasFormatVer => 'Različica kodeka';
 
   @override
-  String get chat_canvasPalette => 'Palette';
+  String get chat_canvasPalette => 'Paleta';
 
   @override
-  String get chat_canvasPaletteShow => 'Show palette';
+  String get chat_canvasPaletteShow => 'Prikaži paleto';
 
   @override
-  String get chat_canvasPaletteMode => 'Palette preset';
+  String get chat_canvasPaletteMode => 'Profil palete';
 
   @override
-  String get chat_canvasPaletteDynamic => 'Dynamic';
+  String get chat_canvasPaletteDynamic => 'Dinamična';
 
   @override
-  String get chat_canvasPaletteDynamicProfile => 'Base set for dynamic palette';
+  String get chat_canvasPaletteDynamicProfile =>
+      'Osnovni nabor za dinamično paleto';
 
   @override
-  String get chat_canvasPaletteDynamicUsed => 'Colours actually used';
+  String get chat_canvasPaletteDynamicUsed => 'Dejansko uporabljene barve';
 
   @override
   String get chat_canvasPaletteDynamicDscr =>
-      'Please note! Use the dynamic palette wisely! It is primarily intended for images with gradients, to create a smaller palette and use colours that do not belong to the same base palette. For reference: a smaller base palette reduces the cost of encoding information about the shades used, and a smaller total number of colours reduces the cost of each pixel on the canvas.';
+      'Pozor! Dinamično paleto uporabljajte premišljeno! Namenjena je predvsem slikam s prehodi, da se zgradi manjša paleta in uporabijo barve, ki ne pripadajo isti osnovni paleti. Za orientacijo: manjša osnovna paleta zniža stroške kodiranja informacij o uporabljenih odtenkih, manjše skupno število barv pa zniža stroške vsakega slikovnega elementa na platnu.';
 
   @override
-  String get chat_canvasPaletteAlpha => 'Transparency color';
+  String get chat_canvasPaletteAlpha => 'Barva prosojnosti';
 
   @override
-  String get chat_canvasChangeSize => 'Change canvas size';
+  String get chat_canvasChangeSize => 'Spremeni velikost platna';
 
   @override
-  String get chat_canvasTrim => 'Trim empty';
+  String get chat_canvasTrim => 'Obreži prazen prostor';
 
   @override
-  String get chat_canvasWidth => 'Width';
+  String get chat_canvasWidth => 'Širina';
 
   @override
-  String get chat_canvasHeight => 'Height';
+  String get chat_canvasHeight => 'Višina';
 
   @override
-  String get chat_canvasGridShow => 'Show grid';
+  String get chat_canvasGridShow => 'Prikaži mrežo';
 
   @override
-  String get chat_canvasRulerShow => 'Show ruler';
+  String get chat_canvasRulerShow => 'Prikaži ravnilo';
 
   @override
-  String get chat_canvasGridColor => 'Grid color';
+  String get chat_canvasGridColor => 'Barva mreže';
 
   @override
-  String get chat_canvasSave => 'Save to file';
+  String get chat_canvasSave => 'Shrani v datoteko';
 
   @override
-  String get chat_canvasLoad => 'Load from file';
+  String get chat_canvasLoad => 'Naloži iz datoteke';
 
   @override
   String chat_canvasSendPayloadExceed(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please reduce the number of parts or the canvas size.';
+    return 'Pošiljanje ni uspelo — payload je presežen za $count bajtov. Zmanjšajte število podrobnosti ali velikost platna.';
   }
 
   @override
   String chat_canvasCurrentPayload(int payload) {
-    return 'Current payload: $payload';
+    return 'Trenutni payload: $payload';
   }
 
   @override
-  String get chat_canvasActive => 'Show canvas';
+  String get chat_canvasActive => 'Prikaži platno';
 
   @override
-  String get chat_canvasShowLockBtn => 'Show canvas block button';
+  String get chat_canvasShowLockBtn => 'Prikaži gumb za zaklepanje platna';
 
   @override
-  String get chat_canvasSendToEdit => 'Send to canvas';
+  String get chat_canvasSendToEdit => 'Pošlji na platno';
 
   @override
-  String get chat_canvasSendToGallery => 'Save to gallery';
+  String get chat_canvasSendToGallery => 'Shrani v galerijo';
 
   @override
-  String get chat_canvasGalleryShowPNG => 'Show source (PNG)';
+  String get chat_canvasGalleryShowPNG => 'Prikaži izvirnik (PNG)';
 
   @override
-  String get chat_canvasGalleryShowBIN => 'Show as Bin';
+  String get chat_canvasGalleryShowBIN => 'Prikaži kot Bin';
 
   @override
-  String get chat_canvasGalleryRemove => 'Remove';
+  String get chat_canvasGalleryRemove => 'Odstrani';
 
   @override
-  String get chat_canvasGalleryRemoveConfirm => 'Remove image from gallery?';
+  String get chat_canvasGalleryRemoveConfirm =>
+      'Ali naj se slika odstrani iz galerije?';
 
   @override
   String chat_canvasFormatNotSupported(int received, int current) {
-    return 'MCOimg format version: $received, current codec supports up to $current';
+    return 'Različica MCOimg: $received, trenutni kodek podpira do $current';
   }
 
   @override
-  String get chat_canvasSaveBinary => 'Save fo binary file';
+  String get chat_canvasSaveBinary => 'Shrani v binarno datoteko';
 
   @override
   String chat_canvasCannotSend(int count) {
-    return 'Failed to send – payload exceeded of $count bytes. Please, edit image and try send again.';
+    return 'Pošiljanje ni uspelo — payload je presežen za $count bajtov. Uredite sliko in poskusite znova.';
   }
 
   @override
-  String get chat_canvasCompressionLevel => 'Compression level';
+  String get chat_canvasCompressionLevel => 'Raven stiskanja';
 
   @override
-  String get chat_canvasCompressionLevelNormal => 'Normal';
+  String get chat_canvasCompressionLevelNormal => 'Običajna';
 
   @override
-  String get chat_canvasCompressionLevelHigh => 'High';
+  String get chat_canvasCompressionLevelHigh => 'Visoka';
 
   @override
-  String get chat_canvasCompressionLevelExtreme => 'Extreme';
+  String get chat_canvasCompressionLevelExtreme => 'Ekstremna';
 
   @override
-  String get chat_showHops => 'Show hops';
+  String get chat_showHops => 'Prikaži skoke';
 
   @override
-  String get settings_modSettings => 'Modification Settings';
+  String get settings_modSettings => 'Nastavitve modifikacije';
 
   @override
   String get settings_modSettingsSubtitle =>
-      'This section contains options that are brings by MCOa and not included in the original meshcore_open';
+      'V tem razdelku so zbrane možnosti, ki jih v izvirnem meshcore_open ni';
 
   @override
-  String get settings_modSettingsVisual => 'Visual';
+  String get settings_modSettingsVisual => 'Videz';
 
   @override
-  String get settings_modSettingsMessaging => 'Messaging';
+  String get settings_modSettingsMessaging => 'Sporočila';
 
   @override
-  String get settings_modSettingsHideChInd => 'Hide channel index';
+  String get settings_modSettingsMCMP => 'MCMP';
 
   @override
-  String get settings_modSettingsIncomingQuoteAsMentions =>
-      'Show quotes in incoming messages as mentions';
+  String get settings_mcmp_version => 'Različica';
 
   @override
-  String get settings_modSettingsSimplifiedMentions =>
-      'Simplified style of mentions in messages visual';
+  String get settings_mcmp_useSign => 'Preverjanje podpisa';
 
   @override
-  String get settings_modSettingsSharedMsgHistory => 'Shared messages history';
+  String get settings_mcmp_signed => 'S preverjanjem podpisa';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDscr =>
-      'Combining the history of messages received from different devices; the final history is stored only in the application';
+  String get settings_mcmp_noSign => 'Brez preverjanja podpisa';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDisabled => 'Disabled';
+  String get settings_mcmp_senderNameCollision =>
+      'Ime pošiljatelja ni enolično!';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryChannels => 'Only channels';
+  String get chat_mcmpSignatureValid => 'Podpis je veljaven';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryContacts => 'Only contacts';
+  String get chat_mcmpSignatureInvalid => 'Neveljaven podpis!';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryAll => 'All chats';
+  String get chat_mcmpSignatureUnverifiable =>
+      'Podpisa ni mogoče preveriti — pošiljatelja ni med stiki';
 
   @override
-  String get settings_modSettingsMessagingShowCompressionRatio =>
-      'Show compression ratio';
+  String get chat_mcmpSignatureTransport => 'Potrjeno s šifriranjem prenosa';
 
   @override
-  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
-      'Also take into account senderName';
+  String get chat_mcmpManualRecheckSign => 'Znova preveri podpis';
 
   @override
-  String get settings_modSettingsVisualHideMapZoomControls =>
-      'Hide map zoom panel';
+  String get chat_mcmpSignatureCheckStatus => 'Preverjanje podpisa';
+
+  @override
+  String get chat_mcmpSigningFailed => 'Sporočila ni bilo mogoče podpisati';
+
+  @override
+  String get chat_mcmpAnswerTo => 'Odgovor MCMPv3 na';
+
+  @override
+  String get chat_timestampPacket => 'Časovni žig paketa';
+
+  @override
+  String get settings_modSettingsMCOimg => 'MCOimg';
 
   @override
   String get settings_modSettingsVisualShowMCOimgFormat =>
-      'MCOimg: show format version badge';
+      'MCOimg: prikaži značko različice formata';
 
   @override
   String get settings_modSettingsVisualShowMCOimgAlgo =>
-      'MCOimg: show coding algorythm badge';
+      'MCOimg: prikaži značko algoritma kodiranja';
 
   @override
   String get settings_modSettingsVisualShowMCOimgBytes =>
-      'MCOimg: show image weight (bytes)';
+      'MCOimg: prikaži velikost slike (bajti)';
 
   @override
   String get settings_modSettingsVisualShowMCOimgResolution =>
-      'MCOimg: show resolution';
+      'MCOimg: prikaži ločljivost';
 
   @override
-  String get settings_modSettingsVisualShowMsgRegion => 'Show message region';
+  String get settings_modSettingsMCOimg_showReplacements =>
+      'Prikaži izvirnike slik namesto različic za LoRa';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsScale =>
+      'Prilagodi velikost izvirnikov v klepetih';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsLottieScale =>
+      'Omejitev velikosti nadomestkov lottie';
+
+  @override
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
+      'Prilagodi velikost z Nearest Neighbor';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharp =>
+      'Izostri izvirnike v klepetih';
+
+  @override
+  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
+      'Pozor! Onemogoči animacijo GIF!';
+
+  @override
+  String get settings_modSettingsHideChInd => 'Skrij indeks kanala';
+
+  @override
+  String get settings_modSettingsHideRadioStats =>
+      'Skrij radijsko statistiko v glavi';
+
+  @override
+  String get settings_modSettingsSNRindicatorAllRepActivity =>
+      'Indikator SNR: odzovi se na vse odgovore repetitorjev, ne le na advert';
+
+  @override
+  String get settings_modSettingsIncomingQuoteAsMentions =>
+      'Prikaži citate v dohodnih sporočilih kot omembe';
+
+  @override
+  String get settings_modSettingsSimplifiedMentions =>
+      'Poenostavljen slog omemb v sporočilih';
+
+  @override
+  String get settings_modSettingsSharedMsgHistory =>
+      'Skupna zgodovina sporočil';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDscr =>
+      'Združevanje zgodovine sporočil, prejete z različnih naprav; končna zgodovina se hrani samo v aplikaciji';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryDisabled => 'Onemogočeno';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryChannels => 'Samo kanali';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryContacts => 'Samo stiki';
+
+  @override
+  String get settings_modSettingsSharedMsgHistoryAll => 'Vsi klepeti';
+
+  @override
+  String get settings_modSettingsMessagingShowCompressionRatio =>
+      'Prikaži stopnjo stiskanja';
+
+  @override
+  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
+      'Upoštevaj tudi ime vozlišča';
+
+  @override
+  String get settings_modSettingsVisualHideMapZoomControls =>
+      'Skrij ploščo za povečavo na zemljevidu';
+
+  @override
+  String get settings_modSettingsVisualShowMsgRegion =>
+      'Prikaži regijo sporočila';
 
   @override
   String channels_messageRegion(String region) {
-    return 'Region: $region';
+    return 'Regija: $region';
   }
 
   @override
-  String get channels_messageRegionUnknown => 'unknown';
+  String get channels_messageRegionUnknown => 'neznana';
 
   @override
-  String get channels_messageRegionEmpty => 'unset';
+  String get channels_messageRegionNotMatchesWithKnown => 'ni ujemanja';
 
   @override
-  String get settings_defaultRegionScope => 'Default region scope';
+  String get channels_messageRegionEmpty => 'ni nastavljena';
+
+  @override
+  String get settings_defaultRegionScope => 'Privzeta regija vozlišča';
 
   @override
   String get settings_defaultRegionScopeChanged =>
-      'Default region scope changed';
+      'Privzeta regija je spremenjena';
 
   @override
   String get settings_defaultRegionScopeChangeFailed =>
-      'Change default region scope failed';
+      'Regije ni bilo mogoče spremeniti';
 
   @override
-  String get settings_defaultRegionScopeEmpty => 'Currently unset';
+  String get settings_defaultRegionScopeEmpty => 'Ni nastavljena';
 
   @override
   String get settings_defaultRegionScopeWaitForSync =>
-      'Please wait until synchronization complete';
+      'Počakajte na konec sinhronizacije';
 
   @override
-  String get common_reset => 'Reset';
+  String get common_reset => 'Ponastavi';
 
   @override
-  String get connection_autoconnect => 'Autoconnect';
+  String get connection_autoconnect => 'Samodejna povezava';
 
   @override
   String settings_modSettingsNoRetraInfo(int time) {
-    return 'No retranslations heard for $time seconds.';
+    return 'Že $time s ni bilo slišati retransmisij.';
   }
 
   @override
   String get settings_modSettingsNoRetraHeading =>
-      'Display messages as unsent if no retranslations heard within seconds:';
+      'Označi sporočila kot neposlana, če v toliko sekundah ni slišati retransmisij:';
 
   @override
   String get settings_modSettingsNoRetraDscr =>
-      'Attention! Due to a mechanism in a node\'s firmware, messages for channels larger than ~133 bytes cannot physically receive self-repeats and will always be marked as failed! Please, use this option in conjunction with the payload limit in the app settings!';
+      'Pozor! Zaradi mehanizma v vdelani programski opremi vozlišča sporočila za kanale, večja od ~133 bajtov, fizično ne morejo prejemati potrditev in bodo vedno označena kot neuspešna! To možnost uporabljajte skupaj z omejitvijo payloada v nastavitvah aplikacije!';
 
   @override
-  String get settings_selfTelemetryShow => 'Check sensors';
+  String get settings_selfTelemetryShow => 'Ogled senzorjev';
 
   @override
   String get settings_modSettingsVisualChannelsUnreadSorting =>
-      'Channels sorting by unread messages';
+      'Razvrščanje kanalov po neprebranih sporočilih';
 
   @override
   String get settings_modSettingsMessagingBackgroundTCP =>
-      'Keep TCP-connection alive in background';
+      'Ohrani povezavo TCP v ozadju';
 
   @override
-  String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
+  String get settings_modSettingsDPIchange => 'Prilagoditev DPI';
 
   @override
-  String get chat_additionalActions => 'Chat actions menu';
+  String get settings_modSettingsDPIchangeToIcons => 'Uporabi za ikone';
 
   @override
-  String get mcogallery_common => 'Common';
+  String get chat_MCOimgOpenGallery => 'Odpri galerijo MCOimg';
 
   @override
-  String get mcogallery_addPack => 'Add package';
+  String get chat_additionalActions => 'Meni dejanj';
 
   @override
-  String get mcogallery_removePack => 'Remove package';
+  String get mcogallery_common => 'Splošno';
+
+  @override
+  String get mcogallery_addPack => 'Dodaj paket';
+
+  @override
+  String get mcogallery_removePack => 'Odstrani paket';
 
   @override
   String mcogallery_removePackConfirm(String name) {
-    return 'Подтвердите удаление пакета «$name»';
+    return 'Potrdite odstranitev paketa «$name»';
   }
 
   @override
-  String get mcogallery_addGroup => 'Add group';
+  String get mcogallery_addGroup => 'Dodaj skupino';
 
   @override
-  String get mcogallery_removeGroup => 'Remove group';
+  String get mcogallery_removeGroup => 'Odstrani skupino';
 
   @override
-  String get chat_sendSelfContact => 'Send self contact';
+  String get mcogallery_showLora => 'Prikaži različico za LoRa';
 
   @override
-  String get chat_sendContact => 'Share contact';
+  String get mcogallery_showPacked => 'Prikaži izboljšano različico';
 
   @override
-  String get chat_addContact => 'Add contact';
+  String get chat_sendSelfContact => 'Pošlji svoj stik';
+
+  @override
+  String get chat_sendContact => 'Deli stik';
+
+  @override
+  String get chat_addContact => 'Dodaj stik';
 
   @override
   String get chat_sureToReplaceContact =>
-      'Contact is already exists, replace it?';
+      'Stik že obstaja, ali naj se zamenja?';
 
   @override
-  String get contacts_addContactByPubkey => 'Add contact by pubkey';
+  String get contacts_addContactByPubkey => 'Dodaj stik po ključu';
 
   @override
-  String get contacts_addContactByPubkey_contactType => 'Contact type';
+  String get contacts_addContactByPubkey_contactType => 'Vrsta stika';
 
   @override
-  String get chat_contactIsYou => 'It is you';
+  String get chat_contactIsYou => 'To je vaš lastni stik';
 
   @override
   String chat_contactType(String contacttype) {
-    return 'Contact type: $contacttype';
+    return 'Vrsta stika: $contacttype';
   }
 
   @override
-  String get chat_contactTypeNode => 'Node';
+  String get chat_contactTypeNode => 'Vozlišče';
 
   @override
-  String get chat_contactTypeRepeater => 'Repeater';
+  String get chat_contactTypeRepeater => 'Repetitor';
 
   @override
-  String get chat_contactTypeRoom => 'Room-server';
+  String get chat_contactTypeRoom => 'Strežnik sobe';
 
   @override
-  String get chat_contactTypeSensor => 'Sensor';
+  String get chat_contactTypeSensor => 'Senzor';
 
   @override
-  String get chat_myLocation => 'Share my location';
+  String get chat_myLocation => 'Pošlji mojo lokacijo';
 
   @override
-  String get chat_locationFromMap => 'Share location from map';
+  String get chat_locationFromMap => 'Pošlji koordinate z zemljevida';
+
+  @override
+  String get settings_modSettingsRoomServer => 'Strežniki sob in stiki';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
+      'Prikaži strežnike z zgodovino na istem zaslonu kot kanale';
+
+  @override
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
+      'Prikaži stike z zgodovino na istem zaslonu kot kanale';
+
+  @override
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
+      'Ohrani dosedanje delovanje povleci-in-spusti: sprememba vrstnega reda kanalov spremeni njihov vrstni red na vozlišču, stikov in strežnikov pa ni mogoče razvrščati';
+
+  @override
+  String get settings_appSettingsCustomChemistry => 'Po meri';
+
+  @override
+  String get map_clearDiscoveredContactsCache =>
+      'Počisti lokalni predpomnilnik vozlišč';
+
+  @override
+  String get map_clearDiscoveredContactsCacheDisclaimer =>
+      'Ali res želite počistiti predpomnilnik odkritih stikov? To ne bo vplivalo na stike na samem vozlišču.';
+
+  @override
+  String get snrIndicator_v2_nearByRepeaters => 'Dejavnost repetitorjev';
+
+  @override
+  String get app_connectionLostReconnect =>
+      'Povezava z vozliščem je bila izgubljena, poteka ponovno povezovanje ...';
+
+  @override
+  String get app_connectionLostReconnected =>
+      'Povezava z vozliščem je obnovljena';
+
+  @override
+  String get contacts_batchOperations => 'Množične operacije';
+
+  @override
+  String get contacts_batchOperations_notSelected =>
+      'Niste izbrali nobenega stika za obdelavo!';
+
+  @override
+  String get contacts_batchOperations_removeConfirm =>
+      'Ali naj se izbrani stiki odstranijo iz pomnilnika vozlišča?';
+
+  @override
+  String get contacts_batchOperations_removeSuccess =>
+      'Izbrani stiki so bili odstranjeni';
+
+  @override
+  String get contacts_batchOperations_removeFail =>
+      'Stikov ni bilo mogoče odstraniti — znova preverite seznam';
+
+  @override
+  String get contacts_batchOperations_commonSuccess =>
+      'Operacija je bila uspešna';
+
+  @override
+  String get contacts_batchOperations_commonFail =>
+      'Operacije ni bilo mogoče dokončati';
+
+  @override
+  String get contacts_batchOperations_selectFiltered => 'Izberi filtrirane';
+
+  @override
+  String get chat_searchMessages => 'Iskanje sporočil';
+
+  @override
+  String get chat_searchMessages_placeholder =>
+      'Od 3 znakov, brez razlikovanja velikih in malih črk';
+
+  @override
+  String get chat_searchMessages_results => 'Rezultati iskanja';
+
+  @override
+  String chat_searchMessages_results_found(int count) {
+    return 'Najdenih $count sporočil';
+  }
+
+  @override
+  String chat_searchMessages_results_channel(String name) {
+    return 'Kanal $name';
+  }
+
+  @override
+  String chat_searchMessages_results_room(String name) {
+    return 'Room $name';
+  }
+
+  @override
+  String chat_searchMessages_results_contact(String name) {
+    return 'Pogovor z $name';
+  }
+
+  @override
+  String get app_offline => 'Brez povezave';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'V načinu brez povezave ne morete pošiljati sporočil ali izvajati drugih dejanj';
+
+  @override
+  String get app_offline_sharedMode => 'Združena zgodovina';
 }

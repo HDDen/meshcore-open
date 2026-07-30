@@ -2,19 +2,20 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/models/app_settings.dart';
-import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
-import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_settings_store.dart';
 import 'package:meshcore_open/storage/contact_discovery_store.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/storage/message_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Builds a valid contact frame with the given pathLen and optional overrides.
 // Frame layout: [respCode(1)][pubKey(32)][type(1)][flags(1)][pathLen(1)][path(64)][name(32)][timestamp(4)][lat(4)][lon(4)]
@@ -53,6 +54,7 @@ Uint8List _buildChannelMessageFrameV3({
   required bool hasPath,
   int channelIndex = 7,
   String senderName = 'Alice',
+
   String text = 'Hello world',
   int txtType = txtTypePlain,
 }) {
@@ -79,6 +81,14 @@ Uint8List _buildChannelMessageFrameV3({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    PrefsManager.reset();
+    await PrefsManager.initialize();
+  });
+
   group('ChannelMessage.fromFrame — V3 packed path decoding', () {
     test(
       'hasPath reads width, hop count, path bytes, and txtType correctly',
@@ -469,11 +479,6 @@ void main() {
   });
 
   group('Storage migration — multi-byte paths compatibility', () {
-    setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      await PrefsManager.initialize();
-    });
-
     test(
       'ContactStore decodes and migrates legacy mode-encoded paths',
       () async {
@@ -481,6 +486,7 @@ void main() {
 
         // Let's create a contact with legacy 64 path length (mode 1, 0 hops)
         final rawPath = Uint8List(64); // 64 bytes of zeroes
+        final lastSeen = DateTime.now();
         final contactJson = [
           {
             'publicKey': base64Encode(Uint8List(32)..[0] = 0xAA),
@@ -489,8 +495,10 @@ void main() {
             'flags': 0,
             'pathLength': 64, // encoded pathLength (mode 1, 0 hops)
             'path': base64Encode(rawPath),
-            'lastSeen': DateTime.now().millisecondsSinceEpoch,
-            'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
+            'lastSeen': lastSeen.millisecondsSinceEpoch,
+            'lastMessageAt': lastSeen
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch,
             'isActive': true,
           },
         ];
@@ -502,6 +510,7 @@ void main() {
         expect(contacts, hasLength(1));
         expect(contacts.first.pathLength, equals(0));
         expect(contacts.first.path, isEmpty);
+        expect(contacts.first.hasMessages, isFalse);
       },
     );
 
@@ -661,6 +670,7 @@ void main() {
         final rawPath = Uint8List(64)
           ..[0] = 0x11
           ..[1] = 0x22;
+        final lastSeen = DateTime.now();
         final contactJson = [
           {
             'publicKey': base64Encode(Uint8List(32)..[0] = 0xBB),
@@ -669,8 +679,10 @@ void main() {
             'flags': 0,
             'pathLength': 65, // encoded pathLength (mode 1, 1 hop)
             'path': base64Encode(rawPath),
-            'lastSeen': DateTime.now().millisecondsSinceEpoch,
-            'lastMessageAt': DateTime.now().millisecondsSinceEpoch,
+            'lastSeen': lastSeen.millisecondsSinceEpoch,
+            'lastMessageAt': lastSeen
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch,
           },
         ];
 
@@ -681,7 +693,48 @@ void main() {
         expect(contacts, hasLength(1));
         expect(contacts.first.pathLength, equals(1));
         expect(contacts.first.path, equals(Uint8List.fromList([0x11, 0x22])));
+        expect(contacts.first.hasMessages, isFalse);
       },
     );
+  });
+
+  group('AppSettingsService — gps interval fallback', () {
+    test('resolvedGpsIntervalSeconds prefers device custom var', () {
+      final service = AppSettingsService();
+
+      expect(
+        service.resolvedGpsIntervalSeconds(const {'gps_interval': '120'}),
+        equals(120),
+      );
+    });
+
+    test('resolvedGpsIntervalSeconds falls back to stored value', () async {
+      final service = AppSettingsService();
+      await service.updateSettings(AppSettings(gpsIntervalSeconds: 900));
+
+      expect(service.resolvedGpsIntervalSeconds(null), equals(900));
+      expect(
+        service.resolvedGpsIntervalSeconds(const {'gps_interval': 'bad'}),
+        equals(900),
+      );
+    });
+
+    test('resolvedGpsIntervalSeconds keeps an explicit device zero', () async {
+      final service = AppSettingsService();
+      await service.updateSettings(AppSettings(gpsIntervalSeconds: 900));
+
+      expect(
+        service.resolvedGpsIntervalSeconds(const {'gps_interval': '0'}),
+        equals(0),
+      );
+    });
+
+    test('toJson/fromJson preserves gpsIntervalSeconds', () {
+      final settings = AppSettings(gpsIntervalSeconds: 321);
+
+      final restored = AppSettings.fromJson(settings.toJson());
+
+      expect(restored.gpsIntervalSeconds, equals(321));
+    });
   });
 }

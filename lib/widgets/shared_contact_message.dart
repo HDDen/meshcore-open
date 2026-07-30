@@ -58,10 +58,7 @@ class SharedContactMessage extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             contact.shortPublicKey,
-            style: MeshTheme.mono(
-              fontSize: 12 * textScale,
-              color: metaColor,
-            ),
+            style: MeshTheme.mono(fontSize: 12 * textScale, color: metaColor),
           ),
           const SizedBox(height: 4),
           Text(

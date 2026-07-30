@@ -2,16 +2,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mco_service/mco_service.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../config/build_features.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
+import '../services/map_tile_cache_service.dart';
 import '../services/notification_service.dart';
 import '../services/translation_service.dart';
 import '../theme/mesh_theme.dart';
+import '../utils/battery_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -33,10 +37,11 @@ class AppSettingsScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child:
-            Consumer3<
+            Consumer4<
               AppSettingsService,
               MeshCoreConnector,
-              TranslationService
+              TranslationService,
+              SettingsSectionsService
             >(
               builder:
                   (
@@ -44,6 +49,7 @@ class AppSettingsScreen extends StatelessWidget {
                     settingsService,
                     connector,
                     translationService,
+                    settingsSectionsService,
                     child,
                   ) {
                     return ListView(
@@ -87,6 +93,7 @@ class AppSettingsScreen extends StatelessWidget {
                             context,
                             settingsService,
                             connector,
+                            settingsSectionsService,
                           ),
                         ),
 
@@ -98,7 +105,7 @@ class AppSettingsScreen extends StatelessWidget {
                         ),
 
                         // TRANSLATION (non-web only)
-                        if (!kIsWeb) ...[
+                        if (!kIsWeb && BuildFeatures.llmTranslationEnabled) ...[
                           SectionHeader(context.l10n.translation_title),
                           MeshCard(
                             padding: EdgeInsets.zero,
@@ -653,20 +660,6 @@ class AppSettingsScreen extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
         const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
-          ),
-          secondary: const Icon(Icons.location_searching, size: 20),
-          title: Text(context.l10n.appSettings_enableMessageTracing),
-          subtitle: Text(context.l10n.appSettings_enableMessageTracingSubtitle),
-          value: settingsService.settings.enableMessageTracing,
-          onChanged: (value) {
-            settingsService.setEnableMessageTracing(value);
-          },
-        ),
-        const Divider(height: 1, indent: 16),
         _buildChannelResendTimeoutTile(context, settingsService),
         const Divider(height: 1, indent: 16),
         _buildSendingDelayTile(context, settingsService),
@@ -690,12 +683,34 @@ class AppSettingsScreen extends StatelessWidget {
     BuildContext context,
     AppSettingsService settingsService,
     MeshCoreConnector connector,
+    SettingsSectionsService settingsSectionsService,
   ) {
     final deviceId = connector.batteryDeviceKey;
     final isConnected = connector.isConnected && deviceId != null;
-    final selection = isConnected
-        ? settingsService.batteryChemistryForDevice(deviceId)
+    final connectedDeviceId = isConnected ? deviceId : null;
+    final selection = connectedDeviceId != null
+        ? settingsService.batteryChemistryForDevice(connectedDeviceId)
         : 'nmc';
+    final rawExtraProfiles = settingsSectionsService
+        .batteryChemistryProfilesForDevice(connectedDeviceId, context: context);
+    final extraProfiles = <McoBatteryChemistryProfile>[];
+    final extraProfileIds = <String, int>{};
+    for (final profile in rawExtraProfiles) {
+      final existingIndex = extraProfileIds[profile.id];
+      if (existingIndex == null) {
+        extraProfileIds[profile.id] = extraProfiles.length;
+        extraProfiles.add(profile);
+      } else {
+        extraProfiles[existingIndex] = profile;
+      }
+    }
+    final knownChemistries = <String>{
+      'nmc',
+      'lifepo4',
+      'lipo',
+      batteryChemistryCustom,
+      for (final profile in extraProfiles) profile.id,
+    };
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -753,7 +768,7 @@ class AppSettingsScreen extends StatelessWidget {
               ? (value) {
                   if (value != null) {
                     settingsService.setBatteryChemistryForDevice(
-                      deviceId,
+                      connectedDeviceId!,
                       value,
                     );
                   }
@@ -772,8 +787,26 @@ class AppSettingsScreen extends StatelessWidget {
               value: 'lipo',
               child: Text(context.l10n.appSettings_batteryLipo),
             ),
+            for (final profile in extraProfiles)
+              DropdownMenuItem(value: profile.id, child: Text(profile.label)),
+            DropdownMenuItem(
+              value: batteryChemistryCustom,
+              child: Text(context.l10n.settings_appSettingsCustomChemistry),
+            ),
+            if (!knownChemistries.contains(selection))
+              DropdownMenuItem(value: selection, child: Text(selection)),
           ],
         ),
+        if (isConnected && selection == batteryChemistryCustom) ...[
+          const SizedBox(height: 12),
+          _CustomBatteryRangeFields(
+            deviceId: connectedDeviceId!,
+            range: settingsService.batteryCustomRangeForDevice(
+              connectedDeviceId,
+            ),
+            onRangeChanged: settingsService.setBatteryCustomRangeForDevice,
+          ),
+        ],
       ],
     );
   }
@@ -784,65 +817,239 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
+    final children = <Widget>[
+      SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: const Icon(Icons.router_outlined, size: 20),
+        title: Text(context.l10n.appSettings_showRepeaters),
+        subtitle: Text(context.l10n.appSettings_showRepeatersSubtitle),
+        value: settingsService.settings.mapShowRepeaters,
+        onChanged: (value) => settingsService.setMapShowRepeaters(value),
+      ),
+      const Divider(height: 1, indent: 16),
+      SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: const Icon(Icons.chat_outlined, size: 20),
+        title: Text(context.l10n.appSettings_showChatNodes),
+        subtitle: Text(context.l10n.appSettings_showChatNodesSubtitle),
+        value: settingsService.settings.mapShowChatNodes,
+        onChanged: (value) => settingsService.setMapShowChatNodes(value),
+      ),
+      const Divider(height: 1, indent: 16),
+      SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: const Icon(Icons.people_outline, size: 20),
+        title: Text(context.l10n.appSettings_showOtherNodes),
+        subtitle: Text(context.l10n.appSettings_showOtherNodesSubtitle),
+        value: settingsService.settings.mapShowOtherNodes,
+        onChanged: (value) => settingsService.setMapShowOtherNodes(value),
+      ),
+      const Divider(height: 1, indent: 16),
+      SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: const Icon(Icons.more_time_outlined, size: 20),
+        title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
+        value: settingsService.settings.pathTraceHighTimeoutEnabled,
+        onChanged: (value) {
+          settingsService.setPathTraceHighTimeoutEnabled(value);
+        },
+      ),
+      const Divider(height: 1, indent: 16),
+      InkWell(
+        onTap: () => _showTimeFilterSheet(context, settingsService),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.timer_outlined,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.appSettings_timeFilter,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      settingsService.settings.mapTimeFilterHours == 0
+                          ? context.l10n.appSettings_timeFilterShowAll
+                          : context.l10n.appSettings_timeFilterShowLast(
+                              settingsService.settings.mapTimeFilterHours
+                                  .toInt(),
+                            ),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: scheme.onSurfaceVariant,
+                size: 16,
+              ),
+            ],
           ),
-          secondary: const Icon(Icons.router_outlined, size: 20),
-          title: Text(context.l10n.appSettings_showRepeaters),
-          subtitle: Text(context.l10n.appSettings_showRepeatersSubtitle),
-          value: settingsService.settings.mapShowRepeaters,
-          onChanged: (value) => settingsService.setMapShowRepeaters(value),
         ),
-        const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
+      ),
+      const Divider(height: 1, indent: 16),
+      InkWell(
+        onTap: () => _showUnitsSheet(context, settingsService),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.straighten, size: 20, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.appSettings_unitsTitle,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      settingsService.settings.unitSystem == UnitSystem.imperial
+                          ? context.l10n.appSettings_unitsImperial
+                          : context.l10n.appSettings_unitsMetric,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: scheme.onSurfaceVariant,
+                size: 16,
+              ),
+            ],
           ),
-          secondary: const Icon(Icons.chat_outlined, size: 20),
-          title: Text(context.l10n.appSettings_showChatNodes),
-          subtitle: Text(context.l10n.appSettings_showChatNodesSubtitle),
-          value: settingsService.settings.mapShowChatNodes,
-          onChanged: (value) => settingsService.setMapShowChatNodes(value),
         ),
-        const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
+      ),
+      const Divider(height: 1, indent: 16),
+      InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MapCacheScreen()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.download_outlined,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.appSettings_offlineMapCache,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      settingsService.settings.mapCacheBounds == null
+                          ? context.l10n.appSettings_noAreaSelected
+                          : context.l10n.appSettings_areaSelectedZoom(
+                              settingsService.settings.mapCacheMinZoom,
+                              settingsService.settings.mapCacheMaxZoom,
+                            ),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: scheme.onSurfaceVariant,
+                size: 16,
+              ),
+            ],
           ),
-          secondary: const Icon(Icons.people_outline, size: 20),
-          title: Text(context.l10n.appSettings_showOtherNodes),
-          subtitle: Text(context.l10n.appSettings_showOtherNodesSubtitle),
-          value: settingsService.settings.mapShowOtherNodes,
-          onChanged: (value) => settingsService.setMapShowOtherNodes(value),
         ),
-        const Divider(height: 1, indent: 16),
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
+      ),
+      const Divider(height: 1, indent: 16),
+      InkWell(
+        onTap: () => _showMapRasterSourceDialog(context, settingsService),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.layers_outlined,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.appSettings_rasterTileSource,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _mapRasterSourceSummary(settingsService.settings),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: scheme.onSurfaceVariant,
+                size: 16,
+              ),
+            ],
           ),
-          secondary: const Icon(Icons.more_time_outlined, size: 20),
-          title: Text(context.l10n.channelPath_repeaterHopsHighTimeout),
-          value: settingsService.settings.pathTraceHighTimeoutEnabled,
-          onChanged: (value) {
-            settingsService.setPathTraceHighTimeoutEnabled(value);
-          },
         ),
+      ),
+    ];
+
+    if (_isStadiaSource(settingsService.settings)) {
+      children.addAll([
         const Divider(height: 1, indent: 16),
         InkWell(
-          onTap: () => _showTimeFilterSheet(context, settingsService),
+          onTap: () => _showMapRasterEndpointDialog(context, settingsService),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(
-                  Icons.timer_outlined,
+                  Icons.public_outlined,
                   size: 20,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -852,19 +1059,14 @@ class AppSettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.l10n.appSettings_timeFilter,
+                        context.l10n.appSettings_stadiaEndpoint,
                         style: textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        settingsService.settings.mapTimeFilterHours == 0
-                            ? context.l10n.appSettings_timeFilterShowAll
-                            : context.l10n.appSettings_timeFilterShowLast(
-                                settingsService.settings.mapTimeFilterHours
-                                    .toInt(),
-                              ),
+                        _mapRasterEndpointSummary(settingsService.settings),
                         style: textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -883,13 +1085,13 @@ class AppSettingsScreen extends StatelessWidget {
         ),
         const Divider(height: 1, indent: 16),
         InkWell(
-          onTap: () => _showUnitsSheet(context, settingsService),
+          onTap: () => _showMapApiKeyDialog(context, settingsService),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(
-                  Icons.straighten,
+                  Icons.key_outlined,
                   size: 20,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -899,17 +1101,14 @@ class AppSettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.l10n.appSettings_unitsTitle,
+                        context.l10n.appSettings_stadiaApiKey,
                         style: textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        settingsService.settings.unitSystem ==
-                                UnitSystem.imperial
-                            ? context.l10n.appSettings_unitsImperial
-                            : context.l10n.appSettings_unitsMetric,
+                        _mapApiKeySummary(context, settingsService.settings),
                         style: textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -926,59 +1125,208 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        const Divider(height: 1, indent: 16),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MapCacheScreen()),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.download_outlined,
-                  size: 20,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+      ]);
+    }
+
+    return Column(children: children);
+  }
+
+  String _mapRasterSourceSummary(AppSettings settings) {
+    final source = MapRasterSourceCatalog.fromSettings(settings);
+    return '${source.label} - ${source.description}';
+  }
+
+  bool _isStadiaSource(AppSettings settings) {
+    return MapRasterSourceCatalog.fromSettings(settings).isStadia;
+  }
+
+  String _mapRasterEndpointSummary(AppSettings settings) {
+    final endpoint = MapRasterEndpointCatalog.fromSettings(settings);
+    return '${endpoint.label} - ${endpoint.description}';
+  }
+
+  String _mapApiKeySummary(BuildContext context, AppSettings settings) {
+    return context.l10n.appSettings_stadiaApiKeyConfigured(
+      _maskApiKey(settings.effectiveMapTileApiKey),
+    );
+  }
+
+  String _maskApiKey(String value) {
+    if (value.length <= 8) return '********';
+    return '${value.substring(0, 4)}...${value.substring(value.length - 4)}';
+  }
+
+  void _showMapRasterSourceDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    String selectedId = settingsService.settings.mapRasterSourceId;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(context.l10n.appSettings_rasterTileSource),
+          content: SizedBox(
+            width: 360,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(dialogContext).size.height * 0.6,
+              ),
+              child: SingleChildScrollView(
+                child: RadioGroup<String>(
+                  groupValue: selectedId,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      selectedId = value;
+                    });
+                  },
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        context.l10n.appSettings_offlineMapCache,
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      for (final preset in MapRasterSourcePreset.values)
+                        Builder(
+                          builder: (context) {
+                            final option = MapRasterSourceCatalog.fromPreset(
+                              preset,
+                            );
+                            return RadioListTile<String>(
+                              value: preset.id,
+                              title: Text(option.label),
+                              subtitle: Text(option.description),
+                            );
+                          },
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        settingsService.settings.mapCacheBounds == null
-                            ? context.l10n.appSettings_noAreaSelected
-                            : context.l10n.appSettings_areaSelectedZoom(
-                                settingsService.settings.mapCacheMinZoom,
-                                settingsService.settings.mapCacheMaxZoom,
-                              ),
-                        style: textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: scheme.onSurfaceVariant,
-                  size: 16,
-                ),
-              ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                await settingsService.setMapRasterSourceId(selectedId);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              child: Text(context.l10n.common_save),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  void _showMapRasterEndpointDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    String selectedId = settingsService.settings.mapTileEndpointId;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(context.l10n.appSettings_stadiaEndpoint),
+          content: SizedBox(
+            width: 360,
+            child: RadioGroup<String>(
+              groupValue: selectedId,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  selectedId = value;
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final option in MapRasterEndpointCatalog.presets)
+                    RadioListTile<String>(
+                      value: option.id,
+                      title: Text(option.label),
+                      subtitle: Text(option.description),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                await settingsService.setMapTileEndpointId(selectedId);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              child: Text(context.l10n.common_save),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMapApiKeyDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final currentApiKey = settingsService.settings.mapTileApiKey?.trim() ?? '';
+    final maskedApiKey = _maskApiKey(
+      currentApiKey.isEmpty ? AppSettings.stadiaDemo : currentApiKey,
+    );
+    final controller = TextEditingController(text: maskedApiKey);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.appSettings_stadiaApiKey),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.appSettings_stadiaApiKeyDialogDescription),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                autofillHints: const [AutofillHints.password],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: '4e1bf343-3d91-4d9c-a8e1-1234567890ab',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final apiKey = controller.text.trim();
+              await settingsService.setMapTileApiKey(
+                apiKey == maskedApiKey ? currentApiKey : apiKey,
+              );
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(context.l10n.common_save),
+          ),
+        ],
+      ),
     );
   }
 
@@ -3075,6 +3423,150 @@ class _TranslationLanguageDialogContentState
           child: Text(context.l10n.common_close),
         ),
       ],
+    );
+  }
+}
+
+class _CustomBatteryRangeFields extends StatefulWidget {
+  const _CustomBatteryRangeFields({
+    required this.deviceId,
+    required this.range,
+    required this.onRangeChanged,
+  });
+
+  final String deviceId;
+  final ({double minVolts, double maxVolts})? range;
+  final Future<void> Function(String deviceId, double minVolts, double maxVolts)
+  onRangeChanged;
+
+  @override
+  State<_CustomBatteryRangeFields> createState() =>
+      _CustomBatteryRangeFieldsState();
+}
+
+class _CustomBatteryRangeFieldsState extends State<_CustomBatteryRangeFields> {
+  late final TextEditingController _minController;
+  late final TextEditingController _maxController;
+
+  @override
+  void initState() {
+    super.initState();
+    _minController = TextEditingController(
+      text: _formatVolts(widget.range?.minVolts),
+    );
+    _maxController = TextEditingController(
+      text: _formatVolts(widget.range?.maxVolts),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _CustomBatteryRangeFields oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.deviceId != widget.deviceId) {
+      _setControllerText(_minController, _formatVolts(widget.range?.minVolts));
+      _setControllerText(_maxController, _formatVolts(widget.range?.maxVolts));
+    }
+  }
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minVolts = _parseVolts(_minController.text);
+    final maxVolts = _parseVolts(_maxController.text);
+    final hasBoth = minVolts != null && maxVolts != null;
+    final invalidRange = hasBoth && minVolts >= maxVolts;
+    final inputFormatters = [
+      _CommaDecimalTextInputFormatter(),
+      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+    ];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _minController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: inputFormatters,
+            decoration: InputDecoration(
+              labelText: 'Min',
+              suffixText: 'V',
+              isDense: true,
+              errorText: invalidRange ? '' : null,
+            ),
+            onChanged: (_) => _onChanged(),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: invalidRange ? 16 : 13),
+          child: const Text(' – '),
+        ),
+        Expanded(
+          child: TextField(
+            controller: _maxController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: inputFormatters,
+            decoration: InputDecoration(
+              labelText: 'Max',
+              suffixText: 'V',
+              isDense: true,
+              errorText: invalidRange ? '' : null,
+            ),
+            onChanged: (_) => _onChanged(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _onChanged() {
+    setState(() {});
+    final minVolts = _parseVolts(_minController.text);
+    final maxVolts = _parseVolts(_maxController.text);
+    if (minVolts == null || maxVolts == null || minVolts >= maxVolts) {
+      return;
+    }
+    widget.onRangeChanged(widget.deviceId, minVolts, maxVolts);
+  }
+
+  double? _parseVolts(String value) {
+    return double.tryParse(value.replaceAll(',', '.'));
+  }
+
+  String _formatVolts(double? value) {
+    if (value == null) return '';
+    return value.toStringAsFixed(3).replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+
+  void _setControllerText(TextEditingController controller, String text) {
+    if (controller.text == text) return;
+    controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
+class _CommaDecimalTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text.replaceAll(',', '.');
+    if (text == newValue.text) return newValue;
+    final offset = newValue.selection.end < 0
+        ? text.length
+        : newValue.selection.end.clamp(0, text.length).toInt();
+    return newValue.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: offset),
     );
   }
 }

@@ -1072,6 +1072,18 @@ abstract class AppLocalizations {
   /// **'Include location in advert.'**
   String get settings_advertLocationSubtitle;
 
+  /// No description provided for @settings_autoZeroHopAdvertOnGpsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Zero-Hop Advert On GPS Update'**
+  String get settings_autoZeroHopAdvertOnGpsUpdate;
+
+  /// No description provided for @settings_autoZeroHopAdvertOnGpsUpdateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When GPS location changes, send a zero-hop advert (requires Advert Location).'**
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle;
+
   /// No description provided for @settings_multiAck.
   ///
   /// In en, this message translates to:
@@ -1099,7 +1111,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_deleteAllPathsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Clear all path data from contacts.'**
+  /// **'Clear all local route data from contacts. Routes on the node will not be affected.'**
   String get settings_deleteAllPathsSubtitle;
 
   /// No description provided for @settings_sendAdvertisement.
@@ -1231,7 +1243,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_aboutModLink.
   ///
   /// In en, this message translates to:
-  /// **'Mod group on Telegram: https://t.me/mcoadvanced'**
+  /// **'Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced'**
   String get settings_aboutModLink;
 
   /// No description provided for @settings_aboutOpenMeteoAttribution.
@@ -1251,6 +1263,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID'**
   String get settings_infoId;
+
+  /// No description provided for @settings_infoDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Board name'**
+  String get settings_infoDeviceName;
 
   /// No description provided for @settings_infoStatus.
   ///
@@ -1281,6 +1299,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Channel Count'**
   String get settings_infoChannelCount;
+
+  /// No description provided for @settings_infoFirmware.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version'**
+  String get settings_infoFirmware;
 
   /// No description provided for @settings_presets.
   ///
@@ -1954,6 +1978,42 @@ abstract class AppLocalizations {
   /// **'Last week'**
   String get appSettings_lastWeek;
 
+  /// No description provided for @appSettings_rasterTileSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Raster Tile Source'**
+  String get appSettings_rasterTileSource;
+
+  /// No description provided for @appSettings_stadiaEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stadia Endpoint'**
+  String get appSettings_stadiaEndpoint;
+
+  /// No description provided for @appSettings_stadiaApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Stadia API Key'**
+  String get appSettings_stadiaApiKey;
+
+  /// No description provided for @appSettings_stadiaApiKeyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for Stadia Maps usage'**
+  String get appSettings_stadiaApiKeyRequired;
+
+  /// No description provided for @appSettings_stadiaApiKeyConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured: {maskedKey}'**
+  String appSettings_stadiaApiKeyConfigured(String maskedKey);
+
+  /// No description provided for @appSettings_stadiaApiKeyDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Stadia Maps API key. This app uses it for raster tile requests.'**
+  String get appSettings_stadiaApiKeyDialogDescription;
+
   /// No description provided for @appSettings_offlineMapCache.
   ///
   /// In en, this message translates to:
@@ -2151,6 +2211,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Group'**
   String get contacts_newGroup;
+
+  /// No description provided for @contacts_newGroupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines channels/contacts into a folder'**
+  String get contacts_newGroupDescription;
 
   /// No description provided for @contacts_moreOptions.
   ///
@@ -2641,7 +2707,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_doNotFilterMessagesOnChannels.
   ///
   /// In en, this message translates to:
-  /// **'Do not filter selfmessages on channels'**
+  /// **'Do not filter selfmessages on channels and consider messages as definitely delivered'**
   String get settings_doNotFilterMessagesOnChannels;
 
   /// No description provided for @settings_doNotFilterMessagesOnChannelsSubtitle.
@@ -2877,6 +2943,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send GIF'**
   String get chat_sendGif;
+
+  /// No description provided for @chat_receivedGif.
+  ///
+  /// In en, this message translates to:
+  /// **'Received a GIF'**
+  String get chat_receivedGif;
 
   /// No description provided for @chat_reply.
   ///
@@ -4606,6 +4678,54 @@ abstract class AppLocalizations {
   /// **'Failed downloads: {count}'**
   String mapCache_failedDownloads(int count);
 
+  /// No description provided for @mapCache_cachedTilesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached tiles'**
+  String get mapCache_cachedTilesLabel;
+
+  /// No description provided for @mapCache_cachedTileSummaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached tile summary'**
+  String get mapCache_cachedTileSummaryLabel;
+
+  /// No description provided for @mapCache_bulkDownloadDisabledForSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline bulk downloads are disabled for {source}.'**
+  String mapCache_bulkDownloadDisabledForSource(String source);
+
+  /// No description provided for @mapCache_bulkDownloadDisabledInConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline bulk downloads are disabled for {source} in this app configuration.'**
+  String mapCache_bulkDownloadDisabledInConfig(String source);
+
+  /// No description provided for @mapCache_summarySource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source}'**
+  String mapCache_summarySource(String source);
+
+  /// No description provided for @mapCache_summaryCachedTilesForSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached tiles for source: {count}'**
+  String mapCache_summaryCachedTilesForSource(int count);
+
+  /// No description provided for @mapCache_summaryCachedInSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached in selected area/zoom: {count}'**
+  String mapCache_summaryCachedInSelection(int count);
+
+  /// No description provided for @mapCache_summaryApproxCacheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Approx cache size: {size}'**
+  String mapCache_summaryApproxCacheSize(String size);
+
   /// No description provided for @mapCache_boundsLabel.
   ///
   /// In en, this message translates to:
@@ -5552,6 +5672,66 @@ abstract class AppLocalizations {
   /// **'Bytes used to encode this repeater\'s ID in flood path/loop-detect tags. 0=1 byte (256 IDs, up to 64 hops), 1=2 bytes (65K IDs, up to 32 hops), 2=3 bytes (16M IDs, up to 21 hops). Firmware before v1.14 always used 1-byte paths; v1.14 and newer can be configured for 2- or 3-byte paths.'**
   String get repeater_pathHashModeHelper;
 
+  /// No description provided for @repeater_keySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Identity Keys'**
+  String get repeater_keySettings;
+
+  /// No description provided for @repeater_keySettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the public/private keypair'**
+  String get repeater_keySettingsSubtitle;
+
+  /// No description provided for @repeater_prvKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key'**
+  String get repeater_prvKey;
+
+  /// No description provided for @repeater_prvKeyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'A new private key for the repeater, a 128-character hex string.'**
+  String get repeater_prvKeyHelper;
+
+  /// No description provided for @repeater_generatePrvKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a random keypair'**
+  String get repeater_generatePrvKey;
+
+  /// No description provided for @repeater_stopGeneratingPrvKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupt search for keypair'**
+  String get repeater_stopGeneratingPrvKey;
+
+  /// No description provided for @repeater_pubKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key'**
+  String get repeater_pubKey;
+
+  /// No description provided for @repeater_pubKeyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the public key that goes with the generated private key. You can\'t set this directly.'**
+  String get repeater_pubKeyHelper;
+
+  /// No description provided for @repeater_pubKeyPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Desired prefix'**
+  String get repeater_pubKeyPrefix;
+
+  /// No description provided for @repeater_pubKeyPrefixHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a public key that starts with these hex digits. Expected tries needed: {tries}.'**
+  String repeater_pubKeyPrefixHelper(int tries);
+
   /// No description provided for @repeater_txDelay.
   ///
   /// In en, this message translates to:
@@ -6323,7 +6503,7 @@ abstract class AppLocalizations {
   /// No description provided for @repeater_cliHelpSetPrvKey.
   ///
   /// In en, this message translates to:
-  /// **'(Serial only) Replaces the device identity private key. Reboot required to apply. Generates a new public key.'**
+  /// **'Replaces the device identity private key. Reboot required to apply. Generates a new public key.'**
   String get repeater_cliHelpSetPrvKey;
 
   /// No description provided for @repeater_cliHelpSetRadioRxGain.
@@ -7061,7 +7241,7 @@ abstract class AppLocalizations {
   /// No description provided for @channelPath_timeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Time'**
+  /// **'Time (received at)'**
   String get channelPath_timeLabel;
 
   /// No description provided for @channelPath_repeatsLabel.
@@ -8209,7 +8389,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveredContacts_Title.
   ///
   /// In en, this message translates to:
-  /// **'Discovered Contacts'**
+  /// **'Add discovered contacts'**
   String get discoveredContacts_Title;
 
   /// No description provided for @discoveredContacts_noMatching.
@@ -8605,7 +8785,7 @@ abstract class AppLocalizations {
   /// No description provided for @background_serviceText.
   ///
   /// In en, this message translates to:
-  /// **'Keeping BLE connected'**
+  /// **'Keeping node connected'**
   String get background_serviceText;
 
   /// No description provided for @appSettings_translationModelDeleted.
@@ -9079,7 +9259,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSendPayloadExceed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send – payload exceeded of {count} bytes. Please reduce the number of parts or the canvas size.'**
+  /// **'Failed to send – payload exceeded by {count} bytes. Please reduce the number of details or the canvas size.'**
   String chat_canvasSendPayloadExceed(int count);
 
   /// No description provided for @chat_canvasCurrentPayload.
@@ -9145,13 +9325,13 @@ abstract class AppLocalizations {
   /// No description provided for @chat_canvasSaveBinary.
   ///
   /// In en, this message translates to:
-  /// **'Save fo binary file'**
+  /// **'Save to binary file'**
   String get chat_canvasSaveBinary;
 
   /// No description provided for @chat_canvasCannotSend.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send – payload exceeded of {count} bytes. Please, edit image and try send again.'**
+  /// **'Failed to send – payload exceeded by {count} bytes. Please edit the image and try again.'**
   String chat_canvasCannotSend(int count);
 
   /// No description provided for @chat_canvasCompressionLevel.
@@ -9193,7 +9373,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_modSettingsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'This section contains options that are brings by MCOa and not included in the original meshcore_open'**
+  /// **'This section contains options added by MCOa that are not part of the original meshcore_open'**
   String get settings_modSettingsSubtitle;
 
   /// No description provided for @settings_modSettingsVisual.
@@ -9208,11 +9388,179 @@ abstract class AppLocalizations {
   /// **'Messaging'**
   String get settings_modSettingsMessaging;
 
+  /// No description provided for @settings_modSettingsMCMP.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP'**
+  String get settings_modSettingsMCMP;
+
+  /// No description provided for @settings_mcmp_version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settings_mcmp_version;
+
+  /// No description provided for @settings_mcmp_useSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Message signing'**
+  String get settings_mcmp_useSign;
+
+  /// No description provided for @settings_mcmp_signed.
+  ///
+  /// In en, this message translates to:
+  /// **'Using signature verification'**
+  String get settings_mcmp_signed;
+
+  /// No description provided for @settings_mcmp_noSign.
+  ///
+  /// In en, this message translates to:
+  /// **'No signature'**
+  String get settings_mcmp_noSign;
+
+  /// No description provided for @settings_mcmp_senderNameCollision.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender isn\'t unique!'**
+  String get settings_mcmp_senderNameCollision;
+
+  /// No description provided for @chat_mcmpSignatureValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature is valid'**
+  String get chat_mcmpSignatureValid;
+
+  /// No description provided for @chat_mcmpSignatureInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid signature!'**
+  String get chat_mcmpSignatureInvalid;
+
+  /// No description provided for @chat_mcmpSignatureUnverifiable.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature can\'t be verified — sender is not in contacts'**
+  String get chat_mcmpSignatureUnverifiable;
+
+  /// No description provided for @chat_mcmpSignatureTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticated by encrypted transport'**
+  String get chat_mcmpSignatureTransport;
+
+  /// No description provided for @chat_mcmpManualRecheckSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Manually recheck signature'**
+  String get chat_mcmpManualRecheckSign;
+
+  /// No description provided for @chat_mcmpSignatureCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature checking'**
+  String get chat_mcmpSignatureCheckStatus;
+
+  /// No description provided for @chat_mcmpSigningFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to sign the message'**
+  String get chat_mcmpSigningFailed;
+
+  /// No description provided for @chat_mcmpAnswerTo.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMPv3 answer to'**
+  String get chat_mcmpAnswerTo;
+
+  /// No description provided for @chat_timestampPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet timestamp'**
+  String get chat_timestampPacket;
+
+  /// No description provided for @settings_modSettingsMCOimg.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg'**
+  String get settings_modSettingsMCOimg;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show format version badge'**
+  String get settings_modSettingsVisualShowMCOimgFormat;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show coding algorithm badge'**
+  String get settings_modSettingsVisualShowMCOimgAlgo;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show image weight (bytes)'**
+  String get settings_modSettingsVisualShowMCOimgBytes;
+
+  /// No description provided for @settings_modSettingsVisualShowMCOimgResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg: show resolution'**
+  String get settings_modSettingsVisualShowMCOimgResolution;
+
+  /// No description provided for @settings_modSettingsMCOimg_showReplacements.
+  ///
+  /// In en, this message translates to:
+  /// **'Display original images instead of LoRa versions'**
+  String get settings_modSettingsMCOimg_showReplacements;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale original images in chats'**
+  String get settings_modSettingsMCOimg_replacementsScale;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsLottieScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Limiting of lottie-replacements size'**
+  String get settings_modSettingsMCOimg_replacementsLottieScale;
+
+  /// No description provided for @settings_modSettingsMCOimg_scaleNearestNeighbor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale as Nearest Neighbor'**
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsSharp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp original images in chats'**
+  String get settings_modSettingsMCOimg_replacementsSharp;
+
+  /// No description provided for @settings_modSettingsMCOimg_replacementsSharpDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention! Disables GIF animation!'**
+  String get settings_modSettingsMCOimg_replacementsSharpDscr;
+
   /// No description provided for @settings_modSettingsHideChInd.
   ///
   /// In en, this message translates to:
   /// **'Hide channel index'**
   String get settings_modSettingsHideChInd;
+
+  /// No description provided for @settings_modSettingsHideRadioStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide header radio stats'**
+  String get settings_modSettingsHideRadioStats;
+
+  /// No description provided for @settings_modSettingsSNRindicatorAllRepActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR indicator: trigger on all repeater responses, not just adverts'**
+  String get settings_modSettingsSNRindicatorAllRepActivity;
 
   /// No description provided for @settings_modSettingsIncomingQuoteAsMentions.
   ///
@@ -9280,30 +9628,6 @@ abstract class AppLocalizations {
   /// **'Hide map zoom panel'**
   String get settings_modSettingsVisualHideMapZoomControls;
 
-  /// No description provided for @settings_modSettingsVisualShowMCOimgFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show format version badge'**
-  String get settings_modSettingsVisualShowMCOimgFormat;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgAlgo.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show coding algorythm badge'**
-  String get settings_modSettingsVisualShowMCOimgAlgo;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgBytes.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show image weight (bytes)'**
-  String get settings_modSettingsVisualShowMCOimgBytes;
-
-  /// No description provided for @settings_modSettingsVisualShowMCOimgResolution.
-  ///
-  /// In en, this message translates to:
-  /// **'MCOimg: show resolution'**
-  String get settings_modSettingsVisualShowMCOimgResolution;
-
   /// No description provided for @settings_modSettingsVisualShowMsgRegion.
   ///
   /// In en, this message translates to:
@@ -9321,6 +9645,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'unknown'**
   String get channels_messageRegionUnknown;
+
+  /// No description provided for @channels_messageRegionNotMatchesWithKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'no matches'**
+  String get channels_messageRegionNotMatchesWithKnown;
 
   /// No description provided for @channels_messageRegionEmpty.
   ///
@@ -9406,6 +9736,18 @@ abstract class AppLocalizations {
   /// **'Keep TCP-connection alive in background'**
   String get settings_modSettingsMessagingBackgroundTCP;
 
+  /// No description provided for @settings_modSettingsDPIchange.
+  ///
+  /// In en, this message translates to:
+  /// **'DPI change'**
+  String get settings_modSettingsDPIchange;
+
+  /// No description provided for @settings_modSettingsDPIchangeToIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to icons'**
+  String get settings_modSettingsDPIchangeToIcons;
+
   /// No description provided for @chat_MCOimgOpenGallery.
   ///
   /// In en, this message translates to:
@@ -9439,7 +9781,7 @@ abstract class AppLocalizations {
   /// No description provided for @mcogallery_removePackConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Подтвердите удаление пакета «{name}»'**
+  /// **'Confirm removal of the «{name}» pack?'**
   String mcogallery_removePackConfirm(String name);
 
   /// No description provided for @mcogallery_addGroup.
@@ -9453,6 +9795,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove group'**
   String get mcogallery_removeGroup;
+
+  /// No description provided for @mcogallery_showLora.
+  ///
+  /// In en, this message translates to:
+  /// **'Show LoRa-variant'**
+  String get mcogallery_showLora;
+
+  /// No description provided for @mcogallery_showPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Show improved variant'**
+  String get mcogallery_showPacked;
 
   /// No description provided for @chat_sendSelfContact.
   ///
@@ -9537,6 +9891,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share location from map'**
   String get chat_locationFromMap;
+
+  /// No description provided for @settings_modSettingsRoomServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Room-servers and contacts'**
+  String get settings_modSettingsRoomServer;
+
+  /// No description provided for @settings_modSettingsRoomServerShowNotemptyOnChatscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Show room-servers with messages history against channels in single screen'**
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen;
+
+  /// No description provided for @settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Show contacts with messages history against channels in single screen'**
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen;
+
+  /// No description provided for @settings_modSettingsRoomServerDisableRoomAndContactsSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers'**
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting;
+
+  /// No description provided for @settings_appSettingsCustomChemistry.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get settings_appSettingsCustomChemistry;
+
+  /// No description provided for @map_clearDiscoveredContactsCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear nodes local cache'**
+  String get map_clearDiscoveredContactsCache;
+
+  /// No description provided for @map_clearDiscoveredContactsCacheDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.'**
+  String get map_clearDiscoveredContactsCacheDisclaimer;
+
+  /// No description provided for @snrIndicator_v2_nearByRepeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater\'s activity'**
+  String get snrIndicator_v2_nearByRepeaters;
+
+  /// No description provided for @app_connectionLostReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to node is lost; reconnecting...'**
+  String get app_connectionLostReconnect;
+
+  /// No description provided for @app_connectionLostReconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnected to node'**
+  String get app_connectionLostReconnected;
+
+  /// No description provided for @contacts_batchOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch operations'**
+  String get contacts_batchOperations;
+
+  /// No description provided for @contacts_batchOperations_notSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not selected any contacts for processing!'**
+  String get contacts_batchOperations_notSelected;
+
+  /// No description provided for @contacts_batchOperations_removeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove selected contacts from node?'**
+  String get contacts_batchOperations_removeConfirm;
+
+  /// No description provided for @contacts_batchOperations_removeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected contacts have been removed'**
+  String get contacts_batchOperations_removeSuccess;
+
+  /// No description provided for @contacts_batchOperations_removeFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove contacts – please check the contact list again'**
+  String get contacts_batchOperations_removeFail;
+
+  /// No description provided for @contacts_batchOperations_commonSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation completed successfully'**
+  String get contacts_batchOperations_commonSuccess;
+
+  /// No description provided for @contacts_batchOperations_commonFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed'**
+  String get contacts_batchOperations_commonFail;
+
+  /// No description provided for @contacts_batchOperations_selectFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Select filtered'**
+  String get contacts_batchOperations_selectFiltered;
+
+  /// No description provided for @chat_searchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get chat_searchMessages;
+
+  /// No description provided for @chat_searchMessages_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'From 3 characters, case-insensitive'**
+  String get chat_searchMessages_placeholder;
+
+  /// No description provided for @chat_searchMessages_results.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get chat_searchMessages_results;
+
+  /// No description provided for @chat_searchMessages_results_found.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} messages found'**
+  String chat_searchMessages_results_found(int count);
+
+  /// No description provided for @chat_searchMessages_results_channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {name}'**
+  String chat_searchMessages_results_channel(String name);
+
+  /// No description provided for @chat_searchMessages_results_room.
+  ///
+  /// In en, this message translates to:
+  /// **'Room {name}'**
+  String chat_searchMessages_results_room(String name);
+
+  /// No description provided for @chat_searchMessages_results_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with {name}'**
+  String chat_searchMessages_results_contact(String name);
+
+  /// No description provided for @app_offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get app_offline;
+
+  /// No description provided for @app_offline_unableToMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot send messages or perform other actions while offline'**
+  String get app_offline_unableToMessage;
+
+  /// No description provided for @app_offline_sharedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined history'**
+  String get app_offline_sharedMode;
 }
 
 class _AppLocalizationsDelegate

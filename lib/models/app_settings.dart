@@ -168,6 +168,7 @@ class AppSettings {
     'cyrillic_extended',
     'cyrillic_transliteration',
   ];
+  static const String stadiaDemo = '51bd0381-4685-4666-bae8-48940f6d77c0';
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -187,11 +188,26 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+  final bool hideRadioStatsButton;
+  final bool snrIndicatorAllRepActivity;
   final bool hideMapZoomControls;
   final bool showMcoImageResolution;
   final bool showMcoImageFormat;
   final bool showMcoImageAlgorithm;
   final bool showMcoImageBytes;
+  final bool showMcoImagePackReplacements;
+  final double mcoImageReplacementsScale;
+  final int mcoImageReplacementsLottieScalePercent;
+  final bool mcoImageScaleNearestNeighbor;
+  final int mcoImageReplacementsSharpness;
+
+  /// Global UI scale multiplier applied on top of the system text scale
+  /// (affects fonts, and icons when [uiScaleApplyToIcons] is enabled).
+  final double uiScale;
+
+  /// When true, the [uiScale] multiplier also scales icons (via
+  /// IconThemeData.applyTextScaling), not only text.
+  final bool uiScaleApplyToIcons;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool showMessageRegion;
@@ -201,13 +217,21 @@ class AppSettings {
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
   final bool backgroundTcpEnabled;
+  final bool roomServerShowNotemptyOnChatscreen;
+  final bool roomServerShowNotemptyContactsOnChatscreen;
+  final bool roomServerDisableRoomAndContactsSorting;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
+  final String mapRasterSourceId;
+  final String mapTileEndpointId;
+  final String? mapTileApiKey;
   final bool notificationsEnabled;
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
   final bool notifyOnNewAdvert;
+  final bool autoSendZeroHopAdvertOnGpsUpdate;
+  final int gpsIntervalSeconds;
   final bool autoRouteRotationEnabled;
   final double maxRouteWeight;
   final double initialRouteWeight;
@@ -220,6 +244,8 @@ class AppSettings {
   final bool appDebugLogEnabled;
   final Map<String, String> batteryChemistryByDeviceId;
   final Map<String, String> batteryChemistryByRepeaterId;
+  final Map<String, double> batteryCustomMinVoltsByDeviceId;
+  final Map<String, double> batteryCustomMaxVoltsByDeviceId;
   final UnitSystem unitSystem;
   final Set<String> mutedChannels;
   final bool mapShowDiscoveryContacts;
@@ -438,6 +464,16 @@ class AppSettings {
         .toInt();
   }
 
+  String get effectiveMapTileApiKey {
+    final apiKey = mapTileApiKey?.trim();
+    if (apiKey == null || apiKey.isEmpty) {
+      return stadiaDemo;
+    }
+    return apiKey;
+  }
+
+  bool get usesstadiaDemo => effectiveMapTileApiKey == stadiaDemo;
+
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
       (p) => p.id == selectedCyr2latProfileId,
@@ -465,11 +501,20 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = false,
+    this.hideRadioStatsButton = false,
+    this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
     this.showMcoImageResolution = false,
     this.showMcoImageFormat = true,
     this.showMcoImageAlgorithm = true,
     this.showMcoImageBytes = true,
+    this.showMcoImagePackReplacements = true,
+    this.mcoImageReplacementsScale = 1.0,
+    this.mcoImageReplacementsLottieScalePercent = 50,
+    this.mcoImageScaleNearestNeighbor = true,
+    this.mcoImageReplacementsSharpness = 0,
+    this.uiScale = 1.0,
+    this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
     this.showMessageRegion = false,
@@ -479,13 +524,21 @@ class AppSettings {
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
     this.backgroundTcpEnabled = false,
+    this.roomServerShowNotemptyOnChatscreen = false,
+    this.roomServerShowNotemptyContactsOnChatscreen = false,
+    this.roomServerDisableRoomAndContactsSorting = true,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
+    this.mapRasterSourceId = 'osm_auto',
+    this.mapTileEndpointId = 'standard_2x',
+    this.mapTileApiKey,
     this.notificationsEnabled = true,
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
+    this.autoSendZeroHopAdvertOnGpsUpdate = false,
+    this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = true,
     this.maxRouteWeight = 5.0,
     this.initialRouteWeight = 3.0,
@@ -498,6 +551,8 @@ class AppSettings {
     this.appDebugLogEnabled = false,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     this.unitSystem = UnitSystem.metric,
     Set<String>? mutedChannels,
     this.mapShowDiscoveryContacts = true,
@@ -524,6 +579,8 @@ class AppSettings {
     String? selectedCyr2latProfileId,
   }) : batteryChemistryByDeviceId = batteryChemistryByDeviceId ?? {},
        batteryChemistryByRepeaterId = batteryChemistryByRepeaterId ?? {},
+       batteryCustomMinVoltsByDeviceId = batteryCustomMinVoltsByDeviceId ?? {},
+       batteryCustomMaxVoltsByDeviceId = batteryCustomMaxVoltsByDeviceId ?? {},
        mutedChannels = mutedChannels ?? {},
        tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
@@ -569,11 +626,21 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'hide_radio_stats_button': hideRadioStatsButton,
+      'snr_indicator_all_rep_activity': snrIndicatorAllRepActivity,
       'hide_map_zoom_controls': hideMapZoomControls,
       'show_mco_image_resolution': showMcoImageResolution,
       'show_mco_image_format': showMcoImageFormat,
       'show_mco_image_algorithm': showMcoImageAlgorithm,
       'show_mco_image_bytes': showMcoImageBytes,
+      'show_mco_image_pack_replacements': showMcoImagePackReplacements,
+      'mco_image_replacements_scale': mcoImageReplacementsScale,
+      'mco_image_replacements_lottie_scale_percent':
+          mcoImageReplacementsLottieScalePercent,
+      'mco_image_scale_nearest_neighbor': mcoImageScaleNearestNeighbor,
+      'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
+      'ui_scale': uiScale,
+      'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
       'show_message_region': showMessageRegion,
@@ -583,13 +650,25 @@ class AppSettings {
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
       'background_tcp_enabled': backgroundTcpEnabled,
+      'room_server_show_notempty_on_chatscreen':
+          roomServerShowNotemptyOnChatscreen,
+      'room_server_show_notempty_contacts_on_chatscreen':
+          roomServerShowNotemptyContactsOnChatscreen,
+      'room_server_disable_room_and_contacts_sorting':
+          roomServerDisableRoomAndContactsSorting,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
+      'map_raster_source_id': mapRasterSourceId,
+      'map_tile_endpoint_id': mapTileEndpointId,
+      'map_tile_api_key': mapTileApiKey,
       'notifications_enabled': notificationsEnabled,
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
       'notify_on_new_advert': notifyOnNewAdvert,
+      'auto_send_zero_hop_advert_on_gps_update':
+          autoSendZeroHopAdvertOnGpsUpdate,
+      'gps_interval_seconds': gpsIntervalSeconds,
       'auto_route_rotation_enabled': autoRouteRotationEnabled,
       'max_route_weight': maxRouteWeight,
       'initial_route_weight': initialRouteWeight,
@@ -602,6 +681,8 @@ class AppSettings {
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
       'battery_chemistry_by_repeater_id': batteryChemistryByRepeaterId,
+      'battery_custom_min_volts_by_device_id': batteryCustomMinVoltsByDeviceId,
+      'battery_custom_max_volts_by_device_id': batteryCustomMaxVoltsByDeviceId,
       'unit_system': unitSystem.value,
       'muted_channels': mutedChannels.toList(),
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
@@ -658,6 +739,12 @@ class AppSettings {
       return SharedMessageHistoryMode.disabled;
     }
 
+    double? parseDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value.replaceAll(',', '.'));
+      return null;
+    }
+
     return AppSettings(
       clearPathOnMaxRetry: json['clear_path_on_max_retry'] as bool? ?? false,
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
@@ -682,12 +769,31 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? false,
+      hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
+      snrIndicatorAllRepActivity:
+          json['snr_indicator_all_rep_activity'] as bool? ?? true,
       hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
       showMcoImageResolution:
           json['show_mco_image_resolution'] as bool? ?? false,
       showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
       showMcoImageAlgorithm: json['show_mco_image_algorithm'] as bool? ?? true,
       showMcoImageBytes: json['show_mco_image_bytes'] as bool? ?? true,
+      showMcoImagePackReplacements:
+          json['show_mco_image_pack_replacements'] as bool? ?? true,
+      mcoImageReplacementsScale:
+          (json['mco_image_replacements_scale'] as num?)?.toDouble() ?? 1.0,
+      mcoImageReplacementsLottieScalePercent:
+          ((json['mco_image_replacements_lottie_scale_percent'] as num?)
+                      ?.toInt() ??
+                  50)
+              .clamp(10, 100)
+              .toInt(),
+      mcoImageScaleNearestNeighbor:
+          json['mco_image_scale_nearest_neighbor'] as bool? ?? true,
+      mcoImageReplacementsSharpness:
+          (json['mco_image_replacements_sharpness'] as num?)?.toInt() ?? 0,
+      uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
+      uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
@@ -701,16 +807,31 @@ class AppSettings {
       ),
       noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
       backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
+      roomServerShowNotemptyOnChatscreen:
+          json['room_server_show_notempty_on_chatscreen'] as bool? ?? false,
+      roomServerShowNotemptyContactsOnChatscreen:
+          json['room_server_show_notempty_contacts_on_chatscreen'] as bool? ??
+          false,
+      roomServerDisableRoomAndContactsSorting:
+          json['room_server_disable_room_and_contacts_sorting'] as bool? ??
+          true,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
       mapCacheMinZoom: json['map_cache_min_zoom'] as int? ?? 10,
       mapCacheMaxZoom: json['map_cache_max_zoom'] as int? ?? 15,
+      mapRasterSourceId: json['map_raster_source_id'] as String? ?? 'osm_auto',
+      mapTileEndpointId: json['map_tile_endpoint_id'] as String? ?? 'standard',
+      mapTileApiKey: json['map_tile_api_key'] as String?,
       notificationsEnabled: json['notifications_enabled'] as bool? ?? true,
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
           json['notify_on_new_channel_message'] as bool? ?? true,
       notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
+      autoSendZeroHopAdvertOnGpsUpdate:
+          json['auto_send_zero_hop_advert_on_gps_update'] as bool? ?? false,
+      gpsIntervalSeconds:
+          (json['gps_interval_seconds'] as num?)?.toInt() ?? 900,
       autoRouteRotationEnabled:
           json['auto_route_rotation_enabled'] as bool? ?? true,
       maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
@@ -733,6 +854,16 @@ class AppSettings {
       batteryChemistryByRepeaterId:
           (json['battery_chemistry_by_repeater_id'] as Map?)?.map(
             (key, value) => MapEntry(key.toString(), value.toString()),
+          ) ??
+          {},
+      batteryCustomMinVoltsByDeviceId:
+          (json['battery_custom_min_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
+          ) ??
+          {},
+      batteryCustomMaxVoltsByDeviceId:
+          (json['battery_custom_max_volts_by_device_id'] as Map?)?.map(
+            (key, value) => MapEntry(key.toString(), parseDouble(value) ?? 0.0),
           ) ??
           {},
       unitSystem: parseUnitSystem(json['unit_system']),
@@ -837,11 +968,20 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? hideRadioStatsButton,
+    bool? snrIndicatorAllRepActivity,
     bool? hideMapZoomControls,
     bool? showMcoImageResolution,
     bool? showMcoImageFormat,
     bool? showMcoImageAlgorithm,
     bool? showMcoImageBytes,
+    bool? showMcoImagePackReplacements,
+    double? mcoImageReplacementsScale,
+    int? mcoImageReplacementsLottieScalePercent,
+    bool? mcoImageScaleNearestNeighbor,
+    int? mcoImageReplacementsSharpness,
+    double? uiScale,
+    bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
     bool? showMessageRegion,
@@ -851,13 +991,21 @@ class AppSettings {
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
     bool? backgroundTcpEnabled,
+    bool? roomServerShowNotemptyOnChatscreen,
+    bool? roomServerShowNotemptyContactsOnChatscreen,
+    bool? roomServerDisableRoomAndContactsSorting,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
+    String? mapRasterSourceId,
+    String? mapTileEndpointId,
+    Object? mapTileApiKey = _unset,
     bool? notificationsEnabled,
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
     bool? notifyOnNewAdvert,
+    bool? autoSendZeroHopAdvertOnGpsUpdate,
+    int? gpsIntervalSeconds,
     bool? autoRouteRotationEnabled,
     double? maxRouteWeight,
     double? initialRouteWeight,
@@ -870,6 +1018,8 @@ class AppSettings {
     bool? appDebugLogEnabled,
     Map<String, String>? batteryChemistryByDeviceId,
     Map<String, String>? batteryChemistryByRepeaterId,
+    Map<String, double>? batteryCustomMinVoltsByDeviceId,
+    Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     UnitSystem? unitSystem,
     Set<String>? mutedChannels,
     bool? mapShowDiscoveryContacts,
@@ -918,6 +1068,9 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,
+      snrIndicatorAllRepActivity:
+          snrIndicatorAllRepActivity ?? this.snrIndicatorAllRepActivity,
       hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,
       showMcoImageResolution:
           showMcoImageResolution ?? this.showMcoImageResolution,
@@ -925,6 +1078,19 @@ class AppSettings {
       showMcoImageAlgorithm:
           showMcoImageAlgorithm ?? this.showMcoImageAlgorithm,
       showMcoImageBytes: showMcoImageBytes ?? this.showMcoImageBytes,
+      showMcoImagePackReplacements:
+          showMcoImagePackReplacements ?? this.showMcoImagePackReplacements,
+      mcoImageReplacementsScale:
+          mcoImageReplacementsScale ?? this.mcoImageReplacementsScale,
+      mcoImageReplacementsLottieScalePercent:
+          mcoImageReplacementsLottieScalePercent ??
+          this.mcoImageReplacementsLottieScalePercent,
+      mcoImageScaleNearestNeighbor:
+          mcoImageScaleNearestNeighbor ?? this.mcoImageScaleNearestNeighbor,
+      mcoImageReplacementsSharpness:
+          mcoImageReplacementsSharpness ?? this.mcoImageReplacementsSharpness,
+      uiScale: uiScale ?? this.uiScale,
+      uiScaleApplyToIcons: uiScaleApplyToIcons ?? this.uiScaleApplyToIcons,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
@@ -939,16 +1105,34 @@ class AppSettings {
       noRetransmissionWarningSeconds:
           noRetransmissionWarningSeconds ?? this.noRetransmissionWarningSeconds,
       backgroundTcpEnabled: backgroundTcpEnabled ?? this.backgroundTcpEnabled,
+      roomServerShowNotemptyOnChatscreen:
+          roomServerShowNotemptyOnChatscreen ??
+          this.roomServerShowNotemptyOnChatscreen,
+      roomServerShowNotemptyContactsOnChatscreen:
+          roomServerShowNotemptyContactsOnChatscreen ??
+          this.roomServerShowNotemptyContactsOnChatscreen,
+      roomServerDisableRoomAndContactsSorting:
+          roomServerDisableRoomAndContactsSorting ??
+          this.roomServerDisableRoomAndContactsSorting,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
       mapCacheMinZoom: mapCacheMinZoom ?? this.mapCacheMinZoom,
       mapCacheMaxZoom: mapCacheMaxZoom ?? this.mapCacheMaxZoom,
+      mapRasterSourceId: mapRasterSourceId ?? this.mapRasterSourceId,
+      mapTileEndpointId: mapTileEndpointId ?? this.mapTileEndpointId,
+      mapTileApiKey: mapTileApiKey == _unset
+          ? this.mapTileApiKey
+          : mapTileApiKey as String?,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       notifyOnNewMessage: notifyOnNewMessage ?? this.notifyOnNewMessage,
       notifyOnNewChannelMessage:
           notifyOnNewChannelMessage ?? this.notifyOnNewChannelMessage,
       notifyOnNewAdvert: notifyOnNewAdvert ?? this.notifyOnNewAdvert,
+      autoSendZeroHopAdvertOnGpsUpdate:
+          autoSendZeroHopAdvertOnGpsUpdate ??
+          this.autoSendZeroHopAdvertOnGpsUpdate,
+      gpsIntervalSeconds: gpsIntervalSeconds ?? this.gpsIntervalSeconds,
       autoRouteRotationEnabled:
           autoRouteRotationEnabled ?? this.autoRouteRotationEnabled,
       maxRouteWeight: maxRouteWeight ?? this.maxRouteWeight,
@@ -969,6 +1153,12 @@ class AppSettings {
           batteryChemistryByDeviceId ?? this.batteryChemistryByDeviceId,
       batteryChemistryByRepeaterId:
           batteryChemistryByRepeaterId ?? this.batteryChemistryByRepeaterId,
+      batteryCustomMinVoltsByDeviceId:
+          batteryCustomMinVoltsByDeviceId ??
+          this.batteryCustomMinVoltsByDeviceId,
+      batteryCustomMaxVoltsByDeviceId:
+          batteryCustomMaxVoltsByDeviceId ??
+          this.batteryCustomMaxVoltsByDeviceId,
       unitSystem: unitSystem ?? this.unitSystem,
       mutedChannels: mutedChannels ?? this.mutedChannels,
       mapShowDiscoveryContacts:

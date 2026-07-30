@@ -100,6 +100,8 @@
   "settings_locationInvalid": "Ungültiger Breiten- oder Längengrad.",
   "settings_latitude": "Breitengrad",
   "settings_longitude": "Längengrad",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Automatische Zero-Hop-Ankündigung bei GPS-Update",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Wenn sich der GPS-Standort ändert, eine Zero-Hop-Ankündigung senden (erfordert Standort in der Ankündigung).",
   "settings_privacyMode": "Privatsphärenmodus",
   "settings_privacyModeSubtitle": "Name und Standort in Ankündigungen verbergen",
   "settings_privacyModeToggle": "Privatsphärenmodus aktivieren, um Namen und Standort in Ankündigungen zu verbergen.",
@@ -120,8 +122,6 @@
   "settings_rebootDeviceSubtitle": "MeshCore-Gerät neu starten",
   "settings_rebootDeviceConfirm": "Sind Sie sicher, dass Sie das Gerät neu starten möchten? Sie werden getrennt.",
   "settings_debug": "Fehlerbehebung",
-  "settings_bleDebugLog": "BLE-Debug-Protokoll",
-  "settings_bleDebugLogSubtitle": "BLE-, TCP- und USB-Befehle, Antworten und Rohdaten",
   "settings_appDebugLog": "App-Debug-Protokoll",
   "settings_appDebugLogSubtitle": "App-Debug-Nachrichten",
   "settings_about": "Über",
@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Sendeverzögerung zum Abbrechen",
   "settings_useSendingDelay": "Sendeverzögerung verwenden",
   "chat_cancelSend": "Senden abbrechen",
-  "settings_doNotFilterMessagesOnChannels": "Eigene Nachrichten in Kanälen nicht filtern",
+  "settings_doNotFilterMessagesOnChannels": "Eigene Nachrichtenpakete in diesen Kanälen nicht filtern und Nachrichten als bedingungslos zugestellt betrachten",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Standardmäßig werden eigene Nachrichten deines Knotens ignoriert. Das verursacht bei einigen Firmwares mit integriertem TerminalCLI Probleme",
   "chat_retryingMessageWait": "Bitte warte {seconds} Sekunden vor dem erneuten Senden",
   "channels_mcmpCompression": "MCMP-Komprimierung",
@@ -265,6 +265,19 @@
   "appSettings_last6Hours": "Letzte 6 Stunden",
   "appSettings_last24Hours": "Letzte 24 Stunden",
   "appSettings_lastWeek": "Letzte Woche",
+  "appSettings_rasterTileSource": "Quelle für Rasterkacheln",
+  "appSettings_stadiaEndpoint": "Stadia-Endpunkt",
+  "appSettings_stadiaApiKey": "Stadia-API-Schlüssel",
+  "appSettings_stadiaApiKeyRequired": "Für die Nutzung von Stadia Maps erforderlich",
+  "appSettings_stadiaApiKeyConfigured": "Konfiguriert: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Geben Sie Ihren Stadia-Maps-API-Schlüssel ein. Die App verwendet ihn für Rasterkachel-Anfragen.",
   "appSettings_offlineMapCache": "Offline-Karten-Cache",
   "appSettings_noAreaSelected": "Kein Bereich ausgewählt",
   "appSettings_areaSelectedZoom": "Bereich ausgewählt (Zoom {minZoom}-{maxZoom})",
@@ -606,14 +619,6 @@
     }
   },
   "debugFrame_hexDump": "Hex-Dump:",
-  "chat_pathManagement": "Pfadverwaltung",
-  "chat_routingMode": "Routenmodus",
-  "chat_autoUseSavedPath": "Automatisch (gespeicherten Pfad verwenden)",
-  "chat_forceFloodMode": "Flut-Modus erzwingen",
-  "chat_recentAckPaths": "Aktuelle ACK-Pfade (antippen, um zu verwenden):",
-  "chat_pathHistoryFull": "Die Pfadhistorie ist voll. Entferne Einträge, um neue hinzuzufügen.",
-  "chat_hopSingular": "Sprung",
-  "chat_hopPlural": "Sprünge",
   "chat_hopsCount": "{count} {count, plural, =1{Sprung} other{Sprünge}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -622,30 +627,10 @@
       }
     }
   },
-  "chat_successes": "Erfolgreich",
   "chat_removePath": "Pfad entfernen",
   "chat_noPathHistoryYet": "Keine Pfadhistorie vorhanden.\nSende eine Nachricht, um Pfade zu entdecken.",
-  "chat_pathActions": "Pfadaktionen:",
-  "chat_setCustomPath": "Lege benutzerdefinierten Pfad fest",
-  "chat_setCustomPathSubtitle": "Manuellen Routenpfad festlegen",
-  "chat_clearPath": "Pfad zurücksetzen",
-  "chat_clearPathSubtitle": "Setze Pfad zurück, erkenne neuen Pfad bei nächster Sendung.",
   "chat_pathCleared": "Pfad zurückgesetzt. Nächste Nachricht wird Route neu entdecken.",
-  "chat_floodModeSubtitle": "Verwende den Routingschalter in der App-Leiste",
-  "chat_floodModeEnabled": "Flutmodus aktiviert.",
   "chat_fullPath": "Vollständiger Pfad",
-  "chat_pathDetailsNotAvailable": "Die Pfaddetails sind noch nicht verfügbar. Versuchen Sie, eine Nachricht zu senden, um zu aktualisieren.",
-  "chat_pathSetHops": "Pfad gesetzt: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "Lokal Gespeichert. Bitte Verbinden zum Synchronisieren.",
   "chat_pathDeviceConfirmed": "Gerät bestätigt.",
   "chat_pathDeviceNotConfirmed": "Gerät noch nicht bestätigt.",
@@ -816,6 +801,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -906,41 +941,8 @@
   "login_failedMessage": "Anmeldung fehlgeschlagen. Entweder ist das Passwort falsch oder der Repeater ist nicht erreichbar.",
   "common_reload": "Neu laden",
   "common_clear": "Leeren",
-  "path_currentPath": "Aktueller Pfad: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Pfad mit {count} {count, plural, =1{Hop} other{Hops}} verwenden",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Pfad eingeben",
   "path_currentPathLabel": "Aktueller Pfad",
-  "path_hexPrefixInstructions": "Geben Sie für jeden Zwischen-Hop das zweistellige Hex-Präfix ein, getrennt durch Kommas.",
-  "path_hexPrefixExample": "Beispiel: A1,F2,3C (jeder Knoten verwendet das erste Byte seines öffentlichen Schlüssels)",
-  "path_labelHexPrefixes": "Pfad (Hex-Präfixe)",
-  "path_helperMaxHops": "Maximal 64 Sprünge. Jedes Präfix besteht aus 2 Hex-Zeichen (1 Byte).",
-  "path_selectFromContacts": "Oder aus Kontakten auswählen:",
   "path_noRepeatersFound": "Keine Repeater oder Raumserver gefunden.",
-  "path_customPathsRequire": "Benutzerdefinierte Pfade erfordern Zwischen-Hops, die Nachrichten weiterleiten können.",
-  "path_invalidHexPrefixes": "Ungültige Hex-Präfixe: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "Pfad zu lang. Maximal 64 Sprünge erlaubt.",
-  "path_setPath": "Pfad festlegen",
   "repeater_management": "Repeater-Verwaltung",
   "repeater_managementTools": "Verwaltungstools",
   "repeater_status": "Status",
@@ -953,9 +955,6 @@
   "repeater_settingsSubtitle": "Repeater-Parameter konfigurieren",
   "repeater_statusTitle": "Repeater-Status",
   "repeater_routingMode": "Routing-Modus",
-  "repeater_autoUseSavedPath": "Automatisch (gespeicherten Pfad verwenden)",
-  "repeater_forceFloodMode": "Flut-Modus erzwingen",
-  "repeater_pathManagement": "Pfadverwaltung",
   "repeater_refresh": "Aktualisieren",
   "repeater_statusRequestTimeout": "Statusanfrage abgelaufen.",
   "repeater_errorLoadingStatus": "Fehler beim Laden des Status: {error}",
@@ -1502,7 +1501,7 @@
   "channelPath_noHopDetails": "Die Detailangaben für dieses Paket sind nicht verfügbar.",
   "channelPath_messageDetails": "Nachrichtendetails",
   "channelPath_senderLabel": "Sender",
-  "channelPath_timeLabel": "Zeit",
+  "channelPath_timeLabel": "Empfangs-/Erstellungszeit",
   "channelPath_repeatsLabel": "Wiederholungen",
   "channelPath_pathLabel": "Pfad {index}",
   "channelPath_observedLabel": "Beobachtet",
@@ -1621,7 +1620,7 @@
   "neighbors_receivedData": "Empfangene Nachbarsdaten",
   "neighbors_requestTimedOut": "Anfrage durch Timeout fehlgeschlagen.",
   "neighbors_errorLoading": "Fehler beim Laden der Nachbarn: {error}",
-  "neighbors_repeatersNeighbors": "Nachbarn",
+  "neighbors_repeatersNeighbors": "Nachbarn des Repeaters",
   "neighbors_noData": "Keine Nachbarsdaten verfügbar.",
   "channels_joinPrivateChannel": "Treten Sie einem privaten Kanal bei",
   "channels_joinPrivateChannelDesc": "Manuelle Eingabe eines geheimen Schlüssels.",
@@ -1897,7 +1896,6 @@
   "scanner_enableBluetooth": "Bluetooth aktivieren",
   "snrIndicator_lastSeen": "Zuletzt gesehen",
   "snrIndicator_nearByRepeaters": "In der Nähe befindliche Repeater",
-  "chat_ShowAllPaths": "Alle Pfade anzeigen",
   "settings_clientRepeat": "Weiterleitung ohne Netzstrom",
   "settings_clientRepeatFreqWarning": "Weiterleitung ohne Netzstrom erfordert 433, 869 oder 918 MHz",
   "settings_clientRepeatSubtitle": "Dieses Gerät kann Mesh-Pakete für andere weiterleiten",
@@ -2173,16 +2171,6 @@
   "tcpConnectionFailed": "TCP-Verbindung fehlgeschlagen: {error}",
   "map_showDiscoveryContacts": "Entdeckte Kontakte anzeigen",
   "map_setAsMyLocation": "Als meine aktuelle Position festlegen",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "settings_allowByContact": "Nach Kontakt-Flags zulassen",
   "settings_privacy": "Datenschutzeinstellungen",
   "settings_allowAll": "Alles zulassen",
@@ -2215,7 +2203,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Gewicht, das nach einem fehlgeschlagenen Versand von einem Weg entfernt wurde",
   "appSettings_maxMessageRetries": "Maximale Anzahl an Wiederholungsversuchen",
   "appSettings_maxMessageRetriesSubtitle": "Anzahl der Versuche, eine Nachricht erneut zu senden, bevor sie als fehlgeschlagen markiert wird.",
-  "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Telemetriemodus aktualisiert",
   "map_showOverlaps": "Repeater-Schlüsselüberlappungen",
   "map_runTraceWithReturnPath": "Auf dem gleichen Pfad zurückkehren.",
@@ -2469,7 +2456,6 @@
       }
     }
   },
-  "chat_score": "Punktzahl",
   "settings_multiAck": "Mehrfach-ACKs",
   "map_sharedAt": "Geteilt am",
   "@losBlockedSpotChip": {
@@ -2517,6 +2503,13 @@
   "settings_companionDebugLog": "Debug-Protokoll für die Begleitsoftware",
   "settings_companionDebugLogSubtitle": "BLE/TCP/USB-Befehle, Antworten und Rohdaten",
   "repeater_chanUtil": "Nutzung des Kanals",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "@routing_lastWorked": {
     "placeholders": {
       "when": {
@@ -2524,6 +2517,27 @@
       }
     }
   },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "settings_regionSettings": "Regionen",
+  "settings_regionSettingsSubtitle": "Gespeicherte Regionen verwalten",
+  "settings_regionManagement_screenTitle": "Regions-Verwaltung",
+  "settings_regionNameHint": "Regions-Namen eingeben",
+  "settings_regionAddRegion": "Region hinzufügen",
+  "settings_regionDeleted": "Region entfernt",
+  "settings_regionName": "Regions-Name",
+  "settings_deleteRegion": "Region entfernen",
+  "settings_deleteRegionConfirm": "Region \"{region}\" aus der Liste entfernen?",
+  "channels_regionNotSet": "Region: keine",
+  "channels_regionSetTo": "Region: {region}",
+  "channels_regionSelect_Title": "Region auswählen",
+  "channels_clearRegion": "Region zurücksetzen",
   "@routing_deliveryCounts": {
     "placeholders": {
       "successes": {
@@ -2994,5 +3008,221 @@
   "channels_regionNotSet": "Region: keine",
   "channels_regionSetTo": "Region: {region}",
   "channels_regionSelect_Title": "Region auswählen",
-  "channels_clearRegion": "Region zurücksetzen"
+  "channels_clearRegion": "Region zurücksetzen",
+  "common_default": "Standard",
+  "common_send": "Senden",
+  "common_apply": "Übernehmen",
+  "settings_regionFetchRegions": "Regionen von Repeatern abrufen",
+  "settings_regionFetchRegionsFail": "Keine Regionen gefunden",
+  "settings_regionFetchRegionsAlreadyExists": "Diese Region wurde bereits hinzugefügt",
+  "settings_aboutModDescription": "Die «Advanced»-Modifikation basiert auf dem ursprünglichen meshcore_open und enthält Änderungen, die im Repository der Originalanwendung vorgeschlagen wurden oder speziell auf das Einsatzgebiet zugeschnitten sind und daher nicht als Pull Request eingereicht wurden.",
+  "settings_aboutModLink": "Releases auf Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod-Gruppe auf Telegram: \nhttps://t.me/mcoadvanced",
+  "settings_infoFirmware": "Firmware-Version",
+  "contact_clearChatConfirm": "Chat wirklich leeren?",
+  "chat_receivedGif": "GIF empfangen",
+  "map_wardriveReUpload": "Erneut hochladen",
+  "map_wardriveSamplesNoNew": "Keine neuen Messwerte zum Hochladen",
+  "map_wardriveCoverageResolution": "Auflösung der Abdeckung",
+  "map_wardriveCoverageResolutionPrompt": "Größe der Abdeckungsquadrate wählen (Größe = Seitenlänge des Blocks):",
+  "map_wardriveCoverageRegional": "Regional",
+  "map_wardriveCoverageRegionalSubtitle": "~20 km (Präzision 4)",
+  "map_wardriveCoverageCity": "Stadtebene",
+  "map_wardriveCoverageCitySubtitle": "~5 km (Präzision 5)",
+  "map_wardriveCoverageNeighborhood": "Stadtteil",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1,2 km (Präzision 6)",
+  "map_wardriveCoverageStreet": "Straßenebene",
+  "map_wardriveCoverageStreetSubtitle": "~153 m (Präzision 7)",
+  "map_wardriveCoverageBuilding": "Gebäudeebene",
+  "map_wardriveCoverageBuildingSubtitle": "~38 m (Präzision 8)",
+  "map_wardriveRepNoLocation": "Repeater-Standort nicht verfügbar",
+  "map_wardriveDiscoveryWait": "Bitte {seconds} Sekunden warten, bevor die Suche erneut gestartet wird",
+  "map_wardriveFollowMe": "Meinem Standort folgen",
+  "map_wardriveDeleteBlock": "Block löschen",
+  "map_wardriveInBackground": "Im Hintergrund ausführen",
+  "map_wardriveContinuousGPS": "Kontinuierliche GPS-Ortung",
+  "map_wardriveShowRepeaterCoverage": "Wardrive-Abdeckungsblöcke anzeigen",
+  "map_wardriveHideRepeaterCoverage": "Wardrive-Abdeckungsblöcke ausblenden",
+  "repeater_keySettings": "Identitätsschlüssel ändern",
+  "repeater_keySettingsSubtitle": "Öffentliches/privates Schlüsselpaar ändern",
+  "repeater_prvKey": "Privater Schlüssel",
+  "repeater_prvKeyHelper": "Ein neuer privater Schlüssel für den Repeater, eine 128-stellige Hex-Zeichenfolge.",
+  "repeater_generatePrvKey": "Zufälliges Schlüsselpaar erzeugen",
+  "repeater_stopGeneratingPrvKey": "Suche nach Schlüsselpaar abbrechen",
+  "repeater_pubKey": "Öffentlicher Schlüssel",
+  "repeater_pubKeyHelper": "Dies ist der öffentliche Schlüssel zum erzeugten privaten Schlüssel. Er kann nicht direkt gesetzt werden.",
+  "repeater_pubKeyPrefix": "Gewünschtes Präfix",
+  "repeater_pubKeyPrefixHelper": "Suche nach einem öffentlichen Schlüssel, der mit diesen Hex-Zeichen beginnt. Erwartete Anzahl Versuche: {tries}.",
+  "channelPath_repeaterHopsHighTimeout": "Erhöhtes Timeout für die Pfadverfolgung (10 s × Hops)",
+  "listFilter_removeFromWardrive": "Im Wardrive ignorieren",
+  "listFilter_returnToWardrive": "Zum Wardrive zurückholen",
+  "channels_copyPath": "Nachrichtenpfad kopieren",
+  "channels_copyPathExtended": "Nachrichtenpfad kopieren (erweitert)",
+  "channels_copiedPath": "Nachrichtenpfad kopiert",
+  "channels_copyPathFailed": "Kopieren des Nachrichtenpfads fehlgeschlagen",
+  "settings_copyMsgPathTitle": "Kopieren des Nachrichtenpfads konfigurieren",
+  "settings_copyMsgPathDscr": "Vorlage für die Pfadinformationen einer Kanalnachricht bearbeiten",
+  "settings_copyMsgPathEditTemplateTitle": "Vorlage bearbeiten",
+  "settings_copyMsgPathEditTemplateDscr": "Verfügbare Platzhalter:\n%hopInd% - Hop-Index\n%hopKey% - Hop-Präfix\n%hopName% - Hop-Name\n%collisionMarker% - Markierung für Repeater-Kollision\n%div% - Trennzeichen (beim letzten Hop entfällt es)\n%hops% - Anzahl der Hops\n\\n - Zeilenumbruch",
+  "settings_copyMsgPathEditFinalTitle": "Endgültige Nachricht",
+  "settings_copyMsgPathEditFinalDscr": "Platzhalter:\n%senderName% - sichtbarer Absendername\n%path% - fertig zusammengesetzter Pfad\n%hops% - Anzahl der Hops\n\\n - Zeilenumbruch",
+  "settings_channelsSendAsBinary": "Erweiterte Daten binär senden (Kanäle)",
+  "settings_dmSendAsBinary": "Erweiterte Daten binär senden (Direktnachrichten)",
+  "chat_canvas": "MCOimg-Leinwand",
+  "chat_canvasCrop": "Zuschneiden/erweitern",
+  "chat_canvasResize": "Skalieren",
+  "chat_canvasUnlockSize": "Leinwandgröße entsperren",
+  "chat_canvasFormatVer": "Codec-Version",
+  "chat_canvasPalette": "Palette",
+  "chat_canvasPaletteShow": "Palette anzeigen",
+  "chat_canvasPaletteMode": "Palettenvorlage",
+  "chat_canvasPaletteDynamic": "Dynamisch",
+  "chat_canvasPaletteDynamicProfile": "Basissatz für dynamische Palette",
+  "chat_canvasPaletteDynamicUsed": "Tatsächlich verwendete Farben",
+  "chat_canvasPaletteDynamicDscr": "Bitte beachten! Nutzen Sie die dynamische Palette mit Bedacht! Sie ist vor allem für Bilder mit Farbverläufen gedacht, um eine kleinere Palette zu erzeugen und Farben zu verwenden, die nicht zur selben Basispalette gehören. Zur Orientierung: eine kleinere Basispalette senkt die Kosten für die Codierung der verwendeten Farbtöne, und eine geringere Gesamtzahl an Farben senkt die Kosten pro Pixel auf der Leinwand.",
+  "chat_canvasPaletteAlpha": "Transparenzfarbe",
+  "chat_canvasChangeSize": "Leinwandgröße ändern",
+  "chat_canvasTrim": "Leere Ränder entfernen",
+  "chat_canvasWidth": "Breite",
+  "chat_canvasHeight": "Höhe",
+  "chat_canvasGridShow": "Raster anzeigen",
+  "chat_canvasRulerShow": "Lineal anzeigen",
+  "chat_canvasGridColor": "Rasterfarbe",
+  "chat_canvasSave": "In Datei speichern",
+  "chat_canvasLoad": "Aus Datei laden",
+  "chat_canvasSendPayloadExceed": "Senden fehlgeschlagen – die Nutzlast wurde um {count} Bytes überschritten. Bitte reduzieren Sie die Anzahl der Details oder die Leinwandgröße.",
+  "chat_canvasCurrentPayload": "Aktuelle Nutzlast: {payload}",
+  "chat_canvasActive": "Leinwand anzeigen",
+  "chat_canvasShowLockBtn": "Sperrschaltfläche der Leinwand anzeigen",
+  "chat_canvasSendToEdit": "An Leinwand senden",
+  "chat_canvasSendToGallery": "In Galerie speichern",
+  "chat_canvasGalleryShowPNG": "Original anzeigen (PNG)",
+  "chat_canvasGalleryShowBIN": "Als Bin anzeigen",
+  "chat_canvasGalleryRemove": "Entfernen",
+  "chat_canvasGalleryRemoveConfirm": "Bild aus der Galerie entfernen?",
+  "chat_canvasFormatNotSupported": "MCOimg-Formatversion: {received}, der aktuelle Codec unterstützt bis {current}",
+  "chat_canvasSaveBinary": "In Binärdatei speichern",
+  "chat_canvasCannotSend": "Senden fehlgeschlagen – die Nutzlast wurde um {count} Bytes überschritten. Bitte bearbeiten Sie das Bild und versuchen Sie es erneut.",
+  "chat_canvasCompressionLevel": "Kompressionsstufe",
+  "chat_canvasCompressionLevelNormal": "Normal",
+  "chat_canvasCompressionLevelHigh": "Hoch",
+  "chat_canvasCompressionLevelExtreme": "Extrem",
+  "chat_showHops": "Hops anzeigen",
+  "settings_modSettings": "Modifikationseinstellungen",
+  "settings_modSettingsSubtitle": "Dieser Bereich enthält Optionen, die MCOa hinzufügt und die im ursprünglichen meshcore_open nicht enthalten sind",
+  "settings_modSettingsVisual": "Darstellung",
+  "settings_modSettingsMessaging": "Nachrichten",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "Version",
+  "settings_mcmp_useSign": "Signaturprüfung",
+  "settings_mcmp_signed": "Mit Signaturprüfung",
+  "settings_mcmp_noSign": "Ohne Signaturprüfung",
+  "settings_mcmp_senderNameCollision": "Absendername ist nicht eindeutig!",
+  "chat_mcmpSignatureValid": "Signatur ist gültig",
+  "chat_mcmpSignatureInvalid": "Ungültige Signatur!",
+  "chat_mcmpSignatureUnverifiable": "Signatur kann nicht geprüft werden — Absender ist nicht in den Kontakten",
+  "chat_mcmpSignatureTransport": "Durch verschlüsselten Transport authentifiziert",
+  "chat_mcmpManualRecheckSign": "Signatur manuell erneut prüfen",
+  "chat_mcmpSignatureCheckStatus": "Signaturprüfung",
+  "chat_mcmpSigningFailed": "Signieren der Nachricht fehlgeschlagen",
+  "chat_mcmpAnswerTo": "MCMPv3-Antwort auf",
+  "chat_timestampPacket": "Paket-Zeitstempel",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: Badge mit Formatversion anzeigen",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: Badge mit Codierungsalgorithmus anzeigen",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: Bildgröße (Bytes) anzeigen",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: Auflösung anzeigen",
+  "settings_modSettingsMCOimg_showReplacements": "Originalbilder anstelle der LoRa-Versionen anzeigen",
+  "settings_modSettingsMCOimg_replacementsScale": "Originalbilder im Chat skalieren",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Mit Nearest Neighbor skalieren",
+  "settings_modSettingsMCOimg_replacementsSharp": "Originalbilder im Chat scharf zeichnen",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "Achtung! Deaktiviert die GIF-Animation!",
+  "settings_modSettingsHideChInd": "Kanalindex ausblenden",
+  "settings_modSettingsHideRadioStats": "Funkstatistik in der Kopfzeile ausblenden",
+  "settings_modSettingsSNRindicatorAllRepActivity": "SNR-Anzeige: bei allen Repeater-Antworten auslösen, nicht nur bei Adverts",
+  "settings_modSettingsIncomingQuoteAsMentions": "Zitate in eingehenden Nachrichten als Erwähnungen anzeigen",
+  "settings_modSettingsSimplifiedMentions": "Vereinfachte Darstellung von Erwähnungen in Nachrichten",
+  "settings_modSettingsSharedMsgHistory": "Gemeinsamer Nachrichtenverlauf",
+  "settings_modSettingsSharedMsgHistoryDscr": "Zusammenführen des Nachrichtenverlaufs von verschiedenen Geräten; der zusammengeführte Verlauf wird nur in der Anwendung gespeichert",
+  "settings_modSettingsSharedMsgHistoryDisabled": "Deaktiviert",
+  "settings_modSettingsSharedMsgHistoryChannels": "Nur Kanäle",
+  "settings_modSettingsSharedMsgHistoryContacts": "Nur Kontakte",
+  "settings_modSettingsSharedMsgHistoryAll": "Alle Chats",
+  "settings_modSettingsMessagingShowCompressionRatio": "Kompressionsrate anzeigen",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "Absendername ebenfalls berücksichtigen",
+  "settings_modSettingsVisualHideMapZoomControls": "Zoom-Leiste der Karte ausblenden",
+  "settings_modSettingsVisualShowMsgRegion": "Region der Nachricht anzeigen",
+  "channels_messageRegion": "Region: {region}",
+  "channels_messageRegionUnknown": "unbekannt",
+  "channels_messageRegionEmpty": "nicht gesetzt",
+  "settings_defaultRegionScope": "Standardregion des Knotens",
+  "settings_defaultRegionScopeChanged": "Standardregion geändert",
+  "settings_defaultRegionScopeChangeFailed": "Ändern der Region fehlgeschlagen",
+  "settings_defaultRegionScopeEmpty": "Derzeit nicht gesetzt",
+  "settings_defaultRegionScopeWaitForSync": "Bitte warten, bis die Synchronisierung abgeschlossen ist",
+  "common_reset": "Zurücksetzen",
+  "connection_autoconnect": "Automatisch verbinden",
+  "settings_modSettingsNoRetraInfo": "Seit {time} Sekunden keine Weiterleitungen gehört.",
+  "settings_modSettingsNoRetraHeading": "Nachrichten als nicht gesendet anzeigen, wenn innerhalb dieser Sekundenzahl keine Weiterleitungen gehört werden:",
+  "settings_modSettingsNoRetraDscr": "Achtung! Aufgrund eines Mechanismus in der Firmware des Knotens können Kanalnachrichten über ~133 Bytes physisch keine Selbstwiederholungen empfangen und werden immer als fehlgeschlagen markiert! Bitte verwenden Sie diese Option zusammen mit der Nutzlastbegrenzung in den App-Einstellungen!",
+  "settings_selfTelemetryShow": "Sensoren anzeigen",
+  "settings_modSettingsVisualChannelsUnreadSorting": "Kanäle nach ungelesenen Nachrichten sortieren",
+  "settings_modSettingsMessagingBackgroundTCP": "TCP-Verbindung im Hintergrund aufrechterhalten",
+  "settings_modSettingsDPIchange": "DPI ändern",
+  "settings_modSettingsDPIchangeToIcons": "Auf Symbole anwenden",
+  "chat_MCOimgOpenGallery": "MCOimg-Galerie öffnen",
+  "chat_additionalActions": "Chat-Aktionsmenü",
+  "mcogallery_common": "Allgemein",
+  "mcogallery_addPack": "Paket hinzufügen",
+  "mcogallery_removePack": "Paket entfernen",
+  "mcogallery_removePackConfirm": "Entfernen des Pakets «{name}» bestätigen",
+  "mcogallery_addGroup": "Gruppe hinzufügen",
+  "mcogallery_removeGroup": "Gruppe entfernen",
+  "mcogallery_showLora": "LoRa-Variante anzeigen",
+  "mcogallery_showPacked": "Verbesserte Variante anzeigen",
+  "chat_sendSelfContact": "Eigenen Kontakt senden",
+  "chat_sendContact": "Kontakt teilen",
+  "chat_addContact": "Kontakt hinzufügen",
+  "chat_sureToReplaceContact": "Kontakt existiert bereits, ersetzen?",
+  "contacts_addContactByPubkey": "Kontakt per Public Key hinzufügen",
+  "contacts_addContactByPubkey_contactType": "Kontakttyp",
+  "chat_contactIsYou": "Das ist Ihr eigener Kontakt",
+  "chat_contactType": "Kontakttyp: {contacttype}",
+  "chat_contactTypeNode": "Knoten",
+  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRoom": "Room-Server",
+  "chat_contactTypeSensor": "Sensor",
+  "chat_myLocation": "Meinen Standort teilen",
+  "chat_locationFromMap": "Standort aus der Karte teilen",
+  "settings_modSettingsRoomServer": "Room-Server und Kontakte",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Room-Server mit Nachrichtenverlauf gemeinsam mit Kanälen auf einem Bildschirm anzeigen",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Kontakte mit Nachrichtenverlauf gemeinsam mit Kanälen auf einem Bildschirm anzeigen",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Bestehende Drag-and-drop-Funktion beibehalten: die Reihenfolge der Kanäle ändert deren Reihenfolge auf dem Knoten, Kontakte und Server lassen sich nicht sortieren",
+  "settings_appSettingsCustomChemistry": "Benutzerdefiniert",
+  "map_clearDiscoveredContactsCache": "Lokalen Knoten-Cache leeren",
+  "map_clearDiscoveredContactsCacheDisclaimer": "Möchten Sie den Cache der entdeckten Kontakte wirklich leeren? Die Kontakte auf dem Knoten selbst sind davon nicht betroffen.",
+  "snrIndicator_v2_nearByRepeaters": "Repeater-Aktivität",
+  "app_connectionLostReconnect": "Verbindung zum Knoten verloren; Verbindung wird wiederhergestellt...",
+  "app_connectionLostReconnected": "Wieder mit dem Knoten verbunden",
+  "contacts_batchOperations": "Sammelaktionen",
+  "contacts_batchOperations_notSelected": "Sie haben keine Kontakte zur Verarbeitung ausgewählt!",
+  "contacts_batchOperations_removeConfirm": "Ausgewählte Kontakte vom Knoten entfernen?",
+  "contacts_batchOperations_removeSuccess": "Ausgewählte Kontakte wurden entfernt",
+  "contacts_batchOperations_removeFail": "Entfernen der Kontakte fehlgeschlagen – bitte prüfen Sie die Kontakte erneut",
+  "contacts_batchOperations_commonSuccess": "Vorgang erfolgreich",
+  "contacts_batchOperations_commonFail": "Vorgang fehlgeschlagen",
+  "contacts_batchOperations_selectFiltered": "Gefilterte auswählen",
+  "contacts_newGroupDescription": "Fasst Kanäle/Kontakte in einem Ordner zusammen",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Größenbegrenzung für Lottie-Ersetzungen",
+  "channels_messageRegionNotMatchesWithKnown": "keine Übereinstimmung",
+  "chat_searchMessages": "Nachrichtensuche",
+  "chat_searchMessages_placeholder": "Ab 3 Zeichen, Groß-/Kleinschreibung egal",
+  "chat_searchMessages_results": "Suchergebnisse",
+  "chat_searchMessages_results_found": "{count} Nachrichten gefunden",
+  "chat_searchMessages_results_channel": "Kanal {name}",
+  "chat_searchMessages_results_room": "Raumserver {name}",
+  "chat_searchMessages_results_contact": "Unterhaltung mit {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "Im Offline-Modus können Sie keine Nachrichten senden oder andere Aktionen ausführen",
+  "app_offline_sharedMode": "Zusammengeführter Verlauf",
+  "settings_infoDeviceName": "Board-Bezeichnung"
 }

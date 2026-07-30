@@ -31,10 +31,8 @@ class NeighborsScreen extends StatefulWidget {
 
 class _NeighborsScreenState extends State<NeighborsScreen> {
   static const int _reqNeighborsKeyLen = 4;
-  static const int _statusPayloadOffset = 8;
-  static const int _statusStatsSize = 52;
-  static const int _statusResponseBytes =
-      _statusPayloadOffset + _statusStatsSize;
+  static const Duration _sentResponseFallbackTimeout = Duration(seconds: 10);
+  static const Duration _responseTimeoutPadding = Duration(seconds: 2);
   Uint8List _tagData = Uint8List(4);
   int _neighborCount = 0;
 
@@ -83,11 +81,23 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
       if (frame.isEmpty) return;
 
       if (frame[0] == respCodeSent) {
-        _tagData = frame.sublist(2, 6);
+        if (frame.length >= 6) {
+          _tagData = frame.sublist(2, 6);
+        }
+        if (_isLoading && frame.length >= 10) {
+          final estimatedTimeoutMs = readUint32LE(frame, 6);
+          _startStatusTimeout(
+            estimatedTimeoutMs > 0
+                ? Duration(milliseconds: estimatedTimeoutMs) +
+                      _responseTimeoutPadding
+                : _sentResponseFallbackTimeout,
+          );
+        }
       }
 
       // Check if it's a binary response
-      if (frame[0] == pushCodeBinaryResponse &&
+      if (frame.length >= 6 &&
+          frame[0] == pushCodeBinaryResponse &&
           listEquals(frame.sublist(2, 6), _tagData)) {
         _handleNeighborsResponse(connector, frame.sublist(6));
       }
@@ -172,6 +182,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         backgroundColor: Theme.of(context).colorScheme.tertiary,
       );
       _statusTimeout?.cancel();
+      _recordStatusResult(true);
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -209,31 +220,10 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
           _reqNeighborsKeyLen,
         ]),
       );
+      _startStatusTimeout(_sentResponseFallbackTimeout);
       await connector.sendFrame(frame);
-
-      final pathLengthValue = selection.useFlood ? -1 : selection.hopCount;
-      final messageBytes = frame.length >= _statusResponseBytes
-          ? frame.length
-          : _statusResponseBytes;
-      final timeoutMs = connector.calculateTimeout(
-        pathLength: pathLengthValue,
-        messageBytes: messageBytes,
-      );
-      _statusTimeout?.cancel();
-      _statusTimeout = Timer(Duration(milliseconds: timeoutMs), () {
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-          _isLoaded = false;
-        });
-        showDismissibleSnackBar(
-          context,
-          content: Text(context.l10n.neighbors_requestTimedOut),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        );
-        _recordStatusResult(false);
-      });
     } catch (e) {
+      _statusTimeout?.cancel();
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -247,6 +237,25 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         );
       }
     }
+  }
+
+  void _startStatusTimeout(Duration duration) {
+    _statusTimeout?.cancel();
+    _statusTimeout = Timer(duration, _handleStatusTimeout);
+  }
+
+  void _handleStatusTimeout() {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _isLoaded = false;
+    });
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.neighbors_requestTimedOut),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
+    _recordStatusResult(false);
   }
 
   void _recordStatusResult(bool success) {
@@ -276,7 +285,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
@@ -296,7 +305,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
             ),
           ],
         ),
-        centerTitle: false,
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),

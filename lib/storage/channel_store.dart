@@ -13,14 +13,14 @@ class ChannelStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
-  Future<List<Channel>> loadChannels() async {
+  Future<List<Channel>> loadChannels({bool allowLegacyMigration = true}) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load channels.');
       return [];
     }
     final prefs = PrefsManager.instance;
     String? jsonString = prefs.getString(keyFor);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) && allowLegacyMigration) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(_keyPrefix);
       prefs.remove(_keyPrefix);

@@ -11,6 +11,7 @@ class MeshCompressor {
 
   static const String prefix = 'mcmp2:';
   static const String legacyPrefix = 'mcmp:';
+  static bool get _legacyV1Enabled => false;
   static const String _modelAssetPath = 'assets/models/model-en-ru.json';
   static const String _legacyModelAssetPath =
       'assets/models/model-universal-10lang.json';
@@ -90,7 +91,7 @@ class MeshCompressor {
     if (model == null ||
         text.isEmpty ||
         text.startsWith(prefix) ||
-        text.startsWith(legacyPrefix)) {
+        (_legacyV1Enabled && text.startsWith(legacyPrefix))) {
       return text;
     }
     try {
@@ -109,7 +110,8 @@ class MeshCompressor {
     final trimmedLeft = text.trimLeft();
     return (trimmedLeft.startsWith(prefix) &&
             trimmedLeft.length > prefix.length) ||
-        (trimmedLeft.startsWith(legacyPrefix) &&
+        (_legacyV1Enabled &&
+            trimmedLeft.startsWith(legacyPrefix) &&
             trimmedLeft.length > legacyPrefix.length);
   }
 
@@ -138,7 +140,10 @@ class MeshCompressor {
       }
     }
 
-    if (trimmedLeft.startsWith(legacyPrefix) &&
+    // MCMP v1 text transport (`mcmp:`) is intentionally gated off in current
+    // builds because the v1 model asset is no longer bundled.
+    if (_legacyV1Enabled &&
+        trimmedLeft.startsWith(legacyPrefix) &&
         trimmedLeft.length > legacyPrefix.length) {
       final model = _model;
       if (model == null) return null;
@@ -180,11 +185,17 @@ class MeshCompressor {
       final raw = await rootBundle.loadString(_modelAssetPath);
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       _model = _MeshCompressionModel.fromJson(decoded);
-      try {
-        final legacyRaw = await rootBundle.loadString(_legacyModelAssetPath);
-        final legacyDecoded = jsonDecode(legacyRaw) as Map<String, dynamic>;
-        _legacyModel = _LegacyMeshCompressionModel.fromJson(legacyDecoded);
-      } catch (_) {
+      // MCMP v1 model loading is disabled in current builds; the code path is
+      // kept for a possible compatibility build.
+      if (_legacyV1Enabled) {
+        try {
+          final legacyRaw = await rootBundle.loadString(_legacyModelAssetPath);
+          final legacyDecoded = jsonDecode(legacyRaw) as Map<String, dynamic>;
+          _legacyModel = _LegacyMeshCompressionModel.fromJson(legacyDecoded);
+        } catch (_) {
+          _legacyModel = null;
+        }
+      } else {
         _legacyModel = null;
       }
     } finally {
@@ -305,8 +316,10 @@ class MeshCompressor {
       return decoded;
     }
 
+    // MCMP v1 binary fallback is disabled because the v1 model is no longer
+    // bundled.
     final legacyModel = _legacyModel;
-    if (legacyModel != null) {
+    if (_legacyV1Enabled && legacyModel != null) {
       final legacyDecoded = _tryDecodeLegacyWithLegacyModel(data, legacyModel);
       if (legacyDecoded != null) {
         return legacyDecoded;

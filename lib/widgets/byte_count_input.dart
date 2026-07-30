@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -60,6 +61,9 @@ class ByteCountedTextField extends StatelessWidget {
   /// Optional maximum height for the input area before it becomes scrollable.
   final double? maxHeight;
 
+  /// Whether the text field accepts input.
+  final bool enabled;
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -77,7 +81,41 @@ class ByteCountedTextField extends StatelessWidget {
     this.encoder,
     this.minLines = 1,
     this.maxHeight,
+    this.enabled = true,
   });
+
+  bool get _usesDesktopEnterHandling {
+    return defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux;
+  }
+
+  void _insertText(String text) {
+    final oldValue = controller.value;
+    final selection = oldValue.selection;
+    final start = selection.isValid
+        ? selection.start.clamp(0, oldValue.text.length).toInt()
+        : oldValue.text.length;
+    final end = selection.isValid
+        ? selection.end.clamp(0, oldValue.text.length).toInt()
+        : oldValue.text.length;
+    final normalizedStart = start < end ? start : end;
+    final normalizedEnd = start < end ? end : start;
+    final newText = oldValue.text.replaceRange(
+      normalizedStart,
+      normalizedEnd,
+      text,
+    );
+    var newValue = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: normalizedStart + text.length),
+    );
+
+    newValue = Utf8LengthLimitingTextInputFormatter(
+      maxBytes,
+      encoder: encoder,
+    ).formatEditUpdate(oldValue, newValue);
+    controller.value = newValue;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,34 +143,58 @@ class ByteCountedTextField extends StatelessWidget {
               constraints: BoxConstraints(
                 maxHeight: maxHeight ?? double.infinity,
               ),
-              child: TextField(
-                minLines: minLines,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                scrollPhysics: const BouncingScrollPhysics(),
-                textAlignVertical: TextAlignVertical.top,
-                controller: controller,
-                focusNode: focusNode,
-                inputFormatters: [
-                  ...extraFormatters,
-                  Utf8LengthLimitingTextInputFormatter(
-                    maxBytes,
-                    encoder: encoder,
-                  ),
-                ],
-                textCapitalization: textCapitalization,
-                decoration:
-                    decoration ??
-                    InputDecoration(
-                      hintText: hintText,
-                      border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+              child: CallbackShortcuts(
+                bindings:
+                    enabled && _usesDesktopEnterHandling && onSubmitted != null
+                    ? {
+                        const SingleActivator(LogicalKeyboardKey.enter): () =>
+                            onSubmitted!(controller.text),
+                        const SingleActivator(
+                          LogicalKeyboardKey.numpadEnter,
+                        ): () =>
+                            onSubmitted!(controller.text),
+                        const SingleActivator(
+                          LogicalKeyboardKey.enter,
+                          shift: true,
+                        ): () =>
+                            _insertText('\n'),
+                        const SingleActivator(
+                          LogicalKeyboardKey.numpadEnter,
+                          shift: true,
+                        ): () =>
+                            _insertText('\n'),
+                      }
+                    : const <ShortcutActivator, VoidCallback>{},
+                child: TextField(
+                  minLines: minLines,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  scrollPhysics: const BouncingScrollPhysics(),
+                  textAlignVertical: TextAlignVertical.top,
+                  controller: controller,
+                  focusNode: focusNode,
+                  enabled: enabled,
+                  inputFormatters: [
+                    ...extraFormatters,
+                    Utf8LengthLimitingTextInputFormatter(
+                      maxBytes,
+                      encoder: encoder,
                     ),
-                textInputAction: textInputAction,
-                onSubmitted: onSubmitted,
+                  ],
+                  textCapitalization: textCapitalization,
+                  decoration:
+                      decoration ??
+                      InputDecoration(
+                        hintText: hintText,
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                  textInputAction: textInputAction,
+                  onSubmitted: onSubmitted,
+                ),
               ),
             ),
             Opacity(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/widgets/battery_indicator.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +28,12 @@ class AppBarTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final selfName = connector.selfName;
+    final hideRadioStats = context.select<AppSettingsService, bool>(
+      (s) => s.settings.hideRadioStatsButton,
+    );
+    final snrAllRepActivity = context.select<AppSettingsService, bool>(
+      (s) => s.settings.snrIndicatorAllRepActivity,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -67,8 +74,11 @@ class AppBarTitle extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (showBattery) BatteryIndicator(connector: connector),
-                  if (showSnr) SNRIndicator(connector: connector),
-                  if (connector.supportsCompanionRadioStats)
+                  if (showSnr)
+                    snrAllRepActivity
+                        ? SNRActivityIndicator(connector: connector)
+                        : SNRIndicator(connector: connector),
+                  if (connector.supportsCompanionRadioStats && !hideRadioStats)
                     const RadioStatsIconButton(compact: true),
                 ],
               ),

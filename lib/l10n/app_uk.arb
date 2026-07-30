@@ -101,6 +101,8 @@
   "settings_locationInvalid": "Некоректна широта або довгота.",
   "settings_latitude": "Широта",
   "settings_longitude": "Довгота",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Автооголошення без хопів при оновленні GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Коли GPS-локація змінюється, надсилати оголошення без хопів (потрібна геопозиція в оголошенні).",
   "settings_privacyMode": "Режим приватності",
   "settings_privacyModeSubtitle": "Приховати ім'я/геопозицію в оголошеннях",
   "settings_privacyModeToggle": "Увімкніть режим приватності, щоб приховати своє ім'я та геопозицію в оголошеннях.",
@@ -121,8 +123,6 @@
   "settings_rebootDeviceSubtitle": "Перезавантажити пристрій MeshCore",
   "settings_rebootDeviceConfirm": "Ви впевнені, що хочете перезавантажити пристрій? Вас буде відключено.",
   "settings_debug": "Налагодження",
-  "settings_bleDebugLog": "Журнал налагодження BLE",
-  "settings_bleDebugLogSubtitle": "Команди BLE, відповіді та необроблені дані",
   "settings_appDebugLog": "Журнал налагодження застосунку",
   "settings_appDebugLogSubtitle": "Повідомлення налагодження застосунку",
   "settings_about": "Про застосунок",
@@ -181,7 +181,7 @@
   "settings_sendingDelayForCancellation": "Затримка надсилання для скасування",
   "settings_useSendingDelay": "Використовувати затримку надсилання",
   "chat_cancelSend": "скасувати надсилання",
-  "settings_doNotFilterMessagesOnChannels": "Не фільтрувати власні повідомлення в каналах",
+  "settings_doNotFilterMessagesOnChannels": "Не фільтрувати власні пакети повідомлень на цих каналах і вважати повідомлення безумовно доставленими",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "За замовчуванням власні повідомлення з вашої ноди ігноруються. Це спричиняє проблеми на деяких прошивках із вбудованим TerminalCLI",
   "chat_retryingMessageWait": "Зачекайте {seconds} секунд перед повторним надсиланням",
   "channels_mcmpCompression": "Стиснення MCMP",
@@ -267,6 +267,19 @@
   "appSettings_last6Hours": "Останні 6 годин",
   "appSettings_last24Hours": "Останні 24 години",
   "appSettings_lastWeek": "Минулий тиждень",
+  "appSettings_rasterTileSource": "Джерело растрових тайлів",
+  "appSettings_stadiaEndpoint": "Кінцева точка Stadia",
+  "appSettings_stadiaApiKey": "Ключ API Stadia",
+  "appSettings_stadiaApiKeyRequired": "Потрібно для використання Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Налаштовано: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Введіть свій ключ API Stadia Maps. Програма використовує його для запитів растрових тайлів.",
   "appSettings_offlineMapCache": "Офлайн-кеш карти",
   "appSettings_noAreaSelected": "Область не вибрано",
   "appSettings_areaSelectedZoom": "Вибрана область (зум {minZoom}-{maxZoom})",
@@ -587,14 +600,6 @@
     }
   },
   "debugFrame_hexDump": "Дамп Hex:",
-  "chat_pathManagement": "Керування шляхами",
-  "chat_routingMode": "Режим маршрутизації",
-  "chat_autoUseSavedPath": "Авто (використовувати збережений шлях)",
-  "chat_forceFloodMode": "Примусово через всю мережу",
-  "chat_recentAckPaths": "Підтверджені шляхи (натисніть, щоб використати):",
-  "chat_pathHistoryFull": "Історія шляхів заповнена. Видаліть записи, щоб додати нові.",
-  "chat_hopSingular": "Перехід",
-  "chat_hopPlural": "переходів",
   "chat_hopsCount": "{count} {count, plural, =1{перехід} few{переходи} many{переходів} other{переходів}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -603,31 +608,10 @@
       }
     }
   },
-  "chat_successes": "Успішно",
-  "chat_score": "Оцінка",
   "chat_removePath": "Видалити шлях",
   "chat_noPathHistoryYet": "Історія шляхів недоступна.\nНадішліть повідомлення, щоб виявити шляхи.",
-  "chat_pathActions": "Дії зі шляхом:",
-  "chat_setCustomPath": "Встановити власний шлях",
-  "chat_setCustomPathSubtitle": "Вказати шлях маршрутизації вручну",
-  "chat_clearPath": "Очистити шлях",
-  "chat_clearPathSubtitle": "Примусово повторити пошук при наступному надсиланні",
   "chat_pathCleared": "Шлях очищено. Наступне повідомлення оновить маршрут.",
-  "chat_floodModeSubtitle": "Використовувати перемикач маршрутизації в панелі застосунку",
-  "chat_floodModeEnabled": "Увімкнено режим «через всю мережу». Перемикайте через іконку маршрутизації на панелі інструментів.",
   "chat_fullPath": "Повний шлях",
-  "chat_pathDetailsNotAvailable": "Деталі шляху ще недоступні. Спробуйте надіслати повідомлення для оновлення.",
-  "chat_pathSetHops": "Шлях встановлено: {hopCount} {hopCount, plural, =1{перехід} few{переходи} many{переходів} other{переходів}} - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "Збережено локально. Підключіться для синхронізації.",
   "chat_pathDeviceConfirmed": "Пристрій підтверджено.",
   "chat_pathDeviceNotConfirmed": "Пристрій ще не підтверджено.",
@@ -804,6 +788,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "Пн {north}, Пд {south}, Сх {east}, Зх {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -894,41 +928,8 @@
   "login_failedMessage": "Вхід не вдався. Або пароль неправильний, або ретранслятор недосяжний.",
   "common_reload": "Перезавантажити",
   "common_clear": "Очистити",
-  "path_currentPath": "Поточний шлях: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Використання шляху з {count} {count, plural, =1{переходом} few{переходами} many{переходами} other{переходами}}",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Ввести власний шлях",
   "path_currentPathLabel": "Поточний шлях",
-  "path_hexPrefixInstructions": "Введіть 2-символьні hex-префікси для кожного переходу, розділені комами.",
-  "path_hexPrefixExample": "Приклад: A1,F2,3C (кожен вузол використовує перший байт свого відкритого ключа).",
-  "path_labelHexPrefixes": "Hex-префікси",
-  "path_helperMaxHops": "Макс. 64 переходи. Кожен префікс — 2 шістнадцяткові символи (1 байт)",
-  "path_selectFromContacts": "Вибрати з контактів:",
   "path_noRepeatersFound": "Ретрансляторів або серверів кімнат не знайдено.",
-  "path_customPathsRequire": "Власні шляхи вимагають проміжних вузлів, які можуть передавати повідомлення.",
-  "path_invalidHexPrefixes": "Некоректні hex-префікси: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "Шлях занадто довгий. Максимум 64 переходи.",
-  "path_setPath": "Встановити шлях",
   "repeater_management": "Керування ретранслятором",
   "repeater_managementTools": "Інструменти керування",
   "repeater_status": "Статус",
@@ -941,9 +942,6 @@
   "repeater_settingsSubtitle": "Налаштувати параметри ретранслятора",
   "repeater_statusTitle": "Статус ретранслятора",
   "repeater_routingMode": "Режим маршрутизації",
-  "repeater_autoUseSavedPath": "Авто (використовувати збережений шлях)",
-  "repeater_forceFloodMode": "Примусово через всю мережу",
-  "repeater_pathManagement": "Керування шляхами",
   "repeater_refresh": "Оновити",
   "repeater_statusRequestTimeout": "Час очікування запиту статусу вичерпано.",
   "repeater_errorLoadingStatus": "Помилка завантаження статусу: {error}",
@@ -1197,7 +1195,6 @@
   "repeater_refreshBasicSettings": "Оновити основні налаштування",
   "repeater_refreshRadioSettings": "Оновити налаштування радіо",
   "repeater_refreshTxPower": "Оновити потужність TX",
-  "repeater_refreshLocationSettings": "Оновити налаштування геопозиції",
   "repeater_refreshPacketForwarding": "Оновити пересилання пакетів",
   "repeater_refreshGuestAccess": "Оновити гостьовий доступ",
   "repeater_refreshPrivacyMode": "Оновити режим приватності",
@@ -1449,7 +1446,7 @@
   "channelPath_noHopDetails": "Деталі відправки не надані для цього пакету.",
   "channelPath_messageDetails": "Деталі повідомлення",
   "channelPath_senderLabel": "Відправник",
-  "channelPath_timeLabel": "Час",
+  "channelPath_timeLabel": "Час отримання/створення",
   "channelPath_repeatsLabel": "Повторення",
   "channelPath_pathLabel": "Шлях {index}",
   "channelPath_observedLabel": "Спостережено",
@@ -1565,7 +1562,7 @@
   "neighbors_receivedData": "Дані сусідів отримано",
   "neighbors_requestTimedOut": "Час запиту сусідів вичерпано.",
   "neighbors_errorLoading": "Помилка завантаження сусідів: {error}",
-  "neighbors_repeatersNeighbors": "Ретранслятори-сусіди",
+  "neighbors_repeatersNeighbors": "Сусіди ретранслятора",
   "neighbors_noData": "Дані про сусідів недоступні.",
   "channels_createPrivateChannelDesc": "Захищено секретним ключем.",
   "channels_joinPrivateChannel": "Приєднатись до приватного каналу",
@@ -1812,7 +1809,6 @@
   "scanner_bluetoothOff": "Bluetooth вимкнено",
   "snrIndicator_lastSeen": "Останній раз бачили",
   "snrIndicator_nearByRepeaters": "Найближчі ретранслятори",
-  "chat_ShowAllPaths": "Показати всі шляхи",
   "settings_clientRepeatFreqWarning": "Повтор без підключення до мережі вимагає частоти 433, 869 або 918 МГц.",
   "settings_clientRepeatSubtitle": "Дозвольте цьому пристрою повторювати пакети даних для інших пристроїв.",
   "settings_clientRepeat": "Автономна система",
@@ -2091,16 +2087,6 @@
   "tcpConnectionFailed": "Не вдалось встановити з'єднання TCP: {error}",
   "map_showDiscoveryContacts": "Показати виявлені контакти",
   "map_setAsMyLocation": "Встановити мою геопозицію",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "settings_privacySubtitle": "Керуйте інформацією, яка буде спільно використовуватись",
   "settings_privacy": "Налаштування приватності",
   "settings_telemetryBaseMode": "Режим базової телеметрії",
@@ -2133,7 +2119,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Вага, яка була знята з маршруту після невдалої доставки",
   "appSettings_maxMessageRetries": "Максимальна кількість повторних спроб надсилання повідомлення",
   "appSettings_maxMessageRetriesSubtitle": "Кількість спроб повторного відправлення повідомлення перед тим, як позначити його як невдале",
-  "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Режим телеметрії оновлено",
   "map_showOverlaps": "Перекриття ключів ретрансляторів",
   "map_runTraceWithReturnPath": "Повернутись назад тим же шляхом",
@@ -2847,5 +2832,234 @@
     }
   },
   "map_wardriveSamplesCleared": "Wardrive-семпли очищено.",
-  "channelPath_outgoingSentByRadioAt": "Очікувало передавання через радіо, с"
+  "channelPath_outgoingSentByRadioAt": "Очікувало передавання через радіо, с",
+  "common_default": "За замовчуванням",
+  "common_send": "Надіслати",
+  "common_apply": "Застосувати",
+  "settings_regionSettings": "Регіони",
+  "settings_regionSettingsSubtitle": "Керування сховищем регіонів",
+  "settings_regionManagement_screenTitle": "Керування регіонами",
+  "settings_regionNameHint": "Введіть назву регіону",
+  "settings_regionAddRegion": "Додати регіон",
+  "settings_regionFetchRegions": "Запитати регіони у ретрансляторів",
+  "settings_regionFetchRegionsFail": "Регіонів не знайдено",
+  "settings_regionFetchRegionsAlreadyExists": "Цей регіон уже додано",
+  "settings_regionName": "Назва регіону",
+  "settings_regionDeleted": "Регіон видалено",
+  "settings_deleteRegion": "Видалити регіон",
+  "settings_deleteRegionConfirm": "Видалити \"{region}\" зі списку регіонів?",
+  "settings_aboutModDescription": "Модифікація «Advanced» базується на оригінальному meshcore_open і містить зміни, запропоновані до репозиторію оригінального застосунку або специфічні для території використання, а тому не оформлені у вигляді PR.",
+  "settings_aboutModLink": "Релізи на Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГрупа модифікації в TG: \nhttps://t.me/mcoadvanced",
+  "settings_infoFirmware": "Версія прошивки",
+  "contact_clearChatConfirm": "Видалити повідомлення з чату?",
+  "channels_regionSetTo": "Регіон: {region}",
+  "channels_regionNotSet": "Регіон: відсутній",
+  "channels_regionSelect_Title": "Призначити регіон",
+  "channels_clearRegion": "Очистити регіональність",
+  "chat_receivedGif": "Отримано GIF",
+  "map_wardriveReUpload": "Вивантажити повторно",
+  "map_wardriveSamplesNoNew": "Немає нових семплів для вивантаження",
+  "map_wardriveCoverageResolution": "Деталізація покриття",
+  "map_wardriveCoverageResolutionPrompt": "Виберіть розмір блоків покриття (розмір = сторона блока):",
+  "map_wardriveCoverageRegional": "Регіональний",
+  "map_wardriveCoverageRegionalSubtitle": "~20 км (точність 4)",
+  "map_wardriveCoverageCity": "На рівні міста",
+  "map_wardriveCoverageCitySubtitle": "~5 км (точність 5)",
+  "map_wardriveCoverageNeighborhood": "Район",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1,2 км (точність 6)",
+  "map_wardriveCoverageStreet": "Рівень вулиці",
+  "map_wardriveCoverageStreetSubtitle": "~153 м (точність 7)",
+  "map_wardriveCoverageBuilding": "Рівень будівлі",
+  "map_wardriveCoverageBuildingSubtitle": "~38 м (точність 8)",
+  "map_wardriveRepNoLocation": "Місцезнаходження ретранслятора не надано",
+  "map_wardriveDiscoveryWait": "Зачекайте {seconds} секунд перед повтором",
+  "map_wardriveFollowMe": "Слідувати за мною",
+  "map_wardriveDeleteBlock": "Видалити блок",
+  "map_wardriveInBackground": "Працювати у фоні",
+  "map_wardriveContinuousGPS": "Безперервний GPS-location",
+  "map_wardriveShowRepeaterCoverage": "Показати блоки покриття",
+  "map_wardriveHideRepeaterCoverage": "Приховати блоки покриття",
+  "repeater_keySettings": "Зміна ключів вузла",
+  "repeater_keySettingsSubtitle": "Змінити пару публічного та приватного ключів",
+  "repeater_prvKey": "Приватний ключ",
+  "repeater_prvKeyHelper": "Новий приватний ключ ретранслятора — hex-рядок зі 128 символів.",
+  "repeater_generatePrvKey": "Згенерувати випадкову пару ключів",
+  "repeater_stopGeneratingPrvKey": "Перервати пошук пари ключів",
+  "repeater_pubKey": "Публічний ключ",
+  "repeater_pubKeyHelper": "Це публічний ключ, що відповідає згенерованому приватному. Задати його напряму не можна.",
+  "repeater_pubKeyPrefix": "Бажаний префікс",
+  "repeater_pubKeyPrefixHelper": "Пошук публічного ключа, що починається з цих hex-символів. Очікувана кількість спроб: {tries}.",
+  "channelPath_repeaterHopsHighTimeout": "Збільшений тайм-аут трасування шляху (10 с × хопи)",
+  "listFilter_removeFromWardrive": "Ігнорувати у Wardrive",
+  "listFilter_returnToWardrive": "Враховувати у Wardrive",
+  "channels_copyPath": "Скопіювати шлях повідомлення",
+  "channels_copyPathExtended": "Скопіювати шлях повідомлення (розширено)",
+  "channels_copiedPath": "Шлях повідомлення скопійовано",
+  "channels_copyPathFailed": "Не вдалося скопіювати шлях повідомлення",
+  "settings_copyMsgPathTitle": "Налаштування копіювання шляху повідомлення",
+  "settings_copyMsgPathDscr": "Редагувати шаблон складання інформації про шлях повідомлення з каналу",
+  "settings_copyMsgPathEditTemplateTitle": "Редагування шаблону",
+  "settings_copyMsgPathEditTemplateDscr": "Використовуйте підстановочні шаблони:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - імʼя хопа\n%collisionMarker% - позначка колізії ретрансляторів\n%div% - роздільник (пропускається для останнього хопа)\n%hops% - кількість хопів\n\\n - перенесення рядка",
+  "settings_copyMsgPathEditFinalTitle": "Підсумкове повідомлення",
+  "settings_copyMsgPathEditFinalDscr": "Доступні шаблони:\n%senderName% - імʼя відправника\n%path% - сформований шлях\n%hops% - кількість хопів\n\\n - перенесення рядка",
+  "settings_channelsSendAsBinary": "Надсилати розширені формати у двійковому вигляді (канали)",
+  "settings_dmSendAsBinary": "Надсилати розширені формати у двійковому вигляді (особисті повідомлення)",
+  "chat_canvas": "Полотно MCOimg",
+  "chat_canvasCrop": "Обрізати/розширити",
+  "chat_canvasResize": "Стиснути/розтягнути",
+  "chat_canvasUnlockSize": "Розблокувати розмір полотна",
+  "chat_canvasFormatVer": "Версія кодека",
+  "chat_canvasPalette": "Палітра",
+  "chat_canvasPaletteShow": "Показати палітру",
+  "chat_canvasPaletteMode": "Профіль палітри",
+  "chat_canvasPaletteDynamic": "Динамічна",
+  "chat_canvasPaletteDynamicProfile": "Базовий набір для динамічної палітри",
+  "chat_canvasPaletteDynamicUsed": "Реально використані кольори",
+  "chat_canvasPaletteDynamicDscr": "Увага! Використовуйте динамічну палітру з розумом! Насамперед вона призначена для малюнків із градієнтами, щоб будувати меншу палітру та використовувати кольори, які не входять до однієї й тієї ж базової. Для довідки: менша базова палітра дає меншу вартість кодування інформації про використані відтінки, а менша підсумкова кількість кольорів знижує вартість кожного пікселя полотна.",
+  "chat_canvasPaletteAlpha": "Колір прозорості",
+  "chat_canvasChangeSize": "Змінити розмір полотна",
+  "chat_canvasTrim": "Обрізати порожнє",
+  "chat_canvasWidth": "Ширина",
+  "chat_canvasHeight": "Висота",
+  "chat_canvasGridShow": "Показувати сітку",
+  "chat_canvasRulerShow": "Показувати лінійку",
+  "chat_canvasGridColor": "Колір сітки",
+  "chat_canvasSave": "Зберегти у файл",
+  "chat_canvasLoad": "Завантажити з файлу",
+  "chat_canvasSendPayloadExceed": "Не вдалося надіслати — payload перевищено на {count} байт. Зменште кількість деталей або розмір полотна.",
+  "chat_canvasCurrentPayload": "Поточний payload: {payload}",
+  "chat_canvasActive": "Показувати полотно",
+  "chat_canvasShowLockBtn": "Показувати кнопку блокування полотна",
+  "chat_canvasSendToEdit": "Надіслати в полотно",
+  "chat_canvasSendToGallery": "Зберегти в галерею",
+  "chat_canvasGalleryShowPNG": "Показати джерело (PNG)",
+  "chat_canvasGalleryShowBIN": "Показати Bin",
+  "chat_canvasGalleryRemove": "Видалити",
+  "chat_canvasGalleryRemoveConfirm": "Видалити зображення з галереї?",
+  "chat_canvasFormatNotSupported": "Версія MCOimg: {received}, поточний кодек підтримує до {current}",
+  "chat_canvasSaveBinary": "Зберегти у двійковий файл",
+  "chat_canvasCannotSend": "Не вдалося надіслати — payload перевищено на {count} байт. Відредагуйте зображення та спробуйте ще раз.",
+  "chat_canvasCompressionLevel": "Рівень стиснення",
+  "chat_canvasCompressionLevelNormal": "Звичайний",
+  "chat_canvasCompressionLevelHigh": "Високий",
+  "chat_canvasCompressionLevelExtreme": "Екстремальний",
+  "chat_showHops": "Показувати хопи",
+  "settings_modSettings": "Налаштування модифікації",
+  "settings_modSettingsSubtitle": "У розділі зібрані опції, відсутні в оригінальному meshcore_open",
+  "settings_modSettingsVisual": "Візуал",
+  "settings_modSettingsMessaging": "Обмін повідомленнями",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "Версія",
+  "settings_mcmp_useSign": "Перевірка підпису",
+  "settings_mcmp_signed": "З перевіркою підпису",
+  "settings_mcmp_noSign": "Без перевірки підпису",
+  "settings_mcmp_senderNameCollision": "Імʼя відправника не унікальне!",
+  "chat_mcmpSignatureValid": "Підпис дійсний",
+  "chat_mcmpSignatureInvalid": "Недійсний підпис!",
+  "chat_mcmpSignatureUnverifiable": "Підпис неможливо перевірити — відправника немає в контактах",
+  "chat_mcmpSignatureTransport": "Підтверджено шифруванням транспорту",
+  "chat_mcmpManualRecheckSign": "Перевірити підпис ще раз",
+  "chat_mcmpSignatureCheckStatus": "Перевірка підпису",
+  "chat_mcmpSigningFailed": "Не вдалося підписати повідомлення",
+  "chat_mcmpAnswerTo": "MCMPv3 відповідь на",
+  "chat_timestampPacket": "Timestamp пакета",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: показувати бейдж версії формату",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: показувати бейдж алгоритму кодування",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: показувати вагу зображення (байт)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: показувати роздільність",
+  "settings_modSettingsMCOimg_showReplacements": "Показувати оригінали зображень замість LoRa-версій",
+  "settings_modSettingsMCOimg_replacementsScale": "Масштабувати оригінали в чатах",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Масштабувати як Nearest Neighbor",
+  "settings_modSettingsMCOimg_replacementsSharp": "Підвищити різкість оригіналів у чатах",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "Увага! Вимикає анімацію GIF!",
+  "settings_modSettingsHideChInd": "Приховати індекс каналу",
+  "settings_modSettingsHideRadioStats": "Приховати статистику радіо в шапці",
+  "settings_modSettingsSNRindicatorAllRepActivity": "Індикатор SNR: спрацьовувати на всі відповіді ретрансляторів, не лише на advert",
+  "settings_modSettingsIncomingQuoteAsMentions": "Показувати цитати у вхідних повідомленнях як згадки",
+  "settings_modSettingsSimplifiedMentions": "Спрощений стиль згадок у повідомленнях",
+  "settings_modSettingsSharedMsgHistory": "Спільна історія повідомлень",
+  "settings_modSettingsSharedMsgHistoryDscr": "Обʼєднання історії повідомлень, отриманої від різних пристроїв; підсумкова історія зберігається лише в застосунку",
+  "settings_modSettingsSharedMsgHistoryDisabled": "Вимкнено",
+  "settings_modSettingsSharedMsgHistoryChannels": "Лише канали",
+  "settings_modSettingsSharedMsgHistoryContacts": "Лише контакти",
+  "settings_modSettingsSharedMsgHistoryAll": "Усі чати",
+  "settings_modSettingsMessagingShowCompressionRatio": "Показувати ступінь стиснення",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "Під час підрахунку враховувати імʼя ноди",
+  "settings_modSettingsVisualHideMapZoomControls": "Приховати на карті панель масштабування",
+  "settings_modSettingsVisualShowMsgRegion": "Показувати регіон повідомлення",
+  "channels_messageRegion": "Регіон: {region}",
+  "channels_messageRegionUnknown": "невідомо",
+  "channels_messageRegionEmpty": "відсутній",
+  "settings_defaultRegionScope": "Регіон ноди за замовчуванням",
+  "settings_defaultRegionScopeChanged": "Регіон за замовчуванням змінено",
+  "settings_defaultRegionScopeChangeFailed": "Не вдалося змінити регіон",
+  "settings_defaultRegionScopeEmpty": "Не задано",
+  "settings_defaultRegionScopeWaitForSync": "Дочекайтеся завершення синхронізації",
+  "common_reset": "Скинути",
+  "connection_autoconnect": "Автопідключення",
+  "settings_modSettingsNoRetraInfo": "Не почуто ретрансляцій за {time} с.",
+  "settings_modSettingsNoRetraHeading": "Позначати повідомлення як ненадіслані, якщо не почуто ретрансляцій за стільки секунд:",
+  "settings_modSettingsNoRetraDscr": "Увага! Через механізм у прошивці ноди повідомлення для каналів вагою понад ~133 байт фізично не можуть отримувати підтвердження, і вони завжди будуть позначені як збійні! Використовуйте цю опцію разом з обмеженням payload у налаштуваннях застосунку!",
+  "settings_selfTelemetryShow": "Перегляд датчиків",
+  "settings_modSettingsVisualChannelsUnreadSorting": "Сортування каналів за непрочитаними повідомленнями",
+  "settings_modSettingsMessagingBackgroundTCP": "Утримувати TCP-зʼєднання у фоні",
+  "settings_modSettingsDPIchange": "Регулювання DPI",
+  "settings_modSettingsDPIchangeToIcons": "Застосовувати до іконок",
+  "chat_MCOimgOpenGallery": "Відкрити галерею MCOimg",
+  "chat_additionalActions": "Меню дій",
+  "mcogallery_common": "Загальне",
+  "mcogallery_addPack": "Додати пакет",
+  "mcogallery_removePack": "Видалити пакет",
+  "mcogallery_removePackConfirm": "Підтвердьте видалення пакета «{name}»",
+  "mcogallery_addGroup": "Додати групу",
+  "mcogallery_removeGroup": "Видалити групу",
+  "mcogallery_showLora": "Показати LoRa-варіант",
+  "mcogallery_showPacked": "Показати покращений варіант",
+  "chat_sendSelfContact": "Надіслати свій контакт",
+  "chat_sendContact": "Поділитися контактом",
+  "chat_addContact": "Додати контакт",
+  "chat_sureToReplaceContact": "Контакт уже існує, замінити?",
+  "contacts_addContactByPubkey": "Додати контакт за ключем",
+  "contacts_addContactByPubkey_contactType": "Тип контакту",
+  "chat_contactIsYou": "Це ваш власний контакт",
+  "chat_contactType": "Тип контакту: {contacttype}",
+  "chat_contactTypeNode": "Нода",
+  "chat_contactTypeRepeater": "Ретранслятор",
+  "chat_contactTypeRoom": "Рум-сервер",
+  "chat_contactTypeSensor": "Сенсор",
+  "chat_myLocation": "Надіслати моє місцезнаходження",
+  "chat_locationFromMap": "Надіслати координати з карти",
+  "settings_modSettingsRoomServer": "Room-сервери та контакти",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Показувати сервери з історією на одному екрані з каналами",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Показувати контакти з історією на одному екрані з каналами",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Залишити колишню механіку drag-n-drop: зміна порядку каналів змінює їхній порядок на ноді, і не можна сортувати контакти чи сервери",
+  "settings_appSettingsCustomChemistry": "Власна",
+  "map_clearDiscoveredContactsCache": "Очистити локальний кеш вузлів",
+  "map_clearDiscoveredContactsCacheDisclaimer": "Ви впевнені, що хочете видалити кеш виявлених контактів? Це не вплине на контакти на самій ноді.",
+  "snrIndicator_v2_nearByRepeaters": "Активність ретрансляторів",
+  "app_connectionLostReconnect": "Втрачено зʼєднання з нодою, виконується перепідключення...",
+  "app_connectionLostReconnected": "Зʼєднання з нодою відновлено",
+  "contacts_batchOperations": "Масові операції",
+  "contacts_batchOperations_notSelected": "Ви не вибрали контакти для обробки!",
+  "contacts_batchOperations_removeConfirm": "Видалити вибрані контакти з памʼяті ноди?",
+  "contacts_batchOperations_removeSuccess": "Вибрані контакти видалено",
+  "contacts_batchOperations_removeFail": "Не вдалося видалити контакти — перевірте їхній список ще раз",
+  "contacts_batchOperations_commonSuccess": "Операція пройшла успішно",
+  "contacts_batchOperations_commonFail": "Не вдалося завершити операцію",
+  "contacts_batchOperations_selectFiltered": "Вибрати відфільтровані",
+  "contacts_newGroupDescription": "Об'єднує канали/контакти в папку",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Обмеження розмірів lottie-замін",
+  "channels_messageRegionNotMatchesWithKnown": "немає збігів",
+  "chat_searchMessages": "Пошук повідомлень",
+  "chat_searchMessages_placeholder": "Від 3 символів, без урахування регістру",
+  "chat_searchMessages_results": "Результати пошуку",
+  "chat_searchMessages_results_found": "Знайдено {count} повідомлень",
+  "chat_searchMessages_results_channel": "Канал {name}",
+  "chat_searchMessages_results_room": "Кімната {name}",
+  "chat_searchMessages_results_contact": "Діалог з {name}",
+  "app_offline": "Офлайн",
+  "app_offline_unableToMessage": "Ви не можете надсилати повідомлення або виконувати інші дії в офлайн-режимі",
+  "app_offline_sharedMode": "Об'єднана історія",
+  "settings_infoDeviceName": "Найменування плати"
 }

@@ -100,6 +100,8 @@
   "settings_locationInvalid": "Latitud o longitud inválidos.",
   "settings_latitude": "Latitud",
   "settings_longitude": "Longitud",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Anuncio de cero saltos automático al actualizar GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Cuando cambie la ubicación GPS, enviar un anuncio de cero saltos (requiere ubicación en anuncio).",
   "settings_privacyMode": "Modo de privacidad",
   "settings_privacyModeSubtitle": "Ocultar nombre/ubicación en anuncios",
   "settings_privacyModeToggle": "Activar el modo de privacidad para ocultar tu nombre y ubicación en los anuncios.",
@@ -120,8 +122,6 @@
   "settings_rebootDeviceSubtitle": "Reiniciar el dispositivo MeshCore",
   "settings_rebootDeviceConfirm": "¿Está seguro de que desea reiniciar el dispositivo? Se desconectará.",
   "settings_debug": "Depurar",
-  "settings_bleDebugLog": "Registro de Depuración BLE",
-  "settings_bleDebugLogSubtitle": "Comandos, respuestas y datos brutos de BLE",
   "settings_appDebugLog": "Registro de Depuración de la App",
   "settings_appDebugLogSubtitle": "Mensajes de depuración de la aplicación",
   "settings_about": "Acerca de",
@@ -180,7 +180,7 @@
   "settings_sendingDelayForCancellation": "Retardo de envío para cancelación",
   "settings_useSendingDelay": "Usar retardo de envío",
   "chat_cancelSend": "cancelar envío",
-  "settings_doNotFilterMessagesOnChannels": "No filtrar mensajes propios en canales",
+  "settings_doNotFilterMessagesOnChannels": "No filtrar los paquetes de mensajes propios en estos canales y considerar los mensajes como entregados incondicionalmente",
   "settings_doNotFilterMessagesOnChannelsSubtitle": "Por defecto, se ignoran los mensajes propios de tu nodo. Esto causa problemas en algunos firmwares con TerminalCLI integrado",
   "chat_retryingMessageWait": "Espera {seconds} segundos antes de reenviar",
   "channels_mcmpCompression": "Compresión MCMP",
@@ -265,6 +265,19 @@
   "appSettings_last6Hours": "Últimas 6 horas",
   "appSettings_last24Hours": "Últimas 24 horas",
   "appSettings_lastWeek": "La semana pasada",
+  "appSettings_rasterTileSource": "Fuente de teselas ráster",
+  "appSettings_stadiaEndpoint": "Punto de acceso de Stadia",
+  "appSettings_stadiaApiKey": "Clave API de Stadia",
+  "appSettings_stadiaApiKeyRequired": "Obligatorio para usar Stadia Maps",
+  "appSettings_stadiaApiKeyConfigured": "Configurado: {maskedKey}",
+  "@appSettings_stadiaApiKeyConfigured": {
+    "placeholders": {
+      "maskedKey": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_stadiaApiKeyDialogDescription": "Introduce tu clave API de Stadia Maps. La aplicación la usa para solicitar teselas ráster.",
   "appSettings_offlineMapCache": "Caché de mapa sin conexión",
   "appSettings_noAreaSelected": "No se ha seleccionado ningún área",
   "appSettings_areaSelectedZoom": "Área seleccionada (zoom {minZoom}-{maxZoom})",
@@ -606,14 +619,6 @@
     }
   },
   "debugFrame_hexDump": "Volcado hexadecimal:",
-  "chat_pathManagement": "Gestión de rutas",
-  "chat_routingMode": "Modo de enrutamiento",
-  "chat_autoUseSavedPath": "Auto (usar la ruta guardada)",
-  "chat_forceFloodMode": "Modo inundación forzado",
-  "chat_recentAckPaths": "Rutas recientes de ACK (toca para usar):",
-  "chat_pathHistoryFull": "El historial de rutas está completo. Elimina entradas para añadir nuevas.",
-  "chat_hopSingular": "salto",
-  "chat_hopPlural": "saltos",
   "chat_hopsCount": "{count} {count, plural, =1{salto} other{saltos}}",
   "@chat_hopsCount": {
     "placeholders": {
@@ -622,30 +627,10 @@
       }
     }
   },
-  "chat_successes": "Éxitos",
   "chat_removePath": "Eliminar ruta",
   "chat_noPathHistoryYet": "Aún no hay historial de rutas.\nEnvía un mensaje para descubrir rutas.",
-  "chat_pathActions": "Acciones de ruta:",
-  "chat_setCustomPath": "Establecer ruta personalizada",
-  "chat_setCustomPathSubtitle": "Especificar manualmente la ruta de enrutamiento",
-  "chat_clearPath": "Borrar ruta",
-  "chat_clearPathSubtitle": "Forzar redescubrimiento en el próximo envío",
   "chat_pathCleared": "Ruta borrada. El siguiente mensaje redescubrirá la ruta.",
-  "chat_floodModeSubtitle": "Usar el selector de enrutamiento en la barra de herramientas",
-  "chat_floodModeEnabled": "El modo de inundación está activado. Desactívalo con el icono de enrutamiento de la barra de herramientas de la app.",
   "chat_fullPath": "Ruta completa",
-  "chat_pathDetailsNotAvailable": "Los detalles de la ruta aún no están disponibles. Intenta enviar un mensaje para refrescar.",
-  "chat_pathSetHops": "Ruta establecida: {hopCount} {hopCount, plural, =1{salto} other{saltos}} - {status}",
-  "@chat_pathSetHops": {
-    "placeholders": {
-      "hopCount": {
-        "type": "int"
-      },
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "chat_pathSavedLocally": "Guardado localmente. Conéctate para sincronizar.",
   "chat_pathDeviceConfirmed": "Dispositivo confirmado.",
   "chat_pathDeviceNotConfirmed": "Dispositivo aún no confirmado.",
@@ -816,6 +801,56 @@
       }
     }
   },
+  "mapCache_cachedTilesLabel": "Cached tiles",
+  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "@mapCache_bulkDownloadDisabledForSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "@mapCache_bulkDownloadDisabledInConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summarySource": "Source: {source}",
+  "@mapCache_summarySource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "@mapCache_summaryCachedTilesForSource": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "@mapCache_summaryCachedInSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "@mapCache_summaryApproxCacheSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
@@ -906,41 +941,8 @@
   "login_failedMessage": "El inicio de sesión ha fallado. La contraseña es incorrecta o el repetidor no está disponible.",
   "common_reload": "Recargar",
   "common_clear": "Borrar",
-  "path_currentPath": "Ruta actual: {path}",
-  "@path_currentPath": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "path_usingHopsPath": "Usando {count} {count, plural, =1{salto} other{saltos}} de ruta",
-  "@path_usingHopsPath": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "path_enterCustomPath": "Introducir ruta personalizada",
   "path_currentPathLabel": "Ruta actual",
-  "path_hexPrefixInstructions": "Introduzca los prefijos hexadecimales de 2 caracteres para cada salto, separados por comas.",
-  "path_hexPrefixExample": "Ejemplo: A1,F2,3C (cada nodo usa el primer byte de su clave pública).",
-  "path_labelHexPrefixes": "Prefijos hexadecimales",
-  "path_helperMaxHops": "Máximo 64 saltos. Cada prefijo tiene 2 caracteres hexadecimales (1 byte).",
-  "path_selectFromContacts": "O seleccionar de los contactos:",
   "path_noRepeatersFound": "No se encontraron repetidores ni servidores de sala.",
-  "path_customPathsRequire": "Las rutas personalizadas requieren saltos intermedios que puedan transmitir mensajes.",
-  "path_invalidHexPrefixes": "Prefijos hexadecimales inválidos: {prefixes}",
-  "@path_invalidHexPrefixes": {
-    "placeholders": {
-      "prefixes": {
-        "type": "String"
-      }
-    }
-  },
-  "path_tooLong": "La ruta es demasiado larga. Se permiten un máximo de 64 saltos.",
-  "path_setPath": "Establecer ruta",
   "repeater_management": "Gestión de repetidores",
   "repeater_managementTools": "Herramientas de gestión",
   "repeater_status": "Estado",
@@ -953,9 +955,6 @@
   "repeater_settingsSubtitle": "Configurar parámetros del repetidor",
   "repeater_statusTitle": "Estado del Repetidor",
   "repeater_routingMode": "Modo de enrutamiento",
-  "repeater_autoUseSavedPath": "Auto (usar la ruta guardada)",
-  "repeater_forceFloodMode": "Modo inundación forzado",
-  "repeater_pathManagement": "Gestión de rutas",
   "repeater_refresh": "Actualizar",
   "repeater_statusRequestTimeout": "Se agotó el tiempo de espera de la solicitud de estado.",
   "repeater_errorLoadingStatus": "Error al cargar el estado: {error}",
@@ -1502,7 +1501,7 @@
   "channelPath_noHopDetails": "Los detalles del paquete no están disponibles.",
   "channelPath_messageDetails": "Detalles del mensaje",
   "channelPath_senderLabel": "Remitente",
-  "channelPath_timeLabel": "Hora",
+  "channelPath_timeLabel": "Hora de recepción/creación",
   "channelPath_repeatsLabel": "Repetir",
   "channelPath_pathLabel": "Ruta {index}",
   "channelPath_observedLabel": "Observado",
@@ -1618,7 +1617,7 @@
   "neighbors_receivedData": "Recibidas Datos de Vecinos",
   "neighbors_requestTimedOut": "Los vecinos solicitan que se desconecte.",
   "neighbors_errorLoading": "Error al cargar vecinos: {error}",
-  "neighbors_repeatersNeighbors": "Repetidores Vecinos",
+  "neighbors_repeatersNeighbors": "Vecinos del repetidor",
   "neighbors_noData": "No hay datos de vecinos disponibles.",
   "channels_joinPrivateChannel": "Únete a un Canal Privado",
   "channels_createPrivateChannel": "Crear un Canal Privado",
@@ -1894,7 +1893,6 @@
   "scanner_enableBluetooth": "Habilitar Bluetooth",
   "snrIndicator_nearByRepeaters": "Repetidores cercanos",
   "snrIndicator_lastSeen": "Visto por última vez",
-  "chat_ShowAllPaths": "Mostrar todas las rutas",
   "settings_clientRepeatFreqWarning": "Para la comunicación fuera de la red, se requiere una frecuencia de 433, 869 o 918 MHz.",
   "settings_clientRepeat": "Repetir sin conexión",
   "settings_clientRepeatSubtitle": "Permita que este dispositivo repita los paquetes de red para otros usuarios.",
@@ -2173,16 +2171,6 @@
   "tcpConnectionFailed": "Error en la conexión TCP: {error}",
   "map_showDiscoveryContacts": "Mostrar contactos de descubrimiento",
   "map_setAsMyLocation": "Establecer mi ubicación",
-  "@path_routeWeight": {
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
   "settings_privacySubtitle": "Controlar qué información se comparte.",
   "settings_allowByContact": "Permitir por banderas de contacto",
   "settings_denyAll": "Denegar todo",
@@ -2215,7 +2203,6 @@
   "appSettings_routeWeightFailureDecrementSubtitle": "Peso retirado de una ruta después de un intento de entrega fallido.",
   "appSettings_maxMessageRetries": "Número máximo de reintentos de envío de mensajes",
   "appSettings_maxMessageRetriesSubtitle": "Número de intentos de reintento antes de marcar un mensaje como fallido.",
-  "path_routeWeight": "{weight}/{max}",
   "settings_telemetryModeUpdated": "Modo de telemetría actualizado",
   "settings_multiAck": "Múltiples respuestas de confirmación",
   "map_showOverlaps": "Superposiciones de tecla repetidora",
@@ -2470,7 +2457,6 @@
       }
     }
   },
-  "chat_score": "Puntuación",
   "map_sharedAt": "Compartido",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2966,5 +2952,234 @@
     }
   },
   "map_wardriveSamplesCleared": "Muestras wardrive borradas.",
-  "channelPath_outgoingSentByRadioAt": "Esperando transmisión por radio, s"
+  "channelPath_outgoingSentByRadioAt": "Esperando transmisión por radio, s",
+  "common_default": "Predeterminado",
+  "common_send": "Enviar",
+  "common_apply": "Aplicar",
+  "settings_regionSettings": "Regiones",
+  "settings_regionSettingsSubtitle": "Gestionar las regiones guardadas",
+  "settings_regionManagement_screenTitle": "Gestión de regiones",
+  "settings_regionNameHint": "Introduce el nombre de la región",
+  "settings_regionAddRegion": "Añadir región",
+  "settings_regionFetchRegions": "Solicitar regiones a los repetidores",
+  "settings_regionFetchRegionsFail": "No se han encontrado regiones",
+  "settings_regionFetchRegionsAlreadyExists": "Esta región ya está añadida",
+  "settings_regionName": "Nombre de la región",
+  "settings_regionDeleted": "Región eliminada",
+  "settings_deleteRegion": "Eliminar región",
+  "settings_deleteRegionConfirm": "¿Eliminar \"{region}\" de la lista de regiones?",
+  "settings_aboutModDescription": "La modificación «Advanced» se basa en el meshcore_open original e incorpora cambios propuestos en el repositorio de la aplicación original o específicos del área de uso y, por tanto, no presentados como pull requests.",
+  "settings_aboutModLink": "Versiones en Github: \nhttps://github.com/HDDen/meshcore-open/releases \nGrupo de la modificación en Telegram: \nhttps://t.me/mcoadvanced",
+  "settings_infoFirmware": "Versión del firmware",
+  "contact_clearChatConfirm": "¿Eliminar los mensajes del chat?",
+  "channels_regionSetTo": "Región: {region}",
+  "channels_regionNotSet": "Región: ninguna",
+  "channels_regionSelect_Title": "Asignar región",
+  "channels_clearRegion": "Borrar región",
+  "chat_receivedGif": "GIF recibido",
+  "map_wardriveReUpload": "Volver a subir",
+  "map_wardriveSamplesNoNew": "No hay muestras nuevas para subir",
+  "map_wardriveCoverageResolution": "Detalle de la cobertura",
+  "map_wardriveCoverageResolutionPrompt": "Elige el tamaño de los bloques de cobertura (tamaño = lado del bloque):",
+  "map_wardriveCoverageRegional": "Regional",
+  "map_wardriveCoverageRegionalSubtitle": "~20 km (precisión 4)",
+  "map_wardriveCoverageCity": "Nivel de ciudad",
+  "map_wardriveCoverageCitySubtitle": "~5 km (precisión 5)",
+  "map_wardriveCoverageNeighborhood": "Barrio",
+  "map_wardriveCoverageNeighborhoodSubtitle": "~1,2 km (precisión 6)",
+  "map_wardriveCoverageStreet": "Nivel de calle",
+  "map_wardriveCoverageStreetSubtitle": "~153 m (precisión 7)",
+  "map_wardriveCoverageBuilding": "Nivel de edificio",
+  "map_wardriveCoverageBuildingSubtitle": "~38 m (precisión 8)",
+  "map_wardriveRepNoLocation": "El repetidor no ha proporcionado su ubicación",
+  "map_wardriveDiscoveryWait": "Espera {seconds} segundos antes de volver a intentarlo",
+  "map_wardriveFollowMe": "Seguir mi ubicación",
+  "map_wardriveDeleteBlock": "Eliminar bloque",
+  "map_wardriveInBackground": "Ejecutar en segundo plano",
+  "map_wardriveContinuousGPS": "Ubicación GPS continua",
+  "map_wardriveShowRepeaterCoverage": "Mostrar los bloques de cobertura",
+  "map_wardriveHideRepeaterCoverage": "Ocultar los bloques de cobertura",
+  "repeater_keySettings": "Cambiar las claves de identidad",
+  "repeater_keySettingsSubtitle": "Cambiar el par de claves pública/privada",
+  "repeater_prvKey": "Clave privada",
+  "repeater_prvKeyHelper": "Una nueva clave privada para el repetidor, una cadena hexadecimal de 128 caracteres.",
+  "repeater_generatePrvKey": "Generar un par de claves aleatorio",
+  "repeater_stopGeneratingPrvKey": "Interrumpir la búsqueda del par de claves",
+  "repeater_pubKey": "Clave pública",
+  "repeater_pubKeyHelper": "Esta es la clave pública que corresponde a la clave privada generada. No se puede establecer directamente.",
+  "repeater_pubKeyPrefix": "Prefijo deseado",
+  "repeater_pubKeyPrefixHelper": "Busca una clave pública que empiece por estos dígitos hexadecimales. Intentos previstos: {tries}.",
+  "channelPath_repeaterHopsHighTimeout": "Tiempo de espera ampliado para el trazado de la ruta (10 s × saltos)",
+  "listFilter_removeFromWardrive": "Ignorar en Wardrive",
+  "listFilter_returnToWardrive": "Tener en cuenta en Wardrive",
+  "channels_copyPath": "Copiar la ruta del mensaje",
+  "channels_copyPathExtended": "Copiar la ruta del mensaje (ampliada)",
+  "channels_copiedPath": "Ruta del mensaje copiada",
+  "channels_copyPathFailed": "No se ha podido copiar la ruta del mensaje",
+  "settings_copyMsgPathTitle": "Configurar la copia de la ruta del mensaje",
+  "settings_copyMsgPathDscr": "Editar la plantilla con la que se compone la información de la ruta de un mensaje de canal",
+  "settings_copyMsgPathEditTemplateTitle": "Edición de la plantilla",
+  "settings_copyMsgPathEditTemplateDscr": "Usa las plantillas de sustitución:\n%hopInd% - orden del salto\n%hopKey% - clave del salto\n%hopName% - nombre del salto\n%collisionMarker% - marca de colisión de repetidores\n%div% - separador (se omite en el último salto)\n%hops% - cantidad de saltos\n\\n - salto de línea",
+  "settings_copyMsgPathEditFinalTitle": "Mensaje final",
+  "settings_copyMsgPathEditFinalDscr": "Plantillas disponibles:\n%senderName% - nombre del remitente\n%path% - ruta ya compuesta\n%hops% - cantidad de saltos\n\\n - salto de línea",
+  "settings_channelsSendAsBinary": "Enviar los formatos ampliados en binario (canales)",
+  "settings_dmSendAsBinary": "Enviar los formatos ampliados en binario (mensajes directos)",
+  "chat_canvas": "Lienzo MCOimg",
+  "chat_canvasCrop": "Recortar/ampliar",
+  "chat_canvasResize": "Comprimir/estirar",
+  "chat_canvasUnlockSize": "Desbloquear el tamaño del lienzo",
+  "chat_canvasFormatVer": "Versión del códec",
+  "chat_canvasPalette": "Paleta",
+  "chat_canvasPaletteShow": "Mostrar la paleta",
+  "chat_canvasPaletteMode": "Perfil de paleta",
+  "chat_canvasPaletteDynamic": "Dinámica",
+  "chat_canvasPaletteDynamicProfile": "Conjunto base para la paleta dinámica",
+  "chat_canvasPaletteDynamicUsed": "Colores realmente usados",
+  "chat_canvasPaletteDynamicDscr": "¡Atención! ¡Usa la paleta dinámica con criterio! Está pensada sobre todo para imágenes con degradados, para construir una paleta más pequeña y usar colores que no pertenecen a una misma paleta base. Como referencia: una paleta base más pequeña reduce el coste de codificar la información sobre los tonos usados, y un número total de colores menor reduce el coste de cada píxel del lienzo.",
+  "chat_canvasPaletteAlpha": "Color de transparencia",
+  "chat_canvasChangeSize": "Cambiar el tamaño del lienzo",
+  "chat_canvasTrim": "Recortar el espacio vacío",
+  "chat_canvasWidth": "Ancho",
+  "chat_canvasHeight": "Alto",
+  "chat_canvasGridShow": "Mostrar la rejilla",
+  "chat_canvasRulerShow": "Mostrar la regla",
+  "chat_canvasGridColor": "Color de la rejilla",
+  "chat_canvasSave": "Guardar en un archivo",
+  "chat_canvasLoad": "Cargar desde un archivo",
+  "chat_canvasSendPayloadExceed": "No se ha podido enviar: el payload se ha excedido en {count} bytes. Reduce la cantidad de detalles o el tamaño del lienzo.",
+  "chat_canvasCurrentPayload": "Payload actual: {payload}",
+  "chat_canvasActive": "Mostrar el lienzo",
+  "chat_canvasShowLockBtn": "Mostrar el botón de bloqueo del lienzo",
+  "chat_canvasSendToEdit": "Enviar al lienzo",
+  "chat_canvasSendToGallery": "Guardar en la galería",
+  "chat_canvasGalleryShowPNG": "Mostrar el original (PNG)",
+  "chat_canvasGalleryShowBIN": "Mostrar como Bin",
+  "chat_canvasGalleryRemove": "Eliminar",
+  "chat_canvasGalleryRemoveConfirm": "¿Eliminar la imagen de la galería?",
+  "chat_canvasFormatNotSupported": "Versión de MCOimg: {received}, el códec actual admite hasta {current}",
+  "chat_canvasSaveBinary": "Guardar en un archivo binario",
+  "chat_canvasCannotSend": "No se ha podido enviar: el payload se ha excedido en {count} bytes. Edita la imagen e inténtalo de nuevo.",
+  "chat_canvasCompressionLevel": "Nivel de compresión",
+  "chat_canvasCompressionLevelNormal": "Normal",
+  "chat_canvasCompressionLevelHigh": "Alto",
+  "chat_canvasCompressionLevelExtreme": "Extremo",
+  "chat_showHops": "Mostrar los saltos",
+  "settings_modSettings": "Ajustes de la modificación",
+  "settings_modSettingsSubtitle": "Esta sección reúne opciones que no existen en el meshcore_open original",
+  "settings_modSettingsVisual": "Aspecto",
+  "settings_modSettingsMessaging": "Mensajería",
+  "settings_modSettingsMCMP": "MCMP",
+  "settings_mcmp_version": "Versión",
+  "settings_mcmp_useSign": "Verificación de la firma",
+  "settings_mcmp_signed": "Con verificación de la firma",
+  "settings_mcmp_noSign": "Sin verificación de la firma",
+  "settings_mcmp_senderNameCollision": "¡El nombre del remitente no es único!",
+  "chat_mcmpSignatureValid": "La firma es válida",
+  "chat_mcmpSignatureInvalid": "¡Firma no válida!",
+  "chat_mcmpSignatureUnverifiable": "La firma no se puede verificar: el remitente no está en los contactos",
+  "chat_mcmpSignatureTransport": "Autenticado por el cifrado del transporte",
+  "chat_mcmpManualRecheckSign": "Volver a comprobar la firma",
+  "chat_mcmpSignatureCheckStatus": "Comprobación de la firma",
+  "chat_mcmpSigningFailed": "No se ha podido firmar el mensaje",
+  "chat_mcmpAnswerTo": "Respuesta MCMPv3 a",
+  "chat_timestampPacket": "Marca de tiempo del paquete",
+  "settings_modSettingsMCOimg": "MCOimg",
+  "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: mostrar la etiqueta de versión del formato",
+  "settings_modSettingsVisualShowMCOimgAlgo": "MCOimg: mostrar la etiqueta del algoritmo de codificación",
+  "settings_modSettingsVisualShowMCOimgBytes": "MCOimg: mostrar el peso de la imagen (bytes)",
+  "settings_modSettingsVisualShowMCOimgResolution": "MCOimg: mostrar la resolución",
+  "settings_modSettingsMCOimg_showReplacements": "Mostrar los originales de las imágenes en lugar de las versiones LoRa",
+  "settings_modSettingsMCOimg_replacementsScale": "Escalar los originales en los chats",
+  "settings_modSettingsMCOimg_scaleNearestNeighbor": "Escalar como Nearest Neighbor",
+  "settings_modSettingsMCOimg_replacementsSharp": "Aumentar la nitidez de los originales en los chats",
+  "settings_modSettingsMCOimg_replacementsSharpDscr": "¡Atención! ¡Desactiva la animación de los GIF!",
+  "settings_modSettingsHideChInd": "Ocultar el índice del canal",
+  "settings_modSettingsHideRadioStats": "Ocultar las estadísticas de radio en la cabecera",
+  "settings_modSettingsSNRindicatorAllRepActivity": "Indicador SNR: activarse con todas las respuestas de los repetidores, no solo con los adverts",
+  "settings_modSettingsIncomingQuoteAsMentions": "Mostrar las citas de los mensajes entrantes como menciones",
+  "settings_modSettingsSimplifiedMentions": "Estilo simplificado de las menciones en los mensajes",
+  "settings_modSettingsSharedMsgHistory": "Historial de mensajes compartido",
+  "settings_modSettingsSharedMsgHistoryDscr": "Combinación del historial de mensajes recibido de distintos dispositivos; el historial resultante se guarda solo en la aplicación",
+  "settings_modSettingsSharedMsgHistoryDisabled": "Desactivado",
+  "settings_modSettingsSharedMsgHistoryChannels": "Solo canales",
+  "settings_modSettingsSharedMsgHistoryContacts": "Solo contactos",
+  "settings_modSettingsSharedMsgHistoryAll": "Todos los chats",
+  "settings_modSettingsMessagingShowCompressionRatio": "Mostrar el grado de compresión",
+  "settings_modSettingsMessagingCompressionRatioWithSendername": "Tener en cuenta también el nombre del nodo",
+  "settings_modSettingsVisualHideMapZoomControls": "Ocultar el panel de zoom en el mapa",
+  "settings_modSettingsVisualShowMsgRegion": "Mostrar la región del mensaje",
+  "channels_messageRegion": "Región: {region}",
+  "channels_messageRegionUnknown": "desconocida",
+  "channels_messageRegionEmpty": "sin asignar",
+  "settings_defaultRegionScope": "Región del nodo por defecto",
+  "settings_defaultRegionScopeChanged": "Región por defecto cambiada",
+  "settings_defaultRegionScopeChangeFailed": "No se ha podido cambiar la región",
+  "settings_defaultRegionScopeEmpty": "Sin asignar",
+  "settings_defaultRegionScopeWaitForSync": "Espera a que termine la sincronización",
+  "common_reset": "Restablecer",
+  "connection_autoconnect": "Conexión automática",
+  "settings_modSettingsNoRetraInfo": "No se han oído retransmisiones durante {time} s.",
+  "settings_modSettingsNoRetraHeading": "Marcar los mensajes como no enviados si no se oyen retransmisiones en estos segundos:",
+  "settings_modSettingsNoRetraDscr": "¡Atención! Por un mecanismo del firmware del nodo, los mensajes de canal de más de ~133 bytes no pueden recibir físicamente confirmaciones y siempre se marcarán como fallidos. Usa esta opción junto con el límite de payload en los ajustes de la aplicación.",
+  "settings_selfTelemetryShow": "Ver los sensores",
+  "settings_modSettingsVisualChannelsUnreadSorting": "Ordenar los canales por mensajes no leídos",
+  "settings_modSettingsMessagingBackgroundTCP": "Mantener la conexión TCP en segundo plano",
+  "settings_modSettingsDPIchange": "Ajuste del DPI",
+  "settings_modSettingsDPIchangeToIcons": "Aplicar a los iconos",
+  "chat_MCOimgOpenGallery": "Abrir la galería MCOimg",
+  "chat_additionalActions": "Menú de acciones",
+  "mcogallery_common": "General",
+  "mcogallery_addPack": "Añadir paquete",
+  "mcogallery_removePack": "Eliminar paquete",
+  "mcogallery_removePackConfirm": "Confirma la eliminación del paquete «{name}»",
+  "mcogallery_addGroup": "Añadir grupo",
+  "mcogallery_removeGroup": "Eliminar grupo",
+  "mcogallery_showLora": "Mostrar la variante LoRa",
+  "mcogallery_showPacked": "Mostrar la variante mejorada",
+  "chat_sendSelfContact": "Enviar mi contacto",
+  "chat_sendContact": "Compartir contacto",
+  "chat_addContact": "Añadir contacto",
+  "chat_sureToReplaceContact": "El contacto ya existe, ¿reemplazarlo?",
+  "contacts_addContactByPubkey": "Añadir contacto por clave",
+  "contacts_addContactByPubkey_contactType": "Tipo de contacto",
+  "chat_contactIsYou": "Es tu propio contacto",
+  "chat_contactType": "Tipo de contacto: {contacttype}",
+  "chat_contactTypeNode": "Nodo",
+  "chat_contactTypeRepeater": "Repetidor",
+  "chat_contactTypeRoom": "Servidor de sala",
+  "chat_contactTypeSensor": "Sensor",
+  "chat_myLocation": "Enviar mi ubicación",
+  "chat_locationFromMap": "Enviar coordenadas del mapa",
+  "settings_modSettingsRoomServer": "Servidores de sala y contactos",
+  "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Mostrar los servidores con historial en la misma pantalla que los canales",
+  "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Mostrar los contactos con historial en la misma pantalla que los canales",
+  "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Mantener el comportamiento anterior de arrastrar y soltar: cambiar el orden de los canales cambia su orden en el nodo, y no se pueden ordenar los contactos ni los servidores",
+  "settings_appSettingsCustomChemistry": "Personalizada",
+  "map_clearDiscoveredContactsCache": "Borrar la caché local de nodos",
+  "map_clearDiscoveredContactsCacheDisclaimer": "¿Seguro que quieres borrar la caché de contactos descubiertos? Esto no afectará a los contactos del propio nodo.",
+  "snrIndicator_v2_nearByRepeaters": "Actividad de los repetidores",
+  "app_connectionLostReconnect": "Se ha perdido la conexión con el nodo, reconectando...",
+  "app_connectionLostReconnected": "Conexión con el nodo restablecida",
+  "contacts_batchOperations": "Operaciones masivas",
+  "contacts_batchOperations_notSelected": "¡No has seleccionado ningún contacto para procesar!",
+  "contacts_batchOperations_removeConfirm": "¿Eliminar los contactos seleccionados de la memoria del nodo?",
+  "contacts_batchOperations_removeSuccess": "Los contactos seleccionados se han eliminado",
+  "contacts_batchOperations_removeFail": "No se han podido eliminar los contactos: comprueba la lista de nuevo",
+  "contacts_batchOperations_commonSuccess": "La operación se ha realizado correctamente",
+  "contacts_batchOperations_commonFail": "No se ha podido completar la operación",
+  "contacts_batchOperations_selectFiltered": "Seleccionar los filtrados",
+  "contacts_newGroupDescription": "Agrupa canales/contactos en una carpeta",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Límite de tamaño de los reemplazos lottie",
+  "channels_messageRegionNotMatchesWithKnown": "sin coincidencias",
+  "chat_searchMessages": "Buscar mensajes",
+  "chat_searchMessages_placeholder": "Desde 3 caracteres, sin distinguir mayúsculas",
+  "chat_searchMessages_results": "Resultados de la búsqueda",
+  "chat_searchMessages_results_found": "{count} mensajes encontrados",
+  "chat_searchMessages_results_channel": "Canal {name}",
+  "chat_searchMessages_results_room": "Sala {name}",
+  "chat_searchMessages_results_contact": "Conversación con {name}",
+  "app_offline": "Sin conexión",
+  "app_offline_unableToMessage": "No puedes enviar mensajes ni realizar otras acciones sin conexión",
+  "app_offline_sharedMode": "Historial combinado",
+  "settings_infoDeviceName": "Nombre de la placa"
 }
