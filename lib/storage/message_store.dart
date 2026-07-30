@@ -64,8 +64,7 @@ class MessageStore {
     final prefs = PrefsManager.instance;
     final key = '$keyFor$contactKeyHex';
     var jsonString = prefs.getString(key);
-    if ((jsonString == null || jsonString.isEmpty) &&
-        includeLegacyUnscoped) {
+    if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
       jsonString = prefs.getString('$_keyPrefix$contactKeyHex');
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
@@ -113,8 +112,7 @@ class MessageStore {
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
     var jsonString = prefs.getString(key);
-    if ((jsonString == null || jsonString.isEmpty) &&
-        includeLegacyUnscoped) {
+    if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
       final legacyJsonString = prefs.getString(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         jsonString = legacyJsonString;

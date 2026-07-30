@@ -68,10 +68,7 @@ void main() {
   });
 
   test('known scopes do not treat an unscoped contact key as a node', () async {
-    await PrefsManager.instance.setString(
-      'messages_$contactKey',
-      '[]',
-    );
+    await PrefsManager.instance.setString('messages_$contactKey', '[]');
     await PrefsManager.instance.setString(
       'messages_1111111111$contactKey',
       '[]',

@@ -283,27 +283,25 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
 
       final descriptorsById = <String, _MessageSearchSourceDescriptor>{};
       for (final source in sources) {
-        descriptorsById.putIfAbsent(
-          source.workerSource.sourceId,
-          () => source,
-        );
+        descriptorsById.putIfAbsent(source.workerSource.sourceId, () => source);
       }
       final roomSenderNamesByPrefix = _roomSenderNamesByPrefix(connector);
 
       for (final batch in _workerBatches(descriptorsById.values)) {
         if (!mounted || generation != _generation) return;
-        final task = startCancellableCompute<
-          StoredMessageSearchRequest,
-          List<StoredMessageSearchHit>
-        >(
-          searchStoredMessageBatch,
-          StoredMessageSearchRequest(
-            normalizedQuery: normalizedQuery,
-            sources: batch.map((source) => source.workerSource).toList(),
-            roomSenderNamesByPrefix: roomSenderNamesByPrefix,
-          ),
-          debugLabel: 'message-search',
-        );
+        final task =
+            startCancellableCompute<
+              StoredMessageSearchRequest,
+              List<StoredMessageSearchHit>
+            >(
+              searchStoredMessageBatch,
+              StoredMessageSearchRequest(
+                normalizedQuery: normalizedQuery,
+                sources: batch.map((source) => source.workerSource).toList(),
+                roomSenderNamesByPrefix: roomSenderNamesByPrefix,
+              ),
+              debugLabel: 'message-search',
+            );
         _activeWorkerTask = task;
         final List<StoredMessageSearchHit> hits;
         try {
@@ -480,10 +478,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     return preferred;
   }
 
-  int _loadedChannelMessageCount(
-    MeshCoreConnector connector,
-    Channel channel,
-  ) {
+  int _loadedChannelMessageCount(MeshCoreConnector connector, Channel channel) {
     return connector.getLoadedChannelMessages(channel).length +
         connector.getPendingChannelMessages(channel.index).length;
   }
@@ -502,7 +497,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     }
 
     for (final channel in candidates) {
-      final hasLocalMessage = connector
+      final hasLocalMessage =
+          connector
               .getLoadedChannelMessages(channel)
               .any((message) => message.messageId == hit.messageId) ||
           connector
@@ -550,8 +546,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         ? connector.contacts
         : connector.contacts
               .where(
-                (contact) =>
-                    contact.publicKeyHex == contactFilter.publicKeyHex,
+                (contact) => contact.publicKeyHex == contactFilter.publicKeyHex,
               )
               .toList();
     if (contactCandidates.isEmpty && contactFilter != null) {
@@ -630,8 +625,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         : MessageSearchEntryType.contact;
     return _MessageSearchSourceDescriptor(
       workerSource: StoredMessageSearchSource(
-        sourceId:
-            'peer|$scope|${contact.publicKeyHex}|${resultType.name}',
+        sourceId: 'peer|$scope|${contact.publicKeyHex}|${resultType.name}',
         jsonString: jsonString,
         type: contact.type == advTypeRoom
             ? StoredMessageSearchType.room
@@ -692,16 +686,11 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     return merged;
   }
 
-  Map<String, String> _roomSenderNamesByPrefix(
-    MeshCoreConnector connector,
-  ) {
+  Map<String, String> _roomSenderNamesByPrefix(MeshCoreConnector connector) {
     final result = <String, String>{};
     for (final contact in connector.allContactsUnfiltered) {
       if (contact.publicKey.length < 4) continue;
-      result.putIfAbsent(
-        hexPrefix(contact.publicKey, 4),
-        () => contact.name,
-      );
+      result.putIfAbsent(hexPrefix(contact.publicKey, 4), () => contact.name);
     }
     return result;
   }
@@ -825,11 +814,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         itemCount: _results.length,
-                        separatorBuilder: (_, _) => const Divider(
-                          height: 1,
-                          indent: 4,
-                          endIndent: 4,
-                        ),
+                        separatorBuilder: (_, _) =>
+                            const Divider(height: 1, indent: 4, endIndent: 4),
                         itemBuilder: (context, index) {
                           final result = _results[index];
                           return ListTile(

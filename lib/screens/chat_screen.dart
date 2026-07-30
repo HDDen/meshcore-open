@@ -369,9 +369,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }) async {
     await Scrollable.ensureVisible(
       initialContext,
-      duration: animate
-          ? const Duration(milliseconds: 300)
-          : Duration.zero,
+      duration: animate ? const Duration(milliseconds: 300) : Duration.zero,
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
@@ -677,6 +675,13 @@ class _ChatScreenState extends State<ChatScreen> {
     if (ModalRoute.of(context)?.isCurrent != true) {
       return false;
     }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch());
+      return true;
+    }
     final isNavigationKeyDown = event is KeyDownEvent;
     final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;
     if (!isNavigationKeyDown && !isScrollKeyEvent) {
@@ -749,7 +754,9 @@ class _ChatScreenState extends State<ChatScreen> {
     // Reverse messages so newest appear at bottom with reverse: true
     final reversedMessages = messages.reversed.toList();
     final itemCount = reversedMessages.length + (_isLoadingOlder ? 1 : 0);
-    final liveIds = reversedMessages.map((message) => message.messageId).toSet();
+    final liveIds = reversedMessages
+        .map((message) => message.messageId)
+        .toSet();
     _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
     final keyedIndices = <int>{};
     final duplicateKeys = <int, ValueKey<String>>{};
@@ -783,103 +790,104 @@ class _ChatScreenState extends State<ChatScreen> {
           onPointerSignal: (_) => _cancelMessageScrollStabilization(),
           child: ChatZoomWrapper(
             child: ListView.builder(
-            reverse: true, // List grows from bottom up
-            controller: _scrollController,
-            padding: padding,
-            itemCount: itemCount + spacerItemCount,
-            itemBuilder: (context, index) {
-              if (hasBottomSpacer && index == 0) {
-                return SizedBox(height: bottomReservedExtent);
-              }
-              final adjustedIndex = index - spacerItemCount;
+              reverse: true, // List grows from bottom up
+              controller: _scrollController,
+              padding: padding,
+              itemCount: itemCount + spacerItemCount,
+              itemBuilder: (context, index) {
+                if (hasBottomSpacer && index == 0) {
+                  return SizedBox(height: bottomReservedExtent);
+                }
+                final adjustedIndex = index - spacerItemCount;
 
-              // Loading indicator now appears at end (bottom) of reversed list
-              if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                // Loading indicator now appears at end (bottom) of reversed list
+                if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ),
-                  ),
-                );
-              }
-              final messageIndex = adjustedIndex;
-              Contact contact = _resolveContact(connector);
-              final message = reversedMessages[messageIndex];
-              final Key messageKey = keyedIndices.contains(messageIndex)
-                  ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
-                  : duplicateKeys[messageIndex]!;
-              String fourByteHex = '';
-              if (contact.type == advTypeRoom) {
-                // Room-server messages carry the original author's 4-byte prefix
-                // separately from message.text; use it only for resolving the name.
-                contact =
-                    _resolveContactFrom4Bytes(
-                      connector,
-                      message.fourByteRoomContactKey.isEmpty
-                          ? Uint8List.fromList([0, 0, 0, 0])
-                          : message.fourByteRoomContactKey,
-                    ) ??
-                    contact;
-                fourByteHex = message.fourByteRoomContactKey
-                    .map((b) => b.toRadixString(16).padLeft(2, '0'))
-                    .join()
-                    .toUpperCase();
-              }
-
-              return Builder(
-                builder: (context) {
-                  final textScale = context
-                      .select<ChatTextScaleService, double>(
-                        (service) => service.scale,
-                      );
-                  final resolvedContact = _resolveContact(connector);
-                  final bubble = _MessageBubble(
-                    message: message,
-                    isHighlighted:
-                        _highlightedMessageId == message.messageId,
-                    senderName: resolvedContact.type == advTypeRoom
-                        ? "${contact.name} [$fourByteHex]"
-                        : contact.name,
-                    sourceId: widget.contact.publicKeyHex,
-                    isRoomChat: resolvedContact.type == advTypeRoom,
-                    mcoVariantOverridden: _mcoVariantOverridden.contains(
-                      message.messageId,
-                    ),
-                    textScale: textScale,
-                    onTap: () => _openMessagePath(message, contact),
-                    onLongPress: () =>
-                        unawaited(_showMessageActions(message, contact)),
-                    onRetryReaction: (msg, emoji) =>
-                        _sendReaction(msg, contact, emoji),
-                    onAddSharedContact: _addSharedContact,
-                    pendingSendAt: connector.pendingContactSendAt(
-                      message.messageId,
-                    ),
-                    pendingSendDelaySeconds: connector
-                        .pendingContactSendDelaySeconds(message.messageId),
-                    onCancelPendingSend: () =>
-                        _cancelPendingContactSend(connector, message.messageId),
                   );
-                  final isUnreadAnchor =
-                      _unreadDividerMessageId != null &&
-                      message.messageId == _unreadDividerMessageId;
-                  final child = isUnreadAnchor
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [const UnreadDivider(), bubble],
-                        )
-                      : bubble;
-                  if (identical(message, _pendingUnreadScrollTarget)) {
-                    return KeyedSubtree(key: _unreadScrollKey, child: child);
-                  }
-                  return KeyedSubtree(key: messageKey, child: child);
-                },
-              );
-            },
+                }
+                final messageIndex = adjustedIndex;
+                Contact contact = _resolveContact(connector);
+                final message = reversedMessages[messageIndex];
+                final Key messageKey = keyedIndices.contains(messageIndex)
+                    ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
+                    : duplicateKeys[messageIndex]!;
+                String fourByteHex = '';
+                if (contact.type == advTypeRoom) {
+                  // Room-server messages carry the original author's 4-byte prefix
+                  // separately from message.text; use it only for resolving the name.
+                  contact =
+                      _resolveContactFrom4Bytes(
+                        connector,
+                        message.fourByteRoomContactKey.isEmpty
+                            ? Uint8List.fromList([0, 0, 0, 0])
+                            : message.fourByteRoomContactKey,
+                      ) ??
+                      contact;
+                  fourByteHex = message.fourByteRoomContactKey
+                      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+                      .join()
+                      .toUpperCase();
+                }
+
+                return Builder(
+                  builder: (context) {
+                    final textScale = context
+                        .select<ChatTextScaleService, double>(
+                          (service) => service.scale,
+                        );
+                    final resolvedContact = _resolveContact(connector);
+                    final bubble = _MessageBubble(
+                      message: message,
+                      isHighlighted: _highlightedMessageId == message.messageId,
+                      senderName: resolvedContact.type == advTypeRoom
+                          ? "${contact.name} [$fourByteHex]"
+                          : contact.name,
+                      sourceId: widget.contact.publicKeyHex,
+                      isRoomChat: resolvedContact.type == advTypeRoom,
+                      mcoVariantOverridden: _mcoVariantOverridden.contains(
+                        message.messageId,
+                      ),
+                      textScale: textScale,
+                      onTap: () => _openMessagePath(message, contact),
+                      onLongPress: () =>
+                          unawaited(_showMessageActions(message, contact)),
+                      onRetryReaction: (msg, emoji) =>
+                          _sendReaction(msg, contact, emoji),
+                      onAddSharedContact: _addSharedContact,
+                      pendingSendAt: connector.pendingContactSendAt(
+                        message.messageId,
+                      ),
+                      pendingSendDelaySeconds: connector
+                          .pendingContactSendDelaySeconds(message.messageId),
+                      onCancelPendingSend: () => _cancelPendingContactSend(
+                        connector,
+                        message.messageId,
+                      ),
+                    );
+                    final isUnreadAnchor =
+                        _unreadDividerMessageId != null &&
+                        message.messageId == _unreadDividerMessageId;
+                    final child = isUnreadAnchor
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [const UnreadDivider(), bubble],
+                          )
+                        : bubble;
+                    if (identical(message, _pendingUnreadScrollTarget)) {
+                      return KeyedSubtree(key: _unreadScrollKey, child: child);
+                    }
+                    return KeyedSubtree(key: messageKey, child: child);
+                  },
+                );
+              },
             ),
           ),
         );

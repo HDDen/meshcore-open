@@ -147,11 +147,19 @@ class _ContactsScreenState extends State<ContactsScreen>
     if (!PlatformInfo.isDesktop ||
         widget.selectionMode ||
         widget.batchOperationsMode ||
-        event is! KeyDownEvent ||
-        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+        event is! KeyDownEvent) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch(context));
+      return true;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
     }
     if (_searchFocusNode.hasFocus) {

@@ -109,8 +109,7 @@ void _searchStoredMessages({
             text,
           ),
           timestampMs: timestampMs,
-          identityTimestampMs:
-              source.type == StoredMessageSearchType.channel
+          identityTimestampMs: source.type == StoredMessageSearchType.channel
               ? entry['timestamp'] as int? ?? timestampMs
               : timestampMs,
           senderName: senderName,
@@ -138,10 +137,7 @@ String _decodeStoredTextIfNeeded(String text) {
   return MessageTextCodec.tryDecodeKnownCompression(text) ?? text;
 }
 
-int? _timestampFor(
-  Map<String, dynamic> entry,
-  StoredMessageSearchType type,
-) {
+int? _timestampFor(Map<String, dynamic> entry, StoredMessageSearchType type) {
   if (type == StoredMessageSearchType.channel) {
     return entry['receivedAt'] as int? ?? entry['timestamp'] as int?;
   }

@@ -447,6 +447,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     return null;
   }
+
   // Keep in sync with ChatScreen._probeMessageContextAroundOffset.
   Future<BuildContext?> _probeMessageContextAroundOffset(
     String messageId,
@@ -588,9 +589,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }) async {
     await Scrollable.ensureVisible(
       initialContext,
-      duration: animate
-          ? const Duration(milliseconds: 300)
-          : Duration.zero,
+      duration: animate ? const Duration(milliseconds: 300) : Duration.zero,
       curve: Curves.easeInOut,
       alignment: 0.3,
     );
@@ -875,9 +874,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       if (occurrence == 0) {
                         keyedIndices.add(i);
                       } else {
-                        duplicateKeys[i] = ValueKey(
-                          '$messageId#$occurrence',
-                        );
+                        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
                       }
                     }
 
@@ -905,77 +902,78 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   _cancelMessageScrollStabilization(),
                               child: ChatZoomWrapper(
                                 child: ListView.builder(
-                                reverse: true, // List grows from bottom up
-                                controller: _scrollController,
-                                padding: padding,
-                                itemCount: itemCount + spacerItemCount,
-                                itemBuilder: (context, index) {
-                                  if (hasBottomSpacer && index == 0) {
-                                    return SizedBox(
-                                      height: bottomReservedExtent,
-                                    );
-                                  }
-                                  final adjustedIndex = index - spacerItemCount;
+                                  reverse: true, // List grows from bottom up
+                                  controller: _scrollController,
+                                  padding: padding,
+                                  itemCount: itemCount + spacerItemCount,
+                                  itemBuilder: (context, index) {
+                                    if (hasBottomSpacer && index == 0) {
+                                      return SizedBox(
+                                        height: bottomReservedExtent,
+                                      );
+                                    }
+                                    final adjustedIndex =
+                                        index - spacerItemCount;
 
-                                  // Loading indicator now appears at end (bottom) of reversed list
-                                  if (_isLoadingOlder &&
-                                      adjustedIndex == itemCount - 1) {
-                                    return const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                    // Loading indicator now appears at end (bottom) of reversed list
+                                    if (_isLoadingOlder &&
+                                        adjustedIndex == itemCount - 1) {
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                         ),
+                                      );
+                                    }
+                                    final messageIndex = adjustedIndex;
+                                    final message =
+                                        reversedMessages[messageIndex];
+                                    final Key messageKey =
+                                        keyedIndices.contains(messageIndex)
+                                        ? _messageKeys.putIfAbsent(
+                                            message.messageId,
+                                            GlobalKey.new,
+                                          )
+                                        : duplicateKeys[messageIndex]!;
+                                    final isUnreadAnchor =
+                                        _unreadDividerMessageId != null &&
+                                        message.messageId ==
+                                            _unreadDividerMessageId;
+                                    return Container(
+                                      key: messageKey,
+                                      child: Builder(
+                                        builder: (context) {
+                                          final textScale = context
+                                              .select<
+                                                ChatTextScaleService,
+                                                double
+                                              >((service) => service.scale);
+                                          final bubble = _buildMessageBubble(
+                                            message,
+                                            textScale,
+                                          );
+                                          if (isUnreadAnchor) {
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const UnreadDivider(),
+                                                bubble,
+                                              ],
+                                            );
+                                          }
+                                          return bubble;
+                                        },
                                       ),
                                     );
-                                  }
-                                  final messageIndex = adjustedIndex;
-                                  final message =
-                                      reversedMessages[messageIndex];
-                                  final Key messageKey =
-                                      keyedIndices.contains(messageIndex)
-                                      ? _messageKeys.putIfAbsent(
-                                          message.messageId,
-                                          GlobalKey.new,
-                                        )
-                                      : duplicateKeys[messageIndex]!;
-                                  final isUnreadAnchor =
-                                      _unreadDividerMessageId != null &&
-                                      message.messageId ==
-                                          _unreadDividerMessageId;
-                                  return Container(
-                                    key: messageKey,
-                                    child: Builder(
-                                      builder: (context) {
-                                        final textScale = context
-                                            .select<
-                                              ChatTextScaleService,
-                                              double
-                                            >((service) => service.scale);
-                                        final bubble = _buildMessageBubble(
-                                          message,
-                                          textScale,
-                                        );
-                                        if (isUnreadAnchor) {
-                                          return Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const UnreadDivider(),
-                                              bubble,
-                                            ],
-                                          );
-                                        }
-                                        return bubble;
-                                      },
-                                    ),
-                                  );
-                                },
+                                  },
                                 ),
                               ),
                             );
@@ -1001,6 +999,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
       return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch());
+      return true;
     }
     final isNavigationKeyDown = event is KeyDownEvent;
     final isScrollKeyEvent = event is KeyDownEvent || event is KeyRepeatEvent;

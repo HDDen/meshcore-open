@@ -222,12 +222,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
-    if (!PlatformInfo.isDesktop ||
-        event is! KeyDownEvent ||
-        event.logicalKey != LogicalKeyboardKey.arrowRight) {
+    if (!PlatformInfo.isDesktop || event is! KeyDownEvent) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    if ((PlatformInfo.isWindows || PlatformInfo.isLinux) &&
+        event.logicalKey == LogicalKeyboardKey.keyF &&
+        HardwareKeyboard.instance.isControlPressed) {
+      unawaited(_showMessageSearch(context));
+      return true;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowRight) {
       return false;
     }
     if (_searchFocusNode.hasFocus) {
