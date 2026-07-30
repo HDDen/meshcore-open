@@ -1175,7 +1175,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Voegt kanalen/contacten samen in een map';
 
   @override
   String get contacts_moreOptions => 'Meer opties';
@@ -4116,7 +4116,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Repeatbburen';
+  String get neighbors_repeatersNeighbors => 'Buren van de repeater';
 
   @override
   String get neighbors_noData => 'Geen gegevens van buren beschikbaar.';
@@ -5550,7 +5550,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Groottebeperking van lottie-vervangingen';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5628,7 +5628,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_messageRegionUnknown => 'onbekend';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'geen overeenkomst';
 
   @override
   String get channels_messageRegionEmpty => 'niet ingesteld';
@@ -5830,23 +5830,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Gefilterde selecteren';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Berichten zoeken';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Vanaf 3 tekens, hoofdletterongevoelig';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Zoekresultaten';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count berichten gevonden';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Kanaal $name';
   }
 
   @override
@@ -5856,6 +5856,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Gesprek met $name';
   }
+
+  @override
+  String get app_offline => 'Offline';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'In de offlinemodus kunt u geen berichten verzenden of andere handelingen uitvoeren';
+
+  @override
+  String get app_offline_sharedMode => 'Gecombineerde geschiedenis';
 }

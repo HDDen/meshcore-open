@@ -1188,7 +1188,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Обединява канали/контакти в папка';
 
   @override
   String get contacts_moreOptions => 'Повече възможности';
@@ -4137,7 +4137,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Повторители Съседи';
+  String get neighbors_repeatersNeighbors => 'Съседи на повторителя';
 
   @override
   String get neighbors_noData => 'Няма налични данни за съседи.';
@@ -5567,7 +5567,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Ограничаване на размера на lottie-замените';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5645,7 +5645,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_messageRegionUnknown => 'неизвестен';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'няма съвпадение';
 
   @override
   String get channels_messageRegionEmpty => 'незададен';
@@ -5848,32 +5848,42 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Избор на филтрираните';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Търсене на съобщения';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'От 3 символа, без значение на регистъра';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Резултати от търсенето';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return 'Намерени са $count съобщения';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Канал $name';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'Стая $name';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Разговор с $name';
   }
+
+  @override
+  String get app_offline => 'Офлайн';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'Не можете да изпращате съобщения или да извършвате други действия в офлайн режим';
+
+  @override
+  String get app_offline_sharedMode => 'Обединена история';
 }

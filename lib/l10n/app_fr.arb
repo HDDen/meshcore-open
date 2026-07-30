@@ -1617,7 +1617,7 @@
   "neighbors_receivedData": "Données des voisins reçues",
   "neighbors_requestTimedOut": "Les voisins demandent un délai.",
   "neighbors_errorLoading": "Erreur lors du chargement des voisins : {error}",
-  "neighbors_repeatersNeighbors": "Répéteurs Voisins",
+  "neighbors_repeatersNeighbors": "Voisins du répéteur",
   "neighbors_noData": "Aucune donnée concernant les voisins disponible.",
   "channels_createPrivateChannelDesc": "Sécurisé avec une clé secrète.",
   "channels_joinPrivateChannel": "Rejoindre un Canal Privé",
@@ -3167,5 +3167,18 @@
   "contacts_batchOperations_removeFail": "Impossible de supprimer les contacts : vérifiez à nouveau la liste",
   "contacts_batchOperations_commonSuccess": "L'opération a réussi",
   "contacts_batchOperations_commonFail": "Impossible de terminer l'opération",
-  "contacts_batchOperations_selectFiltered": "Sélectionner les éléments filtrés"
+  "contacts_batchOperations_selectFiltered": "Sélectionner les éléments filtrés",
+  "contacts_newGroupDescription": "Regroupe les canaux/contacts dans un dossier",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Limite de taille des remplacements lottie",
+  "channels_messageRegionNotMatchesWithKnown": "aucune correspondance",
+  "chat_searchMessages": "Recherche de messages",
+  "chat_searchMessages_placeholder": "À partir de 3 caractères, insensible à la casse",
+  "chat_searchMessages_results": "Résultats de la recherche",
+  "chat_searchMessages_results_found": "{count} messages trouvés",
+  "chat_searchMessages_results_channel": "Canal {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Conversation avec {name}",
+  "app_offline": "Hors ligne",
+  "app_offline_unableToMessage": "Vous ne pouvez pas envoyer de messages ni effectuer d'autres actions en mode hors ligne",
+  "app_offline_sharedMode": "Historique combiné"
 }

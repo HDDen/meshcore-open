@@ -1117,8 +1117,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_newGroup => '新しいグループ';
 
   @override
-  String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+  String get contacts_newGroupDescription => 'チャンネル/連絡先をフォルダーにまとめます';
 
   @override
   String get contacts_moreOptions => 'さらに多くの選択肢';
@@ -3918,7 +3917,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => '近隣のリピータ';
+  String get neighbors_repeatersNeighbors => 'リピータの隣接ノード';
 
   @override
   String get neighbors_noData => '近隣のデータは利用できません。';
@@ -5288,7 +5287,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'lottie 置き換えのサイズ制限';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5359,7 +5358,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_messageRegionUnknown => '不明';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => '一致なし';
 
   @override
   String get channels_messageRegionEmpty => '未設定';
@@ -5552,32 +5551,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => '絞り込み結果を選択';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'メッセージ検索';
 
   @override
-  String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+  String get chat_searchMessages_placeholder => '3文字以上、大文字小文字を区別しません';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => '検索結果';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count 件のメッセージが見つかりました';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'チャンネル $name';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'ルーム $name';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return '$name との会話';
   }
+
+  @override
+  String get app_offline => 'オフライン';
+
+  @override
+  String get app_offline_unableToMessage => 'オフラインモードではメッセージの送信やその他の操作はできません';
+
+  @override
+  String get app_offline_sharedMode => '統合履歴';
 }

@@ -1178,7 +1178,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Об\'єднує канали/контакти в папку';
 
   @override
   String get contacts_moreOptions => 'Більше можливостей';
@@ -4125,7 +4125,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Ретранслятор-сусіди';
+  String get neighbors_repeatersNeighbors => 'Сусіди ретранслятора';
 
   @override
   String get neighbors_noData => 'Дані про сусідів недоступні.';
@@ -5577,7 +5577,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Обмеження розмірів lottie-замін';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5655,7 +5655,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_messageRegionUnknown => 'невідомо';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'немає збігів';
 
   @override
   String get channels_messageRegionEmpty => 'відсутній';
@@ -5858,32 +5858,42 @@ class AppLocalizationsUk extends AppLocalizations {
       'Вибрати відфільтровані';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Пошук повідомлень';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Від 3 символів, без урахування регістру';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Результати пошуку';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return 'Знайдено $count повідомлень';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Канал $name';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'Кімната $name';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Діалог з $name';
   }
+
+  @override
+  String get app_offline => 'Офлайн';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'Ви не можете надсилати повідомлення або виконувати інші дії в офлайн-режимі';
+
+  @override
+  String get app_offline_sharedMode => 'Об\'єднана історія';
 }

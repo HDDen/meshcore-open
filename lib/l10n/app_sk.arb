@@ -1553,7 +1553,7 @@
   "neighbors_receivedData": "Obdielo dáta suseda",
   "repeater_neighbors": "Súsezný",
   "neighbors_errorLoading": "Chyba pri načítaní susedov: {error}",
-  "neighbors_repeatersNeighbors": "Opakovadlá Súsezná",
+  "neighbors_repeatersNeighbors": "Susedia opakovača",
   "neighbors_noData": "Nie je dostupná žiadna informácia o susedoch.",
   "channels_createPrivateChannel": "Vytvorte súkromný kanál",
   "channels_joinPrivateChannel": "Pripojiť sa k súkromnému kanálu",
@@ -3068,5 +3068,18 @@
   "contacts_batchOperations_removeFail": "Kontakty sa nepodarilo odstrániť — skontrolujte ich zoznam znova",
   "contacts_batchOperations_commonSuccess": "Operácia prebehla úspešne",
   "contacts_batchOperations_commonFail": "Operáciu sa nepodarilo dokončiť",
-  "contacts_batchOperations_selectFiltered": "Vybrať filtrované"
+  "contacts_batchOperations_selectFiltered": "Vybrať filtrované",
+  "contacts_newGroupDescription": "Spája kanály/kontakty do priečinka",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Obmedzenie veľkosti lottie-náhrad",
+  "channels_messageRegionNotMatchesWithKnown": "žiadna zhoda",
+  "chat_searchMessages": "Vyhľadávanie správ",
+  "chat_searchMessages_placeholder": "Od 3 znakov, bez rozlišovania veľkosti písmen",
+  "chat_searchMessages_results": "Výsledky vyhľadávania",
+  "chat_searchMessages_results_found": "Nájdených {count} správ",
+  "chat_searchMessages_results_channel": "Kanál {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Konverzácia s {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "V režime offline nemôžete odosielať správy ani vykonávať iné akcie",
+  "app_offline_sharedMode": "Zlúčená história"
 }

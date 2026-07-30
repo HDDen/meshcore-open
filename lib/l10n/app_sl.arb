@@ -1553,7 +1553,7 @@
   "neighbors_receivedData": "Prejeto podatke o sosedih",
   "neighbors_requestTimedOut": "Sosedi zahtevajo izklop po dogovoru.",
   "neighbors_errorLoading": "Napaka pri obnašanju sosedov: {error}",
-  "neighbors_repeatersNeighbors": "Ponovitve Sosedi",
+  "neighbors_repeatersNeighbors": "Sosedje ponavljalnika",
   "neighbors_noData": "Niso na voljo podatki o sosedih.",
   "channels_joinPrivateChannel": "Pridružite se zasebni skupini",
   "channels_createPrivateChannelDesc": "Varno zaklenjeno s skrivnim ključem.",
@@ -3068,5 +3068,18 @@
   "contacts_batchOperations_removeFail": "Stikov ni bilo mogoče odstraniti — znova preverite seznam",
   "contacts_batchOperations_commonSuccess": "Operacija je bila uspešna",
   "contacts_batchOperations_commonFail": "Operacije ni bilo mogoče dokončati",
-  "contacts_batchOperations_selectFiltered": "Izberi filtrirane"
+  "contacts_batchOperations_selectFiltered": "Izberi filtrirane",
+  "contacts_newGroupDescription": "Združi kanale/stike v mapo",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Omejitev velikosti nadomestkov lottie",
+  "channels_messageRegionNotMatchesWithKnown": "ni ujemanja",
+  "chat_searchMessages": "Iskanje sporočil",
+  "chat_searchMessages_placeholder": "Od 3 znakov, brez razlikovanja velikih in malih črk",
+  "chat_searchMessages_results": "Rezultati iskanja",
+  "chat_searchMessages_results_found": "Najdenih {count} sporočil",
+  "chat_searchMessages_results_channel": "Kanal {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Pogovor z {name}",
+  "app_offline": "Brez povezave",
+  "app_offline_unableToMessage": "V načinu brez povezave ne morete pošiljati sporočil ali izvajati drugih dejanj",
+  "app_offline_sharedMode": "Združena zgodovina"
 }

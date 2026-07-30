@@ -13,6 +13,7 @@ import '../utils/usb_port_labels.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'tcp_screen.dart';
@@ -27,6 +28,7 @@ class UsbScreen extends StatefulWidget {
 class _UsbScreenState extends State<UsbScreen> {
   final List<String> _ports = <String>[];
   bool _isLoadingPorts = true;
+  bool _isOpeningOfflineHistory = false;
   bool _navigatedToChannels = false;
   bool _didScheduleInitialLoad = false;
   Timer? _hotPlugTimer;
@@ -125,29 +127,41 @@ class _UsbScreenState extends State<UsbScreen> {
           },
         ),
       ),
-      bottomNavigationBar: _supportsHotPlug
-          ? null
-          : SafeArea(
-              top: false,
-              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FloatingActionButton.extended(
-                    onPressed: _isLoadingPorts ? null : _loadPorts,
-                    heroTag: 'usb_refresh_action',
-                    icon: _isLoadingPorts
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.usb),
-                    label: Text(context.l10n.scanner_scan),
-                  ),
-                ],
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: OfflineHistoryButton(
+                connector: _connector,
+                onLoadingChanged: (value) {
+                  if (mounted) {
+                    setState(() => _isOpeningOfflineHistory = value);
+                  }
+                },
               ),
             ),
+            if (!_supportsHotPlug) ...[
+              const SizedBox(width: 12),
+              FloatingActionButton.extended(
+                onPressed: _isLoadingPorts || _isOpeningOfflineHistory
+                    ? null
+                    : _loadPorts,
+                heroTag: 'usb_refresh_action',
+                icon: _isLoadingPorts
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.usb),
+                label: Text(context.l10n.scanner_scan),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -236,11 +250,12 @@ class _UsbScreenState extends State<UsbScreen> {
     }
 
     final isConnecting =
+        _isOpeningOfflineHistory ||
         connector.state == MeshCoreConnectionState.connecting &&
-        connector.activeTransport == MeshCoreTransportType.usb;
+            connector.activeTransport == MeshCoreTransportType.usb;
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 32),
+      padding: const EdgeInsets.only(bottom: 96),
       itemCount: _ports.length,
       itemBuilder: (context, index) {
         final port = _ports[index];
@@ -307,7 +322,7 @@ class _UsbScreenState extends State<UsbScreen> {
   }
 
   Future<void> _pollHotPlug() async {
-    if (_isLoadingPorts) return;
+    if (_isLoadingPorts || _connector.isOfflineMode) return;
     if (!mounted) return;
     // Don't poll while connecting or connected.
     if (_connector.state != MeshCoreConnectionState.disconnected) return;

@@ -3287,5 +3287,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "You cannot send messages or perform other actions while offline",
+  "app_offline_sharedMode": "Combined history"
 }

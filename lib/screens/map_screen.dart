@@ -34,6 +34,7 @@ import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/wardrive_coverage_helper.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -786,7 +787,7 @@ class _MapScreenState extends State<MapScreen>
               automaticallyImplyLeading: false,
               bottom: const SyncProgressAppBarBottom(),
               actions: [
-                if (!_isBuildingPathTrace)
+                if (!connector.isOfflineMode && !_isBuildingPathTrace)
                   IconButton(
                     icon: const Icon(Icons.radar),
                     onPressed: selfDisplayPosition == null
@@ -833,7 +834,8 @@ class _MapScreenState extends State<MapScreen>
                   ),
                 PopupMenuButton(
                   itemBuilder: (context) => [
-                    if (!_isBuildingPathTrace &&
+                    if (!connector.isOfflineMode &&
+                        !_isBuildingPathTrace &&
                         connector.selfLatitude != null &&
                         connector.selfLongitude != null)
                       PopupMenuItem(
@@ -891,14 +893,15 @@ class _MapScreenState extends State<MapScreen>
                           );
                         },
                       ),
-                    PopupMenuItem(
-                      child: PopupMenuRow(
-                        icon: Icons.delete_sweep_outlined,
-                        text: context.l10n.map_clearDiscoveredContactsCache,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.delete_sweep_outlined,
+                          text: context.l10n.map_clearDiscoveredContactsCache,
+                        ),
+                        onTap: () =>
+                            _clearDiscoveredContactsCache(context, connector),
                       ),
-                      onTap: () =>
-                          _clearDiscoveredContactsCache(context, connector),
-                    ),
                     PopupMenuItem(
                       child: PopupMenuRow(
                         icon: Icons.logout,
@@ -912,12 +915,15 @@ class _MapScreenState extends State<MapScreen>
                         icon: Icons.settings,
                         text: context.l10n.settings_title,
                       ),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      ),
+                      onTap: () {
+                        if (blockIfOffline(context, connector)) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                   icon: const Icon(Icons.more_vert),
@@ -1139,7 +1145,9 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
-                if (!_isBuildingPathTrace && wardrive.hasMapState)
+                if (!connector.isOfflineMode &&
+                    !_isBuildingPathTrace &&
+                    wardrive.hasMapState)
                   WardriveStatusPanel(
                     wardrive: wardrive,
                     panelKey: _wardrivePanelKey,
@@ -1237,33 +1245,35 @@ class _MapScreenState extends State<MapScreen>
           ),
           const SizedBox(height: 12),
         ],
-        FloatingActionButton.small(
-          heroTag: 'wardrive_toggle',
-          onPressed: () => _openWardrivePanel(wardrive),
-          tooltip: context.l10n.map_wardrive,
-          child: const Icon(Icons.directions_car_filled),
-        ),
-        const SizedBox(height: 12),
-        FloatingActionButton.small(
-          heroTag: 'wardrive_discovery',
-          onPressed: connector.isConnected
-              ? () => _sendWardriveDiscovery(wardrive)
-              : null,
-          tooltip: context.l10n.map_wardriveZeroHopDiscovery,
-          child:
-              wardrive.isSendingDiscovery ||
-                  wardrive.isAwaitingDiscoveryResponse
-              ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                )
-              : const Icon(Icons.radar),
-        ),
-        const SizedBox(height: 12),
+        if (!connector.isOfflineMode) ...[
+          FloatingActionButton.small(
+            heroTag: 'wardrive_toggle',
+            onPressed: () => _openWardrivePanel(wardrive),
+            tooltip: context.l10n.map_wardrive,
+            child: const Icon(Icons.directions_car_filled),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.small(
+            heroTag: 'wardrive_discovery',
+            onPressed: connector.isConnected
+                ? () => _sendWardriveDiscovery(wardrive)
+                : null,
+            tooltip: context.l10n.map_wardriveZeroHopDiscovery,
+            child:
+                wardrive.isSendingDiscovery ||
+                    wardrive.isAwaitingDiscoveryResponse
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  )
+                : const Icon(Icons.radar),
+          ),
+          const SizedBox(height: 12),
+        ],
         FloatingActionButton(
           onPressed: () => _showFilterDialog(context, settingsService),
           tooltip: context.l10n.map_filterNodes,
@@ -4339,7 +4349,7 @@ class _MapScreenState extends State<MapScreen>
       case advTypeChat:
         return [
           action(context.l10n.contacts_openChat, Icons.chat_bubble_outline, () {
-            if (!contact.isActive) {
+            if (!connector.isOfflineMode && !contact.isActive) {
               connector.importDiscoveredContact(contact);
             }
             final unread = connector.getUnreadCountForContactKey(
@@ -4359,6 +4369,7 @@ class _MapScreenState extends State<MapScreen>
         final coverageVisible = _isWardriveRepeaterCoverageVisible(contact);
         return [
           action(context.l10n.map_manageRepeater, Icons.cell_tower, () {
+            if (blockIfOffline(context, connector)) return;
             if (!contact.isActive) {
               connector.importDiscoveredContact(contact);
             }
@@ -4377,6 +4388,7 @@ class _MapScreenState extends State<MapScreen>
       case advTypeRoom:
         return [
           action(context.l10n.map_joinRoom, Icons.meeting_room, () {
+            if (blockIfOffline(context, connector)) return;
             if (!contact.isActive) {
               connector.importDiscoveredContact(contact);
             }
@@ -4600,7 +4612,7 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
-                if (!contact.isActive) {
+                if (!connector.isOfflineMode && !contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
                 final unread = connector.getUnreadCountForContactKey(
@@ -4626,6 +4638,7 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
+                if (blockIfOffline(context, connector)) return;
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
@@ -4662,6 +4675,7 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
+                if (blockIfOffline(context, connector)) return;
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
@@ -4975,6 +4989,7 @@ class _MapScreenState extends State<MapScreen>
     required String defaultLabel,
     required String flags,
   }) async {
+    if (blockIfOffline(context, connector)) return;
     if (!connector.isConnected) {
       showDismissibleSnackBar(
         context,

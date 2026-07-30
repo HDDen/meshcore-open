@@ -393,7 +393,11 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       if (source != null) result.add(source);
     }
 
-    if (!settings.sharedMessageHistoryMode.includesChannels) return result;
+    if ((connector.isOfflineMode && !connector.isOfflineSharedMode) ||
+        (!connector.isOfflineSharedMode &&
+            !settings.sharedMessageHistoryMode.includesChannels)) {
+      return result;
+    }
 
     final secondaryScopes = SharedMessageHistoryHelper.knownScopes().toList()
       ..sort();
@@ -572,7 +576,11 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       if (source != null) result.add(source);
     }
 
-    if (!settings.sharedMessageHistoryMode.includesContacts) return result;
+    if ((connector.isOfflineMode && !connector.isOfflineSharedMode) ||
+        (!connector.isOfflineSharedMode &&
+            !settings.sharedMessageHistoryMode.includesContacts)) {
+      return result;
+    }
 
     final secondaryScopes = SharedMessageHistoryHelper.knownScopes().toList()
       ..sort();
@@ -581,7 +589,9 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       if (scope == currentScope) continue;
       final store = MessageStore()..setPublicKeyHex = scope;
       for (final contact in contacts) {
-        if (contact.type == advTypeRoom) continue;
+        if (contact.type == advTypeRoom && !connector.isOfflineSharedMode) {
+          continue;
+        }
         final source = await _loadContactSource(
           store: store,
           contact: contact,

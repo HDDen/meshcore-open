@@ -1553,7 +1553,7 @@
   "neighbors_receivedData": "Получени данни за съседи",
   "neighbors_requestTimedOut": "Съседите поискат изтичане на време.",
   "neighbors_errorLoading": "Грешка при зареждане на съседи: {error}",
-  "neighbors_repeatersNeighbors": "Повторители Съседи",
+  "neighbors_repeatersNeighbors": "Съседи на повторителя",
   "neighbors_noData": "Няма налични данни за съседи.",
   "channels_createPrivateChannel": "Създай Частен Канал",
   "channels_joinPrivateChannel": "Присъедини се към Частен Канал",
@@ -3068,5 +3068,18 @@
   "contacts_batchOperations_removeFail": "Контактите не можаха да бъдат премахнати — проверете списъка отново",
   "contacts_batchOperations_commonSuccess": "Операцията е успешна",
   "contacts_batchOperations_commonFail": "Операцията не можа да бъде завършена",
-  "contacts_batchOperations_selectFiltered": "Избор на филтрираните"
+  "contacts_batchOperations_selectFiltered": "Избор на филтрираните",
+  "contacts_newGroupDescription": "Обединява канали/контакти в папка",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Ограничаване на размера на lottie-замените",
+  "channels_messageRegionNotMatchesWithKnown": "няма съвпадение",
+  "chat_searchMessages": "Търсене на съобщения",
+  "chat_searchMessages_placeholder": "От 3 символа, без значение на регистъра",
+  "chat_searchMessages_results": "Резултати от търсенето",
+  "chat_searchMessages_results_found": "Намерени са {count} съобщения",
+  "chat_searchMessages_results_channel": "Канал {name}",
+  "chat_searchMessages_results_room": "Стая {name}",
+  "chat_searchMessages_results_contact": "Разговор с {name}",
+  "app_offline": "Офлайн",
+  "app_offline_unableToMessage": "Не можете да изпращате съобщения или да извършвате други действия в офлайн режим",
+  "app_offline_sharedMode": "Обединена история"
 }

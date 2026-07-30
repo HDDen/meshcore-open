@@ -20,6 +20,7 @@ import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
@@ -157,7 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
         (_) => _showMcmpSigningFailed(),
       );
-      if (PlatformInfo.isDesktop) {
+      if (PlatformInfo.isDesktop && !connector.isOfflineMode) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
         _keyboardNavigationActive = true;
@@ -608,36 +609,40 @@ class _ChatScreenState extends State<ChatScreen> {
                         text: context.l10n.chat_searchMessages,
                       ),
                     ),
-                    PopupMenuItem(
-                      value: 'info',
-                      child: PopupMenuRow(
-                        icon: Icons.info_outline,
-                        text: context.l10n.contact_info,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'info',
+                        child: PopupMenuRow(
+                          icon: Icons.info_outline,
+                          text: context.l10n.contact_info,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'telemetry',
-                      child: PopupMenuRow(
-                        icon: Icons.bar_chart,
-                        text: context.l10n.contact_telemetry,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'telemetry',
+                        child: PopupMenuRow(
+                          icon: Icons.bar_chart,
+                          text: context.l10n.contact_telemetry,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'settings',
-                      child: PopupMenuRow(
-                        icon: Icons.settings,
-                        text: context.l10n.contact_settings,
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: PopupMenuRow(
+                          icon: Icons.settings,
+                          text: context.l10n.contact_settings,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: 'clearChat',
-                      child: PopupMenuRow(
-                        icon: Icons.delete,
-                        iconColor: Colors.red,
-                        text: context.l10n.contact_clearChat,
-                        textStyle: const TextStyle(color: Colors.red),
+                    if (!connector.isOfflineMode)
+                      PopupMenuItem(
+                        value: 'clearChat',
+                        child: PopupMenuRow(
+                          icon: Icons.delete,
+                          iconColor: Colors.red,
+                          text: context.l10n.contact_clearChat,
+                          textStyle: const TextStyle(color: Colors.red),
+                        ),
                       ),
-                    ),
                   ],
                 );
               },
@@ -944,6 +949,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ChatComposerSideAction(
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
+                offlineMode: connector.isOfflineMode,
                 onSendSelfContact: () => _insertSelfContact(connector),
                 onSendMyLocation: () => unawaited(_insertMyLocation(connector)),
                 onSendContact: () => _pickAndInsertContact(),
@@ -1012,6 +1018,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     maxBytes: maxBytes,
                     controller: _textController,
                     focusNode: _textFieldFocusNode,
+                    enabled: !connector.isOfflineMode,
                     maxHeight: maxInputHeight,
                     hintText: context.l10n.chat_typeMessage,
                     onSubmitted: (_) => _sendMessage(connector),
@@ -1067,11 +1074,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   _resolveContact(connector).name,
                 ),
                 child: GestureDetector(
-                  onLongPress: () => _showQuickAnswersPicker(connector),
-                  onSecondaryTap: () => _showQuickAnswersPicker(connector),
+                  onLongPress: connector.isOfflineMode
+                      ? null
+                      : () => _showQuickAnswersPicker(connector),
+                  onSecondaryTap: connector.isOfflineMode
+                      ? null
+                      : () => _showQuickAnswersPicker(connector),
                   child: IconButton.filled(
                     icon: const Icon(Icons.send),
-                    onPressed: () => _sendMessage(connector),
+                    onPressed: connector.isOfflineMode
+                        ? null
+                        : () => _sendMessage(connector),
                   ),
                 ),
               ),
@@ -1295,6 +1308,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
+    if (blockIfOffline(context, connector)) return;
 
     final now = DateTime.now();
     if (_lastTextSendAt != null &&
@@ -2249,7 +2263,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _deleteMessage(Message message) async {
-    await context.read<MeshCoreConnector>().deleteMessage(message);
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
+    await connector.deleteMessage(message);
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
@@ -2259,6 +2275,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -2316,6 +2333,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _retryMessage(Message message) {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    if (blockIfOffline(context, connector)) return;
     connector.cancelPendingContactSend(message.messageId);
     // Retry using the contact's current path override setting
     connector.sendMessage(_resolveContact(connector), message.text);
@@ -2339,6 +2357,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendReaction(Message message, Contact senderContact, String emoji) {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
     if (emojiIndex == null) return; // Unknown emoji, skip
     final timestampSecs = message.timestamp.millisecondsSinceEpoch ~/ 1000;

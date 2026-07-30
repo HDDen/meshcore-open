@@ -1171,7 +1171,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Spája kanály/kontakty do priečinka';
 
   @override
   String get contacts_moreOptions => 'Ďalšie možnosti';
@@ -4110,7 +4110,7 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Opakovadlá Súsezná';
+  String get neighbors_repeatersNeighbors => 'Susedia opakovača';
 
   @override
   String get neighbors_noData =>
@@ -5536,7 +5536,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Obmedzenie veľkosti lottie-náhrad';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5613,7 +5613,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_messageRegionUnknown => 'neznámy';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'žiadna zhoda';
 
   @override
   String get channels_messageRegionEmpty => 'nenastavený';
@@ -5815,23 +5815,23 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Vybrať filtrované';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Vyhľadávanie správ';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Od 3 znakov, bez rozlišovania veľkosti písmen';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Výsledky vyhľadávania';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return 'Nájdených $count správ';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Kanál $name';
   }
 
   @override
@@ -5841,6 +5841,16 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Konverzácia s $name';
   }
+
+  @override
+  String get app_offline => 'Offline';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'V režime offline nemôžete odosielať správy ani vykonávať iné akcie';
+
+  @override
+  String get app_offline_sharedMode => 'Zlúčená história';
 }

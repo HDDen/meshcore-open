@@ -61,6 +61,9 @@ class ByteCountedTextField extends StatelessWidget {
   /// Optional maximum height for the input area before it becomes scrollable.
   final double? maxHeight;
 
+  /// Whether the text field accepts input.
+  final bool enabled;
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -78,6 +81,7 @@ class ByteCountedTextField extends StatelessWidget {
     this.encoder,
     this.minLines = 1,
     this.maxHeight,
+    this.enabled = true,
   });
 
   bool get _usesDesktopEnterHandling {
@@ -140,7 +144,8 @@ class ByteCountedTextField extends StatelessWidget {
                 maxHeight: maxHeight ?? double.infinity,
               ),
               child: CallbackShortcuts(
-                bindings: _usesDesktopEnterHandling && onSubmitted != null
+                bindings:
+                    enabled && _usesDesktopEnterHandling && onSubmitted != null
                     ? {
                         const SingleActivator(LogicalKeyboardKey.enter): () =>
                             onSubmitted!(controller.text),
@@ -168,6 +173,7 @@ class ByteCountedTextField extends StatelessWidget {
                   textAlignVertical: TextAlignVertical.top,
                   controller: controller,
                   focusNode: focusNode,
+                  enabled: enabled,
                   inputFormatters: [
                     ...extraFormatters,
                     Utf8LengthLimitingTextInputFormatter(

@@ -1181,7 +1181,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Agrupa canales/contactos en una carpeta';
 
   @override
   String get contacts_moreOptions => 'Más opciones';
@@ -4128,7 +4128,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Repetidores Vecinos';
+  String get neighbors_repeatersNeighbors => 'Vecinos del repetidor';
 
   @override
   String get neighbors_noData => 'No hay datos de vecinos disponibles.';
@@ -5567,7 +5567,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Límite de tamaño de los reemplazos lottie';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5645,7 +5645,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get channels_messageRegionUnknown => 'desconocida';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'sin coincidencias';
 
   @override
   String get channels_messageRegionEmpty => 'sin asignar';
@@ -5850,32 +5850,42 @@ class AppLocalizationsEs extends AppLocalizations {
       'Seleccionar los filtrados';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Buscar mensajes';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Desde 3 caracteres, sin distinguir mayúsculas';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Resultados de la búsqueda';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count mensajes encontrados';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Canal $name';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'Sala $name';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Conversación con $name';
   }
+
+  @override
+  String get app_offline => 'Sin conexión';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'No puedes enviar mensajes ni realizar otras acciones sin conexión';
+
+  @override
+  String get app_offline_sharedMode => 'Historial combinado';
 }

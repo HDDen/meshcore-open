@@ -5776,4 +5776,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String chat_searchMessages_results_contact(String name) {
     return 'Chat with $name';
   }
+
+  @override
+  String get app_offline => 'Offline';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'You cannot send messages or perform other actions while offline';
+
+  @override
+  String get app_offline_sharedMode => 'Combined history';
 }

@@ -1177,7 +1177,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Csatornákat/névjegyeket egy mappába von össze';
 
   @override
   String get contacts_moreOptions => 'További lehetőségek';
@@ -4127,7 +4127,7 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Ismétlők Szomszédok';
+  String get neighbors_repeatersNeighbors => 'A repeater szomszédai';
 
   @override
   String get neighbors_noData =>
@@ -5563,7 +5563,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'A lottie-helyettesítők méretének korlátozása';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5640,7 +5640,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_messageRegionUnknown => 'ismeretlen';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'nincs egyezés';
 
   @override
   String get channels_messageRegionEmpty => 'nincs beállítva';
@@ -5843,32 +5843,42 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Szűrtek kijelölése';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Üzenetek keresése';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Legalább 3 karakter, kis- és nagybetű nem számít';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Keresési eredmények';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count üzenet található';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return '$name csatorna';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return '$name szoba';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Beszélgetés vele: $name';
   }
+
+  @override
+  String get app_offline => 'Offline';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'Offline módban nem küldhet üzenetet és nem végezhet más műveletet';
+
+  @override
+  String get app_offline_sharedMode => 'Egyesített előzmények';
 }

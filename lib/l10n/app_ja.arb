@@ -1678,7 +1678,7 @@
       }
     }
   },
-  "neighbors_repeatersNeighbors": "近隣のリピータ",
+  "neighbors_repeatersNeighbors": "リピータの隣接ノード",
   "neighbors_noData": "近隣のデータは利用できません。",
   "neighbors_unknownContact": "不明な {pubkey}",
   "@neighbors_unknownContact": {
@@ -3173,5 +3173,18 @@
   "contacts_batchOperations_removeFail": "連絡先を削除できませんでした — 一覧をもう一度確認してください",
   "contacts_batchOperations_commonSuccess": "操作は正常に完了しました",
   "contacts_batchOperations_commonFail": "操作を完了できませんでした",
-  "contacts_batchOperations_selectFiltered": "絞り込み結果を選択"
+  "contacts_batchOperations_selectFiltered": "絞り込み結果を選択",
+  "contacts_newGroupDescription": "チャンネル/連絡先をフォルダーにまとめます",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "lottie 置き換えのサイズ制限",
+  "channels_messageRegionNotMatchesWithKnown": "一致なし",
+  "chat_searchMessages": "メッセージ検索",
+  "chat_searchMessages_placeholder": "3文字以上、大文字小文字を区別しません",
+  "chat_searchMessages_results": "検索結果",
+  "chat_searchMessages_results_found": "{count} 件のメッセージが見つかりました",
+  "chat_searchMessages_results_channel": "チャンネル {name}",
+  "chat_searchMessages_results_room": "ルーム {name}",
+  "chat_searchMessages_results_contact": "{name} との会話",
+  "app_offline": "オフライン",
+  "app_offline_unableToMessage": "オフラインモードではメッセージの送信やその他の操作はできません",
+  "app_offline_sharedMode": "統合履歴"
 }

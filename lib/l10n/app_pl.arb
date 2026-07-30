@@ -1563,7 +1563,7 @@
   "neighbors_receivedData": "Otrzymano dane sąsiedztwa",
   "neighbors_requestTimedOut": "Sąsiedzi proszą o wyłączenie timingu.",
   "neighbors_errorLoading": "Błąd podczas ładowania sąsiadów: {error}",
-  "neighbors_repeatersNeighbors": "Sąsiedzi przekaźników",
+  "neighbors_repeatersNeighbors": "Sąsiedzi przekaźnika",
   "neighbors_noData": "Brak danych dotyczących sąsiadów.",
   "channels_joinPrivateChannelDesc": "Ręcznie wprowadź klucz tajny.",
   "channels_createPrivateChannel": "Utwórz Prywatny Kanał",
@@ -3106,5 +3106,18 @@
   "contacts_batchOperations_removeFail": "Nie udało się usunąć kontaktów — sprawdź ich listę ponownie",
   "contacts_batchOperations_commonSuccess": "Operacja zakończona powodzeniem",
   "contacts_batchOperations_commonFail": "Nie udało się zakończyć operacji",
-  "contacts_batchOperations_selectFiltered": "Wybierz przefiltrowane"
+  "contacts_batchOperations_selectFiltered": "Wybierz przefiltrowane",
+  "contacts_newGroupDescription": "Łączy kanały/kontakty w folder",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Ograniczenie rozmiaru zamienników lottie",
+  "channels_messageRegionNotMatchesWithKnown": "brak dopasowania",
+  "chat_searchMessages": "Wyszukiwanie wiadomości",
+  "chat_searchMessages_placeholder": "Od 3 znaków, bez rozróżniania wielkości liter",
+  "chat_searchMessages_results": "Wyniki wyszukiwania",
+  "chat_searchMessages_results_found": "Znaleziono {count} wiadomości",
+  "chat_searchMessages_results_channel": "Kanał {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Rozmowa z {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "W trybie offline nie możesz wysyłać wiadomości ani wykonywać innych działań",
+  "app_offline_sharedMode": "Połączona historia"
 }

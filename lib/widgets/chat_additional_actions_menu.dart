@@ -20,6 +20,7 @@ class ChatComposerSideAction extends StatelessWidget {
 
 class ChatAdditionalActionsButton extends StatelessWidget {
   final bool canvasActive;
+  final bool offlineMode;
   final VoidCallback onSendSelfContact;
   final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
@@ -31,6 +32,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   const ChatAdditionalActionsButton({
     super.key,
     required this.canvasActive,
+    this.offlineMode = false,
     required this.onSendSelfContact,
     required this.onSendMyLocation,
     required this.onSendContact,
@@ -55,6 +57,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
       isScrollControlled: true,
       builder: (sheetContext) => ChatAdditionalActionsMenu(
         canvasActive: canvasActive,
+        offlineMode: offlineMode,
         onSendSelfContact: () {
           Navigator.pop(sheetContext);
           onSendSelfContact();
@@ -90,6 +93,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
 
 class ChatAdditionalActionsMenu extends StatelessWidget {
   final bool canvasActive;
+  final bool offlineMode;
   final VoidCallback onSendSelfContact;
   final VoidCallback onSendMyLocation;
   final VoidCallback onSendContact;
@@ -101,6 +105,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
   const ChatAdditionalActionsMenu({
     super.key,
     required this.canvasActive,
+    this.offlineMode = false,
     required this.onSendSelfContact,
     required this.onSendMyLocation,
     required this.onSendContact,
@@ -123,31 +128,33 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  leading: const Icon(Icons.badge_outlined),
-                  title: Text(context.l10n.chat_sendSelfContact),
-                  onTap: onSendSelfContact,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.contact_page_outlined),
-                  title: Text(context.l10n.chat_sendContact),
-                  onTap: onSendContact,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.my_location),
-                  title: Text(context.l10n.chat_myLocation),
-                  onTap: onSendMyLocation,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.add_location_alt_outlined),
-                  title: Text(context.l10n.chat_locationFromMap),
-                  onTap: onPickLocationFromMap,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.gif_box_outlined),
-                  title: Text(context.l10n.chat_sendGif),
-                  onTap: onSendGif,
-                ),
+                if (!offlineMode) ...[
+                  ListTile(
+                    leading: const Icon(Icons.badge_outlined),
+                    title: Text(context.l10n.chat_sendSelfContact),
+                    onTap: onSendSelfContact,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.contact_page_outlined),
+                    title: Text(context.l10n.chat_sendContact),
+                    onTap: onSendContact,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.my_location),
+                    title: Text(context.l10n.chat_myLocation),
+                    onTap: onSendMyLocation,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.add_location_alt_outlined),
+                    title: Text(context.l10n.chat_locationFromMap),
+                    onTap: onPickLocationFromMap,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.gif_box_outlined),
+                    title: Text(context.l10n.chat_sendGif),
+                    onTap: onSendGif,
+                  ),
+                ],
                 if (canvasActive) ...[
                   ListTile(
                     leading: const Icon(Icons.brush_outlined),

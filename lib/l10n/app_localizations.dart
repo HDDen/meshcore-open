@@ -10035,6 +10035,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat with {name}'**
   String chat_searchMessages_results_contact(String name);
+
+  /// No description provided for @app_offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get app_offline;
+
+  /// No description provided for @app_offline_unableToMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot send messages or perform other actions while offline'**
+  String get app_offline_unableToMessage;
+
+  /// No description provided for @app_offline_sharedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined history'**
+  String get app_offline_sharedMode;
 }
 
 class _AppLocalizationsDelegate

@@ -1518,7 +1518,7 @@
   "neighbors_receivedData": "Ontvangen Buurdata",
   "neighbors_requestTimedOut": "Buren vragen om tijdelijk uitgeschakeld.",
   "neighbors_errorLoading": "Fout bij het laden van buren: {error}",
-  "neighbors_repeatersNeighbors": "Repeatbburen",
+  "neighbors_repeatersNeighbors": "Buren van de repeater",
   "neighbors_noData": "Geen gegevens van buren beschikbaar.",
   "channels_createPrivateChannelDesc": "Beveiligd met een geheime sleutel.",
   "channels_createPrivateChannel": "PrivéKanaal Aanmaken",
@@ -2850,5 +2850,18 @@
   "contacts_batchOperations_removeFail": "De contacten konden niet worden verwijderd: controleer de lijst opnieuw",
   "contacts_batchOperations_commonSuccess": "De bewerking is voltooid",
   "contacts_batchOperations_commonFail": "De bewerking kon niet worden voltooid",
-  "contacts_batchOperations_selectFiltered": "Gefilterde selecteren"
+  "contacts_batchOperations_selectFiltered": "Gefilterde selecteren",
+  "contacts_newGroupDescription": "Voegt kanalen/contacten samen in een map",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Groottebeperking van lottie-vervangingen",
+  "channels_messageRegionNotMatchesWithKnown": "geen overeenkomst",
+  "chat_searchMessages": "Berichten zoeken",
+  "chat_searchMessages_placeholder": "Vanaf 3 tekens, hoofdletterongevoelig",
+  "chat_searchMessages_results": "Zoekresultaten",
+  "chat_searchMessages_results_found": "{count} berichten gevonden",
+  "chat_searchMessages_results_channel": "Kanaal {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Gesprek met {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "In de offlinemodus kunt u geen berichten verzenden of andere handelingen uitvoeren",
+  "app_offline_sharedMode": "Gecombineerde geschiedenis"
 }

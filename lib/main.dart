@@ -271,6 +271,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
 
   void _handleConnectionStateChanged() {
     final connector = widget.connector;
+    if (connector.isOfflineMode) {
+      _scannerNavigationScheduled = false;
+      return;
+    }
     if (connector.wasManuallyDisconnected) {
       _hadReadyConnection = false;
       _recoveringConnection = false;

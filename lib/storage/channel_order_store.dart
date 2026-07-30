@@ -20,14 +20,14 @@ class ChannelOrderStore {
     await prefs.setString(keyFor, jsonEncode(order));
   }
 
-  Future<List<int>> loadChannelOrder() async {
+  Future<List<int>> loadChannelOrder({bool allowLegacyMigration = true}) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load channel order.');
       return [];
     }
     final prefs = PrefsManager.instance;
     String? jsonString = prefs.getString(keyFor);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) && allowLegacyMigration) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(_keyPrefix);
       prefs.remove(_keyPrefix);

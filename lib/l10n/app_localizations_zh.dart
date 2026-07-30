@@ -1101,8 +1101,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_newGroup => '新建群聊';
 
   @override
-  String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+  String get contacts_newGroupDescription => '将频道/联系人合并到文件夹中';
 
   @override
   String get contacts_moreOptions => '更多选择';
@@ -5173,7 +5172,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'lottie 替换图的尺寸限制';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5243,7 +5242,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_messageRegionUnknown => '未知';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => '无匹配';
 
   @override
   String get channels_messageRegionEmpty => '未设置';
@@ -5431,23 +5430,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => '选择筛选结果';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => '搜索消息';
 
   @override
-  String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+  String get chat_searchMessages_placeholder => '从 3 个字符起，不区分大小写';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => '搜索结果';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '找到 $count 条消息';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return '频道 $name';
   }
 
   @override
@@ -5457,6 +5455,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return '与 $name 的对话';
   }
+
+  @override
+  String get app_offline => '离线';
+
+  @override
+  String get app_offline_unableToMessage => '离线模式下无法发送消息或执行其他操作';
+
+  @override
+  String get app_offline_sharedMode => '合并历史';
 }

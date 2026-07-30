@@ -42,6 +42,7 @@ import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
 import '../helpers/gif_helper.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'chat_screen.dart';
@@ -374,13 +375,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ),
                   onTap: () => _disconnect(context),
                 ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.groups,
-                    text: menuContext.l10n.community_manageCommunities,
+                if (!connector.isOfflineMode)
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.groups,
+                      text: menuContext.l10n.community_manageCommunities,
+                    ),
+                    onTap: () => _showManageCommunitiesDialog(context),
                   ),
-                  onTap: () => _showManageCommunitiesDialog(context),
-                ),
                 PopupMenuItem(
                   child: PopupMenuRow(
                     icon: Icons.search,
@@ -393,12 +395,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     icon: Icons.settings,
                     text: menuContext.l10n.settings_title,
                   ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsScreen(),
-                    ),
-                  ),
+                  onTap: () {
+                    if (blockIfOffline(context, connector)) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
               icon: const Icon(Icons.more_vert),
@@ -407,6 +412,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
         body: RefreshIndicator(
           onRefresh: () async {
+            if (connector.isOfflineMode) return;
             await context.read<MeshCoreConnector>().getChannels(force: true);
           },
           child: () {
@@ -441,7 +447,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       icon: Icons.tag,
                       title: context.l10n.channels_noChannelsConfigured,
                       action: FilledButton.icon(
-                        onPressed: () => _addPublicChannel(context, connector),
+                        onPressed: connector.isOfflineMode
+                            ? null
+                            : () => _addPublicChannel(context, connector),
                         icon: const Icon(Icons.public),
                         label: Text(context.l10n.channels_addPublicChannel),
                       ),
@@ -532,11 +540,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             );
           }(),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showAddChannelDialog(context),
-          tooltip: context.l10n.channels_addChannel,
-          child: const Icon(Icons.add),
-        ),
+        floatingActionButton: connector.isOfflineMode
+            ? null
+            : FloatingActionButton(
+                onPressed: () => _showAddChannelDialog(context),
+                tooltip: context.l10n.channels_addChannel,
+                child: const Icon(Icons.add),
+              ),
         bottomNavigationBar: SafeArea(
           top: false,
           child: QuickSwitchBar(
@@ -661,14 +671,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           );
         },
-        onLongPress: () => _showChannelActions(
-          this.context,
-          connector,
-          channelMessageStore,
-          channel,
-        ),
+        onLongPress: connector.isOfflineMode
+            ? null
+            : () => _showChannelActions(
+                this.context,
+                connector,
+                channelMessageStore,
+                channel,
+              ),
         child: GestureDetector(
-          onSecondaryTapUp: PlatformInfo.isDesktop
+          onSecondaryTapUp: PlatformInfo.isDesktop && !connector.isOfflineMode
               ? (_) => _showChannelActions(
                   this.context,
                   connector,
@@ -1188,7 +1200,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         .read<AppSettingsService>()
         .settings
         .roomServerDisableRoomAndContactsSorting;
-    if (disableRoomAndContactsSorting) {
+    if (disableRoomAndContactsSorting && !connector.isOfflineMode) {
       return _buildLegacyChannelsList(
         context,
         connector,
@@ -1213,6 +1225,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             roomServerContacts,
           ).isNotEmpty;
     }).toList();
+    if (connector.isOfflineMode) {
+      visibleGroups.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+    }
     final ungroupedItems = [
       for (final channel in filteredChannels)
         if (!groupedItemNames.contains(_groupKeyForChannel(channel)))
@@ -1221,12 +1238,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         if (!groupedItemNames.contains(_groupKeyForRoom(room)))
           _ChannelScreenItem.room(room),
     ];
-    _sortChannelScreenItems(
-      ungroupedItems,
-      connector,
-      viewState.channelsSortOption,
-      sortUnreadFirst: sortUnreadFirst,
-    );
+    if (connector.isOfflineMode) {
+      ungroupedItems.sort(_compareOfflineChannelItems);
+    } else {
+      _sortChannelScreenItems(
+        ungroupedItems,
+        connector,
+        viewState.channelsSortOption,
+        sortUnreadFirst: sortUnreadFirst,
+      );
+    }
     final hasVisibleContent =
         visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty;
 
@@ -1254,6 +1275,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     final canReorder =
+        !connector.isOfflineMode &&
         viewState.channelsSortOption == ChannelSortOption.manual &&
         viewState.channelsSearchText.isEmpty;
     if (canReorder) {
@@ -1434,6 +1456,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     final canReorder =
+        !connector.isOfflineMode &&
         viewState.channelsSortOption == ChannelSortOption.manual &&
         viewState.channelsSearchText.isEmpty;
     if (canReorder) {
@@ -1697,7 +1720,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       roomServerContacts,
     );
     final items = List<_ChannelScreenItem>.from(baseItems);
-    if (!group.allowOrderingInGroup) {
+    if (connector.isOfflineMode) {
+      items.sort(
+        (a, b) =>
+            _offlineItemNameForSort(a).compareTo(_offlineItemNameForSort(b)),
+      );
+    } else if (!group.allowOrderingInGroup) {
       _sortChannelScreenItems(
         items,
         connector,
@@ -1705,7 +1733,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         sortUnreadFirst: false,
       );
     }
-    if (sortUnreadFirst) {
+    if (sortUnreadFirst && !connector.isOfflineMode) {
       _sortChannelScreenItems(
         items,
         connector,
@@ -1725,7 +1753,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
 
     return GestureDetector(
-      onSecondaryTapUp: PlatformInfo.isDesktop
+      onSecondaryTapUp: PlatformInfo.isDesktop && !connector.isOfflineMode
           ? (_) => _showChannelGroupActions(context, group)
           : null,
       child: Card(
@@ -1781,7 +1809,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 });
                 unawaited(_saveExpandedChannelGroups());
               },
-              onLongPress: () => _showChannelGroupActions(context, group),
+              onLongPress: connector.isOfflineMode
+                  ? null
+                  : () => _showChannelGroupActions(context, group),
             ),
             AnimatedCrossFade(
               // Keep the collapsed child full-width so cross-fade sizing does
@@ -2425,6 +2455,26 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return room.name.trim().toLowerCase();
   }
 
+  int _compareOfflineChannelItems(_ChannelScreenItem a, _ChannelScreenItem b) {
+    final aIsPublic = a.channel?.isPublicChannel ?? false;
+    final bIsPublic = b.channel?.isPublicChannel ?? false;
+    if (aIsPublic != bIsPublic) return aIsPublic ? -1 : 1;
+    return _offlineItemNameForSort(a).compareTo(_offlineItemNameForSort(b));
+  }
+
+  String _offlineItemNameForSort(_ChannelScreenItem item) {
+    final channel = item.channel;
+    if (channel != null) return _offlineChannelNameForSort(channel);
+    return item.room!.name.trim().toLowerCase();
+  }
+
+  String _offlineChannelNameForSort(Channel channel) {
+    if (channel.name.isEmpty) {
+      return 'channel ${channel.index}';
+    }
+    return channel.name.trim().toLowerCase();
+  }
+
   List<_ChannelScreenItem> _restoreUnreadItemPositions(
     List<_ChannelScreenItem> baseItems,
     List<_ChannelScreenItem> displayItems,
@@ -2561,6 +2611,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         viewState.channelsSearchText.toLowerCase(),
       );
     }).toList();
+
+    if (connector.isOfflineMode) {
+      filtered.sort((a, b) {
+        if (a.isPublicChannel != b.isPublicChannel) {
+          return a.isPublicChannel ? -1 : 1;
+        }
+        return _offlineChannelNameForSort(
+          a,
+        ).compareTo(_offlineChannelNameForSort(b));
+      });
+      return filtered;
+    }
 
     switch (viewState.channelsSortOption) {
       case ChannelSortOption.manual:

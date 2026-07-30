@@ -5875,4 +5875,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String chat_searchMessages_results_contact(String name) {
     return 'Диалог с $name';
   }
+
+  @override
+  String get app_offline => 'Оффлайн';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме';
+
+  @override
+  String get app_offline_sharedMode => 'Объединённая история';
 }

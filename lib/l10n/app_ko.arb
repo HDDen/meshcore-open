@@ -1618,7 +1618,7 @@
       }
     }
   },
-  "neighbors_repeatersNeighbors": "반복기, 이웃",
+  "neighbors_repeatersNeighbors": "리피터의 이웃 노드",
   "neighbors_noData": "이웃 정보는 없습니다.",
   "neighbors_unknownContact": "알 수 없는 {pubkey}",
   "@neighbors_unknownContact": {
@@ -3205,5 +3205,18 @@
   "contacts_batchOperations_removeFail": "연락처를 삭제하지 못했습니다 — 목록을 다시 확인하세요",
   "contacts_batchOperations_commonSuccess": "작업이 완료되었습니다",
   "contacts_batchOperations_commonFail": "작업을 완료하지 못했습니다",
-  "contacts_batchOperations_selectFiltered": "필터된 항목 선택"
+  "contacts_batchOperations_selectFiltered": "필터된 항목 선택",
+  "contacts_newGroupDescription": "채널/연락처를 폴더로 묶습니다",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "lottie 대체 이미지 크기 제한",
+  "channels_messageRegionNotMatchesWithKnown": "일치 없음",
+  "chat_searchMessages": "메시지 검색",
+  "chat_searchMessages_placeholder": "3자 이상, 대소문자 구분 없음",
+  "chat_searchMessages_results": "검색 결과",
+  "chat_searchMessages_results_found": "{count}개의 메시지를 찾았습니다",
+  "chat_searchMessages_results_channel": "채널 {name}",
+  "chat_searchMessages_results_room": "룸 {name}",
+  "chat_searchMessages_results_contact": "{name}와의 대화",
+  "app_offline": "오프라인",
+  "app_offline_unableToMessage": "오프라인 모드에서는 메시지를 보내거나 다른 작업을 할 수 없습니다",
+  "app_offline_sharedMode": "통합 기록"
 }

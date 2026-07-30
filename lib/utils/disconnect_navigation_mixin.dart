@@ -9,7 +9,7 @@ mixin DisconnectNavigationMixin<T extends StatefulWidget> on State<T> {
   /// A recoverable BLE loss keeps the current route and its unsaved state alive
   /// while the connector reconnects in the background.
   bool checkConnectionAndNavigate(MeshCoreConnector connector) {
-    if (!connector.isConnected && !connector.isRecoveringConnection) {
+    if (!connector.hasReadableSession && !connector.isRecoveringConnection) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.popUntil(context, (route) => route.isFirst);

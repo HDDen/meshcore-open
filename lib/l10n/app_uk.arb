@@ -1562,7 +1562,7 @@
   "neighbors_receivedData": "Дані сусідів отримано",
   "neighbors_requestTimedOut": "Час запиту сусідів вичерпано.",
   "neighbors_errorLoading": "Помилка завантаження сусідів: {error}",
-  "neighbors_repeatersNeighbors": "Ретранслятор-сусіди",
+  "neighbors_repeatersNeighbors": "Сусіди ретранслятора",
   "neighbors_noData": "Дані про сусідів недоступні.",
   "channels_createPrivateChannelDesc": "Захищено секретним ключем.",
   "channels_joinPrivateChannel": "Приєднатись до приватного каналу",
@@ -3047,5 +3047,18 @@
   "contacts_batchOperations_removeFail": "Не вдалося видалити контакти — перевірте їхній список ще раз",
   "contacts_batchOperations_commonSuccess": "Операція пройшла успішно",
   "contacts_batchOperations_commonFail": "Не вдалося завершити операцію",
-  "contacts_batchOperations_selectFiltered": "Вибрати відфільтровані"
+  "contacts_batchOperations_selectFiltered": "Вибрати відфільтровані",
+  "contacts_newGroupDescription": "Об'єднує канали/контакти в папку",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Обмеження розмірів lottie-замін",
+  "channels_messageRegionNotMatchesWithKnown": "немає збігів",
+  "chat_searchMessages": "Пошук повідомлень",
+  "chat_searchMessages_placeholder": "Від 3 символів, без урахування регістру",
+  "chat_searchMessages_results": "Результати пошуку",
+  "chat_searchMessages_results_found": "Знайдено {count} повідомлень",
+  "chat_searchMessages_results_channel": "Канал {name}",
+  "chat_searchMessages_results_room": "Кімната {name}",
+  "chat_searchMessages_results_contact": "Діалог з {name}",
+  "app_offline": "Офлайн",
+  "app_offline_unableToMessage": "Ви не можете надсилати повідомлення або виконувати інші дії в офлайн-режимі",
+  "app_offline_sharedMode": "Об'єднана історія"
 }

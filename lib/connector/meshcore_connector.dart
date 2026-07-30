@@ -66,6 +66,13 @@ import '../utils/platform_info.dart';
 import 'meshcore_uuids.dart';
 import 'meshcore_protocol.dart';
 
+class OfflineHistorySource {
+  final String scope;
+  final String name;
+
+  const OfflineHistorySource({required this.scope, required this.name});
+}
+
 class DirectRepeater {
   static const int maxAgeMinutes = 30; // Max age for direct repeater info
   List<int> pubkeyPrefix;
@@ -469,6 +476,11 @@ class MeshCoreConnector extends ChangeNotifier {
   int _lastNoRetransmissionWarningSeconds = 0;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  bool _isOfflineMode = false;
+  bool _isOfflineSharedMode = false;
+  String? _offlineHistoryScope;
+  String? _offlinePublicKeyHex;
+  List<String> _offlineSharedScopes = const [];
   bool _isFlushingPendingOutgoingMessages = false;
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
@@ -569,6 +581,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<Channel> get channels => List.unmodifiable(_channels);
   bool get isConnected => _state == MeshCoreConnectionState.connected;
+  bool get isOfflineMode => _isOfflineMode;
+  bool get isOfflineSharedMode => _isOfflineMode && _isOfflineSharedMode;
+  String? get offlineHistoryScope => _offlineHistoryScope;
+  bool get hasReadableSession => isConnected || isOfflineMode;
   bool get wasManuallyDisconnected => _manualDisconnect;
   bool get isRecoveringConnection => _isRecoveringConnection;
   bool get isLoadingContacts => _isLoadingContacts;
@@ -593,7 +609,8 @@ class MeshCoreConnector extends ChangeNotifier {
   /// [_mcmpSigningFailedController].
   Stream<void> get mcmpSigningFailures => _mcmpSigningFailedController.stream;
   Uint8List? get selfPublicKey => _selfPublicKey;
-  String get selfPublicKeyHex => pubKeyToHex(_selfPublicKey ?? Uint8List(0));
+  String get selfPublicKeyHex =>
+      _offlinePublicKeyHex ?? pubKeyToHex(_selfPublicKey ?? Uint8List(0));
   String? get selfName => _selfName;
   double? get selfLatitude => _selfLatitude;
   double? get selfLongitude => _selfLongitude;
@@ -647,6 +664,281 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   int? get firmwareVerCode => _firmwareVerCode;
+
+  List<OfflineHistorySource> get offlineHistorySources {
+    final scopes = SharedMessageHistoryHelper.knownScopes().toList()..sort();
+    return scopes
+        .map(
+          (scope) => OfflineHistorySource(
+            scope: scope,
+            name:
+                (NodeIdentityStore()..setPublicKeyHex = scope).loadName() ??
+                scope.substring(0, 6).toUpperCase(),
+          ),
+        )
+        .toList();
+  }
+
+  Future<bool> enterOfflineHistory({String? scope, bool shared = false}) async {
+    if (isConnected || _state == MeshCoreConnectionState.connecting) {
+      return false;
+    }
+    final knownScopes = SharedMessageHistoryHelper.knownScopes().toList()
+      ..sort();
+    if (knownScopes.isEmpty) return false;
+    // Shared mode still needs one deterministic scope for the synthetic
+    // session's store bindings. It is only a presentation scope: all history
+    // reads below remain explicitly read-only and aggregate every known scope.
+    final selectedScope = shared
+        ? knownScopes.first
+        : scope?.trim().toLowerCase();
+    if (selectedScope == null || !knownScopes.contains(selectedScope)) {
+      return false;
+    }
+
+    _cancelReconnectTimer();
+    await stopScan();
+    _clearOfflineHistoryData();
+    _isOfflineMode = true;
+    _isOfflineSharedMode = shared;
+    _offlineHistoryScope = shared ? null : selectedScope;
+    _offlineSharedScopes = shared ? knownScopes : [selectedScope];
+    _offlinePublicKeyHex = selectedScope.padRight(pubKeySize * 2, '0');
+    _selfName = shared
+        ? null
+        : (NodeIdentityStore()..setPublicKeyHex = selectedScope).loadName();
+    _bindStoresToPublicKey(selfPublicKeyHex);
+
+    try {
+      if (shared) {
+        await _loadSharedOfflineHistory(knownScopes);
+      } else {
+        await _loadNodeOfflineHistory();
+      }
+    } catch (error, stackTrace) {
+      appLogger.error(
+        'Failed to load offline history: $error\n$stackTrace',
+        tag: 'OfflineHistory',
+      );
+      _clearOfflineHistoryData();
+      _isOfflineMode = false;
+      _isOfflineSharedMode = false;
+      _offlineHistoryScope = null;
+      _offlinePublicKeyHex = null;
+      _offlineSharedScopes = const [];
+      _selfName = null;
+      _bindStoresToPublicKey('');
+      notifyListeners();
+      return false;
+    }
+    _hasLoadedContacts = true;
+    _hasLoadedChannels = true;
+    _hasLoadedCachedChannelStorage = true;
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> exitOfflineHistory() async {
+    if (!_isOfflineMode) return;
+    _clearOfflineHistoryData();
+    _isOfflineMode = false;
+    _isOfflineSharedMode = false;
+    _offlineHistoryScope = null;
+    _offlinePublicKeyHex = null;
+    _offlineSharedScopes = const [];
+    _selfName = null;
+    _bindStoresToPublicKey('');
+    notifyListeners();
+  }
+
+  void _bindStoresToPublicKey(String publicKeyHex) {
+    _channelMessageStore.setPublicKeyHex = publicKeyHex;
+    _messageStore.setPublicKeyHex = publicKeyHex;
+    _channelOrderStore.setPublicKeyHex = publicKeyHex;
+    _channelSettingsStore.setPublicKeyHex = publicKeyHex;
+    _channelRegionStore.setPublicKeyHex = publicKeyHex;
+    _contactSettingsStore.setPublicKeyHex = publicKeyHex;
+    _contactStore.setPublicKeyHex = publicKeyHex;
+    _channelStore.setPublicKeyHex = publicKeyHex;
+    _nodeIdentityStore.setPublicKeyHex = publicKeyHex;
+    _unreadStore.setPublicKeyHex = publicKeyHex;
+    _settingsSectionsService?.setActiveDeviceKey(
+      publicKeyHex.isEmpty ? null : publicKeyHex,
+    );
+  }
+
+  void _clearOfflineHistoryData() {
+    _contacts.clear();
+    _discoveredContacts.clear();
+    _channels.clear();
+    _cachedChannels.clear();
+    _conversations.clear();
+    _channelMessages.clear();
+    _loadedConversationKeys.clear();
+    _conversationLoadGeneration++;
+    _conversationLoadFutures.clear();
+    _knownContactKeys.clear();
+    _channelOrder.clear();
+    _clearSharedMessageHistoryState();
+    _contactMessagePreviews.clear();
+    _contactUnreadCount.clear();
+    _unreadStateLoaded = false;
+    _cachedContactsUnreadTotal = 0;
+    _cachedChannelsUnreadTotal = 0;
+    _activeContactKey = null;
+    _activeChannelIndex = null;
+    _resetSyncProgressState();
+  }
+
+  Future<void> _loadNodeOfflineHistory() async {
+    final publicKeyHex = selfPublicKeyHex;
+    final channelStore = ChannelStore()..setPublicKeyHex = publicKeyHex;
+    final channels = await channelStore.loadChannels(
+      allowLegacyMigration: false,
+    );
+    _channels.addAll(channels);
+    _cachedChannels.addAll(channels);
+    _replaceChannelStorageBindings(channels);
+    await loadChannelSettings(
+      publicKeyHex: publicKeyHex,
+      channelBindings: channels,
+      allowLegacyMigration: false,
+    );
+    await loadAllChannelMessages(
+      publicKeyHex: publicKeyHex,
+      channelBindings: channels,
+      allowLegacyMigration: false,
+    );
+    await _loadChannelOrder(
+      publicKeyHex: publicKeyHex,
+      allowLegacyMigration: false,
+    );
+
+    final contacts = await (ContactStore()..setPublicKeyHex = publicKeyHex)
+        .loadContacts(allowLegacyMigration: false);
+    final normalized = deduplicateContactsByPublicKey(contacts);
+    _contacts.addAll(normalized);
+    _knownContactKeys.addAll(normalized.map((contact) => contact.publicKeyHex));
+    await _refreshContactMessageSummaries(persistChanges: false);
+    await loadUnreadState();
+  }
+
+  Future<void> _loadSharedOfflineHistory(List<String> scopes) async {
+    final allContacts = <Contact>[];
+    final channelByIdentity = <String, Channel>{};
+    final messagesByIdentity = <String, List<ChannelMessage>>{};
+
+    for (final scope in scopes) {
+      final publicKeyHex = scope.padRight(pubKeySize * 2, '0');
+      final sourceName =
+          (NodeIdentityStore()..setPublicKeyHex = scope).loadName() ??
+          scope.substring(0, 6).toUpperCase();
+      allContacts.addAll(
+        await (ContactStore()..setPublicKeyHex = publicKeyHex).loadContacts(
+          allowLegacyMigration: false,
+        ),
+      );
+
+      final channels = await (ChannelStore()..setPublicKeyHex = publicKeyHex)
+          .loadChannels(allowLegacyMigration: false);
+      final messageStore = ChannelMessageStore()
+        ..setPublicKeyHex = publicKeyHex
+        ..replaceChannels(channels);
+      for (final channel in channels.where((channel) => !channel.isEmpty)) {
+        final identity = _sharedChannelIdentityKey(channel);
+        channelByIdentity.putIfAbsent(identity, () => channel);
+        final storedMessages = await messageStore.loadChannelMessages(
+          channel.index,
+          allowLegacyMigration: false,
+        );
+        final historicalMessages = storedMessages
+            .map(
+              (message) => message.copyWith(
+                status:
+                    message.isOutgoing &&
+                        message.status == ChannelMessageStatus.pending
+                    ? ChannelMessageStatus.sent
+                    : message.status,
+                sharedHistorySourceName: sourceName,
+              ),
+            )
+            .toList();
+        messagesByIdentity[identity] = _mergeChannelMessages(
+          messagesByIdentity[identity] ?? const [],
+          historicalMessages,
+        );
+      }
+    }
+
+    final normalizedContacts = deduplicateContactsByPublicKey(allContacts);
+    _contacts.addAll(normalizedContacts);
+    _knownContactKeys.addAll(
+      normalizedContacts.map((contact) => contact.publicKeyHex),
+    );
+    await _refreshOfflineSharedContactMessageSummaries(scopes);
+
+    var syntheticIndex = 0;
+    for (final entry in channelByIdentity.entries) {
+      final source = entry.value;
+      final channel = Channel(
+        index: syntheticIndex,
+        name: source.name,
+        psk: Uint8List.fromList(source.psk),
+        unreadCount: 0,
+      );
+      _channels.add(channel);
+      _channelMessages[syntheticIndex] = _orderedChannelMessages(
+        (messagesByIdentity[entry.key] ?? const [])
+            .map((message) => message.copyWith(channelIndex: syntheticIndex))
+            .toList(),
+      );
+      syntheticIndex++;
+    }
+    _cachedChannels.addAll(_channels);
+    _replaceChannelStorageBindings(_channels);
+    _unreadStateLoaded = true;
+    _cachedContactsUnreadTotal = 0;
+    _cachedChannelsUnreadTotal = 0;
+  }
+
+  Future<void> _refreshOfflineSharedContactMessageSummaries(
+    List<String> scopes,
+  ) async {
+    final contactKeys = _contacts
+        .where(_supportsContactMessageSummary)
+        .map((contact) => contact.publicKeyHex)
+        .toSet()
+        .toList();
+
+    for (var i = 0; i < contactKeys.length; i++) {
+      if (i > 0 && i % 8 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      final contactKeyHex = contactKeys[i];
+      MessageStoreSummary? latestSummary;
+      for (final scope in scopes) {
+        final summary = await (MessageStore()..setPublicKeyHex = scope)
+            .loadMessageSummary(contactKeyHex, includeLegacyUnscoped: false);
+        if (summary != null &&
+            (latestSummary == null ||
+                summary.latestMessageAt.isAfter(
+                  latestSummary.latestMessageAt,
+                ))) {
+          latestSummary = summary;
+        }
+      }
+
+      _cacheContactMessagePreview(contactKeyHex, latestSummary, replace: true);
+      if (latestSummary == null) {
+        _clearContactMessageSummary(contactKeyHex);
+      } else {
+        _applyContactMessageSummary(
+          contactKeyHex,
+          latestSummary.latestMessageAt,
+        );
+      }
+    }
+  }
 
   /// Human-readable firmware version string reported in RESP_CODE_DEVICE_INFO
   /// (FIRMWARE_VERSION), e.g. "v1.7.4"; null until the device info arrives.
@@ -722,6 +1014,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<Message> getMessages(Contact contact) {
     final primary = _conversations[contact.publicKeyHex] ?? [];
+    if (isOfflineMode) return primary;
     if (!_sharedContactsEnabled || contact.type == advTypeRoom) {
       return primary;
     }
@@ -802,7 +1095,37 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex,
     int generation,
   ) async {
-    final allMessages = await _messageStore.loadMessages(contactKeyHex);
+    if (isOfflineSharedMode) {
+      final merged = <Message>[];
+      for (final scope in _offlineSharedScopes) {
+        final publicKeyHex = scope.padRight(pubKeySize * 2, '0');
+        final sourceName =
+            (NodeIdentityStore()..setPublicKeyHex = scope).loadName() ??
+            scope.substring(0, 6).toUpperCase();
+        final messages = await (MessageStore()..setPublicKeyHex = publicKeyHex)
+            .loadScopedMessages(contactKeyHex);
+        if (generation != _conversationLoadGeneration) return;
+        merged.addAll(
+          messages.map(
+            (message) => message.copyWith(
+              status:
+                  message.isOutgoing && message.status == MessageStatus.pending
+                  ? MessageStatus.sent
+                  : message.status,
+              sharedHistorySourceName: sourceName,
+            ),
+          ),
+        );
+      }
+      merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      _conversations[contactKeyHex] = merged;
+      _applyContactMessageSummaryFromMessages(contactKeyHex, merged);
+      notifyListeners();
+      return;
+    }
+    final allMessages = isOfflineMode
+        ? await _messageStore.loadScopedMessages(contactKeyHex)
+        : await _messageStore.loadMessages(contactKeyHex);
     if (generation != _conversationLoadGeneration) return;
     _applyContactMessageSummaryFromMessages(contactKeyHex, allMessages);
     if (allMessages.isNotEmpty) {
@@ -855,7 +1178,9 @@ class MeshCoreConnector extends ChangeNotifier {
     return 'fallback:${message.senderKeyHex}:${message.isOutgoing}:${message.isCli}:${message.timestamp.millisecondsSinceEpoch}:${message.text}';
   }
 
-  Future<void> _refreshContactMessageSummaries() async {
+  Future<void> _refreshContactMessageSummaries({
+    bool persistChanges = true,
+  }) async {
     if (_contacts.isEmpty && _discoveredContacts.isEmpty) {
       if (_contactMessagePreviews.isNotEmpty) {
         _contactMessagePreviews.clear();
@@ -892,7 +1217,10 @@ class MeshCoreConnector extends ChangeNotifier {
       final entry = contactEntries[i];
       final contactKeyHex = entry.key;
       var latestSummary = _loadedContactMessageSummary(contactKeyHex);
-      latestSummary ??= await _messageStore.loadMessageSummary(contactKeyHex);
+      latestSummary ??= await _messageStore.loadMessageSummary(
+        contactKeyHex,
+        includeLegacyUnscoped: !isOfflineMode,
+      );
       if (entry.value && selfPublicKeyHex.isNotEmpty) {
         final sharedSummary = await _sharedMessageHistoryHelper
             .loadSecondaryContactMessageSummary(
@@ -925,7 +1253,7 @@ class MeshCoreConnector extends ChangeNotifier {
             changed;
       }
     }
-    if (changed) {
+    if (changed && persistChanges) {
       unawaited(_persistContacts());
       unawaited(_persistDiscoveredContacts());
     }
@@ -933,7 +1261,9 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool _canUseSharedContactHistorySummary(Contact contact) {
-    return _sharedContactsEnabled && contact.type != advTypeRoom;
+    return !(_isOfflineMode && !_isOfflineSharedMode) &&
+        _sharedContactsEnabled &&
+        contact.type != advTypeRoom;
   }
 
   void _applyContactMessageSummaryFromMessages(
@@ -1140,7 +1470,10 @@ class MeshCoreConnector extends ChangeNotifier {
     String contactKeyHex, {
     int count = 50,
   }) async {
-    final allMessages = await _messageStore.loadMessages(contactKeyHex);
+    if (isOfflineSharedMode) return const [];
+    final allMessages = isOfflineMode
+        ? await _messageStore.loadScopedMessages(contactKeyHex)
+        : await _messageStore.loadMessages(contactKeyHex);
     final currentMessages = _conversations[contactKeyHex] ?? [];
 
     if (allMessages.length <= currentMessages.length) {
@@ -1162,6 +1495,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   List<ChannelMessage> getChannelMessages(Channel channel) {
     final primary = _channelMessages[channel.index] ?? [];
+    if (isOfflineMode) return primary;
     if (!_sharedChannelsEnabled) return primary;
     _ensureSharedChannelHistory(channel);
     return _mergeChannelMessages(
@@ -1645,7 +1979,7 @@ class MeshCoreConnector extends ChangeNotifier {
         (entry) => entry?.publicKeyHex == contactKeyHex,
         orElse: () => null,
       );
-      if (contact != null) {
+      if (!isOfflineMode && contact != null) {
         _ensureSharedContactHistory(contact);
       }
       markContactRead(contactKeyHex);
@@ -1656,7 +1990,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _activeChannelIndex = channelIndex;
     if (channelIndex != null) {
       final channel = _findChannelByIndex(channelIndex);
-      if (channel != null) {
+      if (!isOfflineMode && channel != null) {
         _ensureSharedChannelHistory(channel);
       }
       markChannelRead(channelIndex);
@@ -1664,6 +1998,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void markContactRead(String contactKeyHex) {
+    if (isOfflineMode) return;
     if (!_shouldTrackUnreadForContactKey(contactKeyHex)) return;
     final previousCount = _contactUnreadCount[contactKeyHex] ?? 0;
     if (previousCount > 0) {
@@ -1707,6 +2042,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void markChannelRead(int channelIndex) {
+    if (isOfflineMode) return;
     final channel = _findChannelByIndex(channelIndex);
     if (channel != null && channel.unreadCount > 0) {
       final previousCount = channel.unreadCount;
@@ -1939,12 +2275,17 @@ class MeshCoreConnector extends ChangeNotifier {
     _hasLoadedDefaultRegionScope = true;
   }
 
-  Future<void> _loadChannelOrder({String? publicKeyHex}) async {
+  Future<void> _loadChannelOrder({
+    String? publicKeyHex,
+    bool allowLegacyMigration = true,
+  }) async {
     final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
     final store = publicKeyHex == null
         ? _channelOrderStore
         : (ChannelOrderStore()..setPublicKeyHex = publicKeyHex);
-    final channelOrder = await store.loadChannelOrder();
+    final channelOrder = await store.loadChannelOrder(
+      allowLegacyMigration: allowLegacyMigration,
+    );
     if (expectedPublicKeyHex != selfPublicKeyHex) return;
     _channelOrder = channelOrder;
     _applyChannelOrder();
@@ -1957,9 +2298,13 @@ class MeshCoreConnector extends ChangeNotifier {
     bool notify = true,
     ChannelMessageStore? store,
     String? expectedPublicKeyHex,
+    bool allowLegacyMigration = true,
   }) async {
     final allMessages = await (store ?? _channelMessageStore)
-        .loadChannelMessages(channelIndex);
+        .loadChannelMessages(
+          channelIndex,
+          allowLegacyMigration: allowLegacyMigration,
+        );
     if (expectedPublicKeyHex != null &&
         expectedPublicKeyHex != selfPublicKeyHex) {
       return false;
@@ -1986,8 +2331,12 @@ class MeshCoreConnector extends ChangeNotifier {
     int channelIndex, {
     int count = 50,
   }) async {
+    if (isOfflineSharedMode) return const [];
     final allMessages = _orderedChannelMessages(
-      await _channelMessageStore.loadChannelMessages(channelIndex),
+      await _channelMessageStore.loadChannelMessages(
+        channelIndex,
+        allowLegacyMigration: !isOfflineMode,
+      ),
     );
     final currentMessages = _channelMessages[channelIndex] ?? [];
 
@@ -2016,6 +2365,7 @@ class MeshCoreConnector extends ChangeNotifier {
     int? maxChannels,
     String? publicKeyHex,
     Iterable<Channel>? channelBindings,
+    bool allowLegacyMigration = true,
   }) async {
     final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
     final store = publicKeyHex == null
@@ -2034,6 +2384,7 @@ class MeshCoreConnector extends ChangeNotifier {
             notify: false,
             store: store,
             expectedPublicKeyHex: expectedPublicKeyHex,
+            allowLegacyMigration: allowLegacyMigration,
           ) ||
           changed;
       if (expectedPublicKeyHex != selfPublicKeyHex) return;
@@ -2318,6 +2669,7 @@ class MeshCoreConnector extends ChangeNotifier {
     int? maxChannels,
     String? publicKeyHex,
     Iterable<Channel>? channelBindings,
+    bool allowLegacyMigration = true,
   }) async {
     final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
     final settingsStore = publicKeyHex == null
@@ -2330,6 +2682,10 @@ class MeshCoreConnector extends ChangeNotifier {
         channelBindings ?? (_channels.isNotEmpty ? _channels : _cachedChannels);
     settingsStore.replaceChannels(knownChannels);
     regionStore.replaceChannels(knownChannels);
+    if (!allowLegacyMigration) {
+      settingsStore.finishLegacyIndexMigration();
+      regionStore.finishLegacyIndexMigration();
+    }
     _channelMcmpEnabled.clear();
     _channelMcmpVersion.clear();
     _channelMcmpUseSign.clear();
@@ -2990,6 +3346,13 @@ class MeshCoreConnector extends ChangeNotifier {
     required String portName,
     int baudRate = 115200,
   }) async {
+    if (_isOfflineMode) {
+      _appDebugLogService?.warn(
+        'connectUsb ignored while offline history is open',
+        tag: 'USB',
+      );
+      return;
+    }
     if (_state == MeshCoreConnectionState.connecting ||
         _state == MeshCoreConnectionState.connected) {
       _appDebugLogService?.warn(
@@ -3092,6 +3455,13 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> connectTcp({required String host, required int port}) async {
+    if (_isOfflineMode) {
+      _appDebugLogService?.warn(
+        'connectTcp ignored while offline history is open',
+        tag: 'TCP',
+      );
+      return;
+    }
     if (_state == MeshCoreConnectionState.connecting ||
         _state == MeshCoreConnectionState.connected) {
       _appDebugLogService?.warn(
@@ -3248,6 +3618,13 @@ class MeshCoreConnector extends ChangeNotifier {
     String? displayName,
     Future<String?> Function()? linuxPairingPinProvider,
   }) async {
+    if (_isOfflineMode) {
+      _appDebugLogService?.warn(
+        'BLE connect ignored while offline history is open',
+        tag: 'BLE Connect',
+      );
+      return;
+    }
     if (_state == MeshCoreConnectionState.connecting ||
         _state == MeshCoreConnectionState.connected) {
       return;
@@ -4030,6 +4407,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   bool get _shouldAutoReconnect =>
+      !_isOfflineMode &&
       !_manualDisconnect &&
       _lastDeviceId != null &&
       _activeTransport == MeshCoreTransportType.bluetooth;
@@ -4084,6 +4462,10 @@ class MeshCoreConnector extends ChangeNotifier {
     bool manual = true,
     bool skipBleDeviceDisconnect = false,
   }) async {
+    if (_isOfflineMode) {
+      await exitOfflineHistory();
+      return;
+    }
     if (_state == MeshCoreConnectionState.disconnecting) return;
     final transportAtDisconnect = _activeTransport;
     final transportLabel = switch (transportAtDisconnect) {
@@ -4689,7 +5071,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? pendingMessageId,
     DateTime? pendingTimestamp,
   }) async {
-    if (text.isEmpty) return;
+    if (text.isEmpty || isOfflineMode) return;
     if (!isSessionReady) {
       if (pendingMessageId == null) {
         scheduleContactMessage(
@@ -5208,7 +5590,7 @@ class MeshCoreConnector extends ChangeNotifier {
     DateTime? pendingTimestamp,
     DateTime? pendingReceivedAt,
   }) async {
-    if (text.isEmpty) return;
+    if (text.isEmpty || isOfflineMode) return;
     if (!isSessionReady) {
       if (pendingMessageId == null) {
         scheduleChannelMessage(
@@ -6167,7 +6549,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? translatedLanguageCode,
     String? translationModelId,
   }) {
-    if (text.isEmpty || delaySeconds < 0) return;
+    if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     final resolved = resolvePathSelection(contact);
     // Preview only: the real send re-prepares (and re-signs) at commit time.
     final outboundText = prepareContactOutboundText(contact, text);
@@ -6230,7 +6612,7 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
     int? replyToTimestamp,
   }) {
-    if (text.isEmpty || delaySeconds < 0) return;
+    if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     final outboundText = prepareChannelOutboundText(channel.index, text);
     final binaryOutbound = mcoImageV3 != null
         ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(

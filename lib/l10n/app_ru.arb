@@ -2383,5 +2383,8 @@
   "chat_searchMessages_results_found": "Найдено {count} сообщений",
   "chat_searchMessages_results_channel": "Канал {name}",
   "chat_searchMessages_results_room": "Комната {name}",
-  "chat_searchMessages_results_contact": "Диалог с {name}"
+  "chat_searchMessages_results_contact": "Диалог с {name}",
+  "app_offline": "Оффлайн",
+  "app_offline_unableToMessage": "Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме",
+  "app_offline_sharedMode": "Объединённая история"
 }

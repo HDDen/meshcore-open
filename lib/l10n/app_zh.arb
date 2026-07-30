@@ -3068,5 +3068,18 @@
   "contacts_batchOperations_removeFail": "删除联系人失败——请再次检查列表",
   "contacts_batchOperations_commonSuccess": "操作已成功完成",
   "contacts_batchOperations_commonFail": "操作未能完成",
-  "contacts_batchOperations_selectFiltered": "选择筛选结果"
+  "contacts_batchOperations_selectFiltered": "选择筛选结果",
+  "contacts_newGroupDescription": "将频道/联系人合并到文件夹中",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "lottie 替换图的尺寸限制",
+  "channels_messageRegionNotMatchesWithKnown": "无匹配",
+  "chat_searchMessages": "搜索消息",
+  "chat_searchMessages_placeholder": "从 3 个字符起，不区分大小写",
+  "chat_searchMessages_results": "搜索结果",
+  "chat_searchMessages_results_found": "找到 {count} 条消息",
+  "chat_searchMessages_results_channel": "频道 {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "与 {name} 的对话",
+  "app_offline": "离线",
+  "app_offline_unableToMessage": "离线模式下无法发送消息或执行其他操作",
+  "app_offline_sharedMode": "合并历史"
 }

@@ -27,6 +27,7 @@ import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
@@ -173,7 +174,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
         (_) => _showMcmpSigningFailed(),
       );
-      if (PlatformInfo.isDesktop) {
+      if (PlatformInfo.isDesktop && !connector.isOfflineMode) {
         _ignoreNextTextFieldFocus = true;
         _textFieldFocusNode.requestFocus();
         _keyboardNavigationActive = true;
@@ -788,22 +789,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     text: context.l10n.chat_searchMessages,
                   ),
                 ),
-                PopupMenuItem(
-                  value: 'editChannel',
-                  child: PopupMenuRow(
-                    icon: Icons.edit_outlined,
-                    text: context.l10n.channels_editChannel,
+                if (!context.read<MeshCoreConnector>().isOfflineMode)
+                  PopupMenuItem(
+                    value: 'editChannel',
+                    child: PopupMenuRow(
+                      icon: Icons.edit_outlined,
+                      text: context.l10n.channels_editChannel,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'clearChat',
-                  child: PopupMenuRow(
-                    icon: Icons.delete,
-                    iconColor: Colors.red,
-                    text: context.l10n.contact_clearChat,
-                    textStyle: const TextStyle(color: Colors.red),
+                if (!context.read<MeshCoreConnector>().isOfflineMode)
+                  PopupMenuItem(
+                    value: 'clearChat',
+                    child: PopupMenuRow(
+                      icon: Icons.delete,
+                      iconColor: Colors.red,
+                      text: context.l10n.contact_clearChat,
+                      textStyle: const TextStyle(color: Colors.red),
+                    ),
                   ),
-                ),
               ],
             ),
           ],
@@ -2710,6 +2713,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ChatComposerSideAction(
                   child: ChatAdditionalActionsButton(
                     canvasActive: settings.canvasActive,
+                    offlineMode: connector.isOfflineMode,
                     onSendSelfContact: () => _insertSelfContact(connector),
                     onSendMyLocation: () =>
                         unawaited(_insertMyLocation(connector)),
@@ -2778,6 +2782,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         maxBytes: maxBytes,
                         controller: _textController,
                         focusNode: _textFieldFocusNode,
+                        enabled: !connector.isOfflineMode,
                         maxHeight: maxInputHeight,
                         hintText: context.l10n.chat_typeMessage,
                         onSubmitted: (_) => _sendMessage(),
@@ -2817,8 +2822,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     builder: (context, value, _) {
                       final hasText = value.text.trim().isNotEmpty;
                       return GestureDetector(
-                        onLongPress: _showQuickAnswersPicker,
-                        onSecondaryTap: _showQuickAnswersPicker,
+                        onLongPress: connector.isOfflineMode
+                            ? null
+                            : _showQuickAnswersPicker,
+                        onSecondaryTap: connector.isOfflineMode
+                            ? null
+                            : _showQuickAnswersPicker,
                         child: IconButton.filled(
                           icon: const Icon(Icons.send, size: 20),
                           tooltip: context.l10n.chat_sendMessage,
@@ -2832,7 +2841,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             minimumSize: const Size(40, 40),
                             shape: const CircleBorder(),
                           ),
-                          onPressed: hasText
+                          onPressed: hasText && !connector.isOfflineMode
                               ? () {
                                   HapticFeedback.lightImpact();
                                   _sendMessage();
@@ -2904,6 +2913,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final rawText = quickAnswerText ?? _textController.text;
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
 
     final now = DateTime.now();
     if (_lastChannelSendAt != null &&
@@ -2916,7 +2927,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     _lastChannelSendAt = now;
 
-    final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
     final translationService = context.read<TranslationService>();
 
@@ -3402,6 +3412,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   void _sendReaction(ChannelMessage message, String emoji) {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
     if (emojiIndex == null) return; // Unknown emoji, skip
     final timestampSecs = message.timestamp.millisecondsSinceEpoch ~/ 1000;
@@ -3498,7 +3509,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _deleteMessage(ChannelMessage message) async {
-    await context.read<MeshCoreConnector>().deleteChannelMessage(message);
+    final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
+    await connector.deleteChannelMessage(message);
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
@@ -3508,6 +3521,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
+    if (blockIfOffline(context, connector)) return;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -3577,6 +3591,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   void _resendMessage(ChannelMessage message) {
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    if (blockIfOffline(context, connector)) return;
     final remainingSeconds = _remainingResendWaitSeconds(message);
     if (remainingSeconds != null) {
       showDismissibleSnackBar(
@@ -3586,7 +3602,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return;
     }
 
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     connector.cancelPendingChannelSend(message.messageId);
     _lastChannelSendAt = DateTime.now();
     final mcoImageV3 = _mcoImageV3ForResend(message.text);

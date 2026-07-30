@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/offline_mode_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -504,109 +505,134 @@ class _ContactsScreenState extends State<ContactsScreen>
             else
               PopupMenuButton(
                 tooltip: context.l10n.contacts_moreOptions,
-                itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.person_add_rounded,
-                      text: context.l10n.discoveredContacts_Title,
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DiscoveryScreen(),
+                itemBuilder: (context) {
+                  if (connector.isOfflineMode) {
+                    return <PopupMenuEntry<dynamic>>[
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.logout,
+                          iconColor: Theme.of(context).colorScheme.error,
+                          text: context.l10n.common_disconnect,
+                        ),
+                        onTap: () => _disconnect(context, connector),
                       ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.vpn_key,
-                      text: context.l10n.contacts_addContactByPubkey,
-                    ),
-                    onTap: () => _showAddContactByPubkeyDialog(context),
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.paste,
-                      text: context.l10n.contacts_addContactFromClipboard,
-                    ),
-                    onTap: () => _contactImport(),
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.checklist,
-                      text: context.l10n.contacts_batchOperations,
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const ContactsBatchOperationsScreen(),
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.search,
+                          text: context.l10n.chat_searchMessages,
+                        ),
+                        onTap: () => _showMessageSearch(this.context),
                       ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.search,
-                      text: context.l10n.chat_searchMessages,
-                    ),
-                    onTap: () => _showMessageSearch(this.context),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.connect_without_contact,
-                      text: context.l10n.contacts_zeroHopAdvert,
-                    ),
-                    onTap: () => {
-                      connector.sendSelfAdvert(flood: false),
-                      showDismissibleSnackBar(
+                    ];
+                  }
+                  return <PopupMenuEntry<dynamic>>[
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.person_add_rounded,
+                        text: context.l10n.discoveredContacts_Title,
+                      ),
+                      onTap: () => Navigator.push(
                         context,
-                        content: Text(context.l10n.settings_advertisementSent),
+                        MaterialPageRoute(
+                          builder: (context) => const DiscoveryScreen(),
+                        ),
                       ),
-                    },
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.cell_tower,
-                      text: context.l10n.contacts_floodAdvert,
                     ),
-                    onTap: () => {
-                      connector.sendSelfAdvert(flood: true),
-                      showDismissibleSnackBar(
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.vpn_key,
+                        text: context.l10n.contacts_addContactByPubkey,
+                      ),
+                      onTap: () => _showAddContactByPubkeyDialog(context),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.paste,
+                        text: context.l10n.contacts_addContactFromClipboard,
+                      ),
+                      onTap: () => _contactImport(),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.checklist,
+                        text: context.l10n.contacts_batchOperations,
+                      ),
+                      onTap: () => Navigator.push(
                         context,
-                        content: Text(context.l10n.settings_advertisementSent),
-                      ),
-                    },
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.copy,
-                      text: context.l10n.contacts_copyAdvertToClipboard,
-                    ),
-                    onTap: () => _contactExport(Uint8List.fromList([])),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.logout,
-                      iconColor: Theme.of(context).colorScheme.error,
-                      text: context.l10n.common_disconnect,
-                    ),
-                    onTap: () => _disconnect(context, connector),
-                  ),
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.settings,
-                      text: context.l10n.settings_title,
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ContactsBatchOperationsScreen(),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.search,
+                        text: context.l10n.chat_searchMessages,
+                      ),
+                      onTap: () => _showMessageSearch(this.context),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.connect_without_contact,
+                        text: context.l10n.contacts_zeroHopAdvert,
+                      ),
+                      onTap: () => {
+                        connector.sendSelfAdvert(flood: false),
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(
+                            context.l10n.settings_advertisementSent,
+                          ),
+                        ),
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.cell_tower,
+                        text: context.l10n.contacts_floodAdvert,
+                      ),
+                      onTap: () => {
+                        connector.sendSelfAdvert(flood: true),
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(
+                            context.l10n.settings_advertisementSent,
+                          ),
+                        ),
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.copy,
+                        text: context.l10n.contacts_copyAdvertToClipboard,
+                      ),
+                      onTap: () => _contactExport(Uint8List.fromList([])),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.logout,
+                        iconColor: Theme.of(context).colorScheme.error,
+                        text: context.l10n.common_disconnect,
+                      ),
+                      onTap: () => _disconnect(context, connector),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.settings,
+                        text: context.l10n.settings_title,
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      ),
+                    ),
+                  ];
+                },
                 icon: const Icon(Icons.more_vert),
               ),
           ],
@@ -629,7 +655,8 @@ class _ContactsScreenState extends State<ContactsScreen>
             ],
           ),
         ),
-        floatingActionButton: widget.batchOperationsMode
+        floatingActionButton:
+            widget.batchOperationsMode || connector.isOfflineMode
             ? null
             : FloatingActionButton(
                 onPressed: connector.isLoadingContacts
@@ -1526,8 +1553,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                             _openChat(context, contact);
                           }
                         },
-                        onLongPress: () =>
-                            _showContactOptions(context, connector, contact),
+                        onLongPress: connector.isOfflineMode
+                            ? null
+                            : () => _showContactOptions(
+                                context,
+                                connector,
+                                contact,
+                              ),
                       );
                     },
                   ),
@@ -1648,13 +1680,31 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   void _openChat(BuildContext context, Contact contact) {
+    final connector = context.read<MeshCoreConnector>();
+    if (connector.isOfflineMode) {
+      if (contact.type == advTypeRepeater) {
+        blockIfOffline(context, connector);
+        return;
+      }
+      final unread = connector.getUnreadCountForContactKey(
+        contact.publicKeyHex,
+      );
+      connector.markContactRead(contact.publicKeyHex);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ChatScreen(contact: contact, initialUnreadCount: unread),
+        ),
+      );
+      return;
+    }
     // Check if this is a repeater
     if (contact.type == advTypeRepeater) {
       _showRepeaterLogin(context, contact);
     } else if (contact.type == advTypeRoom) {
       _showRoomLogin(context, contact, RoomLoginDestination.chat);
     } else {
-      final connector = context.read<MeshCoreConnector>();
       final unread = connector.getUnreadCountForContactKey(
         contact.publicKeyHex,
       );
@@ -2485,7 +2535,7 @@ class _ContactTile extends StatelessWidget {
   final bool? isSelected;
   final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const _ContactTile({
     required this.contact,
@@ -2496,7 +2546,7 @@ class _ContactTile extends StatelessWidget {
     this.isSelected,
     this.onSelectionChanged,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
   });
 
   /// Node-type avatar color per design language.
@@ -2544,7 +2594,9 @@ class _ContactTile extends StatelessWidget {
           ).length;
 
     return GestureDetector(
-      onSecondaryTapUp: PlatformInfo.isDesktop ? (_) => onLongPress() : null,
+      onSecondaryTapUp: PlatformInfo.isDesktop && onLongPress != null
+          ? (_) => onLongPress!()
+          : null,
       child: MeshCard(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -2722,7 +2774,7 @@ class _ContactTileEntrance extends StatelessWidget {
   final bool? isSelected;
   final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   const _ContactTileEntrance({
     required this.index,
@@ -2734,7 +2786,7 @@ class _ContactTileEntrance extends StatelessWidget {
     this.isSelected,
     this.onSelectionChanged,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
   });
 
   @override

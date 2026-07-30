@@ -1620,7 +1620,7 @@
   "neighbors_receivedData": "Empfangene Nachbarsdaten",
   "neighbors_requestTimedOut": "Anfrage durch Timeout fehlgeschlagen.",
   "neighbors_errorLoading": "Fehler beim Laden der Nachbarn: {error}",
-  "neighbors_repeatersNeighbors": "Nachbarn",
+  "neighbors_repeatersNeighbors": "Nachbarn des Repeaters",
   "neighbors_noData": "Keine Nachbarsdaten verfügbar.",
   "channels_joinPrivateChannel": "Treten Sie einem privaten Kanal bei",
   "channels_joinPrivateChannelDesc": "Manuelle Eingabe eines geheimen Schlüssels.",
@@ -3210,5 +3210,18 @@
   "contacts_batchOperations_removeFail": "Entfernen der Kontakte fehlgeschlagen – bitte prüfen Sie die Kontakte erneut",
   "contacts_batchOperations_commonSuccess": "Vorgang erfolgreich",
   "contacts_batchOperations_commonFail": "Vorgang fehlgeschlagen",
-  "contacts_batchOperations_selectFiltered": "Gefilterte auswählen"
+  "contacts_batchOperations_selectFiltered": "Gefilterte auswählen",
+  "contacts_newGroupDescription": "Fasst Kanäle/Kontakte in einem Ordner zusammen",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Größenbegrenzung für Lottie-Ersetzungen",
+  "channels_messageRegionNotMatchesWithKnown": "keine Übereinstimmung",
+  "chat_searchMessages": "Nachrichtensuche",
+  "chat_searchMessages_placeholder": "Ab 3 Zeichen, Groß-/Kleinschreibung egal",
+  "chat_searchMessages_results": "Suchergebnisse",
+  "chat_searchMessages_results_found": "{count} Nachrichten gefunden",
+  "chat_searchMessages_results_channel": "Kanal {name}",
+  "chat_searchMessages_results_room": "Raumserver {name}",
+  "chat_searchMessages_results_contact": "Unterhaltung mit {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "Im Offline-Modus können Sie keine Nachrichten senden oder andere Aktionen ausführen",
+  "app_offline_sharedMode": "Zusammengeführter Verlauf"
 }

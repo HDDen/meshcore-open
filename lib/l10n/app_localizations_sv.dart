@@ -1165,7 +1165,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+      'Samlar kanaler/kontakter i en mapp';
 
   @override
   String get contacts_moreOptions => 'Fler alternativ';
@@ -4093,7 +4093,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => 'Upprepar grannar';
+  String get neighbors_repeatersNeighbors => 'Repeaterns grannar';
 
   @override
   String get neighbors_noData => 'Inga grannuppgifter finns tillgängliga.';
@@ -5520,7 +5520,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'Storleksbegränsning för lottie-ersättningar';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5597,7 +5597,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_messageRegionUnknown => 'okänd';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => 'ingen träff';
 
   @override
   String get channels_messageRegionEmpty => 'inte angiven';
@@ -5798,23 +5798,23 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Välj de filtrerade';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => 'Sök meddelanden';
 
   @override
   String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+      'Från 3 tecken, skiftlägesokänsligt';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Sökresultat';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count meddelanden hittades';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return 'Kanal $name';
   }
 
   @override
@@ -5824,6 +5824,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return 'Konversation med $name';
   }
+
+  @override
+  String get app_offline => 'Offline';
+
+  @override
+  String get app_offline_unableToMessage =>
+      'I offlineläge kan du inte skicka meddelanden eller utföra andra åtgärder';
+
+  @override
+  String get app_offline_sharedMode => 'Kombinerad historik';
 }

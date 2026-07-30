@@ -1558,7 +1558,7 @@
       }
     }
   },
-  "neighbors_repeatersNeighbors": "Ismétlők Szomszédok",
+  "neighbors_repeatersNeighbors": "A repeater szomszédai",
   "neighbors_noData": "A szomszédokról nem állnak rendelkezésre adatok.",
   "neighbors_unknownContact": "Ismeretlen {pubkey}",
   "@neighbors_unknownContact": {
@@ -3071,5 +3071,18 @@
   "contacts_batchOperations_removeFail": "A névjegyeket nem sikerült eltávolítani — ellenőrizze újra a listát",
   "contacts_batchOperations_commonSuccess": "A művelet sikeres volt",
   "contacts_batchOperations_commonFail": "A műveletet nem sikerült befejezni",
-  "contacts_batchOperations_selectFiltered": "Szűrtek kijelölése"
+  "contacts_batchOperations_selectFiltered": "Szűrtek kijelölése",
+  "contacts_newGroupDescription": "Csatornákat/névjegyeket egy mappába von össze",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "A lottie-helyettesítők méretének korlátozása",
+  "channels_messageRegionNotMatchesWithKnown": "nincs egyezés",
+  "chat_searchMessages": "Üzenetek keresése",
+  "chat_searchMessages_placeholder": "Legalább 3 karakter, kis- és nagybetű nem számít",
+  "chat_searchMessages_results": "Keresési eredmények",
+  "chat_searchMessages_results_found": "{count} üzenet található",
+  "chat_searchMessages_results_channel": "{name} csatorna",
+  "chat_searchMessages_results_room": "{name} szoba",
+  "chat_searchMessages_results_contact": "Beszélgetés vele: {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "Offline módban nem küldhet üzenetet és nem végezhet más műveletet",
+  "app_offline_sharedMode": "Egyesített előzmények"
 }

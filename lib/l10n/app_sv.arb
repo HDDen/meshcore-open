@@ -1518,7 +1518,7 @@
   "neighbors_receivedData": "Mottagna grannars data",
   "neighbors_requestTimedOut": "Grannar begär tidsinställd utskick.",
   "neighbors_errorLoading": "Fel vid inläsning av grannar: {error}",
-  "neighbors_repeatersNeighbors": "Upprepar grannar",
+  "neighbors_repeatersNeighbors": "Repeaterns grannar",
   "neighbors_noData": "Inga grannuppgifter finns tillgängliga.",
   "channels_createPrivateChannel": "Skapa en privat kanal",
   "channels_joinPrivateChannel": "Gå med i en Privat Kanal",
@@ -2850,5 +2850,18 @@
   "contacts_batchOperations_removeFail": "Det gick inte att ta bort kontakterna – kontrollera listan igen",
   "contacts_batchOperations_commonSuccess": "Åtgärden lyckades",
   "contacts_batchOperations_commonFail": "Det gick inte att slutföra åtgärden",
-  "contacts_batchOperations_selectFiltered": "Välj de filtrerade"
+  "contacts_batchOperations_selectFiltered": "Välj de filtrerade",
+  "contacts_newGroupDescription": "Samlar kanaler/kontakter i en mapp",
+  "settings_modSettingsMCOimg_replacementsLottieScale": "Storleksbegränsning för lottie-ersättningar",
+  "channels_messageRegionNotMatchesWithKnown": "ingen träff",
+  "chat_searchMessages": "Sök meddelanden",
+  "chat_searchMessages_placeholder": "Från 3 tecken, skiftlägesokänsligt",
+  "chat_searchMessages_results": "Sökresultat",
+  "chat_searchMessages_results_found": "{count} meddelanden hittades",
+  "chat_searchMessages_results_channel": "Kanal {name}",
+  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_contact": "Konversation med {name}",
+  "app_offline": "Offline",
+  "app_offline_unableToMessage": "I offlineläge kan du inte skicka meddelanden eller utföra andra åtgärder",
+  "app_offline_sharedMode": "Kombinerad historik"
 }

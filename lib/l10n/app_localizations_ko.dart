@@ -1119,8 +1119,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_newGroup => '새로운 그룹';
 
   @override
-  String get contacts_newGroupDescription =>
-      'Combines channels/contacts into a folder';
+  String get contacts_newGroupDescription => '채널/연락처를 폴더로 묶습니다';
 
   @override
   String get contacts_moreOptions => '더 많은 옵션';
@@ -3924,7 +3923,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get neighbors_repeatersNeighbors => '반복기, 이웃';
+  String get neighbors_repeatersNeighbors => '리피터의 이웃 노드';
 
   @override
   String get neighbors_noData => '이웃 정보는 없습니다.';
@@ -5293,7 +5292,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'Limiting of lottie-replacements size';
+      'lottie 대체 이미지 크기 제한';
 
   @override
   String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
@@ -5365,7 +5364,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_messageRegionUnknown => '알 수 없음';
 
   @override
-  String get channels_messageRegionNotMatchesWithKnown => 'no matches';
+  String get channels_messageRegionNotMatchesWithKnown => '일치 없음';
 
   @override
   String get channels_messageRegionEmpty => '설정되지 않음';
@@ -5557,32 +5556,41 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => '필터된 항목 선택';
 
   @override
-  String get chat_searchMessages => 'Search messages';
+  String get chat_searchMessages => '메시지 검색';
 
   @override
-  String get chat_searchMessages_placeholder =>
-      'From 3 characters, case-insensitive';
+  String get chat_searchMessages_placeholder => '3자 이상, 대소문자 구분 없음';
 
   @override
-  String get chat_searchMessages_results => 'Search results';
+  String get chat_searchMessages_results => '검색 결과';
 
   @override
   String chat_searchMessages_results_found(int count) {
-    return '$count messages found';
+    return '$count개의 메시지를 찾았습니다';
   }
 
   @override
   String chat_searchMessages_results_channel(String name) {
-    return 'Channel $name';
+    return '채널 $name';
   }
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return '룸 $name';
   }
 
   @override
   String chat_searchMessages_results_contact(String name) {
-    return 'Chat with $name';
+    return '$name와의 대화';
   }
+
+  @override
+  String get app_offline => '오프라인';
+
+  @override
+  String get app_offline_unableToMessage =>
+      '오프라인 모드에서는 메시지를 보내거나 다른 작업을 할 수 없습니다';
+
+  @override
+  String get app_offline_sharedMode => '통합 기록';
 }
