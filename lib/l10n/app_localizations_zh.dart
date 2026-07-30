@@ -588,7 +588,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      '修改版的 Telegram 群组：https://t.me/mcoadvanced';
+      'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -599,6 +599,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_infoId => 'MAC ID';
+
+  @override
+  String get settings_infoDeviceName => '板卡名称';
 
   @override
   String get settings_infoStatus => '状态';

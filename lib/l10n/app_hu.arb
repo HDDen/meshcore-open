@@ -2873,7 +2873,7 @@
   "settings_deleteRegion": "Régió törlése",
   "settings_deleteRegionConfirm": "Eltávolítja a(z) \"{region}\" régiót a listából?",
   "settings_aboutModDescription": "Az «Advanced» módosítás az eredeti meshcore_open alapjain készült, és olyan változtatásokat tartalmaz, amelyeket az eredeti alkalmazás tárolójában javasoltak, vagy amelyek a felhasználási területre jellemzők, ezért nem pull requestként lettek beküldve.",
-  "settings_aboutModLink": "A módosítás csoportja Telegramon: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Kiadások a Githubon: \nhttps://github.com/HDDen/meshcore-open/releases \nA módosítás csoportja Telegramon: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Firmware-verzió",
   "contact_clearChatConfirm": "Törli az üzeneteket a csevegésből?",
   "channels_regionSetTo": "Régió: {region}",
@@ -3084,5 +3084,6 @@
   "chat_searchMessages_results_contact": "Beszélgetés vele: {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "Offline módban nem küldhet üzenetet és nem végezhet más műveletet",
-  "app_offline_sharedMode": "Egyesített előzmények"
+  "app_offline_sharedMode": "Egyesített előzmények",
+  "settings_infoDeviceName": "Panel megnevezése"
 }

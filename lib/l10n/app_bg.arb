@@ -2870,7 +2870,7 @@
   "settings_deleteRegion": "Изтриване на региона",
   "settings_deleteRegionConfirm": "Да се премахне ли \"{region}\" от списъка с региони?",
   "settings_aboutModDescription": "Модификацията «Advanced» се основава на оригиналния meshcore_open и включва промени, предложени в хранилището на оригиналното приложение или специфични за областта на използване, и затова неоформени като pull request.",
-  "settings_aboutModLink": "Група на модификацията в Telegram: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Издания в Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГрупа на модификацията в Telegram: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Версия на фърмуера",
   "contact_clearChatConfirm": "Да се изтрият ли съобщенията от чата?",
   "channels_regionSetTo": "Регион: {region}",
@@ -3081,5 +3081,6 @@
   "chat_searchMessages_results_contact": "Разговор с {name}",
   "app_offline": "Офлайн",
   "app_offline_unableToMessage": "Не можете да изпращате съобщения или да извършвате други действия в офлайн режим",
-  "app_offline_sharedMode": "Обединена история"
+  "app_offline_sharedMode": "Обединена история",
+  "settings_infoDeviceName": "Наименование на платката"
 }

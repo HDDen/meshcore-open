@@ -595,7 +595,8 @@ class AppLocalizationsKo extends AppLocalizations {
       '「Advanced」 수정판은 원본 meshcore_open을 기반으로 하며, 원본 앱 저장소에 제안된 변경 사항이나 사용 지역에 특화된 변경 사항을 포함하고 있어 PR로 제출되지 않았습니다.';
 
   @override
-  String get settings_aboutModLink => '수정판 텔레그램 그룹: https://t.me/mcoadvanced';
+  String get settings_aboutModLink =>
+      'Github 릴리스: \nhttps://github.com/HDDen/meshcore-open/releases \n수정판 텔레그램 그룹: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -606,6 +607,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => '보드 이름';
 
   @override
   String get settings_infoStatus => '상태';

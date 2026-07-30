@@ -595,7 +595,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      '改造版の Telegram グループ: https://t.me/mcoadvanced';
+      'Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -606,6 +606,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'ボード名';
 
   @override
   String get settings_infoStatus => 'ステータス';

@@ -622,7 +622,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'A módosítás csoportja Telegramon: https://t.me/mcoadvanced';
+      'Kiadások a Githubon: \nhttps://github.com/HDDen/meshcore-open/releases \nA módosítás csoportja Telegramon: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -633,6 +633,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'Panel megnevezése';
 
   @override
   String get settings_infoStatus => 'Állapot';

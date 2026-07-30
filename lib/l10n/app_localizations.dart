@@ -1243,7 +1243,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_aboutModLink.
   ///
   /// In en, this message translates to:
-  /// **'Mod group on Telegram: https://t.me/mcoadvanced'**
+  /// **'Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced'**
   String get settings_aboutModLink;
 
   /// No description provided for @settings_aboutOpenMeteoAttribution.
@@ -1263,6 +1263,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID'**
   String get settings_infoId;
+
+  /// No description provided for @settings_infoDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Board name'**
+  String get settings_infoDeviceName;
 
   /// No description provided for @settings_infoStatus.
   ///

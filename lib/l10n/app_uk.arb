@@ -2849,7 +2849,7 @@
   "settings_deleteRegion": "Видалити регіон",
   "settings_deleteRegionConfirm": "Видалити \"{region}\" зі списку регіонів?",
   "settings_aboutModDescription": "Модифікація «Advanced» базується на оригінальному meshcore_open і містить зміни, запропоновані до репозиторію оригінального застосунку або специфічні для території використання, а тому не оформлені у вигляді PR.",
-  "settings_aboutModLink": "Група модифікації в TG: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Релізи на Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГрупа модифікації в TG: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Версія прошивки",
   "contact_clearChatConfirm": "Видалити повідомлення з чату?",
   "channels_regionSetTo": "Регіон: {region}",
@@ -3060,5 +3060,6 @@
   "chat_searchMessages_results_contact": "Діалог з {name}",
   "app_offline": "Офлайн",
   "app_offline_unableToMessage": "Ви не можете надсилати повідомлення або виконувати інші дії в офлайн-режимі",
-  "app_offline_sharedMode": "Об'єднана історія"
+  "app_offline_sharedMode": "Об'єднана історія",
+  "settings_infoDeviceName": "Найменування плати"
 }

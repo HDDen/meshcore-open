@@ -624,7 +624,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Група модифікації в TG: https://t.me/mcoadvanced';
+      'Релізи на Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГрупа модифікації в TG: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -635,6 +635,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_infoId => 'Ідентифікатор';
+
+  @override
+  String get settings_infoDeviceName => 'Найменування плати';
 
   @override
   String get settings_infoStatus => 'Статус';

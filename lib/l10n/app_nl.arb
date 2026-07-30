@@ -2572,7 +2572,7 @@
   "settings_deleteRegion": "Regio verwijderen",
   "settings_deleteRegionConfirm": "\"{region}\" uit de lijst met regio's verwijderen?",
   "settings_aboutModDescription": "De «Advanced»-modificatie is gebaseerd op het originele meshcore_open en bevat wijzigingen die in de repository van de originele applicatie zijn voorgesteld of die specifiek zijn voor het gebruiksgebied en daarom niet als pull request zijn ingediend.",
-  "settings_aboutModLink": "Groep van de modificatie op Telegram: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Releases op Github: \nhttps://github.com/HDDen/meshcore-open/releases \nGroep van de modificatie op Telegram: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Firmwareversie",
   "settings_quickAnswersSendAtSelect": "Verzenden bij selectie",
   "repeater_pathHashModeOption0": "0 — 1 byte",
@@ -2863,5 +2863,6 @@
   "chat_searchMessages_results_contact": "Gesprek met {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "In de offlinemodus kunt u geen berichten verzenden of andere handelingen uitvoeren",
-  "app_offline_sharedMode": "Gecombineerde geschiedenis"
+  "app_offline_sharedMode": "Gecombineerde geschiedenis",
+  "settings_infoDeviceName": "Boardnaam"
 }

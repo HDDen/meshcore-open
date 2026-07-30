@@ -616,7 +616,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Modifieringens grupp på Telegram: https://t.me/mcoadvanced';
+      'Utgåvor på Github: \nhttps://github.com/HDDen/meshcore-open/releases \nModifieringens grupp på Telegram: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -627,6 +627,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'Kortets namn';
 
   @override
   String get settings_infoStatus => 'Status';

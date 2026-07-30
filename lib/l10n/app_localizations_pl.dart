@@ -630,7 +630,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Grupa modyfikacji na Telegramie: https://t.me/mcoadvanced';
+      'Wydania na Githubie: \nhttps://github.com/HDDen/meshcore-open/releases \nGrupa modyfikacji na Telegramie: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -641,6 +641,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_infoId => 'ID';
+
+  @override
+  String get settings_infoDeviceName => 'Nazwa płytki';
 
   @override
   String get settings_infoStatus => 'Stan';

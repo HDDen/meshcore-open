@@ -3016,7 +3016,7 @@
   "settings_regionFetchRegionsFail": "Keine Regionen gefunden",
   "settings_regionFetchRegionsAlreadyExists": "Diese Region wurde bereits hinzugefügt",
   "settings_aboutModDescription": "Die «Advanced»-Modifikation basiert auf dem ursprünglichen meshcore_open und enthält Änderungen, die im Repository der Originalanwendung vorgeschlagen wurden oder speziell auf das Einsatzgebiet zugeschnitten sind und daher nicht als Pull Request eingereicht wurden.",
-  "settings_aboutModLink": "Mod-Gruppe auf Telegram: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Releases auf Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod-Gruppe auf Telegram: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Firmware-Version",
   "contact_clearChatConfirm": "Chat wirklich leeren?",
   "chat_receivedGif": "GIF empfangen",
@@ -3223,5 +3223,6 @@
   "chat_searchMessages_results_contact": "Unterhaltung mit {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "Im Offline-Modus können Sie keine Nachrichten senden oder andere Aktionen ausführen",
-  "app_offline_sharedMode": "Zusammengeführter Verlauf"
+  "app_offline_sharedMode": "Zusammengeführter Verlauf",
+  "settings_infoDeviceName": "Board-Bezeichnung"
 }

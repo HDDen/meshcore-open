@@ -283,6 +283,7 @@ class MeshCoreConnector extends ChangeNotifier {
   int? _firmwareVerCode;
   String? _firmwareVersion;
   String? _firmwareBuildDate;
+  String? _boardName;
   int _pathHashByteWidth = 1;
   CompanionRadioStats? _latestRadioStats;
   Stopwatch? _airtimeBumpStopwatch;
@@ -947,6 +948,11 @@ class MeshCoreConnector extends ChangeNotifier {
   /// Firmware build date reported in RESP_CODE_DEVICE_INFO
   /// (FIRMWARE_BUILD_DATE); null until the device info arrives.
   String? get firmwareBuildDate => _firmwareBuildDate;
+
+  /// Board name reported in RESP_CODE_DEVICE_INFO (Board::getManufacturerName),
+  /// e.g. "Heltec V3"; null until the device info arrives. Custom builds may
+  /// report a generic name such as "Generic ESP32".
+  String? get boardName => _boardName;
 
   Map<String, String>? get currentCustomVars => _currentCustomVars;
   int? get batteryMillivolts => _batteryMillivolts;
@@ -4570,6 +4576,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _firmwareVerCode = null;
     _firmwareVersion = null;
     _firmwareBuildDate = null;
+    _boardName = null;
     _batteryMillivolts = null;
     _repeaterBatterySnapshots.clear();
     _batteryRequested = false;
@@ -8020,6 +8027,7 @@ class MeshCoreConnector extends ChangeNotifier {
     // [3]=maxChannels [4..7]=ble_pin [8..19]=build date (12B, null-padded)
     // [20..59]=manufacturer (40B) [60..79]=firmware version (20B).
     _firmwareBuildDate = _readNullPaddedString(frame, 8, 12);
+    _boardName = _readNullPaddedString(frame, 20, 40);
     _firmwareVersion = _readNullPaddedString(frame, 60, 20);
 
     // Parse client_repeat from firmware v9+ (byte 80)

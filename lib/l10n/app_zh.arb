@@ -2870,7 +2870,7 @@
   "settings_deleteRegion": "删除区域",
   "settings_deleteRegionConfirm": "要从区域列表中删除“{region}”吗？",
   "settings_aboutModDescription": "「Advanced」修改版基于原版 meshcore_open，包含在原应用仓库中提出的更改，或针对使用地区的特定更改，因此未以 PR 形式提交。",
-  "settings_aboutModLink": "修改版的 Telegram 群组：https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "固件版本",
   "contact_clearChatConfirm": "要删除聊天中的消息吗？",
   "channels_regionSetTo": "区域：{region}",
@@ -3081,5 +3081,6 @@
   "chat_searchMessages_results_contact": "与 {name} 的对话",
   "app_offline": "离线",
   "app_offline_unableToMessage": "离线模式下无法发送消息或执行其他操作",
-  "app_offline_sharedMode": "合并历史"
+  "app_offline_sharedMode": "合并历史",
+  "settings_infoDeviceName": "板卡名称"
 }

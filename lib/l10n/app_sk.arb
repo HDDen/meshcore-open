@@ -2870,7 +2870,7 @@
   "settings_deleteRegion": "Odstrániť región",
   "settings_deleteRegionConfirm": "Odstrániť \"{region}\" zo zoznamu regiónov?",
   "settings_aboutModDescription": "Modifikácia «Advanced» vychádza z pôvodného meshcore_open a prináša zmeny navrhnuté v repozitári pôvodnej aplikácie alebo špecifické pre oblasť použitia, a preto neodoslané ako pull request.",
-  "settings_aboutModLink": "Skupina modifikácie na Telegrame: https://t.me/mcoadvanced",
+  "settings_aboutModLink": "Vydania na Githube: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikácie na Telegrame: \nhttps://t.me/mcoadvanced",
   "settings_infoFirmware": "Verzia firmvéru",
   "contact_clearChatConfirm": "Odstrániť správy z chatu?",
   "channels_regionSetTo": "Región: {region}",
@@ -3081,5 +3081,6 @@
   "chat_searchMessages_results_contact": "Konverzácia s {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "V režime offline nemôžete odosielať správy ani vykonávať iné akcie",
-  "app_offline_sharedMode": "Zlúčená história"
+  "app_offline_sharedMode": "Zlúčená história",
+  "settings_infoDeviceName": "Názov dosky"
 }

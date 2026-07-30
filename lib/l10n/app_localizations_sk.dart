@@ -621,7 +621,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Skupina modifikácie na Telegrame: https://t.me/mcoadvanced';
+      'Vydania na Githube: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikácie na Telegrame: \nhttps://t.me/mcoadvanced';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
@@ -632,6 +632,9 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_infoId => 'Identifikátor';
+
+  @override
+  String get settings_infoDeviceName => 'Názov dosky';
 
   @override
   String get settings_infoStatus => 'Stav';
