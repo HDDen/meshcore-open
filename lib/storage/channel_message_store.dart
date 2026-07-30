@@ -51,8 +51,14 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   }
 
   /// Load messages for a specific channel
-  Future<List<ChannelMessage>> loadChannelMessages(int channelIndex) async {
-    final jsonString = await _loadChannelMessagesJson(channelIndex);
+  Future<List<ChannelMessage>> loadChannelMessages(
+    int channelIndex, {
+    bool allowLegacyMigration = true,
+  }) async {
+    final jsonString = await _loadChannelMessagesJson(
+      channelIndex,
+      allowLegacyMigration: allowLegacyMigration,
+    );
     if (jsonString == null) return [];
 
     try {
@@ -71,11 +77,33 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     }
   }
 
-  Future<String?> loadChannelMessagesJsonForSearch(int channelIndex) {
-    return _loadChannelMessagesJson(channelIndex);
+  Future<String?> loadChannelMessagesJsonForSearch(
+    int channelIndex, {
+    bool includeLegacyIndexFallback = false,
+  }) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load channel messages.',
+      );
+      return null;
+    }
+    final prefs = PrefsManager.instance;
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return null;
+    var jsonString = prefs.getString(key);
+    if ((jsonString == null || jsonString.isEmpty) &&
+        includeLegacyIndexFallback) {
+      jsonString =
+          prefs.getString('$keyFor$channelIndex') ??
+          prefs.getString('$_keyPrefix$channelIndex');
+    }
+    return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
 
-  Future<String?> _loadChannelMessagesJson(int channelIndex) async {
+  Future<String?> _loadChannelMessagesJson(
+    int channelIndex, {
+    bool allowLegacyMigration = true,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load channel messages.',
@@ -90,6 +118,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
     String? jsonString = prefs.getString(key);
     if ((jsonString == null || jsonString.isEmpty) &&
+        allowLegacyMigration &&
         allowsLegacyIndexMigration) {
       // One-time migration from the old slot-based storage.
       final legacyJsonString =

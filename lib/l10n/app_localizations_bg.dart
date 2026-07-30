@@ -5848,32 +5848,32 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_batchOperations_selectFiltered => 'Избор на филтрираните';
 
   @override
-  String get chat_serchMessages => 'Search messages';
+  String get chat_searchMessages => 'Search messages';
 
   @override
-  String get chat_serchMessages_placeholder =>
+  String get chat_searchMessages_placeholder =>
       'From 3 characters, case-insensitive';
 
   @override
-  String get chat_serchMessages_results => 'Search results';
+  String get chat_searchMessages_results => 'Search results';
 
   @override
-  String chat_serchMessages_results_found(int count) {
+  String chat_searchMessages_results_found(int count) {
     return '$count messages found';
   }
 
   @override
-  String chat_serchMessages_results_channel(String name) {
+  String chat_searchMessages_results_channel(String name) {
     return 'Channel $name';
   }
 
   @override
-  String chat_serchMessages_results_room(String name) {
+  String chat_searchMessages_results_room(String name) {
     return 'Room $name';
   }
 
   @override
-  String chat_serchMessages_results_contact(String name) {
+  String chat_searchMessages_results_contact(String name) {
     return 'Chat with $name';
   }
 }

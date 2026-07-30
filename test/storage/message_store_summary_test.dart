@@ -7,7 +7,9 @@ import 'package:meshcore_open/storage/shared_message_history_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  const contactKey = 'abcdef0123456789';
+  const contactKey =
+      'abcdef0123456789abcdef0123456789'
+      'abcdef0123456789abcdef0123456789';
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -63,5 +65,18 @@ void main() {
     expect(summary!.messageCount, 2);
     expect(summary.latestMessageAt.millisecondsSinceEpoch, 2000);
     expect(summary.latestMessageText, 'secondary newest');
+  });
+
+  test('known scopes do not treat an unscoped contact key as a node', () async {
+    await PrefsManager.instance.setString(
+      'messages_$contactKey',
+      '[]',
+    );
+    await PrefsManager.instance.setString(
+      'messages_1111111111$contactKey',
+      '[]',
+    );
+
+    expect(SharedMessageHistoryHelper.knownScopes(), {'1111111111'});
   });
 }

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/cancellable_compute.dart';
 import '../helpers/message_search_worker.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -16,7 +17,7 @@ import '../storage/channel_identity_matcher.dart';
 import '../storage/channel_message_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/message_store.dart';
-import '../storage/prefs_manager.dart';
+import '../storage/shared_message_history_helper.dart';
 
 enum MessageSearchEntryType { channel, room, contact }
 
@@ -39,6 +40,20 @@ class MessageSearchResult {
     required this.senderName,
     required this.text,
     required this.dedupeKey,
+    this.channel,
+    this.contact,
+  });
+}
+
+class _MessageSearchSourceDescriptor {
+  final StoredMessageSearchSource workerSource;
+  final MessageSearchEntryType type;
+  final Channel? channel;
+  final Contact? contact;
+
+  const _MessageSearchSourceDescriptor({
+    required this.workerSource,
+    required this.type,
     this.channel,
     this.contact,
   });
@@ -76,15 +91,13 @@ class MessageSearchSheet extends StatefulWidget {
 class _MessageSearchSheetState extends State<MessageSearchSheet> {
   static const Duration _debounceDuration = Duration(milliseconds: 1500);
   static const int _minimumQueryLength = 3;
-  static const int _scopeLength = 10;
-
-  static final RegExp _scopeKeyPattern = RegExp(
-    r'^(?:channels|messages_|channel_messages_)([0-9a-fA-F]{10})',
-  );
+  static const int _maxWorkerSources = 24;
+  static const int _maxWorkerJsonChars = 1024 * 1024;
 
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
   Future<void>? _activeSearch;
+  CancellableComputeTask<List<StoredMessageSearchHit>>? _activeWorkerTask;
   String _lastSearchText = '';
   int _generation = 0;
   bool _hasSearched = false;
@@ -101,6 +114,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
   void dispose() {
     _generation++;
     _debounce?.cancel();
+    _activeWorkerTask?.cancel();
+    _activeWorkerTask = null;
     _controller.removeListener(_scheduleSearch);
     _controller.dispose();
     super.dispose();
@@ -112,6 +127,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     _lastSearchText = rawText;
     _generation++;
     _debounce?.cancel();
+    _activeWorkerTask?.cancel();
+    _activeWorkerTask = null;
     final query = rawText.trim();
     if (query.length < _minimumQueryLength) {
       setState(() {
@@ -135,18 +152,12 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
   }
 
   void _queueSearch(String query, int generation) {
-    final previousSearch = _activeSearch;
     final queuedSearch = () async {
-      if (previousSearch != null) {
-        try {
-          await previousSearch;
-        } catch (_) {
-          // A failed stale search must not block the latest query.
-        }
-      }
       if (!mounted || generation != _generation) return;
       try {
         await _runSearch(query, generation);
+      } on CancellableComputeCancelledException {
+        // A newer query or a closed sheet cancelled this search.
       } catch (_) {
         // Keep the sheet responsive if one stored scope is unreadable.
       }
@@ -201,46 +212,110 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     }
 
     try {
+      final sources = <_MessageSearchSourceDescriptor>[];
       if (widget.scope == MessageSearchScope.channels) {
-        await _searchChannels(
-          connector: connector,
-          settings: settings,
-          query: normalizedQuery,
-          generation: generation,
-          addResults: addResults,
-        );
-        if (settings.roomServerShowNotemptyContactsOnChatscreen) {
-          await _searchContacts(
+        sources.addAll(
+          await _collectChannelSources(
             connector: connector,
             settings: settings,
-            query: normalizedQuery,
-            includeContacts: true,
-            includeRooms: false,
             generation: generation,
-            addResults: addResults,
+          ),
+        );
+        if (!mounted || generation != _generation) return;
+        if (settings.roomServerShowNotemptyContactsOnChatscreen) {
+          sources.addAll(
+            await _collectContactSources(
+              connector: connector,
+              settings: settings,
+              includeContacts: true,
+              includeRooms: false,
+              generation: generation,
+            ),
           );
         }
+        if (!mounted || generation != _generation) return;
         if (settings.roomServerShowNotemptyOnChatscreen) {
-          await _searchContacts(
-            connector: connector,
-            settings: settings,
-            query: normalizedQuery,
-            includeContacts: false,
-            includeRooms: true,
-            generation: generation,
-            addResults: addResults,
+          sources.addAll(
+            await _collectContactSources(
+              connector: connector,
+              settings: settings,
+              includeContacts: false,
+              includeRooms: true,
+              generation: generation,
+            ),
           );
         }
       } else {
-        await _searchContacts(
-          connector: connector,
-          settings: settings,
-          query: normalizedQuery,
-          includeContacts: true,
-          includeRooms: true,
-          generation: generation,
-          addResults: addResults,
+        sources.addAll(
+          await _collectContactSources(
+            connector: connector,
+            settings: settings,
+            includeContacts: true,
+            includeRooms: true,
+            generation: generation,
+          ),
         );
+      }
+      if (!mounted || generation != _generation) return;
+
+      final descriptorsById = <String, _MessageSearchSourceDescriptor>{};
+      for (final source in sources) {
+        descriptorsById.putIfAbsent(
+          source.workerSource.sourceId,
+          () => source,
+        );
+      }
+      final roomSenderNamesByPrefix = _roomSenderNamesByPrefix(connector);
+
+      for (final batch in _workerBatches(descriptorsById.values)) {
+        if (!mounted || generation != _generation) return;
+        final task = startCancellableCompute<
+          StoredMessageSearchRequest,
+          List<StoredMessageSearchHit>
+        >(
+          searchStoredMessageBatch,
+          StoredMessageSearchRequest(
+            normalizedQuery: normalizedQuery,
+            sources: batch.map((source) => source.workerSource).toList(),
+            roomSenderNamesByPrefix: roomSenderNamesByPrefix,
+          ),
+          debugLabel: 'message-search',
+        );
+        _activeWorkerTask = task;
+        final List<StoredMessageSearchHit> hits;
+        try {
+          hits = await task.result;
+        } finally {
+          if (identical(_activeWorkerTask, task)) {
+            _activeWorkerTask = null;
+          }
+        }
+        if (!mounted || generation != _generation) return;
+
+        final resultBatch = <MessageSearchResult>[];
+        for (final hit in hits) {
+          final descriptor = descriptorsById[hit.sourceId];
+          if (descriptor == null) continue;
+          resultBatch.add(
+            MessageSearchResult(
+              type: descriptor.type,
+              channel: descriptor.channel,
+              contact: descriptor.contact,
+              messageId: hit.messageId,
+              timestamp: DateTime.fromMillisecondsSinceEpoch(hit.timestampMs),
+              senderName: hit.senderName,
+              text: hit.text,
+              dedupeKey: '${hit.sourceId}|${hit.messageId}',
+            ),
+          );
+          if (resultBatch.length >= 200) {
+            addResults(List.of(resultBatch));
+            resultBatch.clear();
+            await Future<void>.delayed(Duration.zero);
+            if (!mounted || generation != _generation) return;
+          }
+        }
+        if (resultBatch.isNotEmpty) addResults(resultBatch);
       }
     } finally {
       publishTimer?.cancel();
@@ -251,37 +326,39 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     }
   }
 
-  Future<void> _searchChannels({
+  Future<List<_MessageSearchSourceDescriptor>> _collectChannelSources({
     required MeshCoreConnector connector,
     required AppSettings settings,
-    required String query,
     required int generation,
-    required void Function(Iterable<MessageSearchResult> results) addResults,
   }) async {
-    final currentScope = _scopeFor(connector.selfPublicKeyHex);
-    if (currentScope.isEmpty) return;
+    final currentScope = SharedMessageHistoryHelper.scopeFor(
+      connector.selfPublicKeyHex,
+    );
+    if (currentScope.isEmpty) return const [];
     final channels = connector.channels.where((c) => !c.isEmpty).toList();
-    if (channels.isEmpty) return;
+    if (channels.isEmpty) return const [];
+    final result = <_MessageSearchSourceDescriptor>[];
 
     final currentStore = ChannelMessageStore()..setPublicKeyHex = currentScope;
     currentStore.replaceChannels(channels);
     for (final channel in channels) {
-      if (generation != _generation) return;
-      await _searchChannelMessages(
+      if (generation != _generation) return result;
+      final source = await _loadChannelSource(
         store: currentStore,
         channel: channel,
         channelIndex: channel.index,
         scope: currentScope,
-        query: query,
-        generation: generation,
-        addResults: addResults,
+        includeLegacyIndexFallback: true,
       );
+      if (source != null) result.add(source);
     }
 
-    if (!settings.sharedMessageHistoryMode.includesChannels) return;
+    if (!settings.sharedMessageHistoryMode.includesChannels) return result;
 
-    for (final scope in _knownScopes()) {
-      if (generation != _generation) return;
+    final secondaryScopes = SharedMessageHistoryHelper.knownScopes().toList()
+      ..sort();
+    for (final scope in secondaryScopes) {
+      if (generation != _generation) return result;
       if (scope == currentScope) continue;
       final channelStore = ChannelStore()..setPublicKeyHex = scope;
       final secondaryChannels = await channelStore.loadChannels();
@@ -296,118 +373,92 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
           pskHex: channel.pskHex,
         );
         if (matchedIndex == null) continue;
-        await _searchChannelMessages(
+        final source = await _loadChannelSource(
           store: messageStore,
           channel: channel,
           channelIndex: matchedIndex,
           scope: scope,
-          query: query,
-          generation: generation,
-          addResults: addResults,
         );
+        if (source != null) result.add(source);
       }
     }
+    return result;
   }
 
-  Future<void> _searchChannelMessages({
+  Future<_MessageSearchSourceDescriptor?> _loadChannelSource({
     required ChannelMessageStore store,
     required Channel channel,
     required int channelIndex,
     required String scope,
-    required String query,
-    required int generation,
-    required void Function(Iterable<MessageSearchResult> results) addResults,
+    bool includeLegacyIndexFallback = false,
   }) async {
     final jsonString = await store.loadChannelMessagesJsonForSearch(
       channelIndex,
+      includeLegacyIndexFallback: includeLegacyIndexFallback,
     );
-    if (jsonString == null || generation != _generation) return;
-    final hits = await searchStoredMessages(
-      jsonString: jsonString,
-      normalizedQuery: query,
-      type: StoredMessageSearchType.channel,
+    if (jsonString == null) return null;
+    return _MessageSearchSourceDescriptor(
+      workerSource: StoredMessageSearchSource(
+        sourceId:
+            'channel|$scope|${channel.pskHex}|${channel.name}|$channelIndex',
+        jsonString: jsonString,
+        type: StoredMessageSearchType.channel,
+      ),
+      type: MessageSearchEntryType.channel,
+      channel: channel,
     );
-    if (!mounted || generation != _generation) return;
-
-    final batch = <MessageSearchResult>[];
-    for (var index = 0; index < hits.length; index++) {
-      final hit = hits[index];
-      batch.add(
-        MessageSearchResult(
-          type: MessageSearchEntryType.channel,
-          channel: channel,
-          messageId: hit.messageId,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(hit.timestampMs),
-          senderName: hit.senderName,
-          text: hit.text,
-          dedupeKey:
-              'c|$scope|${channel.pskHex}|${channel.name}|${hit.messageId}',
-        ),
-      );
-      if (batch.length >= 200) {
-        addResults(List.of(batch));
-        batch.clear();
-        await Future<void>.delayed(Duration.zero);
-        if (!mounted || generation != _generation) return;
-      }
-    }
-    if (batch.isNotEmpty) addResults(batch);
   }
 
-  Future<void> _searchContacts({
+  Future<List<_MessageSearchSourceDescriptor>> _collectContactSources({
     required MeshCoreConnector connector,
     required AppSettings settings,
-    required String query,
     required bool includeContacts,
     required bool includeRooms,
     required int generation,
-    required void Function(Iterable<MessageSearchResult> results) addResults,
   }) async {
-    final currentScope = _scopeFor(connector.selfPublicKeyHex);
-    if (currentScope.isEmpty) return;
+    final currentScope = SharedMessageHistoryHelper.scopeFor(
+      connector.selfPublicKeyHex,
+    );
+    if (currentScope.isEmpty) return const [];
     final contacts = _searchableContacts(
       connector.contacts,
       includeContacts: includeContacts,
       includeRooms: includeRooms,
     );
-    if (contacts.isEmpty) return;
-    final roomSenderNamesByPrefix = includeRooms
-        ? _roomSenderNamesByPrefix(connector)
-        : const <String, String>{};
+    if (contacts.isEmpty) return const [];
+    final result = <_MessageSearchSourceDescriptor>[];
 
     final currentStore = MessageStore()..setPublicKeyHex = currentScope;
     for (final contact in contacts) {
-      if (generation != _generation) return;
-      await _searchContactMessages(
+      if (generation != _generation) return result;
+      final source = await _loadContactSource(
         store: currentStore,
         contact: contact,
         scope: currentScope,
-        query: query,
-        roomSenderNamesByPrefix: roomSenderNamesByPrefix,
-        generation: generation,
-        addResults: addResults,
+        includeLegacyUnscoped: true,
       );
+      if (source != null) result.add(source);
     }
 
-    if (!settings.sharedMessageHistoryMode.includesContacts) return;
+    if (!settings.sharedMessageHistoryMode.includesContacts) return result;
 
-    for (final scope in _knownScopes()) {
-      if (generation != _generation) return;
+    final secondaryScopes = SharedMessageHistoryHelper.knownScopes().toList()
+      ..sort();
+    for (final scope in secondaryScopes) {
+      if (generation != _generation) return result;
       if (scope == currentScope) continue;
       final store = MessageStore()..setPublicKeyHex = scope;
       for (final contact in contacts) {
         if (contact.type == advTypeRoom) continue;
-        await _searchContactMessages(
+        final source = await _loadContactSource(
           store: store,
           contact: contact,
           scope: scope,
-          query: query,
-          roomSenderNamesByPrefix: roomSenderNamesByPrefix,
-          generation: generation,
-          addResults: addResults,
         );
+        if (source != null) result.add(source);
       }
     }
+    return result;
   }
 
   List<Contact> _searchableContacts(
@@ -426,54 +477,53 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     return byKey.values.toList();
   }
 
-  Future<void> _searchContactMessages({
+  Future<_MessageSearchSourceDescriptor?> _loadContactSource({
     required MessageStore store,
     required Contact contact,
     required String scope,
-    required String query,
-    required Map<String, String> roomSenderNamesByPrefix,
-    required int generation,
-    required void Function(Iterable<MessageSearchResult> results) addResults,
+    bool includeLegacyUnscoped = false,
   }) async {
     final jsonString = await store.loadMessagesJsonForSearch(
       contact.publicKeyHex,
+      includeLegacyUnscoped: includeLegacyUnscoped,
     );
-    if (jsonString == null || generation != _generation) return;
-    final hits = await searchStoredMessages(
-      jsonString: jsonString,
-      normalizedQuery: query,
-      type: contact.type == advTypeRoom
-          ? StoredMessageSearchType.room
-          : StoredMessageSearchType.contact,
-      contactName: contact.name,
-      roomSenderNamesByPrefix: roomSenderNamesByPrefix,
+    if (jsonString == null) return null;
+    final resultType = contact.type == advTypeRoom
+        ? MessageSearchEntryType.room
+        : MessageSearchEntryType.contact;
+    return _MessageSearchSourceDescriptor(
+      workerSource: StoredMessageSearchSource(
+        sourceId:
+            'peer|$scope|${contact.publicKeyHex}|${resultType.name}',
+        jsonString: jsonString,
+        type: contact.type == advTypeRoom
+            ? StoredMessageSearchType.room
+            : StoredMessageSearchType.contact,
+        contactName: contact.name,
+      ),
+      type: resultType,
+      contact: contact,
     );
-    if (!mounted || generation != _generation) return;
+  }
 
-    final batch = <MessageSearchResult>[];
-    for (var index = 0; index < hits.length; index++) {
-      final hit = hits[index];
-      batch.add(
-        MessageSearchResult(
-          type: contact.type == advTypeRoom
-              ? MessageSearchEntryType.room
-              : MessageSearchEntryType.contact,
-          contact: contact,
-          messageId: hit.messageId,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(hit.timestampMs),
-          senderName: hit.senderName,
-          text: hit.text,
-          dedupeKey: 'm|$scope|${contact.publicKeyHex}|${hit.messageId}',
-        ),
-      );
-      if (batch.length >= 200) {
-        addResults(List.of(batch));
-        batch.clear();
-        await Future<void>.delayed(Duration.zero);
-        if (!mounted || generation != _generation) return;
+  Iterable<List<_MessageSearchSourceDescriptor>> _workerBatches(
+    Iterable<_MessageSearchSourceDescriptor> sources,
+  ) sync* {
+    var batch = <_MessageSearchSourceDescriptor>[];
+    var jsonChars = 0;
+    for (final source in sources) {
+      final sourceChars = source.workerSource.jsonString.length;
+      if (batch.isNotEmpty &&
+          (batch.length >= _maxWorkerSources ||
+              jsonChars + sourceChars > _maxWorkerJsonChars)) {
+        yield batch;
+        batch = <_MessageSearchSourceDescriptor>[];
+        jsonChars = 0;
       }
+      batch.add(source);
+      jsonChars += sourceChars;
     }
-    if (batch.isNotEmpty) addResults(batch);
+    if (batch.isNotEmpty) yield batch;
   }
 
   List<MessageSearchResult> _mergeNewestFirst(
@@ -512,31 +562,9 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     for (final contact in connector.allContactsUnfiltered) {
       if (contact.publicKey.length < 4) continue;
       result.putIfAbsent(
-        _hexPrefix(contact.publicKey, 4),
+        hexPrefix(contact.publicKey, 4),
         () => contact.name,
       );
-    }
-    return result;
-  }
-
-  String _hexPrefix(List<int> bytes, int count) {
-    final buffer = StringBuffer();
-    for (var index = 0; index < count; index++) {
-      buffer.write(bytes[index].toRadixString(16).padLeft(2, '0'));
-    }
-    return buffer.toString();
-  }
-
-  String _scopeFor(String publicKeyHex) {
-    final value = publicKeyHex.trim().toLowerCase();
-    return value.length >= _scopeLength ? value.substring(0, _scopeLength) : '';
-  }
-
-  Set<String> _knownScopes() {
-    final result = <String>{};
-    for (final key in PrefsManager.instance.getKeys()) {
-      final match = _scopeKeyPattern.firstMatch(key);
-      if (match != null) result.add(match.group(1)!.toLowerCase());
     }
     return result;
   }
@@ -571,7 +599,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      context.l10n.chat_serchMessages,
+                      context.l10n.chat_searchMessages,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -588,7 +616,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                 controller: _controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: context.l10n.chat_serchMessages_placeholder,
+                  hintText: context.l10n.chat_searchMessages_placeholder,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _isSearching
                       ? const Padding(
@@ -606,7 +634,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
               const SizedBox(height: 8),
               if (_hasSearched)
                 Text(
-                  context.l10n.chat_serchMessages_results_found(
+                  context.l10n.chat_searchMessages_results_found(
                     _results.length,
                   ),
                   style: theme.textTheme.bodySmall,
@@ -615,7 +643,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
               Expanded(
                 child: !_hasSearched
                     ? Center(
-                        child: Text(context.l10n.chat_serchMessages_results),
+                        child: Text(context.l10n.chat_searchMessages_results),
                       )
                     : ListView.separated(
                         itemCount: _results.length,
@@ -661,15 +689,15 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
   String _titleForResult(BuildContext context, MessageSearchResult result) {
     switch (result.type) {
       case MessageSearchEntryType.channel:
-        return context.l10n.chat_serchMessages_results_channel(
+        return context.l10n.chat_searchMessages_results_channel(
           result.channel?.name ?? '',
         );
       case MessageSearchEntryType.room:
-        return context.l10n.chat_serchMessages_results_room(
+        return context.l10n.chat_searchMessages_results_room(
           result.contact?.name ?? '',
         );
       case MessageSearchEntryType.contact:
-        return context.l10n.chat_serchMessages_results_contact(
+        return context.l10n.chat_searchMessages_results_contact(
           result.contact?.name ?? '',
         );
     }

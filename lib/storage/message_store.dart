@@ -34,6 +34,15 @@ class MessageStore {
 
   Future<List<Message>> loadMessages(String contactKeyHex) async {
     final jsonString = await _loadMessagesJson(contactKeyHex);
+    return _messagesFromJson(jsonString);
+  }
+
+  Future<List<Message>> loadScopedMessages(String contactKeyHex) async {
+    final jsonString = await loadMessagesJsonForSearch(contactKeyHex);
+    return _messagesFromJson(jsonString);
+  }
+
+  List<Message> _messagesFromJson(String? jsonString) {
     if (jsonString == null) return [];
 
     try {
@@ -44,8 +53,24 @@ class MessageStore {
     }
   }
 
-  Future<String?> loadMessagesJsonForSearch(String contactKeyHex) {
-    return _loadMessagesJson(contactKeyHex);
+  Future<String?> loadMessagesJsonForSearch(
+    String contactKeyHex, {
+    bool includeLegacyUnscoped = false,
+  }) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot load messages.');
+      return null;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyFor$contactKeyHex';
+    var jsonString = prefs.getString(key);
+    if ((jsonString == null || jsonString.isEmpty) &&
+        includeLegacyUnscoped) {
+      jsonString =
+          prefs.getString('$_keyPrefix$contactKeyHex') ??
+          prefs.getString(keyFor);
+    }
+    return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
 
   Future<String?> _loadMessagesJson(String contactKeyHex) async {
@@ -78,7 +103,10 @@ class MessageStore {
     return jsonString;
   }
 
-  Future<MessageStoreSummary?> loadMessageSummary(String contactKeyHex) async {
+  Future<MessageStoreSummary?> loadMessageSummary(
+    String contactKeyHex, {
+    bool includeLegacyUnscoped = true,
+  }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
@@ -87,7 +115,8 @@ class MessageStore {
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
     var jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) &&
+        includeLegacyUnscoped) {
       final legacyJsonString = prefs.getString(oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         jsonString = legacyJsonString;

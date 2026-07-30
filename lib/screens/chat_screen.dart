@@ -184,7 +184,6 @@ class _ChatScreenState extends State<ChatScreen> {
           if (!mounted) return;
           _scrollToMessage(
             widget.initialMessageId!,
-            quiet: true,
             animate: false,
             stabilize: true,
             highlightOnSuccess: true,
@@ -295,31 +294,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<bool> _scrollToMessage(
     String messageId, {
-    bool quiet = false,
     bool animate = true,
     bool stabilize = false,
     bool highlightOnSuccess = false,
   }) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final originalMessageNotFoundText =
-        context.l10n.chat_originalMessageNotFound;
     final targetContext = await _materializeMessageContext(messageId);
 
     if (!mounted) return false;
 
     if (targetContext == null) {
-      if (quiet) return false;
-      messenger.showSnackBar(
-        SnackBar(
-          content: GestureDetector(
-            onTap: messenger.hideCurrentSnackBar,
-            child: Text(originalMessageNotFoundText),
-          ),
-          duration: const Duration(seconds: 2),
-          dismissDirection: DismissDirection.down,
-          clipBehavior: Clip.hardEdge,
-        ),
-      );
       return false;
     }
 
@@ -716,11 +699,17 @@ class _ChatScreenState extends State<ChatScreen> {
     final itemCount = reversedMessages.length + (_isLoadingOlder ? 1 : 0);
     final liveIds = reversedMessages.map((message) => message.messageId).toSet();
     _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
-    final seenIds = <String>{};
     final keyedIndices = <int>{};
+    final duplicateKeys = <int, ValueKey<String>>{};
+    final occurrencesById = <String, int>{};
     for (var i = 0; i < reversedMessages.length; i++) {
-      if (seenIds.add(reversedMessages[i].messageId)) {
+      final messageId = reversedMessages[i].messageId;
+      final occurrence = occurrencesById[messageId] ?? 0;
+      occurrencesById[messageId] = occurrence + 1;
+      if (occurrence == 0) {
         keyedIndices.add(i);
+      } else {
+        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
       }
     }
 
@@ -765,9 +754,9 @@ class _ChatScreenState extends State<ChatScreen> {
               final messageIndex = adjustedIndex;
               Contact contact = _resolveContact(connector);
               final message = reversedMessages[messageIndex];
-              final messageKey = keyedIndices.contains(messageIndex)
+              final Key messageKey = keyedIndices.contains(messageIndex)
                   ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
-                  : GlobalKey();
+                  : duplicateKeys[messageIndex]!;
               String fourByteHex = '';
               if (contact.type == advTypeRoom) {
                 // Room-server messages carry the original author's 4-byte prefix

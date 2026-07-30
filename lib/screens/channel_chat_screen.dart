@@ -817,11 +817,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
                     // Rare messageId collisions must not reuse the same
                     // GlobalKey in the list.
-                    final seenIds = <String>{};
                     final keyedIndices = <int>{};
+                    final duplicateKeys = <int, ValueKey<String>>{};
+                    final occurrencesById = <String, int>{};
                     for (var i = 0; i < reversedMessages.length; i++) {
-                      if (seenIds.add(reversedMessages[i].messageId)) {
+                      final messageId = reversedMessages[i].messageId;
+                      final occurrence = occurrencesById[messageId] ?? 0;
+                      occurrencesById[messageId] = occurrence + 1;
+                      if (occurrence == 0) {
                         keyedIndices.add(i);
+                      } else {
+                        duplicateKeys[i] = ValueKey(
+                          '$messageId#$occurrence',
+                        );
                       }
                     }
 
@@ -877,13 +885,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   final messageIndex = adjustedIndex;
                                   final message =
                                       reversedMessages[messageIndex];
-                                  final messageKey =
+                                  final Key messageKey =
                                       keyedIndices.contains(messageIndex)
                                       ? _messageKeys.putIfAbsent(
                                           message.messageId,
                                           GlobalKey.new,
                                         )
-                                      : GlobalKey();
+                                      : duplicateKeys[messageIndex]!;
                                   final isUnreadAnchor =
                                       _unreadDividerMessageId != null &&
                                       message.messageId ==

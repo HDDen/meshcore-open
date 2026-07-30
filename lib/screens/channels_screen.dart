@@ -369,7 +369,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 PopupMenuItem(
                   child: PopupMenuRow(
                     icon: Icons.search,
-                    text: menuContext.l10n.chat_serchMessages,
+                    text: menuContext.l10n.chat_searchMessages,
                   ),
                   onTap: () => _showMessageSearch(context),
                 ),

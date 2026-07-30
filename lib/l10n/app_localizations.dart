@@ -9994,47 +9994,47 @@ abstract class AppLocalizations {
   /// **'Select filtered'**
   String get contacts_batchOperations_selectFiltered;
 
-  /// No description provided for @chat_serchMessages.
+  /// No description provided for @chat_searchMessages.
   ///
   /// In en, this message translates to:
   /// **'Search messages'**
-  String get chat_serchMessages;
+  String get chat_searchMessages;
 
-  /// No description provided for @chat_serchMessages_placeholder.
+  /// No description provided for @chat_searchMessages_placeholder.
   ///
   /// In en, this message translates to:
   /// **'From 3 characters, case-insensitive'**
-  String get chat_serchMessages_placeholder;
+  String get chat_searchMessages_placeholder;
 
-  /// No description provided for @chat_serchMessages_results.
+  /// No description provided for @chat_searchMessages_results.
   ///
   /// In en, this message translates to:
   /// **'Search results'**
-  String get chat_serchMessages_results;
+  String get chat_searchMessages_results;
 
-  /// No description provided for @chat_serchMessages_results_found.
+  /// No description provided for @chat_searchMessages_results_found.
   ///
   /// In en, this message translates to:
   /// **'{count} messages found'**
-  String chat_serchMessages_results_found(int count);
+  String chat_searchMessages_results_found(int count);
 
-  /// No description provided for @chat_serchMessages_results_channel.
+  /// No description provided for @chat_searchMessages_results_channel.
   ///
   /// In en, this message translates to:
   /// **'Channel {name}'**
-  String chat_serchMessages_results_channel(String name);
+  String chat_searchMessages_results_channel(String name);
 
-  /// No description provided for @chat_serchMessages_results_room.
+  /// No description provided for @chat_searchMessages_results_room.
   ///
   /// In en, this message translates to:
   /// **'Room {name}'**
-  String chat_serchMessages_results_room(String name);
+  String chat_searchMessages_results_room(String name);
 
-  /// No description provided for @chat_serchMessages_results_contact.
+  /// No description provided for @chat_searchMessages_results_contact.
   ///
   /// In en, this message translates to:
   /// **'Chat with {name}'**
-  String chat_serchMessages_results_contact(String name);
+  String chat_searchMessages_results_contact(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -5847,32 +5847,32 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выбрать отфильтрованные';
 
   @override
-  String get chat_serchMessages => 'Поиск сообщений';
+  String get chat_searchMessages => 'Поиск сообщений';
 
   @override
-  String get chat_serchMessages_placeholder =>
+  String get chat_searchMessages_placeholder =>
       'От 3 символов, регистронезависимо';
 
   @override
-  String get chat_serchMessages_results => 'Результаты поиска';
+  String get chat_searchMessages_results => 'Результаты поиска';
 
   @override
-  String chat_serchMessages_results_found(int count) {
+  String chat_searchMessages_results_found(int count) {
     return 'Найдено $count сообщений';
   }
 
   @override
-  String chat_serchMessages_results_channel(String name) {
+  String chat_searchMessages_results_channel(String name) {
     return 'Канал $name';
   }
 
   @override
-  String chat_serchMessages_results_room(String name) {
+  String chat_searchMessages_results_room(String name) {
     return 'Комната $name';
   }
 
   @override
-  String chat_serchMessages_results_contact(String name) {
+  String chat_searchMessages_results_contact(String name) {
     return 'Диалог с $name';
   }
 }

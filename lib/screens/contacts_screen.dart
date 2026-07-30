@@ -535,7 +535,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   PopupMenuItem(
                     child: PopupMenuRow(
                       icon: Icons.search,
-                      text: context.l10n.chat_serchMessages,
+                      text: context.l10n.chat_searchMessages,
                     ),
                     onTap: () => _showMessageSearch(this.context),
                   ),

@@ -1,17 +1,47 @@
 import 'dart:convert';
-import 'dart:isolate';
 
+import 'mcmp_app_codec.dart';
 import 'message_text_codec.dart';
+import 'mesh_compressor.dart';
+import 'smaz.dart';
 
 enum StoredMessageSearchType { channel, contact, room }
 
+class StoredMessageSearchSource {
+  final String sourceId;
+  final String jsonString;
+  final StoredMessageSearchType type;
+  final String contactName;
+
+  const StoredMessageSearchSource({
+    required this.sourceId,
+    required this.jsonString,
+    required this.type,
+    this.contactName = '',
+  });
+}
+
+class StoredMessageSearchRequest {
+  final String normalizedQuery;
+  final List<StoredMessageSearchSource> sources;
+  final Map<String, String> roomSenderNamesByPrefix;
+
+  const StoredMessageSearchRequest({
+    required this.normalizedQuery,
+    required this.sources,
+    this.roomSenderNamesByPrefix = const {},
+  });
+}
+
 class StoredMessageSearchHit {
+  final String sourceId;
   final String messageId;
   final int timestampMs;
   final String senderName;
   final String text;
 
   const StoredMessageSearchHit({
+    required this.sourceId,
     required this.messageId,
     required this.timestampMs,
     required this.senderName,
@@ -19,57 +49,47 @@ class StoredMessageSearchHit {
   });
 }
 
-Future<List<StoredMessageSearchHit>> searchStoredMessages({
-  required String jsonString,
-  required String normalizedQuery,
-  required StoredMessageSearchType type,
-  String contactName = '',
-  Map<String, String> roomSenderNamesByPrefix = const {},
-}) async {
-  try {
-    return await Isolate.run(
-      () => _searchStoredMessages(
-        jsonString: jsonString,
-        normalizedQuery: normalizedQuery,
-        type: type,
-        contactName: contactName,
-        roomSenderNamesByPrefix: roomSenderNamesByPrefix,
-      ),
+List<StoredMessageSearchHit> searchStoredMessageBatch(
+  StoredMessageSearchRequest request,
+) {
+  final results = <StoredMessageSearchHit>[];
+  for (final source in request.sources) {
+    _searchStoredMessages(
+      source: source,
+      normalizedQuery: request.normalizedQuery,
+      roomSenderNamesByPrefix: request.roomSenderNamesByPrefix,
+      results: results,
     );
-  } catch (_) {
-    return const [];
   }
+  return results;
 }
 
-List<StoredMessageSearchHit> _searchStoredMessages({
-  required String jsonString,
+void _searchStoredMessages({
+  required StoredMessageSearchSource source,
   required String normalizedQuery,
-  required StoredMessageSearchType type,
-  required String contactName,
   required Map<String, String> roomSenderNamesByPrefix,
+  required List<StoredMessageSearchHit> results,
 }) {
   dynamic decoded;
   try {
-    decoded = jsonDecode(jsonString);
+    decoded = jsonDecode(source.jsonString);
   } catch (_) {
-    return const [];
+    return;
   }
-  if (decoded is! List<dynamic>) return const [];
+  if (decoded is! List<dynamic>) return;
 
-  final results = <StoredMessageSearchHit>[];
   for (final entry in decoded) {
     if (entry is! Map<String, dynamic>) continue;
     try {
       final rawText = entry['text'];
-      if (rawText is! String) continue;
-      final text =
-          MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
-      final timestampMs = _timestampFor(entry, type);
+      if (rawText is! String || _isMcoImageText(rawText)) continue;
+      final text = _decodeStoredTextIfNeeded(rawText);
+      final timestampMs = _timestampFor(entry, source.type);
       if (timestampMs == null) continue;
       final senderName = _senderNameFor(
         entry,
-        type,
-        contactName,
+        source.type,
+        source.contactName,
         roomSenderNamesByPrefix,
       );
       if (!'$senderName: $text'.toLowerCase().contains(normalizedQuery)) {
@@ -78,9 +98,10 @@ List<StoredMessageSearchHit> _searchStoredMessages({
 
       results.add(
         StoredMessageSearchHit(
+          sourceId: source.sourceId,
           messageId: _messageIdFor(
             entry,
-            type,
+            source.type,
             timestampMs,
             senderName,
             text,
@@ -94,7 +115,21 @@ List<StoredMessageSearchHit> _searchStoredMessages({
       // A malformed stored message must not abort the remaining search.
     }
   }
-  return results;
+}
+
+bool _isMcoImageText(String text) {
+  final trimmed = text.trimLeft();
+  return trimmed.startsWith('im:') || trimmed.startsWith('im3:');
+}
+
+String _decodeStoredTextIfNeeded(String text) {
+  final trimmed = text.trimLeft();
+  final isKnownCompressedText =
+      trimmed.startsWith(McmpAppCodec.textPrefix) ||
+      trimmed.startsWith(MeshCompressor.prefix) ||
+      Smaz.hasPrefix(trimmed);
+  if (!isKnownCompressedText) return text;
+  return MessageTextCodec.tryDecodeKnownCompression(text) ?? text;
 }
 
 int? _timestampFor(
@@ -125,7 +160,7 @@ String _senderNameFor(
     try {
       final bytes = base64Decode(roomKey);
       if (bytes.length >= 4) {
-        final name = roomSenderNamesByPrefix[_hexPrefix(bytes, 4)];
+        final name = roomSenderNamesByPrefix[hexPrefix(bytes, 4)];
         if (name != null) return name;
       }
     } catch (_) {
@@ -145,14 +180,15 @@ String _messageIdFor(
   final storedId = entry['messageId'];
   if (storedId is String && storedId.isNotEmpty) return storedId;
   if (type == StoredMessageSearchType.channel) {
-    return '${timestampMs}_${senderName.hashCode}_${text.hashCode}';
+    final packetTimestampMs = entry['timestamp'] as int? ?? timestampMs;
+    return '${packetTimestampMs}_${senderName.hashCode}_${text.hashCode}';
   }
 
   final senderKey = entry['senderKey'];
   var senderKeyHex = '';
   if (senderKey is String && senderKey.isNotEmpty) {
     try {
-      senderKeyHex = _hexPrefix(base64Decode(senderKey));
+      senderKeyHex = hexPrefix(base64Decode(senderKey));
     } catch (_) {
       // Keep the fallback ID deterministic even for malformed legacy data.
     }
@@ -160,7 +196,7 @@ String _messageIdFor(
   return '${timestampMs}_${senderKeyHex}_${text.hashCode}';
 }
 
-String _hexPrefix(List<int> bytes, [int? count]) {
+String hexPrefix(List<int> bytes, [int? count]) {
   final length = count == null || count > bytes.length ? bytes.length : count;
   final buffer = StringBuffer();
   for (var index = 0; index < length; index++) {
