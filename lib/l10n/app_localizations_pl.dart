@@ -753,14 +753,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_quickAnswersSendAtSelect => 'Wyślij po wybraniu';
 
   @override
-  String get settings_channelMaxbytesOutgoingTitle =>
-      'Limit the outgoing payload for channels, bytes';
-
-  @override
-  String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
-
-  @override
   String get appSettings_title => 'Ustawienia aplikacji';
 
   @override
