@@ -955,6 +955,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 onSendContact: () => _pickAndInsertContact(),
                 onPickLocationFromMap: () =>
                     unawaited(_pickAndInsertLocationFromMap()),
+                onOpenQuickAnswers: () => _showQuickAnswersPicker(connector),
                 onSendGif: () => _showGifPicker(context),
                 onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
                 onOpenMcoImageGallery: () =>

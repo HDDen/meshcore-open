@@ -2720,6 +2720,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onSendContact: () => _pickAndInsertContact(),
                     onPickLocationFromMap: () =>
                         unawaited(_pickAndInsertLocationFromMap()),
+                    onOpenQuickAnswers: _showQuickAnswersPicker,
                     onSendGif: () => _showGifPicker(context),
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
                     onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
