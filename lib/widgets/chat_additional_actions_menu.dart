@@ -18,6 +18,67 @@ class ChatComposerSideAction extends StatelessWidget {
   }
 }
 
+class ChatComposerSendButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final VoidCallback? onLongPress;
+  final String tooltip;
+  final String? semanticLabel;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final double iconSize;
+  final double size;
+
+  const ChatComposerSendButton({
+    super.key,
+    required this.onPressed,
+    required this.onLongPress,
+    required this.tooltip,
+    this.semanticLabel,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.iconSize = 24,
+    this.size = 48,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onPressed != null || onLongPress != null;
+
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: semanticLabel ?? tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color:
+              backgroundColor ??
+              (enabled ? scheme.primary : scheme.surfaceContainerHighest),
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            onLongPress: onLongPress,
+            onSecondaryTap: onLongPress,
+            child: SizedBox.square(
+              dimension: size,
+              child: Icon(
+                Icons.send,
+                size: iconSize,
+                color:
+                    foregroundColor ??
+                    (enabled ? scheme.onPrimary : scheme.onSurfaceVariant),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ChatAdditionalActionsButton extends StatelessWidget {
   final bool canvasActive;
   final bool offlineMode;

@@ -2821,33 +2821,25 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     valueListenable: _textController,
                     builder: (context, value, _) {
                       final hasText = value.text.trim().isNotEmpty;
-                      return GestureDetector(
+                      return ChatComposerSendButton(
+                        tooltip: context.l10n.chat_sendMessage,
+                        size: 40,
+                        iconSize: 20,
+                        backgroundColor: hasText
+                            ? scheme.primary
+                            : scheme.surfaceContainerHighest,
+                        foregroundColor: hasText
+                            ? scheme.onPrimary
+                            : scheme.onSurfaceVariant,
                         onLongPress: connector.isOfflineMode
                             ? null
                             : _showQuickAnswersPicker,
-                        onSecondaryTap: connector.isOfflineMode
-                            ? null
-                            : _showQuickAnswersPicker,
-                        child: IconButton.filled(
-                          icon: const Icon(Icons.send, size: 20),
-                          tooltip: context.l10n.chat_sendMessage,
-                          style: IconButton.styleFrom(
-                            backgroundColor: hasText
-                                ? scheme.primary
-                                : scheme.surfaceContainerHighest,
-                            foregroundColor: hasText
-                                ? scheme.onPrimary
-                                : scheme.onSurfaceVariant,
-                            minimumSize: const Size(40, 40),
-                            shape: const CircleBorder(),
-                          ),
-                          onPressed: hasText && !connector.isOfflineMode
-                              ? () {
-                                  HapticFeedback.lightImpact();
-                                  _sendMessage();
-                                }
-                              : null,
-                        ),
+                        onPressed: hasText && !connector.isOfflineMode
+                            ? () {
+                                HapticFeedback.lightImpact();
+                                _sendMessage();
+                              }
+                            : null,
                       );
                     },
                   ),

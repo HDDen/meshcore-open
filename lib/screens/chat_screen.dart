@@ -1068,25 +1068,17 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 8),
             ChatComposerSideAction(
-              child: Semantics(
-                button: true,
-                label: context.l10n.chat_sendMessageTo(
+              child: ChatComposerSendButton(
+                tooltip: context.l10n.chat_sendMessage,
+                semanticLabel: context.l10n.chat_sendMessageTo(
                   _resolveContact(connector).name,
                 ),
-                child: GestureDetector(
-                  onLongPress: connector.isOfflineMode
-                      ? null
-                      : () => _showQuickAnswersPicker(connector),
-                  onSecondaryTap: connector.isOfflineMode
-                      ? null
-                      : () => _showQuickAnswersPicker(connector),
-                  child: IconButton.filled(
-                    icon: const Icon(Icons.send),
-                    onPressed: connector.isOfflineMode
-                        ? null
-                        : () => _sendMessage(connector),
-                  ),
-                ),
+                onLongPress: connector.isOfflineMode
+                    ? null
+                    : () => _showQuickAnswersPicker(connector),
+                onPressed: connector.isOfflineMode
+                    ? null
+                    : () => _sendMessage(connector),
               ),
             ),
           ],
