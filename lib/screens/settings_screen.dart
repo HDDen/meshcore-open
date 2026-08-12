@@ -303,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           connector.boardName!.isNotEmpty)
                         _infoRow(
                           context,
-                          label: l10n.settings_infoHardware,
+                          label: l10n.settings_infoDeviceName, // changed from l10n.settings_infoHardware
                           value: connector.boardName!,
                         ),
                       _buildBatteryInfoRow(context, connector),
