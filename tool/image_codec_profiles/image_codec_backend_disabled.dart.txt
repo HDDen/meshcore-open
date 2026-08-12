@@ -1,0 +1,92 @@
+import 'dart:typed_data';
+
+import '../models/image_codec_support.dart';
+import 'entropy_tables.dart';
+import 'image_codec_entropy.dart';
+import 'rans_coder.dart';
+
+abstract class ImageCodecBackend {
+  String get name;
+  bool get supportsBitstreamCodec;
+
+  Future<void> load(Object bundle);
+
+  Future<Uint8List> decodeLatentToRgb({
+    required Float32List yHat,
+    void Function(double progress)? onProgress,
+    bool Function()? shouldCancel,
+  });
+
+  Future<Uint8List> encode({
+    required Uint8List rgbBytes,
+    required AeicRatePoint ratePoint,
+    required int resolution,
+    void Function(double progress)? onProgress,
+    bool Function()? shouldCancel,
+  });
+
+  Future<Uint8List> decode({
+    required Uint8List bitstream,
+    required AeicRatePoint ratePoint,
+    required int resolution,
+    void Function(double progress)? onProgress,
+    bool Function()? shouldCancel,
+  });
+
+  Future<void> releaseDecoderSession();
+  Future<void> releaseEntropySession();
+  Future<void> dispose();
+}
+
+const bool kImageCodecFeatureAvailable = false;
+const bool kImageCodecBitstreamPathAvailable = false;
+
+typedef ImageCodecRansCoderBuilder =
+    Future<AeicRansCoderFactory> Function(String tablesPath);
+
+ImageCodecRansCoderBuilder? imageCodecRansCoderBuilder;
+
+class AeicRansCoders implements AeicRansCoderFactory {
+  final EntropyTables tables;
+
+  const AeicRansCoders(this.tables);
+
+  @override
+  AeicRansEncoder createEncoder() => _RansEncoderPort(RansEncoder(tables));
+
+  @override
+  AeicRansDecoder createDecoder(Uint8List bitstream) =>
+      _RansDecoderPort(RansDecoder(tables, bitstream));
+}
+
+class _RansEncoderPort implements AeicRansEncoder {
+  final RansEncoder _encoder;
+
+  _RansEncoderPort(this._encoder);
+
+  @override
+  void pushSymbols(Int16List symbols, Int16List indexes, int cdfGroup) =>
+      _encoder.encodeWithIndexes(symbols, indexes, cdfGroup);
+
+  @override
+  Uint8List finish() => _encoder.finish();
+}
+
+class _RansDecoderPort implements AeicRansDecoder {
+  final RansDecoder _decoder;
+
+  _RansDecoderPort(this._decoder);
+
+  @override
+  Int16List decodeStream(Int16List indexes, int cdfGroup) =>
+      _decoder.decodeStream(indexes, cdfGroup);
+}
+
+class ImageCodecCancelled implements Exception {
+  const ImageCodecCancelled();
+
+  @override
+  String toString() => 'Image processing stopped.';
+}
+
+ImageCodecBackend? createImageCodecBackend() => null;

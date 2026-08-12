@@ -3082,5 +3082,274 @@
   "app_offline": "Brez povezave",
   "app_offline_unableToMessage": "V načinu brez povezave ne morete pošiljati sporočil ali izvajati drugih dejanj",
   "app_offline_sharedMode": "Združena zgodovina",
-  "settings_infoDeviceName": "Ime plošče"
+  "settings_infoDeviceName": "Ime plošče",
+  "settings_bleDebugLog": "BLE debug log (razhroščevanje)",
+  "settings_bleDebugLogSubtitle": "BLE ukazi, odgovori in surovi podatki",
+  "chat_pathManagement": "Upravljanje poti",
+  "chat_routingMode": "Navodilo za usmerjevalni način",
+  "chat_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
+  "chat_forceFloodMode": "Nasilje obvezati v način",
+  "chat_recentAckPaths": "Nedavni poti ACK (tap za uporabo):",
+  "chat_pathHistoryFull": "Zapiske o poti so popolni. Izbriši vnose, da dodaš nove.",
+  "chat_hopSingular": "skok",
+  "chat_hopPlural": "skokov",
+  "chat_successes": "Uspešni",
+  "chat_pathActions": "Potni ukazi:",
+  "chat_setCustomPath": "Nastavi Prilozeno Pot",
+  "chat_setCustomPathSubtitle": "Ročno določite potniško pot.",
+  "chat_clearPath": "Počisti pot",
+  "chat_clearPathSubtitle": "Ob naslednji pošiljanju znova zbrati.",
+  "chat_floodModeSubtitle": "Uporabi tipko usmerjevanja v meniju aplikacije.",
+  "chat_floodModeEnabled": "Narejena je bila omrežna modaliteta. Vklopi jo znova preko ikone v meniju aplikacije.",
+  "chat_pathDetailsNotAvailable": "Podrobnosti poti zaenkrat niso na voljo. Poskusite poslati sporočilo za osvežitev.",
+  "chat_pathSetHops": "Pot nastavljen: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Trenutna pot: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Uporablja {count} {count, plural, =1{hop} other{hops}} pot",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Vnesite prilagojeno pot",
+  "path_hexPrefixInstructions": "Vnesite 2-karakterne heksadecimalne prefixe za vsako skopo, ločeno z zvezekami.",
+  "path_hexPrefixExample": "Primer: A1,F2,3C (vsak notranji element uporablja prvi bajt svojega javnega ključa)",
+  "path_labelHexPrefixes": "Pot (heksafixne skrajšave)",
+  "path_helperMaxHops": "Maksimalno 64 skokov. Vsak prefiks je 2 heksadecimalna znamenja (1 bajt).",
+  "path_selectFromContacts": "Izberi iz kontaktov:",
+  "path_customPathsRequire": "Prilojene poti zahtevajo medhodne prenose, ki lahko prenašajo sporočila.",
+  "path_invalidHexPrefixes": "Neveljačni šesteročlenski prefiksi: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Pot je prevelika. Dovoljeno največ 64 skokov.",
+  "path_setPath": "Nastavi Pot",
+  "repeater_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
+  "repeater_forceFloodMode": "Nasilje obvezati v način",
+  "repeater_pathManagement": "Upravljanje poti",
+  "chat_ShowAllPaths": "Prikaži vse poti",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardver",
+  "appSettings_batteryLipoHv": "LiPo HV (3,0–4,35 V)",
+  "chat_sendImage": "Sločaji slik",
+  "chat_imagePickFailed": "Nispeval sem tega ta slik",
+  "imageMessages_enableTitle": "Pozivni izkričile slike",
+  "imageMessages_enableSubtitle": "Prešli vzorce pre mrežo. Potrebno je jednokratno stworiti model vzorca.",
+  "imageMessages_modelSectionTitle": "Obrazni model",
+  "imageMessages_downloadModel": "Storba",
+  "imageMessages_cancelDownload": "Odločite",
+  "imageMessages_removeModel": "Ubrani model",
+  "imageMessages_modelReady": "Gotov",
+  "imageMessages_modelNotPublished": "Jo še niso izdana — ta izdelka te ne može prebaviti.",
+  "imageMessages_downloadFailed": "Obrazni model ne može biti preuzet.",
+  "imageMessages_autoProcessTitle": "Avtomatizirane slike",
+  "imageMessages_autoProcessSubtitle": "Katero je oblikovanje svega oblikov, ko se pošteva. Za drugo okolo časa se koristi ok. 2 GB pamične prostore; odločite se za oblikovanje s tukom.",
+  "imageSend_title": "Sločaji slik",
+  "imageSend_cropNote": "Zadovoljno izmenjeno na 512 × 512 · vzorovni odnos ne ohranjen",
+  "imageSend_originalSize": "Original text:\n\nThe early bird catches the worm.\n\nTranslation:\n\nPojdi prvi, zlati v kroku.",
+  "imageSend_onAirSize": "Na vodi",
+  "imageSend_quality": "Kakovost",
+  "imageSend_qualityStandard": "Standard",
+  "imageSend_qualityHigh": "Vysoko",
+  "imageSend_packetsLabel": "Pakete",
+  "imageSend_airtimeLabel": "Čas v eteru",
+  "imageSend_sizeLabel": "Napravo",
+  "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paketov}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Naslušniki radio neznane",
+  "imageSend_radioUnknownBody": "Poučajte se na stroj, da se lahko izračunuje čas v prikazu.",
+  "imageSend_longSendTitle": "Dluga preposlana",
+  "imageSend_longSendBody": "Ovo bo ohranilo kanal prihodno za obliko {duration}.",
+  "imageSend_floodNote": "Povlatni potok: sve repeaterje v območju pretrasirajo svak paket, pa kanál ostane zanudnejši od tega.",
+  "imageSend_parityTitle": "Pobavni paket zdržbe",
+  "imageSend_paritySubtitle": "Jedna dodatna paczka. Grupni izjasi ne izvajajo potvarnosti, pa ta izdelka omogoča preuzimanju ponovno izgleda, če je zgubjen pojedni paket.",
+  "imageSend_send": "Posyłaj",
+  "imageSend_cancel": "Odločite",
+  "imageSend_encodeFailed": "Ovo slikovo ne more biti zakodirano.",
+  "imageSend_codecDownloading": "Obrazni model še pospeva preborjanje.",
+  "imageSend_codecUnavailable": "Poslanje slike nema na tem zelo naročnem naročnem.",
+  "imageSend_codecDisabled": "Obrazi s pomanjkanjem so v nastavnih.",
+  "imageSend_deviceUnsupported": "Taj radio ne može posredovati slike pakuete. Prepoštijo izbirni napravnik s kompanijskimi programi na čevem 13 ali novšejšim.",
+  "imageSend_directMessagesUnsupported": "Obrazy se pojavijo kot skupnih podatkov, pa lahko ih poslujejo samo na kanal — ne v prilogih.",
+  "imageSend_tooLarge": "Taj slik je zakodiran v viših pakotnih od športne formate, ki omogoča mrežni format.",
+  "imageSend_sentConfirmation": "Slika poslana kot {count} {count, plural, =1{paket} other{paketov}}.",
+  "imageSend_sendFailed": "Obraz ne može biti poslany: {error}",
+  "imageSend_sendingProgress": "Prekazivanje izkaza — paket {sent} od {total}",
+  "receivedImage_senderPrefix": "Vrtitev {prefix}",
+  "receivedImage_incoming": "Otrteno od {received} na {total} poslovanih potokov",
+  "receivedImage_queued": "Čekanje, da se dekodira",
+  "receivedImage_tapToDecode": "Kliknite, da razkrivete",
+  "receivedImage_decoding": "Ostvarjanje… o prihodnosti za okolo 1 s",
+  "receivedImage_incomplete": "Obraz nije kompletan — {received} od {total} poslaničev je prishodil",
+  "receivedImage_corrupt": "Obraz ne more lahko rekonstruirati",
+  "receivedImage_decoderMissing": "Otrgena slika — dekodirana slika je izključena",
+  "receivedImage_evicted": "Obraz ni več niso zakajiren",
+  "receivedImage_retry": "Pokušajte znova",
+  "receivedImage_decodeAgain": "Dekodiraj ponovno",
+  "receivedImage_openSettings": "Nastavite",
+  "receivedImage_tapToProcess": "Kliknij za obravnavanje",
+  "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
+  "imageSend_secondsValue": "{seconds} s",
+  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s"
 }

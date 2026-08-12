@@ -3082,5 +3082,274 @@
   "app_offline": "Офлайн",
   "app_offline_unableToMessage": "Не можете да изпращате съобщения или да извършвате други действия в офлайн режим",
   "app_offline_sharedMode": "Обединена история",
-  "settings_infoDeviceName": "Наименование на платката"
+  "settings_infoDeviceName": "Наименование на платката",
+  "settings_bleDebugLog": "Дневник за отстраняване на грешки на BLE",
+  "settings_bleDebugLogSubtitle": "Команди, отговори и сурови BLE данни",
+  "chat_pathManagement": "Управление на пътищата",
+  "chat_routingMode": "Режим на маршрутизиране",
+  "chat_autoUseSavedPath": "Автоматично (използвай запазения път)",
+  "chat_forceFloodMode": "Принуди режим на наводняване",
+  "chat_recentAckPaths": "Последни ACK пътища (докоснете, за да използвате):",
+  "chat_pathHistoryFull": "Историята на пътя е пълна. Премахнете записи, за да добавите нови.",
+  "chat_hopSingular": "скок",
+  "chat_hopPlural": "скока",
+  "chat_successes": "Успехи",
+  "chat_pathActions": "Действия по пътя:",
+  "chat_setCustomPath": "Задай персонализиран път",
+  "chat_setCustomPathSubtitle": "Ръчно задайте маршрутен път",
+  "chat_clearPath": "Изчисти пътя",
+  "chat_clearPathSubtitle": "Принуди преоткриване при следващо изпращане",
+  "chat_floodModeSubtitle": "Използвайте превключвателя за маршрутизиране в лентата на приложението.",
+  "chat_floodModeEnabled": "Режимът на наводняване е включен. Включете го отново чрез иконата за маршрутизиране в лентата на приложението.",
+  "chat_pathDetailsNotAvailable": "Подробности за пътя все още не са налични. Опитайте да изпратите съобщение, за да ги обновите.",
+  "chat_pathSetHops": "Пътят е зададен: {hopCount} {hopCount, plural, =1{скок} other{скока}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Текущ път: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Използване на {count} {count, plural, =1{hop} other{hops}} път",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Въведете персонализиран път",
+  "path_hexPrefixInstructions": "Въведете 2-символни шестнадесетични префикси за всеки хоп, разделени с кама.",
+  "path_hexPrefixExample": "A1,F2,3C (всяка нода използва първия байт от публичния си ключ)",
+  "path_labelHexPrefixes": "Пътеки (шестнадесетични префикси)",
+  "path_helperMaxHops": "Максимум 64 скока. Всеки префикс е 2 шестнадесетични знака (1 байт).",
+  "path_selectFromContacts": "Изберете от контакти:",
+  "path_customPathsRequire": "Персонализираните пътища изискват междинни скокове, които могат да препращат съобщения.",
+  "path_invalidHexPrefixes": "Невалидни шестнадесетични префикси: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Пътят е твърде дълъг. Максимум 64 скока са разрешени.",
+  "path_setPath": "Задайте път",
+  "repeater_autoUseSavedPath": "Автоматично (използвай запазения път)",
+  "repeater_forceFloodMode": "Принуди режим на наводняване",
+  "repeater_pathManagement": "Управление на пътища",
+  "chat_ShowAllPaths": "Покажи всички пътища",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Оценка",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Оборудование",
+  "appSettings_batteryLipoHv": "LiPo ВЗГ (3,0-4,35 В)",
+  "chat_sendImage": "Изпрати изображение",
+  "chat_imagePickFailed": "Не мог да откривам та изображин",
+  "imageMessages_enableTitle": "Абilitiraм изображените сообщения",
+  "imageMessages_enableSubtitle": "Изправате изображения чрез сетката. Треба е одноразовна загрузка модел на изображение.",
+  "imageMessages_modelSectionTitle": "Изображени модель",
+  "imageMessages_downloadModel": "Скачане",
+  "imageMessages_cancelDownload": "Отмена",
+  "imageMessages_removeModel": "Удалете модель",
+  "imageMessages_modelReady": "Готов",
+  "imageMessages_modelNotPublished": "Еще не опубликовано — тази версия не може да скане.",
+  "imageMessages_downloadFailed": "Модел за изображение не може да бъде скачан.",
+  "imageMessages_autoProcessTitle": "Автоматически обрабатвате изображения",
+  "imageMessages_autoProcessSubtitle": "Катализиране на всята изображение сразу по пришествие. Използване на около 2 ГБ на втора пъти; откажете от реконструкцията чаке при натискане.",
+  "imageSend_title": "Изпрати изображение",
+  "imageSend_cropNote": "Масштабиран до 512 × 512 · соотношение сторон не съхранясе",
+  "imageSend_originalSize": "Късно на използване на език:",
+  "imageSend_onAirSize": "В ефир",
+  "imageSend_quality": "Качество",
+  "imageSend_qualityStandard": "Стандарт",
+  "imageSend_qualityHigh": "Высок",
+  "imageSend_packetsLabel": "Пакети",
+  "imageSend_airtimeLabel": "Времето на изкъсване",
+  "imageSend_sizeLabel": "Баланса",
+  "imageSend_packetsCount": "{count} {count, plural, =1{пакет} other{пакета}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Настройки на радио неизвестни",
+  "imageSend_radioUnknownBody": "Усредете се с устройство, за да се отработа часът на изстъпане.",
+  "imageSend_longSendTitle": "Долга пресилка",
+  "imageSend_longSendBody": "Тази буде поддержива открит отряд на около {duration}.",
+  "imageSend_floodNote": "Руйжинг на превъште: всички ретранслятори в диапазонта превратят всички пакети, тъйа каналят оставря дълше, от този час.",
+  "imageSend_parityTitle": "Возобновителен пакет",
+  "imageSend_paritySubtitle": "Едно дополително пакет. Групни извещания не принимаются, след това разбирателят едно пакетто, какщо е пропущен един пакет.",
+  "imageSend_send": "Отправляй",
+  "imageSend_cancel": "Отмена",
+  "imageSend_encodeFailed": "Тази изображение не може да бъде кодирано.",
+  "imageSend_codecDownloading": "Модел на изображение еще разгрузира.",
+  "imageSend_codecUnavailable": "Изглед отправа не е доступен на този устройство.",
+  "imageSend_codecDisabled": "Изображенията на извещенията е отключена в настройките.",
+  "imageSend_deviceUnsupported": "Та радиота не може да пресылава изображени пакети. Подключите устройство, който работи с компанионски прошивка 13 или новия.",
+  "imageSend_directMessagesUnsupported": "Изображенията се превозводя се как групова информация, следато да се отправят единствено на канал — не в лична вестка.",
+  "imageSend_tooLarge": "Таата изображение е кодирано в по-числа пакети, отгоре както формат на сетта разрешава.",
+  "imageSend_sentConfirmation": "Изображението е изпратено като {count} {count, plural, =1{пакет} other{пакета}}.",
+  "imageSend_sendFailed": "Изображение не може да бъде отправено: {error}",
+  "imageSend_sendingProgress": "Отправка наизображение — пакет {sent} от {total}",
+  "receivedImage_senderPrefix": "Узъдето {prefix}",
+  "receivedImage_incoming": "{received} от {total} пакета",
+  "receivedImage_queued": "Ожидането за декодиране",
+  "receivedImage_tapToDecode": "Натискнете за декодиране",
+  "receivedImage_decoding": "Повторно… за приблизително 1 секунда",
+  "receivedImage_incomplete": "Изображение неполно — {received} от {total} пакети отправили",
+  "receivedImage_corrupt": "Изображение не може да бъде воссоздано",
+  "receivedImage_decoderMissing": "Получена изображение — разгадка на изображение е вреjan",
+  "receivedImage_evicted": "Изображение не е хранитено",
+  "receivedImage_retry": "Повтори",
+  "receivedImage_decodeAgain": "Правилейте заново",
+  "receivedImage_openSettings": "Настройте",
+  "receivedImage_tapToProcess": "Натискнете за обработка",
+  "receivedImage_awaiting": "{bytes} байта · {packets} {packets, plural, =1{пакет} other{пакета}}",
+  "imageSend_secondsValue": "{seconds} секунди",
+  "imageSend_minutesSecondsValue": "{minutes} мин {seconds} сек"
 }

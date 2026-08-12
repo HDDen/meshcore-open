@@ -2864,5 +2864,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "I offlineläge kan du inte skicka meddelanden eller utföra andra åtgärder",
   "app_offline_sharedMode": "Kombinerad historik",
-  "settings_infoDeviceName": "Kortets namn"
+  "settings_infoDeviceName": "Kortets namn",
+  "settings_bleDebugLog": "BLE-felsökning",
+  "settings_bleDebugLogSubtitle": "BLE-kommandon, svar och rådata",
+  "chat_pathManagement": "Stigarhantering",
+  "chat_routingMode": "Ruttläge",
+  "chat_autoUseSavedPath": "Automatisk (använd sparad sökväg)",
+  "chat_forceFloodMode": "Tvinga Översvämningsläge",
+  "chat_recentAckPaths": "Nyligen Ack-vägar (tryck för att använda):",
+  "chat_pathHistoryFull": "Historisk sökväg är full. Ta bort poster för att lägga till nya.",
+  "chat_hopSingular": "hoppa",
+  "chat_hopPlural": "hoppar",
+  "chat_successes": "framgångar",
+  "chat_pathActions": "Stigar:",
+  "chat_setCustomPath": "Ange anpassad sökväg",
+  "chat_setCustomPathSubtitle": "Ange ruttväg manuellt",
+  "chat_clearPath": "Rensa Vägen",
+  "chat_clearPathSubtitle": "Tvinga fram omstart vid nästa sändning",
+  "chat_floodModeSubtitle": "Använd routningsomkopplaren i appraden",
+  "chat_floodModeEnabled": "Översvämningsläge aktiverat. Stäng av via ruttikonen i appraden.",
+  "chat_pathDetailsNotAvailable": "Stigaruppgifterna är ännu inte tillgängliga. Försök att skicka ett meddelande för att uppdatera.",
+  "chat_pathSetHops": "Sökväg inställd: {hopCount} {hopCount, plural, =1{hopp} other{hoppar}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Nuvarande sökväg: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Använda {count} {count, plural, =1{hop} other{hops}} sökväg",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Ange anpassad sökväg",
+  "path_hexPrefixInstructions": "Ange 2-tecknets hex-prefett för varje hopp, åtskilda med komma.",
+  "path_hexPrefixExample": "Exempel: A1,F2,3C (varje nod använder det första bytet av sitt publika nyckel)",
+  "path_labelHexPrefixes": "Hexprefixer",
+  "path_helperMaxHops": "Max 64 hopp. Varje prefix är 2 hex-tecken (1 byte)",
+  "path_selectFromContacts": "Välj istället från kontakter:",
+  "path_customPathsRequire": "Anpassade sökvägar kräver mellansteg som kan vidarebefordra meddelanden.",
+  "path_invalidHexPrefixes": "Ogiltiga hex-prefikser: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Sökvägen är för lång. Max 64 hopp tillåtna.",
+  "path_setPath": "Ange Sökväg",
+  "repeater_autoUseSavedPath": "Automatisk (använd sparad sökväg)",
+  "repeater_forceFloodMode": "Tvinga Översvämningsläge",
+  "repeater_pathManagement": "Stigarhantering",
+  "chat_ShowAllPaths": "Visa alla vägar",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardware",
+  "appSettings_batteryLipoHv": "LiPo HV (3,0-4,35 V)",
+  "chat_sendImage": "Send vagnbild",
+  "chat_imagePickFailed": "Kunde inte öppna det bildet",
+  "imageMessages_enableTitle": "Bildermeddelanden",
+  "imageMessages_enableSubtitle": "Send bilder över mönstret. Det kräver en enkelt bildmodellhämtning.",
+  "imageMessages_modelSectionTitle": "Bildmodell",
+  "imageMessages_downloadModel": "Download",
+  "imageMessages_cancelDownload": "Avbud",
+  "imageMessages_removeModel": "Förhåll dig från modellen",
+  "imageMessages_modelReady": "Färdig",
+  "imageMessages_modelNotPublished": "Ingen publikerad än — denna byggnads kan inte laddas ner av det.",
+  "imageMessages_downloadFailed": "Bildmodellen kunde inte laddas ner.",
+  "imageMessages_autoProcessTitle": "Automatiska bilder automatiserar",
+  "imageMessages_autoProcessSubtitle": "Rekonstruera varje bild så snart den ankommer. Använder cirka 2 GB minne varje gång; låt det omför att rekonstruera genom ett tap.",
+  "imageSend_title": "Send vagnbild",
+  "imageSend_cropNote": "Reserverat till 512 × 512 · förhållandet mellan storlek inte bevarat",
+  "imageSend_originalSize": "Ovanstående text (engelska)\n\nTranslation (svenskt):",
+  "imageSend_onAirSize": "Underför hjärnan",
+  "imageSend_quality": "Kvalitet",
+  "imageSend_qualityStandard": "Standard",
+  "imageSend_qualityHigh": "Hög",
+  "imageSend_packetsLabel": "Paket",
+  "imageSend_airtimeLabel": "Tid i övrighet",
+  "imageSend_sizeLabel": "Ladning",
+  "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paket}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Radioindikatorer inte kända",
+  "imageSend_radioUnknownBody": "Förkoppna till ett enhet så kan tiden på air beräknas.",
+  "imageSend_longSendTitle": "Långförsending",
+  "imageSend_longSendBody": "Detta kommer att bevara kanalen roughly {duration}.",
+  "imageSend_floodNote": "Flodledning: varje repeater i ramen retransmitterar varje paket, så kan kanalen vara på arbete långare än den här tiden.",
+  "imageSend_parityTitle": "Omedlningspaket",
+  "imageSend_paritySubtitle": "En ytterligare paket. Gruppmeddelanden inte akceras, så den här tar hänsyn till att mottar kan återuppbygga bilden om ett enkelt paket förlorats.",
+  "imageSend_send": "Sänd",
+  "imageSend_cancel": "Avbud",
+  "imageSend_encodeFailed": "Denna bild kan inte kodas.",
+  "imageSend_codecDownloading": "Bildmodellen downloads fortfarande.",
+  "imageSend_codecUnavailable": "Bildsendning är inte tillgänglig på detta enhet.",
+  "imageSend_codecDisabled": "Bildmeddelanden är offna i inställningarna.",
+  "imageSend_deviceUnsupported": "Denna radi kan inte senda bildpaket. Använd ett äventyrsgerät med companionsystemfirmware 13 eller nyare.",
+  "imageSend_directMessagesUnsupported": "Bilder senders som gruppod, så de kan endast skickas till ett kanal – inte i en direkt meddelning.",
+  "imageSend_tooLarge": "Bilden kodades till mer paket än meshformaten tillåter.",
+  "imageSend_sentConfirmation": "Bilden skickades som {count} {count, plural, =1{paket} other{paket}}.",
+  "imageSend_sendFailed": "Bilden kunde inte skickas: {error}",
+  "imageSend_sendingProgress": "Bild sendning — paket {sent} av {total}",
+  "receivedImage_senderPrefix": "Nod {prefix}",
+  "receivedImage_incoming": "VANTA {received} av {total} paket",
+  "receivedImage_queued": "Att väta att decodera",
+  "receivedImage_tapToDecode": "Tap för att decodera",
+  "receivedImage_decoding": "Rekonstruktion… om 1 sekund",
+  "receivedImage_incomplete": "Bilden är okomplett — {received} av {total} paket har ankomit",
+  "receivedImage_corrupt": "Bilden kunde inte rekonstrueras",
+  "receivedImage_decoderMissing": "Bild mottagen — bilddekoderingen är avbrott",
+  "receivedImage_evicted": "Bild inte lagrad längre",
+  "receivedImage_retry": "Omförs igen",
+  "receivedImage_decodeAgain": "Kodera igen",
+  "receivedImage_openSettings": "Skapa en uppställning",
+  "receivedImage_tapToProcess": "Tap för att behandla",
+  "receivedImage_awaiting": "{bytes} byte · {packets} {packets, plural, =1{paket} other{paket}}",
+  "imageSend_secondsValue": "{seconds} sekunder",
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
 }

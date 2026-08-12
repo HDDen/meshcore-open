@@ -179,26 +179,26 @@ flutter build windows --release
 flutter build linux --release
 ```
 
-### Build profiles: lite / full
+### Build profiles: lite / lite-aeic / full
 
-The app can be built in two profiles that differ in on-device LLM message translation support:
+The app can be built in three profiles:
 
-- **lite** — no LLM translation, fewer dependencies, smaller binary (the default, and how
-  released builds are produced)
-- **full** — includes on-device LLM translation (`llamadart`)
+- **lite** — no LLM translation or AEIC neural images; smallest binary
+- **lite-aeic** — lite plus AEIC image support (`flutter_onnxruntime`)
+- **full** — includes both on-device LLM translation (`llamadart`) and AEIC
 
 ```bash
 flutter clean
-dart run tool/use_translation_profile.dart lite   # or: full
+dart run tool/use_translation_profile.dart lite   # or: lite-aeic / full
 flutter pub get
 ...
 flutter build apk --release --split-per-abi --dart-define=MESHCORE_ENABLE_TRANSLATION=false # adds «MESHCORE_ENABLE_TRANSLATION»-flag; Android apk for example
 ```
 
-The tool copies `pubspec.lite.yaml` / `pubspec.full.yaml` over `pubspec.yaml` and swaps
-`lib/services/translation_service.dart` to the matching variant. The selected profile is sticky —
-it stays active for every subsequent build until you switch again. When changing dependencies,
-edit all three pubspec files so a profile switch does not overwrite your change.
+The tool copies the selected `pubspec.<profile>.yaml` over `pubspec.yaml` and swaps both the
+translation service and AEIC backend to their matching implementations. The selected profile is
+sticky: it stays active for every subsequent build until you switch again. When changing shared
+dependencies, update every profile manifest so a later switch does not overwrite the change.
 
 ## Contact and support
 

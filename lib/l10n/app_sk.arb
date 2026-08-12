@@ -3082,5 +3082,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "V režime offline nemôžete odosielať správy ani vykonávať iné akcie",
   "app_offline_sharedMode": "Zlúčená história",
-  "settings_infoDeviceName": "Názov dosky"
+  "settings_infoDeviceName": "Názov dosky",
+  "settings_bleDebugLog": "Log BLE Debug",
+  "settings_bleDebugLogSubtitle": "Príkazy BLE, odpovede a surové dáta",
+  "chat_pathManagement": "Správa ciest",
+  "chat_routingMode": "Režim trasy",
+  "chat_autoUseSavedPath": "Použiť uloženú cestu",
+  "chat_forceFloodMode": "Zavrieť režim núdzového povodňového režimu",
+  "chat_recentAckPaths": "Nedávne cesty ACK (klepni na použitie):",
+  "chat_pathHistoryFull": "História ciest je plná. Odstráňte záznamy, aby ste mohli pridať nové.",
+  "chat_hopSingular": "Skok",
+  "chat_hopPlural": "Skákať",
+  "chat_successes": "Úspechy",
+  "chat_pathActions": "Cesty:",
+  "chat_setCustomPath": "Nastaviť vlastnú cestu",
+  "chat_setCustomPathSubtitle": "Ručne zadajte trasu.",
+  "chat_clearPath": "Vyčistiš cestu",
+  "chat_clearPathSubtitle": "Znovu nájsť vynútene pri nasledujúcej pošlite",
+  "chat_floodModeSubtitle": "Použite prepínanie trasy v navigačnom paneli.",
+  "chat_floodModeEnabled": "Odosporňovacia prevádzka je zapnutá. Vypnite ju znova cez ikonu routovania v navigačnom páse.",
+  "chat_pathDetailsNotAvailable": "Podrobnosti o ceste zatiaľ dostupné nie sú. Skúste poslať správu na obnovenie.",
+  "chat_pathSetHops": "Cesta nastavená: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Aktívna cesta: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Používa {count} {count, plural, =1{hop} other{hops}} cestu",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Zadajte vlastný priebeh",
+  "path_hexPrefixInstructions": "Zadajte 2-miestne hexové predpony pre každú fázu, oddelené čiarkami.",
+  "path_hexPrefixExample": "A1,F2,3C (každý uzel používa prvý bajt svojho verejného kľúča)",
+  "path_labelHexPrefixes": "Cesty (hexové predpony)",
+  "path_helperMaxHops": "Max 64 skokov. Každý prefix je 2 hexadecimálne znaky (1 bajt).",
+  "path_selectFromContacts": "Vyberte sa z kontaktov:",
+  "path_customPathsRequire": "Vlastné cesty vyžadujú medziletoch, ktoré môžu prenášať správky.",
+  "path_invalidHexPrefixes": "Neplatné hexové predpony: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Cesta je príliš dlhá. Umožnené je maximum 64 skokov.",
+  "path_setPath": "Nastaviť cestu",
+  "repeater_autoUseSavedPath": "Použiť uloženú cestu",
+  "repeater_forceFloodMode": "Zavrieť režim núdzového povodňového režimu",
+  "repeater_pathManagement": "Správa trás",
+  "chat_ShowAllPaths": "Zobraziť všetky cesty",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardware",
+  "appSettings_batteryLipoHv": "LiPo HV (3.0-4.35V)",
+  "chat_sendImage": "Vyslat obraz",
+  "chat_imagePickFailed": "Nesmiela jsem otvoriť tento obrázok",
+  "imageMessages_enableTitle": "Zabezpečte zobrazi",
+  "imageMessages_enableSubtitle": "Odeslanie obrazov pre mšťanie. Potrebujete jednorazové stáhnutie modelu obrazov.",
+  "imageMessages_modelSectionTitle": "Model v kínajme",
+  "imageMessages_downloadModel": "Stáhnie",
+  "imageMessages_cancelDownload": "Zastavenie",
+  "imageMessages_removeModel": "Vyhniť model",
+  "imageMessages_modelReady": "Čiačný",
+  "imageMessages_modelNotPublished": "Nesprávne vypisáné — tento prechovka nie môže jej stáhnuť.",
+  "imageMessages_downloadFailed": "Model s obrázkom nemôžno sťažovať.",
+  "imageMessages_autoProcessTitle": "Automaticky prepojiť slučaje.",
+  "imageMessages_autoProcessSubtitle": "Rekonstruujte každý obraz tak, ako pridá. Používajete okolo 2 GB pamäti pre drugú hodinu; odložte rekonstrukciu tým kliknutím.",
+  "imageSend_title": "Vyslat obraz",
+  "imageSend_cropNote": "Zmeneno na 512 × 512 · vzorýst nie byl zachovan",
+  "imageSend_originalSize": "Výborný text:\n\n\"Language is the road map of a culture. It tells us where to go as a society and helps us understand the world around us. Learning a new language opens up new perspectives and opportunities, allowing us to connect with people from different backgrounds and build bridges between cultures.\"\n\nSlovenská preklada:\n\n\"Jazyk je cesta pre zručnosti a odráža kultúru. Dá nám uvedomi, dokádať, kúdy sa pohladneme a pomáha našej společnosti poradiť sa v rôznych okolnosti a porozumieť o svetu kolem nás. Nauka nového jazyka otviera nové perspektívy a možnosti, čo pohybuje našu schopnosť sa spoluprávať s ľudmi z rôznych okolnosti a budovať mosty medzi kultúry.\"",
+  "imageSend_onAirSize": "V prúce",
+  "imageSend_quality": "Kvalita",
+  "imageSend_qualityStandard": "Stándard",
+  "imageSend_qualityHigh": "Vysoká",
+  "imageSend_packetsLabel": "Pakety",
+  "imageSend_airtimeLabel": "Čas na anteni",
+  "imageSend_sizeLabel": "Základ",
+  "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paketov}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Nastavenia radio nezná",
+  "imageSend_radioUnknownBody": "Zkonečte s určým prijemcem, aby sa mohlo výpočet času, ktorý je v prúbežu.",
+  "imageSend_longSendTitle": "Dlouhá transmisia",
+  "imageSend_longSendBody": "Tento dôvod udrží kanál priamo na {duration}.",
+  "imageSend_floodNote": "Povodný routing: každý repeater v rozsahu zrňa každý paket, takže kanál zostá zajetší dlouше, než tu.",
+  "imageSend_parityTitle": "Poučný paket pre očudenie",
+  "imageSend_paritySubtitle": "Jedný dodatný paket. Skúsené súhlasy nie sa uznávaú, takže to umožňuje prechovávaču opraviť obraz, pokiaľ sa jedný paket niebyl ztrácený.",
+  "imageSend_send": "Odeslať",
+  "imageSend_cancel": "Zastavenie",
+  "imageSend_encodeFailed": "Tento obráz nie byla byla schována.",
+  "imageSend_codecDownloading": "Model prehľadovania prebeža stále stále stále prechádza.",
+  "imageSend_codecUnavailable": "Zobrazenie nie je dostupný na tomto zariadení.",
+  "imageSend_codecDisabled": "Zobrazy s prešteľkami sú v nastavení vypnené.",
+  "imageSend_deviceUnsupported": "Tento radiok nie môže odeslať obrazové pakety. Podeďte správne určité zařízení s oprogramovaním spolupráce 13 alebo novším.",
+  "imageSend_directMessagesUnsupported": "Obrazy sa prechádzajú jako skupinové údaje, preto sa ich môžu odeslať len na kanál — nie v príbeh sa.",
+  "imageSend_tooLarge": "Tento obraz byl skodyrovany do viac paketov, ako umožňuje si sítka format.",
+  "imageSend_sentConfirmation": "Obrázok odoslaný ako {count} {count, plural, =1{paket} other{paketov}}.",
+  "imageSend_sendFailed": "Obraz nemôžlo odeslať: {error}",
+  "imageSend_sendingProgress": "Vysyťanie obrazu — pakét {sent} z {total}",
+  "receivedImage_senderPrefix": "Vęzlo {prefix}",
+  "receivedImage_incoming": "Otrzymané {received} z {total} pakotí",
+  "receivedImage_queued": "Čekanie na dekódovanie",
+  "receivedImage_tapToDecode": "Kliknite, aby dekódovať",
+  "receivedImage_decoding": "Rekonstrukcia… o čoľve 1 s",
+  "receivedImage_incomplete": "Obraz nieješťajný — {received} z {total} paciek príšlo",
+  "receivedImage_corrupt": "Obraz nemôžu byť prepojený",
+  "receivedImage_decoderMissing": "Otrzymaná slúba — dekódovanie slúby je vypadejce",
+  "receivedImage_evicted": "Obraz nemá uložený",
+  "receivedImage_retry": "Zkôr to opítajte",
+  "receivedImage_decodeAgain": "Zdeľte sa znovu",
+  "receivedImage_openSettings": "Založte",
+  "receivedImage_tapToProcess": "Ukliknite, aby sa príjomili",
+  "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
+  "imageSend_secondsValue": "{seconds} s",
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
 }

@@ -2864,5 +2864,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "Você não pode enviar mensagens nem realizar outras ações no modo offline",
   "app_offline_sharedMode": "Histórico combinado",
-  "settings_infoDeviceName": "Nome da placa"
+  "settings_infoDeviceName": "Nome da placa",
+  "settings_bleDebugLog": "Log de Depuração BLE",
+  "settings_bleDebugLogSubtitle": "Comandos, respostas e dados brutos do BLE",
+  "chat_pathManagement": "Gerenciamento de Caminhos",
+  "chat_routingMode": "Modo de roteamento",
+  "chat_autoUseSavedPath": "Auto (usar caminho salvo)",
+  "chat_forceFloodMode": "Modo de Inundação Forçado",
+  "chat_recentAckPaths": "Rotas de ACK Recentes (toque para usar):",
+  "chat_pathHistoryFull": "O histórico está cheio. Remova entradas para adicionar novas.",
+  "chat_hopSingular": "pule",
+  "chat_hopPlural": "salta",
+  "chat_successes": "Sucessos",
+  "chat_pathActions": "Ações do Caminho:",
+  "chat_setCustomPath": "Definir Caminho Personalizado",
+  "chat_setCustomPathSubtitle": "Especifique manualmente o caminho de roteamento",
+  "chat_clearPath": "Limpar Caminho",
+  "chat_clearPathSubtitle": "Forçar a descoberta na próxima transmissão",
+  "chat_floodModeSubtitle": "Use a chave de roteamento na barra de ferramentas",
+  "chat_floodModeEnabled": "Modo de inundação ativado. Desative-o novamente através do ícone de roteamento na barra de ferramentas.",
+  "chat_pathDetailsNotAvailable": "Os detalhes do caminho ainda não estão disponíveis. Tente enviar uma mensagem para atualizar.",
+  "chat_pathSetHops": "Caminho definido: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Caminho atual: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Usando {count} {count, plural, =1{hop} other{hops}} caminho",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Insira Caminho Personalizado",
+  "path_hexPrefixInstructions": "Insira os prefixos hexadecimais de 2 caracteres para cada salto, separados por vírgulas.",
+  "path_hexPrefixExample": "A1,F2,3C (cada nó usa o primeiro byte de sua chave pública)",
+  "path_labelHexPrefixes": "Prefixo Hexadecimal",
+  "path_helperMaxHops": "Máximo de 64 saltos. Cada prefixo tem 2 caracteres hexadecimais (1 byte)",
+  "path_selectFromContacts": "Ou selecione de contatos:",
+  "path_customPathsRequire": "Caminhos personalizados exigem saltos intermediários que podem transmitir mensagens.",
+  "path_invalidHexPrefixes": "Prefixos hexadecimais inválidos: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Caminho muito longo. Máximo de 64 saltos permitidos.",
+  "path_setPath": "Definir Caminho",
+  "repeater_autoUseSavedPath": "Auto (usar caminho salvo)",
+  "repeater_forceFloodMode": "Modo de Inundação Forçado",
+  "repeater_pathManagement": "Gerenciamento de caminhos",
+  "chat_ShowAllPaths": "Mostrar todos os caminhos",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardware",
+  "appSettings_batteryLipoHv": "LiPo HV (3,0-4,35V)",
+  "chat_sendImage": "Enviar imagem",
+  "chat_imagePickFailed": "Não consegui abrir essa imagem",
+  "imageMessages_enableTitle": "Mensagens de imagem",
+  "imageMessages_enableSubtitle": "Envie as imagens pela malha. Requer o download de um modelo de imagem único.",
+  "imageMessages_modelSectionTitle": "Modelo de imagem",
+  "imageMessages_downloadModel": "Download",
+  "imageMessages_cancelDownload": "Cancelar",
+  "imageMessages_removeModel": "Remover modelo",
+  "imageMessages_modelReady": "Pronto",
+  "imageMessages_modelNotPublished": "Ainda não publicado — esta versão não pode baixá-lo.",
+  "imageMessages_downloadFailed": "O modelo de imagem não pôde ser baixado.",
+  "imageMessages_autoProcessTitle": "Processar imagens automaticamente",
+  "imageMessages_autoProcessSubtitle": "Reconstrua cada imagem assim que ela chegar. Utiliza cerca de 2 GB de memória por segundo; dispense a reconstrução com um toque.",
+  "imageSend_title": "Enviar imagem",
+  "imageSend_cropNote": "Redimensionado para 512 × 512 · a proporção de aspecto não foi preservada",
+  "imageSend_originalSize": "Texto Original",
+  "imageSend_onAirSize": "Ao ar",
+  "imageSend_quality": "Qualidade",
+  "imageSend_qualityStandard": "Padrão",
+  "imageSend_qualityHigh": "Alto",
+  "imageSend_packetsLabel": "Pacotes",
+  "imageSend_airtimeLabel": "Tempo em transmissão",
+  "imageSend_sizeLabel": "Carga útil",
+  "imageSend_packetsCount": "{count} {count, plural, =1{pacote} other{pacotes}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Configurações de rádio desconhecidas",
+  "imageSend_radioUnknownBody": "Conecte-se a um dispositivo para que o horário de transmissão possa ser calculado.",
+  "imageSend_longSendTitle": "Transmissão longa",
+  "imageSend_longSendBody": "Isso manterá o canal por cerca de {duration}.",
+  "imageSend_floodNote": "Roteamento de inundação: cada repetidor na faixa retransmite cada pacote, fazendo com que o canal permaneça ocupado por mais tempo do que isso.",
+  "imageSend_parityTitle": "Pacote de recuperação",
+  "imageSend_paritySubtitle": "Um pacote extra. As mensagens em grupo não são reconhecidas, assim permitindo que o destinatário reconstrua a imagem caso um pacote seja perdido.",
+  "imageSend_send": "Enviar",
+  "imageSend_cancel": "Cancelar",
+  "imageSend_encodeFailed": "Esta imagem não pode ser codificada.",
+  "imageSend_codecDownloading": "O modelo de imagem ainda está baixando.",
+  "imageSend_codecUnavailable": "O envio de imagem não está disponível neste dispositivo.",
+  "imageSend_codecDisabled": "As mensagens de imagem estão desativadas nas configurações.",
+  "imageSend_deviceUnsupported": "Este rádio não pode enviar pacotes de imagem. Conecte um dispositivo com firmware companheiro versão 13 ou superior.",
+  "imageSend_directMessagesUnsupported": "As imagens viajam como dados em grupo, portanto, só podem ser enviadas para um canal — não em mensagem direta.",
+  "imageSend_tooLarge": "Essa imagem foi codificada em mais pacotes do que o formato de malha permite.",
+  "imageSend_sentConfirmation": "Imagem enviada como {count} {count, plural, =1{pacote} other{pacotes}}.",
+  "imageSend_sendFailed": "A imagem não pôde ser enviada: {error}",
+  "imageSend_sendingProgress": "Envio da imagem — pacote {sent} de {total}",
+  "receivedImage_senderPrefix": "Nó {prefix}",
+  "receivedImage_incoming": "{received} de {total} pacotes",
+  "receivedImage_queued": "Aguardando para decodificar",
+  "receivedImage_tapToDecode": "Toque para decodificar",
+  "receivedImage_decoding": "Reconstruindo… cerca de 1 segundo",
+  "receivedImage_incomplete": "Imagem incompleta — {received} de {total} pacotes chegaram",
+  "receivedImage_corrupt": "A imagem não pôde ser reconstruída",
+  "receivedImage_decoderMissing": "Imagem recebida — decodificação de imagem incorreta",
+  "receivedImage_evicted": "Imagem não armazenada",
+  "receivedImage_retry": "Tente novamente",
+  "receivedImage_decodeAgain": "Decodifique novamente",
+  "receivedImage_openSettings": "Configurar",
+  "receivedImage_tapToProcess": "Toque para processar",
+  "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{pacote} other{pacotes}}",
+  "imageSend_secondsValue": "{seconds} segundos",
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
 }

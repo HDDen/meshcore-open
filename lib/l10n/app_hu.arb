@@ -3085,5 +3085,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "Offline módban nem küldhet üzenetet és nem végezhet más műveletet",
   "app_offline_sharedMode": "Egyesített előzmények",
-  "settings_infoDeviceName": "Panel megnevezése"
+  "settings_infoDeviceName": "Panel megnevezése",
+  "settings_bleDebugLog": "BLE hibaelhárítási napló",
+  "settings_bleDebugLogSubtitle": "BLE parancsok, válaszok és alapvető adatok",
+  "path_routeWeight": "{weight}/{max}",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_pathManagement": "Útvonal-kezelés",
+  "chat_ShowAllPaths": "Mutasson meg minden útvonalat",
+  "chat_routingMode": "Útvonal-kezelési mód",
+  "chat_autoUseSavedPath": "Automatikus (az eddigi útvonal használata)",
+  "chat_forceFloodMode": "Erőforrás-alapú áramlás mód",
+  "chat_recentAckPaths": "Legutóbbi használt útvonalak (gombra kattintva):",
+  "chat_pathHistoryFull": "Az előző lépések listája teljes. Törölj ki a bejegyzéseket, hogy újokat hozzáadhatsd.",
+  "chat_hopSingular": "ugor",
+  "chat_hopPlural": "babér",
+  "chat_successes": "sikerek",
+  "chat_pathActions": "Céltúrások:",
+  "chat_setCustomPath": "Beállítsd a saját útvonalat",
+  "chat_setCustomPathSubtitle": "Kézzel megadott útvonal",
+  "chat_clearPath": "Egyértelmű út",
+  "chat_clearPathSubtitle": "A parancs új küldéskor újra kell aktivizálnia.",
+  "chat_floodModeSubtitle": "Használja a \"útvonal\" kapcsolót az alkalmazás sávjában.",
+  "chat_floodModeEnabled": "Árvízvédelmi mód bekapcsolva. A visszaállítás a alkalmazásban található útvonal ikon segítségével.",
+  "chat_pathDetailsNotAvailable": "Az útvonal részletei még nem elérhetők. Próbálja meg küldeni egy üzenetet, hogy frissítse az információkat.",
+  "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Jelenlegi útvonal: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "{count} {count, plural, =1{ugrás} other{ugrások}} útvonal használata",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Adja meg a saját elérési útvonalat",
+  "path_hexPrefixInstructions": "Adja meg a 2 karakteres hexadecimális előtagokat minden lépéshez, tagolva kommával.",
+  "path_hexPrefixExample": "Példa: A1, F2, 3C (minden csomó az első részét használja a nyilvános kulcsából)",
+  "path_labelHexPrefixes": "Út (hex-prefixek)",
+  "path_helperMaxHops": "A maximális hossz 64 karakter. Minden előző rész 2 hatos számjegyből áll (1 bájt).",
+  "path_selectFromContacts": "Válasszon a kontaktlista elembek közül:",
+  "path_customPathsRequire": "Az egyedi útvonalaknak szükségük van átjáró pontokra, amelyek képesek üzeneteket továbbítani.",
+  "path_invalidHexPrefixes": "Érvénytelen hexadecimális előtagok: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Az út túl hosszú. A maximális engedélyezett lépések száma 64.",
+  "path_setPath": "Útvonal meghatározása",
+  "repeater_autoUseSavedPath": "Automatikus (az eddigi útvonal használata)",
+  "repeater_forceFloodMode": "Erőforrás-alapú áramlás mód",
+  "repeater_pathManagement": "Útvonal-kezelés",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardverő",
+  "appSettings_batteryLipoHv": "LiPo HV (3.0-4.35V)",
+  "chat_sendImage": "Felhasználj az image",
+  "chat_imagePickFailed": "Nem tudtam ezt a fenti fényre kapni",
+  "imageMessages_enableTitle": "Fenti hírüket biztosítani",
+  "imageMessages_enableSubtitle": "Fényokat a hálózatban küldd el. Egyértelmű fénymodell hozzáadásra kell.",
+  "imageMessages_modelSectionTitle": "Image model",
+  "imageMessages_downloadModel": "Hozzáladás",
+  "imageMessages_cancelDownload": "Színviselés",
+  "imageMessages_removeModel": "Kisnövezdés",
+  "imageMessages_modelReady": "Hozzá",
+  "imageMessages_modelNotPublished": "Érkeztetve nem — ez a építési módszert nem lehet lejobbítani.",
+  "imageMessages_downloadFailed": "Életmódelmát nem tudtam hozni.",
+  "imageMessages_autoProcessTitle": "Automatikusan kínaltatja fénybetek",
+  "imageMessages_autoProcessSubtitle": "Minden fenti image-t kiválasztsa meg, amikor érkezik. Minden más esetben 2 GB fényre kell szükséges; megoldja a rekonstruálisi a támogatásra egy klikkel.",
+  "imageSend_title": "Felhasználj az image",
+  "imageSend_cropNote": "512 × 512 órák számára megosztva · képszöget nem biztosítva",
+  "imageSend_originalSize": "Következtetés:",
+  "imageSend_onAirSize": "Erőben",
+  "imageSend_quality": "Hosszú Képesség",
+  "imageSend_qualityStandard": "Standard",
+  "imageSend_qualityHigh": "High: Magas",
+  "imageSend_packetsLabel": "Paketek",
+  "imageSend_airtimeLabel": "Kiválasztás a fent",
+  "imageSend_sizeLabel": "Kártya",
+  "imageSend_packetsCount": "{count} {count, plural, =1{csomag} other{csomag}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Radiooldalok nem tudom",
+  "imageSend_radioUnknownBody": "Kizárdhoz kapcsolódd a rendszert, hogy a súly az az álló időt lehet elismerni.",
+  "imageSend_longSendTitle": "Uzun hírás",
+  "imageSend_longSendBody": "Ez megbízható a kanal {duration}-n.",
+  "imageSend_floodNote": "Fúró irányozás: Minden repeater a fúró körüléggel megköveti mindkét paketet, ezért a kanal eltartja más a lehetséges időt.",
+  "imageSend_parityTitle": "Korzolás paksa",
+  "imageSend_paritySubtitle": "Egy kibőbbes kapszula. Gruppos hírselek nem érkezik, ezért az empfangó nem kell elismerni a jel, ha egy egyes kapszula kaland, hogy nem teljesen érkezz.",
+  "imageSend_send": "Keresés",
+  "imageSend_cancel": "Színviselés",
+  "imageSend_encodeFailed": "Ez a fényet nem tudtam kódolni.",
+  "imageSend_codecDownloading": "Érdekesz az image model megstálása még van.",
+  "imageSend_codecUnavailable": "Felhasználó észintje nem kapható ezen a rendszert.",
+  "imageSend_codecDisabled": "Image hírletek belsőoldal elkalmáznak a konfigurációban.",
+  "imageSend_deviceUnsupported": "Ez a radio nem tudja verseni színekfájltakat. Habilítd a kompatibilis firmware 13 vagy újabb versionot kapcsált eszközet.",
+  "imageSend_directMessagesUnsupported": "Fényiak gyakorolják grupos adatban, ezért nem lehetek versenek egy hozzáfűzésre, csak egy kanalra.",
+  "imageSend_tooLarge": "A figyelmetes fentet nem kínálhat a körközlettel ismétálás elterjesztésére.",
+  "imageSend_sentConfirmation": "Kép elküldve {count} {count, plural, =1{csomagként} other{csomagként}}.",
+  "imageSend_sendFailed": "Fentami nem tűnik: {error}",
+  "imageSend_sendingProgress": "Felhasználó: Lehet a következőkét kifejezetet – {sent} paket {total}",
+  "receivedImage_senderPrefix": "Node {prefix}",
+  "receivedImage_incoming": "Kulcsfontosságú: Kiválasztja meg a {received} {total} paketot",
+  "receivedImage_queued": "Kódoláshoz küldőzve",
+  "receivedImage_tapToDecode": "Kódoláshoz klikd el",
+  "receivedImage_decoding": "Korlátozás… egy 1 perc után",
+  "receivedImage_incomplete": "Kérem, az {received} {total} paketet kapottak.",
+  "receivedImage_corrupt": "Fény nem tudtam megrealítani",
+  "receivedImage_decoderMissing": "Kezd az image — image decodálás nem kapható",
+  "receivedImage_evicted": "Fény nem tartalmazva",
+  "receivedImage_retry": "Kérem kell próbálni",
+  "receivedImage_decodeAgain": "Kodoldó",
+  "receivedImage_openSettings": "Jelzése",
+  "receivedImage_tapToProcess": "Klikd a feljelenítést",
+  "receivedImage_awaiting": "{bytes} bájt · {packets} {packets, plural, =1{csomag} other{csomag}}",
+  "imageSend_secondsValue": "{seconds} sekünd\n\n(Note: The placeholder {seconds} is kept unchanged as requested.)",
+  "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)"
 }

@@ -2387,5 +2387,246 @@
   "chat_searchMessages_results_contact": "Диалог с {name}",
   "app_offline": "Оффлайн",
   "app_offline_unableToMessage": "Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме",
-  "app_offline_sharedMode": "Объединённая история"
+  "app_offline_sharedMode": "Объединённая история",
+  "settings_bleDebugLog": "Журнал отладки BLE",
+  "settings_bleDebugLogSubtitle": "Команды BLE, ответы и сырые данные",
+  "chat_pathManagement": "Управление маршрутами",
+  "chat_routingMode": "Режим маршрутизации",
+  "chat_autoUseSavedPath": "Авто (использовать сохранённый маршрут)",
+  "chat_forceFloodMode": "Принудительный режим рассылки",
+  "chat_recentAckPaths": "Недавние подтверждённые маршруты (нажмите, чтобы использовать):",
+  "chat_pathHistoryFull": "История маршрутов заполнена. Удалите записи, чтобы добавить новые.",
+  "chat_hopSingular": "хоп",
+  "chat_hopPlural": "хопов",
+  "chat_successes": "успешно",
+  "chat_pathActions": "Действия с маршрутом:",
+  "chat_setCustomPath": "Указать маршрут вручную",
+  "chat_setCustomPathSubtitle": "Вручную задать маршрут передачи",
+  "chat_clearPath": "Очистить маршрут",
+  "chat_clearPathSubtitle": "Принудительно обновить маршрут при следующей отправке",
+  "chat_floodModeSubtitle": "Используйте переключатель маршрутизации в панели приложения",
+  "chat_floodModeEnabled": "Режим рассылки включён. Отключите через значок маршрутизации в панели приложения.",
+  "chat_pathDetailsNotAvailable": "Детали маршрута ещё недоступны. Попробуйте отправить сообщение для обновления.",
+  "chat_pathSetHops": "Маршрут установлен: {hopCount} {hopCount, plural, one{хоп} few{хопа} many{хопов} other{хопов}} — {status}",
+  "path_currentPath": "Текущий маршрут: {path}",
+  "path_usingHopsPath": "Используется маршрут из {count} {count, plural, one{хоп} few{хопа} many{хопов} other{хопов}}",
+  "path_enterCustomPath": "Введите маршрут вручную",
+  "path_hexPrefixInstructions": "Введите 2-символьные шестнадцатеричные префиксы для каждого хопа, разделённые запятыми.",
+  "path_hexPrefixExample": "Пример: A1,F2,3C (каждый узел использует первый байт своего публичного ключа)",
+  "path_labelHexPrefixes": "Маршрут (шестнадцатеричные префиксы)",
+  "path_helperMaxHops": "Максимум 64 хопа. Каждый префикс — 2 шестнадцатеричных символа (1 байт)",
+  "path_selectFromContacts": "Или выберите из контактов:",
+  "path_customPathsRequire": "Пользовательские маршруты требуют промежуточных узлов, способных ретранслировать сообщения.",
+  "path_invalidHexPrefixes": "Недопустимые шестнадцатеричные префиксы: {prefixes}",
+  "path_tooLong": "Маршрут слишком длинный. Максимум 64 хопа.",
+  "path_setPath": "Установить маршрут",
+  "repeater_autoUseSavedPath": "Авто (использовать сохранённый маршрут)",
+  "repeater_forceFloodMode": "Принудительный режим рассылки",
+  "repeater_pathManagement": "Управление маршрутами",
+  "repeater_refreshLocationSettings": "Обновить настройки местоположения",
+  "repeater_refreshAdvertisementSettings": "Обновить настройки анонсирований",
+  "neighbors_heardA ago": "Слышали: {time} назад",
+  "chat_ShowAllPaths": "Показать все пути",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Оценка",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Оборудование",
+  "appSettings_batteryLipoHv": "LiPo HV (3,0–4,35 В)",
+  "chat_sendImage": "Отправьте изображение",
+  "chat_imagePickFailed": "Не удалось открыть это изображение",
+  "imageMessages_enableTitle": "Включить изображения в сообщения",
+  "imageMessages_enableSubtitle": "Отправьте изображения через сеть. Требуется однократная загрузка шаблона изображения.",
+  "imageMessages_modelSectionTitle": "Модель изображения",
+  "imageMessages_downloadModel": "Скачать",
+  "imageMessages_cancelDownload": "Отмена",
+  "imageMessages_removeModel": "Удалить модель",
+  "imageMessages_modelReady": "Готов",
+  "imageMessages_modelNotPublished": "Пока не опубликовано — эта сборка не может скачать это.",
+  "imageMessages_downloadFailed": "Модель изображения не удалось скачать.",
+  "imageMessages_autoProcessTitle": "Автоматически обрабатывать изображения",
+  "imageMessages_autoProcessSubtitle": "Примерно каждое изображение реконструируйте сразу после его поступления. Для этого на каждый раз используется около 2 ГБ памяти; отключите реконструкцию касанием.",
+  "imageSend_title": "Отправьте изображение",
+  "imageSend_cropNote": "Меняется размер на 512 × 512 · соотношение сторон не сохраняется",
+  "imageSend_originalSize": "Оригинал",
+  "imageSend_onAirSize": "В эфире",
+  "imageSend_quality": "Качество",
+  "imageSend_qualityStandard": "Стандарт",
+  "imageSend_qualityHigh": "Высота",
+  "imageSend_packetsLabel": "Пакеты",
+  "imageSend_airtimeLabel": "Время на эфире",
+  "imageSend_sizeLabel": "Пакет",
+  "imageSend_packetsCount": "{count} {count, plural, one{пакет} few{пакета} many{пакетов} other{пакета}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Настройки радио неизвестны",
+  "imageSend_radioUnknownBody": "Подключитесь к устройству, чтобы можно было рассчитать время эфирного времени.",
+  "imageSend_longSendTitle": "Долгая передача",
+  "imageSend_longSendBody": "Это будет поддерживать канал примерно {duration}.",
+  "imageSend_floodNote": "Руководство по маршрутизации потоков: каждый ретрансатор в зоне перераспределяет каждый пакет, поэтому канал остаётся занятным дольше, чем это.",
+  "imageSend_parityTitle": "Пакет восстановления",
+  "imageSend_paritySubtitle": "Один дополнительный пакет. Групповые сообщения не подтверждаются, поэтому это позволяет получателю восстановить изображение, если один пакет потерян.",
+  "imageSend_send": "Отправить",
+  "imageSend_cancel": "Отмена",
+  "imageSend_encodeFailed": "Это изображение не может быть закодировано.",
+  "imageSend_codecDownloading": "Модель изображения всё ещё загружается.",
+  "imageSend_codecUnavailable": "Отправка изображения на этом устройстве недоступна.",
+  "imageSend_codecDisabled": "В настройках отключены сообщения с изображениями.",
+  "imageSend_deviceUnsupported": "Это радио не может отправлять пакеты изображений. Подключите устройство, работающее на прошивке-компаньоне версии 13 или выше.",
+  "imageSend_directMessagesUnsupported": "Изображения передаются как групповые данные, поэтому их можно отправлять только в канал, а не в личное сообщение.",
+  "imageSend_tooLarge": "Изображение было закодировано в больше пакетов, чем позволяет формат сетки.",
+  "imageSend_sentConfirmation": "Изображение отправлено как {count} {count, plural, =1{пакет} other{пакетов}}.",
+  "imageSend_sendFailed": "Изображение не может быть отправлено: {error}",
+  "imageSend_sendingProgress": "Отправка изображения — пакет {sent} из {total}",
+  "receivedImage_senderPrefix": "Узел {prefix}",
+  "receivedImage_incoming": "{received} из {total} пакетов",
+  "receivedImage_queued": "Ожидание расшифровки",
+  "receivedImage_tapToDecode": "Нажмите для декодирования",
+  "receivedImage_decoding": "Реконструкция… примерно за 1 секунду",
+  "receivedImage_incomplete": "Отсутствует изображение — {received} из {total} пакетов пришло",
+  "receivedImage_corrupt": "Изображение не может быть восстановлено",
+  "receivedImage_decoderMissing": "Получен изображение — декодирование изображения неправильное",
+  "receivedImage_evicted": "Изображение больше не сохраняется",
+  "receivedImage_retry": "Попробуйте снова",
+  "receivedImage_decodeAgain": "Декодируйте снова",
+  "receivedImage_openSettings": "Настройте",
+  "receivedImage_tapToProcess": "Нажмите для обработки",
+  "receivedImage_awaiting": "{bytes} байт · {packets} {packets, plural, =1{пакет} other{пакетов}}",
+  "imageSend_secondsValue": "{seconds} секунд",
+  "imageSend_minutesSecondsValue": "{minutes} м {seconds} с"
 }

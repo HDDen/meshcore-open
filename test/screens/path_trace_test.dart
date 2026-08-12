@@ -82,15 +82,17 @@ Widget _buildTestApp({
   required MeshCoreConnector connector,
   required Widget child,
 }) {
+  final appSettingsService = AppSettingsService();
+
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
-      ChangeNotifierProvider<AppSettingsService>(
-        create: (_) => AppSettingsService(),
+      ChangeNotifierProvider<AppSettingsService>.value(
+        value: appSettingsService,
       ),
-      Provider<MapTileCacheService>(
+      ChangeNotifierProvider<MapTileCacheService>(
         create: (_) =>
-            MapTileCacheService(appSettingsService: AppSettingsService()),
+            MapTileCacheService(appSettingsService: appSettingsService),
       ),
       ChangeNotifierProvider<PathHistoryService>(
         create: (_) => PathHistoryService(_FakePathStorageService()),

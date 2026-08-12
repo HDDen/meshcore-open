@@ -2864,5 +2864,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "In de offlinemodus kunt u geen berichten verzenden of andere handelingen uitvoeren",
   "app_offline_sharedMode": "Gecombineerde geschiedenis",
-  "settings_infoDeviceName": "Boardnaam"
+  "settings_infoDeviceName": "Boardnaam",
+  "settings_bleDebugLog": "BLE Debug Log",
+  "settings_bleDebugLogSubtitle": "BLE commando's, antwoorden en ruwe data",
+  "chat_pathManagement": "Beheer van Paden",
+  "chat_routingMode": "Routeerwijze",
+  "chat_autoUseSavedPath": "Automatisch (gebruik opgeslagen pad)",
+  "chat_forceFloodMode": "Dwing Floodsmodus",
+  "chat_recentAckPaths": "Recente ACK Paden (tik om te gebruiken):",
+  "chat_pathHistoryFull": "De voorgeschiedenis is vol. Verwijder vermeldingen om er nieuwe aan toe te voegen.",
+  "chat_hopSingular": "Hop",
+  "chat_hopPlural": "hoppen",
+  "chat_successes": "Succesvol",
+  "chat_pathActions": "Padacties:",
+  "chat_setCustomPath": "Stel aangepaste pad in",
+  "chat_setCustomPathSubtitle": "Handmatig routepad specificeren",
+  "chat_clearPath": "Duidelijke Pad",
+  "chat_clearPathSubtitle": "Dwing herontdekking bij volgende verzending",
+  "chat_floodModeSubtitle": "Gebruik de route-schakelaar in de app-balk",
+  "chat_floodModeEnabled": "Floodmodus is ingeschakeld. Schakel dit uit via het route-icoon in de app-balk.",
+  "chat_pathDetailsNotAvailable": "De paddetails zijn nog niet beschikbaar. Probeer een bericht te sturen om te vernieuwen.",
+  "chat_pathSetHops": "Pad ingesteld: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Huidige pad: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Gebruik {count} {count, plural, =1{hop} other{hops}} pad",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Voer aangepaste pad in",
+  "path_hexPrefixInstructions": "Voer 2-letter hex-voorgiffen voor elke hop in, gescheiden door komma's.",
+  "path_hexPrefixExample": "Voorbeeld: A1,F2,3C (elke node gebruikt het eerste byte van zijn openbare sleutel)",
+  "path_labelHexPrefixes": "Pad (hex-voorkeursletters)",
+  "path_helperMaxHops": "Maximaal 64 sprongen. Elke prefix is 2 hexadecimale tekens (1 byte)",
+  "path_selectFromContacts": "Of select contacten:",
+  "path_customPathsRequire": "Aangepaste paden vereisen tussentse overstappen die berichten kunnen doorgeven.",
+  "path_invalidHexPrefixes": "Ongeldige hex-voorkeursletters: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Pad is te lang. Maximaal 64 sprongen zijn toegestaan.",
+  "path_setPath": "Stel Pad in",
+  "repeater_autoUseSavedPath": "Automatisch (gebruik opgeslagen pad)",
+  "repeater_forceFloodMode": "Dwing Floodmodus Af",
+  "repeater_pathManagement": "Beheer van paden",
+  "chat_ShowAllPaths": "Toon alle paden",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Hardware",
+  "appSettings_batteryLipoHv": "LiPo HV (3,0-4,35 V)",
+  "chat_sendImage": "Beeld verzenden",
+  "chat_imagePickFailed": "Kunde die afbeelding niet openen",
+  "imageMessages_enableTitle": "Bijbehorende afbeeldingen activeren",
+  "imageMessages_enableSubtitle": "Beeldjes verzenden via het netwerk. Vereist eenmalig afdaling van een beeldmodel.",
+  "imageMessages_modelSectionTitle": "Beeldmodel",
+  "imageMessages_downloadModel": "Download",
+  "imageMessages_cancelDownload": "Annuleren",
+  "imageMessages_removeModel": "Model verwijderen",
+  "imageMessages_modelReady": "Klaar",
+  "imageMessages_modelNotPublished": "Nog niet gepubliceerd — deze versie kan dit niet downloaden.",
+  "imageMessages_downloadFailed": "Het beeldmodel kon niet worden gedownload.",
+  "imageMessages_autoProcessTitle": "Beeldverwerking automatisch",
+  "imageMessages_autoProcessSubtitle": "Reconstrueer elk beeld direct nadat het binnenkomt. Het gebruikt ongeveer 2 GB geheugen voor elke keer; schakel het reconstrueren uit met een tik als je het niet nodig hebt.",
+  "imageSend_title": "Beeld verzenden",
+  "imageSend_cropNote": "Aangepast aan 512 × 512 · het aspectverhouding is niet behouden",
+  "imageSend_originalSize": "Oorspronkelijk",
+  "imageSend_onAirSize": "Op de lucht",
+  "imageSend_quality": "Kwaliteit",
+  "imageSend_qualityStandard": "Standaard",
+  "imageSend_qualityHigh": "Hoog",
+  "imageSend_packetsLabel": "Pakketten",
+  "imageSend_airtimeLabel": "Tijd op de lucht",
+  "imageSend_sizeLabel": "Belasting",
+  "imageSend_packetsCount": "{count} {count, plural, =1{pakket} other{pakketten}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Radio-instellingen onbekend",
+  "imageSend_radioUnknownBody": "Verbinding maken met een apparaat zodat de uitzendtijd kan worden berekend.",
+  "imageSend_longSendTitle": "Lange transmissie",
+  "imageSend_longSendBody": "Dit houdt de kanaal ongeveer voor {duration} stand.",
+  "imageSend_floodNote": "Overstromingsrouting: elke repeater binnen bereik herzendsends elk pakket opnieuw, waardoor het kanaal langer bezig blijft dan dit.",
+  "imageSend_parityTitle": "Herstelpakket",
+  "imageSend_paritySubtitle": "Een extra pakje. Groepsberichten worden niet bevestigd, waardoor de ontvanger het beeld kan herstellen als een enkel pakket verloren gaat.",
+  "imageSend_send": "Stuur",
+  "imageSend_cancel": "Annuleren",
+  "imageSend_encodeFailed": "Dit beeld kon niet worden gecodeerd.",
+  "imageSend_codecDownloading": "Het beeldmodel wordt nog steeds gedownload.",
+  "imageSend_codecUnavailable": "Het verzenden van een afbeelding is niet mogelijk op dit apparaat.",
+  "imageSend_codecDisabled": "Boodschappen met afbeeldingen zijn uitgeschakeld in de instellingen.",
+  "imageSend_deviceUnsupported": "Dit radio kan geen beeldpakketten verzenden. Verbind een apparaat met de bijbehorende firmware versie 13 of nieuwer.",
+  "imageSend_directMessagesUnsupported": "Afbeeldingen worden verzonden als groepsgegevens, dus ze kunnen alleen naar een kanaal worden gestuurd — niet via een directe boodschap.",
+  "imageSend_tooLarge": "Die afbeelding werd gecodeerd in meer pakketten dan het mesh-formaat toelaat.",
+  "imageSend_sentConfirmation": "Afbeelding verzonden als {count} {count, plural, =1{pakket} other{pakketten}}.",
+  "imageSend_sendFailed": "Het beeld kon niet worden verzonden: {error}",
+  "imageSend_sendingProgress": "Beeld verzenden — pakket {sent} van {total}",
+  "receivedImage_senderPrefix": "Knipper {prefix}",
+  "receivedImage_incoming": "{received} van de {total} pakketten",
+  "receivedImage_queued": "Wachten op het ontcijferen",
+  "receivedImage_tapToDecode": "Tik om te decoderen",
+  "receivedImage_decoding": "Herstellen… ongeveer 1 seconde",
+  "receivedImage_incomplete": "Afbeelding onvolledig — {received} van {total} pakketten ontvangen",
+  "receivedImage_corrupt": "Afbeelding kon niet worden gereconstrueerd",
+  "receivedImage_decoderMissing": "Beeld ontvangen — beeldontcipheringsapparatuur is uitgeschakeld",
+  "receivedImage_evicted": "Afbeelding niet langer opgeslagen",
+  "receivedImage_retry": "Probeer het opnieuw",
+  "receivedImage_decodeAgain": "Decode opnieuw",
+  "receivedImage_openSettings": "Inricht",
+  "receivedImage_tapToProcess": "Tik om te verwerken",
+  "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{pakket} other{pakketten}}",
+  "imageSend_secondsValue": "{seconds} seconden",
+  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s"
 }

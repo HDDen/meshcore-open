@@ -70,9 +70,6 @@ android {
         //         arguments += listOf("-DANDROID_STL=c++_shared")
         //     }
         // }
-        // ndk {
-        //     abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-        // }
     }
 
     signingConfigs {
@@ -94,6 +91,13 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // ONNX Runtime resolves its Java classes from native code by name.
+            // Without these rules R8 renames them and the process SIGABRTs with
+            // "java_class == null" the instant the codec runs a model.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 

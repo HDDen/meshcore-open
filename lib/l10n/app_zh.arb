@@ -3082,5 +3082,279 @@
   "app_offline": "离线",
   "app_offline_unableToMessage": "离线模式下无法发送消息或执行其他操作",
   "app_offline_sharedMode": "合并历史",
-  "settings_infoDeviceName": "板卡名称"
+  "settings_infoDeviceName": "板卡名称",
+  "settings_bleDebugLog": "BLE 调试日志",
+  "settings_bleDebugLogSubtitle": "BLE 命令、响应和原始数据",
+  "settings_preset915Mhz": "915 MHz",
+  "settings_preset868Mhz": "868 MHz",
+  "settings_preset433Mhz": "433 MHz",
+  "settings_longRange": "远距离",
+  "settings_fastSpeed": "高速",
+  "chat_pathManagement": "路径管理",
+  "chat_routingMode": "路由模式",
+  "chat_autoUseSavedPath": "自动（使用保存的路径）",
+  "chat_forceFloodMode": "强制泛洪模式",
+  "chat_recentAckPaths": "最近使用的 ACK 路径（点击使用）：",
+  "chat_pathHistoryFull": "路径历史已满，请删除后再添加。",
+  "chat_hopSingular": "跳",
+  "chat_hopPlural": "跳",
+  "chat_successes": "成功",
+  "chat_pathActions": "路径操作：",
+  "chat_setCustomPath": "设置自定义路径",
+  "chat_setCustomPathSubtitle": "手动指定路由路径",
+  "chat_clearPath": "清除路径",
+  "chat_clearPathSubtitle": "清除当前路径，下次发送将重新尝试。",
+  "chat_floodModeSubtitle": "在应用栏中切换路由模式。",
+  "chat_floodModeEnabled": "泛洪模式已启用。可通过应用栏的路由图标切换。",
+  "chat_pathDetailsNotAvailable": "路径信息暂不可用，请尝试发送消息刷新。",
+  "chat_pathSetHops": "路径设置：{hopCount} 跳 - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "当前路径：{path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "使用 {count} 跳路径",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "输入自定义路径",
+  "path_hexPrefixInstructions": "请输入每个中继节点的2字符十六进制前缀，用逗号分隔。",
+  "path_hexPrefixExample": "例如：A1, F2, 3C（每个节点使用其公钥的第一字节）",
+  "path_labelHexPrefixes": "路径（十六进制前缀）",
+  "path_helperMaxHops": "最多 64 跳。每个前缀由 2 个十六进制字符（1 字节）组成。",
+  "path_selectFromContacts": "或从联系人列表中选择：",
+  "path_customPathsRequire": "自定义路径需要中间节点转发消息。",
+  "path_invalidHexPrefixes": "无效的十六进制前缀：{prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "路径过长，最多允许 64 跳。",
+  "path_setPath": "设置路径",
+  "repeater_autoUseSavedPath": "自动（使用保存的路径）",
+  "repeater_forceFloodMode": "强制泛洪模式",
+  "repeater_pathManagement": "路径管理",
+  "chat_ShowAllPaths": "显示所有路径",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "硬件",
+  "appSettings_batteryLipoHv": "锂多压电源（3.0-4.35伏）",
+  "chat_sendImage": "发送图片",
+  "chat_imagePickFailed": "无法打开该图片",
+  "imageMessages_enableTitle": "启用图片消息",
+  "imageMessages_enableSubtitle": "通过网格发送图像。需要一次性下载图像模型。",
+  "imageMessages_modelSectionTitle": "图像模型",
+  "imageMessages_downloadModel": "下载",
+  "imageMessages_cancelDownload": "取消",
+  "imageMessages_removeModel": "移除模型",
+  "imageMessages_modelReady": "准备就绪",
+  "imageMessages_modelNotPublished": "尚未发布——此版本无法下载该内容。",
+  "imageMessages_downloadFailed": "图像模型无法下载。",
+  "imageMessages_autoProcessTitle": "自动处理图像",
+  "imageMessages_autoProcessSubtitle": "每次图像到达后立即重建，每次需要约2GB的内存；若想关闭重建功能，可通过点击取消开启。",
+  "imageSend_title": "发送图片",
+  "imageSend_cropNote": "调整大小至512 × 512 · 宽高比未保留",
+  "imageSend_originalSize": "原文",
+  "imageSend_onAirSize": "直播中",
+  "imageSend_quality": "质量",
+  "imageSend_qualityStandard": "标准",
+  "imageSend_qualityHigh": "高",
+  "imageSend_packetsLabel": "数据包",
+  "imageSend_airtimeLabel": "播出时间",
+  "imageSend_sizeLabel": "有效载荷",
+  "imageSend_packetsCount": "{count} {count, plural, =1{个数据包} other{个数据包}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "无线电设置未知",
+  "imageSend_radioUnknownBody": "连接设备以计算播出时间。",
+  "imageSend_longSendTitle": "长距离传输",
+  "imageSend_longSendBody": "这将维持频道大约 {duration} 时间。",
+  "imageSend_floodNote": "洪水路由：每个中继站都会转发每个数据包，因此信道比这段时间更长地处于繁忙状态。",
+  "imageSend_parityTitle": "恢复包",
+  "imageSend_paritySubtitle": "多一个数据包。群发消息不被确认，因此如果某个数据包丢失，接收方可以重新构建图像。",
+  "imageSend_send": "发送",
+  "imageSend_cancel": "取消",
+  "imageSend_encodeFailed": "此图像无法编码。",
+  "imageSend_codecDownloading": "图像模型仍在下载中。",
+  "imageSend_codecUnavailable": "此设备无法发送图片。",
+  "imageSend_codecDisabled": "图片消息在设置中已关闭。",
+  "imageSend_deviceUnsupported": "此无线电无法发送图像数据包。请连接运行伴侣固件13或更高版本的设备。",
+  "imageSend_directMessagesUnsupported": "图片作为群组数据传输，因此只能发送到频道，而不能直接发送给个人。",
+  "imageSend_tooLarge": "该图像编码的数据包数量超过了网格格式所允许的范围。",
+  "imageSend_sentConfirmation": "图像已作为 {count} {count, plural, =1{个数据包} other{个数据包}} 发送。",
+  "imageSend_sendFailed": "无法发送图片：{error}",
+  "imageSend_sendingProgress": "发送图像 — 已发送 {sent} 包含 {total}",
+  "receivedImage_senderPrefix": "节点 {prefix}",
+  "receivedImage_incoming": "已收到的 {received} 个包含在 {total} 个包裹中",
+  "receivedImage_queued": "等待解码",
+  "receivedImage_tapToDecode": "点击解锁",
+  "receivedImage_decoding": "重建……大约1秒",
+  "receivedImage_incomplete": "图片不完整 — {received} 已收到 {total} 个数据包",
+  "receivedImage_corrupt": "图像无法重建",
+  "receivedImage_decoderMissing": "收到图片 — 图像解码失败",
+  "receivedImage_evicted": "图片已不再存储",
+  "receivedImage_retry": "再试一次",
+  "receivedImage_decodeAgain": "重新解码",
+  "receivedImage_openSettings": "建立",
+  "receivedImage_tapToProcess": "点击处理",
+  "receivedImage_awaiting": "{bytes} 字节 · {packets} {packets, plural, =1{个数据包} other{个数据包}}",
+  "imageSend_secondsValue": "{seconds} 秒",
+  "imageSend_minutesSecondsValue": "{minutes} 分 {seconds} 秒"
 }

@@ -84,6 +84,8 @@ dependencies:
   convert: ^3.1.2
   lottie: ^3.5.1
   visibility_detector: ^0.4.0+2
+  # Neural AEIC image codec (optional in lite builds).
+  flutter_onnxruntime: ^1.8.3
 
 hooks:
   user_defines:

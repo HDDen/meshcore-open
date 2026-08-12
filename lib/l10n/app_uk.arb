@@ -3061,5 +3061,275 @@
   "app_offline": "Офлайн",
   "app_offline_unableToMessage": "Ви не можете надсилати повідомлення або виконувати інші дії в офлайн-режимі",
   "app_offline_sharedMode": "Об'єднана історія",
-  "settings_infoDeviceName": "Найменування плати"
+  "settings_infoDeviceName": "Найменування плати",
+  "settings_bleDebugLog": "Журнал налагодження BLE",
+  "settings_bleDebugLogSubtitle": "Команди BLE, відповіді та необроблені дані",
+  "chat_pathManagement": "Керування шляхами",
+  "chat_routingMode": "Режим маршрутизації",
+  "chat_autoUseSavedPath": "Авто (використовувати збережений шлях)",
+  "chat_forceFloodMode": "Примусово через всю мережу",
+  "chat_recentAckPaths": "Підтверджені шляхи (натисніть, щоб використати):",
+  "chat_pathHistoryFull": "Історія шляхів заповнена. Видаліть записи, щоб додати нові.",
+  "chat_hopSingular": "Перехід",
+  "chat_hopPlural": "переходів",
+  "chat_successes": "Успішно",
+  "chat_score": "Оцінка",
+  "chat_pathActions": "Дії зі шляхом:",
+  "chat_setCustomPath": "Встановити власний шлях",
+  "chat_setCustomPathSubtitle": "Вказати шлях маршрутизації вручну",
+  "chat_clearPath": "Очистити шлях",
+  "chat_clearPathSubtitle": "Примусово повторити пошук при наступному надсиланні",
+  "chat_floodModeSubtitle": "Використовувати перемикач маршрутизації в панелі застосунку",
+  "chat_floodModeEnabled": "Увімкнено режим «через всю мережу». Перемикайте через іконку маршрутизації на панелі інструментів.",
+  "chat_pathDetailsNotAvailable": "Деталі шляху ще недоступні. Спробуйте надіслати повідомлення для оновлення.",
+  "chat_pathSetHops": "Шлях встановлено: {hopCount} {hopCount, plural, =1{перехід} few{переходи} many{переходів} other{переходів}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Поточний шлях: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Використання шляху з {count} {count, plural, =1{переходом} few{переходами} many{переходами} other{переходами}}",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Ввести власний шлях",
+  "path_hexPrefixInstructions": "Введіть 2-символьні hex-префікси для кожного переходу, розділені комами.",
+  "path_hexPrefixExample": "Приклад: A1,F2,3C (кожен вузол використовує перший байт свого відкритого ключа).",
+  "path_labelHexPrefixes": "Hex-префікси",
+  "path_helperMaxHops": "Макс. 64 переходи. Кожен префікс — 2 шістнадцяткові символи (1 байт)",
+  "path_selectFromContacts": "Вибрати з контактів:",
+  "path_customPathsRequire": "Власні шляхи вимагають проміжних вузлів, які можуть передавати повідомлення.",
+  "path_invalidHexPrefixes": "Некоректні hex-префікси: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Шлях занадто довгий. Максимум 64 переходи.",
+  "path_setPath": "Встановити шлях",
+  "repeater_autoUseSavedPath": "Авто (використовувати збережений шлях)",
+  "repeater_forceFloodMode": "Примусово через всю мережу",
+  "repeater_pathManagement": "Керування шляхами",
+  "repeater_refreshLocationSettings": "Оновити налаштування геопозиції",
+  "chat_ShowAllPaths": "Показати всі шляхи",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Оборудовання",
+  "appSettings_batteryLipoHv": "ЛиPo HV (3,0-4,35 В)",
+  "chat_sendImage": "Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення",
+  "chat_imagePickFailed": "Неможливо відкрити це изображення",
+  "imageMessages_enableTitle": "Підтримка зображень для посилання",
+  "imageMessages_enableSubtitle": "Пошукуєте изображення через сеть. Вимagaєте однократне скачання моделю изображення.",
+  "imageMessages_modelSectionTitle": "Модель для зображень",
+  "imageMessages_downloadModel": "Скачання",
+  "imageMessages_cancelDownload": "Завершити",
+  "imageMessages_removeModel": "Видалим модель",
+  "imageMessages_modelReady": "Готово",
+  "imageMessages_modelNotPublished": "Щоб не було опубліковано — це версія не дозволяє зробити скачання.",
+  "imageMessages_downloadFailed": "Модель для зображень не можна сказати.",
+  "imageMessages_autoProcessTitle": "Автоматично оброблювати obraзи",
+  "imageMessages_autoProcessSubtitle": "Кожна картинка повинні бути відтворена на мій момент прибуття. Використовує приблизно 2 ГБ пам'яті на кожен раз; відключіть від відтворення за допомогою кlikу.",
+  "imageSend_title": "Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення",
+  "imageSend_cropNote": "Манітовано до 512 × 512 · соотношення варість не зберігається",
+  "imageSend_originalSize": "Оригінал",
+  "imageSend_onAirSize": "На ері",
+  "imageSend_quality": "Качество",
+  "imageSend_qualityStandard": "Стандарт",
+  "imageSend_qualityHigh": "Висок",
+  "imageSend_packetsLabel": "Пакети",
+  "imageSend_airtimeLabel": "Час на ері",
+  "imageSend_sizeLabel": "Підлог",
+  "imageSend_packetsCount": "{count} {count, plural, one{пакет} few{пакети} many{пакетів} other{пакета}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Настройки радио неизвестні",
+  "imageSend_radioUnknownBody": "Залучіться до пристрою, щоб можна було розрахунювати час в етері.",
+  "imageSend_longSendTitle": "Длуга передача",
+  "imageSend_longSendBody": "Це забезпечить канал на approximativno {duration} хвилин.",
+  "imageSend_floodNote": "Рухування потоків: кожен ретрансатор у діапазоні відправлює кожен пакет, тому канал залишається занятшим довше, ніж це.",
+  "imageSend_parityTitle": "Пакет відновлення",
+  "imageSend_paritySubtitle": "Один дополний пакет. Групові посилання не відповідають, тому це дозволяє відвідувачу відтворити зображення, якщо один пакет втрачений.",
+  "imageSend_send": "Пошутить",
+  "imageSend_cancel": "Завершити",
+  "imageSend_encodeFailed": "Це изображення не може бути кодировано.",
+  "imageSend_codecDownloading": "Модель для відтворення изображень ще збирається.",
+  "imageSend_codecUnavailable": "Постій для відправлення изображень на цьому пристрої не доступний.",
+  "imageSend_codecDisabled": "Пictesovani posyly wyключені в настройках.",
+  "imageSend_deviceUnsupported": "Цей радіопередач не може отправляти пакети зображень. Зконнете пристрої, що працює з обладнанням керемонітом компаньєр 13 або новшим.",
+  "imageSend_directMessagesUnsupported": "Фотографії передаються як дані групою, тому їх можна відправляти лише на канал — не в прямому посилання.",
+  "imageSend_tooLarge": "Це изображення кодує більше пакітів, ніж дозволяє формат сети.",
+  "imageSend_sentConfirmation": "Зображення надіслано як {count} {count, plural, =1{пакет} other{пакетів}}.",
+  "imageSend_sendFailed": "Изображення не можна відправити: {error}",
+  "imageSend_sendingProgress": "Пошускаємо изображення — пакет {sent} з {total}",
+  "receivedImage_senderPrefix": "Нод {prefix}",
+  "receivedImage_incoming": "Підходяче: {received} з {total} пакітів",
+  "receivedImage_queued": "Очікування розслівання коду",
+  "receivedImage_tapToDecode": "Кliknite для декодування",
+  "receivedImage_decoding": "Повноювання… за прибуття 1 с.",
+  "receivedImage_incomplete": "Образок не повний — {received} з {total} пакітів прибавлено",
+  "receivedImage_corrupt": "Obraz не можна відтворити",
+  "receivedImage_decoderMissing": "Під час приємки — розшифровка зображення не вдалося.",
+  "receivedImage_evicted": "Изображення не зберігається",
+  "receivedImage_retry": "Попробуй ще раз",
+  "receivedImage_decodeAgain": "Декодуй ще раз",
+  "receivedImage_openSettings": "Заведіть",
+  "receivedImage_tapToProcess": "Кликніть для обробки",
+  "receivedImage_awaiting": "{bytes} байтів · {packets} {packets, plural, =1{пакет} other{пакетів}}",
+  "imageSend_secondsValue": "{seconds} секунди",
+  "imageSend_minutesSecondsValue": "{minutes} хв {seconds} с"
 }

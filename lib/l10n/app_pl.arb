@@ -3120,5 +3120,274 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "W trybie offline nie możesz wysyłać wiadomości ani wykonywać innych działań",
   "app_offline_sharedMode": "Połączona historia",
-  "settings_infoDeviceName": "Nazwa płytki"
+  "settings_infoDeviceName": "Nazwa płytki",
+  "settings_bleDebugLog": "Dziennik debugowania BLE",
+  "settings_bleDebugLogSubtitle": "Polecenia BLE, odpowiedzi i surowe dane",
+  "chat_pathManagement": "Zarządzanie ścieżkami",
+  "chat_routingMode": "Tryb routingu",
+  "chat_autoUseSavedPath": "Automatyczne (użyj zapisanej ścieżki)",
+  "chat_forceFloodMode": "Wymuś tryb zalewowy",
+  "chat_recentAckPaths": "Ostatnie ścieżki ACK (naciśnij, aby użyć):",
+  "chat_pathHistoryFull": "Historia ścieżek jest pełna. Usuń wpisy, aby dodać nowe.",
+  "chat_hopSingular": "skok",
+  "chat_hopPlural": "skoki",
+  "chat_successes": "Sukcesy",
+  "chat_pathActions": "Działania ścieżki:",
+  "chat_setCustomPath": "Ustaw ścieżkę niestandardową",
+  "chat_setCustomPathSubtitle": "Ręcznie określ trasę.",
+  "chat_clearPath": "Wyczyść Ścieżkę",
+  "chat_clearPathSubtitle": "Wymuś ponowne wyznaczenie trasy przy następnym wysłaniu",
+  "chat_floodModeSubtitle": "Użyj przełącznika routingu w pasku narzędzi.",
+  "chat_floodModeEnabled": "Tryb zalewowy włączony. Przełącz z powrotem ikoną routingu w pasku aplikacji.",
+  "chat_pathDetailsNotAvailable": "Szczegóły ścieżki jeszcze niedostępne. Spróbuj wysłać wiadomość, aby odświeżyć.",
+  "chat_pathSetHops": "Ścieżka ustawiona: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
+  "@chat_pathSetHops": {
+    "placeholders": {
+      "hopCount": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "path_currentPath": "Aktualna ścieżka: {path}",
+  "@path_currentPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "path_usingHopsPath": "Użyj ścieżki {count} {count, plural, one{skok} few{skoki} many{skoków} other{skoków}}.",
+  "@path_usingHopsPath": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "path_enterCustomPath": "Wprowadź własną ścieżkę",
+  "path_hexPrefixInstructions": "Wprowadź 2-znakowe prefiksy szesnastkowe dla każdego skoku, oddzielone przecinkami.",
+  "path_hexPrefixExample": "A1,F2,3C (każdy węzeł używa pierwszego bajtu swojego klucza publicznego)",
+  "path_labelHexPrefixes": "Ścieżka (prefiksy hex)",
+  "path_helperMaxHops": "Maksymalnie 64 skoki. Każdy prefiks ma 2 znaki szesnastkowe (1 bajt).",
+  "path_selectFromContacts": "Albo wybierz z kontaktów:",
+  "path_customPathsRequire": "Dostosowane ścieżki wymagają pośrednich skoków, które mogą przekazywać wiadomości.",
+  "path_invalidHexPrefixes": "Nieprawidłowe prefiksy szesnastkowe: {prefixes}",
+  "@path_invalidHexPrefixes": {
+    "placeholders": {
+      "prefixes": {
+        "type": "String"
+      }
+    }
+  },
+  "path_tooLong": "Ścieżka jest zbyt długa. Dozwolonych skoków wynosi 64.",
+  "path_setPath": "Ustaw Ścieżkę",
+  "repeater_autoUseSavedPath": "Automatycznie (użyj zapisanej ścieżki)",
+  "repeater_forceFloodMode": "Wymuś tryb zalewowy",
+  "repeater_pathManagement": "Zarządzanie ścieżkami",
+  "chat_ShowAllPaths": "Pokaż wszystkie ścieżki",
+  "@path_routeWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "path_routeWeight": "{weight}/{max}",
+  "chat_score": "Score",
+  "@settings_deleteRegionConfirm": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "@channels_regionSetTo": {
+    "placeholders": {
+      "region": {
+        "type": "String",
+        "example": "de-mitte"
+      }
+    }
+  },
+  "@chat_imagePickFailed": {
+    "description": "Shown when picking or reading a photo to send fails"
+  },
+  "@repeater_pubKeyPrefixHelper": {
+    "placeholders": {
+      "tries": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_packetsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_range": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_longSendBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sentConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_sendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_sendingProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_senderPrefix": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "@receivedImage_incoming": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_incomplete": {
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@receivedImage_awaiting": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "packets": {
+        "type": "int"
+      }
+    }
+  },
+  "@imageSend_secondsValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "@imageSend_minutesSecondsValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_infoHardware": "Sprzęt",
+  "appSettings_batteryLipoHv": "Bateria LiPo HV (3,0-4,35 V)",
+  "chat_sendImage": "Wyślij obraz",
+  "chat_imagePickFailed": "Nie mogłem otworzyć tego obrazu",
+  "imageMessages_enableTitle": "Włącz wiadomości ze zdjęciami",
+  "imageMessages_enableSubtitle": "Przesyłaj zdjęcia przez siatkę. Wymaga jednorazowego pobrania modelu obrazu.",
+  "imageMessages_modelSectionTitle": "Model obrazowy",
+  "imageMessages_downloadModel": "Pobierz",
+  "imageMessages_cancelDownload": "Anuluj",
+  "imageMessages_removeModel": "Usuń model",
+  "imageMessages_modelReady": "Gotowy",
+  "imageMessages_modelNotPublished": "Nie opublikowane — ten build nie może tego pobrać.",
+  "imageMessages_downloadFailed": "Model obrazowy nie mógł zostać pobrany.",
+  "imageMessages_autoProcessTitle": "Obrazki są przetwarzane automatycznie.",
+  "imageMessages_autoProcessSubtitle": "Odbuduj każde zdjęcie, jak tylko przyjdzie. Zużywa około 2 GB pamięci za każdą drugą sekundę; wyłącz odbudowywanie jednym dotknięciem.",
+  "imageSend_title": "Wyślij obraz",
+  "imageSend_cropNote": "Zmniejszone do 512 × 512 · proporcje nie zostały zachowane",
+  "imageSend_originalSize": "Oryginalny",
+  "imageSend_onAirSize": "W eterze",
+  "imageSend_quality": "Jakość",
+  "imageSend_qualityStandard": "Standard",
+  "imageSend_qualityHigh": "Wysoko",
+  "imageSend_packetsLabel": "Pakiet",
+  "imageSend_airtimeLabel": "Czas w eterze",
+  "imageSend_sizeLabel": "Payload",
+  "imageSend_packetsCount": "{count} {count, plural, =1{pakiet} other{pakietów}}",
+  "imageSend_range": "{min}–{max}",
+  "imageSend_unknownValue": "—",
+  "imageSend_radioUnknownTitle": "Ustawienia radia nieznane",
+  "imageSend_radioUnknownBody": "Połącz urządzenie, aby można było obliczyć czas trwania transmisji.",
+  "imageSend_longSendTitle": "Długa transmisja",
+  "imageSend_longSendBody": "Ten kanał będzie dostępny przez około {duration}.",
+  "imageSend_floodNote": "Przepływ pakietów: każdy retransmitujący w zasięgu przekazuje każdy pakiet, przez co kanał pozostaje zajęty dłużej niż ten czas.",
+  "imageSend_parityTitle": "Pakiet odzysku",
+  "imageSend_paritySubtitle": "Jedna dodatkowa paczka. Wiadomości grupowe nie są potwierdzane, dzięki czemu odbiorca może odbudować obraz, jeśli zostanie utracona pojedyncza paczka.",
+  "imageSend_send": "Wyślij",
+  "imageSend_cancel": "Anuluj",
+  "imageSend_encodeFailed": "Ten obraz nie mógł zostać zakodowany.",
+  "imageSend_codecDownloading": "Model obrazowy jest nadal pobierany.",
+  "imageSend_codecUnavailable": "Wysyłanie obrazu nie jest dostępne na tym urządzeniu.",
+  "imageSend_codecDisabled": "Wiadomości ze zdjęciami są wyłączone w ustawieniach.",
+  "imageSend_deviceUnsupported": "Ten radiodysk nie może wysyłać pakietów obrazu. Podłącz urządzenie z oprogramowaniem firmware 13 lub nowszym.",
+  "imageSend_directMessagesUnsupported": "Obrazy są przesyłane jako dane grupowe, więc można je wysłać tylko do kanału — nie w wiadomości prywatnej.",
+  "imageSend_tooLarge": "Obraz zakodowany do więcej pakietów niż pozwala format siatki.",
+  "imageSend_sentConfirmation": "Obraz wysłany jako {count} {count, plural, =1{pakiet} other{pakietów}}.",
+  "imageSend_sendFailed": "Obraz nie mogł zostać wysłany: {error}",
+  "imageSend_sendingProgress": "Wysyłanie obrazu — pakiet {sent} z {total}",
+  "receivedImage_senderPrefix": "Węzeł {prefix}",
+  "receivedImage_incoming": "Otrzymano: {received} z {total} pakietów",
+  "receivedImage_queued": "Oczekiwanie na rozszyfrowanie",
+  "receivedImage_tapToDecode": "Kliknij, aby odszyfrować",
+  "receivedImage_decoding": "Odtwarzanie… około 1 sekundy",
+  "receivedImage_incomplete": "Obraz niepełny — {received} z {total} pakietów dotarło",
+  "receivedImage_corrupt": "Obraz nie może zostać zrekonstruowany",
+  "receivedImage_decoderMissing": "Otrzymano obraz — dekodowanie obrazu jest nieprawidłowe.",
+  "receivedImage_evicted": "Obraz nie jest już przechowywany",
+  "receivedImage_retry": "Spróbuj ponownie",
+  "receivedImage_decodeAgain": "Zdekoduj ponownie",
+  "receivedImage_openSettings": "Ustaw",
+  "receivedImage_tapToProcess": "Kliknij, aby przetworzyć",
+  "receivedImage_awaiting": "{bytes} bajtów · {packets} {packets, plural, =1{pakiet} other{pakiety}}",
+  "imageSend_secondsValue": "{seconds} sekund",
+  "imageSend_minutesSecondsValue": "{minutes} minut {seconds} sekundy"
 }

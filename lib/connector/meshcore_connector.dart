@@ -38,6 +38,13 @@ import '../services/ble_debug_log_service.dart';
 import '../services/linux_ble_error_classifier.dart';
 import '../services/linux_ble_pairing_service_stub.dart'
     if (dart.library.io) '../services/linux_ble_pairing_service.dart';
+import '../services/image_chunk_transport.dart'
+    show
+        ImageChunkOutcome,
+        ImageChunkTransport,
+        dataTypeAeicImage,
+        senderPrefixFromKey;
+import '../services/image_codec_service.dart';
 import '../services/message_retry_service.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
@@ -304,6 +311,13 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _hasLoadedChannels = false;
   TimeoutPredictionService? _timeoutPredictionService;
   TranslationService? _translationService;
+  ImageCodecService? _imageCodecService;
+  // Holds the ImageReassembler, so partially received images survive across
+  // frames (chunks of one image arrive in separate GRP_DATA frames, and via the
+  // firmware offline queue they may be minutes apart).
+  ImageChunkTransport? _imageTransport;
+  void Function(ImageChunkOutcome outcome)? _onImageChunk;
+  void Function(int senderPrefix)? _onImageSenderPrefix;
   // Intentionally global (not per-contact): tracks overall network activity.
   // Frequent RX from any source indicates a busy network with more collisions.
   DateTime _lastRxTime = DateTime.now();
@@ -612,7 +626,14 @@ class MeshCoreConnector extends ChangeNotifier {
   Uint8List? get selfPublicKey => _selfPublicKey;
   String get selfPublicKeyHex =>
       _offlinePublicKeyHex ?? pubKeyToHex(_selfPublicKey ?? Uint8List(0));
+
+  /// First 2 bytes of the local public key, big-endian: the `senderPrefix`
+  /// stamped into every outgoing image chunk header. Null until SELF_INFO.
+  int? get imageSenderPrefix => senderPrefixFromKey(_selfPublicKey);
+
   String? get selfName => _selfName;
+  String? get manufacturerName => _boardName;
+  String? get firmwareVersionString => _firmwareVersion;
   double? get selfLatitude => _selfLatitude;
   double? get selfLongitude => _selfLongitude;
   List<DirectRepeater> get directRepeaters => _directRepeaters;
@@ -2408,6 +2429,10 @@ class MeshCoreConnector extends ChangeNotifier {
     AppDebugLogService? appDebugLogService,
     BackgroundService? backgroundService,
     TimeoutPredictionService? timeoutPredictionService,
+    ImageCodecService? imageCodecService,
+    ImageChunkTransport? imageTransport,
+    void Function(ImageChunkOutcome outcome)? onImageChunk,
+    void Function(int senderPrefix)? onImageSenderPrefix,
   }) {
     _retryService = retryService;
     _pathHistoryService = pathHistoryService;
@@ -2429,6 +2454,10 @@ class MeshCoreConnector extends ChangeNotifier {
         settingsSectionsService?.southFrameFragmentsEnabled ?? false;
     _settingsSectionsService?.addListener(_handleSettingsSectionsChanged);
     _translationService = translationService;
+    _imageCodecService = imageCodecService;
+    _imageTransport = imageTransport;
+    _onImageChunk = onImageChunk;
+    _onImageSenderPrefix = onImageSenderPrefix;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
     _southFrameFragmentReassembler.onWarning = (message) {
@@ -4354,6 +4383,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
     _selfPublicKey = null;
+    // Partially received images belong to the previous session's sender prefix.
+    _imageTransport?.reassembler.clear();
     _selfName = null;
     _selfLatitude = null;
     _selfLongitude = null;
@@ -4532,6 +4563,19 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSyncTimeout = null;
     _channelSyncRetries = 0;
     await _translationService?.releaseModel();
+    // The decode graph is ~833 MB resident; drop it with the connection. The
+    // connector never disposes services it does not own (main.dart does).
+    //
+    // Cancel first: `releaseModel` serialises behind the codec's exclusive
+    // lock, so disconnecting mid-decode would otherwise block this teardown
+    // for the ~1 s the inference takes and then tear the session out from
+    // under a job whose result nobody is waiting for any more.
+    _imageCodecService?.cancelCodecJob();
+    await _imageCodecService?.releaseModel();
+    // Partial images belong to this session's sender prefixes; a reconnect
+    // starts over. Dropping them also stops `evictExpired` from firing "image
+    // incomplete" failures into the store minutes after the radio went away.
+    _imageTransport?.reassembler.clear();
 
     if (!skipBleDeviceDisconnect) {
       try {
@@ -6173,6 +6217,76 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
+  }
+
+  /// Minimum companion firmware version code that implements
+  /// CMD_SEND_CHANNEL_DATA (62) / RESP_CODE_CHANNEL_DATA_RECV (27).
+  static const int _minFirmwareVerCodeForChannelData = 13;
+
+  /// True when the connected device can send/receive GRP_DATA blobs.
+  bool get supportsChannelData =>
+      isConnected &&
+      (_firmwareVerCode ?? 0) >= _minFirmwareVerCodeForChannelData;
+
+  /// Sends one image's chunk [blobs] as GRP_DATA packets on [channelIndex],
+  /// strictly sequentially, inside a single scoped-send scope for the whole
+  /// image (the flood scope is global, so re-entering it per chunk would let
+  /// another channel's send interleave mid-image).
+  ///
+  /// [onProgress] fires after each chunk is acked, so the UI can show
+  /// "sending 2 of 3".
+  ///
+  /// IMPORTANT: the command ACK only proves the firmware accepted the blob and
+  /// queued a packet to the radio. It says nothing about transmission or
+  /// delivery — GRP_DATA is unacknowledged flood traffic, there is no
+  /// PUSH_CODE_SEND_CONFIRMED for it, and a chunk may still be lost on air.
+  /// That is what the XOR parity chunk is for.
+  ///
+  /// Returns false when the transport is unavailable (disconnected or firmware
+  /// too old); throws whatever [_sendFrameAndWaitForCommandAck] throws, i.e.
+  /// Exception('Command failed with error code N') where N is 1
+  /// (unsupported command), 2 (bad channel index), 3 (packet pool full, worth
+  /// retrying) or 4 (illegal arg — blob too long), or a TimeoutException after
+  /// _commandAckTimeout.
+  Future<bool> sendImageChunks(
+    List<Uint8List> blobs, {
+    required int channelIndex,
+    required Duration interChunkDelay,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    if (blobs.isEmpty) return false;
+    if (!supportsChannelData) return false;
+    // `return` inside the scoped callback only exits the callback, so a
+    // disconnect mid-send used to fall through to `return true` below and the
+    // caller would record a complete outgoing image and tell the user "sent"
+    // after transmitting a prefix of the chunks. Track it explicitly.
+    var sentAll = true;
+    await _runScopedChannelSend(() async {
+      for (var i = 0; i < blobs.length; i++) {
+        if (!isConnected) {
+          sentAll = false;
+          return;
+        }
+        if (i > 0) await Future<void>.delayed(interChunkDelay);
+        // Same collision avoidance as every other channel send. On a quiet mesh
+        // this returns almost immediately; interChunkDelay is what actually
+        // paces the chunks so we do not talk over our own previous packet.
+        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+        await _sendFrameAndWaitForCommandAck(
+          buildSendChannelDataFrame(
+            channelIndex,
+            dataTypeAeicImage,
+            blobs[i],
+          ),
+          // Code 62 must not be enrolled in the generic-ack queue, and the
+          // firmware replies with RESP_CODE_OK (writeOKFrame), not RESP_CODE_SENT.
+          expectsGenericAck: false,
+          successCode: respCodeOk,
+        );
+        onProgress?.call(i + 1, blobs.length);
+      }
+    }, region: getChannelRegion(channelIndex));
+    return sentAll;
   }
 
   Future<void> _runScopedChannelSend(
@@ -7881,6 +7995,14 @@ class MeshCoreConnector extends ChangeNotifier {
 
       _selfName = reader.readCString();
       parsedSelfInfo = true;
+
+      // The local public key only exists once SELF_INFO has arrived, so the
+      // image sender prefix (first 2 bytes, big-endian) is refreshed here.
+      final prefix = senderPrefixFromKey(_selfPublicKey);
+      if (prefix != null) {
+        _imageTransport?.senderPrefix = prefix;
+        _onImageSenderPrefix?.call(prefix);
+      }
     } catch (e) {
       _appDebugLogService?.error(
         'Error parsing SELF_INFO frame: $e',
@@ -10044,6 +10166,19 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleIncomingChannelData(Uint8List frame) async {
     if (_isSyncingQueuedMessages) {
       _handleQueuedMessageReceived();
+    }
+
+    // AEIC and MCOimg both use GRP_DATA but have distinct content types. Give
+    // AEIC first refusal; a null outcome means this frame belongs to the
+    // existing binary/app-data path below.
+    if (_appSettingsService?.settings.imageMessagesEnabled ?? false) {
+      final outcome = _imageTransport?.handleFrame(frame);
+      if (outcome != null) {
+        _lastChannelMsgRxTime = DateTime.now();
+        _onImageChunk?.call(outcome);
+        notifyListeners();
+        return;
+      }
     }
 
     final dataFrame = parseChannelDataReceivedFrame(frame);
