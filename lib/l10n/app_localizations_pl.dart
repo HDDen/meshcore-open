@@ -5911,4 +5911,251 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => 'Połączona historia';
+
+  @override
+  String get settings_infoHardware => 'Sprzęt';
+
+  @override
+  String get appSettings_batteryLipoHv => 'Bateria LiPo HV (3,0-4,35 V)';
+
+  @override
+  String get chat_sendImage => 'Wyślij obraz';
+
+  @override
+  String get chat_imagePickFailed => 'Nie mogłem otworzyć tego obrazu';
+
+  @override
+  String get imageMessages_enableTitle => 'Włącz wiadomości ze zdjęciami';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      'Przesyłaj zdjęcia przez siatkę. Wymaga jednorazowego pobrania modelu obrazu.';
+
+  @override
+  String get imageMessages_modelSectionTitle => 'Model obrazowy';
+
+  @override
+  String get imageMessages_downloadModel => 'Pobierz';
+
+  @override
+  String get imageMessages_cancelDownload => 'Anuluj';
+
+  @override
+  String get imageMessages_removeModel => 'Usuń model';
+
+  @override
+  String get imageMessages_modelReady => 'Gotowy';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      'Nie opublikowane — ten build nie może tego pobrać.';
+
+  @override
+  String get imageMessages_downloadFailed =>
+      'Model obrazowy nie mógł zostać pobrany.';
+
+  @override
+  String get imageMessages_autoProcessTitle =>
+      'Obrazki są przetwarzane automatycznie.';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      'Odbuduj każde zdjęcie, jak tylko przyjdzie. Zużywa około 2 GB pamięci za każdą drugą sekundę; wyłącz odbudowywanie jednym dotknięciem.';
+
+  @override
+  String get imageSend_title => 'Wyślij obraz';
+
+  @override
+  String get imageSend_cropNote =>
+      'Zmniejszone do 512 × 512 · proporcje nie zostały zachowane';
+
+  @override
+  String get imageSend_originalSize => 'Oryginalny';
+
+  @override
+  String get imageSend_onAirSize => 'W eterze';
+
+  @override
+  String get imageSend_quality => 'Jakość';
+
+  @override
+  String get imageSend_qualityStandard => 'Standard';
+
+  @override
+  String get imageSend_qualityHigh => 'Wysoko';
+
+  @override
+  String get imageSend_packetsLabel => 'Pakiet';
+
+  @override
+  String get imageSend_airtimeLabel => 'Czas w eterze';
+
+  @override
+  String get imageSend_sizeLabel => 'Payload';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pakietów',
+      one: 'pakiet',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => 'Ustawienia radia nieznane';
+
+  @override
+  String get imageSend_radioUnknownBody =>
+      'Połącz urządzenie, aby można było obliczyć czas trwania transmisji.';
+
+  @override
+  String get imageSend_longSendTitle => 'Długa transmisja';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return 'Ten kanał będzie dostępny przez około $duration.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      'Przepływ pakietów: każdy retransmitujący w zasięgu przekazuje każdy pakiet, przez co kanał pozostaje zajęty dłużej niż ten czas.';
+
+  @override
+  String get imageSend_parityTitle => 'Pakiet odzysku';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      'Jedna dodatkowa paczka. Wiadomości grupowe nie są potwierdzane, dzięki czemu odbiorca może odbudować obraz, jeśli zostanie utracona pojedyncza paczka.';
+
+  @override
+  String get imageSend_send => 'Wyślij';
+
+  @override
+  String get imageSend_cancel => 'Anuluj';
+
+  @override
+  String get imageSend_encodeFailed => 'Ten obraz nie mógł zostać zakodowany.';
+
+  @override
+  String get imageSend_codecDownloading =>
+      'Model obrazowy jest nadal pobierany.';
+
+  @override
+  String get imageSend_codecUnavailable =>
+      'Wysyłanie obrazu nie jest dostępne na tym urządzeniu.';
+
+  @override
+  String get imageSend_codecDisabled =>
+      'Wiadomości ze zdjęciami są wyłączone w ustawieniach.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      'Ten radiodysk nie może wysyłać pakietów obrazu. Podłącz urządzenie z oprogramowaniem firmware 13 lub nowszym.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      'Obrazy są przesyłane jako dane grupowe, więc można je wysłać tylko do kanału — nie w wiadomości prywatnej.';
+
+  @override
+  String get imageSend_tooLarge =>
+      'Obraz zakodowany do więcej pakietów niż pozwala format siatki.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pakietów',
+      one: 'pakiet',
+    );
+    return 'Obraz wysłany jako $count $_temp0.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return 'Obraz nie mogł zostać wysłany: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return 'Wysyłanie obrazu — pakiet $sent z $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return 'Węzeł $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return 'Otrzymano: $received z $total pakietów';
+  }
+
+  @override
+  String get receivedImage_queued => 'Oczekiwanie na rozszyfrowanie';
+
+  @override
+  String get receivedImage_tapToDecode => 'Kliknij, aby odszyfrować';
+
+  @override
+  String get receivedImage_decoding => 'Odtwarzanie… około 1 sekundy';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return 'Obraz niepełny — $received z $total pakietów dotarło';
+  }
+
+  @override
+  String get receivedImage_corrupt => 'Obraz nie może zostać zrekonstruowany';
+
+  @override
+  String get receivedImage_decoderMissing =>
+      'Otrzymano obraz — dekodowanie obrazu jest nieprawidłowe.';
+
+  @override
+  String get receivedImage_evicted => 'Obraz nie jest już przechowywany';
+
+  @override
+  String get receivedImage_retry => 'Spróbuj ponownie';
+
+  @override
+  String get receivedImage_decodeAgain => 'Zdekoduj ponownie';
+
+  @override
+  String get receivedImage_openSettings => 'Ustaw';
+
+  @override
+  String get receivedImage_tapToProcess => 'Kliknij, aby przetworzyć';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: 'pakiety',
+      one: 'pakiet',
+    );
+    return '$bytes bajtów · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds sekund';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes minut $seconds sekundy';
+  }
 }

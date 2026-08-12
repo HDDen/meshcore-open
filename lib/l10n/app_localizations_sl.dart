@@ -5864,4 +5864,251 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => 'Združena zgodovina';
+
+  @override
+  String get settings_infoHardware => 'Hardver';
+
+  @override
+  String get appSettings_batteryLipoHv => 'LiPo HV (3,0–4,35 V)';
+
+  @override
+  String get chat_sendImage => 'Sločaji slik';
+
+  @override
+  String get chat_imagePickFailed => 'Nispeval sem tega ta slik';
+
+  @override
+  String get imageMessages_enableTitle => 'Pozivni izkričile slike';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      'Prešli vzorce pre mrežo. Potrebno je jednokratno stworiti model vzorca.';
+
+  @override
+  String get imageMessages_modelSectionTitle => 'Obrazni model';
+
+  @override
+  String get imageMessages_downloadModel => 'Storba';
+
+  @override
+  String get imageMessages_cancelDownload => 'Odločite';
+
+  @override
+  String get imageMessages_removeModel => 'Ubrani model';
+
+  @override
+  String get imageMessages_modelReady => 'Gotov';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      'Jo še niso izdana — ta izdelka te ne može prebaviti.';
+
+  @override
+  String get imageMessages_downloadFailed =>
+      'Obrazni model ne može biti preuzet.';
+
+  @override
+  String get imageMessages_autoProcessTitle => 'Avtomatizirane slike';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      'Katero je oblikovanje svega oblikov, ko se pošteva. Za drugo okolo časa se koristi ok. 2 GB pamične prostore; odločite se za oblikovanje s tukom.';
+
+  @override
+  String get imageSend_title => 'Sločaji slik';
+
+  @override
+  String get imageSend_cropNote =>
+      'Zadovoljno izmenjeno na 512 × 512 · vzorovni odnos ne ohranjen';
+
+  @override
+  String get imageSend_originalSize =>
+      'Original text:\n\nThe early bird catches the worm.\n\nTranslation:\n\nPojdi prvi, zlati v kroku.';
+
+  @override
+  String get imageSend_onAirSize => 'Na vodi';
+
+  @override
+  String get imageSend_quality => 'Kakovost';
+
+  @override
+  String get imageSend_qualityStandard => 'Standard';
+
+  @override
+  String get imageSend_qualityHigh => 'Vysoko';
+
+  @override
+  String get imageSend_packetsLabel => 'Pakete';
+
+  @override
+  String get imageSend_airtimeLabel => 'Čas v eteru';
+
+  @override
+  String get imageSend_sizeLabel => 'Napravo';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => 'Naslušniki radio neznane';
+
+  @override
+  String get imageSend_radioUnknownBody =>
+      'Poučajte se na stroj, da se lahko izračunuje čas v prikazu.';
+
+  @override
+  String get imageSend_longSendTitle => 'Dluga preposlana';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return 'Ovo bo ohranilo kanal prihodno za obliko $duration.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      'Povlatni potok: sve repeaterje v območju pretrasirajo svak paket, pa kanál ostane zanudnejši od tega.';
+
+  @override
+  String get imageSend_parityTitle => 'Pobavni paket zdržbe';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      'Jedna dodatna paczka. Grupni izjasi ne izvajajo potvarnosti, pa ta izdelka omogoča preuzimanju ponovno izgleda, če je zgubjen pojedni paket.';
+
+  @override
+  String get imageSend_send => 'Posyłaj';
+
+  @override
+  String get imageSend_cancel => 'Odločite';
+
+  @override
+  String get imageSend_encodeFailed => 'Ovo slikovo ne more biti zakodirano.';
+
+  @override
+  String get imageSend_codecDownloading =>
+      'Obrazni model še pospeva preborjanje.';
+
+  @override
+  String get imageSend_codecUnavailable =>
+      'Poslanje slike nema na tem zelo naročnem naročnem.';
+
+  @override
+  String get imageSend_codecDisabled => 'Obrazi s pomanjkanjem so v nastavnih.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      'Taj radio ne može posredovati slike pakuete. Prepoštijo izbirni napravnik s kompanijskimi programi na čevem 13 ali novšejšim.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      'Obrazy se pojavijo kot skupnih podatkov, pa lahko ih poslujejo samo na kanal — ne v prilogih.';
+
+  @override
+  String get imageSend_tooLarge =>
+      'Taj slik je zakodiran v viših pakotnih od športne formate, ki omogoča mrežni format.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return 'Slika poslana kot $count $_temp0.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return 'Obraz ne može biti poslany: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return 'Prekazivanje izkaza — paket $sent od $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return 'Vrtitev $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return 'Otrteno od $received na $total poslovanih potokov';
+  }
+
+  @override
+  String get receivedImage_queued => 'Čekanje, da se dekodira';
+
+  @override
+  String get receivedImage_tapToDecode => 'Kliknite, da razkrivete';
+
+  @override
+  String get receivedImage_decoding =>
+      'Ostvarjanje… o prihodnosti za okolo 1 s';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return 'Obraz nije kompletan — $received od $total poslaničev je prishodil';
+  }
+
+  @override
+  String get receivedImage_corrupt => 'Obraz ne more lahko rekonstruirati';
+
+  @override
+  String get receivedImage_decoderMissing =>
+      'Otrgena slika — dekodirana slika je izključena';
+
+  @override
+  String get receivedImage_evicted => 'Obraz ni več niso zakajiren';
+
+  @override
+  String get receivedImage_retry => 'Pokušajte znova';
+
+  @override
+  String get receivedImage_decodeAgain => 'Dekodiraj ponovno';
+
+  @override
+  String get receivedImage_openSettings => 'Nastavite';
+
+  @override
+  String get receivedImage_tapToProcess => 'Kliknij za obravnavanje';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return '$bytes bajtov · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes m $seconds s';
+  }
 }

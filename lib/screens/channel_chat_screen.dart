@@ -62,7 +62,6 @@ import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
 import '../widgets/gif_picker.dart';
-import '../widgets/image_send_button.dart';
 import '../widgets/image_send_codec_binding.dart';
 import '../widgets/image_send_preview_sheet.dart';
 import '../widgets/mco_image_message.dart';
@@ -2674,6 +2673,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// the mandatory AI-reconstruction label.
   Widget _buildImageBubble(ReceivedImageEntry entry, double textScale) {
     final scheme = Theme.of(context).colorScheme;
+    final enableTimeSeconds = context
+        .watch<AppSettingsService>()
+        .settings
+        .enableTimeSeconds;
     final isOutgoing = entry.isOutgoing;
     final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
@@ -2687,7 +2690,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isOutgoing) ...[
-            _buildAvatar(_imageSenderLabel(entry), textScale),
+            _buildAvatar(_imageSenderLabel(entry)),
             const SizedBox(width: 6),
           ],
           Flexible(
@@ -2739,7 +2742,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
                     child: Text(
-                      _formatTime(context, entry.firstSeen),
+                      _formatTime(
+                        context,
+                        entry.firstSeen,
+                        enableSeconds: enableTimeSeconds,
+                      ),
                       style: MeshTheme.mono(
                         fontSize: 10 * textScale,
                         color: metaColor,
@@ -3204,6 +3211,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         unawaited(_pickAndInsertLocationFromMap()),
                     onOpenQuickAnswers: _showQuickAnswersPicker,
                     onSendGif: () => _showGifPicker(context),
+                    onSendImage:
+                        kImageCodecFeatureAvailable &&
+                            settings.imageMessagesEnabled &&
+                            !_imageCodecDownloading
+                        ? _showImageSendPreview
+                        : null,
+                    sendImageEnabled:
+                        _imageCodec?.availability ==
+                        ImageCodecAvailability.ready,
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
                     onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
@@ -3214,16 +3230,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     enabled: settings.composerTranslationEnabled,
                     languageCode: settings.translationTargetLanguageCode,
                     onPressed: _showTranslationOptions,
-                  ),
-                if (kImageCodecFeatureAvailable &&
-                    settings.imageMessagesEnabled &&
-                    !_imageCodecDownloading)
-                  ImageSendButton(
-                    enabled:
-                        !connector.isOfflineMode &&
-                        _imageCodec?.availability ==
-                            ImageCodecAvailability.ready,
-                    onPressed: _showImageSendPreview,
                   ),
                 Expanded(
                   child: ValueListenableBuilder<TextEditingValue>(

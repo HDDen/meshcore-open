@@ -5469,4 +5469,239 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => '合并历史';
+
+  @override
+  String get settings_infoHardware => '硬件';
+
+  @override
+  String get appSettings_batteryLipoHv => '锂多压电源（3.0-4.35伏）';
+
+  @override
+  String get chat_sendImage => '发送图片';
+
+  @override
+  String get chat_imagePickFailed => '无法打开该图片';
+
+  @override
+  String get imageMessages_enableTitle => '启用图片消息';
+
+  @override
+  String get imageMessages_enableSubtitle => '通过网格发送图像。需要一次性下载图像模型。';
+
+  @override
+  String get imageMessages_modelSectionTitle => '图像模型';
+
+  @override
+  String get imageMessages_downloadModel => '下载';
+
+  @override
+  String get imageMessages_cancelDownload => '取消';
+
+  @override
+  String get imageMessages_removeModel => '移除模型';
+
+  @override
+  String get imageMessages_modelReady => '准备就绪';
+
+  @override
+  String get imageMessages_modelNotPublished => '尚未发布——此版本无法下载该内容。';
+
+  @override
+  String get imageMessages_downloadFailed => '图像模型无法下载。';
+
+  @override
+  String get imageMessages_autoProcessTitle => '自动处理图像';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      '每次图像到达后立即重建，每次需要约2GB的内存；若想关闭重建功能，可通过点击取消开启。';
+
+  @override
+  String get imageSend_title => '发送图片';
+
+  @override
+  String get imageSend_cropNote => '调整大小至512 × 512 · 宽高比未保留';
+
+  @override
+  String get imageSend_originalSize => '原文';
+
+  @override
+  String get imageSend_onAirSize => '直播中';
+
+  @override
+  String get imageSend_quality => '质量';
+
+  @override
+  String get imageSend_qualityStandard => '标准';
+
+  @override
+  String get imageSend_qualityHigh => '高';
+
+  @override
+  String get imageSend_packetsLabel => '数据包';
+
+  @override
+  String get imageSend_airtimeLabel => '播出时间';
+
+  @override
+  String get imageSend_sizeLabel => '有效载荷';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '个数据包',
+      one: '个数据包',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => '无线电设置未知';
+
+  @override
+  String get imageSend_radioUnknownBody => '连接设备以计算播出时间。';
+
+  @override
+  String get imageSend_longSendTitle => '长距离传输';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return '这将维持频道大约 $duration 时间。';
+  }
+
+  @override
+  String get imageSend_floodNote => '洪水路由：每个中继站都会转发每个数据包，因此信道比这段时间更长地处于繁忙状态。';
+
+  @override
+  String get imageSend_parityTitle => '恢复包';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      '多一个数据包。群发消息不被确认，因此如果某个数据包丢失，接收方可以重新构建图像。';
+
+  @override
+  String get imageSend_send => '发送';
+
+  @override
+  String get imageSend_cancel => '取消';
+
+  @override
+  String get imageSend_encodeFailed => '此图像无法编码。';
+
+  @override
+  String get imageSend_codecDownloading => '图像模型仍在下载中。';
+
+  @override
+  String get imageSend_codecUnavailable => '此设备无法发送图片。';
+
+  @override
+  String get imageSend_codecDisabled => '图片消息在设置中已关闭。';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      '此无线电无法发送图像数据包。请连接运行伴侣固件13或更高版本的设备。';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      '图片作为群组数据传输，因此只能发送到频道，而不能直接发送给个人。';
+
+  @override
+  String get imageSend_tooLarge => '该图像编码的数据包数量超过了网格格式所允许的范围。';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '个数据包',
+      one: '个数据包',
+    );
+    return '图像已作为 $count $_temp0 发送。';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return '无法发送图片：$error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return '发送图像 — 已发送 $sent 包含 $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return '节点 $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return '已收到的 $received 个包含在 $total 个包裹中';
+  }
+
+  @override
+  String get receivedImage_queued => '等待解码';
+
+  @override
+  String get receivedImage_tapToDecode => '点击解锁';
+
+  @override
+  String get receivedImage_decoding => '重建……大约1秒';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return '图片不完整 — $received 已收到 $total 个数据包';
+  }
+
+  @override
+  String get receivedImage_corrupt => '图像无法重建';
+
+  @override
+  String get receivedImage_decoderMissing => '收到图片 — 图像解码失败';
+
+  @override
+  String get receivedImage_evicted => '图片已不再存储';
+
+  @override
+  String get receivedImage_retry => '再试一次';
+
+  @override
+  String get receivedImage_decodeAgain => '重新解码';
+
+  @override
+  String get receivedImage_openSettings => '建立';
+
+  @override
+  String get receivedImage_tapToProcess => '点击处理';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: '个数据包',
+      one: '个数据包',
+    );
+    return '$bytes 字节 · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes 分 $seconds 秒';
+  }
 }

@@ -88,6 +88,8 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   final VoidCallback onPickLocationFromMap;
   final VoidCallback onOpenQuickAnswers;
   final VoidCallback onSendGif;
+  final VoidCallback? onSendImage;
+  final bool sendImageEnabled;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
 
@@ -101,6 +103,8 @@ class ChatAdditionalActionsButton extends StatelessWidget {
     required this.onPickLocationFromMap,
     required this.onOpenQuickAnswers,
     required this.onSendGif,
+    this.onSendImage,
+    this.sendImageEnabled = true,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
   });
@@ -145,6 +149,13 @@ class ChatAdditionalActionsButton extends StatelessWidget {
           Navigator.pop(sheetContext);
           onSendGif();
         },
+        showSendImage: onSendImage != null,
+        onSendImage: onSendImage == null || !sendImageEnabled
+            ? null
+            : () {
+                Navigator.pop(sheetContext);
+                onSendImage!();
+              },
         onOpenCanvas: () {
           Navigator.pop(sheetContext);
           onOpenCanvas();
@@ -167,6 +178,8 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
   final VoidCallback onPickLocationFromMap;
   final VoidCallback onOpenQuickAnswers;
   final VoidCallback onSendGif;
+  final bool showSendImage;
+  final VoidCallback? onSendImage;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
 
@@ -180,6 +193,8 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
     required this.onPickLocationFromMap,
     required this.onOpenQuickAnswers,
     required this.onSendGif,
+    this.showSendImage = false,
+    this.onSendImage,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
   });
@@ -228,6 +243,12 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
                     title: Text(context.l10n.chat_sendGif),
                     onTap: onSendGif,
                   ),
+                  if (showSendImage)
+                    ListTile(
+                      leading: const Icon(Icons.image_outlined),
+                      title: Text(context.l10n.chat_sendImage),
+                      onTap: onSendImage,
+                    ),
                 ],
                 if (canvasActive) ...[
                   ListTile(

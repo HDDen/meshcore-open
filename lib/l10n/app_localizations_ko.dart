@@ -5597,4 +5597,242 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => '통합 기록';
+
+  @override
+  String get settings_infoHardware => '하드웨어';
+
+  @override
+  String get appSettings_batteryLipoHv => '리포 HV (3.0-4.35V)';
+
+  @override
+  String get chat_sendImage => '이미지를 보내세요';
+
+  @override
+  String get chat_imagePickFailed => '그 이미지를 열 수 없었어요.';
+
+  @override
+  String get imageMessages_enableTitle => '이미지 메시지 활성화';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      '메시를 통해 이미지를 전송하세요. 일회성 이미지 모델 다운로드가 필요합니다.';
+
+  @override
+  String get imageMessages_modelSectionTitle => '이미지 모델';
+
+  @override
+  String get imageMessages_downloadModel => '다운로드';
+
+  @override
+  String get imageMessages_cancelDownload => '취소';
+
+  @override
+  String get imageMessages_removeModel => '모델 제거';
+
+  @override
+  String get imageMessages_modelReady => '준비 완료';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      '아직 출판되지 않았습니다 — 이 빌드로는 다운로드할 수 없습니다.';
+
+  @override
+  String get imageMessages_downloadFailed => '이미지 모델을 다운로드할 수 없었습니다.';
+
+  @override
+  String get imageMessages_autoProcessTitle => '자동으로 프로세스 이미지를 처리합니다.';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      '이미지가 도착하는 즉시 재구성하세요. 매번 2GB의 메모리를 사용하며, 탭으로 재구성을 원할 경우 해제하세요.';
+
+  @override
+  String get imageSend_title => '이미지를 보내세요';
+
+  @override
+  String get imageSend_cropNote => '512 × 512로 크기가 조정되었으며, 종횡비는 유지되지 않았습니다.';
+
+  @override
+  String get imageSend_originalSize => '원문 없음';
+
+  @override
+  String get imageSend_onAirSize => '방송 중';
+
+  @override
+  String get imageSend_quality => '품질';
+
+  @override
+  String get imageSend_qualityStandard => '표준';
+
+  @override
+  String get imageSend_qualityHigh => '높다';
+
+  @override
+  String get imageSend_packetsLabel => '패킷';
+
+  @override
+  String get imageSend_airtimeLabel => '방송 시간';
+
+  @override
+  String get imageSend_sizeLabel => '페이로드';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '패킷',
+      one: '패킷',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min~$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => '라디오 설정 정보 없음';
+
+  @override
+  String get imageSend_radioUnknownBody => '방송 시간을 계산할 수 있도록 기기와 연결하세요.';
+
+  @override
+  String get imageSend_longSendTitle => '장거리 송신';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return '이것은 약 $duration 동안 채널을 유지할 것입니다.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      '홍수 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.';
+
+  @override
+  String get imageSend_parityTitle => '회복 패킷';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      '추가 한 개의 패킷입니다. 그룹 메시지는 확인되지 않으므로, 하나의 패킷이 손실되었을 경우 수신자가 이미지를 다시 구성할 수 있습니다.';
+
+  @override
+  String get imageSend_send => '보내다';
+
+  @override
+  String get imageSend_cancel => '취소';
+
+  @override
+  String get imageSend_encodeFailed => '이 이미지는 인코딩할 수 없습니다.';
+
+  @override
+  String get imageSend_codecDownloading => '이미지 모델이 아직 다운로드 중입니다.';
+
+  @override
+  String get imageSend_codecUnavailable => '이 기기에서는 이미지 전송이 불가능합니다.';
+
+  @override
+  String get imageSend_codecDisabled => '설정에서 이미지 메시지가 꺼져 있습니다.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      '이 라디오는 이미지 패킷을 전송할 수 없습니다. 컴패니언 펌웨어 13 이상을 실행하는 장치를 연결해 주세요.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      '이미지는 그룹 데이터로 전송되므로, 직접 메시지가 아닌 채널로만 보낼 수 있습니다.';
+
+  @override
+  String get imageSend_tooLarge => '그 이미지는 메시 형식이 허용하는 것보다 더 많은 패킷으로 인코딩되었습니다.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '패킷',
+      one: '패킷',
+    );
+    return '이미지가 $count $_temp0로 전송되었습니다.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return '이미지를 보낼 수 없습니다: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return '이미지 전송 — $sent개의 $total 패킷';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return '노드 $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return '$total개 패킷 중 $received개';
+  }
+
+  @override
+  String get receivedImage_queued => '해독을 기다리는 중입니다.';
+
+  @override
+  String get receivedImage_tapToDecode => '해독하려면 탭을 누르세요.';
+
+  @override
+  String get receivedImage_decoding => '재구성하는… 약 1초 정도';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return '이미지 불완전 — $total개 중 $received개 패킷 수신됨';
+  }
+
+  @override
+  String get receivedImage_corrupt => '이미지는 재구성될 수 없습니다.';
+
+  @override
+  String get receivedImage_decoderMissing => '수신된 이미지 — 이미지 해독이 되지 않았습니다';
+
+  @override
+  String get receivedImage_evicted => '이미지는 더 이상 저장되지 않았습니다.';
+
+  @override
+  String get receivedImage_retry => '다시 시도해 보세요';
+
+  @override
+  String get receivedImage_decodeAgain => '다시 해독하다';
+
+  @override
+  String get receivedImage_openSettings => '설정하다';
+
+  @override
+  String get receivedImage_tapToProcess => '처리하려면 탭을 누르세요.';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: '패킷',
+      one: '패킷',
+    );
+    return '$bytes 바이트 · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds 초';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes분 $seconds초';
+  }
 }

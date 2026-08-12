@@ -5856,4 +5856,251 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => 'Zlúčená história';
+
+  @override
+  String get settings_infoHardware => 'Hardware';
+
+  @override
+  String get appSettings_batteryLipoHv => 'LiPo HV (3.0-4.35V)';
+
+  @override
+  String get chat_sendImage => 'Vyslat obraz';
+
+  @override
+  String get chat_imagePickFailed => 'Nesmiela jsem otvoriť tento obrázok';
+
+  @override
+  String get imageMessages_enableTitle => 'Zabezpečte zobrazi';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      'Odeslanie obrazov pre mšťanie. Potrebujete jednorazové stáhnutie modelu obrazov.';
+
+  @override
+  String get imageMessages_modelSectionTitle => 'Model v kínajme';
+
+  @override
+  String get imageMessages_downloadModel => 'Stáhnie';
+
+  @override
+  String get imageMessages_cancelDownload => 'Zastavenie';
+
+  @override
+  String get imageMessages_removeModel => 'Vyhniť model';
+
+  @override
+  String get imageMessages_modelReady => 'Čiačný';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      'Nesprávne vypisáné — tento prechovka nie môže jej stáhnuť.';
+
+  @override
+  String get imageMessages_downloadFailed =>
+      'Model s obrázkom nemôžno sťažovať.';
+
+  @override
+  String get imageMessages_autoProcessTitle => 'Automaticky prepojiť slučaje.';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      'Rekonstruujte každý obraz tak, ako pridá. Používajete okolo 2 GB pamäti pre drugú hodinu; odložte rekonstrukciu tým kliknutím.';
+
+  @override
+  String get imageSend_title => 'Vyslat obraz';
+
+  @override
+  String get imageSend_cropNote =>
+      'Zmeneno na 512 × 512 · vzorýst nie byl zachovan';
+
+  @override
+  String get imageSend_originalSize =>
+      'Výborný text:\n\n\"Language is the road map of a culture. It tells us where to go as a society and helps us understand the world around us. Learning a new language opens up new perspectives and opportunities, allowing us to connect with people from different backgrounds and build bridges between cultures.\"\n\nSlovenská preklada:\n\n\"Jazyk je cesta pre zručnosti a odráža kultúru. Dá nám uvedomi, dokádať, kúdy sa pohladneme a pomáha našej společnosti poradiť sa v rôznych okolnosti a porozumieť o svetu kolem nás. Nauka nového jazyka otviera nové perspektívy a možnosti, čo pohybuje našu schopnosť sa spoluprávať s ľudmi z rôznych okolnosti a budovať mosty medzi kultúry.\"';
+
+  @override
+  String get imageSend_onAirSize => 'V prúce';
+
+  @override
+  String get imageSend_quality => 'Kvalita';
+
+  @override
+  String get imageSend_qualityStandard => 'Stándard';
+
+  @override
+  String get imageSend_qualityHigh => 'Vysoká';
+
+  @override
+  String get imageSend_packetsLabel => 'Pakety';
+
+  @override
+  String get imageSend_airtimeLabel => 'Čas na anteni';
+
+  @override
+  String get imageSend_sizeLabel => 'Základ';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => 'Nastavenia radio nezná';
+
+  @override
+  String get imageSend_radioUnknownBody =>
+      'Zkonečte s určým prijemcem, aby sa mohlo výpočet času, ktorý je v prúbežu.';
+
+  @override
+  String get imageSend_longSendTitle => 'Dlouhá transmisia';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return 'Tento dôvod udrží kanál priamo na $duration.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      'Povodný routing: každý repeater v rozsahu zrňa každý paket, takže kanál zostá zajetší dlouше, než tu.';
+
+  @override
+  String get imageSend_parityTitle => 'Poučný paket pre očudenie';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      'Jedný dodatný paket. Skúsené súhlasy nie sa uznávaú, takže to umožňuje prechovávaču opraviť obraz, pokiaľ sa jedný paket niebyl ztrácený.';
+
+  @override
+  String get imageSend_send => 'Odeslať';
+
+  @override
+  String get imageSend_cancel => 'Zastavenie';
+
+  @override
+  String get imageSend_encodeFailed => 'Tento obráz nie byla byla schována.';
+
+  @override
+  String get imageSend_codecDownloading =>
+      'Model prehľadovania prebeža stále stále stále prechádza.';
+
+  @override
+  String get imageSend_codecUnavailable =>
+      'Zobrazenie nie je dostupný na tomto zariadení.';
+
+  @override
+  String get imageSend_codecDisabled =>
+      'Zobrazy s prešteľkami sú v nastavení vypnené.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      'Tento radiok nie môže odeslať obrazové pakety. Podeďte správne určité zařízení s oprogramovaním spolupráce 13 alebo novším.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      'Obrazy sa prechádzajú jako skupinové údaje, preto sa ich môžu odeslať len na kanál — nie v príbeh sa.';
+
+  @override
+  String get imageSend_tooLarge =>
+      'Tento obraz byl skodyrovany do viac paketov, ako umožňuje si sítka format.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return 'Obrázok odoslaný ako $count $_temp0.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return 'Obraz nemôžlo odeslať: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return 'Vysyťanie obrazu — pakét $sent z $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return 'Vęzlo $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return 'Otrzymané $received z $total pakotí';
+  }
+
+  @override
+  String get receivedImage_queued => 'Čekanie na dekódovanie';
+
+  @override
+  String get receivedImage_tapToDecode => 'Kliknite, aby dekódovať';
+
+  @override
+  String get receivedImage_decoding => 'Rekonstrukcia… o čoľve 1 s';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return 'Obraz nieješťajný — $received z $total paciek príšlo';
+  }
+
+  @override
+  String get receivedImage_corrupt => 'Obraz nemôžu byť prepojený';
+
+  @override
+  String get receivedImage_decoderMissing =>
+      'Otrzymaná slúba — dekódovanie slúby je vypadejce';
+
+  @override
+  String get receivedImage_evicted => 'Obraz nemá uložený';
+
+  @override
+  String get receivedImage_retry => 'Zkôr to opítajte';
+
+  @override
+  String get receivedImage_decodeAgain => 'Zdeľte sa znovu';
+
+  @override
+  String get receivedImage_openSettings => 'Založte';
+
+  @override
+  String get receivedImage_tapToProcess => 'Ukliknite, aby sa príjomili';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: 'paketov',
+      one: 'paket',
+    );
+    return '$bytes bajtov · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes min $seconds s';
+  }
 }

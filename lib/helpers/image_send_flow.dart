@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:flutter/material.dart';
 

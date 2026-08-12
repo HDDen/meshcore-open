@@ -5839,4 +5839,252 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => 'Kombinerad historik';
+
+  @override
+  String get settings_infoHardware => 'Hardware';
+
+  @override
+  String get appSettings_batteryLipoHv => 'LiPo HV (3,0-4,35 V)';
+
+  @override
+  String get chat_sendImage => 'Send vagnbild';
+
+  @override
+  String get chat_imagePickFailed => 'Kunde inte öppna det bildet';
+
+  @override
+  String get imageMessages_enableTitle => 'Bildermeddelanden';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      'Send bilder över mönstret. Det kräver en enkelt bildmodellhämtning.';
+
+  @override
+  String get imageMessages_modelSectionTitle => 'Bildmodell';
+
+  @override
+  String get imageMessages_downloadModel => 'Download';
+
+  @override
+  String get imageMessages_cancelDownload => 'Avbud';
+
+  @override
+  String get imageMessages_removeModel => 'Förhåll dig från modellen';
+
+  @override
+  String get imageMessages_modelReady => 'Färdig';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      'Ingen publikerad än — denna byggnads kan inte laddas ner av det.';
+
+  @override
+  String get imageMessages_downloadFailed =>
+      'Bildmodellen kunde inte laddas ner.';
+
+  @override
+  String get imageMessages_autoProcessTitle =>
+      'Automatiska bilder automatiserar';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      'Rekonstruera varje bild så snart den ankommer. Använder cirka 2 GB minne varje gång; låt det omför att rekonstruera genom ett tap.';
+
+  @override
+  String get imageSend_title => 'Send vagnbild';
+
+  @override
+  String get imageSend_cropNote =>
+      'Reserverat till 512 × 512 · förhållandet mellan storlek inte bevarat';
+
+  @override
+  String get imageSend_originalSize =>
+      'Ovanstående text (engelska)\n\nTranslation (svenskt):';
+
+  @override
+  String get imageSend_onAirSize => 'Underför hjärnan';
+
+  @override
+  String get imageSend_quality => 'Kvalitet';
+
+  @override
+  String get imageSend_qualityStandard => 'Standard';
+
+  @override
+  String get imageSend_qualityHigh => 'Hög';
+
+  @override
+  String get imageSend_packetsLabel => 'Paket';
+
+  @override
+  String get imageSend_airtimeLabel => 'Tid i övrighet';
+
+  @override
+  String get imageSend_sizeLabel => 'Ladning';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paket',
+      one: 'paket',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => 'Radioindikatorer inte kända';
+
+  @override
+  String get imageSend_radioUnknownBody =>
+      'Förkoppna till ett enhet så kan tiden på air beräknas.';
+
+  @override
+  String get imageSend_longSendTitle => 'Långförsending';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return 'Detta kommer att bevara kanalen roughly $duration.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      'Flodledning: varje repeater i ramen retransmitterar varje paket, så kan kanalen vara på arbete långare än den här tiden.';
+
+  @override
+  String get imageSend_parityTitle => 'Omedlningspaket';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      'En ytterligare paket. Gruppmeddelanden inte akceras, så den här tar hänsyn till att mottar kan återuppbygga bilden om ett enkelt paket förlorats.';
+
+  @override
+  String get imageSend_send => 'Sänd';
+
+  @override
+  String get imageSend_cancel => 'Avbud';
+
+  @override
+  String get imageSend_encodeFailed => 'Denna bild kan inte kodas.';
+
+  @override
+  String get imageSend_codecDownloading =>
+      'Bildmodellen downloads fortfarande.';
+
+  @override
+  String get imageSend_codecUnavailable =>
+      'Bildsendning är inte tillgänglig på detta enhet.';
+
+  @override
+  String get imageSend_codecDisabled =>
+      'Bildmeddelanden är offna i inställningarna.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      'Denna radi kan inte senda bildpaket. Använd ett äventyrsgerät med companionsystemfirmware 13 eller nyare.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      'Bilder senders som gruppod, så de kan endast skickas till ett kanal – inte i en direkt meddelning.';
+
+  @override
+  String get imageSend_tooLarge =>
+      'Bilden kodades till mer paket än meshformaten tillåter.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'paket',
+      one: 'paket',
+    );
+    return 'Bilden skickades som $count $_temp0.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return 'Bilden kunde inte skickas: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return 'Bild sendning — paket $sent av $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return 'Nod $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return 'VANTA $received av $total paket';
+  }
+
+  @override
+  String get receivedImage_queued => 'Att väta att decodera';
+
+  @override
+  String get receivedImage_tapToDecode => 'Tap för att decodera';
+
+  @override
+  String get receivedImage_decoding => 'Rekonstruktion… om 1 sekund';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return 'Bilden är okomplett — $received av $total paket har ankomit';
+  }
+
+  @override
+  String get receivedImage_corrupt => 'Bilden kunde inte rekonstrueras';
+
+  @override
+  String get receivedImage_decoderMissing =>
+      'Bild mottagen — bilddekoderingen är avbrott';
+
+  @override
+  String get receivedImage_evicted => 'Bild inte lagrad längre';
+
+  @override
+  String get receivedImage_retry => 'Omförs igen';
+
+  @override
+  String get receivedImage_decodeAgain => 'Kodera igen';
+
+  @override
+  String get receivedImage_openSettings => 'Skapa en uppställning';
+
+  @override
+  String get receivedImage_tapToProcess => 'Tap för att behandla';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: 'paket',
+      one: 'paket',
+    );
+    return '$bytes byte · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds sekunder';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes min $seconds s';
+  }
 }

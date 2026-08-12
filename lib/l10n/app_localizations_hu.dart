@@ -5884,4 +5884,250 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get app_offline_sharedMode => 'Egyesített előzmények';
+
+  @override
+  String get settings_infoHardware => 'Hardverő';
+
+  @override
+  String get appSettings_batteryLipoHv => 'LiPo HV (3.0-4.35V)';
+
+  @override
+  String get chat_sendImage => 'Felhasználj az image';
+
+  @override
+  String get chat_imagePickFailed => 'Nem tudtam ezt a fenti fényre kapni';
+
+  @override
+  String get imageMessages_enableTitle => 'Fenti hírüket biztosítani';
+
+  @override
+  String get imageMessages_enableSubtitle =>
+      'Fényokat a hálózatban küldd el. Egyértelmű fénymodell hozzáadásra kell.';
+
+  @override
+  String get imageMessages_modelSectionTitle => 'Image model';
+
+  @override
+  String get imageMessages_downloadModel => 'Hozzáladás';
+
+  @override
+  String get imageMessages_cancelDownload => 'Színviselés';
+
+  @override
+  String get imageMessages_removeModel => 'Kisnövezdés';
+
+  @override
+  String get imageMessages_modelReady => 'Hozzá';
+
+  @override
+  String get imageMessages_modelNotPublished =>
+      'Érkeztetve nem — ez a építési módszert nem lehet lejobbítani.';
+
+  @override
+  String get imageMessages_downloadFailed => 'Életmódelmát nem tudtam hozni.';
+
+  @override
+  String get imageMessages_autoProcessTitle =>
+      'Automatikusan kínaltatja fénybetek';
+
+  @override
+  String get imageMessages_autoProcessSubtitle =>
+      'Minden fenti image-t kiválasztsa meg, amikor érkezik. Minden más esetben 2 GB fényre kell szükséges; megoldja a rekonstruálisi a támogatásra egy klikkel.';
+
+  @override
+  String get imageSend_title => 'Felhasználj az image';
+
+  @override
+  String get imageSend_cropNote =>
+      '512 × 512 órák számára megosztva · képszöget nem biztosítva';
+
+  @override
+  String get imageSend_originalSize => 'Következtetés:';
+
+  @override
+  String get imageSend_onAirSize => 'Erőben';
+
+  @override
+  String get imageSend_quality => 'Hosszú Képesség';
+
+  @override
+  String get imageSend_qualityStandard => 'Standard';
+
+  @override
+  String get imageSend_qualityHigh => 'High: Magas';
+
+  @override
+  String get imageSend_packetsLabel => 'Paketek';
+
+  @override
+  String get imageSend_airtimeLabel => 'Kiválasztás a fent';
+
+  @override
+  String get imageSend_sizeLabel => 'Kártya';
+
+  @override
+  String imageSend_packetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'csomag',
+      one: 'csomag',
+    );
+    return '$count $_temp0';
+  }
+
+  @override
+  String imageSend_range(String min, String max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get imageSend_unknownValue => '—';
+
+  @override
+  String get imageSend_radioUnknownTitle => 'Radiooldalok nem tudom';
+
+  @override
+  String get imageSend_radioUnknownBody =>
+      'Kizárdhoz kapcsolódd a rendszert, hogy a súly az az álló időt lehet elismerni.';
+
+  @override
+  String get imageSend_longSendTitle => 'Uzun hírás';
+
+  @override
+  String imageSend_longSendBody(String duration) {
+    return 'Ez megbízható a kanal $duration-n.';
+  }
+
+  @override
+  String get imageSend_floodNote =>
+      'Fúró irányozás: Minden repeater a fúró körüléggel megköveti mindkét paketet, ezért a kanal eltartja más a lehetséges időt.';
+
+  @override
+  String get imageSend_parityTitle => 'Korzolás paksa';
+
+  @override
+  String get imageSend_paritySubtitle =>
+      'Egy kibőbbes kapszula. Gruppos hírselek nem érkezik, ezért az empfangó nem kell elismerni a jel, ha egy egyes kapszula kaland, hogy nem teljesen érkezz.';
+
+  @override
+  String get imageSend_send => 'Keresés';
+
+  @override
+  String get imageSend_cancel => 'Színviselés';
+
+  @override
+  String get imageSend_encodeFailed => 'Ez a fényet nem tudtam kódolni.';
+
+  @override
+  String get imageSend_codecDownloading =>
+      'Érdekesz az image model megstálása még van.';
+
+  @override
+  String get imageSend_codecUnavailable =>
+      'Felhasználó észintje nem kapható ezen a rendszert.';
+
+  @override
+  String get imageSend_codecDisabled =>
+      'Image hírletek belsőoldal elkalmáznak a konfigurációban.';
+
+  @override
+  String get imageSend_deviceUnsupported =>
+      'Ez a radio nem tudja verseni színekfájltakat. Habilítd a kompatibilis firmware 13 vagy újabb versionot kapcsált eszközet.';
+
+  @override
+  String get imageSend_directMessagesUnsupported =>
+      'Fényiak gyakorolják grupos adatban, ezért nem lehetek versenek egy hozzáfűzésre, csak egy kanalra.';
+
+  @override
+  String get imageSend_tooLarge =>
+      'A figyelmetes fentet nem kínálhat a körközlettel ismétálás elterjesztésére.';
+
+  @override
+  String imageSend_sentConfirmation(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'csomagként',
+      one: 'csomagként',
+    );
+    return 'Kép elküldve $count $_temp0.';
+  }
+
+  @override
+  String imageSend_sendFailed(String error) {
+    return 'Fentami nem tűnik: $error';
+  }
+
+  @override
+  String imageSend_sendingProgress(int sent, int total) {
+    return 'Felhasználó: Lehet a következőkét kifejezetet – $sent paket $total';
+  }
+
+  @override
+  String receivedImage_senderPrefix(String prefix) {
+    return 'Node $prefix';
+  }
+
+  @override
+  String receivedImage_incoming(int received, int total) {
+    return 'Kulcsfontosságú: Kiválasztja meg a $received $total paketot';
+  }
+
+  @override
+  String get receivedImage_queued => 'Kódoláshoz küldőzve';
+
+  @override
+  String get receivedImage_tapToDecode => 'Kódoláshoz klikd el';
+
+  @override
+  String get receivedImage_decoding => 'Korlátozás… egy 1 perc után';
+
+  @override
+  String receivedImage_incomplete(int received, int total) {
+    return 'Kérem, az $received $total paketet kapottak.';
+  }
+
+  @override
+  String get receivedImage_corrupt => 'Fény nem tudtam megrealítani';
+
+  @override
+  String get receivedImage_decoderMissing =>
+      'Kezd az image — image decodálás nem kapható';
+
+  @override
+  String get receivedImage_evicted => 'Fény nem tartalmazva';
+
+  @override
+  String get receivedImage_retry => 'Kérem kell próbálni';
+
+  @override
+  String get receivedImage_decodeAgain => 'Kodoldó';
+
+  @override
+  String get receivedImage_openSettings => 'Jelzése';
+
+  @override
+  String get receivedImage_tapToProcess => 'Klikd a feljelenítést';
+
+  @override
+  String receivedImage_awaiting(int bytes, int packets) {
+    String _temp0 = intl.Intl.pluralLogic(
+      packets,
+      locale: localeName,
+      other: 'csomag',
+      one: 'csomag',
+    );
+    return '$bytes bájt · $packets $_temp0';
+  }
+
+  @override
+  String imageSend_secondsValue(String seconds) {
+    return '$seconds sekünd\n\n(Note: The placeholder $seconds is kept unchanged as requested.)';
+  }
+
+  @override
+  String imageSend_minutesSecondsValue(String minutes, String seconds) {
+    return '$minutes per $seconds sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)';
+  }
 }
