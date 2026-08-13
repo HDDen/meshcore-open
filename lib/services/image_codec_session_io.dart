@@ -30,6 +30,7 @@ import 'entropy_tables.dart';
 ///                   `progress` {id: int, value: double}
 ///                   `result`   {id: int, bytes: Uint8List}
 ///                   `released` {id: int}
+///                   `shutdownComplete` {}
 ///                   `error`    {id: int, error: String, stack: String?}
 ///   host -> worker  `job`      {id, op: 'encode'|'decode'|'decodeLatent',
 ///                               bytes | latents, rate, size}
@@ -77,6 +78,7 @@ class ImageCodecSession {
 
   final Map<int, _PendingJob> _pending = {};
   final Map<int, Completer<void>> _pendingReleases = {};
+  Completer<void>? _shutdownCompleter;
   int _nextJobId = 1;
   bool _disposed = false;
 
@@ -325,6 +327,11 @@ class ImageCodecSession {
             release.complete();
           }
         }
+      case 'shutdownComplete':
+        final shutdown = _shutdownCompleter;
+        if (shutdown != null && !shutdown.isCompleted) {
+          shutdown.complete();
+        }
       case 'error':
         if (id is int) {
           _pending.remove(id);
@@ -357,16 +364,26 @@ class ImageCodecSession {
         release.complete();
       }
     }
+    final shutdown = _shutdownCompleter;
+    if (shutdown != null && !shutdown.isCompleted) {
+      shutdown.complete();
+    }
   }
 
-  /// Kills the isolate and frees the model's resident memory.
+  /// Gracefully closes the native sessions, then stops the worker isolate.
+  ///
+  /// ONNX calls use a platform channel from the background isolate. Killing
+  /// that isolate while Android still owes a method response makes Flutter
+  /// abort the whole process (`platform_message_response_dart_port.cc`:
+  /// `Check failed: did_send`). Shutdown is therefore acknowledged only after
+  /// every queued inference/release and [ImageCodecBackend.dispose] complete.
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
+    final shutdown = Completer<void>();
+    _shutdownCompleter = shutdown;
     _toWorker.send(const <String, Object?>{'type': 'shutdown'});
-    // Give the worker one event-loop turn to release the native session
-    // cleanly, then take the memory back regardless.
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await shutdown.future;
     _isolate.kill(priority: Isolate.immediate);
     _failAll(StateError('Image codec session disposed.'));
     _fromWorker.close();
@@ -494,6 +511,7 @@ Future<void> _codecWorkerMain(List<Object?> boot) async {
 
   final commands = ReceivePort();
   var cancelRequested = false;
+  var shuttingDown = false;
   var queue = Future<void>.value();
 
   reply.send(<String, Object?>{
@@ -517,9 +535,24 @@ Future<void> _codecWorkerMain(List<Object?> boot) async {
         // Handled on the event loop, so it lands between backend stages.
         cancelRequested = true;
       case 'shutdown':
-        commands.close();
-        unawaited(backend.dispose());
+        if (shuttingDown) return;
+        shuttingDown = true;
+        // Queue teardown behind the current native call. Closing an ORT
+        // session concurrently with run() is unsafe, and killing this isolate
+        // before the plugin replies is a process-fatal Flutter assertion.
+        queue = queue.then((_) async {
+          try {
+            await backend.dispose();
+          } finally {
+            // Even a failed close has already received its platform-channel
+            // response. The host may now retire this isolate without leaving
+            // Android targeting a dead Dart port.
+            reply.send(const <String, Object?>{'type': 'shutdownComplete'});
+            commands.close();
+          }
+        });
       case 'release':
+        if (shuttingDown) return;
         // Queued behind any running job: tearing an ORT session down while it
         // is executing is a native crash, not an exception.
         queue = queue.then((_) async {
@@ -542,6 +575,7 @@ Future<void> _codecWorkerMain(List<Object?> boot) async {
           }
         });
       case 'job':
+        if (shuttingDown) return;
         queue = queue.then((_) async {
           cancelRequested = false;
           final id = map['id'] as int;
