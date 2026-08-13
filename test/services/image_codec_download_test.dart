@@ -564,6 +564,62 @@ void main() {
   });
 
   group('installedBundle', () {
+    test('resolves sibling assets from a persisted Windows path', () {
+      const decoderPath =
+          r'C:\Users\user\Documents\image_codec_models\model.onnx';
+      final model = ImageCodecModelRecord(
+        id: 'test-model',
+        name: 'model.onnx',
+        sourceUrl: 'https://example.invalid/model.onnx',
+        localPath: decoderPath,
+        downloadedAt: DateTime.fromMillisecondsSinceEpoch(1730000000000),
+        fileSizeBytes: 5,
+        assetFileNames: const [
+          'model.onnx',
+          'model.onnx.data',
+          'entropy.onnx',
+          'entropy_decode.onnx',
+          'cdf.bin',
+        ],
+        assetRoles: const {
+          'model.onnx': ImageCodecAssetRole.decoderGraph,
+          'model.onnx.data': ImageCodecAssetRole.decoderWeights,
+          'entropy.onnx': ImageCodecAssetRole.entropyGraph,
+          'entropy_decode.onnx': ImageCodecAssetRole.entropyDecodeGraph,
+          'cdf.bin': ImageCodecAssetRole.cdfTables,
+        },
+        bundleVersion: kImageCodecBundleVersion,
+      );
+      final service = ImageCodecService(
+        AppSettingsService(),
+        fileStore: store,
+        settingsStore: InMemoryImageCodecSettingsStore(
+          ImageCodecPreferences(
+            enabled: true,
+            selectedModelId: 'test-model',
+            downloadedModels: [model],
+          ),
+        ),
+        clientFactory: _server(serverAssets, _Log()),
+      );
+      addTearDown(service.dispose);
+
+      final bundle = service.installedBundle;
+      expect(bundle, isNotNull);
+      expect(
+        bundle!.entropyGraphPath,
+        r'C:\Users\user\Documents\image_codec_models\entropy.onnx',
+      );
+      expect(
+        bundle.entropyDecodeGraphPath,
+        r'C:\Users\user\Documents\image_codec_models\entropy_decode.onnx',
+      );
+      expect(
+        bundle.tablesPath,
+        r'C:\Users\user\Documents\image_codec_models\cdf.bin',
+      );
+    });
+
     test(
       'a fresh install resolves the decoder, entropy and table paths',
       () async {

@@ -293,24 +293,24 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
       //    that can tell the two entropy graphs apart.
       final recorded = model.fileNameForRole(role);
       if (recorded != null) {
-        return '$directory/$recorded';
+        return _joinPath(directory, recorded);
       }
       // 2. The registry spec, for records written before assetRoles existed.
       final declared = spec?.maybeAssetFor(role)?.fileName;
       if (declared != null && model.assetFileNames.contains(declared)) {
-        return '$directory/$declared';
+        return _joinPath(directory, declared);
       }
       // 3. Last resort for a custom-URL install or an old record: the recorded
       //    names, never a guess at a name that was never downloaded.
       for (final name in model.assetFileNames) {
         if (looksRight(name)) {
-          return '$directory/$name';
+          return _joinPath(directory, name);
         }
       }
       return null;
     }
 
-    final decoderName = model.localPath.split('/').last;
+    final decoderName = _fileNameOf(model.localPath);
     // The bundle now holds THREE `.onnx` files, so "any .onnx that is not the
     // decoder" no longer identifies the send-side graph on its own. The
     // heuristic is only ever reached for a record with no matching spec entry,
@@ -345,8 +345,24 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
   }
 
   static String _directoryOf(String path) {
-    final index = path.lastIndexOf('/');
+    final forwardSlash = path.lastIndexOf('/');
+    final backslash = path.lastIndexOf('\\');
+    final index = forwardSlash > backslash ? forwardSlash : backslash;
     return index <= 0 ? path : path.substring(0, index);
+  }
+
+  static String _fileNameOf(String path) {
+    final forwardSlash = path.lastIndexOf('/');
+    final backslash = path.lastIndexOf('\\');
+    final index = forwardSlash > backslash ? forwardSlash : backslash;
+    return index < 0 ? path : path.substring(index + 1);
+  }
+
+  static String _joinPath(String directory, String fileName) {
+    final separator = directory.lastIndexOf('\\') > directory.lastIndexOf('/')
+        ? '\\'
+        : '/';
+    return '$directory$separator$fileName';
   }
 
   ImageCodecModelSpec? _specForId(String id) {
@@ -928,7 +944,7 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
       // here too. Without this, "Remove model" leaves 940 MB on the device.
       final directory = _directoryOf(model.localPath);
       for (final name in model.assetFileNames) {
-        final path = '$directory/$name';
+        final path = _joinPath(directory, name);
         if (path == model.localPath) continue;
         await _fileStore.deleteFile(path);
         await _fileStore.deletePartialDownloads(name);
