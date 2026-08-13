@@ -70,7 +70,9 @@ void main() async {
   final appSettingsService = AppSettingsService();
   final bleDebugLogService = BleDebugLogService();
   final appDebugLogService = AppDebugLogService();
-  final backgroundService = BackgroundService();
+  final backgroundService = BackgroundService(
+    debugLogService: appDebugLogService,
+  );
   final mapTileCacheService = MapTileCacheService(
     appSettingsService: appSettingsService,
   );
@@ -227,6 +229,7 @@ void main() async {
       appSettingsService: appSettingsService,
       bleDebugLogService: bleDebugLogService,
       appDebugLogService: appDebugLogService,
+      backgroundService: backgroundService,
       mapTileCacheService: mapTileCacheService,
       chatTextScaleService: chatTextScaleService,
       translationService: translationService,
@@ -368,6 +371,7 @@ class MeshCoreApp extends StatefulWidget {
   final AppSettingsService appSettingsService;
   final BleDebugLogService bleDebugLogService;
   final AppDebugLogService appDebugLogService;
+  final BackgroundService backgroundService;
   final MapTileCacheService mapTileCacheService;
   final ChatTextScaleService chatTextScaleService;
   final TranslationService translationService;
@@ -388,6 +392,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.appSettingsService,
     required this.bleDebugLogService,
     required this.appDebugLogService,
+    required this.backgroundService,
     required this.mapTileCacheService,
     required this.chatTextScaleService,
     required this.translationService,
@@ -435,6 +440,13 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       _kImageSweepInterval,
       (_) => widget.imageReassembler.evictExpired(),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        widget.backgroundService.ensureBatteryOptimizationExemption(
+          reason: 'startup',
+        ),
+      );
+    });
   }
 
   @override
@@ -550,6 +562,11 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      unawaited(widget.backgroundService.logRuntimeState(state.name));
+    }
     if (state == AppLifecycleState.resumed) {
       _refreshNotificationPermissionState();
     }

@@ -3652,6 +3652,7 @@ class MeshCoreConnector extends ChangeNotifier {
     BluetoothDevice device, {
     String? displayName,
     Future<String?> Function()? linuxPairingPinProvider,
+    bool requestBatteryOptimizationExemption = true,
   }) async {
     if (_isOfflineMode) {
       _appDebugLogService?.warn(
@@ -3663,6 +3664,14 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_state == MeshCoreConnectionState.connecting ||
         _state == MeshCoreConnectionState.connected) {
       return;
+    }
+
+    if (requestBatteryOptimizationExemption) {
+      unawaited(
+        _backgroundService?.ensureBatteryOptimizationExemption(
+          reason: 'bleConnection',
+        ),
+      );
     }
 
     _activeTransport = MeshCoreTransportType.bluetooth;
@@ -4488,7 +4497,11 @@ class MeshCoreConnector extends ChangeNotifier {
       if (device == null) return;
 
       try {
-        await connect(device, displayName: _lastDeviceDisplayName);
+        await connect(
+          device,
+          displayName: _lastDeviceDisplayName,
+          requestBatteryOptimizationExemption: false,
+        );
       } catch (_) {
         _scheduleReconnect();
       }

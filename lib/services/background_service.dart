@@ -3,8 +3,13 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
+import 'app_debug_log_service.dart';
 
 class BackgroundService {
+  BackgroundService({AppDebugLogService? debugLogService})
+    : _debugLogService = debugLogService;
+
+  final AppDebugLogService? _debugLogService;
   bool _initialized = false;
   // Multiple app features can keep the foreground service alive independently.
   // Stop it only after the last active feature releases its reason.
@@ -12,6 +17,7 @@ class BackgroundService {
   String? Function()? _languageOverrideProvider;
   bool _connectionLost = false;
   int _notificationRevision = 0;
+  final Set<String> _batteryOptimizationPromptReasons = {};
 
   /// Allows the app to expose its current language override (e.g. from
   /// AppSettingsService) so the foreground notification matches the app UI
@@ -41,24 +47,117 @@ class BackgroundService {
       ),
     );
     _initialized = true;
+    _debugLogService?.info(
+      'Foreground service initialized',
+      tag: 'Background',
+    );
+  }
+
+  Future<bool> ensureBatteryOptimizationExemption({
+    required String reason,
+  }) async {
+    if (!PlatformInfo.isAndroid) return true;
+
+    try {
+      final ignored =
+          await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+      _debugLogService?.info(
+        'Battery optimization exemption check ($reason): $ignored',
+        tag: 'Background',
+      );
+      if (ignored) return true;
+
+      // Startup and the first explicit BLE connection may each prompt once.
+      // Automatic reconnect attempts must never reopen system settings.
+      if (!_batteryOptimizationPromptReasons.add(reason)) return false;
+
+      _debugLogService?.warn(
+        'Battery optimization exemption missing; opening system request ($reason)',
+        tag: 'Background',
+      );
+      final requestOpened =
+          await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      _debugLogService?.info(
+        'Battery optimization request result ($reason): $requestOpened',
+        tag: 'Background',
+      );
+      if (!requestOpened) {
+        final settingsOpened = await FlutterForegroundTask
+            .openIgnoreBatteryOptimizationSettings();
+        _debugLogService?.warn(
+          'Direct battery request was unavailable; settings opened: $settingsOpened',
+          tag: 'Background',
+        );
+      }
+      return false;
+    } catch (error) {
+      _debugLogService?.error(
+        'Battery optimization check/request failed ($reason): $error',
+        tag: 'Background',
+      );
+      return false;
+    }
+  }
+
+  Future<void> logRuntimeState(String reason) async {
+    if (!PlatformInfo.isAndroid) return;
+    try {
+      final running = await FlutterForegroundTask.isRunningService;
+      final batteryExempt =
+          await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+      _debugLogService?.info(
+        'Runtime state ($reason): serviceRunning=$running, batteryExempt=$batteryExempt',
+        tag: 'Background',
+      );
+    } catch (error) {
+      _debugLogService?.error(
+        'Runtime state check failed ($reason): $error',
+        tag: 'Background',
+      );
+    }
   }
 
   Future<void> start({String reason = 'connection'}) async {
     if (!PlatformInfo.isAndroid) return;
     _keepAliveReasons.add(reason);
-    if (!_initialized) {
-      await initialize();
+    try {
+      if (!_initialized) {
+        await initialize();
+      }
+      final running = await FlutterForegroundTask.isRunningService;
+      if (running) {
+        _debugLogService?.info(
+          'Foreground service already running (reason=$reason)',
+          tag: 'Background',
+        );
+        return;
+      }
+      final l10n = await _loadLocalizations();
+      final result = await FlutterForegroundTask.startService(
+        notificationTitle: l10n.background_serviceTitle,
+        notificationText: _connectionLost
+            ? l10n.app_connectionLostReconnect
+            : l10n.background_serviceText,
+        callback: startCallback,
+      );
+      switch (result) {
+        case ServiceRequestSuccess():
+          _debugLogService?.info(
+            'Foreground service started (reason=$reason)',
+            tag: 'Background',
+          );
+        case ServiceRequestFailure(:final error):
+          _debugLogService?.error(
+            'Foreground service failed to start (reason=$reason): $error',
+            tag: 'Background',
+          );
+      }
+    } catch (error) {
+      _debugLogService?.error(
+        'Foreground service start check failed (reason=$reason): $error',
+        tag: 'Background',
+      );
     }
-    final running = await FlutterForegroundTask.isRunningService;
-    if (running) return;
-    final l10n = await _loadLocalizations();
-    await FlutterForegroundTask.startService(
-      notificationTitle: l10n.background_serviceTitle,
-      notificationText: _connectionLost
-          ? l10n.app_connectionLostReconnect
-          : l10n.background_serviceText,
-      callback: startCallback,
-    );
   }
 
   Future<void> setConnectionLost(bool connectionLost) async {
@@ -103,9 +202,34 @@ class BackgroundService {
     }
     if (_keepAliveReasons.isNotEmpty) return;
 
-    final running = await FlutterForegroundTask.isRunningService;
-    if (!running) return;
-    await FlutterForegroundTask.stopService();
+    try {
+      final running = await FlutterForegroundTask.isRunningService;
+      if (!running) {
+        _debugLogService?.warn(
+          'Foreground service was already stopped (reason=$reason)',
+          tag: 'Background',
+        );
+        return;
+      }
+      final result = await FlutterForegroundTask.stopService();
+      switch (result) {
+        case ServiceRequestSuccess():
+          _debugLogService?.info(
+            'Foreground service stopped (reason=$reason)',
+            tag: 'Background',
+          );
+        case ServiceRequestFailure(:final error):
+          _debugLogService?.error(
+            'Foreground service failed to stop (reason=$reason): $error',
+            tag: 'Background',
+          );
+      }
+    } catch (error) {
+      _debugLogService?.error(
+        'Foreground service stop check failed (reason=$reason): $error',
+        tag: 'Background',
+      );
+    }
   }
 }
 
