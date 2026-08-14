@@ -5854,6 +5854,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get app_connectionLostReconnected => 'Connexion au nœud rétablie';
 
   @override
+  String get app_connectionLostBreaked => 'Connexion au nœud interrompue';
+
+  @override
   String get contacts_batchOperations => 'Opérations en lot';
 
   @override

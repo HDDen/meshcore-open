@@ -2359,6 +2359,7 @@
   "snrIndicator_v2_nearByRepeaters": "Активность репитеров",
   "app_connectionLostReconnect": "Потеряно соединение с нодой, выполняется переподключение...",
   "app_connectionLostReconnected": "Соединение с нодой восстановлено",
+  "app_connectionLostBreaked": "Соединение с нодой разорвано",
   "contacts_batchOperations": "Массовые операции",
   "contacts_batchOperations_notSelected": "Вы не выбрали контакты для обработки!",
   "contacts_batchOperations_removeConfirm": "Удалить выбранные контакты из памяти ноды?",

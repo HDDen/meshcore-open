@@ -3314,5 +3314,6 @@
   "receivedImage_tapToProcess": "Premi per elaborare",
   "receivedImage_awaiting": "{bytes} byte · {packets} {packets, plural, =1{pacchetto} other{pacchetti}}",
   "imageSend_secondsValue": "{seconds} secondi",
-  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
+  "app_connectionLostBreaked": "Connessione al nodo interrotta"
 }

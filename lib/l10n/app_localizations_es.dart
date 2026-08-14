@@ -5822,6 +5822,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Conexión con el nodo restablecida';
 
   @override
+  String get app_connectionLostBreaked => 'Conexión con el nodo interrumpida';
+
+  @override
   String get contacts_batchOperations => 'Operaciones masivas';
 
   @override

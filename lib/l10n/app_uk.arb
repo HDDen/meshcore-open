@@ -3331,5 +3331,6 @@
   "receivedImage_tapToProcess": "Кликніть для обробки",
   "receivedImage_awaiting": "{bytes} байтів · {packets} {packets, plural, =1{пакет} other{пакетів}}",
   "imageSend_secondsValue": "{seconds} секунди",
-  "imageSend_minutesSecondsValue": "{minutes} хв {seconds} с"
+  "imageSend_minutesSecondsValue": "{minutes} хв {seconds} с",
+  "app_connectionLostBreaked": "Зʼєднання з нодою розірвано"
 }

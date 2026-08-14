@@ -5817,6 +5817,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'A kapcsolat a csomóponttal helyreállt';
 
   @override
+  String get app_connectionLostBreaked =>
+      'A kapcsolat a csomóponttal megszakadt';
+
+  @override
   String get contacts_batchOperations => 'Kötegelt műveletek';
 
   @override

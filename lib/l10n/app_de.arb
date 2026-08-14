@@ -3478,5 +3478,6 @@
   "receivedImage_tapToProcess": "Klicken Sie, um fortzufahren",
   "receivedImage_awaiting": "{bytes} Bytes · {packets} {packets, plural, =1{Paket} other{Pakete}}",
   "imageSend_secondsValue": "{seconds} s",
-  "imageSend_minutesSecondsValue": "{minutes} Min {seconds} Sek"
+  "imageSend_minutesSecondsValue": "{minutes} Min {seconds} Sek",
+  "app_connectionLostBreaked": "Verbindung zum Knoten wurde getrennt"
 }

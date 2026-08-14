@@ -3488,5 +3488,6 @@
   "receivedImage_tapToProcess": "처리하려면 탭을 누르세요.",
   "receivedImage_awaiting": "{bytes} 바이트 · {packets} {packets, plural, =1{패킷} other{패킷}}",
   "imageSend_secondsValue": "{seconds} 초",
-  "imageSend_minutesSecondsValue": "{minutes}분 {seconds}초"
+  "imageSend_minutesSecondsValue": "{minutes}분 {seconds}초",
+  "app_connectionLostBreaked": "노드와의 연결이 끊어졌습니다"
 }

@@ -5772,6 +5772,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Anslutningen till noden har återupprättats';
 
   @override
+  String get app_connectionLostBreaked => 'Anslutningen till noden har brutits';
+
+  @override
   String get contacts_batchOperations => 'Massåtgärder';
 
   @override

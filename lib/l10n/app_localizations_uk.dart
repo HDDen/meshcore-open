@@ -5830,6 +5830,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get app_connectionLostReconnected => 'Зʼєднання з нодою відновлено';
 
   @override
+  String get app_connectionLostBreaked => 'Зʼєднання з нодою розірвано';
+
+  @override
   String get contacts_batchOperations => 'Масові операції';
 
   @override

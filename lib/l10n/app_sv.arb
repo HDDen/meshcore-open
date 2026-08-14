@@ -3133,5 +3133,6 @@
   "receivedImage_tapToProcess": "Tap för att behandla",
   "receivedImage_awaiting": "{bytes} byte · {packets} {packets, plural, =1{paket} other{paket}}",
   "imageSend_secondsValue": "{seconds} sekunder",
-  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
+  "app_connectionLostBreaked": "Anslutningen till noden har brutits"
 }

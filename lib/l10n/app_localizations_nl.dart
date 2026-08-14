@@ -5803,6 +5803,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get app_connectionLostReconnected => 'Verbinding met de node hersteld';
 
   @override
+  String get app_connectionLostBreaked => 'Verbinding met de node verbroken';
+
+  @override
   String get contacts_batchOperations => 'Bulkbewerkingen';
 
   @override

@@ -3351,5 +3351,6 @@
   "receivedImage_tapToProcess": "Kliknij za obravnavanje",
   "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
   "imageSend_secondsValue": "{seconds} s",
-  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s",
+  "app_connectionLostBreaked": "Povezava z vozliščem je prekinjena"
 }

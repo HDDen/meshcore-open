@@ -5534,6 +5534,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get app_connectionLostReconnected => '노드와의 연결이 복구되었습니다';
 
   @override
+  String get app_connectionLostBreaked => '노드와의 연결이 끊어졌습니다';
+
+  @override
   String get contacts_batchOperations => '일괄 작업';
 
   @override

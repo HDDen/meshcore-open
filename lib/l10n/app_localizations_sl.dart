@@ -5796,6 +5796,9 @@ class AppLocalizationsSl extends AppLocalizations {
       'Povezava z vozliščem je obnovljena';
 
   @override
+  String get app_connectionLostBreaked => 'Povezava z vozliščem je prekinjena';
+
+  @override
   String get contacts_batchOperations => 'Množične operacije';
 
   @override

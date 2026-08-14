@@ -5822,6 +5822,9 @@ class AppLocalizationsBg extends AppLocalizations {
       'Връзката с възела е възстановена';
 
   @override
+  String get app_connectionLostBreaked => 'Връзката с възела е прекъсната';
+
+  @override
   String get contacts_batchOperations => 'Масови операции';
 
   @override

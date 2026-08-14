@@ -5788,6 +5788,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get app_connectionLostReconnected => 'Spojenie s uzlom bolo obnovené';
 
   @override
+  String get app_connectionLostBreaked => 'Spojenie s uzlom bolo prerušené';
+
+  @override
   String get contacts_batchOperations => 'Hromadné operácie';
 
   @override

@@ -5827,6 +5827,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get app_connectionLostReconnected => 'Wieder mit dem Knoten verbunden';
 
   @override
+  String get app_connectionLostBreaked =>
+      'Verbindung zum Knoten wurde getrennt';
+
+  @override
   String get contacts_batchOperations => 'Sammelaktionen';
 
   @override

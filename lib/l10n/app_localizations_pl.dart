@@ -5842,6 +5842,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get app_connectionLostReconnected => 'Połączenie z węzłem przywrócone';
 
   @override
+  String get app_connectionLostBreaked =>
+      'Połączenie z węzłem zostało przerwane';
+
+  @override
   String get contacts_batchOperations => 'Operacje zbiorcze';
 
   @override

@@ -5528,6 +5528,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get app_connectionLostReconnected => 'ノードとの接続が復旧しました';
 
   @override
+  String get app_connectionLostBreaked => 'ノードとの接続が切断されました';
+
+  @override
   String get contacts_batchOperations => '一括操作';
 
   @override

@@ -3456,5 +3456,6 @@
   "receivedImage_tapToProcess": "処理するにはタップしてください",
   "receivedImage_awaiting": "{bytes} バイト・{packets} {packets, plural, =1{パケット} other{パケット}}",
   "imageSend_secondsValue": "{seconds}秒",
-  "imageSend_minutesSecondsValue": "{minutes}分 {seconds}秒"
+  "imageSend_minutesSecondsValue": "{minutes}分 {seconds}秒",
+  "app_connectionLostBreaked": "ノードとの接続が切断されました"
 }

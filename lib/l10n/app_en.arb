@@ -3246,6 +3246,7 @@
   "snrIndicator_v2_nearByRepeaters": "Repeater's activity",
   "app_connectionLostReconnect": "Connection to node is lost; reconnecting...",
   "app_connectionLostReconnected": "Reconnected to node",
+  "app_connectionLostBreaked": "Connection to node was broken",
   "contacts_batchOperations": "Batch operations",
   "contacts_batchOperations_notSelected": "You have not selected any contacts for processing!",
   "contacts_batchOperations_removeConfirm": "Remove selected contacts from node?",

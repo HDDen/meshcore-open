@@ -3351,5 +3351,6 @@
   "receivedImage_tapToProcess": "Ukliknite, aby sa príjomili",
   "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
   "imageSend_secondsValue": "{seconds} s",
-  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
+  "app_connectionLostBreaked": "Spojenie s uzlom bolo prerušené"
 }

@@ -5722,6 +5722,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get app_connectionLostReconnected => 'Reconnected to node';
 
   @override
+  String get app_connectionLostBreaked => 'Connection to node was broken';
+
+  @override
   String get contacts_batchOperations => 'Batch operations';
 
   @override

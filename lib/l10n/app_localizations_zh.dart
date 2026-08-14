@@ -5409,6 +5409,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get app_connectionLostReconnected => '与节点的连接已恢复';
 
   @override
+  String get app_connectionLostBreaked => '与节点的连接已中断';
+
+  @override
   String get contacts_batchOperations => '批量操作';
 
   @override

@@ -3450,5 +3450,6 @@
   "receivedImage_tapToProcess": "Toque para procesar",
   "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{paquete} other{paquetes}}",
   "imageSend_secondsValue": "{seconds} segundos",
-  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
+  "app_connectionLostBreaked": "Conexión con el nodo interrumpida"
 }

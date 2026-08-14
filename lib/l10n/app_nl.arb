@@ -3133,5 +3133,6 @@
   "receivedImage_tapToProcess": "Tik om te verwerken",
   "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{pakket} other{pakketten}}",
   "imageSend_secondsValue": "{seconds} seconden",
-  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s",
+  "app_connectionLostBreaked": "Verbinding met de node verbroken"
 }

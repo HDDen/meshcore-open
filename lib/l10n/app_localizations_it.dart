@@ -5835,6 +5835,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Connessione al nodo ripristinata';
 
   @override
+  String get app_connectionLostBreaked => 'Connessione al nodo interrotta';
+
+  @override
   String get contacts_batchOperations => 'Operazioni in blocco';
 
   @override

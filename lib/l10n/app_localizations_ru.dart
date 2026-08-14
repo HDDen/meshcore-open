@@ -5819,6 +5819,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Соединение с нодой восстановлено';
 
   @override
+  String get app_connectionLostBreaked => 'Соединение с нодой разорвано';
+
+  @override
   String get contacts_batchOperations => 'Массовые операции';
 
   @override

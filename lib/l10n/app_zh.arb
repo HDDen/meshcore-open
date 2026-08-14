@@ -3356,5 +3356,6 @@
   "receivedImage_tapToProcess": "点击处理",
   "receivedImage_awaiting": "{bytes} 字节 · {packets} {packets, plural, =1{个数据包} other{个数据包}}",
   "imageSend_secondsValue": "{seconds} 秒",
-  "imageSend_minutesSecondsValue": "{minutes} 分 {seconds} 秒"
+  "imageSend_minutesSecondsValue": "{minutes} 分 {seconds} 秒",
+  "app_connectionLostBreaked": "与节点的连接已中断"
 }

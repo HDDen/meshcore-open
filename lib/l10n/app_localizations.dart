@@ -9952,6 +9952,12 @@ abstract class AppLocalizations {
   /// **'Reconnected to node'**
   String get app_connectionLostReconnected;
 
+  /// No description provided for @app_connectionLostBreaked.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to node was broken'**
+  String get app_connectionLostBreaked;
+
   /// No description provided for @contacts_batchOperations.
   ///
   /// In en, this message translates to:

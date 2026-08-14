@@ -3389,5 +3389,6 @@
   "receivedImage_tapToProcess": "Kliknij, aby przetworzyć",
   "receivedImage_awaiting": "{bytes} bajtów · {packets} {packets, plural, =1{pakiet} other{pakiety}}",
   "imageSend_secondsValue": "{seconds} sekund",
-  "imageSend_minutesSecondsValue": "{minutes} minut {seconds} sekundy"
+  "imageSend_minutesSecondsValue": "{minutes} minut {seconds} sekundy",
+  "app_connectionLostBreaked": "Połączenie z węzłem zostało przerwane"
 }

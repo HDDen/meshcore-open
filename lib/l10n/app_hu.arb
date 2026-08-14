@@ -3354,5 +3354,6 @@
   "receivedImage_tapToProcess": "Klikd a feljelenítést",
   "receivedImage_awaiting": "{bytes} bájt · {packets} {packets, plural, =1{csomag} other{csomag}}",
   "imageSend_secondsValue": "{seconds} sekünd\n\n(Note: The placeholder {seconds} is kept unchanged as requested.)",
-  "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)"
+  "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)",
+  "app_connectionLostBreaked": "A kapcsolat a csomóponttal megszakadt"
 }

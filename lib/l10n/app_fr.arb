@@ -3450,5 +3450,6 @@
   "receivedImage_tapToProcess": "Tapez pour traiter",
   "receivedImage_awaiting": "{bytes} octets · {packets} {packets, plural, =1{paquet} other{paquets}}",
   "imageSend_secondsValue": "{seconds} s",
-  "imageSend_minutesSecondsValue": "{minutes} minutes {seconds} secondes"
+  "imageSend_minutesSecondsValue": "{minutes} minutes {seconds} secondes",
+  "app_connectionLostBreaked": "Connexion au nœud interrompue"
 }

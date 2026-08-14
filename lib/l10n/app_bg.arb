@@ -3351,5 +3351,6 @@
   "receivedImage_tapToProcess": "Натискнете за обработка",
   "receivedImage_awaiting": "{bytes} байта · {packets} {packets, plural, =1{пакет} other{пакета}}",
   "imageSend_secondsValue": "{seconds} секунди",
-  "imageSend_minutesSecondsValue": "{minutes} мин {seconds} сек"
+  "imageSend_minutesSecondsValue": "{minutes} мин {seconds} сек",
+  "app_connectionLostBreaked": "Връзката с възела е прекъсната"
 }

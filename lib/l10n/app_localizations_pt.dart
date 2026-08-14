@@ -5813,6 +5813,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get app_connectionLostReconnected => 'Conexão com o nó restabelecida';
 
   @override
+  String get app_connectionLostBreaked => 'Conexão com o nó interrompida';
+
+  @override
   String get contacts_batchOperations => 'Operações em lote';
 
   @override
