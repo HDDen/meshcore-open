@@ -21,6 +21,7 @@ import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
+import '../widgets/edge_swipe_pop.dart';
 
 enum _CanvasTool { pencil, fill, eyedropper, line, oval, rectangle }
 
@@ -316,7 +317,8 @@ class CanvasEditorScreen extends StatefulWidget {
   State<CanvasEditorScreen> createState() => _CanvasEditorScreenState();
 }
 
-class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
+class _CanvasEditorScreenState extends State<CanvasEditorScreen>
+    with EdgeSwipePopSuppression {
   static const int _minCanvasSize = 2;
   static const int _maxCanvasSizeV1 = 85;
   static const int _maxCanvasSizeV2 = 256;
