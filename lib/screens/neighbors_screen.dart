@@ -31,10 +31,23 @@ class NeighborsScreen extends StatefulWidget {
 
 class _NeighborsScreenState extends State<NeighborsScreen> {
   static const int _reqNeighborsKeyLen = 4;
+
+  /// Neighbours asked for per request. The repeater answers out of a fixed
+  /// 130-byte buffer, so with a 4-byte key prefix it fits 14 and truncates the
+  /// page — which is why paging advances by what actually arrived, never by
+  /// what was requested.
+  static const int _neighborsPageSize = 15;
+
+  /// Backstop against a repeater that keeps reporting more neighbours than it
+  /// ever returns; 8 pages already covers the firmware's 50-entry table.
+  static const int _maxNeighborPages = 8;
+
   static const Duration _sentResponseFallbackTimeout = Duration(seconds: 10);
   static const Duration _responseTimeoutPadding = Duration(seconds: 2);
   Uint8List _tagData = Uint8List(4);
   int _neighborCount = 0;
+  final List<Map<String, dynamic>> _collectedNeighbors = [];
+  int _pagesFetched = 0;
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -158,9 +171,9 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     final contacts = connector.allContactsUnfiltered;
     try {
       final neighborCount = buffer.readUInt16LE();
-      final parsedNeighbors = parseNeighborsData(buffer, buffer.readUInt16LE());
+      final pageNeighbors = parseNeighborsData(buffer, buffer.readUInt16LE());
       contacts.where((c) => c.type == advTypeRepeater).forEach((repeater) {
-        for (var neighborData in parsedNeighbors) {
+        for (var neighborData in pageNeighbors) {
           final publicKey = neighborData['publicKey'];
           if (listEquals(
             repeater.publicKey.sublist(0, _reqNeighborsKeyLen),
@@ -171,24 +184,39 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         }
       });
 
+      _statusTimeout?.cancel();
+      _recordStatusResult(true);
+      if (!mounted) return;
+
+      _collectedNeighbors.addAll(pageNeighbors);
+      _pagesFetched++;
+
+      // The repeater reports how many neighbours it knows separately from how
+      // many fit in this answer, so keep paging until the two agree. An empty
+      // page means it has nothing more to give, whatever the total claims.
+      final hasMore =
+          pageNeighbors.isNotEmpty &&
+          _collectedNeighbors.length < neighborCount &&
+          _pagesFetched < _maxNeighborPages;
+
       setState(() {
-        _parsedNeighbors = parsedNeighbors;
+        _parsedNeighbors = List.of(_collectedNeighbors);
         _neighborCount = neighborCount;
+        _isLoading = hasMore;
+        _isLoaded = !hasMore;
+        _hasData = true;
       });
+
+      if (hasMore) {
+        unawaited(_requestNeighborsPage(_collectedNeighbors.length));
+        return;
+      }
 
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.neighbors_receivedData),
         backgroundColor: Theme.of(context).colorScheme.tertiary,
       );
-      _statusTimeout?.cancel();
-      _recordStatusResult(true);
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _isLoaded = true;
-        _hasData = true;
-      });
     } catch (e) {
       appLogger.error('Error handling neighbors response: $e');
     }
@@ -197,25 +225,32 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
   Future<void> _loadNeighbors() async {
     if (_commandService == null) return;
 
+    _collectedNeighbors.clear();
+    _pagesFetched = 0;
     setState(() {
       _isLoading = true;
       _isLoaded = false;
     });
+    await _requestNeighborsPage(0);
+  }
+
+  Future<void> _requestNeighborsPage(int offset) async {
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
       final repeater = _resolveRepeater(connector);
       final selection = await connector.preparePathForContactSend(repeater);
       _pendingStatusSelection = selection;
 
-      //[version][number of requested neighbors][offset_16bit][order by][len of public key]
+      // [req type][version][count][offset_16bit][order by]
+      // [pubkey prefix length]
       final frame = buildSendBinaryReq(
         repeater.publicKey,
         payload: Uint8List.fromList([
           reqTypeGetNeighbors,
           0x00,
-          0x0F,
-          0x00,
-          0x00,
+          _neighborsPageSize,
+          offset & 0xFF,
+          (offset >> 8) & 0xFF,
           0x00,
           _reqNeighborsKeyLen,
         ]),
@@ -225,9 +260,10 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     } catch (e) {
       _statusTimeout?.cancel();
       if (mounted) {
+        // Whatever arrived before the failure is still worth showing.
         setState(() {
           _isLoading = false;
-          _isLoaded = false;
+          _isLoaded = _collectedNeighbors.isNotEmpty;
         });
 
         showDismissibleSnackBar(
@@ -246,9 +282,10 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
 
   void _handleStatusTimeout() {
     if (!mounted) return;
+    // A later page timing out should not throw away the earlier ones.
     setState(() {
       _isLoading = false;
-      _isLoaded = false;
+      _isLoaded = _collectedNeighbors.isNotEmpty;
     });
     showDismissibleSnackBar(
       context,
@@ -373,11 +410,13 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     final double snr = data['snr'] as double;
     final int lastHeardSeconds = data['lastHeard'] as int;
 
+    // Straight from the repeater's answer, never rebuilt from a matched
+    // contact: this is the identity the repeater actually reported, and the
+    // name above it is only our local guess at who owns it.
+    final keyPrefix = pubKeyToHex(data['publicKey'] as Uint8List);
     final name = contact != null
         ? contact.name
-        : l10n.neighbors_unknownContact(
-            '<${pubKeyToHex(data['publicKey'] as Uint8List)}>',
-          );
+        : l10n.neighbors_unknownContact('<$keyPrefix>');
 
     final snrColor = MeshTheme.snrColor(snr, blocked: false);
     final heardLabel = l10n.neighbors_heardAgo(
@@ -408,6 +447,18 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  keyPrefix,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: MeshTheme.mono(
+                    fontSize: 11,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
                   ),
                 ),
                 const SizedBox(height: 2),
