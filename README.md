@@ -133,6 +133,20 @@ visible but dimmed, with the run between them already styled — so you can see 
 and deleting one marker visibly strips the formatting from that run, which is how you undo it by
 editing. Selecting text also offers the five styles straight from the selection toolbar.
 
+On desktop the usual keyboard shortcuts apply to the selection:
+
+| Action | Windows / Linux | macOS |
+|---|---|---|
+| Bold | `Ctrl+B` | `⌘B` |
+| Italic | `Ctrl+I` | `⌘I` |
+| Underline | `Ctrl+U` | `⌘⇧U` |
+| Strikethrough | `Ctrl+Shift+X` | `⌘⇧X` |
+| Monospace | `Ctrl+Shift+M` | `⌘⇧K` |
+| Clear formatting | `Ctrl+Shift+N` | — |
+
+With nothing selected a shortcut drops an empty marker pair at the caret and leaves the caret
+between them, so you can style as you type.
+
 Clients that do not know the convention show the markers as written, the same way they would in
 any other messenger.
 

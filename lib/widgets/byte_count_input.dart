@@ -106,12 +106,13 @@ class ByteCountedTextField extends StatelessWidget {
     return isPhone ? TextInputAction.newline : TextInputAction.send;
   }
 
-  /// Wraps the selection in [marker], the toolbar counterpart of typing the
-  /// markers by hand.
+  /// Wraps the selection in [marker], the toolbar and shortcut counterpart of
+  /// typing the markers by hand. With nothing selected it drops an empty pair
+  /// at the caret and puts the caret between them, the way editors do.
   void _wrapSelection(String marker) {
     final value = controller.value;
     final selection = value.selection;
-    if (!selection.isValid || selection.isCollapsed) return;
+    if (!selection.isValid) return;
     final selected = value.text.substring(selection.start, selection.end);
     final wrapped = '$marker$selected$marker';
     var next = TextEditingValue(
@@ -152,6 +153,96 @@ class ByteCountedTextField extends StatelessWidget {
           },
         ),
     ];
+  }
+
+  /// Undoes formatting over the selection: drops the markers it contains and,
+  /// when it holds none, the pair immediately around it — which is the case
+  /// when the user selected the styled words rather than the markers.
+  void _clearFormatting() {
+    final value = controller.value;
+    final selection = value.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+
+    var before = value.text.substring(0, selection.start);
+    var after = value.text.substring(selection.end);
+    final selected = value.text.substring(selection.start, selection.end);
+
+    final buffer = StringBuffer();
+    for (final segment in MessageMarkup.parse(selected, keepMarkers: true)) {
+      if (!segment.isMarker) buffer.write(segment.text);
+    }
+    final stripped = buffer.toString();
+
+    if (stripped == selected) {
+      for (final marker in MessageMarkup.markers) {
+        if (before.endsWith(marker) && after.startsWith(marker)) {
+          before = before.substring(0, before.length - marker.length);
+          after = after.substring(marker.length);
+          break;
+        }
+      }
+    }
+
+    controller.value = TextEditingValue(
+      text: '$before$stripped$after',
+      selection: TextSelection(
+        baseOffset: before.length,
+        extentOffset: before.length + stripped.length,
+      ),
+    );
+  }
+
+  /// Enter sends and Shift+Enter breaks the line where a hardware keyboard
+  /// is the norm; the formatting combos ride alongside them.
+  Map<ShortcutActivator, VoidCallback> get _shortcutBindings {
+    if (!enabled) return const {};
+    return {
+      if (_usesDesktopEnterHandling && onSubmitted != null) ...{
+        const SingleActivator(LogicalKeyboardKey.enter): () =>
+            onSubmitted!(controller.text),
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): () =>
+            onSubmitted!(controller.text),
+        const SingleActivator(LogicalKeyboardKey.enter, shift: true): () =>
+            _insertText('\n'),
+        const SingleActivator(
+          LogicalKeyboardKey.numpadEnter,
+          shift: true,
+        ): () =>
+            _insertText('\n'),
+      },
+      ..._formattingShortcuts,
+    };
+  }
+
+  bool get _isMacOS => defaultTargetPlatform == TargetPlatform.macOS;
+
+  bool get _isDesktop => _usesDesktopEnterHandling || _isMacOS;
+
+  /// Formatting shortcuts, keyboard-only so they exist on desktop alone.
+  /// macOS follows its own conventions for underline and monospace.
+  Map<ShortcutActivator, VoidCallback> get _formattingShortcuts {
+    if (!_isDesktop) return const {};
+    final mac = _isMacOS;
+    SingleActivator combo(LogicalKeyboardKey key, {bool shift = false}) =>
+        SingleActivator(key, control: !mac, meta: mac, shift: shift);
+    return {
+      combo(LogicalKeyboardKey.keyB): () =>
+          _wrapSelection(MessageMarkup.bold),
+      combo(LogicalKeyboardKey.keyI): () =>
+          _wrapSelection(MessageMarkup.italic),
+      combo(LogicalKeyboardKey.keyU, shift: mac): () =>
+          _wrapSelection(MessageMarkup.underline),
+      combo(LogicalKeyboardKey.keyX, shift: true): () =>
+          _wrapSelection(MessageMarkup.strikethrough),
+      if (mac)
+        combo(LogicalKeyboardKey.keyK, shift: true): () =>
+            _wrapSelection(MessageMarkup.mono)
+      else ...{
+        combo(LogicalKeyboardKey.keyM, shift: true): () =>
+            _wrapSelection(MessageMarkup.mono),
+        combo(LogicalKeyboardKey.keyN, shift: true): _clearFormatting,
+      },
+    };
   }
 
   void _insertText(String text) {
@@ -209,27 +300,7 @@ class ByteCountedTextField extends StatelessWidget {
                 maxHeight: maxHeight ?? double.infinity,
               ),
               child: CallbackShortcuts(
-                bindings:
-                    enabled && _usesDesktopEnterHandling && onSubmitted != null
-                    ? {
-                        const SingleActivator(LogicalKeyboardKey.enter): () =>
-                            onSubmitted!(controller.text),
-                        const SingleActivator(
-                          LogicalKeyboardKey.numpadEnter,
-                        ): () =>
-                            onSubmitted!(controller.text),
-                        const SingleActivator(
-                          LogicalKeyboardKey.enter,
-                          shift: true,
-                        ): () =>
-                            _insertText('\n'),
-                        const SingleActivator(
-                          LogicalKeyboardKey.numpadEnter,
-                          shift: true,
-                        ): () =>
-                            _insertText('\n'),
-                      }
-                    : const <ShortcutActivator, VoidCallback>{},
+                bindings: _shortcutBindings,
                 child: TextField(
                   minLines: minLines,
                   maxLines: null,
