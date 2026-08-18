@@ -2952,6 +2952,7 @@
   "chat_formatUnderline": "Podčrtano",
   "chat_formatStrikethrough": "Prečrtano",
   "chat_formatMono": "Enakomerna pisava",
+  "chat_formatColor": "Barva besedila",
   "chat_canvasSendPayloadExceed": "Pošiljanje ni uspelo — payload je presežen za {count} bajtov. Zmanjšajte število podrobnosti ali velikost platna.",
   "chat_canvasCurrentPayload": "Trenutni payload: {payload}",
   "chat_canvasActive": "Prikaži platno",

@@ -2734,6 +2734,7 @@
   "chat_formatUnderline": "Onderstreept",
   "chat_formatStrikethrough": "Doorgehaald",
   "chat_formatMono": "Monospace",
+  "chat_formatColor": "Tekstkleur",
   "chat_canvasSendPayloadExceed": "Verzenden mislukt: de payload is met {count} bytes overschreden. Verminder het aantal details of de canvasgrootte.",
   "chat_canvasCurrentPayload": "Huidige payload: {payload}",
   "chat_canvasActive": "Canvas weergeven",

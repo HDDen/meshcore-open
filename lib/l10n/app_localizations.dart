@@ -9286,6 +9286,12 @@ abstract class AppLocalizations {
   /// **'Monospace'**
   String get chat_formatMono;
 
+  /// No description provided for @chat_formatColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text colour'**
+  String get chat_formatColor;
+
   /// No description provided for @chat_canvasSendPayloadExceed.
   ///
   /// In en, this message translates to:

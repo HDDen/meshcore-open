@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../helpers/markup_editing.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../l10n/l10n.dart';
+import 'markup_color_picker.dart';
 
 /// A [TextField] that displays a live UTF-8 byte counter.
 ///
@@ -15,7 +18,7 @@ import '../l10n/l10n.dart';
 ///
 /// All standard [TextField] behaviour (focus nodes, input actions, decoration
 /// overrides, etc.) is forwarded so the widget can be dropped into any screen.
-class ByteCountedTextField extends StatelessWidget {
+class ByteCountedTextField extends StatefulWidget {
   /// Maximum number of UTF-8 bytes allowed.
   final int maxBytes;
 
@@ -89,6 +92,59 @@ class ByteCountedTextField extends StatelessWidget {
     this.enabled = true,
   });
 
+  @override
+  State<ByteCountedTextField> createState() => _ByteCountedTextFieldState();
+}
+
+class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
+  /// Cached counter input. Dragging an Android selection handle fires the
+  /// controller on every pixel of travel, and recomputing the encoded length
+  /// there means running MCMP or cyr2lat over the whole message dozens of
+  /// times a second — enough dropped frames to make the handle stutter. Only a
+  /// text change can move the byte count, so selection-only updates are
+  /// ignored.
+  late String _text = widget.controller.text;
+  String? _encodedFor;
+  int _usedBytes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onControllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(ByteCountedTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onControllerChanged);
+      widget.controller.addListener(_onControllerChanged);
+      _text = widget.controller.text;
+      _encodedFor = null;
+    }
+    if (oldWidget.encoder != widget.encoder) _encodedFor = null;
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerChanged);
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (widget.controller.text == _text) return;
+    setState(() => _text = widget.controller.text);
+  }
+
+  int get _byteCount {
+    if (_encodedFor == _text) return _usedBytes;
+    final encoder = widget.encoder;
+    final effective = encoder != null ? encoder(_text) : _text;
+    _usedBytes = utf8.encode(effective).length;
+    _encodedFor = _text;
+    return _usedBytes;
+  }
+
   bool get _usesDesktopEnterHandling {
     return defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux;
@@ -99,41 +155,38 @@ class ByteCountedTextField extends StatelessWidget {
   /// impossible to type, so the action becomes a newline and sending stays on
   /// the composer's own button.
   TextInputAction get _effectiveTextInputAction {
-    if (textInputAction != null) return textInputAction!;
+    if (widget.textInputAction != null) return widget.textInputAction!;
     final isPhone =
         defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
     return isPhone ? TextInputAction.newline : TextInputAction.send;
   }
 
-  /// Wraps the selection in [marker], the toolbar and shortcut counterpart of
-  /// typing the markers by hand. With nothing selected it drops an empty pair
-  /// at the caret and puts the caret between them, the way editors do.
-  void _wrapSelection(String marker) {
-    final value = controller.value;
-    final selection = value.selection;
-    if (!selection.isValid) return;
-    final selected = value.text.substring(selection.start, selection.end);
-    final wrapped = '$marker$selected$marker';
-    var next = TextEditingValue(
-      text: value.text.replaceRange(selection.start, selection.end, wrapped),
-      selection: TextSelection(
-        baseOffset: selection.start + marker.length,
-        extentOffset: selection.start + marker.length + selected.length,
-      ),
+  /// Wraps the selection, the toolbar and shortcut counterpart of typing the
+  /// markers by hand. Paired markers pass the same string twice; colour tags
+  /// pass `[key]` and `[/key]`.
+  void _wrapSelection(String opener, [String? closer]) {
+    final value = widget.controller.value;
+    widget.controller.value = Utf8LengthLimitingTextInputFormatter(
+      widget.maxBytes,
+      encoder: widget.encoder,
+    ).formatEditUpdate(
+      value,
+      MarkupEditing.wrap(value, opener, closer ?? opener),
     );
-    next = Utf8LengthLimitingTextInputFormatter(
-      maxBytes,
-      encoder: encoder,
-    ).formatEditUpdate(value, next);
-    controller.value = next;
+  }
+
+  Future<void> _pickColor(BuildContext context) async {
+    final key = await showMarkupColorPicker(context);
+    if (key == null) return;
+    _wrapSelection('[$key]', '[/$key]');
   }
 
   List<ContextMenuButtonItem> _formattingButtons(
     BuildContext context,
     EditableTextState editableTextState,
   ) {
-    final selection = controller.selection;
+    final selection = widget.controller.selection;
     if (!selection.isValid || selection.isCollapsed) return const [];
     final l10n = context.l10n;
     final labels = <String, String>{
@@ -152,56 +205,32 @@ class ByteCountedTextField extends StatelessWidget {
             _wrapSelection(entry.key);
           },
         ),
+      ContextMenuButtonItem(
+        label: l10n.chat_formatColor,
+        onPressed: () {
+          editableTextState.hideToolbar();
+          unawaited(_pickColor(context));
+        },
+      ),
     ];
   }
 
-  /// Undoes formatting over the selection: drops the markers it contains and,
-  /// when it holds none, the pair immediately around it — which is the case
-  /// when the user selected the styled words rather than the markers.
   void _clearFormatting() {
-    final value = controller.value;
-    final selection = value.selection;
-    if (!selection.isValid || selection.isCollapsed) return;
-
-    var before = value.text.substring(0, selection.start);
-    var after = value.text.substring(selection.end);
-    final selected = value.text.substring(selection.start, selection.end);
-
-    final buffer = StringBuffer();
-    for (final segment in MessageMarkup.parse(selected, keepMarkers: true)) {
-      if (!segment.isMarker) buffer.write(segment.text);
-    }
-    final stripped = buffer.toString();
-
-    if (stripped == selected) {
-      for (final marker in MessageMarkup.markers) {
-        if (before.endsWith(marker) && after.startsWith(marker)) {
-          before = before.substring(0, before.length - marker.length);
-          after = after.substring(marker.length);
-          break;
-        }
-      }
-    }
-
-    controller.value = TextEditingValue(
-      text: '$before$stripped$after',
-      selection: TextSelection(
-        baseOffset: before.length,
-        extentOffset: before.length + stripped.length,
-      ),
+    widget.controller.value = MarkupEditing.stripFormatting(
+      widget.controller.value,
     );
   }
 
   /// Enter sends and Shift+Enter breaks the line where a hardware keyboard
   /// is the norm; the formatting combos ride alongside them.
   Map<ShortcutActivator, VoidCallback> get _shortcutBindings {
-    if (!enabled) return const {};
+    if (!widget.enabled) return const {};
     return {
-      if (_usesDesktopEnterHandling && onSubmitted != null) ...{
+      if (_usesDesktopEnterHandling && widget.onSubmitted != null) ...{
         const SingleActivator(LogicalKeyboardKey.enter): () =>
-            onSubmitted!(controller.text),
+            widget.onSubmitted!(widget.controller.text),
         const SingleActivator(LogicalKeyboardKey.numpadEnter): () =>
-            onSubmitted!(controller.text),
+            widget.onSubmitted!(widget.controller.text),
         const SingleActivator(LogicalKeyboardKey.enter, shift: true): () =>
             _insertText('\n'),
         const SingleActivator(
@@ -246,7 +275,7 @@ class ByteCountedTextField extends StatelessWidget {
   }
 
   void _insertText(String text) {
-    final oldValue = controller.value;
+    final oldValue = widget.controller.value;
     final selection = oldValue.selection;
     final start = selection.isValid
         ? selection.start.clamp(0, oldValue.text.length).toInt()
@@ -267,96 +296,88 @@ class ByteCountedTextField extends StatelessWidget {
     );
 
     newValue = Utf8LengthLimitingTextInputFormatter(
-      maxBytes,
-      encoder: encoder,
+      widget.maxBytes,
+      encoder: widget.encoder,
     ).formatEditUpdate(oldValue, newValue);
-    controller.value = newValue;
+    widget.controller.value = newValue;
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        final effectiveText = encoder != null
-            ? encoder!(value.text)
-            : value.text;
-        final usedBytes = utf8.encode(effectiveText).length;
-        final ratio = maxBytes > 0 ? usedBytes / maxBytes : 0.0;
-        final showCounter = !(hideCounterWhenEmpty && value.text.isEmpty);
+    final usedBytes = _byteCount;
+    final ratio = widget.maxBytes > 0 ? usedBytes / widget.maxBytes : 0.0;
+    final showCounter = !(widget.hideCounterWhenEmpty && _text.isEmpty);
 
-        final counterColor = ratio > errorThreshold
-            ? Theme.of(context).colorScheme.error
-            : ratio > warningThreshold
-            ? Theme.of(context).colorScheme.tertiary
-            : Theme.of(context).colorScheme.onSurfaceVariant;
+    final counterColor = ratio > widget.errorThreshold
+        ? Theme.of(context).colorScheme.error
+        : ratio > widget.warningThreshold
+        ? Theme.of(context).colorScheme.tertiary
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: maxHeight ?? double.infinity,
-              ),
-              child: CallbackShortcuts(
-                bindings: _shortcutBindings,
-                child: TextField(
-                  minLines: minLines,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  scrollPhysics: const BouncingScrollPhysics(),
-                  textAlignVertical: TextAlignVertical.top,
-                  controller: controller,
-                  focusNode: focusNode,
-                  enabled: enabled,
-                  inputFormatters: [
-                    ...extraFormatters,
-                    Utf8LengthLimitingTextInputFormatter(
-                      maxBytes,
-                      encoder: encoder,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: widget.maxHeight ?? double.infinity,
+          ),
+          child: CallbackShortcuts(
+            bindings: _shortcutBindings,
+            child: TextField(
+              minLines: widget.minLines,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              scrollPhysics: const BouncingScrollPhysics(),
+              textAlignVertical: TextAlignVertical.top,
+              controller: widget.controller,
+              focusNode: widget.focusNode,
+              enabled: widget.enabled,
+              inputFormatters: [
+                ...widget.extraFormatters,
+                Utf8LengthLimitingTextInputFormatter(
+                  widget.maxBytes,
+                  encoder: widget.encoder,
+                ),
+              ],
+              textCapitalization: widget.textCapitalization,
+              decoration:
+                  widget.decoration ??
+                  InputDecoration(
+                    hintText: widget.hintText,
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                  ],
-                  textCapitalization: textCapitalization,
-                  decoration:
-                      decoration ??
-                      InputDecoration(
-                        hintText: hintText,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                  textInputAction: _effectiveTextInputAction,
-                  onSubmitted: onSubmitted,
-                  contextMenuBuilder: (context, editableTextState) =>
-                      AdaptiveTextSelectionToolbar.buttonItems(
-                        anchors: editableTextState.contextMenuAnchors,
-                        buttonItems: [
-                          ...editableTextState.contextMenuButtonItems,
-                          ..._formattingButtons(context, editableTextState),
-                        ],
-                      ),
-                ),
-              ),
-            ),
-            Opacity(
-              opacity: showCounter ? 1 : 0,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 4, right: 4),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '$usedBytes / $maxBytes',
-                    style: TextStyle(fontSize: 11, color: counterColor),
                   ),
-                ),
+              textInputAction: _effectiveTextInputAction,
+              onSubmitted: widget.onSubmitted,
+              contextMenuBuilder: (context, editableTextState) =>
+                  AdaptiveTextSelectionToolbar.buttonItems(
+                    anchors: editableTextState.contextMenuAnchors,
+                    buttonItems: [
+                      ...editableTextState.contextMenuButtonItems,
+                      ..._formattingButtons(context, editableTextState),
+                    ],
+                  ),
+            ),
+          ),
+        ),
+        Opacity(
+          opacity: showCounter ? 1 : 0,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4, right: 4),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$usedBytes / ${widget.maxBytes}',
+                style: TextStyle(fontSize: 11, color: counterColor),
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -5429,6 +5429,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_formatMono => 'Írógépbetű';
 
   @override
+  String get chat_formatColor => 'Szöveg színe';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'A küldés nem sikerült — a payload $count bájttal túllépve. Csökkentse a részletek számát vagy a vászon méretét.';
   }

@@ -5159,6 +5159,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_formatMono => '等幅';
 
   @override
+  String get chat_formatColor => '文字色';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return '送信できません — ペイロードが $count バイト超過しています。ディテールの数かキャンバスサイズを減らしてください。';
   }

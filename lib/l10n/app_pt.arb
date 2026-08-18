@@ -2734,6 +2734,7 @@
   "chat_formatUnderline": "Sublinhado",
   "chat_formatStrikethrough": "Riscado",
   "chat_formatMono": "Monoespaçado",
+  "chat_formatColor": "Cor do texto",
   "chat_canvasSendPayloadExceed": "Não foi possível enviar: o payload foi excedido em {count} bytes. Reduza a quantidade de detalhes ou o tamanho da tela.",
   "chat_canvasCurrentPayload": "Payload atual: {payload}",
   "chat_canvasActive": "Mostrar a tela",

@@ -5444,6 +5444,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chat_formatMono => 'Monospazio';
 
   @override
+  String get chat_formatColor => 'Colore del testo';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Invio non riuscito: il payload è stato superato di $count byte. Riduci il numero di dettagli o la dimensione della tela.';
   }

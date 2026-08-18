@@ -2915,6 +2915,7 @@
   "chat_formatUnderline": "Sottolineato",
   "chat_formatStrikethrough": "Barrato",
   "chat_formatMono": "Monospazio",
+  "chat_formatColor": "Colore del testo",
   "chat_canvasSendPayloadExceed": "Invio non riuscito: il payload è stato superato di {count} byte. Riduci il numero di dettagli o la dimensione della tela.",
   "chat_canvasCurrentPayload": "Payload attuale: {payload}",
   "chat_canvasActive": "Mostra la tela",

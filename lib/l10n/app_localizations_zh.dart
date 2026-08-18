@@ -5049,6 +5049,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_formatMono => '等宽';
 
   @override
+  String get chat_formatColor => '文字颜色';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return '发送失败——负载超出 $count 字节。请减少细节数量或画布尺寸。';
   }

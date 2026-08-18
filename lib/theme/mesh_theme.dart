@@ -153,6 +153,29 @@ class LosPalette {
 
 /// Named font stacks — Flutter falls back to system fonts when the named
 /// family isn't installed, keeping things working without bundled assets.
+/// Colours addressable from message markup — `[r]red[/r]` and friends. Keys
+/// match `MessageMarkup.colorKeys`; the parser owns the syntax, this owns the
+/// pigment. Values are picked to stay readable on both the light and the dark
+/// surface, which is why "white" and "black" are softened off the extremes.
+class MarkupPalette {
+  MarkupPalette._();
+
+  static const Map<String, Color> colors = {
+    'r': Color(0xFFEF4444), // red
+    'g': Color(0xFF22C55E), // green
+    'b': Color(0xFF3B82F6), // blue
+    'y': Color(0xFFEAB308), // yellow
+    'o': Color(0xFFF97316), // orange
+    'lb': Color(0xFF38BDF8), // light blue
+    'p': Color(0xFFA855F7), // purple
+    'w': Color(0xFFF8FAFC), // white
+    'bk': Color(0xFF0B0F14), // black
+    'gr': Color(0xFF94A3B8), // grey
+  };
+
+  static Color? of(String? key) => key == null ? null : colors[key];
+}
+
 class MeshFonts {
   MeshFonts._();
 

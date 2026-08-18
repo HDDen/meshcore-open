@@ -990,6 +990,19 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.setContactUnreadCount(widget.contact.publicKeyHex, count);
   }
 
+  /// Byte counting must match what actually goes on air, so the field and the
+  /// colour palette share one encoder.
+  String Function(String)? _composerEncoder(MeshCoreConnector connector) {
+    final key = widget.contact.publicKeyHex;
+    final usesEncoding =
+        connector.isContactMcmpEnabled(key) ||
+        connector.isContactSmazEnabled(key) ||
+        connector.isContactCyr2LatEnabled(key);
+    if (!usesEncoding) return null;
+    return (text) =>
+        connector.prepareContactOutboundText(widget.contact, text);
+  }
+
   Widget _buildInputBar(MeshCoreConnector connector) {
     final maxBytes = _maxContactInputBytes(connector);
     final colorScheme = Theme.of(context).colorScheme;
@@ -1099,21 +1112,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ]
                         : const [],
-                    encoder:
-                        (connector.isContactMcmpEnabled(
-                              widget.contact.publicKeyHex,
-                            ) ||
-                            connector.isContactSmazEnabled(
-                              widget.contact.publicKeyHex,
-                            ) ||
-                            connector.isContactCyr2LatEnabled(
-                              widget.contact.publicKeyHex,
-                            ))
-                        ? (text) => connector.prepareContactOutboundText(
-                            widget.contact,
-                            text,
-                          )
-                        : null,
+                    encoder: _composerEncoder(connector),
                     decoration: InputDecoration(
                       hintText: context.l10n.chat_typeMessage,
                       hintMaxLines: 1,

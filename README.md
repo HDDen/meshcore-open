@@ -147,6 +147,25 @@ On desktop the usual keyboard shortcuts apply to the selection:
 With nothing selected a shortcut drops an empty marker pair at the caret and leaves the caret
 between them, so you can style as you type.
 
+Text can also be coloured, with tags rather than symbols:
+
+| Tag | Colour | Tag | Colour |
+|---|---|---|---|
+| `[r]` | red | `[lb]` | light blue |
+| `[g]` | green | `[p]` | purple |
+| `[b]` | blue | `[w]` | white |
+| `[y]` | yellow | `[bk]` | black |
+| `[o]` | orange | `[gr]` | grey |
+
+Each closes with a slash — `[r]red text[/r]` — and they mix with the styles above, so
+`**[o]bold and orange[/o]**` reads as one run. Nesting a colour inside a colour replaces it for
+the inner part and restores the outer one afterwards. White and black are nudged slightly off
+the extremes so neither disappears into the light or the dark theme.
+
+Only these ten keys count as markup: anything else in square brackets — an unclosed `[r]`, an
+array index, and notably an `@[name]` mention — stays plain text. Picking a colour by hand is
+awkward, so the selection toolbar carries a **Text colour** entry that opens a swatch grid.
+
 Clients that do not know the convention show the markers as written, the same way they would in
 any other messenger.
 

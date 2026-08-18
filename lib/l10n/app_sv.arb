@@ -2734,6 +2734,7 @@
   "chat_formatUnderline": "Understruken",
   "chat_formatStrikethrough": "Genomstruken",
   "chat_formatMono": "Fast bredd",
+  "chat_formatColor": "Textfärg",
   "chat_canvasSendPayloadExceed": "Det gick inte att skicka: payloaden överskreds med {count} byte. Minska antalet detaljer eller canvasstorleken.",
   "chat_canvasCurrentPayload": "Aktuell payload: {payload}",
   "chat_canvasActive": "Visa canvasen",

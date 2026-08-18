@@ -5404,6 +5404,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_formatMono => 'Neproporcionálne';
 
   @override
+  String get chat_formatColor => 'Farba textu';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Odoslanie zlyhalo — payload bol prekročený o $count bajtov. Znížte počet detailov alebo veľkosť plátna.';
   }

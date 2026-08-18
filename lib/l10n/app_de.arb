@@ -3094,6 +3094,7 @@
   "chat_formatUnderline": "Unterstrichen",
   "chat_formatStrikethrough": "Durchgestrichen",
   "chat_formatMono": "Monospace",
+  "chat_formatColor": "Textfarbe",
   "chat_canvasSendPayloadExceed": "Senden fehlgeschlagen – die Nutzlast wurde um {count} Bytes überschritten. Bitte reduzieren Sie die Anzahl der Details oder die Leinwandgröße.",
   "chat_canvasCurrentPayload": "Aktuelle Nutzlast: {payload}",
   "chat_canvasActive": "Leinwand anzeigen",

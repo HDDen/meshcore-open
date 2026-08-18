@@ -2931,6 +2931,7 @@
   "chat_formatUnderline": "Підкреслений",
   "chat_formatStrikethrough": "Закреслений",
   "chat_formatMono": "Моноширинний",
+  "chat_formatColor": "Колір тексту",
   "chat_canvasSendPayloadExceed": "Не вдалося надіслати — payload перевищено на {count} байт. Зменште кількість деталей або розмір полотна.",
   "chat_canvasCurrentPayload": "Поточний payload: {payload}",
   "chat_canvasActive": "Показувати полотно",

@@ -5408,6 +5408,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_formatMono => 'Enakomerna pisava';
 
   @override
+  String get chat_formatColor => 'Barva besedila';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Pošiljanje ni uspelo — payload je presežen za $count bajtov. Zmanjšajte število podrobnosti ali velikost platna.';
   }

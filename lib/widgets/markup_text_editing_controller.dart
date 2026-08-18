@@ -13,6 +13,14 @@ import '../theme/mesh_theme.dart';
 class MarkupTextEditingController extends TextEditingController {
   MarkupTextEditingController({super.text});
 
+  /// Cached span tree. The field repaints on every caret move — and on every
+  /// pixel of an Android selection-handle drag — while the markup can only
+  /// change when the text does, so re-parsing on each repaint is wasted work
+  /// in the middle of a gesture.
+  String? _spansFor;
+  Object? _spansStyleKey;
+  TextSpan? _spans;
+
   @override
   TextSpan buildTextSpan({
     required BuildContext context,
@@ -32,11 +40,17 @@ class MarkupTextEditingController extends TextEditingController {
     }
 
     final base = style ?? const TextStyle();
+    final styleKey = Object.hash(base, Theme.of(context).brightness);
+    final cached = _spans;
+    if (cached != null && _spansFor == text && _spansStyleKey == styleKey) {
+      return cached;
+    }
+
     final markerColor =
         base.color?.withValues(alpha: 0.4) ??
         Theme.of(context).colorScheme.onSurfaceVariant;
 
-    return TextSpan(
+    final spans = TextSpan(
       style: base,
       children: [
         for (final segment in MessageMarkup.parse(text, keepMarkers: true))
@@ -48,6 +62,10 @@ class MarkupTextEditingController extends TextEditingController {
           ),
       ],
     );
+    _spans = spans;
+    _spansFor = text;
+    _spansStyleKey = styleKey;
+    return spans;
   }
 
   static TextStyle _applyMarkup(TextStyle base, MarkupStyles styles) {
@@ -62,7 +80,10 @@ class MarkupTextEditingController extends TextEditingController {
       decoration: decorations.isEmpty
           ? null
           : TextDecoration.combine(decorations),
-      decorationColor: decorations.isEmpty ? null : base.color,
+      color: MarkupPalette.of(styles.color),
+      decorationColor: decorations.isEmpty
+          ? null
+          : (MarkupPalette.of(styles.color) ?? base.color),
     );
     if (styles.mono) {
       result = result.copyWith(

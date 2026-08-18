@@ -2952,6 +2952,7 @@
   "chat_formatUnderline": "Подчертан",
   "chat_formatStrikethrough": "Зачертан",
   "chat_formatMono": "Равноширок",
+  "chat_formatColor": "Цвят на текста",
   "chat_canvasSendPayloadExceed": "Изпращането е неуспешно — payload е превишен с {count} байта. Намалете броя на детайлите или размера на платното.",
   "chat_canvasCurrentPayload": "Текущ payload: {payload}",
   "chat_canvasActive": "Показване на платното",

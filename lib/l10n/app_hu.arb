@@ -2955,6 +2955,7 @@
   "chat_formatUnderline": "Aláhúzott",
   "chat_formatStrikethrough": "Áthúzott",
   "chat_formatMono": "Írógépbetű",
+  "chat_formatColor": "Szöveg színe",
   "chat_canvasSendPayloadExceed": "A küldés nem sikerült — a payload {count} bájttal túllépve. Csökkentse a részletek számát vagy a vászon méretét.",
   "chat_canvasCurrentPayload": "Jelenlegi payload: {payload}",
   "chat_canvasActive": "Vászon megjelenítése",

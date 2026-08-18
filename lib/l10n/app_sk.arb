@@ -2952,6 +2952,7 @@
   "chat_formatUnderline": "Podčiarknuté",
   "chat_formatStrikethrough": "Preškrtnuté",
   "chat_formatMono": "Neproporcionálne",
+  "chat_formatColor": "Farba textu",
   "chat_canvasSendPayloadExceed": "Odoslanie zlyhalo — payload bol prekročený o {count} bajtov. Znížte počet detailov alebo veľkosť plátna.",
   "chat_canvasCurrentPayload": "Aktuálny payload: {payload}",
   "chat_canvasActive": "Zobraziť plátno",

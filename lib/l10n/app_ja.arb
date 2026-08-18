@@ -3057,6 +3057,7 @@
   "chat_formatUnderline": "下線",
   "chat_formatStrikethrough": "取り消し線",
   "chat_formatMono": "等幅",
+  "chat_formatColor": "文字色",
   "chat_canvasSendPayloadExceed": "送信できません — ペイロードが {count} バイト超過しています。ディテールの数かキャンバスサイズを減らしてください。",
   "chat_canvasCurrentPayload": "現在のペイロード: {payload}",
   "chat_canvasActive": "キャンバスを表示",

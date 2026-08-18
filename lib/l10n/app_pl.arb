@@ -2990,6 +2990,7 @@
   "chat_formatUnderline": "Podkreślenie",
   "chat_formatStrikethrough": "Przekreślenie",
   "chat_formatMono": "Czcionka stała",
+  "chat_formatColor": "Kolor tekstu",
   "chat_canvasSendPayloadExceed": "Nie udało się wysłać — payload przekroczony o {count} bajtów. Zmniejsz liczbę szczegółów lub rozmiar płótna.",
   "chat_canvasCurrentPayload": "Bieżący payload: {payload}",
   "chat_canvasActive": "Pokaż płótno",

@@ -5386,6 +5386,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_formatMono => 'Fast bredd';
 
   @override
+  String get chat_formatColor => 'Textfärg';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Det gick inte att skicka: payloaden överskreds med $count byte. Minska antalet detaljer eller canvasstorleken.';
   }

@@ -3051,6 +3051,7 @@
   "chat_formatUnderline": "Souligné",
   "chat_formatStrikethrough": "Barré",
   "chat_formatMono": "Monospace",
+  "chat_formatColor": "Couleur du texte",
   "chat_canvasSendPayloadExceed": "Échec de l'envoi : la charge utile est dépassée de {count} octets. Réduisez le nombre de détails ou la taille de la toile.",
   "chat_canvasCurrentPayload": "Charge utile actuelle : {payload}",
   "chat_canvasActive": "Afficher la toile",

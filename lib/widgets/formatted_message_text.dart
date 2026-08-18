@@ -162,7 +162,10 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
       decoration: decorations.isEmpty
           ? null
           : TextDecoration.combine(decorations),
-      decorationColor: decorations.isEmpty ? null : base.color,
+      color: MarkupPalette.of(styles.color),
+      decorationColor: decorations.isEmpty
+          ? null
+          : (MarkupPalette.of(styles.color) ?? base.color),
     );
     if (styles.mono) {
       style = style.copyWith(

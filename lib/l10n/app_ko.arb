@@ -3089,6 +3089,7 @@
   "chat_formatUnderline": "밑줄",
   "chat_formatStrikethrough": "취소선",
   "chat_formatMono": "고정폭",
+  "chat_formatColor": "글자 색",
   "chat_canvasSendPayloadExceed": "전송하지 못했습니다 — 페이로드가 {count}바이트 초과되었습니다. 디테일 수나 캔버스 크기를 줄이세요.",
   "chat_canvasCurrentPayload": "현재 페이로드: {payload}",
   "chat_canvasActive": "캔버스 표시",

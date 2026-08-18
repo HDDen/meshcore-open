@@ -2248,6 +2248,7 @@
   "chat_formatUnderline": "Подчёркнутый",
   "chat_formatStrikethrough": "Зачёркнутый",
   "chat_formatMono": "Моноширинный",
+  "chat_formatColor": "Цвет текста",
   "chat_canvasSendPayloadExceed": "Не удалось отправить - превышен payload на {count} байт. Уменьшите количество деталей или размер холста.",
   "chat_canvasCurrentPayload": "Текущий payload: {payload}",
   "chat_canvasActive": "Отображать холст",

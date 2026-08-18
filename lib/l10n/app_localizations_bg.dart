@@ -5432,6 +5432,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_formatMono => 'Равноширок';
 
   @override
+  String get chat_formatColor => 'Цвят на текста';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Изпращането е неуспешно — payload е превишен с $count байта. Намалете броя на детайлите или размера на платното.';
   }

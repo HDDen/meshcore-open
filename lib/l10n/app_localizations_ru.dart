@@ -5433,6 +5433,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_formatMono => 'Моноширинный';
 
   @override
+  String get chat_formatColor => 'Цвет текста';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Не удалось отправить - превышен payload на $count байт. Уменьшите количество деталей или размер холста.';
   }

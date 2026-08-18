@@ -2952,6 +2952,7 @@
   "chat_formatUnderline": "下划线",
   "chat_formatStrikethrough": "删除线",
   "chat_formatMono": "等宽",
+  "chat_formatColor": "文字颜色",
   "chat_canvasSendPayloadExceed": "发送失败——负载超出 {count} 字节。请减少细节数量或画布尺寸。",
   "chat_canvasCurrentPayload": "当前负载：{payload}",
   "chat_canvasActive": "显示画布",

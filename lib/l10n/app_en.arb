@@ -3076,6 +3076,7 @@
   "chat_formatUnderline": "Underline",
   "chat_formatStrikethrough": "Strikethrough",
   "chat_formatMono": "Monospace",
+  "chat_formatColor": "Text colour",
   "chat_canvasSendPayloadExceed": "Failed to send – payload exceeded by {count} bytes. Please reduce the number of details or the canvas size.",
   "@chat_canvasSendPayloadExceed": {
     "placeholders": {

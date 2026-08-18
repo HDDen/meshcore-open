@@ -5457,6 +5457,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_formatMono => 'Czcionka stała';
 
   @override
+  String get chat_formatColor => 'Kolor tekstu';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Nie udało się wysłać — payload przekroczony o $count bajtów. Zmniejsz liczbę szczegółów lub rozmiar płótna.';
   }
