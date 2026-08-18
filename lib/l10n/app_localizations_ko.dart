@@ -5149,6 +5149,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_canvasLoad => '파일에서 불러오기';
 
   @override
+  String get chat_formatBold => '굵게';
+
+  @override
+  String get chat_formatItalic => '기울임';
+
+  @override
+  String get chat_formatUnderline => '밑줄';
+
+  @override
+  String get chat_formatStrikethrough => '취소선';
+
+  @override
+  String get chat_formatMono => '고정폭';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return '전송하지 못했습니다 — 페이로드가 $count바이트 초과되었습니다. 디테일 수나 캔버스 크기를 줄이세요.';
   }

@@ -5389,6 +5389,21 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_canvasLoad => 'Načítať zo súboru';
 
   @override
+  String get chat_formatBold => 'Tučné';
+
+  @override
+  String get chat_formatItalic => 'Kurzíva';
+
+  @override
+  String get chat_formatUnderline => 'Podčiarknuté';
+
+  @override
+  String get chat_formatStrikethrough => 'Preškrtnuté';
+
+  @override
+  String get chat_formatMono => 'Neproporcionálne';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Odoslanie zlyhalo — payload bol prekročený o $count bajtov. Znížte počet detailov alebo veľkosť plátna.';
   }

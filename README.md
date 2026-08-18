@@ -109,6 +109,33 @@ The quote line adds at most 20 bytes — the marker, up to 15 bytes of text, the
 line break — and needs no support on the other end: the excerpt is plain text, so clients that
 know nothing about the convention simply show it as written.
 
+### Text formatting
+
+Messages carry the inline markup the big messengers taught everyone, and it costs nothing but
+the marker characters themselves:
+
+| Syntax | Result |
+|---|---|
+| `**bold**` | **bold** |
+| `__italic__` | *italic* |
+| `_underline_` | underlined |
+| `~~strikethrough~~` | ~~strikethrough~~ |
+| <code>&#96;&#96;&#96;mono&#96;&#96;&#96;</code> | <code>monospace</code> |
+
+A span may cover several lines, and spans nest — `**bold with __italic__ inside**` works. The
+parser is deliberately forgiving: a marker only opens a span when a matching closer appears
+later, so a lone asterisk stays an asterisk, and markers made of underscores never trigger
+inside a word, which keeps snake_case names and URLs intact. Inside a monospace block nothing
+else is interpreted.
+
+In a message the markers are hidden and only the formatting shows. In the composer they stay
+visible but dimmed, with the run between them already styled — so you can see what will be sent,
+and deleting one marker visibly strips the formatting from that run, which is how you undo it by
+editing. Selecting text also offers the five styles straight from the selection toolbar.
+
+Clients that do not know the convention show the markers as written, the same way they would in
+any other messenger.
+
 ### MCOimg — small images over LoRa, in one packet payload
 
 A purpose-built lossless raster format that squeezes a very small but recognisable picture 

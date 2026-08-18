@@ -21,6 +21,7 @@ import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
+import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_suggestions_panel.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
@@ -93,7 +94,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _textController = TextEditingController();
+  final _textController = MarkupTextEditingController();
   final _scrollController = ChatScrollController();
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();

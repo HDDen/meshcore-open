@@ -5144,6 +5144,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_canvasLoad => 'ファイルから読み込む';
 
   @override
+  String get chat_formatBold => '太字';
+
+  @override
+  String get chat_formatItalic => '斜体';
+
+  @override
+  String get chat_formatUnderline => '下線';
+
+  @override
+  String get chat_formatStrikethrough => '取り消し線';
+
+  @override
+  String get chat_formatMono => '等幅';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return '送信できません — ペイロードが $count バイト超過しています。ディテールの数かキャンバスサイズを減らしてください。';
   }

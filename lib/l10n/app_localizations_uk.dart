@@ -5428,6 +5428,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_canvasLoad => 'Завантажити з файлу';
 
   @override
+  String get chat_formatBold => 'Жирний';
+
+  @override
+  String get chat_formatItalic => 'Курсив';
+
+  @override
+  String get chat_formatUnderline => 'Підкреслений';
+
+  @override
+  String get chat_formatStrikethrough => 'Закреслений';
+
+  @override
+  String get chat_formatMono => 'Моноширинний';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Не вдалося надіслати — payload перевищено на $count байт. Зменште кількість деталей або розмір полотна.';
   }

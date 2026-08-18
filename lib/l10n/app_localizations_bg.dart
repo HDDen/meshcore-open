@@ -5417,6 +5417,21 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_canvasLoad => 'Зареждане от файл';
 
   @override
+  String get chat_formatBold => 'Удебелен';
+
+  @override
+  String get chat_formatItalic => 'Курсив';
+
+  @override
+  String get chat_formatUnderline => 'Подчертан';
+
+  @override
+  String get chat_formatStrikethrough => 'Зачертан';
+
+  @override
+  String get chat_formatMono => 'Равноширок';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Изпращането е неуспешно — payload е превишен с $count байта. Намалете броя на детайлите или размера на платното.';
   }

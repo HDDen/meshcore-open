@@ -5442,6 +5442,21 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_canvasLoad => 'Wczytaj z pliku';
 
   @override
+  String get chat_formatBold => 'Pogrubienie';
+
+  @override
+  String get chat_formatItalic => 'Kursywa';
+
+  @override
+  String get chat_formatUnderline => 'Podkreślenie';
+
+  @override
+  String get chat_formatStrikethrough => 'Przekreślenie';
+
+  @override
+  String get chat_formatMono => 'Czcionka stała';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Nie udało się wysłać — payload przekroczony o $count bajtów. Zmniejsz liczbę szczegółów lub rozmiar płótna.';
   }

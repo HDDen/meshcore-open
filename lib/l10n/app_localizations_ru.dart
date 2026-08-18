@@ -5418,6 +5418,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvasLoad => 'Загрузить из файла';
 
   @override
+  String get chat_formatBold => 'Жирный';
+
+  @override
+  String get chat_formatItalic => 'Курсив';
+
+  @override
+  String get chat_formatUnderline => 'Подчёркнутый';
+
+  @override
+  String get chat_formatStrikethrough => 'Зачёркнутый';
+
+  @override
+  String get chat_formatMono => 'Моноширинный';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Не удалось отправить - превышен payload на $count байт. Уменьшите количество деталей или размер холста.';
   }

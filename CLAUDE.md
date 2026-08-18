@@ -214,6 +214,13 @@ Plain-text replies carry only `@[sender]`, which the receiver resolves to that s
 
 Both sides normalise identically before cutting or comparing: leading scaffolding (a quote line or a mention the quoted message itself began with) is stripped, whitespace collapsed, ends trimmed. A miss stores the received fragment as `replyToText` with no `replyToMessageId`, so the quote stays visible but untappable; `_findReplyFallbackMessageId` in the screen may still resolve it later by substring after older messages load. Parsing happens once on receipt and the processed text is what gets persisted — toggling the settings does not replay old messages.
 
+### Inline text markup
+Chat-style formatting parsed by `helpers/message_markup.dart`: `**bold**`, `__italic__`, `_underline_`, `~~strike~~` and a monospace block fenced by triple backticks. `parse()` returns styled runs and drops the markers; `parse(keepMarkers: true)` keeps them as their own segments, which the composer needs so caret offsets still line up with the raw text.
+
+Rules that matter when touching it: a marker only opens a run when a matching closer exists later (so a lone `*` stays literal), markers built from `_` refuse to open inside a word (snake_case, URLs), a monospace block is literal all the way to its closer, and runs may span line breaks. `has()` short-circuits on a codeunit scan for `*_~` and backtick before parsing, because message lists render mostly plain text.
+
+Three call sites. **Rendering**: `widgets/formatted_message_text.dart` treats markup as the outer layer and resolves mentions and links inside each run, so a bold sentence keeps its mention chip and tappable URL; that widget is reached from `TranslatedMessageContent`, which falls back to plain `Linkify` when neither markup nor a mention is present. **Composing**: `widgets/markup_text_editing_controller.dart` overrides `buildTextSpan` to dim the markers and style the run between them — characters are never hidden, since a Flutter field cannot hide them without the caret drifting, and that visibility is what makes deleting a marker an obvious way to strip formatting. **Toolbar**: `ByteCountedTextField.contextMenuBuilder` appends five wrap actions (`chat_format*` keys) that run the result through the same UTF-8 limiter as typed input.
+
 ### MCO image codec (image/GIF over LoRa)
 Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→file index of installed `.mcoimg.pack` sets and renders the **original PNG/JPG/animated GIF** when a received image's identity hash matches (`widgets/gif_message.dart`, `widgets/mco_image_message.dart`). Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
 
@@ -424,6 +431,7 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/helpers/message_text_codec.dart` | Inbound decode across MCMP/Smaz prefixes |
 | `lib/helpers/mcmp_signature_verifier.dart` | App-side Ed25519 verification of MCMP v3 signatures |
 | `lib/helpers/exact_quote_helper.dart` | Quote fragments that pin plain-text replies to the message they answer |
+| `lib/helpers/message_markup.dart` | Inline `**bold**` / `__italic__` / `~~strike~~` / mono markup parser |
 | `lib/helpers/mcoimg_v3_codec.dart` | MCO image-over-LoRa codec (v3 binary container) |
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |

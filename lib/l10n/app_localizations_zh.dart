@@ -5034,6 +5034,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_canvasLoad => '从文件加载';
 
   @override
+  String get chat_formatBold => '加粗';
+
+  @override
+  String get chat_formatItalic => '斜体';
+
+  @override
+  String get chat_formatUnderline => '下划线';
+
+  @override
+  String get chat_formatStrikethrough => '删除线';
+
+  @override
+  String get chat_formatMono => '等宽';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return '发送失败——负载超出 $count 字节。请减少细节数量或画布尺寸。';
   }

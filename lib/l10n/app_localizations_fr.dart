@@ -5447,6 +5447,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_canvasLoad => 'Charger depuis un fichier';
 
   @override
+  String get chat_formatBold => 'Gras';
+
+  @override
+  String get chat_formatItalic => 'Italique';
+
+  @override
+  String get chat_formatUnderline => 'Souligné';
+
+  @override
+  String get chat_formatStrikethrough => 'Barré';
+
+  @override
+  String get chat_formatMono => 'Monospace';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Échec de l\'envoi : la charge utile est dépassée de $count octets. Réduisez le nombre de détails ou la taille de la toile.';
   }

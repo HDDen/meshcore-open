@@ -70,8 +70,9 @@ import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
+import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_chip.dart';
-import '../widgets/mention_message_text.dart';
+import '../widgets/formatted_message_text.dart';
 import '../widgets/mention_suggestions_panel.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/message_search_sheet.dart';
@@ -112,7 +113,8 @@ class ChannelChatScreen extends StatefulWidget {
 }
 
 class _ChannelChatScreenState extends State<ChannelChatScreen> {
-  final TextEditingController _textController = TextEditingController();
+  final MarkupTextEditingController _textController =
+      MarkupTextEditingController();
   final ChatScrollController _scrollController = ChatScrollController();
   final FocusNode _textFieldFocusNode = FocusNode();
   final FocusNode _screenFocusNode = FocusNode();
@@ -2138,7 +2140,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     // The reply chip leads, and the body still runs through the mention
     // renderer so any further "@[name]" inside it is drawn the same way.
-    return MentionMessageText(
+    return FormattedMessageText(
       text: text,
       style: style,
       textScale: textScale,

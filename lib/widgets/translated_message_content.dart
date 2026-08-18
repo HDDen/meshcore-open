@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../helpers/link_handler.dart';
 import '../helpers/mention_autocomplete.dart';
+import '../helpers/message_markup.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
-import 'mention_message_text.dart';
+import 'formatted_message_text.dart';
 
 class TranslatedMessageContent extends StatelessWidget {
   final String displayText;
@@ -30,15 +31,16 @@ class TranslatedMessageContent extends StatelessWidget {
     this.onSecondaryTap,
   });
 
-  /// Mentions need widget spans, which `Linkify` cannot produce, so text
-  /// carrying one is assembled span by span instead. Plain text keeps the
-  /// original path, including selectable linkify on desktop.
+  /// Mentions need widget spans and markup needs per-run styles, neither of
+  /// which `Linkify` can produce, so text carrying either is assembled span by
+  /// span instead. Plain text keeps the original path, including selectable
+  /// linkify on desktop.
   Widget _buildBody({
     required BuildContext context,
     required String text,
     required TextStyle style,
   }) {
-    if (!MentionText.has(text)) {
+    if (!MentionText.has(text) && !MessageMarkup.has(text)) {
       return LinkHandler.buildLinkifyText(
         context: context,
         text: text,
@@ -47,7 +49,7 @@ class TranslatedMessageContent extends StatelessWidget {
         onSecondaryTap: onSecondaryTap,
       );
     }
-    return MentionMessageText(
+    return FormattedMessageText(
       text: text,
       style: style,
       textScale: context.watch<ChatTextScaleService>().scale,

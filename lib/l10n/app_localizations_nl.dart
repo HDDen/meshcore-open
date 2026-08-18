@@ -5399,6 +5399,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chat_canvasLoad => 'Laden uit een bestand';
 
   @override
+  String get chat_formatBold => 'Vet';
+
+  @override
+  String get chat_formatItalic => 'Cursief';
+
+  @override
+  String get chat_formatUnderline => 'Onderstreept';
+
+  @override
+  String get chat_formatStrikethrough => 'Doorgehaald';
+
+  @override
+  String get chat_formatMono => 'Monospace';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Verzenden mislukt: de payload is met $count bytes overschreden. Verminder het aantal details of de canvasgrootte.';
   }

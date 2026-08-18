@@ -5414,6 +5414,21 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_canvasLoad => 'Betöltés fájlból';
 
   @override
+  String get chat_formatBold => 'Félkövér';
+
+  @override
+  String get chat_formatItalic => 'Dőlt';
+
+  @override
+  String get chat_formatUnderline => 'Aláhúzott';
+
+  @override
+  String get chat_formatStrikethrough => 'Áthúzott';
+
+  @override
+  String get chat_formatMono => 'Írógépbetű';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'A küldés nem sikerült — a payload $count bájttal túllépve. Csökkentse a részletek számát vagy a vászon méretét.';
   }

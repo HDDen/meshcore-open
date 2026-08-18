@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../helpers/message_markup.dart';
 import '../helpers/utf8_length_limiter.dart';
+import '../l10n/l10n.dart';
 
 /// A [TextField] that displays a live UTF-8 byte counter.
 ///
@@ -102,6 +104,54 @@ class ByteCountedTextField extends StatelessWidget {
         defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
     return isPhone ? TextInputAction.newline : TextInputAction.send;
+  }
+
+  /// Wraps the selection in [marker], the toolbar counterpart of typing the
+  /// markers by hand.
+  void _wrapSelection(String marker) {
+    final value = controller.value;
+    final selection = value.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    final selected = value.text.substring(selection.start, selection.end);
+    final wrapped = '$marker$selected$marker';
+    var next = TextEditingValue(
+      text: value.text.replaceRange(selection.start, selection.end, wrapped),
+      selection: TextSelection(
+        baseOffset: selection.start + marker.length,
+        extentOffset: selection.start + marker.length + selected.length,
+      ),
+    );
+    next = Utf8LengthLimitingTextInputFormatter(
+      maxBytes,
+      encoder: encoder,
+    ).formatEditUpdate(value, next);
+    controller.value = next;
+  }
+
+  List<ContextMenuButtonItem> _formattingButtons(
+    BuildContext context,
+    EditableTextState editableTextState,
+  ) {
+    final selection = controller.selection;
+    if (!selection.isValid || selection.isCollapsed) return const [];
+    final l10n = context.l10n;
+    final labels = <String, String>{
+      MessageMarkup.bold: l10n.chat_formatBold,
+      MessageMarkup.italic: l10n.chat_formatItalic,
+      MessageMarkup.underline: l10n.chat_formatUnderline,
+      MessageMarkup.strikethrough: l10n.chat_formatStrikethrough,
+      MessageMarkup.mono: l10n.chat_formatMono,
+    };
+    return [
+      for (final entry in labels.entries)
+        ContextMenuButtonItem(
+          label: entry.value,
+          onPressed: () {
+            editableTextState.hideToolbar();
+            _wrapSelection(entry.key);
+          },
+        ),
+    ];
   }
 
   void _insertText(String text) {
@@ -209,6 +259,14 @@ class ByteCountedTextField extends StatelessWidget {
                       ),
                   textInputAction: _effectiveTextInputAction,
                   onSubmitted: onSubmitted,
+                  contextMenuBuilder: (context, editableTextState) =>
+                      AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: editableTextState.contextMenuAnchors,
+                        buttonItems: [
+                          ...editableTextState.contextMenuButtonItems,
+                          ..._formattingButtons(context, editableTextState),
+                        ],
+                      ),
                 ),
               ),
             ),

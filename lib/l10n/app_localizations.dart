@@ -9256,6 +9256,36 @@ abstract class AppLocalizations {
   /// **'Load from file'**
   String get chat_canvasLoad;
 
+  /// No description provided for @chat_formatBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get chat_formatBold;
+
+  /// No description provided for @chat_formatItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get chat_formatItalic;
+
+  /// No description provided for @chat_formatUnderline.
+  ///
+  /// In en, this message translates to:
+  /// **'Underline'**
+  String get chat_formatUnderline;
+
+  /// No description provided for @chat_formatStrikethrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get chat_formatStrikethrough;
+
+  /// No description provided for @chat_formatMono.
+  ///
+  /// In en, this message translates to:
+  /// **'Monospace'**
+  String get chat_formatMono;
+
   /// No description provided for @chat_canvasSendPayloadExceed.
   ///
   /// In en, this message translates to:

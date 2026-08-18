@@ -6,16 +6,19 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 
 import '../helpers/link_handler.dart';
 import '../helpers/mention_autocomplete.dart';
+import '../helpers/message_markup.dart';
 import '../screens/contacts_screen.dart';
+import '../theme/mesh_theme.dart';
 import 'mention_chip.dart';
 
-/// Message body with `@[name]` mentions drawn as chips.
+/// Message body with inline markup applied and `@[name]` mentions drawn as
+/// chips.
 ///
 /// Mentions need a widget, not a text style, so the body is assembled as spans
 /// instead of handed to `Linkify` whole. URLs are linkified span by span so
-/// they stay tappable alongside the chips.
-class MentionMessageText extends StatefulWidget {
-  const MentionMessageText({
+/// they stay tappable alongside the chips and the styled runs.
+class FormattedMessageText extends StatefulWidget {
+  const FormattedMessageText({
     super.key,
     required this.text,
     required this.style,
@@ -39,10 +42,10 @@ class MentionMessageText extends StatefulWidget {
   final VoidCallback? onSecondaryTap;
 
   @override
-  State<MentionMessageText> createState() => _MentionMessageTextState();
+  State<FormattedMessageText> createState() => _FormattedMessageTextState();
 }
 
-class _MentionMessageTextState extends State<MentionMessageText> {
+class _FormattedMessageTextState extends State<FormattedMessageText> {
   static const _options = LinkifyOptions(
     humanize: false,
     defaultToHttps: false,
@@ -96,39 +99,44 @@ class _MentionMessageTextState extends State<MentionMessageText> {
     final linkStyle = LinkHandler.defaultLinkStyle(context, widget.style);
     final spans = <InlineSpan>[...widget.leadingSpans];
 
-    for (final segment in MentionText.split(widget.text)) {
-      if (segment.isMention) {
-        final chip = MentionChip(
-          senderName: segment.text,
-          textScale: widget.textScale,
-          simplified: widget.simplified,
-          textStyle: widget.style,
-          onTap: () => ContactsScreen.openWithSearch(context, segment.text),
-        );
-        spans.add(
-          WidgetSpan(
-            alignment: chip.alignment,
-            baseline: chip.baseline,
-            child: chip,
-          ),
-        );
-        continue;
-      }
-      for (final element in _linkifySegment(segment.text)) {
-        if (element is LinkableElement) {
-          final recognizer = TapGestureRecognizer()
-            ..onTap = () =>
-                unawaited(LinkHandler.handleLinkTap(context, element.url));
-          _recognizers.add(recognizer);
+    // Markup is the outer layer: it decides how a run looks, and mentions and
+    // links are resolved inside each run.
+    for (final block in MessageMarkup.parse(widget.text)) {
+      final blockStyle = _applyMarkup(widget.style, block.styles);
+      for (final segment in MentionText.split(block.text)) {
+        if (segment.isMention) {
+          final chip = MentionChip(
+            senderName: segment.text,
+            textScale: widget.textScale,
+            simplified: widget.simplified,
+            textStyle: blockStyle,
+            onTap: () => ContactsScreen.openWithSearch(context, segment.text),
+          );
           spans.add(
-            TextSpan(
-              text: element.text,
-              style: linkStyle,
-              recognizer: recognizer,
+            WidgetSpan(
+              alignment: chip.alignment,
+              baseline: chip.baseline,
+              child: chip,
             ),
           );
-        } else {
-          spans.add(TextSpan(text: element.text));
+          continue;
+        }
+        for (final element in _linkifySegment(segment.text)) {
+          if (element is LinkableElement) {
+            final recognizer = TapGestureRecognizer()
+              ..onTap = () =>
+                  unawaited(LinkHandler.handleLinkTap(context, element.url));
+            _recognizers.add(recognizer);
+            spans.add(
+              TextSpan(
+                text: element.text,
+                style: _applyMarkup(linkStyle, block.styles),
+                recognizer: recognizer,
+              ),
+            );
+          } else {
+            spans.add(TextSpan(text: element.text, style: blockStyle));
+          }
         }
       }
     }
@@ -136,6 +144,33 @@ class _MentionMessageTextState extends State<MentionMessageText> {
     _spans = spans;
     _builtFor = key;
     return spans;
+  }
+
+  /// Folds parsed markup into a text style. Underline and strikethrough can
+  /// apply at once, so decorations are combined rather than overwritten.
+  static TextStyle _applyMarkup(TextStyle base, MarkupStyles styles) {
+    if (styles.isPlain) return base;
+    final decorations = <TextDecoration>[
+      if (styles.underline) TextDecoration.underline,
+      if (styles.strikethrough) TextDecoration.lineThrough,
+      if (base.decoration != null && base.decoration != TextDecoration.none)
+        base.decoration!,
+    ];
+    var style = base.copyWith(
+      fontWeight: styles.bold ? FontWeight.w700 : null,
+      fontStyle: styles.italic ? FontStyle.italic : null,
+      decoration: decorations.isEmpty
+          ? null
+          : TextDecoration.combine(decorations),
+      decorationColor: decorations.isEmpty ? null : base.color,
+    );
+    if (styles.mono) {
+      style = style.copyWith(
+        fontFamily: MeshFonts.mono,
+        fontFamilyFallback: MeshFonts.monoFallback,
+      );
+    }
+    return style;
   }
 
   @override

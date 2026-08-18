@@ -5414,6 +5414,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_canvasLoad => 'Carregar de arquivo';
 
   @override
+  String get chat_formatBold => 'Negrito';
+
+  @override
+  String get chat_formatItalic => 'Itálico';
+
+  @override
+  String get chat_formatUnderline => 'Sublinhado';
+
+  @override
+  String get chat_formatStrikethrough => 'Riscado';
+
+  @override
+  String get chat_formatMono => 'Monoespaçado';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Não foi possível enviar: o payload foi excedido em $count bytes. Reduza a quantidade de detalhes ou o tamanho da tela.';
   }

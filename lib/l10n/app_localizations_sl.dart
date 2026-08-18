@@ -5393,6 +5393,21 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_canvasLoad => 'Naloži iz datoteke';
 
   @override
+  String get chat_formatBold => 'Krepko';
+
+  @override
+  String get chat_formatItalic => 'Ležeče';
+
+  @override
+  String get chat_formatUnderline => 'Podčrtano';
+
+  @override
+  String get chat_formatStrikethrough => 'Prečrtano';
+
+  @override
+  String get chat_formatMono => 'Enakomerna pisava';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Pošiljanje ni uspelo — payload je presežen za $count bajtov. Zmanjšajte število podrobnosti ali velikost platna.';
   }

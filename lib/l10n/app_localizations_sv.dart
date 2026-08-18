@@ -5371,6 +5371,21 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_canvasLoad => 'Läs in från fil';
 
   @override
+  String get chat_formatBold => 'Fet';
+
+  @override
+  String get chat_formatItalic => 'Kursiv';
+
+  @override
+  String get chat_formatUnderline => 'Understruken';
+
+  @override
+  String get chat_formatStrikethrough => 'Genomstruken';
+
+  @override
+  String get chat_formatMono => 'Fast bredd';
+
+  @override
   String chat_canvasSendPayloadExceed(int count) {
     return 'Det gick inte att skicka: payloaden överskreds med $count byte. Minska antalet detaljer eller canvasstorleken.';
   }
