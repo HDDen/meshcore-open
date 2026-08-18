@@ -11959,7 +11959,11 @@ class MeshCoreConnector extends ChangeNotifier {
       final pathBytes = packet.readBytes(pathByteLen);
       final payload = packet.readBytes(packet.remaining);
 
-      _recordRepeaterActivity(pathBytes, pathHashWidth, snr);
+      if (payloadType == payloadTypeTRACE) {
+        _recordTraceRepeaterActivity(pathBytes, payload, snr);
+      } else {
+        _recordRepeaterActivity(pathBytes, pathHashWidth, snr);
+      }
 
       final rawPacket = frame.sublist(3);
       switch (payloadType) {
@@ -12212,6 +12216,37 @@ class MeshCoreConnector extends ChangeNotifier {
         tag: 'Connector',
       );
     }
+  }
+
+  /// Registers the repeater that relayed a TRACE packet we just overheard.
+  ///
+  /// TRACE is the one payload type whose wire `path` field does not hold hop
+  /// hashes: firmware keeps the requested route at the end of the payload and
+  /// uses `path` to collect one SNR byte per hop that forwarded the packet
+  /// (Mesh.cpp, `sendDirect`). Feeding that field to _recordRepeaterActivity
+  /// would register an SNR reading as a repeater prefix — that is where the
+  /// one-byte phantom repeaters came from, their prefix being SNR x 4.
+  ///
+  /// Payload layout: [tag(4)][auth(4)][flags(1)][hop hashes...], hop width is
+  /// `1 << (flags & 3)`. Every forwarder appends its SNR byte after matching
+  /// its own hash, so the node that transmitted what we just heard is the hop
+  /// at index `snrPath.length - 1`.
+  void _recordTraceRepeaterActivity(
+    Uint8List snrPath,
+    Uint8List payload,
+    double snr,
+  ) {
+    const traceHeaderLen = 9;
+    final hopsCompleted = snrPath.length;
+    if (hopsCompleted == 0) return; // nobody has relayed it yet
+    if (payload.length <= traceHeaderLen) return;
+    final width = 1 << (payload[8] & 0x03);
+    // Prefixes wider than 4 bytes cannot be matched against contacts, and
+    // recording them would only add unidentifiable entries.
+    if (width > 4) return;
+    final start = traceHeaderLen + (hopsCompleted - 1) * width;
+    if (start + width > payload.length) return;
+    _recordRepeaterActivity(payload.sublist(start, start + width), width, snr);
   }
 
   // Records the last-hop repeater of ANY received packet (message, ack,
