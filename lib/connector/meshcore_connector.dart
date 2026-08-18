@@ -6693,6 +6693,10 @@ class MeshCoreConnector extends ChangeNotifier {
       uncompressedText ?? text,
       outboundText,
     );
+    final mcmpV3Applies =
+        isContactMcmpEnabled(contact.publicKeyHex) &&
+        contactMcmpVersion(contact.publicKeyHex) == 3 &&
+        _isMcmpSignableText(text);
     final message = Message.outgoing(
       contact.publicKey,
       text,
@@ -6702,8 +6706,13 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       // Pending previews never show a signature badge; the real send at
-      // commit time re-prepares, signs and stamps the actual meta.
+      // commit time re-prepares, signs and stamps the actual meta. The format
+      // version is already decided, and the compression badge derives it from
+      // this timestamp, so a queued v3 message would otherwise read as v2.
       mcmpSignatureStatus: McmpSignatureStatus.none,
+      mcmpTimestamp: mcmpV3Applies
+          ? DateTime.now().millisecondsSinceEpoch ~/ 1000
+          : null,
       pathLength: resolved.useFlood ? -1 : resolved.hopCount,
       pathBytes: Uint8List.fromList(resolved.pathBytes),
       originalText: originalText,
@@ -6793,6 +6802,11 @@ class MeshCoreConnector extends ChangeNotifier {
     final packetRegion = _displayPacketRegion(
       _outgoingChannelRegion(channel.index),
     );
+    final mcmpV3Applies =
+        mcoImageV3 == null &&
+        isChannelMcmpEnabled(channel.index) &&
+        channelMcmpVersion(channel.index) == 3 &&
+        _isMcmpSignableText(text);
     final baseMessage = ChannelMessage.outgoing(
       messageText,
       _selfName ?? 'Me',
@@ -6803,8 +6817,14 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       // Pending previews never show a signature badge; the real send at
-      // commit time re-encodes, signs and stamps the actual meta.
+      // commit time re-encodes, signs and stamps the actual meta. The format
+      // version is known up front, though, and the compression badge reads it
+      // off this timestamp — without it a queued v3 message would sit in the
+      // composer advertising itself as v2.
       mcmpSignatureStatus: McmpSignatureStatus.none,
+      mcmpTimestamp: mcmpV3Applies
+          ? DateTime.now().millisecondsSinceEpoch ~/ 1000
+          : null,
       wasBinaryTransport: usesBinaryTransport,
       binaryPacketBytes: binaryOutbound?.payload.length,
       packetRegion: packetRegion,

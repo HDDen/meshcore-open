@@ -77,7 +77,13 @@ class McmpSignatureBadge extends StatelessWidget {
     required bool isOutgoing,
     required bool wasMcmpV3,
   }) {
-    if (isOutgoing) return wasMcmpV3;
+    // A message still waiting in the send queue carries the format version but
+    // no signature result yet — its status is still "none". Showing the badge
+    // then would claim it was sent unsigned, which the real send may well
+    // disprove a few seconds later.
+    if (isOutgoing) {
+      return wasMcmpV3 && status != McmpSignatureStatus.none;
+    }
     switch (status) {
       case McmpSignatureStatus.valid:
       case McmpSignatureStatus.invalid:
