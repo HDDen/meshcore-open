@@ -94,6 +94,11 @@ class MessageRetryService extends ChangeNotifier {
   static const int _failedSendRetryMs = 2000;
   static const int _sentRespFallbackMs = 15000;
 
+  /// How long a failed message stays matchable after its last attempt timed
+  /// out, so an ACK that arrives late (recovered path, congested return leg)
+  /// can still mark it delivered.
+  static const Duration _lateAckGracePeriod = Duration(seconds: 60);
+
   int _maxRetries = 5;
   int get maxRetries => _maxRetries;
 
@@ -756,9 +761,12 @@ class MessageRetryService extends ChangeNotifier {
 
       _onMessageResolved(messageId, contact.publicKeyHex);
 
-      // Keep message in pending maps for 30s grace period so late ACKs
-      // can still match and update the message to delivered.
-      _timeoutTimers[messageId] = Timer(const Duration(seconds: 30), () {
+      // Keep message in pending maps for a grace period after the final
+      // attempt's ACK wait expired, so a late ACK can still match and flip the
+      // message to delivered. The node reports delivery once and never repeats
+      // it, so a window that closes too early leaves a delivered message shown
+      // as failed for good.
+      _timeoutTimers[messageId] = Timer(_lateAckGracePeriod, () {
         _cleanupMessage(messageId);
       });
     }
