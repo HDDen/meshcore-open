@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../helpers/link_handler.dart';
+import '../helpers/mention_autocomplete.dart';
+import '../services/app_settings_service.dart';
+import '../services/chat_text_scale_service.dart';
+import 'mention_message_text.dart';
 
 class TranslatedMessageContent extends StatelessWidget {
   final String displayText;
@@ -25,6 +30,36 @@ class TranslatedMessageContent extends StatelessWidget {
     this.onSecondaryTap,
   });
 
+  /// Mentions need widget spans, which `Linkify` cannot produce, so text
+  /// carrying one is assembled span by span instead. Plain text keeps the
+  /// original path, including selectable linkify on desktop.
+  Widget _buildBody({
+    required BuildContext context,
+    required String text,
+    required TextStyle style,
+  }) {
+    if (!MentionText.has(text)) {
+      return LinkHandler.buildLinkifyText(
+        context: context,
+        text: text,
+        style: style,
+        textScaler: textScaler,
+        onSecondaryTap: onSecondaryTap,
+      );
+    }
+    return MentionMessageText(
+      text: text,
+      style: style,
+      textScale: context.watch<ChatTextScaleService>().scale,
+      simplified: context
+          .watch<AppSettingsService>()
+          .settings
+          .simplifiedMentions,
+      textScaler: textScaler,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final trimmedDisplay = displayText.trim();
@@ -34,7 +69,7 @@ class TranslatedMessageContent extends StatelessWidget {
         trimmedOriginal.isNotEmpty &&
         trimmedOriginal != trimmedDisplay;
     final originalWidget = shouldShowOriginal
-        ? LinkHandler.buildLinkifyText(
+        ? _buildBody(
             context: context,
             text: trimmedOriginal,
             style:
@@ -43,16 +78,12 @@ class TranslatedMessageContent extends StatelessWidget {
                   fontStyle: FontStyle.italic,
                   fontSize: style.fontSize,
                 ),
-            textScaler: textScaler,
-            onSecondaryTap: onSecondaryTap,
           )
         : null;
-    final translatedWidget = LinkHandler.buildLinkifyText(
+    final translatedWidget = _buildBody(
       context: context,
       text: trimmedDisplay,
       style: style,
-      textScaler: textScaler,
-      onSecondaryTap: onSecondaryTap,
     );
 
     if (!shouldShowOriginal) {

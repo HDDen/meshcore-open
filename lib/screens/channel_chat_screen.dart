@@ -29,6 +29,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
@@ -69,6 +70,9 @@ import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
+import '../widgets/mention_chip.dart';
+import '../widgets/mention_message_text.dart';
+import '../widgets/mention_suggestions_panel.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/popup_menu_row.dart';
@@ -116,6 +120,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   bool _ignoreNextTextFieldFocus = false;
   String _lastTextFieldText = '';
   ChannelMessage? _replyingToMessage;
+  List<Contact> _mentionSuggestions = const [];
+  MentionQuery? _mentionQuery;
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
@@ -160,7 +166,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   void initState() {
     super.initState();
     _textController.addListener(_onTextFieldTextChange);
+    _textController.addListener(_updateMentionSuggestions);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
+    _textFieldFocusNode.addListener(_updateMentionSuggestions);
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
     }
@@ -274,6 +282,52 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
+  /// Keeps the mention picker in sync with the caret. Runs on every text and
+  /// selection change, so it also closes the picker when the caret leaves the
+  /// half-typed name.
+  void _updateMentionSuggestions() {
+    if (!mounted) return;
+    final query = _textFieldFocusNode.hasFocus
+        ? MentionAutocomplete.queryAt(_textController.value)
+        : null;
+    final suggestions = query == null
+        ? const <Contact>[]
+        : MentionAutocomplete.suggestionsFor(
+            context.read<MeshCoreConnector>().contacts,
+            query.filter,
+          );
+    // Remember where the mention sits even when the list itself did not
+    // change: one more typed letter moves its end, and the picker replaces
+    // exactly that range.
+    _mentionQuery = suggestions.isEmpty ? null : query;
+    if (_sameContacts(suggestions, _mentionSuggestions)) return;
+    setState(() => _mentionSuggestions = suggestions);
+  }
+
+  bool _sameContacts(List<Contact> a, List<Contact> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].publicKeyHex != b[i].publicKeyHex) return false;
+    }
+    return true;
+  }
+
+  /// Uses the remembered range rather than re-reading the caret: by the time a
+  /// row is picked the composer may already have lost focus, and with it the
+  /// selection this would be derived from.
+  void _applyMentionSuggestion(Contact contact) {
+    final query = _mentionQuery;
+    final value = _textController.value;
+    if (query == null || query.end > value.text.length) return;
+    _mentionQuery = null;
+    _textController.value = MentionAutocomplete.apply(
+      value,
+      query,
+      contact.name,
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
   void _onTextFieldTextChange() {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
@@ -304,7 +358,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textController.removeListener(_onTextFieldTextChange);
+    _textController.removeListener(_updateMentionSuggestions);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
+    _textFieldFocusNode.removeListener(_updateMentionSuggestions);
     _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
@@ -2073,29 +2129,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required double textScale,
     required bool simplifiedMention,
   }) {
-    return RichText(
-      text: TextSpan(
-        style: style,
-        children: [
-          WidgetSpan(
-            alignment: simplifiedMention
-                ? PlaceholderAlignment.baseline
-                : PlaceholderAlignment.middle,
-            baseline: simplifiedMention ? TextBaseline.alphabetic : null,
-            child: _buildReplyMentionChip(
-              message,
-              senderName,
-              textScale,
-              simplified: simplifiedMention,
-              textStyle: style,
-            ),
-          ),
-          if (text.isNotEmpty) ...[
-            TextSpan(text: simplifiedMention ? ' ' : '  '),
-            TextSpan(text: text),
-          ],
-        ],
-      ),
+    final chip = MentionChip(
+      senderName: senderName,
+      textScale: textScale,
+      simplified: simplifiedMention,
+      textStyle: style,
+      onTap: () => _scrollToReplyTarget(message),
+    );
+    // The reply chip leads, and the body still runs through the mention
+    // renderer so any further "@[name]" inside it is drawn the same way.
+    return MentionMessageText(
+      text: text,
+      style: style,
+      textScale: textScale,
+      simplified: simplifiedMention,
+      leadingSpans: [
+        WidgetSpan(
+          alignment: chip.alignment,
+          baseline: chip.baseline,
+          child: chip,
+        ),
+        if (text.isNotEmpty) TextSpan(text: simplifiedMention ? ' ' : '  '),
+      ],
     );
   }
 
@@ -2106,32 +2161,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required bool simplified,
     required TextStyle textStyle,
   }) {
-    return GestureDetector(
+    return MentionChip(
+      senderName: senderName,
+      textScale: textScale,
+      simplified: simplified,
+      textStyle: textStyle,
       onTap: () => _scrollToReplyTarget(message),
-      child: Container(
-        constraints: BoxConstraints(maxWidth: 160 * textScale),
-        padding: simplified
-            ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: simplified
-            ? null
-            : BoxDecoration(
-                border: Border.all(color: MeshPalette.blue, width: 1),
-                borderRadius: BorderRadius.circular(MeshRadii.xs),
-              ),
-        child: Text(
-          '@$senderName',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: simplified
-              ? textStyle.copyWith(fontWeight: FontWeight.w700)
-              : MeshTheme.mono(
-                  fontSize: 12 * textScale,
-                  fontWeight: FontWeight.w700,
-                  color: MeshPalette.blue,
-                ),
-        ),
-      ),
     );
   }
 
@@ -2856,16 +2891,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// of a channel message leads to that person's contact entry. The name is
   /// all a channel message carries, so this is a search rather than a direct
   /// jump: several contacts may share it, or none may exist yet.
-  void _openContactsForSender(String senderName) {
-    final query = senderName.trim();
-    if (query.isEmpty) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ContactsScreen(initialSearchQuery: query),
-      ),
-    );
-  }
+  void _openContactsForSender(String senderName) =>
+      ContactsScreen.openWithSearch(context, senderName);
 
   Future<void> _pickAndInsertContact() async {
     final contact = await Navigator.push<Contact>(
@@ -3202,6 +3229,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          alignment: Alignment.bottomCenter,
+          child: _mentionSuggestions.isEmpty
+              ? const SizedBox(width: double.infinity)
+              : MentionSuggestionsPanel(
+                  contacts: _mentionSuggestions,
+                  onSelected: _applyMentionSuggestion,
+                ),
+        ),
         if (_replyingToMessage != null)
           Builder(
             builder: (context) {

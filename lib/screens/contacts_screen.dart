@@ -81,6 +81,19 @@ class ContactsScreen extends StatefulWidget {
     this.initialSearchQuery,
   });
 
+  /// Opens the list filtered down to [name] — what tapping a sender's name or
+  /// an @mention does.
+  static void openWithSearch(BuildContext context, String name) {
+    final query = name.trim();
+    if (query.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ContactsScreen(initialSearchQuery: query),
+      ),
+    );
+  }
+
   @override
   State<ContactsScreen> createState() => _ContactsScreenState();
 }

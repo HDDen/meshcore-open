@@ -205,6 +205,15 @@ The node signs message bodies via `CMD_SIGN_START/DATA/FINISH` (single global si
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
 
+### Exact quotes (plain-text replies)
+Plain-text replies carry only `@[sender]`, which the receiver resolves to that sender's *newest* message. `helpers/exact_quote_helper.dart` adds a quote fragment so the reply anchors to the message it was actually written for. Wire form is `@[sender] >fragment\ntext`; the whole mechanism (both directions) lives in that one file, exposed as `formatReply` / `resolveReply` — everything else is call sites.
+
+**Outbound** (`_applyReplyMention` → `_formatReply` in `channel_chat_screen.dart`, channels only). Budget is `AppSettings.exactQuoteLimit` (3–100, default 15) counted in **wire bytes**: the fragment is cut from the readable original, but each character is weighed after cyr2lat substitution, using the table `MeshCoreConnector.channelCyr2LatCharMap()` returns for that channel. Trailing `[\s.+,-]` is trimmed (a question mark is deliberately kept) and an ellipsis is appended only when the fragment is shorter than its source. No fragment is spent when the toggle is off, when the target is the sender's newest message, or when `MeshCoreConnector.channelReplyCarriesMcmpAnchor()` is true — MCMP v3 already ships an exact author+timestamp anchor.
+
+**Inbound** (`_addChannelMessage`). `skipExactQuote` suppresses parsing entirely when `mcmpReplyTimestamp != null` (a leading `>` line there is the author's own text) or, for incoming messages, when `AppSettings.incomingQuoteAsMentions` is on (no quote bubble is drawn there, so stripping the fragment would swallow it). Otherwise the fragment is cut off the body and matched backwards through history against messages from that author: prefix match first, then the candidate re-encoded through `extendedCharMap` → `defaultCharMap` → `transliterationCharMap` → the user's own cyr2lat profiles. Encoding the candidate rather than decoding the fragment is deliberate — several Cyrillic letters share one Latin look-alike, so the reverse is ambiguous.
+
+Both sides normalise identically before cutting or comparing: leading scaffolding (a quote line or a mention the quoted message itself began with) is stripped, whitespace collapsed, ends trimmed. A miss stores the received fragment as `replyToText` with no `replyToMessageId`, so the quote stays visible but untappable; `_findReplyFallbackMessageId` in the screen may still resolve it later by substring after older messages load. Parsing happens once on receipt and the processed text is what gets persisted — toggling the settings does not replay old messages.
+
 ### MCO image codec (image/GIF over LoRa)
 Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→file index of installed `.mcoimg.pack` sets and renders the **original PNG/JPG/animated GIF** when a received image's identity hash matches (`widgets/gif_message.dart`, `widgets/mco_image_message.dart`). Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
 
@@ -414,6 +423,7 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/helpers/mesh_compressor.dart` | MCMP arithmetic-coder text compression (`mcmp2:`) |
 | `lib/helpers/message_text_codec.dart` | Inbound decode across MCMP/Smaz prefixes |
 | `lib/helpers/mcmp_signature_verifier.dart` | App-side Ed25519 verification of MCMP v3 signatures |
+| `lib/helpers/exact_quote_helper.dart` | Quote fragments that pin plain-text replies to the message they answer |
 | `lib/helpers/mcoimg_v3_codec.dart` | MCO image-over-LoRa codec (v3 binary container) |
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |

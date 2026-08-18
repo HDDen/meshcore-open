@@ -21,12 +21,14 @@ import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
+import '../widgets/mention_suggestions_panel.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mention_autocomplete.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
@@ -109,6 +111,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _highlightedMessageId;
   int _highlightSequence = 0;
   int _messageScrollGeneration = 0;
+  List<Contact> _mentionSuggestions = const [];
+  MentionQuery? _mentionQuery;
 
   /// Message ids whose MCOimg variant the user flipped away from the default
   /// (the default is "show pack original" when the mod setting is enabled,
@@ -127,7 +131,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _textController.addListener(_onTextFieldTextChange);
+    _textController.addListener(_updateMentionSuggestions);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
+    _textFieldFocusNode.addListener(_updateMentionSuggestions);
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
     }
@@ -468,6 +474,52 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  /// Keeps the mention picker in sync with the caret. Room servers relay to a
+  /// crowd, so naming who a message is for makes sense there; a one-to-one
+  /// conversation has nobody to disambiguate, and the picker stays away.
+  void _updateMentionSuggestions() {
+    if (!mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    final query =
+        _textFieldFocusNode.hasFocus &&
+            _resolveContact(connector).type == advTypeRoom
+        ? MentionAutocomplete.queryAt(_textController.value)
+        : null;
+    final suggestions = query == null
+        ? const <Contact>[]
+        : MentionAutocomplete.suggestionsFor(connector.contacts, query.filter);
+    // Remember where the mention sits even when the list itself did not
+    // change: one more typed letter moves its end, and the picker replaces
+    // exactly that range.
+    _mentionQuery = suggestions.isEmpty ? null : query;
+    if (_sameContacts(suggestions, _mentionSuggestions)) return;
+    setState(() => _mentionSuggestions = suggestions);
+  }
+
+  bool _sameContacts(List<Contact> a, List<Contact> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].publicKeyHex != b[i].publicKeyHex) return false;
+    }
+    return true;
+  }
+
+  /// Uses the remembered range rather than re-reading the caret: by the time a
+  /// row is picked the composer may already have lost focus, and with it the
+  /// selection this would be derived from.
+  void _applyMentionSuggestion(Contact contact) {
+    final query = _mentionQuery;
+    final value = _textController.value;
+    if (query == null || query.end > value.text.length) return;
+    _mentionQuery = null;
+    _textController.value = MentionAutocomplete.apply(
+      value,
+      query,
+      contact.name,
+    );
+    _textFieldFocusNode.requestFocus();
+  }
+
   void _onTextFieldTextChange() {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
@@ -498,7 +550,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textController.removeListener(_onTextFieldTextChange);
+    _textController.removeListener(_updateMentionSuggestions);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
+    _textFieldFocusNode.removeListener(_updateMentionSuggestions);
     _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
@@ -663,6 +717,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       JumpToBottomButton(scrollController: _scrollController),
                     ],
                   ),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeOut,
+                  alignment: Alignment.bottomCenter,
+                  child: _mentionSuggestions.isEmpty
+                      ? const SizedBox(width: double.infinity)
+                      : MentionSuggestionsPanel(
+                          contacts: _mentionSuggestions,
+                          onSelected: _applyMentionSuggestion,
+                        ),
                 ),
                 _buildInputBar(connector),
               ],
