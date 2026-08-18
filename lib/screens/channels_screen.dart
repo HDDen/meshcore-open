@@ -1330,6 +1330,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 roomServerContacts,
                 mutedChannelNames: mutedChannelNames,
                 hideChannelIndexIndicator: hideChannelIndexIndicator,
+                sortOption: viewState.channelsSortOption,
                 sortUnreadFirst: sortUnreadFirst,
                 showDragHandle: true,
                 dragIndex: index,
@@ -1371,6 +1372,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           roomServerContacts,
           mutedChannelNames: mutedChannelNames,
           hideChannelIndexIndicator: hideChannelIndexIndicator,
+          sortOption: viewState.channelsSortOption,
           sortUnreadFirst: sortUnreadFirst,
           forceExpanded: viewState.channelsSearchText.isNotEmpty,
         ),
@@ -1516,6 +1518,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     const <Contact>[],
                     mutedChannelNames: mutedChannelNames,
                     hideChannelIndexIndicator: hideChannelIndexIndicator,
+                    sortOption: viewState.channelsSortOption,
                     sortUnreadFirst: sortUnreadFirst,
                     showDragHandle: true,
                     dragIndex: index,
@@ -1565,6 +1568,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           const <Contact>[],
           mutedChannelNames: mutedChannelNames,
           hideChannelIndexIndicator: hideChannelIndexIndicator,
+          sortOption: viewState.channelsSortOption,
           sortUnreadFirst: sortUnreadFirst,
           forceExpanded: viewState.channelsSearchText.isNotEmpty,
         ),
@@ -1707,6 +1711,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     List<Contact> roomServerContacts, {
     Set<String> mutedChannelNames = const {},
     required bool hideChannelIndexIndicator,
+    required ChannelSortOption sortOption,
     required bool sortUnreadFirst,
     bool forceExpanded = false,
     bool showDragHandle = false,
@@ -1725,20 +1730,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         (a, b) =>
             _offlineItemNameForSort(a).compareTo(_offlineItemNameForSort(b)),
       );
-    } else if (!group.allowOrderingInGroup) {
+    } else {
+      // The chosen order applies inside groups too. Manual order survives only
+      // where the group allows reordering; elsewhere it falls back to the
+      // alphabetical default those groups have always used.
+      final effectiveSort =
+          sortOption == ChannelSortOption.manual &&
+              !group.allowOrderingInGroup
+          ? ChannelSortOption.name
+          : sortOption;
       _sortChannelScreenItems(
         items,
         connector,
-        ChannelSortOption.name,
-        sortUnreadFirst: false,
-      );
-    }
-    if (sortUnreadFirst && !connector.isOfflineMode) {
-      _sortChannelScreenItems(
-        items,
-        connector,
-        ChannelSortOption.unread,
-        sortUnreadFirst: true,
+        effectiveSort,
+        sortUnreadFirst: sortUnreadFirst,
       );
     }
     final groupWidgetColor = group.widgetColor == null
@@ -2385,67 +2390,101 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     return connector.getUnreadCountForContactKey(item.room!.publicKeyHex);
   }
 
+  /// The time the row actually shows, so the ordering matches what is read on
+  /// screen. Rooms and contacts keep a cached preview that survives without
+  /// their conversation being loaded; sorting by loaded messages alone left
+  /// every unopened chat on the same fallback, and the list fell back to its
+  /// alphabetical tiebreaker.
   DateTime _latestTimeForItem(
     MeshCoreConnector connector,
     _ChannelScreenItem item,
   ) {
     final channel = item.channel;
-    if (channel != null) {
-      final messages = connector.getChannelMessages(channel);
-      return messages.isEmpty ? DateTime(1970) : messages.last.timestamp;
-    }
+    if (channel != null) return _latestChannelTime(connector, channel);
     final room = item.room!;
     final messages = connector.getLoadedMessages(room);
-    return messages.isEmpty ? room.lastMessageAt : messages.last.timestamp;
+    final loaded = messages.isEmpty ? null : messages.last.timestamp;
+    final preview = connector.getContactMessagePreview(room)?.timestamp;
+    if (preview != null && (loaded == null || preview.isAfter(loaded))) {
+      return preview;
+    }
+    return loaded ?? room.lastMessageAt;
   }
 
+  /// Stand-in for "no messages", also used as a filler when a sort key is
+  /// not needed.
+  static final DateTime _epoch = DateTime(1970);
+
+  DateTime _latestChannelTime(MeshCoreConnector connector, Channel channel) {
+    final messages = connector.getChannelMessages(channel);
+    return messages.isEmpty ? DateTime(1970) : messages.last.timestamp;
+  }
+
+  void _sortChannelsByLatestMessage(
+    List<Channel> channels,
+    MeshCoreConnector connector,
+  ) {
+    final latest = <int, DateTime>{
+      for (final channel in channels)
+        channel.index: _latestChannelTime(connector, channel),
+    };
+    channels.sort((a, b) {
+      final timeCompare = latest[b.index]!.compareTo(latest[a.index]!);
+      if (timeCompare != 0) return timeCompare;
+      return _compareChannelsByName(a, b);
+    });
+  }
+
+  /// Sort keys are resolved once, before comparing: the lookups are not free —
+  /// the channel one can start a shared-history load — and a comparator that
+  /// recomputed them would be ordering against a moving target.
   void _sortChannelScreenItems(
     List<_ChannelScreenItem> items,
     MeshCoreConnector connector,
     ChannelSortOption sortOption, {
     required bool sortUnreadFirst,
   }) {
-    if (sortUnreadFirst) {
-      items.sort((a, b) {
-        final unreadCompare = _unreadCountForItem(
-          connector,
-          b,
-        ).compareTo(_unreadCountForItem(connector, a));
-        if (unreadCompare != 0) return unreadCompare;
-        return _itemNameForSort(a).compareTo(_itemNameForSort(b));
-      });
-      return;
-    }
+    if (sortOption == ChannelSortOption.manual && !sortUnreadFirst) return;
 
-    switch (sortOption) {
-      case ChannelSortOption.manual:
-        break;
-      case ChannelSortOption.latestMessages:
-        items.sort((a, b) {
-          final timeCompare = _latestTimeForItem(
-            connector,
-            b,
-          ).compareTo(_latestTimeForItem(connector, a));
+    final needsTime = sortOption == ChannelSortOption.latestMessages;
+    final needsUnread =
+        sortUnreadFirst || sortOption == ChannelSortOption.unread;
+    final decorated = [
+      for (final item in items)
+        (
+          item: item,
+          time: needsTime ? _latestTimeForItem(connector, item) : _epoch,
+          unread: needsUnread ? _unreadCountForItem(connector, item) : 0,
+          name: _itemNameForSort(item),
+        ),
+    ];
+
+    decorated.sort((a, b) {
+      // "Unread first" is a modifier on top of the chosen order, not a
+      // replacement for it. Comparing unread counts and then falling straight
+      // through to the name left every all-read list sorted alphabetically,
+      // whatever the user had picked.
+      if (sortUnreadFirst) {
+        final unreadCompare = b.unread.compareTo(a.unread);
+        if (unreadCompare != 0) return unreadCompare;
+      }
+      switch (sortOption) {
+        case ChannelSortOption.latestMessages:
+          final timeCompare = b.time.compareTo(a.time);
           if (timeCompare != 0) return timeCompare;
-          return _itemNameForSort(a).compareTo(_itemNameForSort(b));
-        });
-        break;
-      case ChannelSortOption.unread:
-        items.sort((a, b) {
-          final unreadCompare = _unreadCountForItem(
-            connector,
-            b,
-          ).compareTo(_unreadCountForItem(connector, a));
+        case ChannelSortOption.unread:
+          final unreadCompare = b.unread.compareTo(a.unread);
           if (unreadCompare != 0) return unreadCompare;
-          return _itemNameForSort(a).compareTo(_itemNameForSort(b));
-        });
-        break;
-      case ChannelSortOption.name:
-        items.sort(
-          (a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)),
-        );
-        break;
-    }
+        case ChannelSortOption.manual:
+        case ChannelSortOption.name:
+          break;
+      }
+      return a.name.compareTo(b.name);
+    });
+
+    items
+      ..clear()
+      ..addAll(decorated.map((entry) => entry.item));
   }
 
   String _itemNameForSort(_ChannelScreenItem item) {
@@ -2628,19 +2667,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       case ChannelSortOption.manual:
         break;
       case ChannelSortOption.latestMessages:
-        filtered.sort((a, b) {
-          final aMessages = connector.getChannelMessages(a);
-          final bMessages = connector.getChannelMessages(b);
-          final aLast = aMessages.isEmpty
-              ? DateTime(1970)
-              : aMessages.last.timestamp;
-          final bLast = bMessages.isEmpty
-              ? DateTime(1970)
-              : bMessages.last.timestamp;
-          final timeCompare = bLast.compareTo(aLast);
-          if (timeCompare != 0) return timeCompare;
-          return _compareChannelsByName(a, b);
-        });
+        _sortChannelsByLatestMessage(filtered, connector);
         break;
       case ChannelSortOption.unread:
         filtered.sort((a, b) {
