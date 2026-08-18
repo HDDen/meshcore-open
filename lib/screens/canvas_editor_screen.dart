@@ -3108,8 +3108,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         acceptedTypeGroups: const [
           file_selector.XTypeGroup(
             label: 'Images',
-            extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
-            mimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/bmp'],
+            extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
+            mimeTypes: [
+              'image/png',
+              'image/jpeg',
+              'image/webp',
+              'image/bmp',
+              'image/gif',
+            ],
             uniformTypeIdentifiers: ['public.image'],
           ),
           file_selector.XTypeGroup(
@@ -3406,6 +3412,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return bestColorValue;
   }
 
+  /// Animated sources (GIF, animated WebP) decode to their first frame: the
+  /// canvas edits a single still, and the first frame is what the user saw in
+  /// the file picker.
   Future<ui.Image> _decodeImage(
     Uint8List bytes, {
     int? targetWidth,
