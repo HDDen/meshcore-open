@@ -77,6 +77,17 @@ gracefully into a plain **@mention** of the quoted author — the same thing old
 and no worse than the classic "@name" convention that has no way of telling apart several
 messages from the same person.
 
+### Mentions
+
+Typing `@` in a channel or a room server raises a list of known contacts out from behind the
+composer, narrowing as you keep typing and closing again once a space ends the name or the caret
+moves away. Picking one inserts a proper `@[name]` mention, the same form replies use.
+
+In a message every mention is drawn as a chip rather than raw text — bordered, or plain bold if
+you prefer the quieter look — and tapping one opens the contacts list filtered to that name. This
+happens wherever a mention appears in the text, independently of the reply-related settings, so
+naming somebody mid-sentence reads the same as answering them.
+
 ### Exact quotes — precise replies without MCMP
 
 A reply that travels as ordinary text carries only `@[sender]`, which the receiving app resolves
