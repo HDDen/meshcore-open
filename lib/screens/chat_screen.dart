@@ -19,7 +19,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
-import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
@@ -1028,7 +1028,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           widget.contact.publicKeyHex,
                         )
                         ? [
-                            NewlineToSpaceFormatter(
+                            InsertedTextLimiter(
                               maxInsertedChars: settings.mcmpTextLimit,
                             ),
                           ]

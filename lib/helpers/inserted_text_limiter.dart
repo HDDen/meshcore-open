@@ -1,10 +1,12 @@
 import 'package:flutter/services.dart';
 
-class NewlineToSpaceFormatter extends TextInputFormatter {
-  const NewlineToSpaceFormatter({this.maxInsertedChars = 600});
+/// Caps how much text a single edit may add, so pasting a long block into a
+/// compression-limited composer cannot blow past the payload budget in one
+/// keystroke.
+class InsertedTextLimiter extends TextInputFormatter {
+  const InsertedTextLimiter({this.maxInsertedChars = 600});
 
   final int maxInsertedChars;
-  static final RegExp _newlinePattern = RegExp(r'[\r\n]+');
 
   @override
   TextEditingValue formatEditUpdate(
@@ -12,17 +14,11 @@ class NewlineToSpaceFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final capped = _capInsertedText(oldValue.text, newValue.text);
-    final hasNewlines = capped.contains('\n') || capped.contains('\r');
-    if (identical(capped, newValue.text) && !hasNewlines) {
-      return newValue;
-    }
+    if (identical(capped, newValue.text)) return newValue;
 
-    final normalized = hasNewlines
-        ? capped.replaceAll(_newlinePattern, ' ')
-        : capped;
     return TextEditingValue(
-      text: normalized,
-      selection: TextSelection.collapsed(offset: normalized.length),
+      text: capped,
+      selection: TextSelection.collapsed(offset: capped.length),
       composing: TextRange.empty,
     );
   }

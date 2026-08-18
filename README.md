@@ -77,6 +77,38 @@ gracefully into a plain **@mention** of the quoted author — the same thing old
 and no worse than the classic "@name" convention that has no way of telling apart several
 messages from the same person.
 
+### Exact quotes — precise replies without MCMP
+
+A reply that travels as ordinary text carries only `@[sender]`, which the receiving app resolves
+to that sender's most recent message — wrong whenever the answer targets an older one. With the
+option enabled (it is, by default), such a reply also carries a short excerpt of the quoted
+message on a line of its own:
+
+```
+@[Anon] >Всем привет
+да, и тебе доброго утра
+```
+
+The excerpt is budgeted in **wire bytes** — up to 15, counted *after* cyr2lat transliteration when
+the channel uses it, so a Cyrillic quote buys as many characters as a Latin one. It is cut on
+character boundaries, stripped of trailing spaces and punctuation (a question mark is kept — it
+identifies the message too well to lose), and marked with an ellipsis when it is shorter than the
+message it came from. If the quoted message itself began with a quote or a mention of somebody
+else, that scaffolding is skipped so the excerpt starts at what the author actually wrote.
+
+Nothing is spent when the answer targets the sender's **newest** message: a bare mention already
+resolves to it, and the network is not asked to carry what it can infer. The same goes for MCMP v3
+messages, which already have an exact anchor of their own.
+
+On the receiving side the history is walked backwards for a message from that author whose text
+starts with the excerpt, retried through every known cyr2lat table when the reply itself arrived
+transliterated. A hit makes the quote tappable and scrolls to the original; a miss still displays
+the excerpt, so the reader sees what was answered even when the original never reached them.
+
+The quote line adds at most 20 bytes — the marker, up to 15 bytes of text, the ellipsis and the
+line break — and needs no support on the other end: the excerpt is plain text, so clients that
+know nothing about the convention simply show it as written.
+
 ### MCOimg — small images over LoRa, in one packet payload
 
 A purpose-built lossless raster format that squeezes a very small but recognisable picture 

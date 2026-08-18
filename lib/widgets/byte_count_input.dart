@@ -26,8 +26,11 @@ class ByteCountedTextField extends StatelessWidget {
   /// Hint text shown when the field is empty.
   final String? hintText;
 
-  /// Keyboard action button (defaults to [TextInputAction.send]).
-  final TextInputAction textInputAction;
+  /// Keyboard action button. When null it resolves to
+  /// [TextInputAction.newline] on phones — where the action button replaces the
+  /// return key, so anything else costs the user line breaks — and to
+  /// [TextInputAction.send] everywhere else.
+  final TextInputAction? textInputAction;
 
   /// Called when the user submits via the keyboard action button.
   final ValueChanged<String>? onSubmitted;
@@ -70,7 +73,7 @@ class ByteCountedTextField extends StatelessWidget {
     required this.controller,
     this.focusNode,
     this.hintText,
-    this.textInputAction = TextInputAction.send,
+    this.textInputAction,
     this.onSubmitted,
     this.extraFormatters = const [],
     this.textCapitalization = TextCapitalization.sentences,
@@ -87,6 +90,18 @@ class ByteCountedTextField extends StatelessWidget {
   bool get _usesDesktopEnterHandling {
     return defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux;
+  }
+
+  /// Phone keyboards have no separate return key: the action button takes its
+  /// place. Asking for [TextInputAction.send] there would make line breaks
+  /// impossible to type, so the action becomes a newline and sending stays on
+  /// the composer's own button.
+  TextInputAction get _effectiveTextInputAction {
+    if (textInputAction != null) return textInputAction!;
+    final isPhone =
+        defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    return isPhone ? TextInputAction.newline : TextInputAction.send;
   }
 
   void _insertText(String text) {
@@ -192,7 +207,7 @@ class ByteCountedTextField extends StatelessWidget {
                           vertical: 12,
                         ),
                       ),
-                  textInputAction: textInputAction,
+                  textInputAction: _effectiveTextInputAction,
                   onSubmitted: onSubmitted,
                 ),
               ),

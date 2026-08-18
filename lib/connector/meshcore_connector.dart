@@ -11400,17 +11400,30 @@ class MeshCoreConnector extends ChangeNotifier {
       // Plain-text replies may carry an exact-quote fragment (">first chars"
       // on its own line) so the mention resolves to the message it was
       // written for instead of merely the sender's newest one.
-      final exactQuote = ExactQuoteHelper.resolveReply(
-        body: replyInfo.actualMessage,
-        mentionedNode: replyInfo.mentionedNode,
-        history: messages,
-        extraCharMaps: [
-          for (final profile
-              in _appSettingsService?.settings.cyr2latProfiles ??
-                  const <Cyr2LatProfile>[])
-            profile.charMap,
-        ],
-      );
+      //
+      // Two cases leave the body untouched. An MCMP v3 anchor already pins the
+      // quoted message, so a leading ">…" line there is the author's own text
+      // and must not be eaten. And with incoming replies shown as plain
+      // mentions no quote bubble is drawn at all, so stripping the fragment
+      // would silently swallow it; those arrive verbatim, fragment included,
+      // with only the mention resolved.
+      final skipExactQuote =
+          message.mcmpReplyTimestamp != null ||
+          (!message.isOutgoing &&
+              (_appSettingsService?.settings.incomingQuoteAsMentions ?? false));
+      final exactQuote = skipExactQuote
+          ? null
+          : ExactQuoteHelper.resolveReply(
+              body: replyInfo.actualMessage,
+              mentionedNode: replyInfo.mentionedNode,
+              history: messages,
+              extraCharMaps: [
+                for (final profile
+                    in _appSettingsService?.settings.cyr2latProfiles ??
+                        const <Cyr2LatProfile>[])
+                  profile.charMap,
+              ],
+            );
       final messageBody = exactQuote?.text ?? replyInfo.actualMessage;
 
       if ((replyToSenderName == null || replyToText == null) &&

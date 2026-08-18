@@ -29,7 +29,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
-import '../helpers/newline_to_space_formatter.dart';
+import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
@@ -3313,7 +3313,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         extraFormatters:
                             connector.isChannelMcmpEnabled(widget.channel.index)
                             ? [
-                                NewlineToSpaceFormatter(
+                                InsertedTextLimiter(
                                   maxInsertedChars: settings.mcmpTextLimit,
                                 ),
                               ]
