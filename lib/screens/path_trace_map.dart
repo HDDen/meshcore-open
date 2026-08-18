@@ -84,6 +84,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
   static const Duration _traceTimeoutPerHop = Duration(seconds: 10);
+
+  /// Guards against a command frame that never reaches the node: without it the
+  /// screen would spin forever, because the real timeout only starts once
+  /// RESP_CODE_SENT arrives.
+  static const Duration _traceSentFallbackTimeout = Duration(seconds: 15);
   //miles to meters conversion for filtering out repeaters that are too far from the last known GPS hop to be a likely match, to avoid false matches that throw off the inferred positions of other hops in the path
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
@@ -93,6 +98,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   bool _isLoading = false;
   bool _failed2Loaded = false;
+
+  /// True between sending the trace command and receiving its RESP_CODE_SENT.
+  bool _awaitingTraceSent = false;
   bool _hasData = false;
   PathTraceData? _traceData;
   // Inferred positions for hops that have no GPS location, keyed by hop prefix.
@@ -180,6 +188,14 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         contact.publicKey.sublist(0, traceHashByteWidth),
       );
     }
+    // Trace hashes are limited to powers of two, so a 3-byte routing hash has
+    // to be widened to 4 bytes, which is only possible from a known contact's
+    // public key. Say which hop blocked the trace instead of just failing.
+    appLogger.warn(
+      'Path trace: hop ${PathHelper.formatHopHex(hop)} is not a known contact, '
+      'cannot widen it to $traceHashByteWidth bytes',
+      tag: 'PathTraceMapScreen',
+    );
     return null;
   }
 
@@ -320,6 +336,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     );
   }
 
+  /// Whether a node may be included as a hop in a trace path. Firmware relays
+  /// a TRACE only while allowPacketForward() is true, and the stock defaults
+  /// differ per node type: repeaters and sensors forward, while a companion
+  /// (chat contact) and a room server both ship with forwarding disabled. A
+  /// non-forwarding endpoint would swallow the packet and the return leg would
+  /// never start, so those are traced up to the last repeater instead.
+  bool _forwardsTracePackets(Contact contact) {
+    return contact.type == advTypeRepeater || contact.type == advTypeSensor;
+  }
+
   Uint8List? buildPath(
     Uint8List pathBytes,
     int traceHashByteWidth,
@@ -331,10 +357,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     );
     final hopWidth = traceHashByteWidth.clamp(1, pubKeySize).toInt();
 
-    // Compute targetPrefix if targetContact is provided
+    // The endpoint is appended as a real hop, so it has to be a node that
+    // forwards packets (see _forwardsTracePackets). For everything else the
+    // trace still covers the whole repeater chain, just without the endpoint.
     Uint8List? targetPrefix;
-    if (widget.targetContact != null) {
-      final pk = widget.targetContact!.publicKey;
+    final target = widget.targetContact;
+    if (target != null && _forwardsTracePackets(target)) {
+      final pk = target.publicKey;
       if (pk.isNotEmpty) {
         final len = pk.length >= hopWidth ? hopWidth : pk.length;
         targetPrefix = Uint8List.fromList(pk.sublist(0, len));
@@ -397,6 +426,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   Future<void> _doPathTrace() async {
     _playback.stop();
+    _timeoutTimer?.cancel();
+    _awaitingTraceSent = false;
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -426,6 +457,25 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       return;
     }
 
+    // A trace needs at least one hop to travel through: firmware rejects a
+    // 10-byte command outright, and padding it to 11 bytes would be read as a
+    // one-hop path with hash 0x00, which strands the packet at whichever
+    // repeater happens to match. A direct (zero-hop) route has nothing to
+    // trace, so fail here instead of emitting a frame that cannot come back.
+    if (path.isEmpty) {
+      appLogger.info(
+        'Path trace skipped: route has no hops to trace',
+        tag: 'PathTraceMapScreen',
+        noNotify: !mounted,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _failed2Loaded = true;
+      });
+      return;
+    }
+
     appLogger.info(
       'Initiating path trace with path: '
       '${_formatPathPrefixes(path, traceHashByteWidth)}',
@@ -433,7 +483,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       noNotify: !mounted,
     );
 
-    final sentTag = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // Millisecond resolution plus a random low byte: a seconds-based tag makes
+    // two traces started in the same second indistinguishable, so a late reply
+    // to the first would be accepted as the answer to the second.
+    final sentTag =
+        ((DateTime.now().millisecondsSinceEpoch & 0xFFFFFF) << 8) |
+        Random().nextInt(256);
     _sentTagBytes = Uint8List(4)
       ..[0] = sentTag & 0xFF
       ..[1] = (sentTag >> 8) & 0xFF
@@ -441,12 +496,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       ..[3] = (sentTag >> 24) & 0xFF;
 
     final flags = _traceFlagsForHashWidth(traceHashByteWidth);
-    final tracePayload = path.isEmpty ? Uint8List.fromList([0x00]) : path;
     final settings = context.read<AppSettingsService>().settings;
     if (settings.pathTraceHighTimeoutEnabled) {
-      final traceHopCount = path.isEmpty
-          ? 1
-          : PathHelper.splitPathBytes(path, traceHashByteWidth).length;
+      final traceHopCount = PathHelper.splitPathBytes(
+        path,
+        traceHashByteWidth,
+      ).length;
       _traceTimeoutFloor = Duration(
         milliseconds: _traceTimeoutPerHop.inMilliseconds * traceHopCount,
       );
@@ -458,15 +513,31 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       sentTag,
       0, // auth
       flags, // flag
-      payload: tracePayload,
+      payload: path,
     );
+    // Only frames that arrive after this point can belong to our request.
+    _awaitingTraceSent = true;
+    // The node may never answer at all (dropped command frame), so arm a
+    // fallback now; RESP_CODE_SENT replaces it with the firmware estimate.
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(_traceSentFallbackTimeout, _failTrace);
     connector.sendFrame(frame);
+  }
+
+  void _failTrace() {
+    if (!mounted) return;
+    _awaitingTraceSent = false;
+    setState(() {
+      _isLoading = false;
+      _failed2Loaded = true;
+    });
   }
 
   void _setupFrameListener() {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    Uint8List tagData = Uint8List(4);
-    // Listen for incoming text messages from the repeater
+    // The connector stream carries every frame, including ones produced by
+    // unrelated sends. Each branch below therefore has to prove the frame
+    // belongs to this trace before acting on it.
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
       final frameBuffer = BufferReader(frame);
@@ -474,8 +545,15 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         final code = frameBuffer.readUInt8();
 
         if (code == respCodeSent) {
+          if (!_awaitingTraceSent || frameBuffer.remaining < 9) return;
           frameBuffer.skipBytes(1); //reserved
-          tagData = frameBuffer.readBytes(4);
+          final tagData = frameBuffer.readBytes(4);
+          // Firmware echoes the tag we generated, so an exact match is the
+          // proof that this acknowledgement is for our trace and not for a
+          // message that happened to be sent at the same moment.
+          if (!listEquals(tagData, _sentTagBytes)) return;
+          _awaitingTraceSent = false;
+
           final timeoutMilliseconds = frameBuffer.readUInt32LE();
           final timeoutFloorMilliseconds =
               _traceTimeoutFloor?.inMilliseconds ?? 0;
@@ -486,41 +564,32 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           // Firmware returns its own estimate; keep a client-side lower bound
           // so longer paths have enough time to collect all hop responses.
           _timeoutTimer?.cancel();
-          _timeoutTimer = Timer(timeoutDuration, () {
-            if (!mounted) return;
-            setState(() {
-              _isLoading = false;
-              _failed2Loaded = true;
-            });
-          });
+          _timeoutTimer = Timer(timeoutDuration, _failTrace);
+          return;
         }
 
+        // Error frames carry no tag. Only the one that arrives while our own
+        // acknowledgement is still outstanding can plausibly be ours; later
+        // errors belong to other commands and must not abort the trace.
         if (code == respCodeErr) {
+          if (!_awaitingTraceSent) return;
           _timeoutTimer?.cancel();
-          if (!mounted) return;
-          setState(() {
-            _isLoading = false;
-            _failed2Loaded = true;
-          });
+          _failTrace();
+          return;
         }
 
         // Check if it's a binary response
         if (frame.length >= 12 &&
             code == pushCodeTraceData &&
-            (listEquals(frame.sublist(4, 8), _sentTagBytes) ||
-                listEquals(frame.sublist(4, 8), tagData))) {
+            listEquals(frame.sublist(4, 8), _sentTagBytes)) {
           _timeoutTimer?.cancel();
+          _awaitingTraceSent = false;
           if (!mounted) return;
           _handleTraceResponse(frame);
         }
       } catch (e) {
-        _timeoutTimer?.cancel();
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-          _failed2Loaded = true;
-        });
-        // Handle any parsing errors gracefully
+        // Only a malformed frame of our own aborts the trace; anything else on
+        // the shared stream is none of our business.
         appLogger.error('Error parsing frame: $e', tag: 'PathTraceMapScreen');
       }
     });
@@ -536,7 +605,22 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       final flags = buffer.readUInt8();
       buffer.skipBytes(4); // Skip tag data
       buffer.skipBytes(4); // Skip auth code
-      var width = _traceHashByteWidth(1 << (flags & 0x03));
+      // Trace frames encode the hash size as 1 << (flags & 3): 1, 2, 4 or 8
+      // bytes. PathHelper splits hops up to 4 bytes wide, so an 8-byte reply is
+      // reported as unparsable instead of being silently split into wrong hops.
+      var width = 1 << (flags & 0x03);
+      if (width > 4) {
+        appLogger.error(
+          'Unsupported trace hash width: $width bytes',
+          tag: 'PathTraceMapScreen',
+        );
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _failed2Loaded = true;
+        });
+        return;
+      }
       var pathLength = pathLenByte == 0xFF ? 0 : pathLenByte;
       if (pathLength > buffer.remaining && (pathLenByte & 0xC0) != 0) {
         final packedWidth = ((pathLenByte & 0xC0) >> 6) + 1;
