@@ -1620,7 +1620,18 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
       case ContactSortOption.recentMessages:
         filtered.sort((a, b) {
-          return b.lastMessageAt.compareTo(a.lastMessageAt);
+          final aAt = _resolveLastDirectMessageAt(a, connector);
+          final bAt = _resolveLastDirectMessageAt(b, connector);
+          // Contacts without direct history sort below the ones that have it,
+          // whatever their advert activity says.
+          if (aAt == null || bAt == null) {
+            if (aAt != null) return -1;
+            if (bAt != null) return 1;
+            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          }
+          final byTime = bAt.compareTo(aAt);
+          if (byTime != 0) return byTime;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
         });
         break;
       case ContactSortOption.name:
@@ -1670,6 +1681,29 @@ class _ContactsScreenState extends State<ContactsScreen>
       case ContactTypeFilter.rooms:
         return contact.type == advTypeRoom;
     }
+  }
+
+  /// Timestamp of the newest real direct message for [contact], or null when
+  /// no direct history exists.
+  ///
+  /// Contact.lastMessageAt cannot be used here: it falls back to lastSeen when
+  /// a contact has no messages at all, and channel activity advances it for
+  /// name-matched contacts, so sorting by it interleaves silent contacts by
+  /// advert time. The connector's message-summary cache is built from stored
+  /// direct history only, and it already folds in shared history exactly when
+  /// that mode covers contacts, so the setting needs no separate check here.
+  /// The in-memory conversation is consulted as well, because it can hold a
+  /// message that arrived after the summary cache was last rebuilt.
+  DateTime? _resolveLastDirectMessageAt(
+    Contact contact,
+    MeshCoreConnector connector,
+  ) {
+    final cached = connector.getContactMessagePreview(contact)?.timestamp;
+    final loaded = connector.getLoadedMessages(contact);
+    final live = loaded.isNotEmpty ? loaded.last.timestamp : null;
+    if (cached == null) return live;
+    if (live == null) return cached;
+    return live.isAfter(cached) ? live : cached;
   }
 
   DateTime _resolveLastSeen(Contact contact) {
