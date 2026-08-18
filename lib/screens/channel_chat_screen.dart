@@ -1351,13 +1351,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Flexible(
-                                  child: Text(
-                                    message.senderName,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: MeshTheme.mono(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: _colorForName(message.senderName),
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () =>
+                                        _openContactsForSender(
+                                          message.senderName,
+                                        ),
+                                    child: Text(
+                                      message.senderName,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: MeshTheme.mono(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: _colorForName(
+                                          message.senderName,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -2839,6 +2848,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _insertTextIntoComposer(
       '${location.latitude.toStringAsFixed(6)},'
       '${location.longitude.toStringAsFixed(6)}',
+    );
+  }
+
+  /// Opens the contacts list filtered to [senderName], so tapping the author
+  /// of a channel message leads to that person's contact entry. The name is
+  /// all a channel message carries, so this is a search rather than a direct
+  /// jump: several contacts may share it, or none may exist yet.
+  void _openContactsForSender(String senderName) {
+    final query = senderName.trim();
+    if (query.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ContactsScreen(initialSearchQuery: query),
+      ),
     );
   }
 

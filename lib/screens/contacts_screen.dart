@@ -68,11 +68,17 @@ class ContactsScreen extends StatefulWidget {
   final bool selectionMode;
   final bool batchOperationsMode;
 
+  /// Opens the screen with the search box already expanded and pre-filled,
+  /// used when arriving from a place that names a contact (for example a
+  /// channel message sender).
+  final String? initialSearchQuery;
+
   const ContactsScreen({
     super.key,
     this.hideBackButton = false,
     this.selectionMode = false,
     this.batchOperationsMode = false,
+    this.initialSearchQuery,
   });
 
   @override
@@ -104,9 +110,29 @@ class _ContactsScreenState extends State<ContactsScreen>
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
     }
-    _searchController.text = context
-        .read<UiViewStateService>()
-        .contactsSearchText;
+    final initialQuery = widget.initialSearchQuery?.trim();
+    if (initialQuery != null && initialQuery.isNotEmpty) {
+      _searchController.text = initialQuery;
+      // The view state is shared and notifies its listeners, so it cannot be
+      // written while this frame is still building. The search box also only
+      // exists once expanded, and it autofocuses itself when it appears.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final viewState = context.read<UiViewStateService>();
+        // The search runs on top of the group, type and unread filters, so a
+        // leftover filter would hide the very contact this query is meant to
+        // reveal. Clear them so the named contact is always reachable.
+        viewState.setContactsSelectedGroupName(contactsAllGroupsValue);
+        viewState.setContactsTypeFilter(ContactTypeFilter.all);
+        viewState.setContactsShowUnreadOnly(false);
+        viewState.setContactsSearchText(initialQuery);
+        viewState.setContactsSearchExpanded(true);
+      });
+    } else {
+      _searchController.text = context
+          .read<UiViewStateService>()
+          .contactsSearchText;
+    }
     _loadGroups();
     _setupFrameListener();
     _clearAdvertNotifications();
@@ -455,7 +481,16 @@ class _ContactsScreenState extends State<ContactsScreen>
       return const SizedBox.shrink();
     }
 
-    final allowBack = widget.batchOperationsMode || !connector.isConnected;
+    // Whenever this screen sits on top of another route it has to offer a way
+    // back to it. hideBackButton is what the quick-switch bar passes for the
+    // tab-like entries, which stay arrow-less and unpoppable while connected;
+    // everything else — contact picker, batch operations, a lookup opened from
+    // a message sender, or any future caller — gets the arrow automatically
+    // and returns wherever it came from, with no per-caller wiring.
+    final showBackButton =
+        !widget.hideBackButton && Navigator.canPop(context);
+    final allowBack =
+        showBackButton || widget.batchOperationsMode || !connector.isConnected;
     final canPop =
         allowBack && (!_batchOperationInProgress || _allowBatchOperationPop);
     final lockContactList =
@@ -477,7 +512,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 ? context.l10n.contacts_batchOperations
                 : context.l10n.contacts_title,
           ),
-          automaticallyImplyLeading: widget.batchOperationsMode,
+          automaticallyImplyLeading: showBackButton,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
             if (widget.batchOperationsMode)
