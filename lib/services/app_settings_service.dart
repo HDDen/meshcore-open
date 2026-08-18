@@ -301,6 +301,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(incomingQuoteAsMentions: value));
   }
 
+  Future<void> setExactQuote(bool value) async {
+    await updateSettings(_settings.copyWith(exactQuote: value));
+  }
+
   Future<void> setSimplifiedMentions(bool value) async {
     await updateSettings(_settings.copyWith(simplifiedMentions: value));
   }

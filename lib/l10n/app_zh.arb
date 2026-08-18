@@ -3022,6 +3022,7 @@
   "settings_modSettingsNoRetraInfo": "已有 {time} 秒未听到转发。",
   "settings_modSettingsNoRetraHeading": "若在这么多秒内未听到转发，则将消息标记为未发送：",
   "settings_modSettingsNoRetraDscr": "注意！由于节点固件的机制，大于约 133 字节的频道消息在物理上无法收到确认，将始终被标记为失败！请与应用设置中的负载限制一起使用此选项！",
+  "settings_modSettingsExactQuote": "对普通消息使用精确引用",
   "settings_selfTelemetryShow": "查看传感器",
   "settings_modSettingsVisualChannelsUnreadSorting": "按未读消息排序频道",
   "settings_modSettingsMessagingBackgroundTCP": "在后台保持 TCP 连接",

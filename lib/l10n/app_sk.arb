@@ -3022,6 +3022,7 @@
   "settings_modSettingsNoRetraInfo": "Už {time} s neboli počuté žiadne retransmisie.",
   "settings_modSettingsNoRetraHeading": "Označovať správy ako neodoslané, ak sa v priebehu toľkých sekúnd nepočujú retransmisie:",
   "settings_modSettingsNoRetraDscr": "Pozor! Kvôli mechanizmu vo firmvéri uzla nemôžu správy pre kanály väčšie ako ~133 bajtov fyzicky dostávať potvrdenia a vždy budú označené ako neúspešné! Používajte túto možnosť spolu s obmedzením payloadu v nastaveniach aplikácie!",
+  "settings_modSettingsExactQuote": "Používať presné citovanie pre bežné správy",
   "settings_selfTelemetryShow": "Zobraziť senzory",
   "settings_modSettingsVisualChannelsUnreadSorting": "Zoradenie kanálov podľa neprečítaných správ",
   "settings_modSettingsMessagingBackgroundTCP": "Udržiavať TCP spojenie na pozadí",

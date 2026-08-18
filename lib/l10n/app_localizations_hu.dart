@@ -5795,6 +5795,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'A korábbi fogd-és-vidd működés megtartása: a csatornák sorrendjének módosítása a csomóponton is módosítja a sorrendjüket, a névjegyek és szerverek pedig nem rendezhetők';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Pontos idézés használata a normál üzenetekhez';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Egyéni';
 
   @override

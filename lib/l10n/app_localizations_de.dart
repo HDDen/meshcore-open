@@ -5807,6 +5807,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bestehende Drag-and-drop-Funktion beibehalten: die Reihenfolge der Kanäle ändert deren Reihenfolge auf dem Knoten, Kontakte und Server lassen sich nicht sortieren';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Präzises Zitieren für normale Nachrichten verwenden';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Benutzerdefiniert';
 
   @override

@@ -5813,6 +5813,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Mantieni il precedente funzionamento del drag-and-drop: cambiare l\'ordine dei canali ne cambia l\'ordine sul nodo e non è possibile ordinare contatti o server';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Usa citazioni precise per i messaggi normali';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Personalizzata';
 
   @override

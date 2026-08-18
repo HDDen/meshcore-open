@@ -5751,6 +5751,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Behåll den tidigare dra-och-släpp-funktionen: att ändra kanalernas ordning ändrar deras ordning på noden, och kontakter eller servrar kan inte sorteras';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Använd exakt citering för vanliga meddelanden';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Egen';
 
   @override

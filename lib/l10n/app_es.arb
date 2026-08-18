@@ -3121,6 +3121,7 @@
   "settings_modSettingsNoRetraInfo": "No se han oído retransmisiones durante {time} s.",
   "settings_modSettingsNoRetraHeading": "Marcar los mensajes como no enviados si no se oyen retransmisiones en estos segundos:",
   "settings_modSettingsNoRetraDscr": "¡Atención! Por un mecanismo del firmware del nodo, los mensajes de canal de más de ~133 bytes no pueden recibir físicamente confirmaciones y siempre se marcarán como fallidos. Usa esta opción junto con el límite de payload en los ajustes de la aplicación.",
+  "settings_modSettingsExactQuote": "Usar citas precisas en los mensajes normales",
   "settings_selfTelemetryShow": "Ver los sensores",
   "settings_modSettingsVisualChannelsUnreadSorting": "Ordenar los canales por mensajes no leídos",
   "settings_modSettingsMessagingBackgroundTCP": "Mantener la conexión TCP en segundo plano",

@@ -24,6 +24,7 @@ import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/exact_quote_helper.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
@@ -3378,7 +3379,34 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String _applyReplyMention(String text) {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;
-    return '@[${replyingTo.senderName}] $text';
+    return _formatReply(
+      senderName: replyingTo.senderName,
+      text: text,
+      quotedText: replyingTo.text,
+      quotedMessageId: replyingTo.messageId,
+    );
+  }
+
+  String _formatReply({
+    required String senderName,
+    required String text,
+    required String? quotedText,
+    required String? quotedMessageId,
+  }) {
+    final connector = context.read<MeshCoreConnector>();
+    return ExactQuoteHelper.formatReply(
+      senderName: senderName,
+      text: text,
+      quotedText: quotedText,
+      quotedMessageId: quotedMessageId,
+      history: connector.getChannelMessages(widget.channel),
+      // MCMP v3 carries its own exact reply anchor, so a text fragment would
+      // only waste payload.
+      enabled:
+          context.read<AppSettingsService>().settings.exactQuote &&
+          !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text),
+      outboundCharMap: connector.channelCyr2LatCharMap(widget.channel.index),
+    );
   }
 
   Future<void> _showQuickAnswersPicker() async {
@@ -4153,7 +4181,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (replySenderName == null || replySenderName.isEmpty) {
       return message.text;
     }
-    return '@[$replySenderName] ${message.text}';
+    return _formatReply(
+      senderName: replySenderName,
+      text: message.text,
+      quotedText: message.replyToText,
+      quotedMessageId: message.replyToMessageId,
+    );
   }
 
   EncodedMCOImageV3? _mcoImageV3ForResend(String text) {

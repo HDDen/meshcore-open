@@ -3001,6 +3001,7 @@
   "settings_modSettingsNoRetraInfo": "Не почуто ретрансляцій за {time} с.",
   "settings_modSettingsNoRetraHeading": "Позначати повідомлення як ненадіслані, якщо не почуто ретрансляцій за стільки секунд:",
   "settings_modSettingsNoRetraDscr": "Увага! Через механізм у прошивці ноди повідомлення для каналів вагою понад ~133 байт фізично не можуть отримувати підтвердження, і вони завжди будуть позначені як збійні! Використовуйте цю опцію разом з обмеженням payload у налаштуваннях застосунку!",
+  "settings_modSettingsExactQuote": "Використовувати уточнене цитування для звичайних повідомлень",
   "settings_selfTelemetryShow": "Перегляд датчиків",
   "settings_modSettingsVisualChannelsUnreadSorting": "Сортування каналів за непрочитаними повідомленнями",
   "settings_modSettingsMessagingBackgroundTCP": "Утримувати TCP-зʼєднання у фоні",

@@ -24,6 +24,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/exact_quote_helper.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mcoimg_codec.dart';
@@ -9355,6 +9356,28 @@ class MeshCoreConnector extends ChangeNotifier {
         !McmpAppCodec.isTextPayload(trimmed);
   }
 
+  /// The cyr2lat substitution table a channel's outgoing text is
+  /// transliterated with — its own profile, else the globally selected one.
+  /// Null when the channel does not use cyr2lat.
+  Map<String, String>? channelCyr2LatCharMap(int channelIndex) {
+    if (!isChannelCyr2LatEnabled(channelIndex)) return null;
+    final profileId = getChannelCyr2LatProfileId(channelIndex);
+    final profile = profileId != null && _appSettingsService != null
+        ? _appSettingsService!.getCyr2LatProfileById(profileId)
+        : null;
+    return (profile ?? _appSettingsService?.getSelectedCyr2LatProfile())
+        ?.charMap;
+  }
+
+  /// Whether a channel reply will travel with an MCMP v3 reply anchor
+  /// (quoted author + timestamp), which pins the quoted message exactly and
+  /// makes a plain-text quote fragment redundant.
+  bool channelReplyCarriesMcmpAnchor(int channelIndex, String text) {
+    return isChannelMcmpEnabled(channelIndex) &&
+        channelMcmpVersion(channelIndex) == 3 &&
+        _isMcmpSignableText(text);
+  }
+
   void _notifyMcmpSigningFailed() {
     if (!_mcmpSigningFailedController.isClosed) {
       _mcmpSigningFailedController.add(null);
@@ -9561,20 +9584,8 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isChannelCyr2LatEnabled(channelIndex)) {
-        final profileId = getChannelCyr2LatProfileId(channelIndex);
-        final profile = profileId != null && _appSettingsService != null
-            ? _appSettingsService!.getCyr2LatProfileById(profileId)
-            : null;
-        if (profile != null) {
-          Cyr2Lat.setCharMap(profile.charMap);
-        } else {
-          // Use global profile
-          final globalProfile = _appSettingsService
-              ?.getSelectedCyr2LatProfile();
-          if (globalProfile != null) {
-            Cyr2Lat.setCharMap(globalProfile.charMap);
-          }
-        }
+        final charMap = channelCyr2LatCharMap(channelIndex);
+        if (charMap != null) Cyr2Lat.setCharMap(charMap);
         return Cyr2Lat.encode(text);
       }
     }
@@ -11386,20 +11397,41 @@ class MeshCoreConnector extends ChangeNotifier {
       var replyToSenderName = message.replyToSenderName;
       var replyToText = message.replyToText;
 
+      // Plain-text replies may carry an exact-quote fragment (">first chars"
+      // on its own line) so the mention resolves to the message it was
+      // written for instead of merely the sender's newest one.
+      final exactQuote = ExactQuoteHelper.resolveReply(
+        body: replyInfo.actualMessage,
+        mentionedNode: replyInfo.mentionedNode,
+        history: messages,
+        extraCharMaps: [
+          for (final profile
+              in _appSettingsService?.settings.cyr2latProfiles ??
+                  const <Cyr2LatProfile>[])
+            profile.charMap,
+        ],
+      );
+      final messageBody = exactQuote?.text ?? replyInfo.actualMessage;
+
       if ((replyToSenderName == null || replyToText == null) &&
           message.mcmpReplyTimestamp == null) {
         // Fallback for incoming/legacy messages where only the @mention
         // exists. Messages with an MCMP reply anchor must never fall back to
         // "most recent from this sender": if the anchor did not resolve, a
         // name-only reply banner is more honest than a wrong quote.
-        final originalMessage = _findMessageBySender(
-          messages,
-          replyInfo.mentionedNode,
-        );
+        final originalMessage = exactQuote == null
+            ? _findMessageBySender(messages, replyInfo.mentionedNode)
+            : exactQuote.quoted;
         if (originalMessage != null) {
           replyToMessageId ??= originalMessage.messageId;
           replyToSenderName ??= originalMessage.senderName;
           replyToText ??= originalMessage.text;
+        } else if (exactQuote != null) {
+          // The quoted message never reached us. Show the fragment that did,
+          // without a message id, so the quote stays visible but is not
+          // tappable.
+          replyToSenderName ??= replyInfo.mentionedNode;
+          replyToText ??= exactQuote.fragment;
         }
       }
 
@@ -11407,7 +11439,7 @@ class MeshCoreConnector extends ChangeNotifier {
       processedMessage = ChannelMessage(
         senderKey: message.senderKey,
         senderName: message.senderName,
-        text: replyInfo.actualMessage,
+        text: messageBody,
         originalText: message.originalText,
         translatedText: message.translatedText,
         translatedLanguageCode: message.translatedLanguageCode,

@@ -5809,6 +5809,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Залишити колишню механіку drag-n-drop: зміна порядку каналів змінює їхній порядок на ноді, і не можна сортувати контакти чи сервери';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Використовувати уточнене цитування для звичайних повідомлень';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Власна';
 
   @override

@@ -2804,6 +2804,7 @@
   "settings_modSettingsNoRetraInfo": "Inga vidaresändningar har hörts på {time} s.",
   "settings_modSettingsNoRetraHeading": "Markera meddelanden som inte skickade om inga vidaresändningar hörs inom så här många sekunder:",
   "settings_modSettingsNoRetraDscr": "Observera! På grund av en mekanism i nodens firmware kan kanalmeddelanden större än ~133 byte fysiskt inte få bekräftelser och kommer alltid att markeras som misslyckade! Använd det här alternativet tillsammans med payloadgränsen i appens inställningar!",
+  "settings_modSettingsExactQuote": "Använd exakt citering för vanliga meddelanden",
   "settings_selfTelemetryShow": "Visa sensorerna",
   "settings_modSettingsVisualChannelsUnreadSorting": "Sortera kanalerna efter olästa meddelanden",
   "settings_modSettingsMessagingBackgroundTCP": "Behåll TCP-anslutningen i bakgrunden",

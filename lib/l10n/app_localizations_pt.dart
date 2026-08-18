@@ -5793,6 +5793,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Manter o comportamento anterior de arrastar e soltar: alterar a ordem dos canais altera a ordem deles no nó, e não é possível ordenar contatos ou servidores';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Usar citações precisas em mensagens normais';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Personalizada';
 
   @override

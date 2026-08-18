@@ -5821,6 +5821,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Zachowaj dotychczasowe działanie przeciągania: zmiana kolejności kanałów zmienia ich kolejność na węźle, a kontaktów ani serwerów nie można sortować';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Używaj dokładnego cytowania w zwykłych wiadomościach';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Własna';
 
   @override

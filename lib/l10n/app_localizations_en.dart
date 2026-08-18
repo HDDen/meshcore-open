@@ -5702,6 +5702,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Use precise quotes for regular messages';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Custom';
 
   @override

@@ -3121,6 +3121,7 @@
   "settings_modSettingsNoRetraInfo": "Aucune retransmission entendue depuis {time} s.",
   "settings_modSettingsNoRetraHeading": "Marquer les messages comme non envoyés si aucune retransmission n'est entendue dans ce délai (en secondes) :",
   "settings_modSettingsNoRetraDscr": "Attention ! En raison d'un mécanisme du firmware du nœud, les messages de canal de plus de ~133 octets ne peuvent physiquement pas recevoir de confirmations et seront toujours marqués comme échoués ! Utilisez cette option conjointement avec la limite de charge utile dans les paramètres de l'application !",
+  "settings_modSettingsExactQuote": "Utiliser les citations précises pour les messages normaux",
   "settings_selfTelemetryShow": "Consulter les capteurs",
   "settings_modSettingsVisualChannelsUnreadSorting": "Trier les canaux par messages non lus",
   "settings_modSettingsMessagingBackgroundTCP": "Maintenir la connexion TCP en arrière-plan",

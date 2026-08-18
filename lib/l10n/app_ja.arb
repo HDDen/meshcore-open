@@ -3127,6 +3127,7 @@
   "settings_modSettingsNoRetraInfo": "{time} 秒間、再送信が確認できません。",
   "settings_modSettingsNoRetraHeading": "この秒数の間に再送信が確認できない場合、メッセージを未送信として表示する:",
   "settings_modSettingsNoRetraDscr": "注意！ ノードのファームウェアの仕組みにより、約133バイトを超えるチャンネルメッセージは物理的に確認応答を受け取れず、常に失敗として表示されます。このオプションはアプリ設定のペイロード制限と併用してください。",
+  "settings_modSettingsExactQuote": "通常のメッセージで正確な引用を使用する",
   "settings_selfTelemetryShow": "センサーを表示",
   "settings_modSettingsVisualChannelsUnreadSorting": "未読メッセージでチャンネルを並べ替え",
   "settings_modSettingsMessagingBackgroundTCP": "バックグラウンドで TCP 接続を維持",

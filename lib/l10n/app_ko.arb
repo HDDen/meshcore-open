@@ -3159,6 +3159,7 @@
   "settings_modSettingsNoRetraInfo": "{time}초 동안 재전송이 확인되지 않았습니다.",
   "settings_modSettingsNoRetraHeading": "이 초 안에 재전송이 확인되지 않으면 메시지를 미전송으로 표시:",
   "settings_modSettingsNoRetraDscr": "주의! 노드 펌웨어의 구조상 약 133바이트를 넘는 채널 메시지는 물리적으로 확인 응답을 받을 수 없어 항상 실패로 표시됩니다! 이 옵션은 앱 설정의 페이로드 제한과 함께 사용하세요!",
+  "settings_modSettingsExactQuote": "일반 메시지에 정확한 인용 사용",
   "settings_selfTelemetryShow": "센서 보기",
   "settings_modSettingsVisualChannelsUnreadSorting": "읽지 않은 메시지 기준으로 채널 정렬",
   "settings_modSettingsMessagingBackgroundTCP": "백그라운드에서 TCP 연결 유지",

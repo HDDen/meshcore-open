@@ -2353,6 +2353,7 @@
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Отображать серверы с историей в одном экране с каналами",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Отображать контакты с историей в одном экране с каналами",
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
+  "settings_modSettingsExactQuote": "Использовать уточнённое цитирование для обычных сообщений",
   "settings_appSettingsCustomChemistry": "Своя",
   "map_clearDiscoveredContactsCache": "Очистить локальный кэш узлов",
   "map_clearDiscoveredContactsCacheDisclaimer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.",

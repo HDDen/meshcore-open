@@ -3060,6 +3060,7 @@
   "settings_modSettingsNoRetraInfo": "Nie słychać retransmisji od {time} s.",
   "settings_modSettingsNoRetraHeading": "Oznaczaj wiadomości jako niewysłane, jeśli w ciągu tylu sekund nie słychać retransmisji:",
   "settings_modSettingsNoRetraDscr": "Uwaga! Z powodu mechanizmu w firmwarze węzła wiadomości kanałowe większe niż ~133 bajty fizycznie nie mogą otrzymać potwierdzeń i zawsze będą oznaczane jako nieudane! Używaj tej opcji razem z ograniczeniem payloadu w ustawieniach aplikacji!",
+  "settings_modSettingsExactQuote": "Używaj dokładnego cytowania w zwykłych wiadomościach",
   "settings_selfTelemetryShow": "Podgląd czujników",
   "settings_modSettingsVisualChannelsUnreadSorting": "Sortowanie kanałów według nieprzeczytanych wiadomości",
   "settings_modSettingsMessagingBackgroundTCP": "Utrzymuj połączenie TCP w tle",

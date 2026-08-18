@@ -2804,6 +2804,7 @@
   "settings_modSettingsNoRetraInfo": "Nenhuma retransmissão ouvida por {time} s.",
   "settings_modSettingsNoRetraHeading": "Marcar as mensagens como não enviadas se nenhuma retransmissão for ouvida nestes segundos:",
   "settings_modSettingsNoRetraDscr": "Atenção! Devido a um mecanismo do firmware do nó, as mensagens de canal com mais de ~133 bytes não podem receber confirmações fisicamente e sempre serão marcadas como falhas! Use esta opção junto com o limite de payload nas configurações do aplicativo!",
+  "settings_modSettingsExactQuote": "Usar citações precisas em mensagens normais",
   "settings_selfTelemetryShow": "Ver os sensores",
   "settings_modSettingsVisualChannelsUnreadSorting": "Ordenar os canais por mensagens não lidas",
   "settings_modSettingsMessagingBackgroundTCP": "Manter a conexão TCP em segundo plano",

@@ -5833,6 +5833,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Conserver l\'ancien fonctionnement du glisser-déposer : changer l\'ordre des canaux modifie leur ordre sur le nœud, et il est impossible de trier les contacts ou les serveurs';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Utiliser les citations précises pour les messages normaux';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Personnalisée';
 
   @override

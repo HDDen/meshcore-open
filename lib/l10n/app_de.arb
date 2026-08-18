@@ -3164,6 +3164,7 @@
   "settings_modSettingsNoRetraInfo": "Seit {time} Sekunden keine Weiterleitungen gehört.",
   "settings_modSettingsNoRetraHeading": "Nachrichten als nicht gesendet anzeigen, wenn innerhalb dieser Sekundenzahl keine Weiterleitungen gehört werden:",
   "settings_modSettingsNoRetraDscr": "Achtung! Aufgrund eines Mechanismus in der Firmware des Knotens können Kanalnachrichten über ~133 Bytes physisch keine Selbstwiederholungen empfangen und werden immer als fehlgeschlagen markiert! Bitte verwenden Sie diese Option zusammen mit der Nutzlastbegrenzung in den App-Einstellungen!",
+  "settings_modSettingsExactQuote": "Präzises Zitieren für normale Nachrichten verwenden",
   "settings_selfTelemetryShow": "Sensoren anzeigen",
   "settings_modSettingsVisualChannelsUnreadSorting": "Kanäle nach ungelesenen Nachrichten sortieren",
   "settings_modSettingsMessagingBackgroundTCP": "TCP-Verbindung im Hintergrund aufrechterhalten",

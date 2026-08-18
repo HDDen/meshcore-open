@@ -5509,6 +5509,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '従来のドラッグ＆ドロップの動作を維持する: チャンネルの並べ替えはノード上の並び順も変更し、連絡先やサーバーは並べ替えできません';
 
   @override
+  String get settings_modSettingsExactQuote => '通常のメッセージで正確な引用を使用する';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'カスタム';
 
   @override

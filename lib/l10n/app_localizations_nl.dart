@@ -5782,6 +5782,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'De oude werking van slepen-en-neerzetten behouden: de volgorde van de kanalen wijzigen wijzigt hun volgorde op de node, en contacten of servers kunnen niet worden gesorteerd';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Nauwkeurig citeren gebruiken voor gewone berichten';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Aangepast';
 
   @override

@@ -5515,6 +5515,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '기존 드래그 앤 드롭 동작 유지: 채널 순서를 바꾸면 노드의 순서도 바뀌며, 연락처나 서버는 정렬할 수 없습니다';
 
   @override
+  String get settings_modSettingsExactQuote => '일반 메시지에 정확한 인용 사용';
+
+  @override
   String get settings_appSettingsCustomChemistry => '사용자 지정';
 
   @override

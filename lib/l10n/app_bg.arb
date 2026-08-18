@@ -3022,6 +3022,7 @@
   "settings_modSettingsNoRetraInfo": "Няма чути ретранслации от {time} с.",
   "settings_modSettingsNoRetraHeading": "Отбелязвай съобщенията като неизпратени, ако не се чуят ретранслации в рамките на толкова секунди:",
   "settings_modSettingsNoRetraDscr": "Внимание! Заради механизъм във фърмуера на възела съобщенията за канали с размер над ~133 байта физически не могат да получават потвърждения и винаги ще бъдат отбелязвани като неуспешни! Използвайте тази опция заедно с ограничението на payload в настройките на приложението!",
+  "settings_modSettingsExactQuote": "Използване на точно цитиране за обикновени съобщения",
   "settings_selfTelemetryShow": "Преглед на сензорите",
   "settings_modSettingsVisualChannelsUnreadSorting": "Подреждане на каналите по непрочетени съобщения",
   "settings_modSettingsMessagingBackgroundTCP": "Поддържане на TCP връзката във фонов режим",

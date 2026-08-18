@@ -351,6 +351,19 @@ class ModSettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.format_quote, size: 20),
+                    title: Text(context.l10n.settings_modSettingsExactQuote),
+                    value: settings.exactQuote,
+                    onChanged: settingsService.setExactQuote,
+                  ),
+                ),
                 if (PlatformInfo.isAndroid)
                   MeshCard(
                     padding: EdgeInsets.zero,

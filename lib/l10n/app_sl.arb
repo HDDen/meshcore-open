@@ -3022,6 +3022,7 @@
   "settings_modSettingsNoRetraInfo": "Že {time} s ni bilo slišati retransmisij.",
   "settings_modSettingsNoRetraHeading": "Označi sporočila kot neposlana, če v toliko sekundah ni slišati retransmisij:",
   "settings_modSettingsNoRetraDscr": "Pozor! Zaradi mehanizma v vdelani programski opremi vozlišča sporočila za kanale, večja od ~133 bajtov, fizično ne morejo prejemati potrditev in bodo vedno označena kot neuspešna! To možnost uporabljajte skupaj z omejitvijo payloada v nastavitvah aplikacije!",
+  "settings_modSettingsExactQuote": "Uporabi natančno citiranje za navadna sporočila",
   "settings_selfTelemetryShow": "Ogled senzorjev",
   "settings_modSettingsVisualChannelsUnreadSorting": "Razvrščanje kanalov po neprebranih sporočilih",
   "settings_modSettingsMessagingBackgroundTCP": "Ohrani povezavo TCP v ozadju",

@@ -5390,6 +5390,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '保留原有的拖放机制：更改频道顺序会同时更改其在节点上的顺序，并且无法排序联系人或服务器';
 
   @override
+  String get settings_modSettingsExactQuote => '对普通消息使用精确引用';
+
+  @override
   String get settings_appSettingsCustomChemistry => '自定义';
 
   @override

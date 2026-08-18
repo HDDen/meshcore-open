@@ -214,6 +214,10 @@ class AppSettings {
   final bool showMessageRegion;
   final bool channelsUnreadSorting;
   final bool incomingQuoteAsMentions;
+
+  /// Adds a short quote fragment to plain-text replies so the recipient can
+  /// tell which message is being answered when it is not the sender's latest.
+  final bool exactQuote;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -554,6 +558,7 @@ class AppSettings {
     this.showMessageRegion = false,
     this.channelsUnreadSorting = false,
     this.incomingQuoteAsMentions = false,
+    this.exactQuote = true,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -688,6 +693,7 @@ class AppSettings {
       'show_message_region': showMessageRegion,
       'channels_unread_sorting': channelsUnreadSorting,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
+      'exact_quote': exactQuote,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -852,6 +858,7 @@ class AppSettings {
       channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? false,
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
+      exactQuote: json['exact_quote'] as bool? ?? true,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1055,6 +1062,7 @@ class AppSettings {
     bool? showMessageRegion,
     bool? channelsUnreadSorting,
     bool? incomingQuoteAsMentions,
+    bool? exactQuote,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1174,6 +1182,7 @@ class AppSettings {
           channelsUnreadSorting ?? this.channelsUnreadSorting,
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
+      exactQuote: exactQuote ?? this.exactQuote,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,

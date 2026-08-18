@@ -5800,6 +5800,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Запазване на досегашната механика на плъзгане: промяната на реда на каналите променя реда им на възела, а контактите и сървърите не могат да се подреждат';
 
   @override
+  String get settings_modSettingsExactQuote =>
+      'Използване на точно цитиране за обикновени съобщения';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Собствена';
 
   @override
