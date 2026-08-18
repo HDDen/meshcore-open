@@ -59,6 +59,7 @@ import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
+import '../widgets/composer_text_builder.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
@@ -3297,10 +3298,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onPressed: _showTranslationOptions,
                   ),
                 Expanded(
-                  child: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, child) {
-                      final gifId = GifHelper.parseGif(value.text);
+                  child: ComposerTextBuilder(
+                    controller: _textController,
+                    builder: (context, composerText) {
+                      final gifId = GifHelper.parseGif(composerText);
                       if (gifId != null) {
                         return Focus(
                           autofocus: true,
@@ -3381,10 +3382,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ),
                 const SizedBox(width: 6),
                 ChatComposerSideAction(
-                  child: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, _) {
-                      final hasText = value.text.trim().isNotEmpty;
+                  child: ComposerTextBuilder(
+                    controller: _textController,
+                    builder: (context, composerText) {
+                      final hasText = composerText.trim().isNotEmpty;
                       return ChatComposerSendButton(
                         tooltip: context.l10n.chat_sendMessage,
                         size: 40,

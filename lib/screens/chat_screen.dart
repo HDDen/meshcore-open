@@ -45,6 +45,7 @@ import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
+import '../widgets/composer_text_builder.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
@@ -1049,10 +1050,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 onPressed: _showTranslationOptions,
               ),
             Expanded(
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _textController,
-                builder: (context, value, child) {
-                  final gifId = GifHelper.parseGif(value.text);
+              child: ComposerTextBuilder(
+                controller: _textController,
+                builder: (context, composerText) {
+                  final gifId = GifHelper.parseGif(composerText);
                   if (gifId != null) {
                     return Focus(
                       autofocus: true,
