@@ -5518,6 +5518,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsExactQuote => '일반 메시지에 정확한 인용 사용';
 
   @override
+  String get settings_modSettingsExactQuoteLimit => '인용을 만들기 위한 바이트 한도';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      '기본 한도는 15입니다. 한도 외에, 이 기능을 지원하지 않는 클라이언트를 위한 인용 표기로 5바이트가 더 추가됩니다';
+
+  @override
   String get settings_appSettingsCustomChemistry => '사용자 지정';
 
   @override

@@ -5804,6 +5804,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Usar citas precisas en los mensajes normales';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Límite de bytes para construir la cita';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'El límite predeterminado es 15. Además del límite, se añaden 5 bytes que dan formato a la cita para los clientes que no admiten esta función';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Personalizada';
 
   @override

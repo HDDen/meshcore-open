@@ -5811,6 +5811,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Präzises Zitieren für normale Nachrichten verwenden';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Byte-Limit für den Zitatausschnitt';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Standardlimit ist 15. Zusätzlich zum Limit kommen 5 Bytes hinzu, die das Zitat für Clients ohne Unterstützung dieser Funktion kennzeichnen';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Benutzerdefiniert';
 
   @override

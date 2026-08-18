@@ -35,11 +35,6 @@ class ResolvedQuote {
 class ExactQuoteHelper {
   ExactQuoteHelper._();
 
-  /// Airtime budget for the fragment, measured on the wire: bytes rather than
-  /// characters, and counted after cyr2lat transliteration when the channel
-  /// uses it, since that is what the packet actually pays for.
-  static const int maxFragmentBytes = 15;
-
   static const String _marker = '>';
 
   /// Appended when the fragment is shorter than the message it came from, so a
@@ -74,6 +69,10 @@ class ExactQuoteHelper {
   /// fragment is spent when [quotedMessageId] is the newest message from
   /// [senderName] in [history] either — a bare mention resolves to it anyway.
   ///
+  /// [maxFragmentBytes] is the airtime budget for the fragment, measured on the
+  /// wire: bytes rather than characters, and counted after cyr2lat
+  /// transliteration, since that is what the packet actually pays for.
+  ///
   /// [outboundCharMap] is the cyr2lat table this message will be transliterated
   /// with, or null when it travels untransliterated. The fragment itself is cut
   /// from the readable original — transliteration happens later, to the whole
@@ -85,6 +84,7 @@ class ExactQuoteHelper {
     required String? quotedMessageId,
     required List<ChannelMessage> history,
     required bool enabled,
+    required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
   }) {
     final mention = '@[$senderName] ';
@@ -94,6 +94,7 @@ class ExactQuoteHelper {
             quotedText,
             quotedMessageId,
             history,
+            maxFragmentBytes,
             outboundCharMap,
           )
         : null;
@@ -131,6 +132,7 @@ class ExactQuoteHelper {
     String? quotedText,
     String? quotedMessageId,
     List<ChannelMessage> history,
+    int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
   ) {
     if (quotedText == null || quotedText.isEmpty) return null;
@@ -140,7 +142,7 @@ class ExactQuoteHelper {
       if (candidate.messageId == quotedMessageId) return null;
       break;
     }
-    return _buildFragment(quotedText, outboundCharMap);
+    return _buildFragment(quotedText, maxFragmentBytes, outboundCharMap);
   }
 
   /// Cuts [text] down to [maxFragmentBytes] wire bytes without splitting a
@@ -148,7 +150,11 @@ class ExactQuoteHelper {
   /// punctuation are dropped first so the ellipsis does not hang off a comma
   /// or a half-typed space. Returns null when nothing usable is left, so
   /// callers can fall back to a bare mention.
-  static String? _buildFragment(String text, Map<String, String>? charMap) {
+  static String? _buildFragment(
+    String text,
+    int maxFragmentBytes,
+    Map<String, String>? charMap,
+  ) {
     final source = _normalize(text);
     if (source.isEmpty) return null;
     final buffer = StringBuffer();

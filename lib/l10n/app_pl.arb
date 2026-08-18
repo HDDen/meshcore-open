@@ -3061,6 +3061,8 @@
   "settings_modSettingsNoRetraHeading": "Oznaczaj wiadomości jako niewysłane, jeśli w ciągu tylu sekund nie słychać retransmisji:",
   "settings_modSettingsNoRetraDscr": "Uwaga! Z powodu mechanizmu w firmwarze węzła wiadomości kanałowe większe niż ~133 bajty fizycznie nie mogą otrzymać potwierdzeń i zawsze będą oznaczane jako nieudane! Używaj tej opcji razem z ograniczeniem payloadu w ustawieniach aplikacji!",
   "settings_modSettingsExactQuote": "Używaj dokładnego cytowania w zwykłych wiadomościach",
+  "settings_modSettingsExactQuoteLimit": "Limit bajtów na zbudowanie cytatu",
+  "settings_modSettingsExactQuoteLimitDscr": "Domyślny limit to 15. Poza limitem do cytatu dodawane jest jeszcze 5 bajtów formatujących cytat dla klientów, które nie obsługują tej funkcji",
   "settings_selfTelemetryShow": "Podgląd czujników",
   "settings_modSettingsVisualChannelsUnreadSorting": "Sortowanie kanałów według nieprzeczytanych wiadomości",
   "settings_modSettingsMessagingBackgroundTCP": "Utrzymuj połączenie TCP w tle",

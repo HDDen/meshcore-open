@@ -5393,6 +5393,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsExactQuote => '对普通消息使用精确引用';
 
   @override
+  String get settings_modSettingsExactQuoteLimit => '构建引用的字节上限';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      '默认上限为 15。除上限之外，还会附加 5 个字节，用于为不支持该功能的客户端标记引用';
+
+  @override
   String get settings_appSettingsCustomChemistry => '自定义';
 
   @override

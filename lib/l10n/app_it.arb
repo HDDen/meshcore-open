@@ -2986,6 +2986,8 @@
   "settings_modSettingsNoRetraHeading": "Contrassegna i messaggi come non inviati se non si rilevano ritrasmissioni entro questi secondi:",
   "settings_modSettingsNoRetraDscr": "Attenzione! A causa di un meccanismo nel firmware del nodo, i messaggi di canale di oltre ~133 byte non possono fisicamente ricevere conferme e verranno sempre contrassegnati come non riusciti! Usa questa opzione insieme al limite di payload nelle impostazioni dell'applicazione!",
   "settings_modSettingsExactQuote": "Usa citazioni precise per i messaggi normali",
+  "settings_modSettingsExactQuoteLimit": "Limite di byte per costruire la citazione",
+  "settings_modSettingsExactQuoteLimitDscr": "Il limite predefinito è 15. Oltre al limite vengono aggiunti 5 byte che formattano la citazione per i client che non supportano questa funzione",
   "settings_selfTelemetryShow": "Visualizza i sensori",
   "settings_modSettingsVisualChannelsUnreadSorting": "Ordina i canali per messaggi non letti",
   "settings_modSettingsMessagingBackgroundTCP": "Mantieni la connessione TCP in background",

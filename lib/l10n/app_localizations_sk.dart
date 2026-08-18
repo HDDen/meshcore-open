@@ -5771,6 +5771,14 @@ class AppLocalizationsSk extends AppLocalizations {
       'Používať presné citovanie pre bežné správy';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Limit bajtov na zloženie citácie';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Predvolený limit je 15. Okrem limitu sa k citácii pridáva ešte 5 bajtov, ktoré ju formátujú pre klientov bez podpory tejto funkcie';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Vlastná';
 
   @override

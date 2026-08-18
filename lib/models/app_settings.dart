@@ -218,6 +218,9 @@ class AppSettings {
   /// Adds a short quote fragment to plain-text replies so the recipient can
   /// tell which message is being answered when it is not the sender's latest.
   final bool exactQuote;
+
+  /// Wire bytes that quote fragment may spend.
+  final int exactQuoteLimit;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -307,6 +310,9 @@ class AppSettings {
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
+  static const int defaultExactQuoteLimit = 15;
+  static const int minExactQuoteLimit = 3;
+  static const int maxExactQuoteLimit = 100;
   static const int defaultNoRetransmissionWarningSeconds = 7;
   static const int minNoRetransmissionWarningSeconds = 5;
   static const int maxNoRetransmissionWarningSeconds = 15;
@@ -473,6 +479,19 @@ class AppSettings {
         .toInt();
   }
 
+  static int normalizeExactQuoteLimit(dynamic value) {
+    int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else if (value is String) {
+      parsed = int.tryParse(value);
+    }
+    if (parsed == null) return defaultExactQuoteLimit;
+    return parsed.clamp(minExactQuoteLimit, maxExactQuoteLimit).toInt();
+  }
+
   static int normalizeNoRetransmissionWarningSeconds(dynamic value) {
     int? parsed;
     if (value is int) {
@@ -559,6 +578,7 @@ class AppSettings {
     this.channelsUnreadSorting = false,
     this.incomingQuoteAsMentions = false,
     this.exactQuote = true,
+    this.exactQuoteLimit = defaultExactQuoteLimit,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -694,6 +714,7 @@ class AppSettings {
       'channels_unread_sorting': channelsUnreadSorting,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'exact_quote': exactQuote,
+      'exact_quote_limit': exactQuoteLimit,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -859,6 +880,7 @@ class AppSettings {
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       exactQuote: json['exact_quote'] as bool? ?? true,
+      exactQuoteLimit: normalizeExactQuoteLimit(json['exact_quote_limit']),
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1063,6 +1085,7 @@ class AppSettings {
     bool? channelsUnreadSorting,
     bool? incomingQuoteAsMentions,
     bool? exactQuote,
+    int? exactQuoteLimit,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1183,6 +1206,7 @@ class AppSettings {
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       exactQuote: exactQuote ?? this.exactQuote,
+      exactQuoteLimit: exactQuoteLimit ?? this.exactQuoteLimit,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,

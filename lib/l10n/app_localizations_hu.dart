@@ -5799,6 +5799,14 @@ class AppLocalizationsHu extends AppLocalizations {
       'Pontos idézés használata a normál üzenetekhez';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Bájtkorlát az idézet felépítéséhez';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Az alapértelmezett korlát 15. A korláton túl további 5 bájt kerül az idézethez, amely azt formázza az e funkciót nem támogató kliensek számára';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Egyéni';
 
   @override

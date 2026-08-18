@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
@@ -364,6 +365,45 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setExactQuote,
                   ),
                 ),
+                if (settings.exactQuote)
+                  MeshCard(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.straighten, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                context
+                                    .l10n
+                                    .settings_modSettingsExactQuoteLimit,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: _ExactQuoteLimitField(
+                                value: settings.exactQuoteLimit,
+                                onChanged: settingsService.setExactQuoteLimit,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 32),
+                          child: Text(
+                            context
+                                .l10n
+                                .settings_modSettingsExactQuoteLimitDscr,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (PlatformInfo.isAndroid)
                   MeshCard(
                     padding: EdgeInsets.zero,
@@ -662,6 +702,88 @@ class ModSettingsScreen extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Numeric box for the exact-quote budget. Keeps its own controller so typing
+/// is not fought by rebuilds, and commits on submit or on losing focus,
+/// clamping into [AppSettings.minExactQuoteLimit] … [AppSettings.maxExactQuoteLimit].
+class _ExactQuoteLimitField extends StatefulWidget {
+  const _ExactQuoteLimitField({required this.value, required this.onChanged});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_ExactQuoteLimitField> createState() => _ExactQuoteLimitFieldState();
+}
+
+class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value.toString(),
+  );
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) _commit();
+  }
+
+  @override
+  void didUpdateWidget(_ExactQuoteLimitField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value && !_focusNode.hasFocus) {
+      _controller.text = widget.value.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    // Detach first: disposing a focused node reports the focus loss, and the
+    // handler would reach for a controller that is already gone.
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// An empty or unparsable box falls back to the stored value rather than to
+  /// the default, so clearing it and tapping away cannot silently reset the
+  /// setting.
+  void _commit() {
+    final parsed = int.tryParse(_controller.text.trim());
+    final resolved = parsed == null
+        ? widget.value
+        : AppSettings.normalizeExactQuoteLimit(parsed);
+    if (_controller.text != resolved.toString()) {
+      _controller.text = resolved.toString();
+    }
+    if (resolved != widget.value) widget.onChanged(resolved);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      textAlign: TextAlign.center,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(3),
+      ],
+      decoration: const InputDecoration(
+        isDense: true,
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      ),
+      onSubmitted: (_) => _commit(),
     );
   }
 }

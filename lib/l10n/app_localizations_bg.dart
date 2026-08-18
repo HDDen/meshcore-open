@@ -5804,6 +5804,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Използване на точно цитиране за обикновени съобщения';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Лимит на байтове за построяване на цитата';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Лимитът по подразбиране е 15. Освен лимита към цитата се добавят още 5 байта като оформление на цитата за клиенти, които не поддържат тази функция';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Собствена';
 
   @override

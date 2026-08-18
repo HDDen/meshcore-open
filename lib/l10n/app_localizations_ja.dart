@@ -5512,6 +5512,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsExactQuote => '通常のメッセージで正確な引用を使用する';
 
   @override
+  String get settings_modSettingsExactQuoteLimit => '引用を作るためのバイト上限';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      '既定の上限は 15 です。上限のほかに、この機能に対応していないクライアント向けの引用表記として 5 バイトが追加されます';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'カスタム';
 
   @override

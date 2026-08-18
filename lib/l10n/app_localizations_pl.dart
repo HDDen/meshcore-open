@@ -5825,6 +5825,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Używaj dokładnego cytowania w zwykłych wiadomościach';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Limit bajtów na zbudowanie cytatu';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Domyślny limit to 15. Poza limitem do cytatu dodawane jest jeszcze 5 bajtów formatujących cytat dla klientów, które nie obsługują tej funkcji';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Własna';
 
   @override

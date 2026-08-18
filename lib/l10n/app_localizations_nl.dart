@@ -5786,6 +5786,14 @@ class AppLocalizationsNl extends AppLocalizations {
       'Nauwkeurig citeren gebruiken voor gewone berichten';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Bytelimiet voor het opbouwen van het citaat';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'De standaardlimiet is 15. Naast de limiet komen er 5 bytes bij die het citaat opmaken voor clients die deze functie niet ondersteunen';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Aangepast';
 
   @override

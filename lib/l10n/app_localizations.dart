@@ -9922,6 +9922,18 @@ abstract class AppLocalizations {
   /// **'Use precise quotes for regular messages'**
   String get settings_modSettingsExactQuote;
 
+  /// No description provided for @settings_modSettingsExactQuoteLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Bytes limit for precise quote'**
+  String get settings_modSettingsExactQuoteLimit;
+
+  /// No description provided for @settings_modSettingsExactQuoteLimitDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Default limit is 15. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature'**
+  String get settings_modSettingsExactQuoteLimitDscr;
+
   /// No description provided for @settings_appSettingsCustomChemistry.
   ///
   /// In en, this message translates to:

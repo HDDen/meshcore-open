@@ -3394,6 +3394,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required String? quotedMessageId,
   }) {
     final connector = context.read<MeshCoreConnector>();
+    final settings = context.read<AppSettingsService>().settings;
     return ExactQuoteHelper.formatReply(
       senderName: senderName,
       text: text,
@@ -3403,8 +3404,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       // MCMP v3 carries its own exact reply anchor, so a text fragment would
       // only waste payload.
       enabled:
-          context.read<AppSettingsService>().settings.exactQuote &&
+          settings.exactQuote &&
           !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text),
+      maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.channelCyr2LatCharMap(widget.channel.index),
     );
   }

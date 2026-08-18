@@ -5755,6 +5755,14 @@ class AppLocalizationsSv extends AppLocalizations {
       'Använd exakt citering för vanliga meddelanden';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Bytegräns för att bygga citatet';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Standardgränsen är 15. Utöver gränsen läggs 5 byte till som formaterar citatet för klienter som inte stöder den här funktionen';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Egen';
 
   @override

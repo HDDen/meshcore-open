@@ -5802,6 +5802,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Использовать уточнённое цитирование для обычных сообщений';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Лимит байт для построения цитаты';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Лимит по умолчанию - 15. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Своя';
 
   @override

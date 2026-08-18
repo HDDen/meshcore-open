@@ -3026,6 +3026,8 @@
   "settings_modSettingsNoRetraHeading": "Jelölje az üzeneteket elküldetlenként, ha ennyi másodpercen belül nem hallható újrasugárzás:",
   "settings_modSettingsNoRetraDscr": "Figyelem! A csomópont firmware-ének egyik mechanizmusa miatt a ~133 bájtnál nagyobb csatornaüzenetek fizikailag nem kaphatnak visszaigazolást, és mindig sikertelenként lesznek megjelölve! Ezt a beállítást a payload alkalmazásbeli korlátjával együtt használja!",
   "settings_modSettingsExactQuote": "Pontos idézés használata a normál üzenetekhez",
+  "settings_modSettingsExactQuoteLimit": "Bájtkorlát az idézet felépítéséhez",
+  "settings_modSettingsExactQuoteLimitDscr": "Az alapértelmezett korlát 15. A korláton túl további 5 bájt kerül az idézethez, amely azt formázza az e funkciót nem támogató kliensek számára",
   "settings_selfTelemetryShow": "Érzékelők megtekintése",
   "settings_modSettingsVisualChannelsUnreadSorting": "Csatornák rendezése olvasatlan üzenetek szerint",
   "settings_modSettingsMessagingBackgroundTCP": "A TCP-kapcsolat fenntartása a háttérben",

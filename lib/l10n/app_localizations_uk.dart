@@ -5813,6 +5813,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовувати уточнене цитування для звичайних повідомлень';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Ліміт байтів для побудови цитати';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Ліміт за замовчуванням — 15. Крім ліміту до цитати додається ще 5 байтів як оформлення цитати для клієнтів, які не підтримують цю функцію';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Власна';
 
   @override

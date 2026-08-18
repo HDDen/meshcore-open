@@ -2805,6 +2805,8 @@
   "settings_modSettingsNoRetraHeading": "Berichten als niet verzonden markeren als er binnen dit aantal seconden geen retransmissies worden gehoord:",
   "settings_modSettingsNoRetraDscr": "Let op! Door een mechanisme in de firmware van de node kunnen kanaalberichten groter dan ~133 bytes fysiek geen bevestigingen ontvangen en worden ze altijd als mislukt gemarkeerd! Gebruik deze optie samen met de payloadlimiet in de app-instellingen!",
   "settings_modSettingsExactQuote": "Nauwkeurig citeren gebruiken voor gewone berichten",
+  "settings_modSettingsExactQuoteLimit": "Bytelimiet voor het opbouwen van het citaat",
+  "settings_modSettingsExactQuoteLimitDscr": "De standaardlimiet is 15. Naast de limiet komen er 5 bytes bij die het citaat opmaken voor clients die deze functie niet ondersteunen",
   "settings_selfTelemetryShow": "Sensoren bekijken",
   "settings_modSettingsVisualChannelsUnreadSorting": "Kanalen sorteren op ongelezen berichten",
   "settings_modSettingsMessagingBackgroundTCP": "TCP-verbinding op de achtergrond in stand houden",

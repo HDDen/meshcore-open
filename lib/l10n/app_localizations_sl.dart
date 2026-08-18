@@ -5778,6 +5778,14 @@ class AppLocalizationsSl extends AppLocalizations {
       'Uporabi natančno citiranje za navadna sporočila';
 
   @override
+  String get settings_modSettingsExactQuoteLimit =>
+      'Omejitev bajtov za sestavo citata';
+
+  @override
+  String get settings_modSettingsExactQuoteLimitDscr =>
+      'Privzeta omejitev je 15. Poleg omejitve se citatu doda še 5 bajtov, ki ga oblikujejo za odjemalce brez podpore te funkcije';
+
+  @override
   String get settings_appSettingsCustomChemistry => 'Po meri';
 
   @override
