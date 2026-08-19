@@ -58,6 +58,78 @@ class SharedMessageHistoryHelper {
     return result;
   }
 
+  /// Removes [messageId] from every other node's copy of [channel].
+  ///
+  /// Shared history is read straight out of the other scopes on this phone, so
+  /// a message that lives there has to be deleted where it actually is —
+  /// dropping it from the merged list alone would bring it back on the next
+  /// merge.
+  Future<bool> deleteSecondaryChannelMessage({
+    required String currentPublicKeyHex,
+    required Channel channel,
+    required String messageId,
+  }) async {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || messageId.isEmpty) return false;
+
+    var deleted = false;
+    for (final scope in knownScopes()) {
+      if (scope == currentScope) continue;
+
+      final channelStore = ChannelStore()..setPublicKeyHex = scope;
+      final channels = await channelStore.loadChannels();
+      final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
+        channels,
+        name: channel.name,
+        pskHex: channel.pskHex,
+      );
+      if (matchedIndex == null) continue;
+
+      final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
+      messageStore.replaceChannels(channels);
+      final messages = await messageStore.loadChannelMessages(
+        matchedIndex,
+        allowLegacyMigration: false,
+      );
+      final remaining = messages
+          .where((message) => message.messageId != messageId)
+          .toList();
+      if (remaining.length == messages.length) continue;
+
+      await messageStore.saveChannelMessages(matchedIndex, remaining);
+      deleted = true;
+    }
+    return deleted;
+  }
+
+  /// Contact-chat counterpart of [deleteSecondaryChannelMessage].
+  Future<bool> deleteSecondaryContactMessage({
+    required String currentPublicKeyHex,
+    required String contactKeyHex,
+    required String messageId,
+  }) async {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || contactKeyHex.isEmpty || messageId.isEmpty) {
+      return false;
+    }
+
+    var deleted = false;
+    for (final scope in knownScopes()) {
+      if (scope == currentScope) continue;
+
+      final messageStore = MessageStore()..setPublicKeyHex = scope;
+      final messages = await messageStore.loadScopedMessages(contactKeyHex);
+      final remaining = messages
+          .where((message) => message.messageId != messageId)
+          .toList();
+      if (remaining.length == messages.length) continue;
+
+      await messageStore.saveMessages(contactKeyHex, remaining);
+      deleted = true;
+    }
+    return deleted;
+  }
+
   Future<List<Message>> loadSecondaryContactMessages({
     required String currentPublicKeyHex,
     required String contactKeyHex,

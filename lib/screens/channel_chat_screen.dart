@@ -4097,7 +4097,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Future<void> _deleteMessage(ChannelMessage message) async {
     final connector = context.read<MeshCoreConnector>();
     if (blockIfOffline(context, connector)) return;
-    await connector.deleteChannelMessage(message);
+    await connector.deleteChannelMessage(widget.channel, message);
     if (!mounted) return;
     showDismissibleSnackBar(
       context,

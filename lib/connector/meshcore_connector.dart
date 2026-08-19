@@ -1079,13 +1079,35 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     final contactKeyHex = message.senderKeyHex;
+    var changed = false;
     final messages = _conversations[contactKeyHex];
-    if (messages == null) return;
-    final removed = messages.remove(message);
-    if (!removed) return;
-    _retryService?.untrack(message.messageId);
-    await _messageStore.saveMessages(contactKeyHex, messages);
-    notifyListeners();
+    if (messages != null && messages.remove(message)) {
+      _retryService?.untrack(message.messageId);
+      await _messageStore.saveMessages(contactKeyHex, messages);
+      changed = true;
+    }
+    if (await _deleteSharedContactMessage(contactKeyHex, message)) {
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
+  /// Contact-chat counterpart of [_deleteSharedChannelMessage].
+  Future<bool> _deleteSharedContactMessage(
+    String contactKeyHex,
+    Message message,
+  ) async {
+    final secondary = _sharedContactSecondaryMessages[contactKeyHex];
+    if (secondary == null || secondary.isEmpty) return false;
+    final before = secondary.length;
+    secondary.removeWhere((current) => current.messageId == message.messageId);
+    if (secondary.length == before) return false;
+    await _sharedMessageHistoryHelper.deleteSecondaryContactMessage(
+      currentPublicKeyHex: selfPublicKeyHex,
+      contactKeyHex: contactKeyHex,
+      messageId: message.messageId,
+    );
+    return true;
   }
 
   Future<void> resendMessage(Contact contact, Message message) async {
@@ -1674,7 +1696,10 @@ class MeshCoreConnector extends ChangeNotifier {
     return '${channel.name.trim().toLowerCase()}|${channel.pskHex.toLowerCase()}';
   }
 
-  Future<void> deleteChannelMessage(ChannelMessage message) async {
+  Future<void> deleteChannelMessage(
+    Channel channel,
+    ChannelMessage message,
+  ) async {
     _retriableChannelMessageSends.remove(message.messageId);
     final pending = _pendingChannelSends.remove(message.messageId);
     if (pending != null) {
@@ -1682,15 +1707,39 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final channelIndex = message.channelIndex;
-    if (channelIndex == null) return;
+    final channelIndex = channel.index;
+    var changed = false;
     final messages = _channelMessages[channelIndex];
-    if (messages == null) return;
-    final removed = messages.remove(message);
-    if (!removed) return;
-    _cancelChannelNoRetransmissionWarning(message.messageId);
-    await _channelMessageStore.saveChannelMessages(channelIndex, messages);
-    notifyListeners();
+    if (messages != null && messages.remove(message)) {
+      _cancelChannelNoRetransmissionWarning(message.messageId);
+      await _channelMessageStore.saveChannelMessages(channelIndex, messages);
+      changed = true;
+    }
+    if (await _deleteSharedChannelMessage(channel, message)) {
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
+  /// Deletes the shared-history copies of [message], both the merged-in list
+  /// and the other node's store it was read from. Matching by message id also
+  /// catches the copy the merge hid when the same message exists in both
+  /// scopes — otherwise deleting the local one just uncovers it again.
+  Future<bool> _deleteSharedChannelMessage(
+    Channel channel,
+    ChannelMessage message,
+  ) async {
+    final secondary = _sharedChannelSecondaryMessages[channel.index];
+    if (secondary == null || secondary.isEmpty) return false;
+    final before = secondary.length;
+    secondary.removeWhere((current) => current.messageId == message.messageId);
+    if (secondary.length == before) return false;
+    await _sharedMessageHistoryHelper.deleteSecondaryChannelMessage(
+      currentPublicKeyHex: selfPublicKeyHex,
+      channel: channel,
+      messageId: message.messageId,
+    );
+    return true;
   }
 
   int getUnreadCountForContact(Contact contact) {
