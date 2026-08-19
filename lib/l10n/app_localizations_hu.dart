@@ -613,6 +613,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore nyílt forráskódú projekt';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Nyílt forráskódú Flutter kliens MeshCore LoRa mesh hálózati eszközökhöz.';
 
@@ -1057,6 +1061,28 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Adja meg a Stadia Maps API-kulcsát. Az alkalmazás ezt használja raszteres csempekérésekhez.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API-kulcs';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Nincs beállítva – az OpenStreetMap jelenik meg';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex aláírási titok';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Nincs beállítva – a kérések aláírás nélkül mennek ki';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline térképgyorsítótár';

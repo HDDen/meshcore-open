@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "Odprtokodni projekt MeshCore 2024",
+  "settings_aboutYandexMapsTerms": "Ploščice zemljevida: Yandex Maps. Pogoji uporabe: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Odprtokodni Flutter klient za naprave za LoRa omrežje MeshCore.",
   "settings_infoName": "Ime",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Vnesite svoj ključ API za Stadia Maps. Aplikacija ga uporablja za zahteve rastrskih ploščic.",
+  "appSettings_yandexApiKey": "Ključ Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Ni nastavljen – prikazan je OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Vnesite svoj ključ iz razvijalske nadzorne plošče Yandex. Brezplačni paket Tiles API dovoljuje do 30 zahtev na sekundo. Podatki zemljevida © Yandex.",
+  "appSettings_yandexSigningSecret": "Skrivnost za podpis Yandex",
+  "appSettings_yandexSigningSecretMissing": "Ni nastavljena – zahteve gredo brez podpisa",
+  "appSettings_yandexSigningSecretDialogDescription": "Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.",
   "appSettings_offlineMapCache": "Shramba zemljevidov brez povezave",
   "appSettings_noAreaSelected": "Območje ni izbrano",
   "appSettings_areaSelectedZoom": "Izbrano območje (povečava {minZoom}-{maxZoom})",

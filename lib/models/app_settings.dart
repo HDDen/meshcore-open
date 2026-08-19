@@ -234,6 +234,8 @@ class AppSettings {
   final String mapRasterSourceId;
   final String mapTileEndpointId;
   final String? mapTileApiKey;
+  final String? mapYandexApiKey;
+  final String? mapYandexSigningSecret;
   final bool notificationsEnabled;
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
@@ -531,6 +533,15 @@ class AppSettings {
 
   bool get usesstadiaDemo => effectiveMapTileApiKey == stadiaDemo;
 
+  /// Yandex ships no demo key — Tiles API answers nothing without one, so an
+  /// empty value means "not configured" and the map falls back to OSM.
+  String get effectiveMapYandexApiKey => mapYandexApiKey?.trim() ?? '';
+
+  /// Signing secret bound to the key in the Yandex console. Empty means
+  /// requests go out unsigned, which the "optional" signature mode allows.
+  String get effectiveMapYandexSigningSecret =>
+      mapYandexSigningSecret?.trim() ?? '';
+
   Map<String, String> get cyr2latCharMap {
     final profile = cyr2latProfiles.firstWhere(
       (p) => p.id == selectedCyr2latProfileId,
@@ -592,6 +603,8 @@ class AppSettings {
     this.mapRasterSourceId = 'osm_auto',
     this.mapTileEndpointId = 'standard_2x',
     this.mapTileApiKey,
+    this.mapYandexApiKey,
+    this.mapYandexSigningSecret,
     this.notificationsEnabled = true,
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
@@ -731,6 +744,8 @@ class AppSettings {
       'map_raster_source_id': mapRasterSourceId,
       'map_tile_endpoint_id': mapTileEndpointId,
       'map_tile_api_key': mapTileApiKey,
+      'map_yandex_api_key': mapYandexApiKey,
+      'map_yandex_signing_secret': mapYandexSigningSecret,
       'notifications_enabled': notificationsEnabled,
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
@@ -903,6 +918,8 @@ class AppSettings {
       mapRasterSourceId: json['map_raster_source_id'] as String? ?? 'osm_auto',
       mapTileEndpointId: json['map_tile_endpoint_id'] as String? ?? 'standard',
       mapTileApiKey: json['map_tile_api_key'] as String?,
+      mapYandexApiKey: json['map_yandex_api_key'] as String?,
+      mapYandexSigningSecret: json['map_yandex_signing_secret'] as String?,
       notificationsEnabled: json['notifications_enabled'] as bool? ?? true,
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
@@ -1099,6 +1116,8 @@ class AppSettings {
     String? mapRasterSourceId,
     String? mapTileEndpointId,
     Object? mapTileApiKey = _unset,
+    Object? mapYandexApiKey = _unset,
+    Object? mapYandexSigningSecret = _unset,
     bool? notificationsEnabled,
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
@@ -1229,6 +1248,12 @@ class AppSettings {
       mapCacheMaxZoom: mapCacheMaxZoom ?? this.mapCacheMaxZoom,
       mapRasterSourceId: mapRasterSourceId ?? this.mapRasterSourceId,
       mapTileEndpointId: mapTileEndpointId ?? this.mapTileEndpointId,
+      mapYandexApiKey: mapYandexApiKey == _unset
+          ? this.mapYandexApiKey
+          : mapYandexApiKey as String?,
+      mapYandexSigningSecret: mapYandexSigningSecret == _unset
+          ? this.mapYandexSigningSecret
+          : mapYandexSigningSecret as String?,
       mapTileApiKey: mapTileApiKey == _unset
           ? this.mapTileApiKey
           : mapTileApiKey as String?,

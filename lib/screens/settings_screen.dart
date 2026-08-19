@@ -12,6 +12,7 @@ import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/radio_settings.dart';
 import '../services/app_settings_service.dart';
+import '../services/map_tile_cache_service.dart';
 import '../services/app_debug_log_service.dart';
 import 'package:mco_service/mco_service.dart';
 import '../theme/mesh_theme.dart';
@@ -1190,6 +1191,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showAbout(BuildContext context) async {
     final l10n = context.l10n;
+    // Yandex requires their terms to be linked from the app's About section
+    // whenever their tiles are in use, so the line appears with the source.
+    final usesYandexTiles = MapRasterSourceCatalog.fromSettings(
+      context.read<AppSettingsService>().settings,
+    ).isYandex;
     // showAboutDialog has no completion future, so show the same AboutDialog
     // through showDialog to observe when it gets dismissed (by any means).
     await showDialog<void>(
@@ -1211,6 +1217,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 8),
           Text(l10n.settings_aboutModDescription),
+          if (usesYandexTiles) ...[
+            const SizedBox(height: 12),
+            LinkHandler.buildLinkifyText(
+              context: context,
+              text: l10n.settings_aboutYandexMapsTerms,
+              style: DefaultTextStyle.of(context).style,
+            ),
+          ],
         ],
       ),
     );

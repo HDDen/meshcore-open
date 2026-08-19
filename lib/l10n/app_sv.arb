@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "2024 MeshCore Öppen Källkodsprojekt",
+  "settings_aboutYandexMapsTerms": "Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "En öppen källkods Flutter-klient för MeshCore LoRa meshnätverksenheter.",
   "settings_infoName": "Namn",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Ange din Stadia Maps API-nyckel. Appen använder den för förfrågningar om rasterplattor.",
+  "appSettings_yandexApiKey": "API-nyckel för Yandex Tiles",
+  "appSettings_yandexApiKeyMissing": "Inte angiven – OpenStreetMap visas",
+  "appSettings_yandexApiKeyDialogDescription": "Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex signeringshemlighet",
+  "appSettings_yandexSigningSecretMissing": "Inte angiven – förfrågningar skickas osignerade",
+  "appSettings_yandexSigningSecretDialogDescription": "Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.",
   "appSettings_offlineMapCache": "Offline Kartcache",
   "appSettings_noAreaSelected": "Ingen area markerad",
   "appSettings_areaSelectedZoom": "Område markerat (zoom {minZoom}-{maxZoom})",

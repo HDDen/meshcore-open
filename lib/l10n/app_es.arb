@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "Proyecto MeshCore Open Source 2026",
+  "settings_aboutYandexMapsTerms": "Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Un cliente Flutter de código abierto para dispositivos MeshCore de malla LoRa.",
   "settings_infoName": "Nombre",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Introduce tu clave API de Stadia Maps. La aplicación la usa para solicitar teselas ráster.",
+  "appSettings_yandexApiKey": "Clave de Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Sin configurar: se muestra OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.",
+  "appSettings_yandexSigningSecret": "Secreto de firma de Yandex",
+  "appSettings_yandexSigningSecretMissing": "Sin configurar: las solicitudes se envían sin firma",
+  "appSettings_yandexSigningSecretDialogDescription": "Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.",
   "appSettings_offlineMapCache": "Caché de mapa sin conexión",
   "appSettings_noAreaSelected": "No se ha seleccionado ningún área",
   "appSettings_areaSelectedZoom": "Área seleccionada (zoom {minZoom}-{maxZoom})",

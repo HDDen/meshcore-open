@@ -135,6 +135,7 @@
     }
   },
   "settings_aboutLegalese": "Проєкт MeshCore Open Source 2026",
+  "settings_aboutYandexMapsTerms": "Тайли карти: Яндекс Карти. Умови використання: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Клієнт Flutter з відкритим вихідним кодом для пристроїв мережі MeshCore LoRa.",
   "settings_infoName": "Ім'я",
   "settings_infoId": "Ідентифікатор",
@@ -280,6 +281,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Введіть свій ключ API Stadia Maps. Програма використовує його для запитів растрових тайлів.",
+  "appSettings_yandexApiKey": "Ключ Tiles API Яндекса",
+  "appSettings_yandexApiKeyMissing": "Не задано — показується OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Введіть власний ключ із кабінету розробника Яндекса. Безкоштовний тариф Tiles API дозволяє до 30 запитів за секунду. Дані карти © Яндекс.",
+  "appSettings_yandexSigningSecret": "Секрет підпису Яндекса",
+  "appSettings_yandexSigningSecretMissing": "Не задано — запити надсилаються без підпису",
+  "appSettings_yandexSigningSecretDialogDescription": "Необов’язково. Вставте секрет підпису, прив’язаний до вашого ключа в кабінеті Яндекса. За «опціонального» режиму запити без підпису теж проходять.",
   "appSettings_offlineMapCache": "Офлайн-кеш карти",
   "appSettings_noAreaSelected": "Область не вибрано",
   "appSettings_areaSelectedZoom": "Вибрана область (зум {minZoom}-{maxZoom})",

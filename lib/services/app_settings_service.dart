@@ -382,6 +382,28 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMapYandexApiKey(String? value) async {
+    final normalized = value?.trim();
+    await updateSettings(
+      _settings.copyWith(
+        mapYandexApiKey: (normalized == null || normalized.isEmpty)
+            ? null
+            : normalized,
+      ),
+    );
+  }
+
+  Future<void> setMapYandexSigningSecret(String? value) async {
+    final normalized = value?.trim();
+    await updateSettings(
+      _settings.copyWith(
+        mapYandexSigningSecret: (normalized == null || normalized.isEmpty)
+            ? null
+            : normalized,
+      ),
+    );
+  }
+
   Future<void> setNotificationsEnabled(bool value) async {
     await updateSettings(_settings.copyWith(notificationsEnabled: value));
   }

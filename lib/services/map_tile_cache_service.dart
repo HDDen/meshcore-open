@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -20,7 +24,8 @@ enum MapRasterSourcePreset {
   outdoorsDark('outdoors_dark'),
   outdoorsDarkHC('outdoors_darkHC'),
   osmBrightDark('osm_bright_dark'),
-  osmBrightDarkHC('osm_bright_darkHC');
+  osmBrightDarkHC('osm_bright_darkHC'),
+  yandex('yandex');
 
   const MapRasterSourcePreset(this.id);
 
@@ -59,14 +64,25 @@ class MapRasterSourceDefinition {
     required this.label,
     required this.description,
     this.isStadia = false,
+    this.isYandex = false,
     this.allowsBulkDownload = false,
+    this.maxRequestsPerSecond,
+    this.consoleUrl,
   });
 
   final String id;
   final String label;
   final String description;
   final bool isStadia;
+  final bool isYandex;
   final bool allowsBulkDownload;
+
+  /// Ceiling the bulk downloader keeps to, where the provider states one.
+  final int? maxRequestsPerSecond;
+
+  /// Where the user issues their own key. Shown as a link when picking the
+  /// source, so it stays out of the one-line summary in settings.
+  final String? consoleUrl;
 }
 
 @immutable
@@ -109,6 +125,19 @@ class MapRasterSourceCatalog {
     label: 'OpenStreetMap Dark High Contrast',
     description:
         'Standard OpenStreetMap tiles with an inverted high contrast dark filter',
+  );
+
+  /// Yandex Tiles API. The `projection=web_mercator` parameter is what makes
+  /// this usable at all: Yandex draws in elliptical Mercator by default, which
+  /// would put every tile kilometres off the EPSG:3857 grid flutter_map uses.
+  static const MapRasterSourceDefinition yandex = MapRasterSourceDefinition(
+    id: 'yandex',
+    label: 'Yandex Maps',
+    description: '© Яндекс. Needs your own Tiles API key',
+    isYandex: true,
+    allowsBulkDownload: true,
+    maxRequestsPerSecond: MapTileCacheService.yandexMaxRequestsPerSecond,
+    consoleUrl: 'https://yandex.ru/maps-api/console',
   );
   static const MapRasterSourceDefinition stamenTerrain =
       MapRasterSourceDefinition(
@@ -199,6 +228,8 @@ class MapRasterSourceCatalog {
         return osmBrightDarkHC;
       case MapRasterSourcePreset.stamenTerrain:
         return stamenTerrain;
+      case MapRasterSourcePreset.yandex:
+        return yandex;
     }
   }
 
@@ -313,6 +344,36 @@ class CachedTileInventory {
 class MapTileCacheService extends ChangeNotifier {
   static const String cacheKey = 'map_tile_cache';
   static const String userAgentPackageName = 'com.meshcore.open';
+
+  /// Names the app and links back to it, which is what the OpenStreetMap tile
+  /// policy asks for — a library default like `flutter_map (...)` is on their
+  /// list of agents to block.
+  static const String userAgent =
+      'MCO (+https://github.com/zjs81/meshcore-open)';
+
+  /// Yandex is served a browser agent instead: their tile endpoint is built
+  /// for web clients and answers them without argument.
+  static const String yandexUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36';
+  static const String yandexTileHost = 'tiles.api-maps.yandex.ru';
+
+  /// Kept under the published 30 rps so a burst cannot trip the key.
+  static const int yandexMaxRequestsPerSecond = 25;
+
+  /// How long tiles are kept and treated as fresh. Deliberately long: the app
+  /// is used where there may be no network for months.
+  static const Duration cacheLifetime = Duration(days: 365);
+  static const String _osmUrlTemplate =
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  /// Yandex serves map captions in a handful of languages only; anything else
+  /// falls back to English rather than failing the request.
+  static const Map<String, String> _yandexLanguages = {
+    'ru': 'ru_RU',
+    'uk': 'uk_UA',
+    'tr': 'tr_TR',
+  };
   static const int defaultMinZoom = 10;
   static const int defaultMaxZoom = 15;
 
@@ -325,14 +386,26 @@ class MapTileCacheService extends ChangeNotifier {
     BaseCacheManager? cacheManager,
   }) : cacheManager =
            cacheManager ??
-           CacheManager(
+           RateLimitedTileCacheManager(
              Config(
                cacheKey,
-               stalePeriod: const Duration(days: 365),
+               stalePeriod: cacheLifetime,
                maxNrOfCacheObjects: 200000,
+               fileService: PinnedFreshnessFileService(
+                 pinnedHost: yandexTileHost,
+                 lifetime: cacheLifetime,
+               ),
              ),
+             throttledHost: yandexTileHost,
+             maxRequestsPerSecond: yandexMaxRequestsPerSecond,
            ) {
-    tileProvider = CachedNetworkTileProvider(cacheManager: this.cacheManager);
+    tileProvider = CachedNetworkTileProvider(
+      cacheManager: this.cacheManager,
+      urlSigner: signTileUrl,
+      headersFor: headersForUrl,
+      // Seeded so TileLayer's putIfAbsent leaves the agent alone.
+      headers: {'User-Agent': userAgent},
+    );
     appSettingsService.addListener(_handleSettingsChanged);
   }
 
@@ -340,7 +413,14 @@ class MapTileCacheService extends ChangeNotifier {
     final selectedSource = MapRasterSourceCatalog.fromSettings(
       appSettingsService.settings,
     );
-    if (!selectedSource.allowsBulkDownload ||
+    if (selectedSource.isYandex &&
+        appSettingsService.settings.effectiveMapYandexApiKey.isEmpty) {
+      // Without a key the map really is OpenStreetMap, so the cache inventory
+      // and the bulk downloader must treat it as such.
+      return MapRasterSourceCatalog.osmStandard;
+    }
+    if (!selectedSource.isStadia ||
+        !selectedSource.allowsBulkDownload ||
         !appSettingsService.settings.usesstadiaDemo) {
       return selectedSource;
     }
@@ -355,6 +435,15 @@ class MapTileCacheService extends ChangeNotifier {
 
   MapRasterEndpointDefinition get endpoint =>
       MapRasterEndpointCatalog.fromSettings(appSettingsService.settings);
+
+  /// Adds the Yandex request signature when a secret is configured. Other
+  /// sources pass through untouched.
+  String signTileUrl(String url) {
+    if (!url.contains(yandexTileHost)) return url;
+    final secret = appSettingsService.settings.effectiveMapYandexSigningSecret;
+    if (secret.isEmpty) return url;
+    return signYandexUrl(url, secret);
+  }
 
   String get urlTemplate => _buildUrlTemplate(appSettingsService.settings);
 
@@ -379,6 +468,7 @@ class MapTileCacheService extends ChangeNotifier {
       case MapRasterSourcePreset.alidadeSmoothDark:
       case MapRasterSourcePreset.outdoors:
       case MapRasterSourcePreset.osmBright:
+      case MapRasterSourcePreset.yandex:
         return false;
     }
   }
@@ -398,6 +488,7 @@ class MapTileCacheService extends ChangeNotifier {
       case MapRasterSourcePreset.outdoorsDark:
       case MapRasterSourcePreset.osmBright:
       case MapRasterSourcePreset.osmBrightDark:
+      case MapRasterSourcePreset.yandex:
         return false;
     }
   }
@@ -449,8 +540,8 @@ class MapTileCacheService extends ChangeNotifier {
 
   CacheManager get _concreteCacheManager => cacheManager as CacheManager;
 
-  Map<String, String> get defaultHeaders => {
-    'User-Agent': 'flutter_map ($userAgentPackageName)',
+  Map<String, String> headersForUrl(String url) => {
+    'User-Agent': url.contains(yandexTileHost) ? yandexUserAgent : userAgent,
   };
 
   Widget buildTileLayer(BuildContext context, {double opacity = 1}) {
@@ -460,6 +551,12 @@ class MapTileCacheService extends ChangeNotifier {
       tileBuilder: tileBuilder,
       userAgentPackageName: userAgentPackageName,
       maxZoom: 19,
+      // Flutter caches failed image loads too, and the default strategy keeps
+      // them forever: one tile lost to a rate limit or a dropped connection
+      // stays a grey square for the rest of the session. Dropping error tiles
+      // once they leave the viewport means coming back to the area retries
+      // them through the normal request queue.
+      evictErrorTileStrategy: EvictErrorTileStrategy.notVisible,
     );
 
     final shouldApplyDarkFilter = shouldApplyDarkFilterForSettings(
@@ -510,6 +607,15 @@ class MapTileCacheService extends ChangeNotifier {
     Iterable<CachedTileInfo> tiles,
   ) {
     final activeSource = source;
+    if (activeSource.isYandex) {
+      return tiles
+          .where(
+            (tile) =>
+                tile.sourceId == activeSource.id &&
+                tile.host == yandexTileHost,
+          )
+          .toList();
+    }
     if (!activeSource.isStadia) {
       return tiles
           .where(
@@ -605,16 +711,22 @@ class MapTileCacheService extends ChangeNotifier {
     final safeMin = math.min(minZoom, maxZoom);
     final safeMax = math.max(minZoom, maxZoom);
     final total = estimateTileCount(bounds, safeMin, safeMax);
-    final authHeaders = headers ?? defaultHeaders;
+    final overrideHeaders = headers;
     final safeConcurrency = math.max(1, concurrentDownloads);
     final currentTemplate = urlTemplate;
+    // Pacing lives in RateLimitedTileCacheManager so map rendering and this
+    // downloader draw from one counter rather than two independent ones.
     int completed = 0;
     int failed = 0;
 
     final pending = <Future<void>>[];
     Future<void> queueDownload(String url) async {
       final future = cacheManager
-          .downloadFile(url, key: url, authHeaders: authHeaders)
+          .downloadFile(
+            url,
+            key: tileCacheKey(url),
+            authHeaders: overrideHeaders ?? headersForUrl(url),
+          )
           .then((_) {
             completed += 1;
           })
@@ -643,7 +755,9 @@ class MapTileCacheService extends ChangeNotifier {
       final tileBounds = _tileBoundsForBounds(bounds, zoom);
       for (int x = tileBounds.minX; x <= tileBounds.maxX; x++) {
         for (int y = tileBounds.minY; y <= tileBounds.maxY; y++) {
-          final url = _buildTileUrl(x, y, zoom, urlTemplate: currentTemplate);
+          final url = signTileUrl(
+            _buildTileUrl(x, y, zoom, urlTemplate: currentTemplate),
+          );
           await queueDownload(url);
         }
       }
@@ -714,10 +828,28 @@ class MapTileCacheService extends ChangeNotifier {
     );
   }
 
+  static String _yandexLang(AppSettings settings) {
+    final code =
+        settings.languageOverride ??
+        ui.PlatformDispatcher.instance.locale.languageCode;
+    return _yandexLanguages[code.toLowerCase()] ?? 'en_US';
+  }
+
   String _buildUrlTemplate(AppSettings settings) {
     final source = MapRasterSourceCatalog.fromSettings(settings);
+    if (source.isYandex) {
+      final apiKey = settings.effectiveMapYandexApiKey;
+      if (apiKey.isEmpty) return _osmUrlTemplate;
+      return 'https://$yandexTileHost/v1/tiles/'
+          '?apikey=${Uri.encodeQueryComponent(apiKey)}'
+          '&lang=${_yandexLang(settings)}'
+          '&l=map'
+          '&projection=web_mercator'
+          '&maptype=map'
+          '&x={x}&y={y}&z={z}';
+    }
     if (!source.isStadia) {
-      return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      return _osmUrlTemplate;
     }
     final endpoint = MapRasterEndpointCatalog.fromSettings(settings);
     final apiKey = settings.effectiveMapTileApiKey;
@@ -730,6 +862,23 @@ class MapTileCacheService extends ChangeNotifier {
   CachedTileInfo? _parseCachedTile(CacheObject object) {
     final uri = Uri.tryParse(object.key);
     if (uri == null) return null;
+    if (uri.host == yandexTileHost) {
+      // Yandex passes the tile coordinates as query parameters rather than
+      // path segments.
+      final zoom = int.tryParse(uri.queryParameters['z'] ?? '');
+      final x = int.tryParse(uri.queryParameters['x'] ?? '');
+      final y = int.tryParse(uri.queryParameters['y'] ?? '');
+      if (zoom == null || x == null || y == null) return null;
+      return CachedTileInfo(
+        key: object.key,
+        host: uri.host,
+        sourceId: MapRasterSourceCatalog.yandex.id,
+        zoom: zoom,
+        x: x,
+        y: y,
+        length: object.length ?? 0,
+      );
+    }
     final segments = uri.pathSegments;
 
     if (segments.length >= 3 &&
@@ -818,18 +967,217 @@ class MapTileCacheService extends ChangeNotifier {
   }
 }
 
+/// File service that pins how long a host's responses stay fresh.
+///
+/// Yandex sends its own `Cache-Control`, and honouring it makes the cache
+/// re-validate tiles that are already on disk: rate-limit slots are spent on
+/// files we hold, redraws of visited areas queue behind the limiter, and an
+/// offline region quietly expires while the phone is nowhere near a network.
+/// The project keeps tiles for the full cache period on purpose, so freshness
+/// is pinned to that instead. Other hosts pass through untouched.
+class PinnedFreshnessFileService extends FileService {
+  PinnedFreshnessFileService({
+    required this.pinnedHost,
+    required this.lifetime,
+    FileService? inner,
+  }) : _inner = inner ?? HttpFileService();
+
+  final String pinnedHost;
+  final Duration lifetime;
+  final FileService _inner;
+
+  @override
+  Future<FileServiceResponse> get(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    final response = await _inner.get(url, headers: headers);
+    if (!url.contains(pinnedHost)) return response;
+    return _PinnedFreshnessResponse(response, lifetime);
+  }
+}
+
+class _PinnedFreshnessResponse implements FileServiceResponse {
+  _PinnedFreshnessResponse(this._inner, this._lifetime);
+
+  final FileServiceResponse _inner;
+  final Duration _lifetime;
+
+  @override
+  DateTime get validTill => DateTime.now().add(_lifetime);
+
+  @override
+  Stream<List<int>> get content => _inner.content;
+
+  @override
+  int? get contentLength => _inner.contentLength;
+
+  @override
+  int get statusCode => _inner.statusCode;
+
+  @override
+  String? get eTag => _inner.eTag;
+
+  @override
+  String get fileExtension => _inner.fileExtension;
+}
+
+/// Cache manager that paces requests to a host which publishes a rate ceiling.
+///
+/// flutter_map asks for every visible tile at once, so a first frame is easily
+/// 30+ requests — the whole Yandex allowance — and the pacing therefore has to
+/// sit under the tile provider, not only in the bulk downloader. Cache hits
+/// skip the queue: an offline map must redraw at full speed.
+class RateLimitedTileCacheManager extends CacheManager {
+  RateLimitedTileCacheManager(
+    super.config, {
+    required this.throttledHost,
+    required this.maxRequestsPerSecond,
+  });
+
+  final String throttledHost;
+  final int maxRequestsPerSecond;
+
+  final Stopwatch _elapsed = Stopwatch()..start();
+  int _nextSlotMicros = 0;
+
+  @override
+  Stream<FileResponse> getFileStream(
+    String url, {
+    String? key,
+    Map<String, String>? headers,
+    bool withProgress = false,
+  }) async* {
+    if (_isThrottled(url)) {
+      final cached = await getFileFromCache(key ?? url);
+      if (cached == null || cached.validTill.isBefore(DateTime.now())) {
+        await _awaitSlot();
+      }
+    }
+    yield* super.getFileStream(
+      url,
+      key: key,
+      headers: headers,
+      withProgress: withProgress,
+    );
+  }
+
+  @override
+  Future<FileInfo> downloadFile(
+    String url, {
+    String? key,
+    Map<String, String>? authHeaders,
+    bool force = false,
+  }) async {
+    if (_isThrottled(url)) await _awaitSlot();
+    return super.downloadFile(
+      url,
+      key: key,
+      authHeaders: authHeaders,
+      force: force,
+    );
+  }
+
+  bool _isThrottled(String url) => url.contains(throttledHost);
+
+  /// Takes the next slot in the queue.
+  ///
+  /// The slot is claimed *before* awaiting, which is the whole point: tile
+  /// requests arrive in parallel, and reserving afterwards would have every
+  /// caller read the same `_nextSlotMicros`, wait the same amount and then
+  /// fire together — exactly the burst a zoom or a fast pan produces. Dart's
+  /// single thread makes the read-and-bump atomic as long as nothing is
+  /// awaited in between.
+  Future<void> _awaitSlot() async {
+    final gap = (Duration.microsecondsPerSecond / maxRequestsPerSecond).ceil();
+    final now = _elapsed.elapsedMicroseconds;
+    final slot = math.max(_nextSlotMicros, now);
+    _nextSlotMicros = slot + gap;
+    final wait = slot - now;
+    if (wait > 0) {
+      await Future<void>.delayed(Duration(microseconds: wait));
+    }
+  }
+}
+
+/// Cache key for a tile URL.
+///
+/// Yandex carries the API key and the request signature in the query string,
+/// so keying the cache on the raw URL would orphan every stored tile the
+/// moment the user reissues either — precisely the offline regions this cache
+/// exists to keep. Dropping both also means a tile stays valid when signing is
+/// switched on or off.
+String tileCacheKey(String url) {
+  if (!url.contains(MapTileCacheService.yandexTileHost)) return url;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return url;
+  final query = Map<String, String>.from(uri.queryParameters)
+    ..remove('apikey')
+    ..remove('signature');
+  return uri.replace(queryParameters: query).toString();
+}
+
+/// Signs a Yandex request with the "simple signature" scheme.
+///
+/// `HMAC-SHA256` over the path and query with the host stripped — the string
+/// starts at the leading slash and carries every parameter except `signature`
+/// itself — keyed with the Base64UrlSafe-decoded secret. The digest goes back
+/// in Base64UrlSafe, padding kept, as the last parameter, which is where the
+/// API expects it.
+///
+/// A secret that will not decode yields an unsigned URL: the "optional" mode
+/// accepts those, so a mistyped secret degrades instead of blanking the map.
+String signYandexUrl(String url, String secret) {
+  final key = _decodeSigningSecret(secret);
+  if (key == null) return url;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return url;
+  final signedPart = uri.query.isEmpty ? uri.path : '${uri.path}?${uri.query}';
+  final digest = crypto.Hmac(
+    crypto.sha256,
+    key,
+  ).convert(utf8.encode(signedPart));
+  final signature = base64Url.encode(digest.bytes);
+  return '$url&signature=$signature';
+}
+
+Uint8List? _decodeSigningSecret(String secret) {
+  final trimmed = secret.trim();
+  if (trimmed.isEmpty) return null;
+  try {
+    return base64Url.decode(base64Url.normalize(trimmed));
+  } on FormatException {
+    return null;
+  }
+}
+
 class CachedNetworkTileProvider extends TileProvider {
   final BaseCacheManager cacheManager;
 
-  CachedNetworkTileProvider({required this.cacheManager, super.headers});
+  /// Applied after the tile coordinates are substituted. Yandex signs the
+  /// finished URL, so the signature can only be computed per tile, not baked
+  /// into the template.
+  final String Function(String url)? urlSigner;
+
+  /// Per-request headers, since the User-Agent differs by host.
+  final Map<String, String> Function(String url)? headersFor;
+
+  CachedNetworkTileProvider({
+    required this.cacheManager,
+    this.urlSigner,
+    this.headersFor,
+    super.headers,
+  });
 
   @override
   ImageProvider getImage(TileCoordinates coordinates, TileLayer options) {
     final url = getTileUrl(coordinates, options);
+    final signedUrl = urlSigner?.call(url) ?? url;
     return CachedNetworkImageProvider(
-      url,
+      signedUrl,
+      cacheKey: tileCacheKey(signedUrl),
       cacheManager: cacheManager,
-      headers: headers,
+      headers: headersFor?.call(signedUrl) ?? headers,
     );
   }
 }

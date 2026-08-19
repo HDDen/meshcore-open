@@ -618,6 +618,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_aboutLegalese => 'Proyecto MeshCore Open Source 2026';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Un cliente Flutter de código abierto para dispositivos MeshCore de malla LoRa.';
 
@@ -1061,6 +1065,28 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Introduce tu clave API de Stadia Maps. La aplicación la usa para solicitar teselas ráster.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Clave de Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Sin configurar: se muestra OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Secreto de firma de Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Sin configurar: las solicitudes se envían sin firma';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.';
 
   @override
   String get appSettings_offlineMapCache => 'Caché de mapa sin conexión';

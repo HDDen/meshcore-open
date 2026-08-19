@@ -613,6 +613,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_aboutLegalese => 'MeshCore Open Source Project 2024';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kaarttegels van Yandex Maps. Gebruiksvoorwaarden: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.';
 
@@ -1056,6 +1060,28 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Voer je Stadia Maps API-sleutel in. De app gebruikt die voor rastertegelverzoeken.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API-sleutel';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Niet ingesteld — OpenStreetMap wordt getoond';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Voer je eigen sleutel uit het Yandex-ontwikkelaarsdashboard in. Het gratis Tiles API-niveau staat maximaal 30 verzoeken per seconde toe. Kaartgegevens © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex-ondertekeningsgeheim';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Niet ingesteld — verzoeken gaan ongetekend uit';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Kaartcache';

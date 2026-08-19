@@ -1228,6 +1228,12 @@ abstract class AppLocalizations {
   /// **'2026 MeshCore Open Source Project'**
   String get settings_aboutLegalese;
 
+  /// No description provided for @settings_aboutYandexMapsTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/'**
+  String get settings_aboutYandexMapsTerms;
+
   /// No description provided for @settings_aboutDescription.
   ///
   /// In en, this message translates to:
@@ -2013,6 +2019,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your Stadia Maps API key. This app uses it for raster tile requests.'**
   String get appSettings_stadiaApiKeyDialogDescription;
+
+  /// No description provided for @appSettings_yandexApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex Tiles API key'**
+  String get appSettings_yandexApiKey;
+
+  /// No description provided for @appSettings_yandexApiKeyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — OpenStreetMap is shown instead'**
+  String get appSettings_yandexApiKeyMissing;
+
+  /// No description provided for @appSettings_yandexApiKeyDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.'**
+  String get appSettings_yandexApiKeyDialogDescription;
+
+  /// No description provided for @appSettings_yandexSigningSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex signing secret'**
+  String get appSettings_yandexSigningSecret;
+
+  /// No description provided for @appSettings_yandexSigningSecretMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — requests go out unsigned'**
+  String get appSettings_yandexSigningSecretMissing;
+
+  /// No description provided for @appSettings_yandexSigningSecretDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.'**
+  String get appSettings_yandexSigningSecretDialogDescription;
 
   /// No description provided for @appSettings_offlineMapCache.
   ///

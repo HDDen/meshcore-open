@@ -607,6 +607,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_aboutLegalese => '2024 MeshCore Öppen Källkodsprojekt';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'En öppen källkods Flutter-klient för MeshCore LoRa meshnätverksenheter.';
 
@@ -1045,6 +1049,28 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Ange din Stadia Maps API-nyckel. Appen använder den för förfrågningar om rasterplattor.';
+
+  @override
+  String get appSettings_yandexApiKey => 'API-nyckel för Yandex Tiles';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Inte angiven – OpenStreetMap visas';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex signeringshemlighet';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Inte angiven – förfrågningar skickas osignerade';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Kartcache';

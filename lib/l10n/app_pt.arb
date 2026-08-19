@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "Projeto MeshCore de Código Aberto 2024",
+  "settings_aboutYandexMapsTerms": "Blocos do mapa por Yandex Maps. Termos de uso: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Um cliente Flutter de código aberto para dispositivos de rede mesh LoRa Core da MeshCore.",
   "settings_infoName": "Nome",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Insira sua chave da API Stadia Maps. O aplicativo a usa para solicitações de blocos raster.",
+  "appSettings_yandexApiKey": "Chave da API Yandex Tiles",
+  "appSettings_yandexApiKeyMissing": "Não definida — o OpenStreetMap é exibido",
+  "appSettings_yandexApiKeyDialogDescription": "Insira sua própria chave do painel de desenvolvedor da Yandex. O plano gratuito da Tiles API permite até 30 solicitações por segundo. Dados do mapa © Yandex.",
+  "appSettings_yandexSigningSecret": "Segredo de assinatura da Yandex",
+  "appSettings_yandexSigningSecretMissing": "Não definido — as solicitações são enviadas sem assinatura",
+  "appSettings_yandexSigningSecretDialogDescription": "Opcional. Cole o segredo de assinatura vinculado à sua chave no console da Yandex. No modo de assinatura opcional, solicitações sem assinatura também funcionam.",
   "appSettings_offlineMapCache": "Cache de Mapa Offline",
   "appSettings_noAreaSelected": "Nenhuma área selecionada",
   "appSettings_areaSelectedZoom": "Área selecionada (zoom {minZoom}-{maxZoom})",

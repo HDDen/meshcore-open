@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "MeshCore Open Source Projekt 2024",
+  "settings_aboutYandexMapsTerms": "Dlaždice mapy od Yandex Maps. Podmienky používania: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.",
   "settings_infoName": "Meno",
   "settings_infoId": "Identifikátor",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Zadajte svoj kľúč API pre Stadia Maps. Aplikácia ho používa na požiadavky na rastrové dlaždice.",
+  "appSettings_yandexApiKey": "Kľúč Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Nenastavené – zobrazuje sa OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Zadajte vlastný kľúč z vývojárskeho účtu Yandex. Bezplatná úroveň Tiles API umožňuje až 30 požiadaviek za sekundu. Mapové údaje © Yandex.",
+  "appSettings_yandexSigningSecret": "Podpisové tajomstvo Yandex",
+  "appSettings_yandexSigningSecretMissing": "Nenastavené – požiadavky odchádzajú bez podpisu",
+  "appSettings_yandexSigningSecretDialogDescription": "Voliteľné. Vložte podpisové tajomstvo priradené k vášmu kľúču v konzole Yandex. Pri voliteľnom režime podpisu fungujú aj nepodpísané požiadavky.",
   "appSettings_offlineMapCache": "Offline Mapa Pamäť",
   "appSettings_noAreaSelected": "Neoznačila sa žiadna oblasť",
   "appSettings_areaSelectedZoom": "Vyberená oblasť (zoom {minZoom}-{maxZoom})",

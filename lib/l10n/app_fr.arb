@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "Projet open source MeshCore 2026",
+  "settings_aboutYandexMapsTerms": "Tuiles de carte par Yandex Maps. Conditions d’utilisation : \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Client Flutter open source pour les appareils de réseau maillé LoRa MeshCore.",
   "settings_infoName": "Nom",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Entrez votre clé API Stadia Maps. Cette application l’utilise pour les requêtes de tuiles raster.",
+  "appSettings_yandexApiKey": "Clé API Yandex Tiles",
+  "appSettings_yandexApiKeyMissing": "Non définie — OpenStreetMap est affiché",
+  "appSettings_yandexApiKeyDialogDescription": "Saisissez votre propre clé depuis le tableau de bord développeur Yandex. Le palier gratuit de Tiles API autorise jusqu’à 30 requêtes par seconde. Données cartographiques © Yandex.",
+  "appSettings_yandexSigningSecret": "Secret de signature Yandex",
+  "appSettings_yandexSigningSecretMissing": "Non défini — les requêtes partent sans signature",
+  "appSettings_yandexSigningSecretDialogDescription": "Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.",
   "appSettings_offlineMapCache": "Cache de carte hors ligne",
   "appSettings_noAreaSelected": "Aucune zone sélectionnée",
   "appSettings_areaSelectedZoom": "Zone sélectionnée (zoom {minZoom}-{maxZoom})",

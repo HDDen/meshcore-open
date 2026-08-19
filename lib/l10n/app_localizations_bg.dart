@@ -622,6 +622,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_aboutLegalese => 'Проект MeshCore с отворен код 2024 г.';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Плочки на картата от Yandex Maps. Условия за ползване: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Отворен Flutter клиент за MeshCore LoRa мрежови устройства.';
 
@@ -1068,6 +1072,28 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Въведете своя API ключ за Stadia Maps. Приложението го използва за заявки за растерни плочки.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Ключ за Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Не е зададен — показва се OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Въведете собствен ключ от разработчиеския кабинет на Yandex. Безплатният план на Tiles API позволява до 30 заявки в секунда. Данни за картата © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Тайна за подпис на Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Не е зададена — заявките се изпращат без подпис';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.';
 
   @override
   String get appSettings_offlineMapCache => 'Кеш на офлайн карти';

@@ -197,6 +197,7 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore nyílt forráskódú projekt",
+  "settings_aboutYandexMapsTerms": "Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Nyílt forráskódú Flutter kliens MeshCore LoRa mesh hálózati eszközökhöz.",
   "settings_aboutOpenMeteoAttribution": "LOS magassági adatok: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Név",
@@ -334,6 +335,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Adja meg a Stadia Maps API-kulcsát. Az alkalmazás ezt használja raszteres csempekérésekhez.",
+  "appSettings_yandexApiKey": "Yandex Tiles API-kulcs",
+  "appSettings_yandexApiKeyMissing": "Nincs beállítva – az OpenStreetMap jelenik meg",
+  "appSettings_yandexApiKeyDialogDescription": "Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex aláírási titok",
+  "appSettings_yandexSigningSecretMissing": "Nincs beállítva – a kérések aláírás nélkül mennek ki",
+  "appSettings_yandexSigningSecretDialogDescription": "Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.",
   "appSettings_offlineMapCache": "Offline térképgyorsítótár",
   "appSettings_unitsTitle": "Egységek",
   "appSettings_unitsMetric": "Metrikus (m/km)",

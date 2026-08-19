@@ -612,6 +612,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_aboutLegalese => 'MeshCore Open Source Projekt 2024';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Dlaždice mapy od Yandex Maps. Podmienky používania: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Otvorený zdrojový Flutter klient pre MeshCore LoRa sieťové zariadenia.';
 
@@ -1051,6 +1055,28 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Zadajte svoj kľúč API pre Stadia Maps. Aplikácia ho používa na požiadavky na rastrové dlaždice.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Kľúč Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Nenastavené – zobrazuje sa OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Zadajte vlastný kľúč z vývojárskeho účtu Yandex. Bezplatná úroveň Tiles API umožňuje až 30 požiadaviek za sekundu. Mapové údaje © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Podpisové tajomstvo Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Nenastavené – požiadavky odchádzajú bez podpisu';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Voliteľné. Vložte podpisové tajomstvo priradené k vášmu kľúču v konzole Yandex. Pri voliteľnom režime podpisu fungujú aj nepodpísané požiadavky.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Mapa Pamäť';

@@ -618,6 +618,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Тайлы карты: Яндекс Карты. Условия использования: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Открытое клиентское приложение на Flutter для устройств MeshCore в LoRa-сетях.';
 
@@ -1064,6 +1068,28 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Введите свой ключ API Stadia Maps. Приложение использует его для запросов растровых тайлов.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Ключ Tiles API Яндекса';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Не задан — показывается OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Введите свой ключ из кабинета разработчика Яндекса. Бесплатный тариф Tiles API допускает до 30 запросов в секунду. Данные карты © Яндекс.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Секрет подписи Яндекса';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Не задан — запросы отправляются без подписи';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.';
 
   @override
   String get appSettings_offlineMapCache => 'Кэш офлайн-карты';

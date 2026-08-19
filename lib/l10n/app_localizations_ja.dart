@@ -586,6 +586,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore オープンソースプロジェクト';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      '地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'MeshCore LoRa メッシュネットワークデバイス向けのオープンソース Flutter クライアント。';
 
@@ -1002,6 +1006,27 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API キー';
+
+  @override
+  String get appSettings_yandexApiKeyMissing => '未設定 — OpenStreetMap を表示します';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex 署名シークレット';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      '未設定 — リクエストは署名なしで送信されます';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      '任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。';
 
   @override
   String get appSettings_offlineMapCache => 'オフライン地図キャッシュ';

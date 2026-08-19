@@ -203,6 +203,7 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore オープンソースプロジェクト",
+  "settings_aboutYandexMapsTerms": "地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "MeshCore LoRa メッシュネットワークデバイス向けのオープンソース Flutter クライアント。",
   "settings_aboutOpenMeteoAttribution": "LOS 標高データ：Open-Meteo (CC BY 4.0)",
   "settings_infoName": "名前",
@@ -365,6 +366,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。",
+  "appSettings_yandexApiKey": "Yandex Tiles API キー",
+  "appSettings_yandexApiKeyMissing": "未設定 — OpenStreetMap を表示します",
+  "appSettings_yandexApiKeyDialogDescription": "Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。",
+  "appSettings_yandexSigningSecret": "Yandex 署名シークレット",
+  "appSettings_yandexSigningSecretMissing": "未設定 — リクエストは署名なしで送信されます",
+  "appSettings_yandexSigningSecretDialogDescription": "任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。",
   "appSettings_offlineMapCache": "オフライン地図キャッシュ",
   "appSettings_unitsTitle": "単位",
   "appSettings_unitsMetric": "メートル法 (m / km)",

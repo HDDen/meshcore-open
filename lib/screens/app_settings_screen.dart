@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../config/build_features.dart';
+import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/image_codec_support.dart';
@@ -1340,6 +1342,98 @@ class AppSettingsScreen extends StatelessWidget {
       ]);
     }
 
+    if (_isYandexSource(settingsService.settings)) {
+      children.addAll([
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showYandexApiKeyDialog(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.key_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_yandexApiKey,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _yandexApiKeySummary(context, settingsService.settings),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showYandexSigningSecretDialog(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.verified_user_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_yandexSigningSecret,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _yandexSigningSecretSummary(
+                          context,
+                          settingsService.settings,
+                        ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ]);
+    }
+
     return Column(children: children);
   }
 
@@ -1350,6 +1444,60 @@ class AppSettingsScreen extends StatelessWidget {
 
   bool _isStadiaSource(AppSettings settings) {
     return MapRasterSourceCatalog.fromSettings(settings).isStadia;
+  }
+
+  /// Source description, with the key console spelled out as a tappable link
+  /// where the source has one. Plain `Text` rather than a linkify widget: on
+  /// desktop that one is selectable, and selectable text inside a
+  /// `RadioListTile` swallows the tap that picks the option.
+  Widget _mapRasterSourceSubtitle(
+    BuildContext context,
+    MapRasterSourceDefinition option,
+  ) {
+    final consoleUrl = option.consoleUrl;
+    if (consoleUrl == null) return Text(option.description);
+    final baseStyle =
+        Theme.of(context).textTheme.bodySmall ?? const TextStyle();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(option.description),
+        const SizedBox(height: 2),
+        InkWell(
+          onTap: () =>
+              unawaited(LinkHandler.handleLinkTap(context, consoleUrl)),
+          child: Text(
+            consoleUrl,
+            style: LinkHandler.defaultLinkStyle(context, baseStyle),
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _isYandexSource(AppSettings settings) {
+    return MapRasterSourceCatalog.fromSettings(settings).isYandex;
+  }
+
+  String _yandexSigningSecretSummary(
+    BuildContext context,
+    AppSettings settings,
+  ) {
+    final secret = settings.effectiveMapYandexSigningSecret;
+    if (secret.isEmpty) {
+      return context.l10n.appSettings_yandexSigningSecretMissing;
+    }
+    return context.l10n.appSettings_stadiaApiKeyConfigured(
+      _maskApiKey(secret),
+    );
+  }
+
+  String _yandexApiKeySummary(BuildContext context, AppSettings settings) {
+    final apiKey = settings.effectiveMapYandexApiKey;
+    if (apiKey.isEmpty) return context.l10n.appSettings_yandexApiKeyMissing;
+    return context.l10n.appSettings_stadiaApiKeyConfigured(
+      _maskApiKey(apiKey),
+    );
   }
 
   String _mapRasterEndpointSummary(AppSettings settings) {
@@ -1405,7 +1553,10 @@ class AppSettingsScreen extends StatelessWidget {
                             return RadioListTile<String>(
                               value: preset.id,
                               title: Text(option.label),
-                              subtitle: Text(option.description),
+                              subtitle: _mapRasterSourceSubtitle(
+                                context,
+                                option,
+                              ),
                             );
                           },
                         ),
@@ -1531,6 +1682,113 @@ class AppSettingsScreen extends StatelessWidget {
               final apiKey = controller.text.trim();
               await settingsService.setMapTileApiKey(
                 apiKey == maskedApiKey ? currentApiKey : apiKey,
+              );
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(context.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Unlike the Stadia key there is no demo value to hide behind a mask, and
+  /// the user has to be able to check what they pasted, so the field shows the
+  /// key as entered.
+  void _showYandexApiKeyDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.effectiveMapYandexApiKey,
+    );
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.appSettings_yandexApiKey),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.appSettings_yandexApiKeyDialogDescription),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: '12345678-90ab-cdef-1234-567890abcdef',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              await settingsService.setMapYandexApiKey(controller.text.trim());
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+            },
+            child: Text(context.l10n.common_save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showYandexSigningSecretDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    final controller = TextEditingController(
+      text: settingsService.settings.effectiveMapYandexSigningSecret,
+    );
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.appSettings_yandexSigningSecret),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.appSettings_yandexSigningSecretDialogDescription,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'bXktc2lnbmluZy1zZWNyZXQ=',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              await settingsService.setMapYandexSigningSecret(
+                controller.text.trim(),
               );
               if (!dialogContext.mounted) return;
               Navigator.pop(dialogContext);

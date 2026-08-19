@@ -621,6 +621,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_aboutLegalese => 'Projekt MeshCore Open Source 2026';
 
   @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kafelki mapy: Yandex Maps. Warunki korzystania: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
   String get settings_aboutDescription =>
       'Otwartoźródłowy klient Flutter dla urządzeń MeshCore LoRa do sieci mesh.';
 
@@ -1065,6 +1069,28 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Wprowadź swój klucz API Stadia Maps. Aplikacja używa go do żądań kafelków rastrowych.';
+
+  @override
+  String get appSettings_yandexApiKey => 'Klucz Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Nie ustawiono — wyświetlany jest OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Wprowadź własny klucz z panelu dewelopera Yandex. Darmowy plan Tiles API pozwala na maksymalnie 30 żądań na sekundę. Dane mapy © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Sekret podpisu Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Nie ustawiono — żądania są wysyłane bez podpisu';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.';
 
   @override
   String get appSettings_offlineMapCache => 'Pamięć podręczna map offline';

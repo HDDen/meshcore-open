@@ -134,6 +134,7 @@
     }
   },
   "settings_aboutLegalese": "Projekt MeshCore Open Source 2026",
+  "settings_aboutYandexMapsTerms": "Kafelki mapy: Yandex Maps. Warunki korzystania: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Otwartoźródłowy klient Flutter dla urządzeń MeshCore LoRa do sieci mesh.",
   "settings_infoName": "Nazwa",
   "settings_infoId": "ID",
@@ -278,6 +279,12 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Wprowadź swój klucz API Stadia Maps. Aplikacja używa go do żądań kafelków rastrowych.",
+  "appSettings_yandexApiKey": "Klucz Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Nie ustawiono — wyświetlany jest OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Wprowadź własny klucz z panelu dewelopera Yandex. Darmowy plan Tiles API pozwala na maksymalnie 30 żądań na sekundę. Dane mapy © Yandex.",
+  "appSettings_yandexSigningSecret": "Sekret podpisu Yandex",
+  "appSettings_yandexSigningSecretMissing": "Nie ustawiono — żądania są wysyłane bez podpisu",
+  "appSettings_yandexSigningSecretDialogDescription": "Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.",
   "appSettings_offlineMapCache": "Pamięć podręczna map offline",
   "appSettings_noAreaSelected": "Nie wybrano żadnego obszaru.",
   "appSettings_areaSelectedZoom": "Wybrany obszar (skala {minZoom}-{maxZoom})",
