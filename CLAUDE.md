@@ -367,12 +367,29 @@ marker sets, rather than inside `_collectSharedMarkers` — that one is cached a
 which knows nothing about style changes.
 
 **"Remove for everyone".** `helpers/shared_marker_deletions.dart` (no imports of its own) holds
-the convention: the command is the marker's own text behind a `del:` prefix, sent back into its
-channel, so a client that does not know it just shows the line as text. Nothing is stored —
+the convention: the command is the marker's own text behind a `del:` prefix, sent back where the
+pin came from — its channel, or the contact or room server that shared it — so a client that does
+not know the convention just shows the line as text. `_SharedMarker` carries `channelIndex` or
+`contactKeyHex`, exactly one of the two, and `_sendMarkerDeletion` picks the route from that. Nothing is stored —
 `_collectSharedMarkers` reads the commands back out of the channel history, which gives two
 rules for free: a command only hides markers **older than itself**, so re-sharing the pin later
 brings it back, and deleting the command from the chat undoes it. `del:` lines therefore have to
-count towards `markerSignature`. In the chat the command renders as the POI badge with
+count towards `markerSignature`, and so does `repeatCount` — see below.
+
+`SharedMarkerDeletions` keeps our own commands apart until the mesh confirms one. The evidence
+differs by route and that is the only difference: a channel command waits for a repeater to echo
+it (`repeatCount == 0` means pending), a direct or room one waits for its ACK
+(`status != MessageStatus.delivered`), because nobody acknowledges a broadcast. A pending command
+hides nothing — `hides` stays false while `pendingHides` turns true, fading the pin to 0.4
+opacity instead of dropping it. Until then nothing has reached the mesh and the removal may still
+fail, so dropping the pin would claim a result nobody else has seen. A command that is never
+confirmed leaves the pin faded indefinitely, which is the truth; deleting the command message
+from the chat undoes it. The two maps are independent, so a second command that *is* confirmed
+removes the pin without waiting on the first.
+
+The contact loop gained that `absorb` as a fix as much as a feature: `parseMarkerText` is
+unanchored, so before it, a `del:m:...` line in a direct chat drew a second pin of its own. The
+direct chat's `_buildPoiMessage` takes `isRemoval` for the same reason the channel one does. In the chat the command renders as the POI badge with
 `chat_poiRemoved` and a struck-through pin icon, since `parseMarkerText` is unanchored and
 matches `del:m:...` as readily as `m:...`.
 
@@ -399,12 +416,12 @@ for byte, or it matches nothing. Hence:
   committing a queued or retried message re-uses text that was already normalised, and running
   the profile over it twice is exactly the rewrite described above.
 
-**The signed envelope.** On a channel with MCMP v3 *and* signing on — and on a room server with
-the same — a marker and its `del:` command travel inside the v3 container instead of as plain
-text. Compression is incidental; the signature is the point, since a plain `del:` lets anyone
-erase anyone's pin. `_isMcmpSignableText` takes `allowMarkerPayload`, set from
-`channelMcmpUseSign` / `contactMcmpUseSign`, and `ChannelBinaryDataHelper.tryEncodeOutbound`
-takes the same flag — its default `false` also keeps a `del:` out of the *unsigned* binary MCMP
+**The signed envelope.** On a channel with MCMP v3 *and* signing on, a marker and its `del:`
+command travel inside the v3 container instead of as plain text. Compression is incidental; the
+signature is the point, since a channel post carries nothing but a display name and a plain
+`del:` there lets anyone erase anyone's pin. `_isMcmpSignableText` takes `allowMarkerPayload`,
+set from `channelMcmpUseSign`, and `ChannelBinaryDataHelper.tryEncodeOutbound` takes the same
+flag — its default `false` also keeps a `del:` out of the *unsigned* binary MCMP
 path it used to slip into, since its structured-payload guard only knew the bare `m:` prefix.
 
 Two fallbacks keep it safe, both landing on plain text, which every client reads. A node that
@@ -422,8 +439,10 @@ status onto `_SharedMarker`, `_buildInfoRow` gained a trailing slot, and the sam
 than on the marker, so a plain-text pin shows nothing at all, and `mcmpSignatureStatus` rides in
 `markerSignature` so a manual re-check reaches the cached pin.
 
-Direct one-to-one chats are excluded on purpose: their ECDH transport already authenticates the
-sender, so an envelope there would cost bytes and prove nothing new. Queued previews
+Contacts are excluded on purpose, both kinds: a direct message is authenticated by its ECDH
+transport, and a room post carries the author's 4-byte key prefix (`fourByteRoomContactKey`,
+attached by the server and shown beside the name in the chat), so an envelope there would cost
+bytes and prove nothing the reader does not already have. Queued previews
 (`schedule*Message`) are excluded too — they sign nothing, and a preview should not promise a
 badge that only materialises at commit time.
 
