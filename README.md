@@ -227,6 +227,24 @@ mesh. Regions are managed in a dedicated screen and stored per channel. The same
 multi-byte path hashes (a configurable 1–4 byte per-hop hash width). Both have recently appeared
 in the original MeshCore Open as well.
 
+### Map markers — filtering, styling and shared removal
+
+Any pin shared into a chat shows up on the map. Which channels put pins there is now a choice:
+a picker lists every known channel, Public first and the rest alphabetically, each with a switch
+and a preview of its pin. Tapping the preview opens a palette of twelve colours and fifty icons,
+so a channel's markers can be told apart at a glance. Channels nobody has styled get colours
+handed out down the palette in order, and the settings are remembered per node.
+
+Markers received through the combined history of your other nodes are drawn as well, not only
+the ones this node heard.
+
+A pin can be hidden locally, removed locally, or **removed for everyone** — the last one sends a
+short command back into the same channel, and other clients drop that pin from their maps. The
+command is plain text, so a client that does not know the convention simply shows the line. It
+only affects pins shared before it: re-sharing the same marker afterwards brings it back, and
+deleting the command from the chat undoes it. Because the command has to repeat the marker text
+exactly, the pin caption is limited to leave room for it.
+
 ### Smaller additions
 
 - **Channel groups** and custom channel ordering, plus contact groups

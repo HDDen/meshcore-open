@@ -261,27 +261,80 @@ Their terms also ask for two attribution elements. The **About dialog link** is 
 
 Tile requests carry a per-host `User-Agent` (`headersForUrl`): `MCO (+…)` everywhere, since the OpenStreetMap tile policy blocks library defaults like `flutter_map (…)`, and a desktop-browser string for Yandex, whose tile endpoint is built for web clients. The provider is seeded with the app agent so `TileLayer`'s `putIfAbsent` cannot overwrite it.
 
-### Per-channel marker styling
+### Shared markers on the map
 
-Markers shared into a channel (`m:<lat>,<lon>|label|flags`) can be hidden or restyled per channel, from the map's overflow menu → `map_showMarksFromChannels`. The feature is kept out of `map_screen.dart` on purpose — it is fork-only, and the map screen is a merge hot spot. Four files own it: `models/channel_marker_style.dart` (the style and the palette), `storage/channel_marker_style_store.dart` (persistence), `helpers/channel_marker_styles.dart` (load/lookup/update plus channel ordering) and `widgets/channel_marker_settings_sheet.dart` (the whole UI). What is left in the map screen is one field, `syncTo` in `build`, `isVisible` in the marker filter, `styleFor` in the marker builder, one menu entry and a `channelName` on `_SharedMarker`.
+A marker shared into a chat is the text `m:<lat>,<lon>|<label>|<flags>`, parsed by
+`parseMarkerText`. `_collectSharedMarkers` in `map_screen.dart` turns every such message into a
+pin, grouping repeats of the same marker so the older positions become its history trail.
 
-Untouched channels are not stored at all — `ChannelMarkerStyle.defaultsFor(order)` derives their look from the channel's place in the picker, walking the palette in order and wrapping around. Public sorts first and so keeps green. `ChannelMarkerStyles.trackChannels` records that order, and the map refreshes it each build so a new channel does not shift the colours of the ones already stored. Default icon is `place`. Anything the user edits is written out and from then on wins over the default.
+**Where markers come from.** `getLoadedChannelMessagesWithShared` /
+`getLoadedMessagesWithShared` merge in shared history, so pins from another node appear too.
+Those getters never start a load; the map calls `ensureSharedChannelHistoryLoaded()` from
+`build` to warm every channel (idempotent, and a no-op when shared history is off). The same
+getters feed `_MapConnectorSnapshot.markerSignature` — the marker list is cached against that
+signature, so anything that should change the pins has to be visible to it.
 
-Markers are collected from `getLoadedChannelMessagesWithShared` / `getLoadedMessagesWithShared`, so pins shared from another node through shared history show up too. Those getters never start a load; the map calls `ensureSharedChannelHistoryLoaded()` once per build to warm every channel (idempotent, and a no-op when shared history is off). The same getters feed `_MapConnectorSnapshot.markerSignature`, otherwise the marker cache would never notice history arriving.
+**Per-channel styling.** Each channel decides whether its markers show at all, in what colour
+and with which icon — the map's overflow menu → `map_showMarksFromChannels`. The feature is kept
+out of `map_screen.dart` on purpose: it is fork-only and the map screen is a merge hot spot.
+Four files own it — `models/channel_marker_style.dart` (style and palette),
+`storage/channel_marker_style_store.dart` (persistence), `helpers/channel_marker_styles.dart`
+(load/lookup/update, channel ordering) and `widgets/channel_marker_settings_sheet.dart` (all
+UI). The map screen keeps one field, `syncTo` and `trackChannels` in `build`, `isVisible` in the
+marker filter, `styleFor` in the marker builder, one menu entry and `channelName` on
+`_SharedMarker`.
 
-Styles are stored as one JSON blob per node, **keyed by channel name** — indexes shift when channels are added or removed, and the name is what shared history matches across nodes. Reads are synchronous because a style is looked up while building every marker.
+Styles are one JSON blob per node, **keyed by channel name**: indexes shift when channels are
+added or removed, and the name is what shared history matches across nodes. Reads are
+synchronous because a style is looked up while building every marker. Colours and icons are
+stored as keys into `ChannelMarkerPalette`, never as an ARGB int and a code point — building
+`IconData` from a stored code point at runtime defeats the icon tree-shaker and pulls the whole
+Material font into the build.
 
-Colours and icons are stored as keys into `ChannelMarkerPalette`, never as an ARGB int and a code point: constructing `IconData` from a stored code point at runtime defeats the icon tree-shaker and pulls the whole Material font into the build. Defaults are not persisted, so a channel that was never touched leaves no key behind when it disappears.
+Untouched channels store nothing: `ChannelMarkerStyle.defaultsFor(order)` derives their look
+from the channel's place in the picker, walking the palette in order and wrapping around. Public
+sorts first and so keeps green; the default icon is `place`. Anything the user edits is written
+out and from then on wins. The visibility toggle filters in `build`, next to the hidden/removed
+marker sets, rather than inside `_collectSharedMarkers` — that one is cached against a signature
+which knows nothing about style changes.
 
-"Remove for everyone" lives in `helpers/shared_marker_deletions.dart`: the command is the marker's own text behind a `del:` prefix, sent back into its channel, so a client that does not know the convention just shows the line as text. Nothing is stored — `_collectSharedMarkers` reads the commands back out of the channel history, which is what gives the two rules for free: a command only hides markers **older than itself** (re-sharing the pin later brings it back), and deleting the command from the chat undoes it. `del:` lines must also count towards `markerSignature`, or the marker cache would not re-collect when one arrives.
+**"Remove for everyone".** `helpers/shared_marker_deletions.dart` (no imports of its own) holds
+the convention: the command is the marker's own text behind a `del:` prefix, sent back into its
+channel, so a client that does not know it just shows the line as text. Nothing is stored —
+`_collectSharedMarkers` reads the commands back out of the channel history, which gives two
+rules for free: a command only hides markers **older than itself**, so re-sharing the pin later
+brings it back, and deleting the command from the chat undoes it. `del:` lines therefore have to
+count towards `markerSignature`. In the chat the command renders as the POI badge with
+`chat_poiRemoved` and a struck-through pin icon, since `parseMarkerText` is unanchored and
+matches `del:m:...` as readily as `m:...`.
 
-Both a marker and its delete command are the one structured payload that still goes through cyr2lat in `prepareChannelOutboundText` / `prepareContactOutboundText` (`SharedMarkerDeletion.isMarkerPayload` decides). It is applied to the marker's **label only**, via `SharedMarkerDeletion.encodeLabel` — the coordinates and flags are structure, and a profile reaching them would make the message unparseable — while a Cyrillic caption costs twice the bytes. A `del:` command is deliberately excluded from **every** transform (`isMarker` gates cyr2lat, the broader `isMarkerPayload` keeps both clear of MCMP/SMAZ): it must repeat the label byte for byte, and whoever sends it may not be the marker's author — a different cyr2lat profile, or one that also maps Latin letters, would rewrite an already-transliterated label and the deletion would match nothing — and, critically, both sides must take the same transform: a command built from an untransformed label names a string the receivers never got. MCMP and SMAZ stay off for these, since they re-encode the whole string — `_isMcmpSignableText` excludes commands as well as markers.
+**Wire form — the part that is easy to break.** A command must repeat the marker's label byte
+for byte, or it matches nothing. Hence:
 
-Both chat screens transliterate the composer text themselves before handing it to the connector — that is what keeps a sent message reading the same for sender and receiver — so markers and commands are excluded there too, by the same `isMarkerPayload`. Otherwise a hand-typed `del:m:...|ттт|poi` would be rewritten whole and match nothing.
+- `SharedMarkerDeletion.isMarkerPayload` (marker *or* command) keeps both out of MCMP and SMAZ,
+  in `prepareChannelOutboundText` / `prepareContactOutboundText` and in `_isMcmpSignableText` —
+  those re-encode the whole string.
+- `SharedMarkerDeletion.isMarker` (marker only) gates cyr2lat, applied through
+  `encodeLabel` to the **label alone**: coordinates and flags are structure, and a profile
+  reaching them would make the message unparseable.
+- A `del:` command takes **no** transform at all. Whoever sends it may not be the marker's
+  author, and a different cyr2lat profile — or one that also maps Latin letters — would rewrite
+  an already-transliterated label.
+- Both chat screens transliterate composer text themselves before handing it to the connector;
+  markers and commands are excluded there too, or a hand-typed `del:m:...|ттт|poi` would be
+  rewritten whole.
+- `sendMessage` / `sendChannelMessage` and both `schedule*Message` normalise a marker **before
+  storing it**, not only before transmitting — otherwise the sender sees the typed Cyrillic
+  label while receivers see the transliterated one, and a queued message would change shape when
+  it finally goes out. Normalisation runs only for a first send (`pendingMessageId == null`):
+  committing a queued or retried message re-uses text that was already normalised, and running
+  the profile over it twice is exactly the rewrite described above.
 
-`sendMessage` / `sendChannelMessage` normalise a marker payload **before** storing it, not only before transmitting: otherwise the sender's chat and map show the typed Cyrillic label while every receiver sees the transliterated one, and a `del:` command built from the local text names a string nobody got. cyr2lat is idempotent, so the later prepare pass on the same string changes nothing.
-
-The toggle filters in `build`, alongside the hidden/removed marker sets, rather than inside `_collectSharedMarkers` — that one is cached against a connector signature which knows nothing about style changes.
+**Label budget.** `_maxMarkerLabelBytes` limits the pin caption at entry time: the channel
+budget for this node (which already accounts for `"<name>: "`), capped by the user's outgoing
+byte limit (which counts that prefix, so it is subtracted), less the marker scaffold, less
+`SharedMarkerDeletion.prefix.length` — those four bytes are reserved so the author can later
+send the same text back as a delete command without overflowing.
 
 ### Coordinates in message text
 
