@@ -754,7 +754,13 @@ class _MapScreenState extends State<MapScreen>
           }
         }
 
-        final allowBack = !connector.isConnected;
+        // The map is one of the tab-like entries, which stay arrow-less and
+        // unpoppable while connected. Opened on top of something else — a
+        // coordinate link in a chat, a shared marker, the location picker —
+        // it gets the arrow automatically and returns where it came from.
+        final showBackButton =
+            !widget.hideBackButton && Navigator.canPop(context);
+        final allowBack = showBackButton || !connector.isConnected;
 
         final visibleContacts = _filterContactsBySettings(
           contactsWithLocation,
@@ -784,7 +790,7 @@ class _MapScreenState extends State<MapScreen>
             appBar: AppBar(
               title: AppBarTitle(context.l10n.map_title),
               centerTitle: true,
-              automaticallyImplyLeading: false,
+              automaticallyImplyLeading: showBackButton,
               bottom: const SyncProgressAppBarBottom(),
               actions: [
                 if (!connector.isOfflineMode && !_isBuildingPathTrace)

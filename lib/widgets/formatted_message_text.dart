@@ -101,6 +101,12 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
 
     _disposeRecognizers();
     final linkStyle = LinkHandler.defaultLinkStyle(context, widget.style);
+    // A coordinate keeps the body colour and is marked by an underline alone —
+    // the look a message that is nothing but coordinates already has.
+    final coordinateStyle = widget.style.copyWith(
+      decoration: TextDecoration.underline,
+      decorationColor: widget.style.color,
+    );
     final spans = <InlineSpan>[...widget.leadingSpans];
 
     // Markup is the outer layer: it decides how a run looks, and mentions and
@@ -152,7 +158,7 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
               spans.add(
                 TextSpan(
                   text: part.text,
-                  style: _applyMarkup(linkStyle, block.styles),
+                  style: _applyMarkup(coordinateStyle, block.styles),
                   recognizer: recognizer,
                 ),
               );
