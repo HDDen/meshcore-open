@@ -326,16 +326,18 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
         subtitle: isBluetoothOff
             ? context.l10n.scanner_bluetoothOffMessage
             : null,
-        action: (isBluetoothOff || isScanning)
-            ? null
-            : FilledButton.icon(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  _toggleScan(connector);
-                },
-                icon: const Icon(Icons.bluetooth_searching),
-                label: Text(context.l10n.scanner_scan),
-              ),
+        // Duplicated the scan button in the bottom bar, so it is kept here
+        // only in case the centred layout is wanted back.
+        // action: (isBluetoothOff || isScanning)
+        //     ? null
+        //     : FilledButton.icon(
+        //         onPressed: () {
+        //           HapticFeedback.lightImpact();
+        //           _toggleScan(connector);
+        //         },
+        //         icon: const Icon(Icons.bluetooth_searching),
+        //         label: Text(context.l10n.scanner_scan),
+        //       ),
       );
     }
 
