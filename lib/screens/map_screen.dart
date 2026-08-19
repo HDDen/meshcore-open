@@ -33,8 +33,12 @@ import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../helpers/channel_marker_styles.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/offline_mode_helper.dart';
+import '../helpers/utf8_length_limiter.dart';
+import '../helpers/shared_marker_deletions.dart';
+import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -92,6 +96,11 @@ class _MapScreenState extends State<MapScreen>
   final GlobalKey _mapBodyKey = GlobalKey();
   final GlobalKey _wardrivePanelKey = GlobalKey();
   final MapMarkerService _markerService = MapMarkerService();
+  late final ChannelMarkerStyles _channelMarkerStyles = ChannelMarkerStyles(
+    onChanged: () {
+      if (mounted) setState(() {});
+    },
+  );
   final WardriveUploadService _wardriveUploadService = WardriveUploadService();
   final Set<String> _hiddenMarkerIds = {};
   Set<String> _removedMarkerIds = {};
@@ -469,6 +478,9 @@ class _MapScreenState extends State<MapScreen>
         );
         final pathHistoryVersion = pathHistory.version;
         final allContacts = connector.allContacts;
+        _channelMarkerStyles.syncTo(connector.selfPublicKeyHex);
+        _channelMarkerStyles.trackChannels(connector.channels);
+        connector.ensureSharedChannelHistoryLoaded();
 
         final contacts = settings.mapShowDiscoveryContacts
             ? allContacts
@@ -483,7 +495,8 @@ class _MapScreenState extends State<MapScreen>
                   .where(
                     (marker) =>
                         !_hiddenMarkerIds.contains(marker.id) &&
-                        !_removedMarkerIds.contains(marker.id),
+                        !_removedMarkerIds.contains(marker.id) &&
+                        _channelMarkerStyles.isVisible(marker.channelName),
                   )
                   .toList()
             : <_SharedMarker>[];
@@ -908,6 +921,17 @@ class _MapScreenState extends State<MapScreen>
                         onTap: () =>
                             _clearDiscoveredContactsCache(context, connector),
                       ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.pin_drop_outlined,
+                        text: context.l10n.map_showMarksFromChannels,
+                      ),
+                      onTap: () => showChannelMarkerSettings(
+                        context,
+                        connector,
+                        _channelMarkerStyles,
+                      ),
+                    ),
                     PopupMenuItem(
                       child: PopupMenuRow(
                         icon: Icons.logout,
@@ -4426,7 +4450,7 @@ class _MapScreenState extends State<MapScreen>
     }
 
     for (final contact in connector.contacts) {
-      final messages = connector.getLoadedMessages(contact);
+      final messages = connector.getLoadedMessagesWithShared(contact);
       for (final message in messages) {
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
@@ -4456,10 +4480,14 @@ class _MapScreenState extends State<MapScreen>
       }
     }
 
+    final deletionsByChannel = <int, SharedMarkerDeletions>{};
     for (final channel in connector.channels.where((c) => !c.isEmpty)) {
       final isPublic = _isPublicChannel(channel);
-      final messages = connector.getLoadedChannelMessages(channel);
+      final messages = connector.getLoadedChannelMessagesWithShared(channel);
+      final deletions = deletionsByChannel[channel.index] =
+          SharedMarkerDeletions();
       for (final message in messages) {
+        if (deletions.absorb(message.text, message.timestamp)) continue;
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
         final key = buildSharedMarkerKey(
@@ -4484,6 +4512,9 @@ class _MapScreenState extends State<MapScreen>
             timestamp: message.timestamp,
             isChannel: true,
             isPublicChannel: isPublic,
+            channelName: channel.name,
+            channelIndex: channel.index,
+            sourceText: message.text.trim(),
           ),
         );
       }
@@ -4503,6 +4534,15 @@ class _MapScreenState extends State<MapScreen>
           history.add(p);
         }
       }
+      final channelIndex = latest.channelIndex;
+      if (channelIndex != null &&
+          (deletionsByChannel[channelIndex]?.hides(
+                latest.sourceText,
+                latest.timestamp,
+              ) ??
+              false)) {
+        return;
+      }
       markers.add(latest.copyWithHistory(history));
     });
 
@@ -4514,9 +4554,14 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Marker _buildSharedMarker(_SharedMarker marker) {
-    final markerColor = marker.isChannel
-        ? (marker.isPublicChannel ? MapPalette.cluster : MapPalette.router)
-        : MapPalette.shared;
+    final style = marker.channelName == null
+        ? null
+        : _channelMarkerStyles.styleFor(marker.channelName);
+    final markerColor = style?.color ??
+        (marker.isChannel
+            ? (marker.isPublicChannel ? MapPalette.cluster : MapPalette.router)
+            : MapPalette.shared);
+    final markerIcon = style?.icon ?? Icons.flag;
     return Marker(
       point: marker.position,
       width: 60,
@@ -4549,7 +4594,7 @@ class _MapScreenState extends State<MapScreen>
                 ],
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.flag, color: Colors.white, size: 19),
+              child: Icon(markerIcon, color: Colors.white, size: 19),
             ),
           ],
         ),
@@ -4825,6 +4870,33 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  /// Sends a "remove for everyone" command back into the marker's channel.
+  /// Returns false when the channel is gone or the app is offline.
+  Future<bool> _sendMarkerDeletion(
+    MeshCoreConnector connector,
+    _SharedMarker marker,
+  ) async {
+    if (connector.isOfflineMode) return false;
+    for (final channel in connector.channels) {
+      if (channel.index != marker.channelIndex || channel.isEmpty) continue;
+      await connector.sendChannelMessage(
+        channel,
+        SharedMarkerDeletion.commandFor(marker.sourceText),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Dialog action labels are clipped rather than wrapped, so four of them
+  /// stay on one line however long the translation is.
+  Widget _markerActionLabel(String text) => Text(
+    text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    textAlign: TextAlign.center,
+  );
+
   void _showMarkerInfo(_SharedMarker marker) {
     showDialog(
       context: context,
@@ -4850,35 +4922,76 @@ class _MapScreenState extends State<MapScreen>
               _buildInfoRow(context.l10n.map_flags, marker.flags),
           ],
         ),
+        // One Row instead of the default OverflowBar: with four entries it
+        // flips to a vertical stack, which turns the dialog into a column of
+        // buttons. Sharing the width and clipping the labels reads better.
+        actionsPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _hiddenMarkerIds.add(marker.id);
-              });
-              Navigator.pop(dialogContext);
-            },
-            child: Text(context.l10n.common_hide),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () async {
-              setState(() {
-                _hiddenMarkerIds.add(marker.id);
-                _removedMarkerIds.add(marker.id);
-              });
-              await _markerService.saveRemovedIds(_removedMarkerIds);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-            },
-            child: Text(context.l10n.common_remove),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_close),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _hiddenMarkerIds.add(marker.id);
+                    });
+                    Navigator.pop(dialogContext);
+                  },
+                  child: _markerActionLabel(context.l10n.common_hide),
+                ),
+              ),
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  onPressed: () async {
+                    setState(() {
+                      _hiddenMarkerIds.add(marker.id);
+                      _removedMarkerIds.add(marker.id);
+                    });
+                    await _markerService.saveRemovedIds(_removedMarkerIds);
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
+                  },
+                  child: _markerActionLabel(context.l10n.common_remove),
+                ),
+              ),
+              if (marker.channelIndex != null && marker.sourceText.isNotEmpty)
+                Expanded(
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    onPressed: () async {
+                      // Closed before the send, not after: the command goes
+                      // through the normal outbound queue and can sit there,
+                      // and leaving the dialog up meanwhile reads as a hang.
+                      final connector = context.read<MeshCoreConnector>();
+                      Navigator.pop(dialogContext);
+                      final sent = await _sendMarkerDeletion(connector, marker);
+                      if (!sent && mounted) {
+                        showDismissibleSnackBar(
+                          context,
+                          content: Text(
+                            context.l10n.app_offline_unableToMessage,
+                          ),
+                        );
+                      }
+                    },
+                    child: _markerActionLabel(
+                      context.l10n.map_removeMarkerForEveryone,
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: _markerActionLabel(context.l10n.common_close),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -5018,7 +5131,11 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
 
-    final label = await _promptForLabel(context, defaultLabel);
+    final label = await _promptForLabel(
+      context,
+      defaultLabel,
+      maxLabelBytes: _maxMarkerLabelBytes(position, flags),
+    );
     if (label == null || !mounted) return;
 
     final markerText = _formatMarkerMessage(position, label, flags);
@@ -5032,10 +5149,35 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  /// Bytes left for the label.
+  ///
+  /// Starts from the channel budget for this node — which already accounts for
+  /// `"<name>: "` — then applies the user's outgoing cap, which counts that
+  /// same prefix and so has it subtracted. What remains loses the marker
+  /// scaffold and the `del:` prefix, so the author can later send this exact
+  /// marker text back as a "remove for everyone" command without overflowing.
+  int _maxMarkerLabelBytes(LatLng position, String flags) {
+    final connector = context.read<MeshCoreConnector>();
+    var limit = maxChannelMessageBytes(connector.selfName);
+    final outgoingLimit = context
+        .read<AppSettingsService>()
+        .settings
+        .channelMaxbytesOutgoing;
+    if (outgoingLimit > 0) {
+      final capped =
+          outgoingLimit - channelSenderPrefixBytes(connector.selfName);
+      limit = min(limit, max(0, capped));
+    }
+    final scaffold = utf8.encode(_formatMarkerMessage(position, '', flags));
+    final reserved = scaffold.length + SharedMarkerDeletion.prefix.length;
+    return max(0, limit - reserved);
+  }
+
   Future<String?> _promptForLabel(
     BuildContext context,
-    String defaultLabel,
-  ) async {
+    String defaultLabel, {
+    required int maxLabelBytes,
+  }) async {
     final controller = TextEditingController(text: defaultLabel);
     controller.selection = TextSelection(
       baseOffset: 0,
@@ -5047,6 +5189,9 @@ class _MapScreenState extends State<MapScreen>
         title: Text(context.l10n.map_pinLabel),
         content: TextField(
           controller: controller,
+          inputFormatters: [
+            Utf8LengthLimitingTextInputFormatter(maxLabelBytes),
+          ],
           decoration: InputDecoration(
             hintText: context.l10n.map_label,
             border: const OutlineInputBorder(),
@@ -5929,7 +6074,7 @@ class _MapConnectorSnapshot {
     for (final contact in connector.contacts) {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);
-      for (final message in connector.getLoadedMessages(contact)) {
+      for (final message in connector.getLoadedMessagesWithShared(contact)) {
         if (!message.text.trimLeft().startsWith('m:')) continue;
         markerParts.add(
           Object.hash(
@@ -5950,8 +6095,14 @@ class _MapConnectorSnapshot {
           channel.isEmpty,
         ),
       );
-      for (final message in connector.getLoadedChannelMessages(channel)) {
-        if (!message.text.trimLeft().startsWith('m:')) continue;
+      for (final message in connector.getLoadedChannelMessagesWithShared(
+        channel,
+      )) {
+        final text = message.text.trimLeft();
+        if (!text.startsWith('m:') &&
+            !text.startsWith(SharedMarkerDeletion.prefix)) {
+          continue;
+        }
         markerParts.add(
           Object.hash(
             message.messageId,
@@ -6198,6 +6349,15 @@ class _SharedMarker {
   final DateTime timestamp;
   final bool isChannel;
   final bool isPublicChannel;
+
+  /// Channel this came from, for looking up the per-channel marker style and
+  /// for sending a delete command back. Null for a direct chat.
+  final String? channelName;
+  final int? channelIndex;
+
+  /// The message text this marker was parsed from, which is also what a
+  /// `del:` command names.
+  final String sourceText;
   final List<LatLng> history;
 
   _SharedMarker({
@@ -6210,6 +6370,9 @@ class _SharedMarker {
     required this.timestamp,
     required this.isChannel,
     required this.isPublicChannel,
+    this.channelName,
+    this.channelIndex,
+    this.sourceText = '',
     this.history = const [],
   });
 
@@ -6224,6 +6387,9 @@ class _SharedMarker {
       timestamp: timestamp,
       isChannel: isChannel,
       isPublicChannel: isPublicChannel,
+      channelName: channelName,
+      channelIndex: channelIndex,
+      sourceText: sourceText,
       history: newHistory,
     );
   }

@@ -618,10 +618,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_aboutLegalese => 'Proyecto MeshCore Open Source 2026';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Un cliente Flutter de código abierto para dispositivos MeshCore de malla LoRa.';
 
@@ -1065,40 +1061,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Introduce tu clave API de Stadia Maps. La aplicación la usa para solicitar teselas ráster.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Clave de Yandex Tiles API';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Sin configurar: se muestra OpenStreetMap';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Secreto de firma de Yandex';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Sin configurar: las solicitudes se envían sin firma';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Resolución de teselas de Yandex';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Actual: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.';
 
   @override
   String get appSettings_offlineMapCache => 'Caché de mapa sin conexión';
@@ -5964,15 +5926,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get app_offline_sharedMode => 'Historial combinado';
 
   @override
-  String get map_copyCoordsFromMap => 'Copiar coordenadas';
-
-  @override
-  String get map_coordsCopied => 'Coordenadas copiadas';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6220,4 +6173,66 @@ class AppLocalizationsEs extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes min $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Copiar coordenadas';
+
+  @override
+  String get map_coordsCopied => 'Coordenadas copiadas';
+
+  @override
+  String get appSettings_yandexApiKey => 'Clave de Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Sin configurar: se muestra OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Secreto de firma de Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Sin configurar: las solicitudes se envían sin firma';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Resolución de teselas de Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Actual: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Mostrar marcadores de...';
+
+  @override
+  String get map_markerStyleTitle => 'Estilo del marcador';
+
+  @override
+  String get map_markerStyleColor => 'Color de relleno';
+
+  @override
+  String get map_markerStyleIcon => 'Icono';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Quitar para todos';
+
+  @override
+  String get chat_poiRemoved => 'POI eliminado';
 }

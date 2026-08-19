@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "Проект MeshCore с отворен код 2024 г.",
-  "settings_aboutYandexMapsTerms": "Плочки на картата от Yandex Maps. Условия за ползване: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Отворен Flutter клиент за MeshCore LoRa мрежови устройства.",
   "settings_infoName": "Име",
   "settings_infoId": "ИД",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Въведете своя API ключ за Stadia Maps. Приложението го използва за заявки за растерни плочки.",
-  "appSettings_yandexApiKey": "Ключ за Yandex Tiles API",
-  "appSettings_yandexApiKeyMissing": "Не е зададен — показва се OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "Въведете собствен ключ от разработчиеския кабинет на Yandex. Безплатният план на Tiles API позволява до 30 заявки в секунда. Данни за картата © Yandex.",
-  "appSettings_yandexSigningSecret": "Тайна за подпис на Yandex",
-  "appSettings_yandexSigningSecretMissing": "Не е зададена — заявките се изпращат без подпис",
-  "appSettings_yandexSigningSecretDialogDescription": "По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.",
-  "appSettings_yandexTileScale": "Резолюция на плочките на Yandex",
-  "appSettings_yandexTileScaleSubtitle": "Сега: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.",
   "appSettings_offlineMapCache": "Кеш на офлайн карти",
   "appSettings_noAreaSelected": "Няма избрана област",
   "appSettings_areaSelectedZoom": "Избрана е област (мащаб {minZoom}-{maxZoom})",
@@ -698,8 +681,6 @@
   "map_source": "Източник",
   "map_flags": "Флагове",
   "map_shareMarkerHere": "Споделете маркер тук",
-  "map_copyCoordsFromMap": "Копиране на координатите",
-  "map_coordsCopied": "Координатите са копирани",
   "map_pinLabel": "Етикет на пина",
   "map_label": "Етикет",
   "map_pointOfInterest": "Точка на интерес",
@@ -3380,5 +3361,30 @@
   "receivedImage_awaiting": "{bytes} байта · {packets} {packets, plural, =1{пакет} other{пакета}}",
   "imageSend_secondsValue": "{seconds} секунди",
   "imageSend_minutesSecondsValue": "{minutes} мин {seconds} сек",
-  "app_connectionLostBreaked": "Връзката с възела е прекъсната"
+  "app_connectionLostBreaked": "Връзката с възела е прекъсната",
+  "map_copyCoordsFromMap": "Копиране на координатите",
+  "map_coordsCopied": "Координатите са копирани",
+  "appSettings_yandexApiKey": "Ключ за Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Не е зададен — показва се OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Въведете собствен ключ от разработчиеския кабинет на Yandex. Безплатният план на Tiles API позволява до 30 заявки в секунда. Данни за картата © Yandex.",
+  "appSettings_yandexSigningSecret": "Тайна за подпис на Yandex",
+  "appSettings_yandexSigningSecretMissing": "Не е зададена — заявките се изпращат без подпис",
+  "appSettings_yandexSigningSecretDialogDescription": "По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.",
+  "appSettings_yandexTileScale": "Резолюция на плочките на Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Сега: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.",
+  "settings_aboutYandexMapsTerms": "Плочки на картата от Yandex Maps. Условия за ползване: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Показване на маркери от...",
+  "map_markerStyleTitle": "Стил на маркера",
+  "map_markerStyleColor": "Цвят на запълване",
+  "map_markerStyleIcon": "Икона",
+  "map_removeMarkerForEveryone": "Премахване за всички",
+  "chat_poiRemoved": "Точката е премахната"
 }

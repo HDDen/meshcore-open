@@ -619,10 +619,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings_aboutLegalese => 'Projeto MeshCore de Código Aberto 2024';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Blocos do mapa por Yandex Maps. Termos de uso: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Um cliente Flutter de código aberto para dispositivos de rede mesh LoRa Core da MeshCore.';
 
@@ -1065,41 +1061,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Insira sua chave da API Stadia Maps. O aplicativo a usa para solicitações de blocos raster.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Chave da API Yandex Tiles';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Não definida — o OpenStreetMap é exibido';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Insira sua própria chave do painel de desenvolvedor da Yandex. O plano gratuito da Tiles API permite até 30 solicitações por segundo. Dados do mapa © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret =>
-      'Segredo de assinatura da Yandex';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Não definido — as solicitações são enviadas sem assinatura';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Opcional. Cole o segredo de assinatura vinculado à sua chave no console da Yandex. No modo de assinatura opcional, solicitações sem assinatura também funcionam.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Resolução dos blocos da Yandex';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Atual: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Valores maiores solicitam o mesmo bloco com mais pixels — mais nítido em telas densas, porém com mais tráfego e espaço em cache.';
 
   @override
   String get appSettings_offlineMapCache => 'Cache de Mapa Offline';
@@ -5956,15 +5917,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get app_offline_sharedMode => 'Histórico combinado';
 
   @override
-  String get map_copyCoordsFromMap => 'Copiar coordenadas';
-
-  @override
-  String get map_coordsCopied => 'Coordenadas copiadas';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6211,4 +6163,67 @@ class AppLocalizationsPt extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes min $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Copiar coordenadas';
+
+  @override
+  String get map_coordsCopied => 'Coordenadas copiadas';
+
+  @override
+  String get appSettings_yandexApiKey => 'Chave da API Yandex Tiles';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Não definida — o OpenStreetMap é exibido';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Insira sua própria chave do painel de desenvolvedor da Yandex. O plano gratuito da Tiles API permite até 30 solicitações por segundo. Dados do mapa © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret =>
+      'Segredo de assinatura da Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Não definido — as solicitações são enviadas sem assinatura';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Opcional. Cole o segredo de assinatura vinculado à sua chave no console da Yandex. No modo de assinatura opcional, solicitações sem assinatura também funcionam.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Resolução dos blocos da Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Atual: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Valores maiores solicitam o mesmo bloco com mais pixels — mais nítido em telas densas, porém com mais tráfego e espaço em cache.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Blocos do mapa por Yandex Maps. Termos de uso: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Mostrar marcadores de...';
+
+  @override
+  String get map_markerStyleTitle => 'Estilo do marcador';
+
+  @override
+  String get map_markerStyleColor => 'Cor de preenchimento';
+
+  @override
+  String get map_markerStyleIcon => 'Ícone';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Remover para todos';
+
+  @override
+  String get chat_poiRemoved => 'POI removido';
 }

@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "Odprtokodni projekt MeshCore 2024",
-  "settings_aboutYandexMapsTerms": "Ploščice zemljevida: Yandex Maps. Pogoji uporabe: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Odprtokodni Flutter klient za naprave za LoRa omrežje MeshCore.",
   "settings_infoName": "Ime",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Vnesite svoj ključ API za Stadia Maps. Aplikacija ga uporablja za zahteve rastrskih ploščic.",
-  "appSettings_yandexApiKey": "Ključ Yandex Tiles API",
-  "appSettings_yandexApiKeyMissing": "Ni nastavljen – prikazan je OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "Vnesite svoj ključ iz razvijalske nadzorne plošče Yandex. Brezplačni paket Tiles API dovoljuje do 30 zahtev na sekundo. Podatki zemljevida © Yandex.",
-  "appSettings_yandexSigningSecret": "Skrivnost za podpis Yandex",
-  "appSettings_yandexSigningSecretMissing": "Ni nastavljena – zahteve gredo brez podpisa",
-  "appSettings_yandexSigningSecretDialogDescription": "Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.",
-  "appSettings_yandexTileScale": "Ločljivost ploščic Yandex",
-  "appSettings_yandexTileScaleSubtitle": "Trenutno: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.",
   "appSettings_offlineMapCache": "Shramba zemljevidov brez povezave",
   "appSettings_noAreaSelected": "Območje ni izbrano",
   "appSettings_areaSelectedZoom": "Izbrano območje (povečava {minZoom}-{maxZoom})",
@@ -698,8 +681,6 @@
   "map_source": "Vir",
   "map_flags": "Zapestnice",
   "map_shareMarkerHere": "Delite točke tukaj.",
-  "map_copyCoordsFromMap": "Kopiraj koordinate",
-  "map_coordsCopied": "Koordinate kopirane",
   "map_pinLabel": "Oznaka za pritrditev",
   "map_label": "Oznaka",
   "map_pointOfInterest": "Točka zanimivosti",
@@ -3380,5 +3361,30 @@
   "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
   "imageSend_secondsValue": "{seconds} s",
   "imageSend_minutesSecondsValue": "{minutes} m {seconds} s",
-  "app_connectionLostBreaked": "Povezava z vozliščem je prekinjena"
+  "app_connectionLostBreaked": "Povezava z vozliščem je prekinjena",
+  "map_copyCoordsFromMap": "Kopiraj koordinate",
+  "map_coordsCopied": "Koordinate kopirane",
+  "appSettings_yandexApiKey": "Ključ Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Ni nastavljen – prikazan je OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Vnesite svoj ključ iz razvijalske nadzorne plošče Yandex. Brezplačni paket Tiles API dovoljuje do 30 zahtev na sekundo. Podatki zemljevida © Yandex.",
+  "appSettings_yandexSigningSecret": "Skrivnost za podpis Yandex",
+  "appSettings_yandexSigningSecretMissing": "Ni nastavljena – zahteve gredo brez podpisa",
+  "appSettings_yandexSigningSecretDialogDescription": "Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.",
+  "appSettings_yandexTileScale": "Ločljivost ploščic Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Trenutno: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.",
+  "settings_aboutYandexMapsTerms": "Ploščice zemljevida: Yandex Maps. Pogoji uporabe: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Prikaži oznake iz...",
+  "map_markerStyleTitle": "Slog oznake",
+  "map_markerStyleColor": "Barva polnila",
+  "map_markerStyleIcon": "Ikona",
+  "map_removeMarkerForEveryone": "Odstrani za vse",
+  "chat_poiRemoved": "POI odstranjen"
 }

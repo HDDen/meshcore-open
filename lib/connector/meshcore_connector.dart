@@ -20,6 +20,7 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
@@ -1069,6 +1070,38 @@ class MeshCoreConnector extends ChangeNotifier {
     // Side-effect-free read for aggregate screens; getChannelMessages() may
     // trigger shared-history loading and should only be used for a focused chat.
     return _channelMessages[channel.index] ?? const [];
+  }
+
+  /// Like [getLoadedChannelMessages], plus shared history that is already in
+  /// memory. Still starts no load of its own — call
+  /// [ensureSharedChannelHistoryLoaded] for that — so an aggregate screen can
+  /// read other nodes' messages without pulling every channel on every build.
+  List<ChannelMessage> getLoadedChannelMessagesWithShared(Channel channel) {
+    final primary = _channelMessages[channel.index] ?? const <ChannelMessage>[];
+    if (isOfflineMode || !_sharedChannelsEnabled) return primary;
+    final secondary = _sharedChannelSecondaryMessages[channel.index];
+    if (secondary == null || secondary.isEmpty) return primary;
+    return _mergeChannelMessages(primary, secondary);
+  }
+
+  /// Contact-chat counterpart of [getLoadedChannelMessagesWithShared].
+  List<Message> getLoadedMessagesWithShared(Contact contact) {
+    final primary = _conversations[contact.publicKeyHex] ?? const <Message>[];
+    if (isOfflineMode || !_sharedContactsEnabled) return primary;
+    final secondary = _sharedContactSecondaryMessages[contact.publicKeyHex];
+    if (secondary == null || secondary.isEmpty) return primary;
+    return _mergeContactMessages(primary, secondary);
+  }
+
+  /// Warms shared history for every channel, so a screen that shows all
+  /// channels at once — the map and its shared markers — sees other nodes'
+  /// messages. Each channel loads once; repeat calls are no-ops.
+  void ensureSharedChannelHistoryLoaded() {
+    if (!_sharedChannelsEnabled) return;
+    for (final channel in _channels) {
+      if (channel.isEmpty) continue;
+      _ensureSharedChannelHistory(channel);
+    }
   }
 
   Future<void> deleteMessage(Message message) async {
@@ -5177,7 +5210,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> sendMessage(
     Contact contact,
-    String text, {
+    String rawText, {
     String? uncompressedText,
     String? originalText,
     String? translatedLanguageCode,
@@ -5185,6 +5218,15 @@ class MeshCoreConnector extends ChangeNotifier {
     String? pendingMessageId,
     DateTime? pendingTimestamp,
   }) async {
+    // A marker is normalised before anything else: what is stored, what goes
+    // on the wire and what a later `del:` command names have to be one string.
+    // Skipped when committing a queued or retried message — that text came out
+    // of a message we already normalised, and a profile that also maps Latin
+    // letters would rewrite it again.
+    final text =
+        pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
+        ? prepareContactOutboundText(contact, rawText)
+        : rawText;
     if (text.isEmpty || isOfflineMode) return;
     if (!isSessionReady) {
       if (pendingMessageId == null) {
@@ -5689,7 +5731,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> sendChannelMessage(
     Channel channel,
-    String text, {
+    String rawText, {
     EncodedMCOImageV3? mcoImageV3,
     String? uncompressedText,
     String? originalText,
@@ -5704,6 +5746,11 @@ class MeshCoreConnector extends ChangeNotifier {
     DateTime? pendingTimestamp,
     DateTime? pendingReceivedAt,
   }) async {
+    // See sendMessage: normalised up front, and only for a first send.
+    final text =
+        pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
+        ? prepareChannelOutboundText(channel.index, rawText)
+        : rawText;
     if (text.isEmpty || isOfflineMode) return;
     if (!isSessionReady) {
       if (pendingMessageId == null) {
@@ -6725,7 +6772,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void scheduleContactMessage(
     Contact contact,
-    String text, {
+    String rawText, {
     required String inputText,
     String? uncompressedText,
     required int delaySeconds,
@@ -6733,6 +6780,11 @@ class MeshCoreConnector extends ChangeNotifier {
     String? translatedLanguageCode,
     String? translationModelId,
   }) {
+    // Normalised here as well as in sendMessage: a queued message is drawn
+    // from this text, and it should read the way it will be transmitted.
+    final text = SharedMarkerDeletion.isMarker(rawText)
+        ? prepareContactOutboundText(contact, rawText)
+        : rawText;
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     final resolved = resolvePathSelection(contact);
     // Preview only: the real send re-prepares (and re-signs) at commit time.
@@ -6792,7 +6844,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void scheduleChannelMessage(
     Channel channel,
-    String text, {
+    String rawText, {
     required String inputText,
     EncodedMCOImageV3? mcoImageV3,
     String? uncompressedText,
@@ -6805,6 +6857,10 @@ class MeshCoreConnector extends ChangeNotifier {
     String? replyToText,
     int? replyToTimestamp,
   }) {
+    // See scheduleContactMessage.
+    final text = SharedMarkerDeletion.isMarker(rawText)
+        ? prepareChannelOutboundText(channel.index, rawText)
+        : rawText;
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     final outboundText = prepareChannelOutboundText(channel.index, text);
     final binaryOutbound = mcoImageV3 != null
@@ -9423,7 +9479,7 @@ class MeshCoreConnector extends ChangeNotifier {
     return !MCOImageV3Codec.isTextPayload(trimmedLeft) &&
         !trimmedLeft.startsWith(MCOImageCodec.prefix) &&
         !trimmed.startsWith('g:') &&
-        !trimmed.startsWith('m:') &&
+        !SharedMarkerDeletion.isMarkerPayload(trimmed) &&
         !trimmed.startsWith('V1|') &&
         // Shared contact payloads (<pubkey:type:name>) must travel as plain
         // text so receivers can parse them.
@@ -9567,11 +9623,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
+    final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(trimmed);
     final isStructuredPayload =
         MCOImageV3Codec.isTextPayload(trimmedLeft) ||
         trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
-        trimmed.startsWith('m:') ||
+        isMarkerPayload ||
         trimmed.startsWith('V1|') ||
         parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
@@ -9603,24 +9660,35 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isContactSmazEnabled(contact.publicKeyHex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isContactCyr2LatEnabled(contact.publicKeyHex)) {
-        final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
-        final profile = profileId != null && _appSettingsService != null
-            ? _appSettingsService!.getCyr2LatProfileById(profileId)
-            : null;
-        if (profile != null) {
-          Cyr2Lat.setCharMap(profile.charMap);
-        } else {
-          // Use global profile
-          final globalProfile = _appSettingsService
-              ?.getSelectedCyr2LatProfile();
-          if (globalProfile != null) {
-            Cyr2Lat.setCharMap(globalProfile.charMap);
-          }
-        }
-        return Cyr2Lat.encode(text);
+        return _encodeContactCyr2Lat(contact, text);
       }
     }
+    // See prepareChannelOutboundText: a marker label takes cyr2lat whenever the
+    // chat has it on; a `del:` command never does.
+    if (SharedMarkerDeletion.isMarker(trimmed) &&
+        isContactCyr2LatEnabled(contact.publicKeyHex)) {
+      return SharedMarkerDeletion.encodeLabel(
+        text,
+        (label) => _encodeContactCyr2Lat(contact, label),
+      );
+    }
     return text;
+  }
+
+  String _encodeContactCyr2Lat(Contact contact, String text) {
+    final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
+    final profile = profileId != null && _appSettingsService != null
+        ? _appSettingsService!.getCyr2LatProfileById(profileId)
+        : null;
+    if (profile != null) {
+      Cyr2Lat.setCharMap(profile.charMap);
+    } else {
+      final globalProfile = _appSettingsService?.getSelectedCyr2LatProfile();
+      if (globalProfile != null) {
+        Cyr2Lat.setCharMap(globalProfile.charMap);
+      }
+    }
+    return Cyr2Lat.encode(text);
   }
 
   /// Synchronous channel outbound estimation; see
@@ -9634,11 +9702,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }) {
     final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
+    final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(trimmed);
     final isStructuredPayload =
         MCOImageV3Codec.isTextPayload(trimmedLeft) ||
         trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
-        trimmed.startsWith('m:') ||
+        isMarkerPayload ||
         parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
         McmpAppCodec.isTextPayload(trimmed);
@@ -9660,12 +9729,27 @@ class MeshCoreConnector extends ChangeNotifier {
       if (isChannelSmazEnabled(channelIndex)) {
         return Smaz.encodeIfSmaller(text);
       } else if (isChannelCyr2LatEnabled(channelIndex)) {
-        final charMap = channelCyr2LatCharMap(channelIndex);
-        if (charMap != null) Cyr2Lat.setCharMap(charMap);
-        return Cyr2Lat.encode(text);
+        return _encodeChannelCyr2Lat(channelIndex, text);
       }
     }
+    // A marker is the one structured payload that still takes cyr2lat, and
+    // only across its label: a Cyrillic caption costs twice the bytes, while
+    // the coordinates and flags are structure. A `del:` command is excluded on
+    // purpose — it must repeat the label byte for byte.
+    if (SharedMarkerDeletion.isMarker(trimmed) &&
+        isChannelCyr2LatEnabled(channelIndex)) {
+      return SharedMarkerDeletion.encodeLabel(
+        text,
+        (label) => _encodeChannelCyr2Lat(channelIndex, label),
+      );
+    }
     return text;
+  }
+
+  String _encodeChannelCyr2Lat(int channelIndex, String text) {
+    final charMap = channelCyr2LatCharMap(channelIndex);
+    if (charMap != null) Cyr2Lat.setCharMap(charMap);
+    return Cyr2Lat.encode(text);
   }
 
   MessageCompressionMetadata? _contactCompressionMetadata(

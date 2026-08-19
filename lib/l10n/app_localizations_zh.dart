@@ -579,10 +579,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore 开源项目';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      '地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       '一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。';
 
@@ -991,38 +987,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       '请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API 密钥';
-
-  @override
-  String get appSettings_yandexApiKeyMissing => '未设置 — 将显示 OpenStreetMap';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      '请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex 签名密钥';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing => '未设置 — 请求将不带签名发送';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      '可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex 瓦片分辨率';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return '当前：$scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      '数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。';
 
   @override
   String get appSettings_offlineMapCache => '离线地图缓存';
@@ -5538,15 +5502,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get app_offline_sharedMode => '合并历史';
 
   @override
-  String get map_copyCoordsFromMap => '复制坐标';
-
-  @override
-  String get map_coordsCopied => '已复制坐标';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => '硬件';
 
   @override
@@ -5780,4 +5735,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes 分 $seconds 秒';
   }
+
+  @override
+  String get map_copyCoordsFromMap => '复制坐标';
+
+  @override
+  String get map_coordsCopied => '已复制坐标';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API 密钥';
+
+  @override
+  String get appSettings_yandexApiKeyMissing => '未设置 — 将显示 OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      '请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex 签名密钥';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing => '未设置 — 请求将不带签名发送';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      '可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex 瓦片分辨率';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '当前：$scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      '地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => '显示来自以下频道的标记…';
+
+  @override
+  String get map_markerStyleTitle => '标记样式';
+
+  @override
+  String get map_markerStyleColor => '填充颜色';
+
+  @override
+  String get map_markerStyleIcon => '图标';
+
+  @override
+  String get map_removeMarkerForEveryone => '为所有人移除';
+
+  @override
+  String get chat_poiRemoved => '已删除兴趣点';
 }

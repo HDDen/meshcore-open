@@ -1228,12 +1228,6 @@ abstract class AppLocalizations {
   /// **'2026 MeshCore Open Source Project'**
   String get settings_aboutLegalese;
 
-  /// No description provided for @settings_aboutYandexMapsTerms.
-  ///
-  /// In en, this message translates to:
-  /// **'Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/'**
-  String get settings_aboutYandexMapsTerms;
-
   /// No description provided for @settings_aboutDescription.
   ///
   /// In en, this message translates to:
@@ -2019,60 +2013,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your Stadia Maps API key. This app uses it for raster tile requests.'**
   String get appSettings_stadiaApiKeyDialogDescription;
-
-  /// No description provided for @appSettings_yandexApiKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Yandex Tiles API key'**
-  String get appSettings_yandexApiKey;
-
-  /// No description provided for @appSettings_yandexApiKeyMissing.
-  ///
-  /// In en, this message translates to:
-  /// **'Not set — OpenStreetMap is shown instead'**
-  String get appSettings_yandexApiKeyMissing;
-
-  /// No description provided for @appSettings_yandexApiKeyDialogDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.'**
-  String get appSettings_yandexApiKeyDialogDescription;
-
-  /// No description provided for @appSettings_yandexSigningSecret.
-  ///
-  /// In en, this message translates to:
-  /// **'Yandex signing secret'**
-  String get appSettings_yandexSigningSecret;
-
-  /// No description provided for @appSettings_yandexSigningSecretMissing.
-  ///
-  /// In en, this message translates to:
-  /// **'Not set — requests go out unsigned'**
-  String get appSettings_yandexSigningSecretMissing;
-
-  /// No description provided for @appSettings_yandexSigningSecretDialogDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.'**
-  String get appSettings_yandexSigningSecretDialogDescription;
-
-  /// No description provided for @appSettings_yandexTileScale.
-  ///
-  /// In en, this message translates to:
-  /// **'Yandex tile resolution'**
-  String get appSettings_yandexTileScale;
-
-  /// No description provided for @appSettings_yandexTileScaleSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Current: {scale}'**
-  String appSettings_yandexTileScaleSubtitle(String scale);
-
-  /// No description provided for @appSettings_yandexTileScaleDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.'**
-  String get appSettings_yandexTileScaleDescription;
 
   /// No description provided for @appSettings_offlineMapCache.
   ///
@@ -10180,24 +10120,6 @@ abstract class AppLocalizations {
   /// **'Combined history'**
   String get app_offline_sharedMode;
 
-  /// No description provided for @map_copyCoordsFromMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy coordinates'**
-  String get map_copyCoordsFromMap;
-
-  /// No description provided for @map_coordsCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Coordinates copied'**
-  String get map_coordsCopied;
-
-  /// No description provided for @map_showMarksFromChannels.
-  ///
-  /// In en, this message translates to:
-  /// **'Show markers from...'**
-  String get map_showMarksFromChannels;
-
   /// No description provided for @settings_infoHardware.
   ///
   /// In en, this message translates to:
@@ -10575,6 +10497,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} m {seconds} s'**
   String imageSend_minutesSecondsValue(String minutes, String seconds);
+
+  /// No description provided for @map_copyCoordsFromMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy coordinates'**
+  String get map_copyCoordsFromMap;
+
+  /// No description provided for @map_coordsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates copied'**
+  String get map_coordsCopied;
+
+  /// No description provided for @appSettings_yandexApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex Tiles API key'**
+  String get appSettings_yandexApiKey;
+
+  /// No description provided for @appSettings_yandexApiKeyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — OpenStreetMap is shown instead'**
+  String get appSettings_yandexApiKeyMissing;
+
+  /// No description provided for @appSettings_yandexApiKeyDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.'**
+  String get appSettings_yandexApiKeyDialogDescription;
+
+  /// No description provided for @appSettings_yandexSigningSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex signing secret'**
+  String get appSettings_yandexSigningSecret;
+
+  /// No description provided for @appSettings_yandexSigningSecretMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — requests go out unsigned'**
+  String get appSettings_yandexSigningSecretMissing;
+
+  /// No description provided for @appSettings_yandexSigningSecretDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.'**
+  String get appSettings_yandexSigningSecretDialogDescription;
+
+  /// No description provided for @appSettings_yandexTileScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex tile resolution'**
+  String get appSettings_yandexTileScale;
+
+  /// No description provided for @appSettings_yandexTileScaleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {scale}'**
+  String appSettings_yandexTileScaleSubtitle(String scale);
+
+  /// No description provided for @appSettings_yandexTileScaleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.'**
+  String get appSettings_yandexTileScaleDescription;
+
+  /// No description provided for @settings_aboutYandexMapsTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/'**
+  String get settings_aboutYandexMapsTerms;
+
+  /// No description provided for @map_showMarksFromChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Show markers from...'**
+  String get map_showMarksFromChannels;
+
+  /// No description provided for @map_markerStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Marker style'**
+  String get map_markerStyleTitle;
+
+  /// No description provided for @map_markerStyleColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill colour'**
+  String get map_markerStyleColor;
+
+  /// No description provided for @map_markerStyleIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get map_markerStyleIcon;
+
+  /// No description provided for @map_removeMarkerForEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove for everyone'**
+  String get map_removeMarkerForEveryone;
+
+  /// No description provided for @chat_poiRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'POI removed'**
+  String get chat_poiRemoved;
 }
 
 class _AppLocalizationsDelegate

@@ -116,7 +116,6 @@
   "settings_about": "О программе",
   "settings_aboutVersion": "MeshCore Open (Advanced mod) v{version}",
   "settings_aboutLegalese": "2026 MeshCore Open Source Project",
-  "settings_aboutYandexMapsTerms": "Тайлы карты: Яндекс Карты. Условия использования: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Открытое клиентское приложение на Flutter для устройств MeshCore в LoRa-сетях.",
   "settings_aboutModDescription": "Модификация «Advanced» базируется на оригинальном meshcore_open и предоставляет изменения, предложенные в репозиторий оригинального приложения или специфичные для территории использования, и поэтому не оформленные в виде PR.",
   "settings_aboutModLink": "Релизы на Github: \nhttps://github.com/HDDen/meshcore-open/releases \nГруппа модификации в TG: \nhttps://t.me/mcoadvanced",
@@ -232,22 +231,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Введите свой ключ API Stadia Maps. Приложение использует его для запросов растровых тайлов.",
-  "appSettings_yandexApiKey": "Ключ Tiles API Яндекса",
-  "appSettings_yandexApiKeyMissing": "Не задан — показывается OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "Введите свой ключ из кабинета разработчика Яндекса. Бесплатный тариф Tiles API допускает до 30 запросов в секунду. Данные карты © Яндекс.",
-  "appSettings_yandexSigningSecret": "Секрет подписи Яндекса",
-  "appSettings_yandexSigningSecretMissing": "Не задан — запросы отправляются без подписи",
-  "appSettings_yandexSigningSecretDialogDescription": "Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.",
-  "appSettings_yandexTileScale": "Разрешение тайлов Яндекса",
-  "appSettings_yandexTileScaleSubtitle": "Сейчас: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Большие значения запрашивают тот же тайл в большем разрешении — чётче на плотных экранах, но больше трафика и места в кэше.",
   "appSettings_offlineMapCache": "Кэш офлайн-карты",
   "appSettings_noAreaSelected": "Область не выбрана",
   "appSettings_areaSelectedZoom": "Область выбрана (масштаб {minZoom}–{maxZoom})",
@@ -2415,9 +2398,6 @@
   "app_offline": "Оффлайн",
   "app_offline_unableToMessage": "Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме",
   "app_offline_sharedMode": "Объединённая история",
-  "map_copyCoordsFromMap": "Скопировать координаты точки",
-  "map_coordsCopied": "Координаты скопированы",
-  "map_showMarksFromChannels": "Отображать метки от...",
   "settings_bleDebugLog": "Журнал отладки BLE",
   "settings_bleDebugLogSubtitle": "Команды BLE, ответы и сырые данные",
   "chat_pathManagement": "Управление маршрутами",
@@ -2658,5 +2638,30 @@
   "receivedImage_tapToProcess": "Нажмите для обработки",
   "receivedImage_awaiting": "{bytes} байт · {packets} {packets, plural, =1{пакет} other{пакетов}}",
   "imageSend_secondsValue": "{seconds} секунд",
-  "imageSend_minutesSecondsValue": "{minutes} м {seconds} с"
+  "imageSend_minutesSecondsValue": "{minutes} м {seconds} с",
+  "map_copyCoordsFromMap": "Скопировать координаты точки",
+  "map_coordsCopied": "Координаты скопированы",
+  "appSettings_yandexApiKey": "Ключ Tiles API Яндекса",
+  "appSettings_yandexApiKeyMissing": "Не задан — показывается OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Введите свой ключ из кабинета разработчика Яндекса. Бесплатный тариф Tiles API допускает до 30 запросов в секунду. Данные карты © Яндекс.",
+  "appSettings_yandexSigningSecret": "Секрет подписи Яндекса",
+  "appSettings_yandexSigningSecretMissing": "Не задан — запросы отправляются без подписи",
+  "appSettings_yandexSigningSecretDialogDescription": "Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.",
+  "appSettings_yandexTileScale": "Разрешение тайлов Яндекса",
+  "appSettings_yandexTileScaleSubtitle": "Сейчас: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Большие значения запрашивают тот же тайл в большем разрешении — чётче на плотных экранах, но больше трафика и места в кэше.",
+  "settings_aboutYandexMapsTerms": "Тайлы карты: Яндекс Карты. Условия использования: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Отображать метки от...",
+  "map_markerStyleTitle": "Вид метки",
+  "map_markerStyleColor": "Цвет заливки",
+  "map_markerStyleIcon": "Иконка",
+  "map_removeMarkerForEveryone": "Убрать для всех",
+  "chat_poiRemoved": "Удалена точка интереса"
 }

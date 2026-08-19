@@ -613,10 +613,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_aboutLegalese => 'MeshCore Open Source Project 2024';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Kaarttegels van Yandex Maps. Gebruiksvoorwaarden: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.';
 
@@ -1060,40 +1056,6 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Voer je Stadia Maps API-sleutel in. De app gebruikt die voor rastertegelverzoeken.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API-sleutel';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Niet ingesteld — OpenStreetMap wordt getoond';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Voer je eigen sleutel uit het Yandex-ontwikkelaarsdashboard in. Het gratis Tiles API-niveau staat maximaal 30 verzoeken per seconde toe. Kaartgegevens © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex-ondertekeningsgeheim';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Niet ingesteld — verzoeken gaan ongetekend uit';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex-tegelresolutie';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Nu: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Kaartcache';
@@ -5944,15 +5906,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get app_offline_sharedMode => 'Gecombineerde geschiedenis';
 
   @override
-  String get map_copyCoordsFromMap => 'Coördinaten kopiëren';
-
-  @override
-  String get map_coordsCopied => 'Coördinaten gekopieerd';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6198,4 +6151,66 @@ class AppLocalizationsNl extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes m $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Coördinaten kopiëren';
+
+  @override
+  String get map_coordsCopied => 'Coördinaten gekopieerd';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API-sleutel';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Niet ingesteld — OpenStreetMap wordt getoond';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Voer je eigen sleutel uit het Yandex-ontwikkelaarsdashboard in. Het gratis Tiles API-niveau staat maximaal 30 verzoeken per seconde toe. Kaartgegevens © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex-ondertekeningsgeheim';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Niet ingesteld — verzoeken gaan ongetekend uit';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex-tegelresolutie';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Nu: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kaarttegels van Yandex Maps. Gebruiksvoorwaarden: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Markeringen tonen van...';
+
+  @override
+  String get map_markerStyleTitle => 'Markeringsstijl';
+
+  @override
+  String get map_markerStyleColor => 'Vulkleur';
+
+  @override
+  String get map_markerStyleIcon => 'Pictogram';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Voor iedereen verwijderen';
+
+  @override
+  String get chat_poiRemoved => 'POI verwijderd';
 }

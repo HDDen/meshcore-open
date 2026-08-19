@@ -617,10 +617,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore Open-Source-Projekt';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Kartenkacheln von Yandex Maps. Nutzungsbedingungen: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Ein Open-Source-Flutter-Client für MeshCore LoRa-Meshnetzwerkgeräte.';
 
@@ -1067,40 +1063,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Geben Sie Ihren Stadia-Maps-API-Schlüssel ein. Die App verwendet ihn für Rasterkachel-Anfragen.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex-Tiles-API-Schlüssel';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Nicht gesetzt – OpenStreetMap wird angezeigt';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Geben Sie Ihren eigenen Schlüssel aus dem Yandex-Entwicklerkonto ein. Der kostenlose Tiles-API-Tarif erlaubt bis zu 30 Anfragen pro Sekunde. Kartendaten © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex-Signaturgeheimnis';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Nicht gesetzt – Anfragen gehen unsigniert raus';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex-Kachelauflösung';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Aktuell: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline-Karten-Cache';
@@ -5967,15 +5929,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get app_offline_sharedMode => 'Zusammengeführter Verlauf';
 
   @override
-  String get map_copyCoordsFromMap => 'Koordinaten kopieren';
-
-  @override
-  String get map_coordsCopied => 'Koordinaten kopiert';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6223,4 +6176,66 @@ class AppLocalizationsDe extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes Min $seconds Sek';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Koordinaten kopieren';
+
+  @override
+  String get map_coordsCopied => 'Koordinaten kopiert';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex-Tiles-API-Schlüssel';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Nicht gesetzt – OpenStreetMap wird angezeigt';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Geben Sie Ihren eigenen Schlüssel aus dem Yandex-Entwicklerkonto ein. Der kostenlose Tiles-API-Tarif erlaubt bis zu 30 Anfragen pro Sekunde. Kartendaten © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex-Signaturgeheimnis';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Nicht gesetzt – Anfragen gehen unsigniert raus';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex-Kachelauflösung';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Aktuell: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kartenkacheln von Yandex Maps. Nutzungsbedingungen: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Markierungen anzeigen von …';
+
+  @override
+  String get map_markerStyleTitle => 'Markierungsstil';
+
+  @override
+  String get map_markerStyleColor => 'Füllfarbe';
+
+  @override
+  String get map_markerStyleIcon => 'Symbol';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Für alle entfernen';
+
+  @override
+  String get chat_poiRemoved => 'POI entfernt';
 }

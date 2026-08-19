@@ -139,7 +139,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore 开源项目",
-  "settings_aboutYandexMapsTerms": "地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。",
   "settings_infoName": "名称",
   "settings_infoId": "MAC ID",
@@ -288,22 +287,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。",
-  "appSettings_yandexApiKey": "Yandex Tiles API 密钥",
-  "appSettings_yandexApiKeyMissing": "未设置 — 将显示 OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。",
-  "appSettings_yandexSigningSecret": "Yandex 签名密钥",
-  "appSettings_yandexSigningSecretMissing": "未设置 — 请求将不带签名发送",
-  "appSettings_yandexSigningSecretDialogDescription": "可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。",
-  "appSettings_yandexTileScale": "Yandex 瓦片分辨率",
-  "appSettings_yandexTileScaleSubtitle": "当前：{scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。",
   "appSettings_offlineMapCache": "离线地图缓存",
   "appSettings_noAreaSelected": "未选择任何区域",
   "appSettings_areaSelectedZoom": "已选择区域（缩放 {minZoom} - {maxZoom}）",
@@ -724,8 +707,6 @@
   "map_source": "来源",
   "map_flags": "标志",
   "map_shareMarkerHere": "在此分享标记",
-  "map_copyCoordsFromMap": "复制坐标",
-  "map_coordsCopied": "已复制坐标",
   "map_pinLabel": "标签",
   "map_label": "标签",
   "map_pointOfInterest": "兴趣点",
@@ -3385,5 +3366,30 @@
   "receivedImage_awaiting": "{bytes} 字节 · {packets} {packets, plural, =1{个数据包} other{个数据包}}",
   "imageSend_secondsValue": "{seconds} 秒",
   "imageSend_minutesSecondsValue": "{minutes} 分 {seconds} 秒",
-  "app_connectionLostBreaked": "与节点的连接已中断"
+  "app_connectionLostBreaked": "与节点的连接已中断",
+  "map_copyCoordsFromMap": "复制坐标",
+  "map_coordsCopied": "已复制坐标",
+  "appSettings_yandexApiKey": "Yandex Tiles API 密钥",
+  "appSettings_yandexApiKeyMissing": "未设置 — 将显示 OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。",
+  "appSettings_yandexSigningSecret": "Yandex 签名密钥",
+  "appSettings_yandexSigningSecretMissing": "未设置 — 请求将不带签名发送",
+  "appSettings_yandexSigningSecretDialogDescription": "可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。",
+  "appSettings_yandexTileScale": "Yandex 瓦片分辨率",
+  "appSettings_yandexTileScaleSubtitle": "当前：{scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。",
+  "settings_aboutYandexMapsTerms": "地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "显示来自以下频道的标记…",
+  "map_markerStyleTitle": "标记样式",
+  "map_markerStyleColor": "填充颜色",
+  "map_markerStyleIcon": "图标",
+  "map_removeMarkerForEveryone": "为所有人移除",
+  "chat_poiRemoved": "已删除兴趣点"
 }

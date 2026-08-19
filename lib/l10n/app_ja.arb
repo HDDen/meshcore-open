@@ -203,7 +203,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore オープンソースプロジェクト",
-  "settings_aboutYandexMapsTerms": "地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "MeshCore LoRa メッシュネットワークデバイス向けのオープンソース Flutter クライアント。",
   "settings_aboutOpenMeteoAttribution": "LOS 標高データ：Open-Meteo (CC BY 4.0)",
   "settings_infoName": "名前",
@@ -366,22 +365,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。",
-  "appSettings_yandexApiKey": "Yandex Tiles API キー",
-  "appSettings_yandexApiKeyMissing": "未設定 — OpenStreetMap を表示します",
-  "appSettings_yandexApiKeyDialogDescription": "Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。",
-  "appSettings_yandexSigningSecret": "Yandex 署名シークレット",
-  "appSettings_yandexSigningSecretMissing": "未設定 — リクエストは署名なしで送信されます",
-  "appSettings_yandexSigningSecretDialogDescription": "任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。",
-  "appSettings_yandexTileScale": "Yandex タイル解像度",
-  "appSettings_yandexTileScaleSubtitle": "現在: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。",
   "appSettings_offlineMapCache": "オフライン地図キャッシュ",
   "appSettings_unitsTitle": "単位",
   "appSettings_unitsMetric": "メートル法 (m / km)",
@@ -883,8 +866,6 @@
   "map_source": "出典",
   "map_flags": "フラグ",
   "map_shareMarkerHere": "ここにマーカーを共有",
-  "map_copyCoordsFromMap": "座標をコピー",
-  "map_coordsCopied": "座標をコピーしました",
   "map_setAsMyLocation": "現在地として設定",
   "map_pinLabel": "ピンラベル",
   "map_label": "ラベル",
@@ -3485,5 +3466,30 @@
   "receivedImage_awaiting": "{bytes} バイト・{packets} {packets, plural, =1{パケット} other{パケット}}",
   "imageSend_secondsValue": "{seconds}秒",
   "imageSend_minutesSecondsValue": "{minutes}分 {seconds}秒",
-  "app_connectionLostBreaked": "ノードとの接続が切断されました"
+  "app_connectionLostBreaked": "ノードとの接続が切断されました",
+  "map_copyCoordsFromMap": "座標をコピー",
+  "map_coordsCopied": "座標をコピーしました",
+  "appSettings_yandexApiKey": "Yandex Tiles API キー",
+  "appSettings_yandexApiKeyMissing": "未設定 — OpenStreetMap を表示します",
+  "appSettings_yandexApiKeyDialogDescription": "Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。",
+  "appSettings_yandexSigningSecret": "Yandex 署名シークレット",
+  "appSettings_yandexSigningSecretMissing": "未設定 — リクエストは署名なしで送信されます",
+  "appSettings_yandexSigningSecretDialogDescription": "任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。",
+  "appSettings_yandexTileScale": "Yandex タイル解像度",
+  "appSettings_yandexTileScaleSubtitle": "現在: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。",
+  "settings_aboutYandexMapsTerms": "地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "マーカーの表示元…",
+  "map_markerStyleTitle": "マーカーの見た目",
+  "map_markerStyleColor": "塗りつぶしの色",
+  "map_markerStyleIcon": "アイコン",
+  "map_removeMarkerForEveryone": "全員から削除",
+  "chat_poiRemoved": "地点を削除しました"
 }

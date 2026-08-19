@@ -622,10 +622,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_aboutLegalese => 'Projet open source MeshCore 2026';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Tuiles de carte par Yandex Maps. Conditions d’utilisation : \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Client Flutter open source pour les appareils de réseau maillé LoRa MeshCore.';
 
@@ -1069,40 +1065,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Entrez votre clé API Stadia Maps. Cette application l’utilise pour les requêtes de tuiles raster.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Clé API Yandex Tiles';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Non définie — OpenStreetMap est affiché';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Saisissez votre propre clé depuis le tableau de bord développeur Yandex. Le palier gratuit de Tiles API autorise jusqu’à 30 requêtes par seconde. Données cartographiques © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Secret de signature Yandex';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Non défini — les requêtes partent sans signature';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Résolution des tuiles Yandex';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Actuel : $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.';
 
   @override
   String get appSettings_offlineMapCache => 'Cache de carte hors ligne';
@@ -5995,15 +5957,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get app_offline_sharedMode => 'Historique combiné';
 
   @override
-  String get map_copyCoordsFromMap => 'Copier les coordonnées';
-
-  @override
-  String get map_coordsCopied => 'Coordonnées copiées';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Matériel';
 
   @override
@@ -6251,4 +6204,66 @@ class AppLocalizationsFr extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes minutes $seconds secondes';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Copier les coordonnées';
+
+  @override
+  String get map_coordsCopied => 'Coordonnées copiées';
+
+  @override
+  String get appSettings_yandexApiKey => 'Clé API Yandex Tiles';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Non définie — OpenStreetMap est affiché';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Saisissez votre propre clé depuis le tableau de bord développeur Yandex. Le palier gratuit de Tiles API autorise jusqu’à 30 requêtes par seconde. Données cartographiques © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Secret de signature Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Non défini — les requêtes partent sans signature';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Résolution des tuiles Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Actuel : $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Tuiles de carte par Yandex Maps. Conditions d’utilisation : \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Afficher les marqueurs de…';
+
+  @override
+  String get map_markerStyleTitle => 'Style du marqueur';
+
+  @override
+  String get map_markerStyleColor => 'Couleur de remplissage';
+
+  @override
+  String get map_markerStyleIcon => 'Icône';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Supprimer pour tous';
+
+  @override
+  String get chat_poiRemoved => 'POI supprimé';
 }

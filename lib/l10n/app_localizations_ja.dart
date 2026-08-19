@@ -586,10 +586,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore オープンソースプロジェクト';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      '地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'MeshCore LoRa メッシュネットワークデバイス向けのオープンソース Flutter クライアント。';
 
@@ -1006,39 +1002,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Stadia Maps の API キーを入力してください。このアプリはラスタタイルの取得に使用します。';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API キー';
-
-  @override
-  String get appSettings_yandexApiKeyMissing => '未設定 — OpenStreetMap を表示します';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex 署名シークレット';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      '未設定 — リクエストは署名なしで送信されます';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      '任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex タイル解像度';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return '現在: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      '値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。';
 
   @override
   String get appSettings_offlineMapCache => 'オフライン地図キャッシュ';
@@ -5660,15 +5623,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get app_offline_sharedMode => '統合履歴';
 
   @override
-  String get map_copyCoordsFromMap => '座標をコピー';
-
-  @override
-  String get map_coordsCopied => '座標をコピーしました';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'ハードウェア';
 
   @override
@@ -5906,4 +5860,65 @@ class AppLocalizationsJa extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes分 $seconds秒';
   }
+
+  @override
+  String get map_copyCoordsFromMap => '座標をコピー';
+
+  @override
+  String get map_coordsCopied => '座標をコピーしました';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API キー';
+
+  @override
+  String get appSettings_yandexApiKeyMissing => '未設定 — OpenStreetMap を表示します';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Yandex デベロッパーダッシュボードで取得した自分のキーを入力してください。Tiles API の無料枠は毎秒 30 リクエストまでです。地図データ © Yandex。';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex 署名シークレット';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      '未設定 — リクエストは署名なしで送信されます';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      '任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex タイル解像度';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '現在: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      '地図タイル提供: Yandex Maps。利用規約: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'マーカーの表示元…';
+
+  @override
+  String get map_markerStyleTitle => 'マーカーの見た目';
+
+  @override
+  String get map_markerStyleColor => '塗りつぶしの色';
+
+  @override
+  String get map_markerStyleIcon => 'アイコン';
+
+  @override
+  String get map_removeMarkerForEveryone => '全員から削除';
+
+  @override
+  String get chat_poiRemoved => '地点を削除しました';
 }

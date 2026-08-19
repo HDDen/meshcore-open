@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore Open-Source-Projekt",
-  "settings_aboutYandexMapsTerms": "Kartenkacheln von Yandex Maps. Nutzungsbedingungen: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Ein Open-Source-Flutter-Client für MeshCore LoRa-Meshnetzwerkgeräte.",
   "settings_infoName": "Name",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Geben Sie Ihren Stadia-Maps-API-Schlüssel ein. Die App verwendet ihn für Rasterkachel-Anfragen.",
-  "appSettings_yandexApiKey": "Yandex-Tiles-API-Schlüssel",
-  "appSettings_yandexApiKeyMissing": "Nicht gesetzt – OpenStreetMap wird angezeigt",
-  "appSettings_yandexApiKeyDialogDescription": "Geben Sie Ihren eigenen Schlüssel aus dem Yandex-Entwicklerkonto ein. Der kostenlose Tiles-API-Tarif erlaubt bis zu 30 Anfragen pro Sekunde. Kartendaten © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex-Signaturgeheimnis",
-  "appSettings_yandexSigningSecretMissing": "Nicht gesetzt – Anfragen gehen unsigniert raus",
-  "appSettings_yandexSigningSecretDialogDescription": "Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.",
-  "appSettings_yandexTileScale": "Yandex-Kachelauflösung",
-  "appSettings_yandexTileScaleSubtitle": "Aktuell: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.",
   "appSettings_offlineMapCache": "Offline-Karten-Cache",
   "appSettings_noAreaSelected": "Kein Bereich ausgewählt",
   "appSettings_areaSelectedZoom": "Bereich ausgewählt (Zoom {minZoom}-{maxZoom})",
@@ -720,8 +703,6 @@
   "map_source": "Quelle",
   "map_flags": "Flaggen",
   "map_shareMarkerHere": "Marker hier teilen",
-  "map_copyCoordsFromMap": "Koordinaten kopieren",
-  "map_coordsCopied": "Koordinaten kopiert",
   "map_pinLabel": "Pin-Beschriftung",
   "map_label": "Beschriftung",
   "map_pointOfInterest": "Punkt von Interesse",
@@ -3507,5 +3488,30 @@
   "receivedImage_awaiting": "{bytes} Bytes · {packets} {packets, plural, =1{Paket} other{Pakete}}",
   "imageSend_secondsValue": "{seconds} s",
   "imageSend_minutesSecondsValue": "{minutes} Min {seconds} Sek",
-  "app_connectionLostBreaked": "Verbindung zum Knoten wurde getrennt"
+  "app_connectionLostBreaked": "Verbindung zum Knoten wurde getrennt",
+  "map_copyCoordsFromMap": "Koordinaten kopieren",
+  "map_coordsCopied": "Koordinaten kopiert",
+  "appSettings_yandexApiKey": "Yandex-Tiles-API-Schlüssel",
+  "appSettings_yandexApiKeyMissing": "Nicht gesetzt – OpenStreetMap wird angezeigt",
+  "appSettings_yandexApiKeyDialogDescription": "Geben Sie Ihren eigenen Schlüssel aus dem Yandex-Entwicklerkonto ein. Der kostenlose Tiles-API-Tarif erlaubt bis zu 30 Anfragen pro Sekunde. Kartendaten © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex-Signaturgeheimnis",
+  "appSettings_yandexSigningSecretMissing": "Nicht gesetzt – Anfragen gehen unsigniert raus",
+  "appSettings_yandexSigningSecretDialogDescription": "Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.",
+  "appSettings_yandexTileScale": "Yandex-Kachelauflösung",
+  "appSettings_yandexTileScaleSubtitle": "Aktuell: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.",
+  "settings_aboutYandexMapsTerms": "Kartenkacheln von Yandex Maps. Nutzungsbedingungen: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Markierungen anzeigen von …",
+  "map_markerStyleTitle": "Markierungsstil",
+  "map_markerStyleColor": "Füllfarbe",
+  "map_markerStyleIcon": "Symbol",
+  "map_removeMarkerForEveryone": "Für alle entfernen",
+  "chat_poiRemoved": "POI entfernt"
 }

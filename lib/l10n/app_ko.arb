@@ -197,7 +197,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore 오픈 소스 프로젝트",
-  "settings_aboutYandexMapsTerms": "지도 타일 제공: Yandex Maps. 이용 약관: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "MeshCore LoRa 메시 네트워크 장치를 위한 오픈소스 Flutter 클라이언트.",
   "settings_aboutOpenMeteoAttribution": "LOS 고도 데이터: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "이름",
@@ -360,22 +359,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Stadia Maps API 키를 입력하세요. 이 앱은 래스터 타일 요청에 이 키를 사용합니다.",
-  "appSettings_yandexApiKey": "Yandex Tiles API 키",
-  "appSettings_yandexApiKeyMissing": "설정되지 않음 — OpenStreetMap이 표시됩니다",
-  "appSettings_yandexApiKeyDialogDescription": "Yandex 개발자 대시보드에서 발급받은 본인의 키를 입력하세요. Tiles API 무료 등급은 초당 최대 30회 요청을 허용합니다. 지도 데이터 © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex 서명 시크릿",
-  "appSettings_yandexSigningSecretMissing": "설정되지 않음 — 요청이 서명 없이 전송됩니다",
-  "appSettings_yandexSigningSecretDialogDescription": "선택 사항입니다. Yandex 콘솔에서 키에 연결한 서명 시크릿을 붙여넣으세요. 서명 모드가 선택 사항이면 서명 없는 요청도 통과합니다.",
-  "appSettings_yandexTileScale": "Yandex 타일 해상도",
-  "appSettings_yandexTileScaleSubtitle": "현재: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "값이 클수록 같은 타일을 더 큰 픽셀 크기로 요청합니다. 고밀도 화면에서 선명하지만 트래픽과 캐시 용량이 늘어납니다.",
   "appSettings_offlineMapCache": "오프라인 지도 캐시",
   "appSettings_unitsTitle": "단위",
   "appSettings_unitsMetric": "미터법 (m / km)",
@@ -865,8 +848,6 @@
   "map_source": "출처",
   "map_flags": "깃발",
   "map_shareMarkerHere": "여기에서 마커 공유",
-  "map_copyCoordsFromMap": "좌표 복사",
-  "map_coordsCopied": "좌표가 복사되었습니다",
   "map_setAsMyLocation": "내 위치로 설정",
   "map_pinLabel": "핀 라벨",
   "map_label": "레이블",
@@ -3517,5 +3498,30 @@
   "receivedImage_awaiting": "{bytes} 바이트 · {packets} {packets, plural, =1{패킷} other{패킷}}",
   "imageSend_secondsValue": "{seconds} 초",
   "imageSend_minutesSecondsValue": "{minutes}분 {seconds}초",
-  "app_connectionLostBreaked": "노드와의 연결이 끊어졌습니다"
+  "app_connectionLostBreaked": "노드와의 연결이 끊어졌습니다",
+  "map_copyCoordsFromMap": "좌표 복사",
+  "map_coordsCopied": "좌표가 복사되었습니다",
+  "appSettings_yandexApiKey": "Yandex Tiles API 키",
+  "appSettings_yandexApiKeyMissing": "설정되지 않음 — OpenStreetMap이 표시됩니다",
+  "appSettings_yandexApiKeyDialogDescription": "Yandex 개발자 대시보드에서 발급받은 본인의 키를 입력하세요. Tiles API 무료 등급은 초당 최대 30회 요청을 허용합니다. 지도 데이터 © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex 서명 시크릿",
+  "appSettings_yandexSigningSecretMissing": "설정되지 않음 — 요청이 서명 없이 전송됩니다",
+  "appSettings_yandexSigningSecretDialogDescription": "선택 사항입니다. Yandex 콘솔에서 키에 연결한 서명 시크릿을 붙여넣으세요. 서명 모드가 선택 사항이면 서명 없는 요청도 통과합니다.",
+  "appSettings_yandexTileScale": "Yandex 타일 해상도",
+  "appSettings_yandexTileScaleSubtitle": "현재: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "값이 클수록 같은 타일을 더 큰 픽셀 크기로 요청합니다. 고밀도 화면에서 선명하지만 트래픽과 캐시 용량이 늘어납니다.",
+  "settings_aboutYandexMapsTerms": "지도 타일 제공: Yandex Maps. 이용 약관: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "마커 표시 대상...",
+  "map_markerStyleTitle": "마커 스타일",
+  "map_markerStyleColor": "채우기 색상",
+  "map_markerStyleIcon": "아이콘",
+  "map_removeMarkerForEveryone": "모두에게서 제거",
+  "chat_poiRemoved": "관심 지점 삭제됨"
 }

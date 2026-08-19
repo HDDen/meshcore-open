@@ -35,6 +35,7 @@ import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/shared_marker_deletions.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -1250,6 +1251,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
+    // `del:m:...` matches the marker pattern as well, so the badge is told
+    // which one it is rather than guessing from the payload.
+    final poiRemoved = SharedMarkerDeletion.targetOf(message.text) != null;
     final coordinate = parseCoordinateText(message.text);
     final sharedContact = parseSharedContactText(message.text);
     final isPlainTextMessage =
@@ -1461,6 +1465,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             isOutgoing,
                             textScale,
                             message.senderName,
+                            isRemoval: poiRemoved,
                             trailing: (!enableTracing && isOutgoing)
                                 ? Padding(
                                     padding: const EdgeInsets.only(bottom: 2),
@@ -2330,6 +2335,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     bool isOutgoing,
     double textScale,
     String senderName, {
+    bool isRemoval = false,
     Widget? trailing,
   }) {
     final scheme = Theme.of(context).colorScheme;
@@ -2340,7 +2346,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          icon: Icon(Icons.location_on_outlined, color: scheme.primary),
+          icon: Icon(
+            isRemoval
+                ? Icons.location_off_outlined
+                : Icons.location_on_outlined,
+            color: scheme.primary,
+          ),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           onPressed: () {
@@ -2371,7 +2382,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.l10n.chat_poiShared,
+                isRemoval
+                    ? context.l10n.chat_poiRemoved
+                    : context.l10n.chat_poiShared,
                 style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.w600,
@@ -3577,7 +3590,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // We can pass whole text, senderName will be kept intact
     if (connector.isChannelCyr2LatEnabled(widget.channel.index) &&
         // Shared contact payloads must stay untouched.
-        parseSharedContactText(messageText) == null) {
+        parseSharedContactText(messageText) == null &&
+        // So must markers and `del:` commands: the connector transliterates a
+        // marker's label only, and leaves a command byte-identical to the
+        // marker it names. Transliterating the whole line here would defeat
+        // both, whether the text came from the map or was typed by hand.
+        !SharedMarkerDeletion.isMarkerPayload(messageText)) {
       messageText = Cyr2Lat.encode(messageText);
     }
     // end transform
@@ -3721,21 +3739,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final outgoingLimit = settings.channelMaxbytesOutgoing;
     if (outgoingLimit > 0) {
       // This user limit counts "<sender>: " plus the message bytes.
-      final textLimit = outgoingLimit - _channelSenderPrefixBytes(connector);
+      final textLimit =
+          outgoingLimit - channelSenderPrefixBytes(connector.selfName);
       limit = math.min(limit, math.max(0, textLimit));
     }
     if (connector.isChannelMcmpEnabled(widget.channel.index)) {
       return math.max(0, limit - 2);
     }
     return limit;
-  }
-
-  int _channelSenderPrefixBytes(MeshCoreConnector connector) {
-    final senderName = connector.selfName;
-    final nameBytes = senderName == null || senderName.isEmpty
-        ? maxNameSize - 1
-        : math.min(utf8.encode(senderName).length, maxNameSize - 1);
-    return nameBytes + 2; // "<name>: "
   }
 
   String _formatTime(

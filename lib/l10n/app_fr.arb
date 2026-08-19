@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "Projet open source MeshCore 2026",
-  "settings_aboutYandexMapsTerms": "Tuiles de carte par Yandex Maps. Conditions d’utilisation : \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Client Flutter open source pour les appareils de réseau maillé LoRa MeshCore.",
   "settings_infoName": "Nom",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Entrez votre clé API Stadia Maps. Cette application l’utilise pour les requêtes de tuiles raster.",
-  "appSettings_yandexApiKey": "Clé API Yandex Tiles",
-  "appSettings_yandexApiKeyMissing": "Non définie — OpenStreetMap est affiché",
-  "appSettings_yandexApiKeyDialogDescription": "Saisissez votre propre clé depuis le tableau de bord développeur Yandex. Le palier gratuit de Tiles API autorise jusqu’à 30 requêtes par seconde. Données cartographiques © Yandex.",
-  "appSettings_yandexSigningSecret": "Secret de signature Yandex",
-  "appSettings_yandexSigningSecretMissing": "Non défini — les requêtes partent sans signature",
-  "appSettings_yandexSigningSecretDialogDescription": "Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.",
-  "appSettings_yandexTileScale": "Résolution des tuiles Yandex",
-  "appSettings_yandexTileScaleSubtitle": "Actuel : {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.",
   "appSettings_offlineMapCache": "Cache de carte hors ligne",
   "appSettings_noAreaSelected": "Aucune zone sélectionnée",
   "appSettings_areaSelectedZoom": "Zone sélectionnée (zoom {minZoom}-{maxZoom})",
@@ -720,8 +703,6 @@
   "map_source": "Source",
   "map_flags": "Drapeaux",
   "map_shareMarkerHere": "Partager le marqueur ici",
-  "map_copyCoordsFromMap": "Copier les coordonnées",
-  "map_coordsCopied": "Coordonnées copiées",
   "map_pinLabel": "Libellé de l'épingle",
   "map_label": "Étiquette",
   "map_pointOfInterest": "Point d'intérêt",
@@ -3479,5 +3460,30 @@
   "receivedImage_awaiting": "{bytes} octets · {packets} {packets, plural, =1{paquet} other{paquets}}",
   "imageSend_secondsValue": "{seconds} s",
   "imageSend_minutesSecondsValue": "{minutes} minutes {seconds} secondes",
-  "app_connectionLostBreaked": "Connexion au nœud interrompue"
+  "app_connectionLostBreaked": "Connexion au nœud interrompue",
+  "map_copyCoordsFromMap": "Copier les coordonnées",
+  "map_coordsCopied": "Coordonnées copiées",
+  "appSettings_yandexApiKey": "Clé API Yandex Tiles",
+  "appSettings_yandexApiKeyMissing": "Non définie — OpenStreetMap est affiché",
+  "appSettings_yandexApiKeyDialogDescription": "Saisissez votre propre clé depuis le tableau de bord développeur Yandex. Le palier gratuit de Tiles API autorise jusqu’à 30 requêtes par seconde. Données cartographiques © Yandex.",
+  "appSettings_yandexSigningSecret": "Secret de signature Yandex",
+  "appSettings_yandexSigningSecretMissing": "Non défini — les requêtes partent sans signature",
+  "appSettings_yandexSigningSecretDialogDescription": "Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.",
+  "appSettings_yandexTileScale": "Résolution des tuiles Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Actuel : {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.",
+  "settings_aboutYandexMapsTerms": "Tuiles de carte par Yandex Maps. Conditions d’utilisation : \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Afficher les marqueurs de…",
+  "map_markerStyleTitle": "Style du marqueur",
+  "map_markerStyleColor": "Couleur de remplissage",
+  "map_markerStyleIcon": "Icône",
+  "map_removeMarkerForEveryone": "Supprimer pour tous",
+  "chat_poiRemoved": "POI supprimé"
 }

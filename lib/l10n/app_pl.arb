@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "Projekt MeshCore Open Source 2026",
-  "settings_aboutYandexMapsTerms": "Kafelki mapy: Yandex Maps. Warunki korzystania: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Otwartoźródłowy klient Flutter dla urządzeń MeshCore LoRa do sieci mesh.",
   "settings_infoName": "Nazwa",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Wprowadź swój klucz API Stadia Maps. Aplikacja używa go do żądań kafelków rastrowych.",
-  "appSettings_yandexApiKey": "Klucz Yandex Tiles API",
-  "appSettings_yandexApiKeyMissing": "Nie ustawiono — wyświetlany jest OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "Wprowadź własny klucz z panelu dewelopera Yandex. Darmowy plan Tiles API pozwala na maksymalnie 30 żądań na sekundę. Dane mapy © Yandex.",
-  "appSettings_yandexSigningSecret": "Sekret podpisu Yandex",
-  "appSettings_yandexSigningSecretMissing": "Nie ustawiono — żądania są wysyłane bez podpisu",
-  "appSettings_yandexSigningSecretDialogDescription": "Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.",
-  "appSettings_yandexTileScale": "Rozdzielczość kafelków Yandex",
-  "appSettings_yandexTileScaleSubtitle": "Obecnie: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Wyższe wartości pobierają ten sam kafelek w większym rozmiarze pikseli — ostrzej na gęstych ekranach, ale więcej transferu i miejsca w pamięci podręcznej.",
   "appSettings_offlineMapCache": "Pamięć podręczna map offline",
   "appSettings_noAreaSelected": "Nie wybrano żadnego obszaru.",
   "appSettings_areaSelectedZoom": "Wybrany obszar (skala {minZoom}-{maxZoom})",
@@ -708,8 +691,6 @@
   "map_source": "Źródło",
   "map_flags": "Flagi",
   "map_shareMarkerHere": "Udostępnij znacznik tutaj",
-  "map_copyCoordsFromMap": "Kopiuj współrzędne",
-  "map_coordsCopied": "Skopiowano współrzędne",
   "map_pinLabel": "Etykieta pinezki",
   "map_label": "Etykieta",
   "map_pointOfInterest": "Punkt zainteresowań",
@@ -3418,5 +3399,30 @@
   "receivedImage_awaiting": "{bytes} bajtów · {packets} {packets, plural, =1{pakiet} other{pakiety}}",
   "imageSend_secondsValue": "{seconds} sekund",
   "imageSend_minutesSecondsValue": "{minutes} minut {seconds} sekundy",
-  "app_connectionLostBreaked": "Połączenie z węzłem zostało przerwane"
+  "app_connectionLostBreaked": "Połączenie z węzłem zostało przerwane",
+  "map_copyCoordsFromMap": "Kopiuj współrzędne",
+  "map_coordsCopied": "Skopiowano współrzędne",
+  "appSettings_yandexApiKey": "Klucz Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Nie ustawiono — wyświetlany jest OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Wprowadź własny klucz z panelu dewelopera Yandex. Darmowy plan Tiles API pozwala na maksymalnie 30 żądań na sekundę. Dane mapy © Yandex.",
+  "appSettings_yandexSigningSecret": "Sekret podpisu Yandex",
+  "appSettings_yandexSigningSecretMissing": "Nie ustawiono — żądania są wysyłane bez podpisu",
+  "appSettings_yandexSigningSecretDialogDescription": "Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.",
+  "appSettings_yandexTileScale": "Rozdzielczość kafelków Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Obecnie: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Wyższe wartości pobierają ten sam kafelek w większym rozmiarze pikseli — ostrzej na gęstych ekranach, ale więcej transferu i miejsca w pamięci podręcznej.",
+  "settings_aboutYandexMapsTerms": "Kafelki mapy: Yandex Maps. Warunki korzystania: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Pokaż znaczniki z...",
+  "map_markerStyleTitle": "Styl znacznika",
+  "map_markerStyleColor": "Kolor wypełnienia",
+  "map_markerStyleIcon": "Ikona",
+  "map_removeMarkerForEveryone": "Usuń dla wszystkich",
+  "chat_poiRemoved": "Usunięto POI"
 }

@@ -587,10 +587,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore 오픈 소스 프로젝트';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      '지도 타일 제공: Yandex Maps. 이용 약관: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'MeshCore LoRa 메시 네트워크 장치를 위한 오픈소스 Flutter 클라이언트.';
 
@@ -1009,40 +1005,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Stadia Maps API 키를 입력하세요. 이 앱은 래스터 타일 요청에 이 키를 사용합니다.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API 키';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      '설정되지 않음 — OpenStreetMap이 표시됩니다';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Yandex 개발자 대시보드에서 발급받은 본인의 키를 입력하세요. Tiles API 무료 등급은 초당 최대 30회 요청을 허용합니다. 지도 데이터 © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex 서명 시크릿';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      '설정되지 않음 — 요청이 서명 없이 전송됩니다';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      '선택 사항입니다. Yandex 콘솔에서 키에 연결한 서명 시크릿을 붙여넣으세요. 서명 모드가 선택 사항이면 서명 없는 요청도 통과합니다.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex 타일 해상도';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return '현재: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      '값이 클수록 같은 타일을 더 큰 픽셀 크기로 요청합니다. 고밀도 화면에서 선명하지만 트래픽과 캐시 용량이 늘어납니다.';
 
   @override
   String get appSettings_offlineMapCache => '오프라인 지도 캐시';
@@ -5668,15 +5630,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get app_offline_sharedMode => '통합 기록';
 
   @override
-  String get map_copyCoordsFromMap => '좌표 복사';
-
-  @override
-  String get map_coordsCopied => '좌표가 복사되었습니다';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => '하드웨어';
 
   @override
@@ -5913,4 +5866,66 @@ class AppLocalizationsKo extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes분 $seconds초';
   }
+
+  @override
+  String get map_copyCoordsFromMap => '좌표 복사';
+
+  @override
+  String get map_coordsCopied => '좌표가 복사되었습니다';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API 키';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      '설정되지 않음 — OpenStreetMap이 표시됩니다';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Yandex 개발자 대시보드에서 발급받은 본인의 키를 입력하세요. Tiles API 무료 등급은 초당 최대 30회 요청을 허용합니다. 지도 데이터 © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex 서명 시크릿';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      '설정되지 않음 — 요청이 서명 없이 전송됩니다';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      '선택 사항입니다. Yandex 콘솔에서 키에 연결한 서명 시크릿을 붙여넣으세요. 서명 모드가 선택 사항이면 서명 없는 요청도 통과합니다.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex 타일 해상도';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '현재: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '값이 클수록 같은 타일을 더 큰 픽셀 크기로 요청합니다. 고밀도 화면에서 선명하지만 트래픽과 캐시 용량이 늘어납니다.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      '지도 타일 제공: Yandex Maps. 이용 약관: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => '마커 표시 대상...';
+
+  @override
+  String get map_markerStyleTitle => '마커 스타일';
+
+  @override
+  String get map_markerStyleColor => '채우기 색상';
+
+  @override
+  String get map_markerStyleIcon => '아이콘';
+
+  @override
+  String get map_removeMarkerForEveryone => '모두에게서 제거';
+
+  @override
+  String get chat_poiRemoved => '관심 지점 삭제됨';
 }

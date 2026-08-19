@@ -197,7 +197,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore nyílt forráskódú projekt",
-  "settings_aboutYandexMapsTerms": "Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Nyílt forráskódú Flutter kliens MeshCore LoRa mesh hálózati eszközökhöz.",
   "settings_aboutOpenMeteoAttribution": "LOS magassági adatok: Open-Meteo (CC BY 4.0)",
   "settings_infoName": "Név",
@@ -335,22 +334,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Adja meg a Stadia Maps API-kulcsát. Az alkalmazás ezt használja raszteres csempekérésekhez.",
-  "appSettings_yandexApiKey": "Yandex Tiles API-kulcs",
-  "appSettings_yandexApiKeyMissing": "Nincs beállítva – az OpenStreetMap jelenik meg",
-  "appSettings_yandexApiKeyDialogDescription": "Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex aláírási titok",
-  "appSettings_yandexSigningSecretMissing": "Nincs beállítva – a kérések aláírás nélkül mennek ki",
-  "appSettings_yandexSigningSecretDialogDescription": "Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.",
-  "appSettings_yandexTileScale": "Yandex csempefelbontás",
-  "appSettings_yandexTileScaleSubtitle": "Jelenleg: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.",
   "appSettings_offlineMapCache": "Offline térképgyorsítótár",
   "appSettings_unitsTitle": "Egységek",
   "appSettings_unitsMetric": "Metrikus (m/km)",
@@ -840,8 +823,6 @@
   "map_source": "Forrás",
   "map_flags": "Zászlók",
   "map_shareMarkerHere": "Oszd meg a jelölőt itt",
-  "map_copyCoordsFromMap": "Koordináták másolása",
-  "map_coordsCopied": "Koordináták másolva",
   "map_setAsMyLocation": "Beállítás helyemként",
   "map_pinLabel": "Kitűzött címke",
   "map_label": "Címke",
@@ -3383,5 +3364,30 @@
   "receivedImage_awaiting": "{bytes} bájt · {packets} {packets, plural, =1{csomag} other{csomag}}",
   "imageSend_secondsValue": "{seconds} sekünd\n\n(Note: The placeholder {seconds} is kept unchanged as requested.)",
   "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)",
-  "app_connectionLostBreaked": "A kapcsolat a csomóponttal megszakadt"
+  "app_connectionLostBreaked": "A kapcsolat a csomóponttal megszakadt",
+  "map_copyCoordsFromMap": "Koordináták másolása",
+  "map_coordsCopied": "Koordináták másolva",
+  "appSettings_yandexApiKey": "Yandex Tiles API-kulcs",
+  "appSettings_yandexApiKeyMissing": "Nincs beállítva – az OpenStreetMap jelenik meg",
+  "appSettings_yandexApiKeyDialogDescription": "Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex aláírási titok",
+  "appSettings_yandexSigningSecretMissing": "Nincs beállítva – a kérések aláírás nélkül mennek ki",
+  "appSettings_yandexSigningSecretDialogDescription": "Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.",
+  "appSettings_yandexTileScale": "Yandex csempefelbontás",
+  "appSettings_yandexTileScaleSubtitle": "Jelenleg: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.",
+  "settings_aboutYandexMapsTerms": "Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Jelölők megjelenítése innen...",
+  "map_markerStyleTitle": "Jelölő stílusa",
+  "map_markerStyleColor": "Kitöltőszín",
+  "map_markerStyleIcon": "Ikon",
+  "map_removeMarkerForEveryone": "Eltávolítás mindenkinek",
+  "chat_poiRemoved": "POI eltávolítva"
 }

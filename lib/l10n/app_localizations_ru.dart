@@ -618,10 +618,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Тайлы карты: Яндекс Карты. Условия использования: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Открытое клиентское приложение на Flutter для устройств MeshCore в LoRa-сетях.';
 
@@ -1068,40 +1064,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Введите свой ключ API Stadia Maps. Приложение использует его для запросов растровых тайлов.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Ключ Tiles API Яндекса';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Не задан — показывается OpenStreetMap';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Введите свой ключ из кабинета разработчика Яндекса. Бесплатный тариф Tiles API допускает до 30 запросов в секунду. Данные карты © Яндекс.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Секрет подписи Яндекса';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Не задан — запросы отправляются без подписи';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Разрешение тайлов Яндекса';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Сейчас: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Большие значения запрашивают тот же тайл в большем разрешении — чётче на плотных экранах, но больше трафика и места в кэше.';
 
   @override
   String get appSettings_offlineMapCache => 'Кэш офлайн-карты';
@@ -5961,15 +5923,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get app_offline_sharedMode => 'Объединённая история';
 
   @override
-  String get map_copyCoordsFromMap => 'Скопировать координаты точки';
-
-  @override
-  String get map_coordsCopied => 'Координаты скопированы';
-
-  @override
-  String get map_showMarksFromChannels => 'Отображать метки от...';
-
-  @override
   String get settings_infoHardware => 'Оборудование';
 
   @override
@@ -6218,4 +6171,66 @@ class AppLocalizationsRu extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes м $seconds с';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Скопировать координаты точки';
+
+  @override
+  String get map_coordsCopied => 'Координаты скопированы';
+
+  @override
+  String get appSettings_yandexApiKey => 'Ключ Tiles API Яндекса';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Не задан — показывается OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Введите свой ключ из кабинета разработчика Яндекса. Бесплатный тариф Tiles API допускает до 30 запросов в секунду. Данные карты © Яндекс.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Секрет подписи Яндекса';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Не задан — запросы отправляются без подписи';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Разрешение тайлов Яндекса';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Сейчас: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Большие значения запрашивают тот же тайл в большем разрешении — чётче на плотных экранах, но больше трафика и места в кэше.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Тайлы карты: Яндекс Карты. Условия использования: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Отображать метки от...';
+
+  @override
+  String get map_markerStyleTitle => 'Вид метки';
+
+  @override
+  String get map_markerStyleColor => 'Цвет заливки';
+
+  @override
+  String get map_markerStyleIcon => 'Иконка';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Убрать для всех';
+
+  @override
+  String get chat_poiRemoved => 'Удалена точка интереса';
 }

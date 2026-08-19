@@ -605,10 +605,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'An open-source Flutter client for MeshCore LoRa mesh networking devices.';
 
@@ -1048,40 +1044,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Enter your Stadia Maps API key. This app uses it for raster tile requests.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API key';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Not set — OpenStreetMap is shown instead';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex signing secret';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Not set — requests go out unsigned';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex tile resolution';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Current: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Map Cache';
@@ -5862,15 +5824,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get app_offline_sharedMode => 'Combined history';
 
   @override
-  String get map_copyCoordsFromMap => 'Copy coordinates';
-
-  @override
-  String get map_coordsCopied => 'Coordinates copied';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6115,4 +6068,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes m $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Copy coordinates';
+
+  @override
+  String get map_coordsCopied => 'Coordinates copied';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API key';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Not set — OpenStreetMap is shown instead';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex signing secret';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Not set — requests go out unsigned';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex tile resolution';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Current: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
+
+  @override
+  String get map_markerStyleTitle => 'Marker style';
+
+  @override
+  String get map_markerStyleColor => 'Fill colour';
+
+  @override
+  String get map_markerStyleIcon => 'Icon';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Remove for everyone';
+
+  @override
+  String get chat_poiRemoved => 'POI removed';
 }

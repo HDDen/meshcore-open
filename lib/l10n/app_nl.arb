@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "MeshCore Open Source Project 2024",
-  "settings_aboutYandexMapsTerms": "Kaarttegels van Yandex Maps. Gebruiksvoorwaarden: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Een open-source Flutter client voor MeshCore LoRa mesh netwerkapparaten.",
   "settings_infoName": "Naam",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Voer je Stadia Maps API-sleutel in. De app gebruikt die voor rastertegelverzoeken.",
-  "appSettings_yandexApiKey": "Yandex Tiles API-sleutel",
-  "appSettings_yandexApiKeyMissing": "Niet ingesteld — OpenStreetMap wordt getoond",
-  "appSettings_yandexApiKeyDialogDescription": "Voer je eigen sleutel uit het Yandex-ontwikkelaarsdashboard in. Het gratis Tiles API-niveau staat maximaal 30 verzoeken per seconde toe. Kaartgegevens © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex-ondertekeningsgeheim",
-  "appSettings_yandexSigningSecretMissing": "Niet ingesteld — verzoeken gaan ongetekend uit",
-  "appSettings_yandexSigningSecretDialogDescription": "Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.",
-  "appSettings_yandexTileScale": "Yandex-tegelresolutie",
-  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.",
   "appSettings_offlineMapCache": "Offline Kaartcache",
   "appSettings_noAreaSelected": "Geen gebied geselecteerd",
   "appSettings_areaSelectedZoom": "Geselecteerd gebied (zoom {minZoom}-{maxZoom})",
@@ -698,8 +681,6 @@
   "map_source": "Bron",
   "map_flags": "Vlaggen",
   "map_shareMarkerHere": "Deel marker hier",
-  "map_copyCoordsFromMap": "Coördinaten kopiëren",
-  "map_coordsCopied": "Coördinaten gekopieerd",
   "map_pinLabel": "Label vastzetten",
   "map_label": "Etiket",
   "map_pointOfInterest": "Interessepunt",
@@ -3162,5 +3143,30 @@
   "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{pakket} other{pakketten}}",
   "imageSend_secondsValue": "{seconds} seconden",
   "imageSend_minutesSecondsValue": "{minutes} m {seconds} s",
-  "app_connectionLostBreaked": "Verbinding met de node verbroken"
+  "app_connectionLostBreaked": "Verbinding met de node verbroken",
+  "map_copyCoordsFromMap": "Coördinaten kopiëren",
+  "map_coordsCopied": "Coördinaten gekopieerd",
+  "appSettings_yandexApiKey": "Yandex Tiles API-sleutel",
+  "appSettings_yandexApiKeyMissing": "Niet ingesteld — OpenStreetMap wordt getoond",
+  "appSettings_yandexApiKeyDialogDescription": "Voer je eigen sleutel uit het Yandex-ontwikkelaarsdashboard in. Het gratis Tiles API-niveau staat maximaal 30 verzoeken per seconde toe. Kaartgegevens © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex-ondertekeningsgeheim",
+  "appSettings_yandexSigningSecretMissing": "Niet ingesteld — verzoeken gaan ongetekend uit",
+  "appSettings_yandexSigningSecretDialogDescription": "Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.",
+  "appSettings_yandexTileScale": "Yandex-tegelresolutie",
+  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.",
+  "settings_aboutYandexMapsTerms": "Kaarttegels van Yandex Maps. Gebruiksvoorwaarden: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Markeringen tonen van...",
+  "map_markerStyleTitle": "Markeringsstijl",
+  "map_markerStyleColor": "Vulkleur",
+  "map_markerStyleIcon": "Pictogram",
+  "map_removeMarkerForEveryone": "Voor iedereen verwijderen",
+  "chat_poiRemoved": "POI verwijderd"
 }

@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "2024 MeshCore Öppen Källkodsprojekt",
-  "settings_aboutYandexMapsTerms": "Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "En öppen källkods Flutter-klient för MeshCore LoRa meshnätverksenheter.",
   "settings_infoName": "Namn",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Ange din Stadia Maps API-nyckel. Appen använder den för förfrågningar om rasterplattor.",
-  "appSettings_yandexApiKey": "API-nyckel för Yandex Tiles",
-  "appSettings_yandexApiKeyMissing": "Inte angiven – OpenStreetMap visas",
-  "appSettings_yandexApiKeyDialogDescription": "Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex signeringshemlighet",
-  "appSettings_yandexSigningSecretMissing": "Inte angiven – förfrågningar skickas osignerade",
-  "appSettings_yandexSigningSecretDialogDescription": "Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.",
-  "appSettings_yandexTileScale": "Upplösning för Yandex-rutor",
-  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.",
   "appSettings_offlineMapCache": "Offline Kartcache",
   "appSettings_noAreaSelected": "Ingen area markerad",
   "appSettings_areaSelectedZoom": "Område markerat (zoom {minZoom}-{maxZoom})",
@@ -698,8 +681,6 @@
   "map_source": "Källa",
   "map_flags": "Flaggor",
   "map_shareMarkerHere": "Dela markeringen här",
-  "map_copyCoordsFromMap": "Kopiera koordinater",
-  "map_coordsCopied": "Koordinater kopierade",
   "map_pinLabel": "Fästetikett",
   "map_label": "Etikett",
   "map_pointOfInterest": "Plats av intresse",
@@ -3162,5 +3143,30 @@
   "receivedImage_awaiting": "{bytes} byte · {packets} {packets, plural, =1{paket} other{paket}}",
   "imageSend_secondsValue": "{seconds} sekunder",
   "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
-  "app_connectionLostBreaked": "Anslutningen till noden har brutits"
+  "app_connectionLostBreaked": "Anslutningen till noden har brutits",
+  "map_copyCoordsFromMap": "Kopiera koordinater",
+  "map_coordsCopied": "Koordinater kopierade",
+  "appSettings_yandexApiKey": "API-nyckel för Yandex Tiles",
+  "appSettings_yandexApiKeyMissing": "Inte angiven – OpenStreetMap visas",
+  "appSettings_yandexApiKeyDialogDescription": "Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex signeringshemlighet",
+  "appSettings_yandexSigningSecretMissing": "Inte angiven – förfrågningar skickas osignerade",
+  "appSettings_yandexSigningSecretDialogDescription": "Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.",
+  "appSettings_yandexTileScale": "Upplösning för Yandex-rutor",
+  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.",
+  "settings_aboutYandexMapsTerms": "Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Visa markörer från...",
+  "map_markerStyleTitle": "Markörstil",
+  "map_markerStyleColor": "Fyllningsfärg",
+  "map_markerStyleIcon": "Ikon",
+  "map_removeMarkerForEveryone": "Ta bort för alla",
+  "chat_poiRemoved": "POI borttagen"
 }

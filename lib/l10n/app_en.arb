@@ -246,7 +246,6 @@
     }
   },
   "settings_aboutLegalese": "2026 MeshCore Open Source Project",
-  "settings_aboutYandexMapsTerms": "Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "An open-source Flutter client for MeshCore LoRa mesh networking devices.",
   "settings_aboutModDescription": "The «Advanced» modification is based on the original meshcore_open and incorporates changes proposed in the original application's repository or specific to the area of use, and therefore not submitted as pull requests.",
   "settings_aboutModLink": "Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced",
@@ -406,22 +405,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Enter your Stadia Maps API key. This app uses it for raster tile requests.",
-  "appSettings_yandexApiKey": "Yandex Tiles API key",
-  "appSettings_yandexApiKeyMissing": "Not set — OpenStreetMap is shown instead",
-  "appSettings_yandexApiKeyDialogDescription": "Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.",
-  "appSettings_yandexSigningSecret": "Yandex signing secret",
-  "appSettings_yandexSigningSecretMissing": "Not set — requests go out unsigned",
-  "appSettings_yandexSigningSecretDialogDescription": "Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.",
-  "appSettings_yandexTileScale": "Yandex tile resolution",
-  "appSettings_yandexTileScaleSubtitle": "Current: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.",
   "appSettings_offlineMapCache": "Offline Map Cache",
   "appSettings_unitsTitle": "Units",
   "appSettings_unitsMetric": "Metric (m / km)",
@@ -3319,9 +3302,6 @@
   "app_offline": "Offline",
   "app_offline_unableToMessage": "You cannot send messages or perform other actions while offline",
   "app_offline_sharedMode": "Combined history",
-  "map_copyCoordsFromMap": "Copy coordinates",
-  "map_coordsCopied": "Coordinates copied",
-  "map_showMarksFromChannels": "Show markers from...",
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3.0-4.35V)",
   "chat_sendImage": "Send image",
@@ -3489,5 +3469,30 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_copyCoordsFromMap": "Copy coordinates",
+  "map_coordsCopied": "Coordinates copied",
+  "appSettings_yandexApiKey": "Yandex Tiles API key",
+  "appSettings_yandexApiKeyMissing": "Not set — OpenStreetMap is shown instead",
+  "appSettings_yandexApiKeyDialogDescription": "Enter your own key from the Yandex developer dashboard. The free Tiles API tier allows up to 30 requests per second. Map data © Yandex.",
+  "appSettings_yandexSigningSecret": "Yandex signing secret",
+  "appSettings_yandexSigningSecretMissing": "Not set — requests go out unsigned",
+  "appSettings_yandexSigningSecretDialogDescription": "Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.",
+  "appSettings_yandexTileScale": "Yandex tile resolution",
+  "appSettings_yandexTileScaleSubtitle": "Current: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.",
+  "settings_aboutYandexMapsTerms": "Map tiles by Yandex Maps. Terms of use: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Show markers from...",
+  "map_markerStyleTitle": "Marker style",
+  "map_markerStyleColor": "Fill colour",
+  "map_markerStyleIcon": "Icon",
+  "map_removeMarkerForEveryone": "Remove for everyone",
+  "chat_poiRemoved": "POI removed"
 }

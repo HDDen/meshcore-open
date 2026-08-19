@@ -134,7 +134,6 @@
     }
   },
   "settings_aboutLegalese": "Proyecto MeshCore Open Source 2026",
-  "settings_aboutYandexMapsTerms": "Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/",
   "settings_aboutDescription": "Un cliente Flutter de código abierto para dispositivos MeshCore de malla LoRa.",
   "settings_infoName": "Nombre",
   "settings_infoId": "ID",
@@ -279,22 +278,6 @@
     }
   },
   "appSettings_stadiaApiKeyDialogDescription": "Introduce tu clave API de Stadia Maps. La aplicación la usa para solicitar teselas ráster.",
-  "appSettings_yandexApiKey": "Clave de Yandex Tiles API",
-  "appSettings_yandexApiKeyMissing": "Sin configurar: se muestra OpenStreetMap",
-  "appSettings_yandexApiKeyDialogDescription": "Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.",
-  "appSettings_yandexSigningSecret": "Secreto de firma de Yandex",
-  "appSettings_yandexSigningSecretMissing": "Sin configurar: las solicitudes se envían sin firma",
-  "appSettings_yandexSigningSecretDialogDescription": "Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.",
-  "appSettings_yandexTileScale": "Resolución de teselas de Yandex",
-  "appSettings_yandexTileScaleSubtitle": "Actual: {scale}",
-  "@appSettings_yandexTileScaleSubtitle": {
-    "placeholders": {
-      "scale": {
-        "type": "String"
-      }
-    }
-  },
-  "appSettings_yandexTileScaleDescription": "Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.",
   "appSettings_offlineMapCache": "Caché de mapa sin conexión",
   "appSettings_noAreaSelected": "No se ha seleccionado ningún área",
   "appSettings_areaSelectedZoom": "Área seleccionada (zoom {minZoom}-{maxZoom})",
@@ -720,8 +703,6 @@
   "map_source": "Fuente",
   "map_flags": "Banderas",
   "map_shareMarkerHere": "Compartir marcador aquí",
-  "map_copyCoordsFromMap": "Copiar coordenadas",
-  "map_coordsCopied": "Coordenadas copiadas",
   "map_pinLabel": "Etiqueta del pin",
   "map_label": "Etiqueta",
   "map_pointOfInterest": "Punto de interés",
@@ -3479,5 +3460,30 @@
   "receivedImage_awaiting": "{bytes} bytes · {packets} {packets, plural, =1{paquete} other{paquetes}}",
   "imageSend_secondsValue": "{seconds} segundos",
   "imageSend_minutesSecondsValue": "{minutes} min {seconds} s",
-  "app_connectionLostBreaked": "Conexión con el nodo interrumpida"
+  "app_connectionLostBreaked": "Conexión con el nodo interrumpida",
+  "map_copyCoordsFromMap": "Copiar coordenadas",
+  "map_coordsCopied": "Coordenadas copiadas",
+  "appSettings_yandexApiKey": "Clave de Yandex Tiles API",
+  "appSettings_yandexApiKeyMissing": "Sin configurar: se muestra OpenStreetMap",
+  "appSettings_yandexApiKeyDialogDescription": "Introduce tu propia clave del panel de desarrollador de Yandex. El plan gratuito de Tiles API permite hasta 30 solicitudes por segundo. Datos del mapa © Yandex.",
+  "appSettings_yandexSigningSecret": "Secreto de firma de Yandex",
+  "appSettings_yandexSigningSecretMissing": "Sin configurar: las solicitudes se envían sin firma",
+  "appSettings_yandexSigningSecretDialogDescription": "Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.",
+  "appSettings_yandexTileScale": "Resolución de teselas de Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Actual: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.",
+  "settings_aboutYandexMapsTerms": "Teselas del mapa de Yandex Maps. Condiciones de uso: \nhttps://yandex.ru/legal/maps_termsofuse/",
+  "map_showMarksFromChannels": "Mostrar marcadores de...",
+  "map_markerStyleTitle": "Estilo del marcador",
+  "map_markerStyleColor": "Color de relleno",
+  "map_markerStyleIcon": "Icono",
+  "map_removeMarkerForEveryone": "Quitar para todos",
+  "chat_poiRemoved": "POI eliminado"
 }

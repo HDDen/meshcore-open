@@ -622,10 +622,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_aboutLegalese => 'Проект MeshCore с отворен код 2024 г.';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Плочки на картата от Yandex Maps. Условия за ползване: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Отворен Flutter клиент за MeshCore LoRa мрежови устройства.';
 
@@ -1072,40 +1068,6 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Въведете своя API ключ за Stadia Maps. Приложението го използва за заявки за растерни плочки.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Ключ за Yandex Tiles API';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Не е зададен — показва се OpenStreetMap';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Въведете собствен ключ от разработчиеския кабинет на Yandex. Безплатният план на Tiles API позволява до 30 заявки в секунда. Данни за картата © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Тайна за подпис на Yandex';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Не е зададена — заявките се изпращат без подпис';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Резолюция на плочките на Yandex';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Сега: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.';
 
   @override
   String get appSettings_offlineMapCache => 'Кеш на офлайн карти';
@@ -5962,15 +5924,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String get app_offline_sharedMode => 'Обединена история';
 
   @override
-  String get map_copyCoordsFromMap => 'Копиране на координатите';
-
-  @override
-  String get map_coordsCopied => 'Координатите са копирани';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Оборудование';
 
   @override
@@ -6217,4 +6170,66 @@ class AppLocalizationsBg extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes мин $seconds сек';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Копиране на координатите';
+
+  @override
+  String get map_coordsCopied => 'Координатите са копирани';
+
+  @override
+  String get appSettings_yandexApiKey => 'Ключ за Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Не е зададен — показва се OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Въведете собствен ключ от разработчиеския кабинет на Yandex. Безплатният план на Tiles API позволява до 30 заявки в секунда. Данни за картата © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Тайна за подпис на Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Не е зададена — заявките се изпращат без подпис';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Резолюция на плочките на Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Сега: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Плочки на картата от Yandex Maps. Условия за ползване: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Показване на маркери от...';
+
+  @override
+  String get map_markerStyleTitle => 'Стил на маркера';
+
+  @override
+  String get map_markerStyleColor => 'Цвят на запълване';
+
+  @override
+  String get map_markerStyleIcon => 'Икона';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Премахване за всички';
+
+  @override
+  String get chat_poiRemoved => 'Точката е премахната';
 }

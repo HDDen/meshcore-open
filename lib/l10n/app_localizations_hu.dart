@@ -613,10 +613,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore nyílt forráskódú projekt';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Nyílt forráskódú Flutter kliens MeshCore LoRa mesh hálózati eszközökhöz.';
 
@@ -1061,40 +1057,6 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Adja meg a Stadia Maps API-kulcsát. Az alkalmazás ezt használja raszteres csempekérésekhez.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Yandex Tiles API-kulcs';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Nincs beállítva – az OpenStreetMap jelenik meg';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex aláírási titok';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Nincs beállítva – a kérések aláírás nélkül mennek ki';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Yandex csempefelbontás';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Jelenleg: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline térképgyorsítótár';
@@ -5958,15 +5920,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get app_offline_sharedMode => 'Egyesített előzmények';
 
   @override
-  String get map_copyCoordsFromMap => 'Koordináták másolása';
-
-  @override
-  String get map_coordsCopied => 'Koordináták másolva';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardverő';
 
   @override
@@ -6211,4 +6164,66 @@ class AppLocalizationsHu extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes per $seconds sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Koordináták másolása';
+
+  @override
+  String get map_coordsCopied => 'Koordináták másolva';
+
+  @override
+  String get appSettings_yandexApiKey => 'Yandex Tiles API-kulcs';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Nincs beállítva – az OpenStreetMap jelenik meg';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Adja meg saját kulcsát a Yandex fejlesztői felületéről. Az ingyenes Tiles API csomag másodpercenként legfeljebb 30 kérést enged. Térképadatok © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex aláírási titok';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Nincs beállítva – a kérések aláírás nélkül mennek ki';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Yandex csempefelbontás';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Jelenleg: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Térképcsempék: Yandex Maps. Felhasználási feltételek: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Jelölők megjelenítése innen...';
+
+  @override
+  String get map_markerStyleTitle => 'Jelölő stílusa';
+
+  @override
+  String get map_markerStyleColor => 'Kitöltőszín';
+
+  @override
+  String get map_markerStyleIcon => 'Ikon';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Eltávolítás mindenkinek';
+
+  @override
+  String get chat_poiRemoved => 'POI eltávolítva';
 }

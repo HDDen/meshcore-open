@@ -427,9 +427,14 @@ int maxContactMessageBytes() {
   return _minPositive(byFrame, maxTextPayloadBytes);
 }
 
+/// Bytes the `"<name>: "` prefix costs in a channel message. The user-facing
+/// outgoing cap counts it along with the text, so callers applying that cap
+/// have to subtract this.
+int channelSenderPrefixBytes(String? senderName) =>
+    _senderNameBytes(senderName) + 2;
+
 int maxChannelMessageBytes(String? senderName) {
-  final nameLength = _senderNameBytes(senderName);
-  final prefixBytes = nameLength + 2; // "<name>: "
+  final prefixBytes = channelSenderPrefixBytes(senderName);
   final byPayload = maxTextPayloadBytes - prefixBytes;
   final byFrame = maxFrameSize - _sendChannelTextMsgOverheadBytes;
   return _minPositive(byPayload, byFrame);

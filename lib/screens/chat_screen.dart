@@ -19,6 +19,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/shared_marker_deletions.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../widgets/markup_text_editing_controller.dart';
@@ -1431,6 +1432,9 @@ class _ChatScreenState extends State<ChatScreen> {
           !MCOImageV3Codec.isTextPayload(outgoingText) &&
           // Shared contact payloads must stay untouched.
           parseSharedContactText(outgoingText) == null &&
+          // See channel_chat_screen: markers keep their structure and `del:`
+          // commands stay verbatim, both handled in the connector.
+          !SharedMarkerDeletion.isMarkerPayload(outgoingText) &&
           connector.isContactCyr2LatEnabled(
             _resolveContact(connector).publicKeyHex,
           )) {

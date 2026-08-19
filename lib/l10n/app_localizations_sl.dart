@@ -610,10 +610,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_aboutLegalese => 'Odprtokodni projekt MeshCore 2024';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Ploščice zemljevida: Yandex Maps. Pogoji uporabe: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'Odprtokodni Flutter klient za naprave za LoRa omrežje MeshCore.';
 
@@ -1056,40 +1052,6 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Vnesite svoj ključ API za Stadia Maps. Aplikacija ga uporablja za zahteve rastrskih ploščic.';
-
-  @override
-  String get appSettings_yandexApiKey => 'Ključ Yandex Tiles API';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Ni nastavljen – prikazan je OpenStreetMap';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Vnesite svoj ključ iz razvijalske nadzorne plošče Yandex. Brezplačni paket Tiles API dovoljuje do 30 zahtev na sekundo. Podatki zemljevida © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Skrivnost za podpis Yandex';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Ni nastavljena – zahteve gredo brez podpisa';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Ločljivost ploščic Yandex';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Trenutno: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.';
 
   @override
   String get appSettings_offlineMapCache => 'Shramba zemljevidov brez povezave';
@@ -5937,15 +5899,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get app_offline_sharedMode => 'Združena zgodovina';
 
   @override
-  String get map_copyCoordsFromMap => 'Kopiraj koordinate';
-
-  @override
-  String get map_coordsCopied => 'Koordinate kopirane';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardver';
 
   @override
@@ -6191,4 +6144,66 @@ class AppLocalizationsSl extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes m $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Kopiraj koordinate';
+
+  @override
+  String get map_coordsCopied => 'Koordinate kopirane';
+
+  @override
+  String get appSettings_yandexApiKey => 'Ključ Yandex Tiles API';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Ni nastavljen – prikazan je OpenStreetMap';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Vnesite svoj ključ iz razvijalske nadzorne plošče Yandex. Brezplačni paket Tiles API dovoljuje do 30 zahtev na sekundo. Podatki zemljevida © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Skrivnost za podpis Yandex';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Ni nastavljena – zahteve gredo brez podpisa';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Ločljivost ploščic Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Trenutno: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Ploščice zemljevida: Yandex Maps. Pogoji uporabe: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Prikaži oznake iz...';
+
+  @override
+  String get map_markerStyleTitle => 'Slog oznake';
+
+  @override
+  String get map_markerStyleColor => 'Barva polnila';
+
+  @override
+  String get map_markerStyleIcon => 'Ikona';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Odstrani za vse';
+
+  @override
+  String get chat_poiRemoved => 'POI odstranjen';
 }

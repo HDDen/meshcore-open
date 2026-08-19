@@ -607,10 +607,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_aboutLegalese => '2024 MeshCore Öppen Källkodsprojekt';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      'Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/';
-
-  @override
   String get settings_aboutDescription =>
       'En öppen källkods Flutter-klient för MeshCore LoRa meshnätverksenheter.';
 
@@ -1049,40 +1045,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get appSettings_stadiaApiKeyDialogDescription =>
       'Ange din Stadia Maps API-nyckel. Appen använder den för förfrågningar om rasterplattor.';
-
-  @override
-  String get appSettings_yandexApiKey => 'API-nyckel för Yandex Tiles';
-
-  @override
-  String get appSettings_yandexApiKeyMissing =>
-      'Inte angiven – OpenStreetMap visas';
-
-  @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      'Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.';
-
-  @override
-  String get appSettings_yandexSigningSecret => 'Yandex signeringshemlighet';
-
-  @override
-  String get appSettings_yandexSigningSecretMissing =>
-      'Inte angiven – förfrågningar skickas osignerade';
-
-  @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      'Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.';
-
-  @override
-  String get appSettings_yandexTileScale => 'Upplösning för Yandex-rutor';
-
-  @override
-  String appSettings_yandexTileScaleSubtitle(String scale) {
-    return 'Nu: $scale';
-  }
-
-  @override
-  String get appSettings_yandexTileScaleDescription =>
-      'Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.';
 
   @override
   String get appSettings_offlineMapCache => 'Offline Kartcache';
@@ -5912,15 +5874,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get app_offline_sharedMode => 'Kombinerad historik';
 
   @override
-  String get map_copyCoordsFromMap => 'Kopiera koordinater';
-
-  @override
-  String get map_coordsCopied => 'Koordinater kopierade';
-
-  @override
-  String get map_showMarksFromChannels => 'Show markers from...';
-
-  @override
   String get settings_infoHardware => 'Hardware';
 
   @override
@@ -6167,4 +6120,66 @@ class AppLocalizationsSv extends AppLocalizations {
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes min $seconds s';
   }
+
+  @override
+  String get map_copyCoordsFromMap => 'Kopiera koordinater';
+
+  @override
+  String get map_coordsCopied => 'Koordinater kopierade';
+
+  @override
+  String get appSettings_yandexApiKey => 'API-nyckel för Yandex Tiles';
+
+  @override
+  String get appSettings_yandexApiKeyMissing =>
+      'Inte angiven – OpenStreetMap visas';
+
+  @override
+  String get appSettings_yandexApiKeyDialogDescription =>
+      'Ange din egen nyckel från Yandex utvecklarpanel. Den kostnadsfria Tiles API-nivån tillåter upp till 30 förfrågningar per sekund. Kartdata © Yandex.';
+
+  @override
+  String get appSettings_yandexSigningSecret => 'Yandex signeringshemlighet';
+
+  @override
+  String get appSettings_yandexSigningSecretMissing =>
+      'Inte angiven – förfrågningar skickas osignerade';
+
+  @override
+  String get appSettings_yandexSigningSecretDialogDescription =>
+      'Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.';
+
+  @override
+  String get appSettings_yandexTileScale => 'Upplösning för Yandex-rutor';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Nu: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.';
+
+  @override
+  String get settings_aboutYandexMapsTerms =>
+      'Kartrutor från Yandex Maps. Användarvillkor: \nhttps://yandex.ru/legal/maps_termsofuse/';
+
+  @override
+  String get map_showMarksFromChannels => 'Visa markörer från...';
+
+  @override
+  String get map_markerStyleTitle => 'Markörstil';
+
+  @override
+  String get map_markerStyleColor => 'Fyllningsfärg';
+
+  @override
+  String get map_markerStyleIcon => 'Ikon';
+
+  @override
+  String get map_removeMarkerForEveryone => 'Ta bort för alla';
+
+  @override
+  String get chat_poiRemoved => 'POI borttagen';
 }
