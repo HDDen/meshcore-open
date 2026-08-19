@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:latlong2/latlong.dart';
 
+import '../helpers/coordinate_text.dart';
 import '../helpers/link_handler.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/message_markup.dart';
 import '../screens/contacts_screen.dart';
+import '../screens/map_screen.dart';
 import '../theme/mesh_theme.dart';
 import 'mention_chip.dart';
 
@@ -15,8 +18,9 @@ import 'mention_chip.dart';
 /// chips.
 ///
 /// Mentions need a widget, not a text style, so the body is assembled as spans
-/// instead of handed to `Linkify` whole. URLs are linkified span by span so
-/// they stay tappable alongside the chips and the styled runs.
+/// instead of handed to `Linkify` whole. URLs and `lat,lon` pairs are picked
+/// out span by span so they stay tappable alongside the chips and the styled
+/// runs.
 class FormattedMessageText extends StatefulWidget {
   const FormattedMessageText({
     super.key,
@@ -135,7 +139,24 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
               ),
             );
           } else {
-            spans.add(TextSpan(text: element.text, style: blockStyle));
+            // Coordinates are looked for inside plain runs only, so a pair
+            // sitting in a URL stays part of that link.
+            for (final part in CoordinateText.split(element.text)) {
+              if (!part.isCoordinate) {
+                spans.add(TextSpan(text: part.text, style: blockStyle));
+                continue;
+              }
+              final recognizer = TapGestureRecognizer()
+                ..onTap = () => _openCoordinate(context, part);
+              _recognizers.add(recognizer);
+              spans.add(
+                TextSpan(
+                  text: part.text,
+                  style: _applyMarkup(linkStyle, block.styles),
+                  recognizer: recognizer,
+                ),
+              );
+            }
           }
         }
       }
@@ -144,6 +165,18 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
     _spans = spans;
     _builtFor = key;
     return spans;
+  }
+
+  void _openCoordinate(BuildContext context, CoordinateSegment segment) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          highlightPosition: LatLng(segment.latitude!, segment.longitude!),
+          highlightLabel: segment.text.trim(),
+        ),
+      ),
+    );
   }
 
   /// Folds parsed markup into a text style. Underline and strikethrough can

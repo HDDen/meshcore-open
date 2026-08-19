@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../helpers/coordinate_text.dart';
 import '../helpers/link_handler.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/message_markup.dart';
@@ -31,16 +32,18 @@ class TranslatedMessageContent extends StatelessWidget {
     this.onSecondaryTap,
   });
 
-  /// Mentions need widget spans and markup needs per-run styles, neither of
-  /// which `Linkify` can produce, so text carrying either is assembled span by
-  /// span instead. Plain text keeps the original path, including selectable
-  /// linkify on desktop.
+  /// Mentions need widget spans, markup needs per-run styles and a `lat,lon`
+  /// pair needs its own tap target — none of which `Linkify` can produce, so
+  /// text carrying any of them is assembled span by span instead. Plain text
+  /// keeps the original path, including selectable linkify on desktop.
   Widget _buildBody({
     required BuildContext context,
     required String text,
     required TextStyle style,
   }) {
-    if (!MentionText.has(text) && !MessageMarkup.has(text)) {
+    if (!MentionText.has(text) &&
+        !MessageMarkup.has(text) &&
+        !CoordinateText.has(text)) {
       return LinkHandler.buildLinkifyText(
         context: context,
         text: text,

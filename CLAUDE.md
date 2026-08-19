@@ -240,6 +240,12 @@ Three call sites. **Rendering**: `widgets/formatted_message_text.dart` treats ma
 
 The edits themselves are pure transforms in `helpers/markup_editing.dart` (`wrap`, `stripFormatting`), shared by all three entry points so they cannot drift apart; each caller applies the UTF-8 limiter afterwards, so a tag can never push a message past the payload budget. Wrapping an empty selection leaves the caret between a fresh pair. `stripFormatting` removes markers inside the selection or, failing that, the pair immediately around it — colour tags included, via `_surroundingPairs`.
 
+### Coordinates in message text
+
+A message that is *only* `lat,lon` is still handled by `parseCoordinateText` (in `map_screen.dart`), which turns the whole bubble into one link. A pair written inside a sentence — "I'm at 45.0,38.9, see you" — is found by `helpers/coordinate_text.dart` instead and linked on its own, leaving the rest of the text alone. `CoordinateText.split` runs inside `widgets/formatted_message_text.dart`, on plain runs only, so a pair sitting in a URL query stays part of that link; `TranslatedMessageContent` routes text to that widget when `CoordinateText.has` is true, the same way it already does for mentions and markup.
+
+The pattern is deliberately stricter than the whole-message one: both halves must carry a decimal point, or "1,5" written as a price and "steps 1,2" would read as coordinates. Out-of-range values are dropped after parsing, not by the pattern.
+
 ### Composer rebuilds
 Anything in a chat composer that reacts to the text controller must go through `widgets/composer_text_builder.dart`, never a bare `ValueListenableBuilder`. A `TextEditingController` notifies on every value change, **selection included**, and dragging an Android selection handle changes the selection continuously — rebuilding the text field underneath the gesture makes the handle stutter badly enough to be unusable. `ComposerTextBuilder` rebuilds only when the text actually changes; `ByteCountedTextField` keeps its own listener with the same guard, plus a byte-count cache, because its encoder runs full MCMP compression over the message and that is far too expensive to repeat per pointer move. `MarkupTextEditingController` caches its span tree for the same reason — `buildTextSpan` fires on every repaint, not just on rebuilds.
 
