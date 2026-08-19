@@ -7815,7 +7815,14 @@ class MeshCoreConnector extends ChangeNotifier {
         notifyListeners();
         break;
       case pushCodeAdvert:
-        // Known contact was seen again - just a pub key, no action needed
+        // A known contact re-advertised. The node has already refreshed its
+        // record — coordinates included — but this push carries only the
+        // public key, so the new values have to be read back explicitly or the
+        // map keeps showing where the node used to be. The request never
+        // leaves the device: the node answers it out of its own contact table.
+        if (frame.length >= 1 + pubKeySize) {
+          unawaited(getContactByKey(frame.sublist(1, 1 + pubKeySize)));
+        }
         break;
       case pushCodeNewAdvert:
         debugPrint('Got New CONTACT');
