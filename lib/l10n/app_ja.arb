@@ -372,6 +372,16 @@
   "appSettings_yandexSigningSecret": "Yandex 署名シークレット",
   "appSettings_yandexSigningSecretMissing": "未設定 — リクエストは署名なしで送信されます",
   "appSettings_yandexSigningSecretDialogDescription": "任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。",
+  "appSettings_yandexTileScale": "Yandex タイル解像度",
+  "appSettings_yandexTileScaleSubtitle": "現在: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。",
   "appSettings_offlineMapCache": "オフライン地図キャッシュ",
   "appSettings_unitsTitle": "単位",
   "appSettings_unitsMetric": "メートル法 (m / km)",

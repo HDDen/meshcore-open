@@ -412,6 +412,16 @@
   "appSettings_yandexSigningSecret": "Yandex signing secret",
   "appSettings_yandexSigningSecretMissing": "Not set — requests go out unsigned",
   "appSettings_yandexSigningSecretDialogDescription": "Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.",
+  "appSettings_yandexTileScale": "Yandex tile resolution",
+  "appSettings_yandexTileScaleSubtitle": "Current: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.",
   "appSettings_offlineMapCache": "Offline Map Cache",
   "appSettings_unitsTitle": "Units",
   "appSettings_unitsMetric": "Metric (m / km)",
@@ -3311,6 +3321,7 @@
   "app_offline_sharedMode": "Combined history",
   "map_copyCoordsFromMap": "Copy coordinates",
   "map_coordsCopied": "Coordinates copied",
+  "map_showMarksFromChannels": "Show markers from...",
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3.0-4.35V)",
   "chat_sendImage": "Send image",

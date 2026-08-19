@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Yandex-ondertekeningsgeheim",
   "appSettings_yandexSigningSecretMissing": "Niet ingesteld — verzoeken gaan ongetekend uit",
   "appSettings_yandexSigningSecretDialogDescription": "Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.",
+  "appSettings_yandexTileScale": "Yandex-tegelresolutie",
+  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.",
   "appSettings_offlineMapCache": "Offline Kaartcache",
   "appSettings_noAreaSelected": "Geen gebied geselecteerd",
   "appSettings_areaSelectedZoom": "Geselecteerd gebied (zoom {minZoom}-{maxZoom})",

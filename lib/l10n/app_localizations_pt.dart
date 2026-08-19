@@ -1090,6 +1090,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Opcional. Cole o segredo de assinatura vinculado à sua chave no console da Yandex. No modo de assinatura opcional, solicitações sem assinatura também funcionam.';
 
   @override
+  String get appSettings_yandexTileScale => 'Resolução dos blocos da Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Atual: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Valores maiores solicitam o mesmo bloco com mais pixels — mais nítido em telas densas, porém com mais tráfego e espaço em cache.';
+
+  @override
   String get appSettings_offlineMapCache => 'Cache de Mapa Offline';
 
   @override
@@ -5948,6 +5960,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coordenadas copiadas';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

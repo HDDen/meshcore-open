@@ -283,6 +283,16 @@
   "appSettings_yandexSigningSecret": "Segreto di firma Yandex",
   "appSettings_yandexSigningSecretMissing": "Non impostato: le richieste vengono inviate senza firma",
   "appSettings_yandexSigningSecretDialogDescription": "Facoltativo. Incolla il segreto di firma associato alla tua chiave nella console Yandex. Con la modalità di firma opzionale funzionano anche le richieste non firmate.",
+  "appSettings_yandexTileScale": "Risoluzione dei tile Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Attuale: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Valori più alti richiedono lo stesso tile a una dimensione in pixel maggiore: più nitido su schermi densi, ma più traffico e spazio in cache.",
   "appSettings_offlineMapCache": "Cache Mappa Offline",
   "appSettings_noAreaSelected": "Nessun'area selezionata",
   "appSettings_areaSelectedZoom": "Area selezionata (zoom {minZoom}-{maxZoom})",

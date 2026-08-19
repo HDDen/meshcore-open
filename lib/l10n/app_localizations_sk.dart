@@ -1079,6 +1079,18 @@ class AppLocalizationsSk extends AppLocalizations {
       'Voliteľné. Vložte podpisové tajomstvo priradené k vášmu kľúču v konzole Yandex. Pri voliteľnom režime podpisu fungujú aj nepodpísané požiadavky.';
 
   @override
+  String get appSettings_yandexTileScale => 'Rozlíšenie dlaždíc Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Aktuálne: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Vyššie hodnoty žiadajú tú istú dlaždicu vo väčšej veľkosti — ostrejšie na hustých displejoch, ale viac dát a miesta v cache.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline Mapa Pamäť';
 
   @override
@@ -5921,6 +5933,9 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Súradnice skopírované';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

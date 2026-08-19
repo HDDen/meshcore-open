@@ -341,6 +341,16 @@
   "appSettings_yandexSigningSecret": "Yandex aláírási titok",
   "appSettings_yandexSigningSecretMissing": "Nincs beállítva – a kérések aláírás nélkül mennek ki",
   "appSettings_yandexSigningSecretDialogDescription": "Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.",
+  "appSettings_yandexTileScale": "Yandex csempefelbontás",
+  "appSettings_yandexTileScaleSubtitle": "Jelenleg: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.",
   "appSettings_offlineMapCache": "Offline térképgyorsítótár",
   "appSettings_unitsTitle": "Egységek",
   "appSettings_unitsMetric": "Metrikus (m/km)",

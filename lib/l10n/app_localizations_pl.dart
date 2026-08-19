@@ -1093,6 +1093,18 @@ class AppLocalizationsPl extends AppLocalizations {
       'Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.';
 
   @override
+  String get appSettings_yandexTileScale => 'Rozdzielczość kafelków Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Obecnie: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Wyższe wartości pobierają ten sam kafelek w większym rozmiarze pikseli — ostrzej na gęstych ekranach, ale więcej transferu i miejsca w pamięci podręcznej.';
+
+  @override
   String get appSettings_offlineMapCache => 'Pamięć podręczna map offline';
 
   @override
@@ -5977,6 +5989,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Skopiowano współrzędne';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Sprzęt';

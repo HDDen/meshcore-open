@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Yandex-Signaturgeheimnis",
   "appSettings_yandexSigningSecretMissing": "Nicht gesetzt – Anfragen gehen unsigniert raus",
   "appSettings_yandexSigningSecretDialogDescription": "Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.",
+  "appSettings_yandexTileScale": "Yandex-Kachelauflösung",
+  "appSettings_yandexTileScaleSubtitle": "Aktuell: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.",
   "appSettings_offlineMapCache": "Offline-Karten-Cache",
   "appSettings_noAreaSelected": "Kein Bereich ausgewählt",
   "appSettings_areaSelectedZoom": "Bereich ausgewählt (Zoom {minZoom}-{maxZoom})",

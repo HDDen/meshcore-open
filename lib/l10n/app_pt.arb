@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Segredo de assinatura da Yandex",
   "appSettings_yandexSigningSecretMissing": "Não definido — as solicitações são enviadas sem assinatura",
   "appSettings_yandexSigningSecretDialogDescription": "Opcional. Cole o segredo de assinatura vinculado à sua chave no console da Yandex. No modo de assinatura opcional, solicitações sem assinatura também funcionam.",
+  "appSettings_yandexTileScale": "Resolução dos blocos da Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Atual: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Valores maiores solicitam o mesmo bloco com mais pixels — mais nítido em telas densas, porém com mais tráfego e espaço em cache.",
   "appSettings_offlineMapCache": "Cache de Mapa Offline",
   "appSettings_noAreaSelected": "Nenhuma área selecionada",
   "appSettings_areaSelectedZoom": "Área selecionada (zoom {minZoom}-{maxZoom})",

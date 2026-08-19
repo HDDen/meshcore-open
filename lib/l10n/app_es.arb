@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Secreto de firma de Yandex",
   "appSettings_yandexSigningSecretMissing": "Sin configurar: las solicitudes se envían sin firma",
   "appSettings_yandexSigningSecretDialogDescription": "Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.",
+  "appSettings_yandexTileScale": "Resolución de teselas de Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Actual: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.",
   "appSettings_offlineMapCache": "Caché de mapa sin conexión",
   "appSettings_noAreaSelected": "No se ha seleccionado ningún área",
   "appSettings_areaSelectedZoom": "Área seleccionada (zoom {minZoom}-{maxZoom})",

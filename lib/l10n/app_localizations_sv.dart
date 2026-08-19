@@ -1073,6 +1073,18 @@ class AppLocalizationsSv extends AppLocalizations {
       'Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.';
 
   @override
+  String get appSettings_yandexTileScale => 'Upplösning för Yandex-rutor';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Nu: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline Kartcache';
 
   @override
@@ -5904,6 +5916,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Koordinater kopierade';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

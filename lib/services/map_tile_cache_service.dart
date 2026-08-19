@@ -840,13 +840,19 @@ class MapTileCacheService extends ChangeNotifier {
     if (source.isYandex) {
       final apiKey = settings.effectiveMapYandexApiKey;
       if (apiKey.isEmpty) return _osmUrlTemplate;
+      final scale = AppSettings.formatMapYandexTileScale(
+        settings.mapYandexTileScale,
+      );
       return 'https://$yandexTileHost/v1/tiles/'
           '?apikey=${Uri.encodeQueryComponent(apiKey)}'
           '&lang=${_yandexLang(settings)}'
           '&l=map'
           '&projection=web_mercator'
           '&maptype=map'
-          '&x={x}&y={y}&z={z}';
+          '&x={x}&y={y}&z={z}'
+          // The signature, added by signTileUrl(), must stay the last
+          // parameter, so anything new goes above it.
+          '&scale=$scale';
     }
     if (!source.isStadia) {
       return _osmUrlTemplate;

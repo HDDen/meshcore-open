@@ -236,6 +236,11 @@ class AppSettings {
   final String? mapTileApiKey;
   final String? mapYandexApiKey;
   final String? mapYandexSigningSecret;
+
+  /// Yandex tile `scale` parameter. Higher renders the same tile at a
+  /// multiple of 256 px — crisper on dense screens, at the cost of traffic
+  /// and cache size.
+  final double mapYandexTileScale;
   final bool notificationsEnabled;
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
@@ -481,6 +486,39 @@ class AppSettings {
         .toInt();
   }
 
+  static const double defaultMapYandexTileScale = 1.0;
+  /// Below 1.0 the server renders the tile smaller than 256 px and the map
+  /// upscales it — blurry, but a fraction of the traffic, which is the point
+  /// on a metered or barely-there connection.
+  static const List<double> mapYandexTileScaleOptions = [
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+  ];
+
+  /// `0.25`, `0.5`, `1.0` — always a decimal point, never a rounded second
+  /// digit. The same text goes into the picker and into the request, so it
+  /// cannot drift between what the user sees and what is cached.
+  static String formatMapYandexTileScale(double scale) {
+    final text = scale.toStringAsFixed(2);
+    return text.endsWith('0') ? text.substring(0, text.length - 1) : text;
+  }
+
+  /// Snaps to one of [mapYandexTileScaleOptions]; the API accepts 0.1 to 4.0,
+  /// but arbitrary values only cost bandwidth without looking better.
+  static double normalizeMapYandexTileScale(dynamic value) {
+    final parsed = value is num ? value.toDouble() : null;
+    if (parsed == null) return defaultMapYandexTileScale;
+    for (final option in mapYandexTileScaleOptions) {
+      if ((option - parsed).abs() < 0.001) return option;
+    }
+    return defaultMapYandexTileScale;
+  }
+
   static int normalizeExactQuoteLimit(dynamic value) {
     int? parsed;
     if (value is int) {
@@ -605,6 +643,7 @@ class AppSettings {
     this.mapTileApiKey,
     this.mapYandexApiKey,
     this.mapYandexSigningSecret,
+    this.mapYandexTileScale = defaultMapYandexTileScale,
     this.notificationsEnabled = true,
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
@@ -746,6 +785,7 @@ class AppSettings {
       'map_tile_api_key': mapTileApiKey,
       'map_yandex_api_key': mapYandexApiKey,
       'map_yandex_signing_secret': mapYandexSigningSecret,
+      'map_yandex_tile_scale': mapYandexTileScale,
       'notifications_enabled': notificationsEnabled,
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
@@ -920,6 +960,9 @@ class AppSettings {
       mapTileApiKey: json['map_tile_api_key'] as String?,
       mapYandexApiKey: json['map_yandex_api_key'] as String?,
       mapYandexSigningSecret: json['map_yandex_signing_secret'] as String?,
+      mapYandexTileScale: normalizeMapYandexTileScale(
+        json['map_yandex_tile_scale'],
+      ),
       notificationsEnabled: json['notifications_enabled'] as bool? ?? true,
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
@@ -1118,6 +1161,7 @@ class AppSettings {
     Object? mapTileApiKey = _unset,
     Object? mapYandexApiKey = _unset,
     Object? mapYandexSigningSecret = _unset,
+    double? mapYandexTileScale,
     bool? notificationsEnabled,
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
@@ -1254,6 +1298,7 @@ class AppSettings {
       mapYandexSigningSecret: mapYandexSigningSecret == _unset
           ? this.mapYandexSigningSecret
           : mapYandexSigningSecret as String?,
+      mapYandexTileScale: mapYandexTileScale ?? this.mapYandexTileScale,
       mapTileApiKey: mapTileApiKey == _unset
           ? this.mapTileApiKey
           : mapTileApiKey as String?,

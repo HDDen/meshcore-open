@@ -1091,6 +1091,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Optional. Fügen Sie das Signaturgeheimnis ein, das mit Ihrem Schlüssel in der Yandex-Konsole verknüpft ist. Im optionalen Signaturmodus funktionieren auch unsignierte Anfragen.';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex-Kachelauflösung';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Aktuell: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Höhere Werte fordern dieselbe Kachel in größerer Pixelgröße an – schärfer auf dichten Displays, aber mehr Datenverkehr und Cache-Bedarf.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline-Karten-Cache';
 
   @override
@@ -5959,6 +5971,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Koordinaten kopiert';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

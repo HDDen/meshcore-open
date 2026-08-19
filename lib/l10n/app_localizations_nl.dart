@@ -1084,6 +1084,18 @@ class AppLocalizationsNl extends AppLocalizations {
       'Optioneel. Plak het ondertekeningsgeheim dat aan je sleutel is gekoppeld in de Yandex-console. In de optionele ondertekeningsmodus werken ook niet-ondertekende verzoeken.';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex-tegelresolutie';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Nu: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Hogere waarden vragen dezelfde tegel op groter pixelformaat — scherper op dichte schermen, maar meer verkeer en cacheruimte.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline Kaartcache';
 
   @override
@@ -5936,6 +5948,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coördinaten gekopieerd';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

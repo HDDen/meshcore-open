@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Тайна за подпис на Yandex",
   "appSettings_yandexSigningSecretMissing": "Не е зададена — заявките се изпращат без подпис",
   "appSettings_yandexSigningSecretDialogDescription": "По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.",
+  "appSettings_yandexTileScale": "Резолюция на плочките на Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Сега: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.",
   "appSettings_offlineMapCache": "Кеш на офлайн карти",
   "appSettings_noAreaSelected": "Няма избрана област",
   "appSettings_areaSelectedZoom": "Избрана е област (мащаб {minZoom}-{maxZoom})",

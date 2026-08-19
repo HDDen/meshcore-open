@@ -238,6 +238,16 @@
   "appSettings_yandexSigningSecret": "Секрет подписи Яндекса",
   "appSettings_yandexSigningSecretMissing": "Не задан — запросы отправляются без подписи",
   "appSettings_yandexSigningSecretDialogDescription": "Необязательно. Вставьте секрет подписи, привязанный к вашему ключу в кабинете Яндекса. При «опциональном» режиме подписи запросы без подписи тоже проходят.",
+  "appSettings_yandexTileScale": "Разрешение тайлов Яндекса",
+  "appSettings_yandexTileScaleSubtitle": "Сейчас: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Большие значения запрашивают тот же тайл в большем разрешении — чётче на плотных экранах, но больше трафика и места в кэше.",
   "appSettings_offlineMapCache": "Кэш офлайн-карты",
   "appSettings_noAreaSelected": "Область не выбрана",
   "appSettings_areaSelectedZoom": "Область выбрана (масштаб {minZoom}–{maxZoom})",
@@ -2407,6 +2417,7 @@
   "app_offline_sharedMode": "Объединённая история",
   "map_copyCoordsFromMap": "Скопировать координаты точки",
   "map_coordsCopied": "Координаты скопированы",
+  "map_showMarksFromChannels": "Отображать метки от...",
   "settings_bleDebugLog": "Журнал отладки BLE",
   "settings_bleDebugLogSubtitle": "Команды BLE, ответы и сырые данные",
   "chat_pathManagement": "Управление маршрутами",

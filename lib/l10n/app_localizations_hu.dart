@@ -1085,6 +1085,18 @@ class AppLocalizationsHu extends AppLocalizations {
       'Nem kötelező. Illessze be a Yandex konzolban a kulcshoz kötött aláírási titkot. Opcionális aláírási módban az aláírás nélküli kérések is működnek.';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex csempefelbontás';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Jelenleg: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'A nagyobb értékek ugyanazt a csempét nagyobb pixelméretben kérik – élesebb sűrű kijelzőn, de több forgalom és gyorsítótár.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline térképgyorsítótár';
 
   @override
@@ -5950,6 +5962,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Koordináták másolva';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardverő';

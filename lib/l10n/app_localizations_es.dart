@@ -1089,6 +1089,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Opcional. Pega el secreto de firma asociado a tu clave en la consola de Yandex. Con el modo de firma opcional, las solicitudes sin firma también funcionan.';
 
   @override
+  String get appSettings_yandexTileScale => 'Resolución de teselas de Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Actual: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Los valores más altos solicitan la misma tesela en mayor tamaño de píxel: más nítida en pantallas densas, pero más tráfico y espacio en caché.';
+
+  @override
   String get appSettings_offlineMapCache => 'Caché de mapa sin conexión';
 
   @override
@@ -5956,6 +5968,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coordenadas copiadas';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

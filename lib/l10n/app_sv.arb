@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Yandex signeringshemlighet",
   "appSettings_yandexSigningSecretMissing": "Inte angiven – förfrågningar skickas osignerade",
   "appSettings_yandexSigningSecretDialogDescription": "Valfritt. Klistra in signeringshemligheten som är kopplad till din nyckel i Yandex-konsolen. I valfritt signeringsläge fungerar även osignerade förfrågningar.",
+  "appSettings_yandexTileScale": "Upplösning för Yandex-rutor",
+  "appSettings_yandexTileScaleSubtitle": "Nu: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Högre värden hämtar samma ruta i större pixelstorlek — skarpare på täta skärmar, men mer trafik och cacheutrymme.",
   "appSettings_offlineMapCache": "Offline Kartcache",
   "appSettings_noAreaSelected": "Ingen area markerad",
   "appSettings_areaSelectedZoom": "Område markerat (zoom {minZoom}-{maxZoom})",

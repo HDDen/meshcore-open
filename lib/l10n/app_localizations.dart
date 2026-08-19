@@ -2056,6 +2056,24 @@ abstract class AppLocalizations {
   /// **'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.'**
   String get appSettings_yandexSigningSecretDialogDescription;
 
+  /// No description provided for @appSettings_yandexTileScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Yandex tile resolution'**
+  String get appSettings_yandexTileScale;
+
+  /// No description provided for @appSettings_yandexTileScaleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {scale}'**
+  String appSettings_yandexTileScaleSubtitle(String scale);
+
+  /// No description provided for @appSettings_yandexTileScaleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.'**
+  String get appSettings_yandexTileScaleDescription;
+
   /// No description provided for @appSettings_offlineMapCache.
   ///
   /// In en, this message translates to:
@@ -10173,6 +10191,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coordinates copied'**
   String get map_coordsCopied;
+
+  /// No description provided for @map_showMarksFromChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Show markers from...'**
+  String get map_showMarksFromChannels;
 
   /// No description provided for @settings_infoHardware.
   ///

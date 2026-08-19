@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Sekret podpisu Yandex",
   "appSettings_yandexSigningSecretMissing": "Nie ustawiono — żądania są wysyłane bez podpisu",
   "appSettings_yandexSigningSecretDialogDescription": "Opcjonalne. Wklej sekret podpisu powiązany z Twoim kluczem w konsoli Yandex. W opcjonalnym trybie podpisu działają również żądania bez podpisu.",
+  "appSettings_yandexTileScale": "Rozdzielczość kafelków Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Obecnie: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Wyższe wartości pobierają ten sam kafelek w większym rozmiarze pikseli — ostrzej na gęstych ekranach, ale więcej transferu i miejsca w pamięci podręcznej.",
   "appSettings_offlineMapCache": "Pamięć podręczna map offline",
   "appSettings_noAreaSelected": "Nie wybrano żadnego obszaru.",
   "appSettings_areaSelectedZoom": "Wybrany obszar (skala {minZoom}-{maxZoom})",

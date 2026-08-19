@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Skrivnost za podpis Yandex",
   "appSettings_yandexSigningSecretMissing": "Ni nastavljena – zahteve gredo brez podpisa",
   "appSettings_yandexSigningSecretDialogDescription": "Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.",
+  "appSettings_yandexTileScale": "Ločljivost ploščic Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Trenutno: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.",
   "appSettings_offlineMapCache": "Shramba zemljevidov brez povezave",
   "appSettings_noAreaSelected": "Območje ni izbrano",
   "appSettings_areaSelectedZoom": "Izbrano območje (povečava {minZoom}-{maxZoom})",

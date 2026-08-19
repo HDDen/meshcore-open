@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Podpisové tajomstvo Yandex",
   "appSettings_yandexSigningSecretMissing": "Nenastavené – požiadavky odchádzajú bez podpisu",
   "appSettings_yandexSigningSecretDialogDescription": "Voliteľné. Vložte podpisové tajomstvo priradené k vášmu kľúču v konzole Yandex. Pri voliteľnom režime podpisu fungujú aj nepodpísané požiadavky.",
+  "appSettings_yandexTileScale": "Rozlíšenie dlaždíc Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Aktuálne: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Vyššie hodnoty žiadajú tú istú dlaždicu vo väčšej veľkosti — ostrejšie na hustých displejoch, ale viac dát a miesta v cache.",
   "appSettings_offlineMapCache": "Offline Mapa Pamäť",
   "appSettings_noAreaSelected": "Neoznačila sa žiadna oblasť",
   "appSettings_areaSelectedZoom": "Vyberená oblasť (zoom {minZoom}-{maxZoom})",

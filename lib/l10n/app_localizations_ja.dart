@@ -1029,6 +1029,18 @@ class AppLocalizationsJa extends AppLocalizations {
       '任意。Yandex コンソールでキーに紐付けた署名シークレットを貼り付けてください。署名モードが任意の場合、署名なしのリクエストも通ります。';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex タイル解像度';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '現在: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '値を大きくすると同じタイルをより大きなピクセルサイズで取得します。高精細画面で鮮明になりますが、通信量とキャッシュ容量が増えます。';
+
+  @override
   String get appSettings_offlineMapCache => 'オフライン地図キャッシュ';
 
   @override
@@ -5652,6 +5664,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get map_coordsCopied => '座標をコピーしました';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'ハードウェア';

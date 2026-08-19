@@ -1093,6 +1093,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.';
 
   @override
+  String get appSettings_yandexTileScale => 'Résolution des tuiles Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Actuel : $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.';
+
+  @override
   String get appSettings_offlineMapCache => 'Cache de carte hors ligne';
 
   @override
@@ -5987,6 +5999,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coordonnées copiées';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Matériel';

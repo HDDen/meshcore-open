@@ -285,6 +285,16 @@
   "appSettings_yandexSigningSecret": "Secret de signature Yandex",
   "appSettings_yandexSigningSecretMissing": "Non défini — les requêtes partent sans signature",
   "appSettings_yandexSigningSecretDialogDescription": "Facultatif. Collez le secret de signature associé à votre clé dans la console Yandex. En mode de signature optionnel, les requêtes non signées fonctionnent aussi.",
+  "appSettings_yandexTileScale": "Résolution des tuiles Yandex",
+  "appSettings_yandexTileScaleSubtitle": "Actuel : {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Des valeurs plus élevées demandent la même tuile en plus grande taille de pixels — plus net sur les écrans denses, mais plus de trafic et de cache.",
   "appSettings_offlineMapCache": "Cache de carte hors ligne",
   "appSettings_noAreaSelected": "Aucune zone sélectionnée",
   "appSettings_areaSelectedZoom": "Zone sélectionnée (zoom {minZoom}-{maxZoom})",

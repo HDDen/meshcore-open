@@ -1080,6 +1080,18 @@ class AppLocalizationsSl extends AppLocalizations {
       'Neobvezno. Prilepite skrivnost za podpis, vezano na vaš ključ v konzoli Yandex. Pri neobveznem načinu podpisa delujejo tudi nepodpisane zahteve.';
 
   @override
+  String get appSettings_yandexTileScale => 'Ločljivost ploščic Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Trenutno: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Višje vrednosti zahtevajo isto ploščico v večji velikosti — ostreje na gostih zaslonih, a več prometa in prostora v predpomnilniku.';
+
+  @override
   String get appSettings_offlineMapCache => 'Shramba zemljevidov brez povezave';
 
   @override
@@ -5929,6 +5941,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Koordinate kopirane';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardver';

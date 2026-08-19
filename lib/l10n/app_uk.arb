@@ -287,6 +287,16 @@
   "appSettings_yandexSigningSecret": "Секрет підпису Яндекса",
   "appSettings_yandexSigningSecretMissing": "Не задано — запити надсилаються без підпису",
   "appSettings_yandexSigningSecretDialogDescription": "Необов’язково. Вставте секрет підпису, прив’язаний до вашого ключа в кабінеті Яндекса. За «опціонального» режиму запити без підпису теж проходять.",
+  "appSettings_yandexTileScale": "Роздільність тайлів Яндекса",
+  "appSettings_yandexTileScaleSubtitle": "Зараз: {scale}",
+  "@appSettings_yandexTileScaleSubtitle": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_yandexTileScaleDescription": "Більші значення запитують той самий тайл у більшій роздільності — чіткіше на щільних екранах, але більше трафіку та місця в кеші.",
   "appSettings_offlineMapCache": "Офлайн-кеш карти",
   "appSettings_noAreaSelected": "Область не вибрано",
   "appSettings_areaSelectedZoom": "Вибрана область (зум {minZoom}-{maxZoom})",

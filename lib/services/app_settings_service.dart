@@ -404,6 +404,14 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMapYandexTileScale(double value) async {
+    await updateSettings(
+      _settings.copyWith(
+        mapYandexTileScale: AppSettings.normalizeMapYandexTileScale(value),
+      ),
+    );
+  }
+
   Future<void> setNotificationsEnabled(bool value) async {
     await updateSettings(_settings.copyWith(notificationsEnabled: value));
   }

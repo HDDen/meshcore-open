@@ -1013,6 +1013,18 @@ class AppLocalizationsZh extends AppLocalizations {
       '可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex 瓦片分辨率';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '当前：$scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。';
+
+  @override
   String get appSettings_offlineMapCache => '离线地图缓存';
 
   @override
@@ -5530,6 +5542,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_coordsCopied => '已复制坐标';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => '硬件';

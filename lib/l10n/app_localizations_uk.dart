@@ -1086,6 +1086,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Необов’язково. Вставте секрет підпису, прив’язаний до вашого ключа в кабінеті Яндекса. За «опціонального» режиму запити без підпису теж проходять.';
 
   @override
+  String get appSettings_yandexTileScale => 'Роздільність тайлів Яндекса';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Зараз: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Більші значення запитують той самий тайл у більшій роздільності — чіткіше на щільних екранах, але більше трафіку та місця в кеші.';
+
+  @override
   String get appSettings_offlineMapCache => 'Офлайн-кеш карти';
 
   @override
@@ -5964,6 +5976,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Координати скопійовано';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Оборудовання';

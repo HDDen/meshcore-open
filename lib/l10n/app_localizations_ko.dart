@@ -1033,6 +1033,18 @@ class AppLocalizationsKo extends AppLocalizations {
       '선택 사항입니다. Yandex 콘솔에서 키에 연결한 서명 시크릿을 붙여넣으세요. 서명 모드가 선택 사항이면 서명 없는 요청도 통과합니다.';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex 타일 해상도';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return '현재: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      '값이 클수록 같은 타일을 더 큰 픽셀 크기로 요청합니다. 고밀도 화면에서 선명하지만 트래픽과 캐시 용량이 늘어납니다.';
+
+  @override
   String get appSettings_offlineMapCache => '오프라인 지도 캐시';
 
   @override
@@ -5660,6 +5672,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_coordsCopied => '좌표가 복사되었습니다';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => '하드웨어';

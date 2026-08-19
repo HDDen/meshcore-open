@@ -1072,6 +1072,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional. Paste the signing secret bound to your key in the Yandex console. With the signature mode set to optional, unsigned requests still work.';
 
   @override
+  String get appSettings_yandexTileScale => 'Yandex tile resolution';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Current: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Higher values request the same tile at a larger pixel size — sharper on dense screens, but more traffic and cache space.';
+
+  @override
   String get appSettings_offlineMapCache => 'Offline Map Cache';
 
   @override
@@ -5854,6 +5866,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coordinates copied';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

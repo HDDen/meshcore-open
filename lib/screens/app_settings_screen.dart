@@ -1431,6 +1431,52 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
         ),
+        const Divider(height: 1, indent: 16),
+        InkWell(
+          onTap: () => _showYandexTileScaleDialog(context, settingsService),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.hd_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.appSettings_yandexTileScale,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.appSettings_yandexTileScaleSubtitle(
+                          _formatTileScale(
+                            settingsService.settings.mapYandexTileScale,
+                          ),
+                        ),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: scheme.onSurfaceVariant,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ]);
     }
 
@@ -1474,6 +1520,9 @@ class AppSettingsScreen extends StatelessWidget {
       ],
     );
   }
+
+  String _formatTileScale(double scale) =>
+      '${AppSettings.formatMapYandexTileScale(scale)}x';
 
   bool _isYandexSource(AppSettings settings) {
     return MapRasterSourceCatalog.fromSettings(settings).isYandex;
@@ -1796,6 +1845,64 @@ class AppSettingsScreen extends StatelessWidget {
             child: Text(context.l10n.common_save),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showYandexTileScaleDialog(
+    BuildContext context,
+    AppSettingsService settingsService,
+  ) {
+    double selected = settingsService.settings.mapYandexTileScale;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(context.l10n.appSettings_yandexTileScale),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.appSettings_yandexTileScaleDescription),
+                const SizedBox(height: 8),
+                RadioGroup<double>(
+                  groupValue: selected,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => selected = value);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final option
+                          in AppSettings.mapYandexTileScaleOptions)
+                        RadioListTile<double>(
+                          value: option,
+                          title: Text(_formatTileScale(option)),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                await settingsService.setMapYandexTileScale(selected);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              child: Text(context.l10n.common_save),
+            ),
+          ],
+        ),
       ),
     );
   }

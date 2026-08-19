@@ -1090,6 +1090,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Facoltativo. Incolla il segreto di firma associato alla tua chiave nella console Yandex. Con la modalità di firma opzionale funzionano anche le richieste non firmate.';
 
   @override
+  String get appSettings_yandexTileScale => 'Risoluzione dei tile Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Attuale: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'Valori più alti richiedono lo stesso tile a una dimensione in pixel maggiore: più nitido su schermi densi, ma più traffico e spazio in cache.';
+
+  @override
   String get appSettings_offlineMapCache => 'Cache Mappa Offline';
 
   @override
@@ -5968,6 +5980,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Coordinate copiate';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Hardware';

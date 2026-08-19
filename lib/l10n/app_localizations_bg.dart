@@ -1096,6 +1096,18 @@ class AppLocalizationsBg extends AppLocalizations {
       'По избор. Поставете тайната за подпис, свързана с вашия ключ в конзолата на Yandex. При опционален режим на подпис заявките без подпис също работят.';
 
   @override
+  String get appSettings_yandexTileScale => 'Резолюция на плочките на Yandex';
+
+  @override
+  String appSettings_yandexTileScaleSubtitle(String scale) {
+    return 'Сега: $scale';
+  }
+
+  @override
+  String get appSettings_yandexTileScaleDescription =>
+      'По-високите стойности заявяват същата плочка с повече пиксели — по-ясно на плътни екрани, но повече трафик и място в кеша.';
+
+  @override
   String get appSettings_offlineMapCache => 'Кеш на офлайн карти';
 
   @override
@@ -5954,6 +5966,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_coordsCopied => 'Координатите са копирани';
+
+  @override
+  String get map_showMarksFromChannels => 'Show markers from...';
 
   @override
   String get settings_infoHardware => 'Оборудование';
