@@ -25,7 +25,19 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
+# `flutter_onnxruntime` is a Swift pod that imports `onnxruntime-objc`, which
+# ships without a module map — CocoaPods then refuses to link it statically.
+# Asking for modular headers on that one dependency fixes it without forcing
+# `use_modular_headers!` on every pod in the project. Only the AEIC-carrying
+# profiles pull the plugin in, so the check keeps the lite profile from
+# downloading a 47 MB runtime it never uses.
+def uses_onnxruntime?
+  manifest = File.expand_path(File.join('..', '.flutter-plugins-dependencies'), __dir__)
+  File.exist?(manifest) && File.read(manifest).include?('flutter_onnxruntime')
+end
+
 target 'Runner' do
+  pod 'onnxruntime-objc', :modular_headers => true if uses_onnxruntime?
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
