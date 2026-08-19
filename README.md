@@ -239,20 +239,15 @@ Markers received through the combined history of your other nodes are drawn as w
 the ones this node heard.
 
 A pin can be hidden locally, removed locally, or **removed for everyone** — the last one sends a
-short command back where the pin came from, whether that was a channel, a contact or a room
-server, and other clients drop that pin from their maps. Your own map keeps the pin, faded, until
-the mesh confirms the command: a repeat for a channel, a delivery receipt for a direct message.
-Nothing has reached anyone before that, and a removal nobody heard should not look like one that
-worked. The
+short command back into the same channel, and other clients drop that pin from their maps. The
 command is plain text, so a client that does not know the convention simply shows the line. It
 only affects pins shared before it: re-sharing the same marker afterwards brings it back, and
 deleting the command from the chat undoes it. Because the command has to repeat the marker text
 exactly, the pin caption is limited to leave room for it.
 
-When a channel is set to MCMP v3 **with signing**, shared pins and their removals travel inside
-that signed container instead of as plain text, so a "remove for everyone" carries proof of who
-sent it. Only channels need this: a direct message is already tied to its sender, and a room
-post shows the author's key bytes next to the name. If the node cannot sign, or the signed version no longer
+When a channel (or room server) is set to MCMP v3 **with signing**, shared pins and their
+removals travel inside that signed container instead of as plain text, so a "remove for
+everyone" carries proof of who sent it. If the node cannot sign, or the signed version no longer
 fits the frame, the pin goes out as plain text as before. A pin that arrived signed shows the
 same signature badge next to its author in the info dialog as its chat message does.
 

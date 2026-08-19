@@ -2529,9 +2529,6 @@ class _MessageBubble extends StatelessWidget {
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
     final poi = parseMarkerText(message.text);
-    // `del:m:...` matches the marker pattern as well, so the badge is told
-    // which one it is rather than guessing from the payload.
-    final poiRemoved = SharedMarkerDeletion.targetOf(message.text) != null;
     final coordinate = parseCoordinateText(message.text);
     final sharedContact = parseSharedContactText(message.text);
     final isFailed = message.status == MessageStatus.failed;
@@ -2659,7 +2656,6 @@ class _MessageBubble extends StatelessWidget {
                             metaColor,
                             textScale,
                             senderName,
-                            isRemoval: poiRemoved,
                             trailing: (!enableTracing && isOutgoing)
                                 ? Padding(
                                     padding: const EdgeInsets.only(bottom: 2),
@@ -3187,19 +3183,13 @@ class _MessageBubble extends StatelessWidget {
     Color metaColor,
     double textScale,
     String senderName, {
-    bool isRemoval = false,
     Widget? trailing,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          icon: Icon(
-            isRemoval
-                ? Icons.location_off_outlined
-                : Icons.location_on_outlined,
-            color: textColor,
-          ),
+          icon: Icon(Icons.location_on_outlined, color: textColor),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           onPressed: () async {
@@ -3230,9 +3220,7 @@ class _MessageBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isRemoval
-                    ? context.l10n.chat_poiRemoved
-                    : context.l10n.chat_poiShared,
+                context.l10n.chat_poiShared,
                 style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.w600,

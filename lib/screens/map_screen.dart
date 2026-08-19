@@ -21,7 +21,6 @@ import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
-import '../models/message.dart';
 import '../l10n/contact_localization.dart';
 import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
@@ -4453,23 +4452,9 @@ class _MapScreenState extends State<MapScreen>
       (updatesByKey[update.id] ??= <_SharedMarker>[]).add(update);
     }
 
-    final deletionsByContact = <String, SharedMarkerDeletions>{};
     for (final contact in connector.contacts) {
       final messages = connector.getLoadedMessagesWithShared(contact);
-      final deletions = deletionsByContact[contact.publicKeyHex] =
-          SharedMarkerDeletions();
       for (final message in messages) {
-        if (deletions.absorb(
-          message.text,
-          message.timestamp,
-          // A direct command counts once the other side acknowledges it.
-          // Nobody acknowledges a broadcast, so a channel command waits for a
-          // repeat instead — same idea, different evidence.
-          pending:
-              message.isOutgoing && message.status != MessageStatus.delivered,
-        )) {
-          continue;
-        }
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
         final fromName = message.isOutgoing ? selfName : contact.name;
@@ -4493,8 +4478,6 @@ class _MapScreenState extends State<MapScreen>
             timestamp: message.timestamp,
             isChannel: false,
             isPublicChannel: false,
-            contactKeyHex: contact.publicKeyHex,
-            sourceText: message.text.trim(),
             signature: _MarkerSignature(
               status: message.mcmpSignatureStatus,
               isOutgoing: message.isOutgoing,
@@ -4519,16 +4502,7 @@ class _MapScreenState extends State<MapScreen>
         // Arrived while its sender was blocked: no pin, and its `del:`
         // command hides nobody else's.
         if (message.wasBlocked) continue;
-        if (deletions.absorb(
-          message.text,
-          message.timestamp,
-          // Our own command counts only once a repeater has echoed it back:
-          // until then nothing has reached the mesh, and dropping the pin
-          // straight away would claim a removal that may never happen.
-          pending: message.isOutgoing && message.repeatCount == 0,
-        )) {
-          continue;
-        }
+        if (deletions.absorb(message.text, message.timestamp)) continue;
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
         final key = buildSharedMarkerKey(
@@ -4585,21 +4559,15 @@ class _MapScreenState extends State<MapScreen>
         }
       }
       final channelIndex = latest.channelIndex;
-      final contactKeyHex = latest.contactKeyHex;
-      final deletions = channelIndex != null
-          ? deletionsByChannel[channelIndex]
-          : (contactKeyHex == null ? null : deletionsByContact[contactKeyHex]);
-      if (deletions?.hides(latest.sourceText, latest.timestamp) ?? false) {
+      if (channelIndex != null &&
+          (deletionsByChannel[channelIndex]?.hides(
+                latest.sourceText,
+                latest.timestamp,
+              ) ??
+              false)) {
         return;
       }
-      markers.add(
-        latest.copyWithHistory(
-          history,
-          pendingRemoval:
-              deletions?.pendingHides(latest.sourceText, latest.timestamp) ??
-              false,
-        ),
-      );
+      markers.add(latest.copyWithHistory(history));
     });
 
     markers.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -4632,36 +4600,27 @@ class _MapScreenState extends State<MapScreen>
           }
           _showMarkerInfo(marker);
         },
-        // A "remove for everyone" of ours that no repeater has echoed back
-        // yet: the pin fades instead of vanishing, since nothing has reached
-        // the mesh and the removal may still fail.
-        child: Opacity(
-          opacity: marker.pendingRemoval ? 0.4 : 1,
-          child: Column(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: markerColor,
-                  border: Border.all(
-                    color: MapPalette.markerOutline,
-                    width: 2.5,
+        child: Column(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: markerColor,
+                border: Border.all(color: MapPalette.markerOutline, width: 2.5),
+                boxShadow: const [
+                  BoxShadow(
+                    color: MapPalette.markerShadow,
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
                   ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: MapPalette.markerShadow,
-                      blurRadius: 8,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Icon(markerIcon, color: Colors.white, size: 19),
+                ],
               ),
-            ],
-          ),
+              alignment: Alignment.center,
+              child: Icon(markerIcon, color: Colors.white, size: 19),
+            ),
+          ],
         ),
       ),
     );
@@ -4942,21 +4901,12 @@ class _MapScreenState extends State<MapScreen>
     _SharedMarker marker,
   ) async {
     if (connector.isOfflineMode) return false;
-    final command = SharedMarkerDeletion.commandFor(marker.sourceText);
-    final channelIndex = marker.channelIndex;
-    if (channelIndex != null) {
-      for (final channel in connector.channels) {
-        if (channel.index != channelIndex || channel.isEmpty) continue;
-        await connector.sendChannelMessage(channel, command);
-        return true;
-      }
-      return false;
-    }
-    final contactKeyHex = marker.contactKeyHex;
-    if (contactKeyHex == null) return false;
-    for (final contact in connector.contacts) {
-      if (contact.publicKeyHex != contactKeyHex) continue;
-      await connector.sendMessage(contact, command);
+    for (final channel in connector.channels) {
+      if (channel.index != marker.channelIndex || channel.isEmpty) continue;
+      await connector.sendChannelMessage(
+        channel,
+        SharedMarkerDeletion.commandFor(marker.sourceText),
+      );
       return true;
     }
     return false;
@@ -5083,9 +5033,7 @@ class _MapScreenState extends State<MapScreen>
                   }
                 },
               ),
-              if (marker.sourceText.isNotEmpty &&
-                  (marker.channelIndex != null ||
-                      marker.contactKeyHex != null))
+              if (marker.channelIndex != null && marker.sourceText.isNotEmpty)
                 _markerAction(
                   icon: Symbols.group_off,
                   label: context.l10n.map_removeMarkerForEveryone,
@@ -6223,20 +6171,13 @@ class _MapConnectorSnapshot {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);
       for (final message in connector.getLoadedMessagesWithShared(contact)) {
-        final text = message.text.trimLeft();
-        if (!text.startsWith('m:') &&
-            !text.startsWith(SharedMarkerDeletion.prefix)) {
-          continue;
-        }
+        if (!message.text.trimLeft().startsWith('m:')) continue;
         markerParts.add(
           Object.hash(
             message.messageId,
             message.text,
             message.timestamp.millisecondsSinceEpoch,
             message.isOutgoing,
-            // A direct command takes effect on its ACK, which changes nothing
-            // else about the message.
-            message.status,
           ),
         );
       }
@@ -6269,9 +6210,6 @@ class _MapConnectorSnapshot {
             // a manual signature re-check, which the info dialog repeats.
             message.wasBlocked,
             message.mcmpSignatureStatus,
-            // A `del:` command only takes effect on its first repeat, and a
-            // repeat changes nothing else about the message.
-            message.repeatCount,
           ),
         );
       }
@@ -6548,20 +6486,12 @@ class _SharedMarker {
   final String? channelName;
   final int? channelIndex;
 
-  /// Contact this came from, for sending a delete command back. Null for a
-  /// channel; exactly one of the two is set.
-  final String? contactKeyHex;
-
   /// The message text this marker was parsed from, which is also what a
   /// `del:` command names.
   final String sourceText;
 
   /// Signature of that same message; see [_MarkerSignature].
   final _MarkerSignature? signature;
-
-  /// A "remove for everyone" of ours is on its way out but has not been heard
-  /// back yet. The pin stays, faded, until it is.
-  final bool pendingRemoval;
   final List<LatLng> history;
 
   _SharedMarker({
@@ -6576,17 +6506,12 @@ class _SharedMarker {
     required this.isPublicChannel,
     this.channelName,
     this.channelIndex,
-    this.contactKeyHex,
     this.sourceText = '',
     this.signature,
-    this.pendingRemoval = false,
     this.history = const [],
   });
 
-  _SharedMarker copyWithHistory(
-    List<LatLng> newHistory, {
-    bool pendingRemoval = false,
-  }) {
+  _SharedMarker copyWithHistory(List<LatLng> newHistory) {
     return _SharedMarker(
       id: id,
       position: position,
@@ -6599,10 +6524,8 @@ class _SharedMarker {
       isPublicChannel: isPublicChannel,
       channelName: channelName,
       channelIndex: channelIndex,
-      contactKeyHex: contactKeyHex,
       sourceText: sourceText,
       signature: signature,
-      pendingRemoval: pendingRemoval,
       history: newHistory,
     );
   }

@@ -57,42 +57,25 @@ class SharedMarkerDeletion {
 }
 
 /// The delete commands seen in one channel, and what they hide.
-///
-/// A command of our own that has left the radio but has not been echoed back
-/// by any repeater is kept apart: nobody else has seen it yet, so it hides
-/// nothing and only fades the pin.
 class SharedMarkerDeletions {
-  final Map<String, DateTime> _confirmedByTarget = {};
-  final Map<String, DateTime> _pendingByTarget = {};
+  final Map<String, DateTime> _latestByTarget = {};
 
   /// Feeds one message. Returns true when it was a command rather than
   /// content, so the caller can skip it.
-  bool absorb(String text, DateTime timestamp, {bool pending = false}) {
+  bool absorb(String text, DateTime timestamp) {
     final target = SharedMarkerDeletion.targetOf(text);
     if (target == null) return false;
-    final known = pending ? _pendingByTarget : _confirmedByTarget;
-    final seen = known[target];
-    if (seen == null || timestamp.isAfter(seen)) {
-      known[target] = timestamp;
+    final known = _latestByTarget[target];
+    if (known == null || timestamp.isAfter(known)) {
+      _latestByTarget[target] = timestamp;
     }
     return true;
   }
 
   /// True when a command covers this marker — same text, sent later than the
   /// marker itself.
-  bool hides(String markerText, DateTime markerTimestamp) =>
-      _covers(_confirmedByTarget, markerText, markerTimestamp);
-
-  /// True when the only command covering this marker is still in flight.
-  bool pendingHides(String markerText, DateTime markerTimestamp) =>
-      _covers(_pendingByTarget, markerText, markerTimestamp);
-
-  static bool _covers(
-    Map<String, DateTime> commands,
-    String markerText,
-    DateTime markerTimestamp,
-  ) {
-    final at = commands[markerText.trim()];
+  bool hides(String markerText, DateTime markerTimestamp) {
+    final at = _latestByTarget[markerText.trim()];
     return at != null && at.isAfter(markerTimestamp);
   }
 }
