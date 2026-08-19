@@ -5305,7 +5305,9 @@ class MeshCoreConnector extends ChangeNotifier {
         isContactMcmpEnabled(contact.publicKeyHex) &&
         contactMcmpVersion(contact.publicKeyHex) == 3 &&
         contactMcmpUseSign(contact.publicKeyHex) &&
-        _isMcmpSignableText(text) &&
+        // Markers sign here too, so the placeholder has to cover them or a
+        // shared pin vanishes from the chat while the node signs it.
+        _isMcmpSignableText(text, allowMarkerPayload: true) &&
         ReactionHelper.parseReaction(text) == null;
     Message? signingPlaceholder;
     if (willSignRoomMcmp && pendingMessageId == null) {
@@ -5891,7 +5893,10 @@ class MeshCoreConnector extends ChangeNotifier {
         !hasExplicitMcoImageV3 &&
         isChannelMcmpEnabled(channel.index) &&
         channelMcmpVersion(channel.index) == 3 &&
-        _isMcmpSignableText(text);
+        _isMcmpSignableText(
+          text,
+          allowMarkerPayload: channelMcmpUseSign(channel.index),
+        );
     final mcmpTimestamp = mcmpV3Applies
         ? DateTime.now().millisecondsSinceEpoch ~/ 1000
         : null;
@@ -5945,6 +5950,14 @@ class MeshCoreConnector extends ChangeNotifier {
       if (mcmpSignature == null) _notifyMcmpSigningFailed();
     }
 
+    // A marker or a `del:` command gives up plain text only for a signature:
+    // that envelope is what proves who ordered a pin placed or removed, and
+    // it is the one thing worth hiding the payload from clients that cannot
+    // decode MCMP. A node that refused to sign sends it plain instead.
+    final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(text);
+    var mcmpV3Sent =
+        mcmpV3Applies && (!isMarkerPayload || mcmpSignature != null);
+
     final binaryOutbound =
         preparedMcoImageV3Outbound ??
         (hasExplicitMcoImageV3
@@ -5964,6 +5977,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 signature: mcmpSignature,
                 replyAuthorName: replyToSenderName,
                 replyTimestamp: replyToTimestamp,
+                allowMarkerPayload: mcmpV3Sent,
               ));
     if (hasExplicitMcoImageV3 && binaryOutbound == null) return;
 
@@ -5973,16 +5987,27 @@ class MeshCoreConnector extends ChangeNotifier {
     final String outboundText;
     if (isMcoImageV3Binary) {
       outboundText = messageText;
-    } else if (mcmpV3Applies && binaryOutbound == null) {
+    } else if (mcmpV3Sent && binaryOutbound == null) {
       // Text transport carries the signed body in the mcmp3: Base91 wrapper;
       // the sender name stays in the outer "Name: text" layer (no bit2).
-      outboundText = McmpAppCodec.encodeTextTransport(
+      final wrapped = McmpAppCodec.encodeTextTransport(
         text: text,
         timestamp: mcmpTimestamp!,
         signature: mcmpSignature,
         replyAuthorName: mcmpReplyAuthorName,
         replyTimestamp: mcmpReplyTimestamp,
       );
+      // Base91 hands back most of what the compressor won and the signature
+      // costs 64 bytes on top, so a long marker can end up over the frame.
+      // A plain pin beats one the length guard below refuses to send; a plain
+      // message has no such alternative and keeps failing loudly.
+      if (isMarkerPayload &&
+          utf8.encode(wrapped).length > maxChannelMessageBytes(_selfName)) {
+        mcmpV3Sent = false;
+        outboundText = text;
+      } else {
+        outboundText = wrapped;
+      }
     } else {
       outboundText = prepareChannelOutboundText(channel.index, text);
     }
@@ -6032,18 +6057,20 @@ class MeshCoreConnector extends ChangeNotifier {
       compressionSavingsPercent: compression?.savingsPercent,
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
-      mcmpSignatureStatus: mcmpV3Applies
+      // Keyed on what actually went out, not on what was eligible: a marker
+      // that fell back to plain text must not claim an envelope it lost.
+      mcmpSignatureStatus: mcmpV3Sent
           ? (mcmpSignature != null
                 ? McmpSignatureStatus.valid
                 : McmpSignatureStatus.unsigned)
           : (isBinaryMcmpTransport
                 ? binaryOutbound!.mcmpSignatureStatus
                 : McmpAppCodec.signatureStatusFromTextPayload(outboundText)),
-      mcmpTimestamp: mcmpTimestamp,
-      mcmpIsSigned: mcmpSignature != null,
-      mcmpSignature: mcmpSignature,
-      mcmpReplyAuthorName: mcmpV3Applies ? mcmpReplyAuthorName : null,
-      mcmpReplyTimestamp: mcmpV3Applies ? mcmpReplyTimestamp : null,
+      mcmpTimestamp: mcmpV3Sent ? mcmpTimestamp : null,
+      mcmpIsSigned: mcmpV3Sent && mcmpSignature != null,
+      mcmpSignature: mcmpV3Sent ? mcmpSignature : null,
+      mcmpReplyAuthorName: mcmpV3Sent ? mcmpReplyAuthorName : null,
+      mcmpReplyTimestamp: mcmpV3Sent ? mcmpReplyTimestamp : null,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -9524,14 +9551,20 @@ class MeshCoreConnector extends ChangeNotifier {
   /// True when [text] is a plain user message eligible for MCMP v3 encoding
   /// and signing (not an image payload, structured payload, or an already
   /// encoded container).
-  bool _isMcmpSignableText(String text) {
+  ///
+  /// [allowMarkerPayload] lifts the exclusion of markers and their `del:`
+  /// commands. Callers set it only where the envelope will actually be
+  /// signed: those payloads are plain text precisely so any client can read
+  /// them, and the one thing worth giving that up for is proof of authorship
+  /// — without it anyone can erase anyone's pin.
+  bool _isMcmpSignableText(String text, {bool allowMarkerPayload = false}) {
     if (text.isEmpty) return false;
     final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
     return !MCOImageV3Codec.isTextPayload(trimmedLeft) &&
         !trimmedLeft.startsWith(MCOImageCodec.prefix) &&
         !trimmed.startsWith('g:') &&
-        !SharedMarkerDeletion.isMarkerPayload(trimmed) &&
+        (allowMarkerPayload || !SharedMarkerDeletion.isMarkerPayload(trimmed)) &&
         !trimmed.startsWith('V1|') &&
         // Shared contact payloads (<pubkey:type:name>) must travel as plain
         // text so receivers can parse them.
@@ -9616,9 +9649,16 @@ class MeshCoreConnector extends ChangeNotifier {
     final effectiveReplyName = hasReplyPair ? replyAuthorName : null;
     final effectiveReplyTimestamp = hasReplyPair ? replyTimestamp : null;
 
+    // A marker or a `del:` command enters the envelope only on a room server
+    // with signing on. A direct chat is already authenticated by its ECDH
+    // transport, so wrapping a pin there would cost bytes and prove nothing
+    // that the transport does not prove already.
+    final allowMarkerPayload =
+        contact.type == advTypeRoom &&
+        contactMcmpUseSign(contact.publicKeyHex);
     if (isContactMcmpEnabled(contact.publicKeyHex) &&
         contactMcmpVersion(contact.publicKeyHex) == 3 &&
-        _isMcmpSignableText(text)) {
+        _isMcmpSignableText(text, allowMarkerPayload: allowMarkerPayload)) {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       if (contact.type == advTypeRoom) {
         final senderName = _selfName ?? 'Me';
@@ -9636,7 +9676,12 @@ class MeshCoreConnector extends ChangeNotifier {
           );
           if (signature == null) _notifyMcmpSigningFailed();
         }
-        return McmpAppCodec.encodeTextTransport(
+        final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(text);
+        // The envelope is only worth it signed: unsigned it just hides the
+        // marker from clients that cannot decode MCMP. The text is already
+        // normalised by the send path, so plain is a complete fallback.
+        if (isMarkerPayload && signature == null) return text;
+        final wrapped = McmpAppCodec.encodeTextTransport(
           text: text,
           timestamp: timestamp,
           senderName: senderName,
@@ -9644,6 +9689,13 @@ class MeshCoreConnector extends ChangeNotifier {
           replyAuthorName: effectiveReplyName,
           replyTimestamp: effectiveReplyTimestamp,
         );
+        // See sendChannelMessage: a marker that stops fitting once signed goes
+        // out plain rather than being refused by the length guard downstream.
+        if (isMarkerPayload &&
+            utf8.encode(wrapped).length > maxRoomServerTextBytes) {
+          return text;
+        }
+        return wrapped;
       }
       // Direct contacts: the ECDH transport authenticates the sender, so the
       // body is never signed and carries no name. Reply anchors travel with

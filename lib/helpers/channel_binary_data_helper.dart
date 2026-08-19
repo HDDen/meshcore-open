@@ -8,6 +8,7 @@ import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
 import 'mcmp_app_codec.dart';
 import 'mesh_compressor.dart';
+import 'shared_marker_deletions.dart';
 
 enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
 
@@ -119,6 +120,7 @@ class ChannelBinaryDataHelper {
     Uint8List? signature,
     String? replyAuthorName,
     int? replyTimestamp,
+    bool allowMarkerPayload = false,
   }) {
     if (!canSend) return null;
 
@@ -149,7 +151,12 @@ class ChannelBinaryDataHelper {
       final trimmed = text.trim();
       final isStructuredPayload =
           trimmed.startsWith('g:') ||
-          trimmed.startsWith('m:') ||
+          // A marker and its `del:` command normally travel as plain text so
+          // every client can read them. [allowMarkerPayload] is the caller
+          // saying it has a signature to put around this one — that envelope
+          // is what proves who ordered a pin removed.
+          (!allowMarkerPayload &&
+              SharedMarkerDeletion.isMarkerPayload(trimmed)) ||
           trimmed.startsWith('V1|') ||
           // Shared contact payloads (<pubkey:type:name>) must travel as
           // plain text so receivers can parse them.

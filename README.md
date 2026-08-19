@@ -245,6 +245,12 @@ only affects pins shared before it: re-sharing the same marker afterwards brings
 deleting the command from the chat undoes it. Because the command has to repeat the marker text
 exactly, the pin caption is limited to leave room for it.
 
+When a channel (or room server) is set to MCMP v3 **with signing**, shared pins and their
+removals travel inside that signed container instead of as plain text, so a "remove for
+everyone" carries proof of who sent it. If the node cannot sign, or the signed version no longer
+fits the frame, the pin goes out as plain text as before. A pin that arrived signed shows the
+same signature badge next to its author in the info dialog as its chat message does.
+
 ### Blocking a sender in channels
 
 Long-press any incoming channel message and pick **Block sender**. From that moment their

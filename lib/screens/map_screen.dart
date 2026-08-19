@@ -35,6 +35,7 @@ import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/channel_marker_styles.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
@@ -49,6 +50,7 @@ import 'channels_screen.dart';
 import 'chat_screen.dart';
 import 'contacts_screen.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
@@ -4476,6 +4478,15 @@ class _MapScreenState extends State<MapScreen>
             timestamp: message.timestamp,
             isChannel: false,
             isPublicChannel: false,
+            signature: _MarkerSignature(
+              status: message.mcmpSignatureStatus,
+              isOutgoing: message.isOutgoing,
+              isSigned: message.mcmpIsSigned,
+              wasMcmpV3: message.mcmpTimestamp != null,
+              showFingerprint: false,
+              verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+              nameCollision: message.mcmpNameCollision,
+            ),
           ),
         );
       }
@@ -4519,6 +4530,15 @@ class _MapScreenState extends State<MapScreen>
             channelName: channel.name,
             channelIndex: channel.index,
             sourceText: message.text.trim(),
+            signature: _MarkerSignature(
+              status: message.mcmpSignatureStatus,
+              isOutgoing: message.isOutgoing,
+              isSigned: message.mcmpIsSigned,
+              wasMcmpV3: message.mcmpTimestamp != null,
+              showFingerprint: true,
+              verifiedSenderKeyHex: message.verifiedSenderKeyHex,
+              nameCollision: message.mcmpNameCollision,
+            ),
           ),
         );
       }
@@ -4941,7 +4961,28 @@ class _MapScreenState extends State<MapScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(context.l10n.map_from, marker.fromName),
+            _buildInfoRow(
+              context.l10n.map_from,
+              marker.fromName,
+              // The same badge the chat bubble shows, for the message this pin
+              // was parsed from: a signed placement or removal is the only
+              // thing tying it to an author rather than to a display name.
+              trailing: marker.signature?.isVisible == true
+                  ? McmpSignatureBadge(
+                      status: marker.signature!.status,
+                      isOutgoing: marker.signature!.isOutgoing,
+                      isSigned: marker.signature!.isSigned,
+                      wasMcmpV3: marker.signature!.wasMcmpV3,
+                      verifiedSenderKeyHex:
+                          marker.signature!.verifiedSenderKeyHex,
+                      nameCollision: marker.signature!.nameCollision,
+                      showFingerprint: marker.signature!.showFingerprint,
+                      textScale: 1,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      errorColor: Theme.of(context).colorScheme.error,
+                    )
+                  : null,
+            ),
             _buildInfoRow(context.l10n.map_source, marker.sourceLabel),
             _buildInfoRow(
               context.l10n.map_sharedAt,
@@ -5025,7 +5066,14 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {Widget? trailing}) {
+    final valueText = SelectableText(
+      value,
+      style: MeshTheme.mono(
+        fontSize: 13,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Column(
@@ -5040,13 +5088,21 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
           const SizedBox(height: 2),
-          SelectableText(
-            value,
-            style: MeshTheme.mono(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurface,
+          if (trailing == null)
+            valueText
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              // Centred on the value, not bottom-aligned: the badge is much
+              // shorter than a text line, and sharing a baseline drops it
+              // into the descender space below the name.
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(child: valueText),
+                const SizedBox(width: 6),
+                trailing,
+              ],
             ),
-          ),
         ],
       ),
     );
@@ -6150,8 +6206,10 @@ class _MapConnectorSnapshot {
             message.senderName,
             message.timestamp.millisecondsSinceEpoch,
             // Blocking flags one already-received message without touching
-            // anything else about it, and that has to reach the cache.
+            // anything else about it, and that has to reach the cache. So does
+            // a manual signature re-check, which the info dialog repeats.
             message.wasBlocked,
+            message.mcmpSignatureStatus,
           ),
         );
       }
@@ -6382,6 +6440,36 @@ class _WardriveCoverageBlock {
   const _WardriveCoverageBlock({required this.hash, required this.precision});
 }
 
+/// Signature provenance of the message a marker was parsed from, so the info
+/// dialog can repeat the badge its chat bubble shows.
+class _MarkerSignature {
+  const _MarkerSignature({
+    required this.status,
+    required this.isOutgoing,
+    required this.isSigned,
+    required this.wasMcmpV3,
+    required this.showFingerprint,
+    this.verifiedSenderKeyHex,
+    this.nameCollision = false,
+  });
+
+  final McmpSignatureStatus status;
+  final bool isOutgoing;
+  final bool isSigned;
+  final bool wasMcmpV3;
+
+  /// Direct chats authenticate by transport and never show a fingerprint.
+  final bool showFingerprint;
+  final String? verifiedSenderKeyHex;
+  final bool nameCollision;
+
+  bool get isVisible => McmpSignatureBadge.isVisible(
+    status: status,
+    isOutgoing: isOutgoing,
+    wasMcmpV3: wasMcmpV3,
+  );
+}
+
 class _SharedMarker {
   final String id;
   final LatLng position;
@@ -6401,6 +6489,9 @@ class _SharedMarker {
   /// The message text this marker was parsed from, which is also what a
   /// `del:` command names.
   final String sourceText;
+
+  /// Signature of that same message; see [_MarkerSignature].
+  final _MarkerSignature? signature;
   final List<LatLng> history;
 
   _SharedMarker({
@@ -6416,6 +6507,7 @@ class _SharedMarker {
     this.channelName,
     this.channelIndex,
     this.sourceText = '',
+    this.signature,
     this.history = const [],
   });
 
@@ -6433,6 +6525,7 @@ class _SharedMarker {
       channelName: channelName,
       channelIndex: channelIndex,
       sourceText: sourceText,
+      signature: signature,
       history: newHistory,
     );
   }

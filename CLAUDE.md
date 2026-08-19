@@ -379,9 +379,10 @@ matches `del:m:...` as readily as `m:...`.
 **Wire form — the part that is easy to break.** A command must repeat the marker's label byte
 for byte, or it matches nothing. Hence:
 
-- `SharedMarkerDeletion.isMarkerPayload` (marker *or* command) keeps both out of MCMP and SMAZ,
-  in `prepareChannelOutboundText` / `prepareContactOutboundText` and in `_isMcmpSignableText` —
-  those re-encode the whole string.
+- `SharedMarkerDeletion.isMarkerPayload` (marker *or* command) keeps both out of MCMP and SMAZ
+  in `prepareChannelOutboundText` / `prepareContactOutboundText`, which are also the
+  normalisation and byte-estimation path — those must hand back a readable marker, not a
+  container. The **signed envelope is the one exception**, described below.
 - `SharedMarkerDeletion.isMarker` (marker only) gates cyr2lat, applied through
   `encodeLabel` to the **label alone**: coordinates and flags are structure, and a profile
   reaching them would make the message unparseable.
@@ -397,6 +398,34 @@ for byte, or it matches nothing. Hence:
   it finally goes out. Normalisation runs only for a first send (`pendingMessageId == null`):
   committing a queued or retried message re-uses text that was already normalised, and running
   the profile over it twice is exactly the rewrite described above.
+
+**The signed envelope.** On a channel with MCMP v3 *and* signing on — and on a room server with
+the same — a marker and its `del:` command travel inside the v3 container instead of as plain
+text. Compression is incidental; the signature is the point, since a plain `del:` lets anyone
+erase anyone's pin. `_isMcmpSignableText` takes `allowMarkerPayload`, set from
+`channelMcmpUseSign` / `contactMcmpUseSign`, and `ChannelBinaryDataHelper.tryEncodeOutbound`
+takes the same flag — its default `false` also keeps a `del:` out of the *unsigned* binary MCMP
+path it used to slip into, since its structured-payload guard only knew the bare `m:` prefix.
+
+Two fallbacks keep it safe, both landing on plain text, which every client reads. A node that
+refuses to sign sends the marker plain rather than wrapping it unsigned: an unsigned envelope
+costs bytes and proves nothing, while hiding the payload from clients that cannot decode MCMP.
+And a wrapped marker that no longer fits its frame — Base91 gives back most of what the
+compressor won, and the signature costs 64 bytes on top — also goes plain, instead of being
+refused by the length guard further down. `mcmpV3Sent` (not `mcmpV3Applies`) is therefore what
+the stored message's MCMP metadata is keyed on, so a marker that fell back cannot claim an
+envelope it lost.
+
+The pin's info dialog repeats that provenance: `_MarkerSignature` carries the source message's
+status onto `_SharedMarker`, `_buildInfoRow` gained a trailing slot, and the same
+`McmpSignatureBadge` the bubble draws sits next to the author. It is keyed on the message rather
+than on the marker, so a plain-text pin shows nothing at all, and `mcmpSignatureStatus` rides in
+`markerSignature` so a manual re-check reaches the cached pin.
+
+Direct one-to-one chats are excluded on purpose: their ECDH transport already authenticates the
+sender, so an envelope there would cost bytes and prove nothing new. Queued previews
+(`schedule*Message`) are excluded too — they sign nothing, and a preview should not promise a
+badge that only materialises at commit time.
 
 **Label budget.** `_maxMarkerLabelBytes` limits the pin caption at entry time: the channel
 budget for this node (which already accounts for `"<name>: "`), capped by the user's outgoing
