@@ -5957,6 +5957,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get app_offline_sharedMode => 'Historique combiné';
 
   @override
+  String get map_copyCoordsFromMap => 'Copier les coordonnées';
+
+  @override
+  String get map_coordsCopied => 'Coordonnées copiées';
+
+  @override
   String get settings_infoHardware => 'Matériel';
 
   @override

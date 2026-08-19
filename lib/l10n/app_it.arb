@@ -747,6 +747,8 @@
   "map_source": "Fonte",
   "map_flags": "Bandiere",
   "map_shareMarkerHere": "Condividi segnaposto qui",
+  "map_copyCoordsFromMap": "Copia coordinate",
+  "map_coordsCopied": "Coordinate copiate",
   "map_pinLabel": "Etichetta pin",
   "map_label": "Etichetta",
   "map_pointOfInterest": "Punto di interesse",

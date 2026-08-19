@@ -5891,6 +5891,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get app_offline_sharedMode => 'Zlúčená história';
 
   @override
+  String get map_copyCoordsFromMap => 'Kopírovať súradnice';
+
+  @override
+  String get map_coordsCopied => 'Súradnice skopírované';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

@@ -866,6 +866,8 @@
   "map_source": "出典",
   "map_flags": "フラグ",
   "map_shareMarkerHere": "ここにマーカーを共有",
+  "map_copyCoordsFromMap": "座標をコピー",
+  "map_coordsCopied": "座標をコピーしました",
   "map_setAsMyLocation": "現在地として設定",
   "map_pinLabel": "ピンラベル",
   "map_label": "ラベル",

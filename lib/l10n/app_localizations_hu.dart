@@ -5920,6 +5920,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get app_offline_sharedMode => 'Egyesített előzmények';
 
   @override
+  String get map_copyCoordsFromMap => 'Koordináták másolása';
+
+  @override
+  String get map_coordsCopied => 'Koordináták másolva';
+
+  @override
   String get settings_infoHardware => 'Hardverő';
 
   @override

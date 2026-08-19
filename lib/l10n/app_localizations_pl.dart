@@ -5947,6 +5947,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get app_offline_sharedMode => 'Połączona historia';
 
   @override
+  String get map_copyCoordsFromMap => 'Kopiuj współrzędne';
+
+  @override
+  String get map_coordsCopied => 'Skopiowano współrzędne';
+
+  @override
   String get settings_infoHardware => 'Sprzęt';
 
   @override

@@ -703,6 +703,8 @@
   "map_source": "Fuente",
   "map_flags": "Banderas",
   "map_shareMarkerHere": "Compartir marcador aquí",
+  "map_copyCoordsFromMap": "Copiar coordenadas",
+  "map_coordsCopied": "Coordenadas copiadas",
   "map_pinLabel": "Etiqueta del pin",
   "map_label": "Etiqueta",
   "map_pointOfInterest": "Punto de interés",

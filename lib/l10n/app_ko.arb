@@ -848,6 +848,8 @@
   "map_source": "출처",
   "map_flags": "깃발",
   "map_shareMarkerHere": "여기에서 마커 공유",
+  "map_copyCoordsFromMap": "좌표 복사",
+  "map_coordsCopied": "좌표가 복사되었습니다",
   "map_setAsMyLocation": "내 위치로 설정",
   "map_pinLabel": "핀 라벨",
   "map_label": "레이블",

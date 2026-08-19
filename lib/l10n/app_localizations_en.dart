@@ -5824,6 +5824,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get app_offline_sharedMode => 'Combined history';
 
   @override
+  String get map_copyCoordsFromMap => 'Copy coordinates';
+
+  @override
+  String get map_coordsCopied => 'Coordinates copied';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

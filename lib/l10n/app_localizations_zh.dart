@@ -5502,6 +5502,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get app_offline_sharedMode => '合并历史';
 
   @override
+  String get map_copyCoordsFromMap => '复制坐标';
+
+  @override
+  String get map_coordsCopied => '已复制坐标';
+
+  @override
   String get settings_infoHardware => '硬件';
 
   @override

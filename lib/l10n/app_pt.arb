@@ -681,6 +681,8 @@
   "map_source": "Fonte",
   "map_flags": "Bandeiras",
   "map_shareMarkerHere": "Compartilhar marcador aqui",
+  "map_copyCoordsFromMap": "Copiar coordenadas",
+  "map_coordsCopied": "Coordenadas copiadas",
   "map_pinLabel": "Rótulo de marcador",
   "map_label": "Rótulo",
   "map_pointOfInterest": "Ponto de interesse",

@@ -681,6 +681,8 @@
   "map_source": "Bron",
   "map_flags": "Vlaggen",
   "map_shareMarkerHere": "Deel marker hier",
+  "map_copyCoordsFromMap": "Coördinaten kopiëren",
+  "map_coordsCopied": "Coördinaten gekopieerd",
   "map_pinLabel": "Label vastzetten",
   "map_label": "Etiket",
   "map_pointOfInterest": "Interessepunt",

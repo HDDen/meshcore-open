@@ -5923,6 +5923,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get app_offline_sharedMode => 'Объединённая история';
 
   @override
+  String get map_copyCoordsFromMap => 'Скопировать координаты точки';
+
+  @override
+  String get map_coordsCopied => 'Координаты скопированы';
+
+  @override
   String get settings_infoHardware => 'Оборудование';
 
   @override

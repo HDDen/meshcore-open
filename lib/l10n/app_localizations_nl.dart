@@ -5906,6 +5906,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get app_offline_sharedMode => 'Gecombineerde geschiedenis';
 
   @override
+  String get map_copyCoordsFromMap => 'Coördinaten kopiëren';
+
+  @override
+  String get map_coordsCopied => 'Coördinaten gekopieerd';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

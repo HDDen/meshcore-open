@@ -10120,6 +10120,18 @@ abstract class AppLocalizations {
   /// **'Combined history'**
   String get app_offline_sharedMode;
 
+  /// No description provided for @map_copyCoordsFromMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy coordinates'**
+  String get map_copyCoordsFromMap;
+
+  /// No description provided for @map_coordsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates copied'**
+  String get map_coordsCopied;
+
   /// No description provided for @settings_infoHardware.
   ///
   /// In en, this message translates to:

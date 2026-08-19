@@ -823,6 +823,8 @@
   "map_source": "Forrás",
   "map_flags": "Zászlók",
   "map_shareMarkerHere": "Oszd meg a jelölőt itt",
+  "map_copyCoordsFromMap": "Koordináták másolása",
+  "map_coordsCopied": "Koordináták másolva",
   "map_setAsMyLocation": "Beállítás helyemként",
   "map_pinLabel": "Kitűzött címke",
   "map_label": "Címke",

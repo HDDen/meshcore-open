@@ -5630,6 +5630,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get app_offline_sharedMode => '통합 기록';
 
   @override
+  String get map_copyCoordsFromMap => '좌표 복사';
+
+  @override
+  String get map_coordsCopied => '좌표가 복사되었습니다';
+
+  @override
   String get settings_infoHardware => '하드웨어';
 
   @override

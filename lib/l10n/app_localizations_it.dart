@@ -5938,6 +5938,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get app_offline_sharedMode => 'Cronologia combinata';
 
   @override
+  String get map_copyCoordsFromMap => 'Copia coordinate';
+
+  @override
+  String get map_coordsCopied => 'Coordinate copiate';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

@@ -690,6 +690,8 @@
   "map_publicKey": "Публічний ключ",
   "map_publicKeyPrefixHint": "напр. ab12",
   "map_shareMarkerHere": "Поділитись маркером тут",
+  "map_copyCoordsFromMap": "Скопіювати координати точки",
+  "map_coordsCopied": "Координати скопійовано",
   "map_pinLabel": "Мітка піна",
   "map_label": "Мітка",
   "map_pointOfInterest": "Точка інтересу",

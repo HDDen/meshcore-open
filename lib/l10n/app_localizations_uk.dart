@@ -5934,6 +5934,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get app_offline_sharedMode => 'Об\'єднана історія';
 
   @override
+  String get map_copyCoordsFromMap => 'Скопіювати координати точки';
+
+  @override
+  String get map_coordsCopied => 'Координати скопійовано';
+
+  @override
   String get settings_infoHardware => 'Оборудовання';
 
   @override

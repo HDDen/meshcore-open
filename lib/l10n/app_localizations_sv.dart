@@ -5874,6 +5874,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get app_offline_sharedMode => 'Kombinerad historik';
 
   @override
+  String get map_copyCoordsFromMap => 'Kopiera koordinater';
+
+  @override
+  String get map_coordsCopied => 'Koordinater kopierade';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

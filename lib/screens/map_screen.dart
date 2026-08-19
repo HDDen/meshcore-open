@@ -4939,6 +4939,20 @@ class _MapScreenState extends State<MapScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
+                  leading: const Icon(Icons.content_copy),
+                  title: Text(context.l10n.map_copyCoordsFromMap),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final copiedMsg = context.l10n.map_coordsCopied;
+                    Navigator.pop(sheetContext);
+                    await Clipboard.setData(
+                      ClipboardData(text: _formatCoordinates(position)),
+                    );
+                    if (!mounted) return;
+                    messenger.showSnackBar(SnackBar(content: Text(copiedMsg)));
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.place),
                   title: Text(context.l10n.map_shareMarkerHere),
                   onTap: () {
@@ -5052,10 +5066,15 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  /// The plain `lat,lon` form, which is both what a marker message carries and
+  /// what a coordinate message pasted into a chat is parsed back from.
+  String _formatCoordinates(LatLng position) {
+    return '${position.latitude.toStringAsFixed(6)},'
+        '${position.longitude.toStringAsFixed(6)}';
+  }
+
   String _formatMarkerMessage(LatLng position, String label, String flags) {
-    final lat = position.latitude.toStringAsFixed(6);
-    final lon = position.longitude.toStringAsFixed(6);
-    return 'm:$lat,$lon|$label|$flags';
+    return 'm:${_formatCoordinates(position)}|$label|$flags';
   }
 
   Future<void> _showRecipientSheet({

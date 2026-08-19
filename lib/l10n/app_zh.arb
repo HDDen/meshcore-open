@@ -707,6 +707,8 @@
   "map_source": "来源",
   "map_flags": "标志",
   "map_shareMarkerHere": "在此分享标记",
+  "map_copyCoordsFromMap": "复制坐标",
+  "map_coordsCopied": "已复制坐标",
   "map_pinLabel": "标签",
   "map_label": "标签",
   "map_pointOfInterest": "兴趣点",

@@ -5929,6 +5929,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get app_offline_sharedMode => 'Zusammengeführter Verlauf';
 
   @override
+  String get map_copyCoordsFromMap => 'Koordinaten kopieren';
+
+  @override
+  String get map_coordsCopied => 'Koordinaten kopiert';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

@@ -691,6 +691,8 @@
   "map_source": "Źródło",
   "map_flags": "Flagi",
   "map_shareMarkerHere": "Udostępnij znacznik tutaj",
+  "map_copyCoordsFromMap": "Kopiuj współrzędne",
+  "map_coordsCopied": "Skopiowano współrzędne",
   "map_pinLabel": "Etykieta pinezki",
   "map_label": "Etykieta",
   "map_pointOfInterest": "Punkt zainteresowań",

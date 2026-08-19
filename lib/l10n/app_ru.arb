@@ -2398,6 +2398,8 @@
   "app_offline": "Оффлайн",
   "app_offline_unableToMessage": "Вы не можете отправлять сообщения или совершать иные действия в оффлайн-режиме",
   "app_offline_sharedMode": "Объединённая история",
+  "map_copyCoordsFromMap": "Скопировать координаты точки",
+  "map_coordsCopied": "Координаты скопированы",
   "settings_bleDebugLog": "Журнал отладки BLE",
   "settings_bleDebugLogSubtitle": "Команды BLE, ответы и сырые данные",
   "chat_pathManagement": "Управление маршрутами",

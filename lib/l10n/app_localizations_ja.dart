@@ -5623,6 +5623,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get app_offline_sharedMode => '統合履歴';
 
   @override
+  String get map_copyCoordsFromMap => '座標をコピー';
+
+  @override
+  String get map_coordsCopied => '座標をコピーしました';
+
+  @override
   String get settings_infoHardware => 'ハードウェア';
 
   @override

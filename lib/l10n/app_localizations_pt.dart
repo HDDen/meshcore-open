@@ -5917,6 +5917,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get app_offline_sharedMode => 'Histórico combinado';
 
   @override
+  String get map_copyCoordsFromMap => 'Copiar coordenadas';
+
+  @override
+  String get map_coordsCopied => 'Coordenadas copiadas';
+
+  @override
   String get settings_infoHardware => 'Hardware';
 
   @override

@@ -5924,6 +5924,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get app_offline_sharedMode => 'Обединена история';
 
   @override
+  String get map_copyCoordsFromMap => 'Копиране на координатите';
+
+  @override
+  String get map_coordsCopied => 'Координатите са копирани';
+
+  @override
   String get settings_infoHardware => 'Оборудование';
 
   @override

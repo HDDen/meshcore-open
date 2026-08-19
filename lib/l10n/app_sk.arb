@@ -681,6 +681,8 @@
   "map_source": "Zdroj",
   "map_flags": "Zástavy",
   "map_shareMarkerHere": "Zdieľte značku tu",
+  "map_copyCoordsFromMap": "Kopírovať súradnice",
+  "map_coordsCopied": "Súradnice skopírované",
   "map_pinLabel": "Označka upozornenia",
   "map_label": "Značka",
   "map_pointOfInterest": "Bod záujmu",

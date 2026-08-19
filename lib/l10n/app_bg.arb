@@ -681,6 +681,8 @@
   "map_source": "Източник",
   "map_flags": "Флагове",
   "map_shareMarkerHere": "Споделете маркер тук",
+  "map_copyCoordsFromMap": "Копиране на координатите",
+  "map_coordsCopied": "Координатите са копирани",
   "map_pinLabel": "Етикет на пина",
   "map_label": "Етикет",
   "map_pointOfInterest": "Точка на интерес",

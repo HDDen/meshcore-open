@@ -681,6 +681,8 @@
   "map_source": "Källa",
   "map_flags": "Flaggor",
   "map_shareMarkerHere": "Dela markeringen här",
+  "map_copyCoordsFromMap": "Kopiera koordinater",
+  "map_coordsCopied": "Koordinater kopierade",
   "map_pinLabel": "Fästetikett",
   "map_label": "Etikett",
   "map_pointOfInterest": "Plats av intresse",

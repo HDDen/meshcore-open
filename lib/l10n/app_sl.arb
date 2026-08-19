@@ -681,6 +681,8 @@
   "map_source": "Vir",
   "map_flags": "Zapestnice",
   "map_shareMarkerHere": "Delite točke tukaj.",
+  "map_copyCoordsFromMap": "Kopiraj koordinate",
+  "map_coordsCopied": "Koordinate kopirane",
   "map_pinLabel": "Oznaka za pritrditev",
   "map_label": "Oznaka",
   "map_pointOfInterest": "Točka zanimivosti",

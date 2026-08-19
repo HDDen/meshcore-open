@@ -5899,6 +5899,12 @@ class AppLocalizationsSl extends AppLocalizations {
   String get app_offline_sharedMode => 'Združena zgodovina';
 
   @override
+  String get map_copyCoordsFromMap => 'Kopiraj koordinate';
+
+  @override
+  String get map_coordsCopied => 'Koordinate kopirane';
+
+  @override
   String get settings_infoHardware => 'Hardver';
 
   @override
