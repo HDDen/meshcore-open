@@ -517,11 +517,6 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
         notifyListeners();
       }
 
-      // Wardrive discovery starts with a local advert so nearby nodes can
-      // refresh us before the follow-up discovery request asks who can hear it.
-      await _connector.sendSelfAdvert(flood: false);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-
       final tag = _random.nextInt(0x7fffffff);
       pendingTag = tag;
       final payload = buildDiscoveryRequestPayload(tag, prefixOnly: false);
