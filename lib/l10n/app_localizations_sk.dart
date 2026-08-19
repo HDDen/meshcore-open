@@ -6198,4 +6198,25 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI odstránený';
+
+  @override
+  String get chat_blockSender => 'Blokovať odosielateľa';
+
+  @override
+  String get chat_unblockSender => 'Odblokovať odosielateľa';
+
+  @override
+  String get chat_senderBlocked => 'odosielateľ zablokovaný';
+
+  @override
+  String get chat_blockedSenders => 'Blokovaní odosielatelia';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Žiadni blokovaní odosielatelia';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Všetky kanály';
+
+  @override
+  String get chat_blockSenderName => 'Meno odosielateľa';
 }

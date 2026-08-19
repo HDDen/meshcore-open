@@ -18,6 +18,7 @@ import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
 import '../utils/platform_info.dart';
+import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
@@ -57,6 +58,8 @@ import '../services/translation_service.dart';
 import '../utils/lora_airtime.dart';
 import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/blocked_message_body.dart';
+import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
@@ -135,6 +138,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// otherwise "show received LoRa version").
   final Set<String> _mcoVariantOverridden = {};
 
+  /// Blocked bodies the user tapped to read. Display only — a revealed body is
+  /// still never parsed — and forgotten whenever the block list changes, so a
+  /// re-blocked sender starts hidden again.
+  final Set<String> _revealedBlockedMessages = {};
+
   /// Effective "render the received LoRa version" flag for a message,
   /// combining the mod setting default with the per-message override.
   bool _mcoForceLora(String messageId, bool showReplacements) {
@@ -158,6 +166,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   StreamSubscription<void>? _mcmpSigningFailedSubscription;
   DateTime? _lastChannelSendAt;
   String? _lastChannelSentText;
+  /// Suppresses the one snap-to-bottom that follows the next list rebuild.
+  ///
+  /// Blocking, unblocking or revealing a body changes bubble heights, and the
+  /// snap would drag the reader to the newest message instead of leaving them
+  /// where they were reading.
   bool _channelSkipNextBottomSnap = false;
   String? _unreadDividerMessageId;
 
@@ -853,6 +866,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   case 'editChannel':
                     final connector = context.read<MeshCoreConnector>();
                     showChannelEditSheet(context, connector, widget.channel);
+                  case 'blockedSenders':
+                    unawaited(_showBlockedSenders());
                   case 'clearChat':
                     _confirmClearChat();
                 }
@@ -873,6 +888,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       text: context.l10n.channels_editChannel,
                     ),
                   ),
+                // Not gated on offline mode: the block list is local data
+                // and stays editable with no radio attached.
+                PopupMenuItem(
+                  value: 'blockedSenders',
+                  child: PopupMenuRow(
+                    icon: Icons.block,
+                    iconColor: Colors.red,
+                    text: context.l10n.chat_blockedSenders,
+                    textStyle: const TextStyle(color: Colors.red),
+                  ),
+                ),
                 if (!context.read<MeshCoreConnector>().isOfflineMode)
                   PopupMenuItem(
                     value: 'clearChat',
@@ -1215,6 +1241,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final showMessageRegion = settingsService.settings.showMessageRegion;
     final isOutgoing = message.isOutgoing;
+    // A blocked sender's body is never parsed: no pin, no image, no shared
+    // contact, no coordinate link, no quote. Everything below reads `bodyText`
+    // instead of the message, so revealing the text in the bubble cannot bring
+    // those handlers back — only lifting the block does, and only for what
+    // arrives after it.
+    final blockedBody =
+        BlockedSenders.instance.hides(message, widget.channel.name)
+        ? message.text
+        : null;
+    final bodyText = blockedBody == null ? message.text : '';
     final compressionType =
         message.compressionType ??
         (message.wasMcmpCompressed ? MessageCompressionType.mcmp : null);
@@ -1233,13 +1269,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : '$compressionRatioPrefix$compressionTypeLabel'
               '${message.wasBinaryTransport ? ' bin' : ''}';
     final scheme = Theme.of(context).colorScheme;
-    final gifId = GifHelper.parseGif(message.text);
-    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final gifId = GifHelper.parseGif(bodyText);
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
     final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
       metadata: mcoImageMetadata,
-      sourceText: message.text,
+      sourceText: bodyText,
       isBinary: message.wasBinaryTransport,
       showResolution: settingsService.settings.showMcoImageResolution,
       showFormat: settingsService.settings.showMcoImageFormat,
@@ -1250,19 +1286,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
-    final poi = parseMarkerText(message.text);
+    final poi = parseMarkerText(bodyText);
     // `del:m:...` matches the marker pattern as well, so the badge is told
     // which one it is rather than guessing from the payload.
-    final poiRemoved = SharedMarkerDeletion.targetOf(message.text) != null;
-    final coordinate = parseCoordinateText(message.text);
-    final sharedContact = parseSharedContactText(message.text);
+    final poiRemoved = SharedMarkerDeletion.targetOf(bodyText) != null;
+    final coordinate = parseCoordinateText(bodyText);
+    final sharedContact = parseSharedContactText(bodyText);
     final isPlainTextMessage =
         poi == null &&
         coordinate == null &&
         !isMediaMessage &&
         sharedContact == null;
     final hasReplyContext =
-        message.replyToSenderName != null || message.replyToText != null;
+        blockedBody == null &&
+        (message.replyToSenderName != null || message.replyToText != null);
     final replyMentionName = message.replyToSenderName?.trim();
     final showIncomingReplyMention =
         !isOutgoing &&
@@ -1271,13 +1308,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyMentionName != null &&
         replyMentionName.isNotEmpty;
     final translatedDisplayText =
-        message.translatedText != null &&
+        blockedBody == null &&
+            message.translatedText != null &&
             message.translatedText!.trim().isNotEmpty
         ? message.translatedText!.trim()
-        : message.text;
+        : bodyText;
     final originalDisplayText = message.isOutgoing
         ? message.originalText
-        : (translatedDisplayText != message.text ? message.text : null);
+        : (translatedDisplayText != bodyText ? bodyText : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final packetRegion = message.packetRegion?.trim();
     final String packetRegionLabel;
@@ -1458,7 +1496,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           ),
                           const SizedBox(height: 6),
                         ],
-                        if (poi != null)
+                        if (blockedBody != null)
+                          BlockedMessageBody(
+                            text: blockedBody,
+                            revealed: _revealedBlockedMessages.contains(
+                              message.messageId,
+                            ),
+                            onToggle: () => _toggleBlockedBody(message),
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: bodyFontSize * textScale,
+                            ),
+                          )
+                        else if (poi != null)
                           _buildPoiMessage(
                             context,
                             poi,
@@ -1486,7 +1536,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             children: [
                               Flexible(
                                 child: _CoordinateMessageLink(
-                                  text: message.text.trim(),
+                                  text: bodyText.trim(),
                                   coordinate: coordinate,
                                   style: TextStyle(
                                     color: textColor,
@@ -1592,7 +1642,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: MCOImageOriginalOrFallback(
-                                    text: message.text,
+                                    text: bodyText,
                                     image: mcoImage,
                                     forceLora: _mcoForceLora(
                                       message.messageId,
@@ -3790,6 +3840,50 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Future<void> _showBlockedSenders() async {
+    await BlockedSendersSheet.show(context);
+    if (!mounted) return;
+    // The sheet writes straight to the shared table, so the chat has to redraw
+    // whatever it changed; revealed bodies are dropped along with it.
+    setState(() {
+      _channelSkipNextBottomSnap = true;
+      _revealedBlockedMessages.clear();
+    });
+  }
+
+  void _toggleBlockedBody(ChannelMessage message) {
+    setState(() {
+      _channelSkipNextBottomSnap = true;
+      final id = message.messageId;
+      if (!_revealedBlockedMessages.remove(id)) {
+        _revealedBlockedMessages.add(id);
+      }
+    });
+  }
+
+  /// Mutes or unmutes the sender of [message] across every channel.
+  ///
+  /// Blocking a message whose MCMP v3 signature verified pins the rule to that
+  /// key, so somebody else answering to the same name stays visible; anything
+  /// else blocks the name alone, since an unsigned message proves nothing
+  /// about who sent it.
+  ///
+  /// The table updates in memory before it is persisted, so the redraw does
+  /// not wait for the write — awaiting it would leave a window where an
+  /// unrelated rebuild redraws the list without the snap being suppressed.
+  void _toggleSenderBlock(ChannelMessage message) {
+    final blocked = BlockedSenders.instance;
+    unawaited(
+      blocked.isSenderBlocked(message, widget.channel.name)
+          ? blocked.unblock(message.senderName)
+          : blocked.block(message),
+    );
+    setState(() {
+      _channelSkipNextBottomSnap = true;
+      _revealedBlockedMessages.clear();
+    });
+  }
+
   Future<void> _showMessageActions(ChannelMessage message) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
@@ -3798,6 +3892,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
     if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
+    // The rule, not the message: one that arrived while blocked keeps its
+    // placeholder after the block is lifted, and offering "unblock" there
+    // would do nothing.
+    final isSenderBlocked = BlockedSenders.instance.isSenderBlocked(
+      message,
+      widget.channel.name,
+    );
+    // Blocking is the consequential half of that entry; lifting it is not, so
+    // only that half is red.
+    final blockActionColor = isSenderBlocked
+        ? null
+        : Theme.of(context).colorScheme.error;
     final canTranslateMessage =
         translationService.canTranslateIncoming(
           text: message.text,
@@ -3972,6 +4078,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       unawaited(
                         _showCanvasEditor(maxBytes, initialImage: mcoImage),
                       );
+                    },
+                  ),
+                if (!message.isOutgoing)
+                  ListTile(
+                    leading: const Icon(Icons.block),
+                    iconColor: blockActionColor,
+                    textColor: blockActionColor,
+                    title: Text(
+                      isSenderBlocked
+                          ? context.l10n.chat_unblockSender
+                          : context.l10n.chat_blockSender,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleSenderBlock(message);
                     },
                   ),
                 ListTile(

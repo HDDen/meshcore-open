@@ -6226,4 +6226,25 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI removido';
+
+  @override
+  String get chat_blockSender => 'Bloquear remetente';
+
+  @override
+  String get chat_unblockSender => 'Desbloquear remetente';
+
+  @override
+  String get chat_senderBlocked => 'remetente bloqueado';
+
+  @override
+  String get chat_blockedSenders => 'Remetentes bloqueados';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Nenhum remetente bloqueado';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Todos os canais';
+
+  @override
+  String get chat_blockSenderName => 'Nome do remetente';
 }

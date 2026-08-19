@@ -6266,4 +6266,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI supprimé';
+
+  @override
+  String get chat_blockSender => 'Bloquer l\'expéditeur';
+
+  @override
+  String get chat_unblockSender => 'Débloquer l\'expéditeur';
+
+  @override
+  String get chat_senderBlocked => 'expéditeur bloqué';
+
+  @override
+  String get chat_blockedSenders => 'Expéditeurs bloqués';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Aucun expéditeur bloqué';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Tous les canaux';
+
+  @override
+  String get chat_blockSenderName => 'Nom de l\'expéditeur';
 }

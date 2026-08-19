@@ -3386,5 +3386,12 @@
   "map_markerStyleColor": "Farba výplne",
   "map_markerStyleIcon": "Ikona",
   "map_removeMarkerForEveryone": "Odstrániť pre všetkých",
-  "chat_poiRemoved": "POI odstránený"
+  "chat_poiRemoved": "POI odstránený",
+  "chat_blockSender": "Blokovať odosielateľa",
+  "chat_unblockSender": "Odblokovať odosielateľa",
+  "chat_senderBlocked": "odosielateľ zablokovaný",
+  "chat_blockedSenders": "Blokovaní odosielatelia",
+  "chat_blockedSendersEmpty": "Žiadni blokovaní odosielatelia",
+  "chat_blockedSendersAllChannels": "Všetky kanály",
+  "chat_blockSenderName": "Meno odosielateľa"
 }

@@ -3386,5 +3386,12 @@
   "map_markerStyleColor": "Цвят на запълване",
   "map_markerStyleIcon": "Икона",
   "map_removeMarkerForEveryone": "Премахване за всички",
-  "chat_poiRemoved": "Точката е премахната"
+  "chat_poiRemoved": "Точката е премахната",
+  "chat_blockSender": "Блокирай подателя",
+  "chat_unblockSender": "Отблокирай подателя",
+  "chat_senderBlocked": "подателят е блокиран",
+  "chat_blockedSenders": "Блокирани податели",
+  "chat_blockedSendersEmpty": "Няма блокирани податели",
+  "chat_blockedSendersAllChannels": "Всички канали",
+  "chat_blockSenderName": "Име на подателя"
 }

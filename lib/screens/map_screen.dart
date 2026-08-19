@@ -33,6 +33,7 @@ import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -4487,6 +4488,9 @@ class _MapScreenState extends State<MapScreen>
       final deletions = deletionsByChannel[channel.index] =
           SharedMarkerDeletions();
       for (final message in messages) {
+        // A blocked sender's text never acts: their pins stay off the map and
+        // their `del:` commands hide nobody else's.
+        if (BlockedSenders.instance.hides(message, channel.name)) continue;
         if (deletions.absorb(message.text, message.timestamp)) continue;
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
@@ -6070,7 +6074,12 @@ class _MapConnectorSnapshot {
           ),
     );
 
-    final markerParts = <Object?>[connector.selfName];
+    final markerParts = <Object?>[
+      connector.selfName,
+      // Blocking changes which messages count without changing any of them,
+      // so the revision has to ride along or the cached pins stay.
+      BlockedSenders.instance.revision,
+    ];
     for (final contact in connector.contacts) {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);

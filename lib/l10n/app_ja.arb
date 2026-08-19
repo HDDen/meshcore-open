@@ -3491,5 +3491,12 @@
   "map_markerStyleColor": "塗りつぶしの色",
   "map_markerStyleIcon": "アイコン",
   "map_removeMarkerForEveryone": "全員から削除",
-  "chat_poiRemoved": "地点を削除しました"
+  "chat_poiRemoved": "地点を削除しました",
+  "chat_blockSender": "送信者をブロック",
+  "chat_unblockSender": "ブロックを解除",
+  "chat_senderBlocked": "送信者はブロックされています",
+  "chat_blockedSenders": "ブロックした送信者",
+  "chat_blockedSendersEmpty": "ブロックした送信者はいません",
+  "chat_blockedSendersAllChannels": "すべてのチャンネル",
+  "chat_blockSenderName": "送信者名"
 }

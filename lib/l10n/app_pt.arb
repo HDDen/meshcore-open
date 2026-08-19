@@ -3168,5 +3168,12 @@
   "map_markerStyleColor": "Cor de preenchimento",
   "map_markerStyleIcon": "Ícone",
   "map_removeMarkerForEveryone": "Remover para todos",
-  "chat_poiRemoved": "POI removido"
+  "chat_poiRemoved": "POI removido",
+  "chat_blockSender": "Bloquear remetente",
+  "chat_unblockSender": "Desbloquear remetente",
+  "chat_senderBlocked": "remetente bloqueado",
+  "chat_blockedSenders": "Remetentes bloqueados",
+  "chat_blockedSendersEmpty": "Nenhum remetente bloqueado",
+  "chat_blockedSendersAllChannels": "Todos os canais",
+  "chat_blockSenderName": "Nome do remetente"
 }

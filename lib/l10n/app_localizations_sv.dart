@@ -6182,4 +6182,25 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI borttagen';
+
+  @override
+  String get chat_blockSender => 'Blockera avsändare';
+
+  @override
+  String get chat_unblockSender => 'Avblockera avsändare';
+
+  @override
+  String get chat_senderBlocked => 'avsändare blockerad';
+
+  @override
+  String get chat_blockedSenders => 'Blockerade avsändare';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Inga blockerade avsändare';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Alla kanaler';
+
+  @override
+  String get chat_blockSenderName => 'Avsändarens namn';
 }

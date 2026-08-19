@@ -2663,5 +2663,12 @@
   "map_markerStyleColor": "Цвет заливки",
   "map_markerStyleIcon": "Иконка",
   "map_removeMarkerForEveryone": "Убрать для всех",
-  "chat_poiRemoved": "Удалена точка интереса"
+  "chat_poiRemoved": "Удалена точка интереса",
+  "chat_blockSender": "Заблокировать контакт",
+  "chat_unblockSender": "Разблокировать контакт",
+  "chat_senderBlocked": "отправитель заблокирован",
+  "chat_blockedSenders": "Заблокированные отправители",
+  "chat_blockedSendersEmpty": "Заблокированных отправителей нет",
+  "chat_blockedSendersAllChannels": "Все каналы",
+  "chat_blockSenderName": "Имя отправителя"
 }

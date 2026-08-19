@@ -62,6 +62,13 @@ class ChannelMessage {
   /// the signature was checked.
   final bool mcmpNameCollision;
   final bool wasBinaryTransport;
+
+  /// True when this message arrived while its sender was blocked.
+  ///
+  /// Stored with the message and never cleared: lifting a block must not
+  /// resurrect a marker or a `del:` command from the muted period, and
+  /// revealing the text by hand must not either.
+  final bool wasBlocked;
   final int? binaryPacketBytes;
   final DateTime timestamp;
   final DateTime receivedAt;
@@ -113,6 +120,7 @@ class ChannelMessage {
     this.verifiedSenderKeyHex,
     this.mcmpNameCollision = false,
     this.wasBinaryTransport = false,
+    this.wasBlocked = false,
     this.binaryPacketBytes,
     required this.timestamp,
     DateTime? receivedAt,
@@ -191,6 +199,7 @@ class ChannelMessage {
     Object? verifiedSenderKeyHex = _unset,
     bool? mcmpNameCollision,
     bool? wasBinaryTransport,
+    bool? wasBlocked,
     Object? binaryPacketBytes = _unset,
     Object? sharedHistorySourceName = _unset,
     DateTime? receivedAt,
@@ -250,6 +259,7 @@ class ChannelMessage {
           : verifiedSenderKeyHex as String?,
       mcmpNameCollision: mcmpNameCollision ?? this.mcmpNameCollision,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
+      wasBlocked: wasBlocked ?? this.wasBlocked,
       binaryPacketBytes: binaryPacketBytes == _unset
           ? this.binaryPacketBytes
           : binaryPacketBytes as int?,

@@ -3424,5 +3424,12 @@
   "map_markerStyleColor": "Kolor wypełnienia",
   "map_markerStyleIcon": "Ikona",
   "map_removeMarkerForEveryone": "Usuń dla wszystkich",
-  "chat_poiRemoved": "Usunięto POI"
+  "chat_poiRemoved": "Usunięto POI",
+  "chat_blockSender": "Zablokuj nadawcę",
+  "chat_unblockSender": "Odblokuj nadawcę",
+  "chat_senderBlocked": "nadawca zablokowany",
+  "chat_blockedSenders": "Zablokowani nadawcy",
+  "chat_blockedSendersEmpty": "Brak zablokowanych nadawców",
+  "chat_blockedSendersAllChannels": "Wszystkie kanały",
+  "chat_blockSenderName": "Nazwa nadawcy"
 }

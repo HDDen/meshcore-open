@@ -19,6 +19,7 @@ import '../models/message_compression.dart';
 import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
+import '../helpers/blocked_senders.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
@@ -10248,6 +10249,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final label = channelName ?? _channelDisplayName(channelIndex);
+    // The chat hides a blocked sender's body; a notification would put it
+    // straight back on screen, so it is not raised at all.
+    if (BlockedSenders.instance.hides(message, label)) return;
     final isMuted = _appSettingsService!.isChannelMuted(label);
     if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
 
@@ -11524,9 +11528,18 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 
+    final blockedNow = BlockedSenders.instance.isSenderBlocked(
+      message,
+      _channelDisplayName(channelIndex),
+    );
+
     // Parse reaction info
     final reactionInfo = ChannelMessage.parseReaction(message.text);
     if (reactionInfo != null) {
+      // A blocked sender's text never acts. A reaction has no body to hide —
+      // it lands on somebody else's message — so it is dropped outright and
+      // never stored, which is why unblocking cannot bring it back either.
+      if (blockedNow) return false;
       // Check if we've already processed this exact reaction
       _processedChannelReactions.putIfAbsent(channelIndex, () => {});
       final reactionIdentifier =
@@ -11550,7 +11563,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Parse reply info from message text
     final replyInfo = ChannelMessage.parseReplyMention(message.text);
-    ChannelMessage processedMessage = message;
+    // Anything that is stored carries the flag, so a marker or a `del:`
+    // command that arrived while its sender was muted stays inert for good.
+    ChannelMessage processedMessage = blockedNow
+        ? message.copyWith(wasBlocked: true)
+        : message;
 
     if (replyInfo != null) {
       var replyToMessageId = message.replyToMessageId;
@@ -11633,6 +11650,7 @@ class MeshCoreConnector extends ChangeNotifier {
         verifiedSenderKeyHex: message.verifiedSenderKeyHex,
         mcmpNameCollision: message.mcmpNameCollision,
         wasBinaryTransport: message.wasBinaryTransport,
+        wasBlocked: blockedNow || message.wasBlocked,
         binaryPacketBytes: message.binaryPacketBytes,
         timestamp: message.timestamp,
         receivedAt: message.receivedAt,

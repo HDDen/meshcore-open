@@ -3523,5 +3523,12 @@
   "map_markerStyleColor": "채우기 색상",
   "map_markerStyleIcon": "아이콘",
   "map_removeMarkerForEveryone": "모두에게서 제거",
-  "chat_poiRemoved": "관심 지점 삭제됨"
+  "chat_poiRemoved": "관심 지점 삭제됨",
+  "chat_blockSender": "발신자 차단",
+  "chat_unblockSender": "차단 해제",
+  "chat_senderBlocked": "발신자가 차단됨",
+  "chat_blockedSenders": "차단된 발신자",
+  "chat_blockedSendersEmpty": "차단된 발신자가 없습니다",
+  "chat_blockedSendersAllChannels": "모든 채널",
+  "chat_blockSenderName": "발신자 이름"
 }

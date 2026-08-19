@@ -3389,5 +3389,12 @@
   "map_markerStyleColor": "Kitöltőszín",
   "map_markerStyleIcon": "Ikon",
   "map_removeMarkerForEveryone": "Eltávolítás mindenkinek",
-  "chat_poiRemoved": "POI eltávolítva"
+  "chat_poiRemoved": "POI eltávolítva",
+  "chat_blockSender": "Feladó letiltása",
+  "chat_unblockSender": "Feladó feloldása",
+  "chat_senderBlocked": "a feladó le van tiltva",
+  "chat_blockedSenders": "Letiltott feladók",
+  "chat_blockedSendersEmpty": "Nincs letiltott feladó",
+  "chat_blockedSendersAllChannels": "Minden csatorna",
+  "chat_blockSenderName": "Feladó neve"
 }

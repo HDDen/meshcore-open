@@ -6233,4 +6233,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'Удалена точка интереса';
+
+  @override
+  String get chat_blockSender => 'Заблокировать контакт';
+
+  @override
+  String get chat_unblockSender => 'Разблокировать контакт';
+
+  @override
+  String get chat_senderBlocked => 'отправитель заблокирован';
+
+  @override
+  String get chat_blockedSenders => 'Заблокированные отправители';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Заблокированных отправителей нет';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Все каналы';
+
+  @override
+  String get chat_blockSenderName => 'Имя отправителя';
 }

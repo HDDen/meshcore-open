@@ -6254,4 +6254,25 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'Usunięto POI';
+
+  @override
+  String get chat_blockSender => 'Zablokuj nadawcę';
+
+  @override
+  String get chat_unblockSender => 'Odblokuj nadawcę';
+
+  @override
+  String get chat_senderBlocked => 'nadawca zablokowany';
+
+  @override
+  String get chat_blockedSenders => 'Zablokowani nadawcy';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Brak zablokowanych nadawców';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Wszystkie kanały';
+
+  @override
+  String get chat_blockSenderName => 'Nazwa nadawcy';
 }

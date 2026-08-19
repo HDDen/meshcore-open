@@ -10605,6 +10605,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'POI removed'**
   String get chat_poiRemoved;
+
+  /// No description provided for @chat_blockSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Block sender'**
+  String get chat_blockSender;
+
+  /// No description provided for @chat_unblockSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock sender'**
+  String get chat_unblockSender;
+
+  /// No description provided for @chat_senderBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'sender blocked'**
+  String get chat_senderBlocked;
+
+  /// No description provided for @chat_blockedSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked senders'**
+  String get chat_blockedSenders;
+
+  /// No description provided for @chat_blockedSendersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked senders'**
+  String get chat_blockedSendersEmpty;
+
+  /// No description provided for @chat_blockedSendersAllChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'All channels'**
+  String get chat_blockedSendersAllChannels;
+
+  /// No description provided for @chat_blockSenderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name'**
+  String get chat_blockSenderName;
 }
 
 class _AppLocalizationsDelegate

@@ -211,6 +211,64 @@ The node signs message bodies via `CMD_SIGN_START/DATA/FINISH` (single global si
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
 
+### Blocked channel senders
+A sender muted from a channel message's long-press menu keeps arriving — nothing is dropped on
+receipt or removed from history — but their body is neither shown nor acted on. The behaviour
+lives in two files: `storage/blocked_sender_store.dart` (rules and JSON) and
+`helpers/blocked_senders.dart` (`BlockedSenders.instance`, a singleton rather than a provider
+because the connector consults it while parsing a frame). Two widgets carry the UI —
+`blocked_message_body.dart` for the placeholder and `blocked_senders_sheet.dart` for the list.
+Everything else is a call site asking one question, `hides(message, channelName)`.
+
+Rules are one app-wide JSON blob, **not** scoped by node public key like most stores here: a
+sender worth muting is worth muting from every radio this phone connects to. The key is the
+sender name; the value is a key and a channel list. Blocking a message whose MCMP v3 signature
+verified pins the rule to that key, so somebody else answering to the same name stays visible;
+anything else blocks the name alone, since an unsigned message proves nothing about who sent it.
+Never read `verifiedSenderKeyHex` without `mcmpSignatureStatus == valid` — `verifiedKeyOf` is
+the only place that pairing is made. Re-blocking a name never narrows an existing rule: on top of
+a name-only rule nothing happens at all, and a second, different key under one name widens the
+rule back to the bare name, which is the most a single-key record can express. Narrowing is a
+deliberate act, done by deleting the rule and blocking again. The channel list is always `["*"]`
+today; it exists so a per-channel block can be added later without migrating stored rules.
+
+**What a block reaches.** `_buildMessageBubble` computes `bodyText` once — the message text, or
+an empty string when blocked — and every parser below reads that, so a blocked body produces no
+pin, image, shared contact, coordinate link or quote. The placeholder
+(`widgets/blocked_message_body.dart`) takes the whole body and a tap reveals the stored text,
+but revealing is a display choice: `bodyText` stays empty, so a revealed marker still puts
+nothing on the map. `_collectSharedMarkers` skips blocked messages **before**
+`SharedMarkerDeletions.absorb`, or a muted troll's `del:` commands would still erase everyone
+else's pins. The connector drops their reactions in `_addChannelMessage` (a reaction is text
+with no body to hide, so it is dropped rather than stored) and raises no notification for them,
+which would otherwise put the hidden text straight back on screen; the channels list shows the
+same placeholder instead of the last-message preview.
+
+**Why the block outlives itself.** `ChannelMessage.wasBlocked` is stamped in `_addChannelMessage`
+when a rule mutes the sender at that moment, and persisted with the message
+(`channel_message_store`, defaulting to `false` for older records). `hides` is
+`wasBlocked || isSenderBlocked(...)`, so lifting a block cannot resurrect a marker or a `del:`
+command that arrived while it was on, and neither can revealing the body by hand — those
+messages keep their placeholder for good, and only what arrives afterwards reads normally.
+Reactions never reach the flag: they are dropped on receipt and never stored, so they are gone
+the same way. Repeats merge through `existing.copyWith(...)` without touching `wasBlocked`, so
+the first arrival is what decides. `isSenderBlocked` has exactly two callers — the receive path
+that stamps the flag, and the long-press menu, which must offer "unblock" for the rule rather
+than for the message. Everything else asks `hides`.
+
+**The list.** `BlockedSendersSheet` (channel overflow menu, below `channels_editChannel`) reads
+and writes `BlockedSenders.instance` straight, since the table is app-wide and synchronous —
+nothing is passed in and nothing handed back, the caller just rebuilds once the sheet closes. It
+is not gated on offline mode, being local data. Its **Add** dialog takes a name and nothing else,
+so `blockName` writes the widest rule a name can carry — no key, `["*"]` — which replaces a keyed
+rule and no-ops when such a rule already exists, the same never-narrow direction `block` follows.
+The sheet is also why the add dialog's controller is a `State` field: `showDialog` completes on
+pop while the dialog is still animating out and still reading it.
+
+`BlockedSenders.revision` exists for one reason: the map caches its markers against
+`_MapConnectorSnapshot.markerSignature`, which is built from message content and cannot see a
+block, so the revision rides in the signature.
+
 ### Mentions
 `@[name]` is the wire form for naming someone — replies have always used it, and it is typed directly too. Both ends live outside the screens: `helpers/mention_autocomplete.dart` for composing, `MentionText.split` (same file) for rendering.
 

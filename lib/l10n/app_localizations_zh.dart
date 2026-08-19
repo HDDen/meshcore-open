@@ -5795,4 +5795,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => '已删除兴趣点';
+
+  @override
+  String get chat_blockSender => '屏蔽发送者';
+
+  @override
+  String get chat_unblockSender => '解除屏蔽';
+
+  @override
+  String get chat_senderBlocked => '发送者已屏蔽';
+
+  @override
+  String get chat_blockedSenders => '已屏蔽的发送者';
+
+  @override
+  String get chat_blockedSendersEmpty => '没有已屏蔽的发送者';
+
+  @override
+  String get chat_blockedSendersAllChannels => '所有频道';
+
+  @override
+  String get chat_blockSenderName => '发送者名称';
 }

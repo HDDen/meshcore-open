@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/blocked_senders.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../l10n/l10n.dart';
@@ -633,13 +634,22 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     // Last message preview
     final messages = connector.getChannelMessages(channel);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
-    final lastMessageText = lastMessage?.text ?? '';
-    final lastPreview =
-        lastMessageText.isNotEmpty &&
-            GifHelper.parseGif(lastMessageText) != null
-        ? context.l10n.chat_receivedGif
-        : lastMessageText;
-    final lastPreviewImage = lastMessage == null
+    // A blocked sender's body stays hidden in this list too, or the preview
+    // puts back exactly what the chat took away.
+    final lastBlocked =
+        lastMessage != null &&
+        BlockedSenders.instance.hides(lastMessage, channel.name);
+    final lastMessageText = lastBlocked ? '' : (lastMessage?.text ?? '');
+    final String lastPreview;
+    if (lastBlocked) {
+      lastPreview = context.l10n.chat_senderBlocked;
+    } else if (lastMessageText.isNotEmpty &&
+        GifHelper.parseGif(lastMessageText) != null) {
+      lastPreview = context.l10n.chat_receivedGif;
+    } else {
+      lastPreview = lastMessageText;
+    }
+    final lastPreviewImage = lastMessage == null || lastBlocked
         ? null
         : MCOImageMessage.tryDecode(lastMessage.text);
     final lastTime = lastMessage?.timestamp;

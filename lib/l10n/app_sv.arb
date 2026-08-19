@@ -3168,5 +3168,12 @@
   "map_markerStyleColor": "Fyllningsfärg",
   "map_markerStyleIcon": "Ikon",
   "map_removeMarkerForEveryone": "Ta bort för alla",
-  "chat_poiRemoved": "POI borttagen"
+  "chat_poiRemoved": "POI borttagen",
+  "chat_blockSender": "Blockera avsändare",
+  "chat_unblockSender": "Avblockera avsändare",
+  "chat_senderBlocked": "avsändare blockerad",
+  "chat_blockedSenders": "Blockerade avsändare",
+  "chat_blockedSendersEmpty": "Inga blockerade avsändare",
+  "chat_blockedSendersAllChannels": "Alla kanaler",
+  "chat_blockSenderName": "Avsändarens namn"
 }

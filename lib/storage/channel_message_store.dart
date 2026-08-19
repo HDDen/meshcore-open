@@ -193,6 +193,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'verifiedSenderKeyHex': msg.verifiedSenderKeyHex,
       'mcmpNameCollision': msg.mcmpNameCollision,
       'wasBinaryTransport': msg.wasBinaryTransport,
+      'wasBlocked': msg.wasBlocked,
       'binaryPacketBytes': msg.binaryPacketBytes,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'receivedAt': msg.receivedAt.millisecondsSinceEpoch,
@@ -304,6 +305,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
       mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
+      wasBlocked: json['wasBlocked'] as bool? ?? false,
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       receivedAt: DateTime.fromMillisecondsSinceEpoch(

@@ -6232,4 +6232,25 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'Точката е премахната';
+
+  @override
+  String get chat_blockSender => 'Блокирай подателя';
+
+  @override
+  String get chat_unblockSender => 'Отблокирай подателя';
+
+  @override
+  String get chat_senderBlocked => 'подателят е блокиран';
+
+  @override
+  String get chat_blockedSenders => 'Блокирани податели';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Няма блокирани податели';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Всички канали';
+
+  @override
+  String get chat_blockSenderName => 'Име на подателя';
 }

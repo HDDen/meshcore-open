@@ -3386,5 +3386,12 @@
   "map_markerStyleColor": "Barva polnila",
   "map_markerStyleIcon": "Ikona",
   "map_removeMarkerForEveryone": "Odstrani za vse",
-  "chat_poiRemoved": "POI odstranjen"
+  "chat_poiRemoved": "POI odstranjen",
+  "chat_blockSender": "Blokiraj pošiljatelja",
+  "chat_unblockSender": "Odblokiraj pošiljatelja",
+  "chat_senderBlocked": "pošiljatelj blokiran",
+  "chat_blockedSenders": "Blokirani pošiljatelji",
+  "chat_blockedSendersEmpty": "Ni blokiranih pošiljateljev",
+  "chat_blockedSendersAllChannels": "Vsi kanali",
+  "chat_blockSenderName": "Ime pošiljatelja"
 }

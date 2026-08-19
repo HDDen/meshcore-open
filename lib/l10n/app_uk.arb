@@ -3366,5 +3366,12 @@
   "map_markerStyleColor": "Колір заливки",
   "map_markerStyleIcon": "Іконка",
   "map_removeMarkerForEveryone": "Прибрати для всіх",
-  "chat_poiRemoved": "Видалено точку інтересу"
+  "chat_poiRemoved": "Видалено точку інтересу",
+  "chat_blockSender": "Заблокувати контакт",
+  "chat_unblockSender": "Розблокувати контакт",
+  "chat_senderBlocked": "відправника заблоковано",
+  "chat_blockedSenders": "Заблоковані відправники",
+  "chat_blockedSendersEmpty": "Заблокованих відправників немає",
+  "chat_blockedSendersAllChannels": "Усі канали",
+  "chat_blockSenderName": "Ім'я відправника"
 }

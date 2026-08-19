@@ -6245,4 +6245,25 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'Видалено точку інтересу';
+
+  @override
+  String get chat_blockSender => 'Заблокувати контакт';
+
+  @override
+  String get chat_unblockSender => 'Розблокувати контакт';
+
+  @override
+  String get chat_senderBlocked => 'відправника заблоковано';
+
+  @override
+  String get chat_blockedSenders => 'Заблоковані відправники';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Заблокованих відправників немає';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Усі канали';
+
+  @override
+  String get chat_blockSenderName => 'Ім\'я відправника';
 }

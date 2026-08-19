@@ -6226,4 +6226,25 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI eltávolítva';
+
+  @override
+  String get chat_blockSender => 'Feladó letiltása';
+
+  @override
+  String get chat_unblockSender => 'Feladó feloldása';
+
+  @override
+  String get chat_senderBlocked => 'a feladó le van tiltva';
+
+  @override
+  String get chat_blockedSenders => 'Letiltott feladók';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Nincs letiltott feladó';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Minden csatorna';
+
+  @override
+  String get chat_blockSenderName => 'Feladó neve';
 }

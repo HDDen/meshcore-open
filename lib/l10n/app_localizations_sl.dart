@@ -6206,4 +6206,25 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => 'POI odstranjen';
+
+  @override
+  String get chat_blockSender => 'Blokiraj pošiljatelja';
+
+  @override
+  String get chat_unblockSender => 'Odblokiraj pošiljatelja';
+
+  @override
+  String get chat_senderBlocked => 'pošiljatelj blokiran';
+
+  @override
+  String get chat_blockedSenders => 'Blokirani pošiljatelji';
+
+  @override
+  String get chat_blockedSendersEmpty => 'Ni blokiranih pošiljateljev';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'Vsi kanali';
+
+  @override
+  String get chat_blockSenderName => 'Ime pošiljatelja';
 }

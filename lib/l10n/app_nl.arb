@@ -3168,5 +3168,12 @@
   "map_markerStyleColor": "Vulkleur",
   "map_markerStyleIcon": "Pictogram",
   "map_removeMarkerForEveryone": "Voor iedereen verwijderen",
-  "chat_poiRemoved": "POI verwijderd"
+  "chat_poiRemoved": "POI verwijderd",
+  "chat_blockSender": "Afzender blokkeren",
+  "chat_unblockSender": "Afzender deblokkeren",
+  "chat_senderBlocked": "afzender geblokkeerd",
+  "chat_blockedSenders": "Geblokkeerde afzenders",
+  "chat_blockedSendersEmpty": "Geen geblokkeerde afzenders",
+  "chat_blockedSendersAllChannels": "Alle kanalen",
+  "chat_blockSenderName": "Naam afzender"
 }

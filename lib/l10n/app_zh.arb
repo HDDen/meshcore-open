@@ -3391,5 +3391,12 @@
   "map_markerStyleColor": "填充颜色",
   "map_markerStyleIcon": "图标",
   "map_removeMarkerForEveryone": "为所有人移除",
-  "chat_poiRemoved": "已删除兴趣点"
+  "chat_poiRemoved": "已删除兴趣点",
+  "chat_blockSender": "屏蔽发送者",
+  "chat_unblockSender": "解除屏蔽",
+  "chat_senderBlocked": "发送者已屏蔽",
+  "chat_blockedSenders": "已屏蔽的发送者",
+  "chat_blockedSendersEmpty": "没有已屏蔽的发送者",
+  "chat_blockedSendersAllChannels": "所有频道",
+  "chat_blockSenderName": "发送者名称"
 }

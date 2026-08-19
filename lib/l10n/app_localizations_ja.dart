@@ -5921,4 +5921,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => '地点を削除しました';
+
+  @override
+  String get chat_blockSender => '送信者をブロック';
+
+  @override
+  String get chat_unblockSender => 'ブロックを解除';
+
+  @override
+  String get chat_senderBlocked => '送信者はブロックされています';
+
+  @override
+  String get chat_blockedSenders => 'ブロックした送信者';
+
+  @override
+  String get chat_blockedSendersEmpty => 'ブロックした送信者はいません';
+
+  @override
+  String get chat_blockedSendersAllChannels => 'すべてのチャンネル';
+
+  @override
+  String get chat_blockSenderName => '送信者名';
 }

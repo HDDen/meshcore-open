@@ -5928,4 +5928,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_poiRemoved => '관심 지점 삭제됨';
+
+  @override
+  String get chat_blockSender => '발신자 차단';
+
+  @override
+  String get chat_unblockSender => '차단 해제';
+
+  @override
+  String get chat_senderBlocked => '발신자가 차단됨';
+
+  @override
+  String get chat_blockedSenders => '차단된 발신자';
+
+  @override
+  String get chat_blockedSendersEmpty => '차단된 발신자가 없습니다';
+
+  @override
+  String get chat_blockedSendersAllChannels => '모든 채널';
+
+  @override
+  String get chat_blockSenderName => '발신자 이름';
 }
