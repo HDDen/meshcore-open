@@ -5305,9 +5305,7 @@ class MeshCoreConnector extends ChangeNotifier {
         isContactMcmpEnabled(contact.publicKeyHex) &&
         contactMcmpVersion(contact.publicKeyHex) == 3 &&
         contactMcmpUseSign(contact.publicKeyHex) &&
-        // Markers sign here too, so the placeholder has to cover them or a
-        // shared pin vanishes from the chat while the node signs it.
-        _isMcmpSignableText(text, allowMarkerPayload: true) &&
+        _isMcmpSignableText(text) &&
         ReactionHelper.parseReaction(text) == null;
     Message? signingPlaceholder;
     if (willSignRoomMcmp && pendingMessageId == null) {
@@ -9553,10 +9551,13 @@ class MeshCoreConnector extends ChangeNotifier {
   /// encoded container).
   ///
   /// [allowMarkerPayload] lifts the exclusion of markers and their `del:`
-  /// commands. Callers set it only where the envelope will actually be
-  /// signed: those payloads are plain text precisely so any client can read
-  /// them, and the one thing worth giving that up for is proof of authorship
-  /// — without it anyone can erase anyone's pin.
+  /// commands. Only the channel send path sets it, and only when the envelope
+  /// will actually be signed: those payloads are plain text precisely so any
+  /// client can read them, and the one thing worth giving that up for is
+  /// proof of authorship. A channel post carries nothing but a display name,
+  /// so without it anyone can erase anyone's pin; a direct message is
+  /// authenticated by its transport and a room post by the author key prefix
+  /// the server attaches, so neither needs the envelope.
   bool _isMcmpSignableText(String text, {bool allowMarkerPayload = false}) {
     if (text.isEmpty) return false;
     final trimmedLeft = text.trimLeft();
@@ -9649,16 +9650,14 @@ class MeshCoreConnector extends ChangeNotifier {
     final effectiveReplyName = hasReplyPair ? replyAuthorName : null;
     final effectiveReplyTimestamp = hasReplyPair ? replyTimestamp : null;
 
-    // A marker or a `del:` command enters the envelope only on a room server
-    // with signing on. A direct chat is already authenticated by its ECDH
-    // transport, so wrapping a pin there would cost bytes and prove nothing
-    // that the transport does not prove already.
-    final allowMarkerPayload =
-        contact.type == advTypeRoom &&
-        contactMcmpUseSign(contact.publicKeyHex);
+    // Markers and `del:` commands never enter the envelope here, whatever the
+    // chat: a direct message is authenticated by its ECDH transport, and a
+    // room post carries the author's 4-byte key prefix, put there by the
+    // server and shown next to the name. Only a channel has nothing but a
+    // display name to go on, which is what the signed envelope replaces.
     if (isContactMcmpEnabled(contact.publicKeyHex) &&
         contactMcmpVersion(contact.publicKeyHex) == 3 &&
-        _isMcmpSignableText(text, allowMarkerPayload: allowMarkerPayload)) {
+        _isMcmpSignableText(text)) {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       if (contact.type == advTypeRoom) {
         final senderName = _selfName ?? 'Me';
@@ -9676,12 +9675,7 @@ class MeshCoreConnector extends ChangeNotifier {
           );
           if (signature == null) _notifyMcmpSigningFailed();
         }
-        final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(text);
-        // The envelope is only worth it signed: unsigned it just hides the
-        // marker from clients that cannot decode MCMP. The text is already
-        // normalised by the send path, so plain is a complete fallback.
-        if (isMarkerPayload && signature == null) return text;
-        final wrapped = McmpAppCodec.encodeTextTransport(
+        return McmpAppCodec.encodeTextTransport(
           text: text,
           timestamp: timestamp,
           senderName: senderName,
@@ -9689,13 +9683,6 @@ class MeshCoreConnector extends ChangeNotifier {
           replyAuthorName: effectiveReplyName,
           replyTimestamp: effectiveReplyTimestamp,
         );
-        // See sendChannelMessage: a marker that stops fitting once signed goes
-        // out plain rather than being refused by the length guard downstream.
-        if (isMarkerPayload &&
-            utf8.encode(wrapped).length > maxRoomServerTextBytes) {
-          return text;
-        }
-        return wrapped;
       }
       // Direct contacts: the ECDH transport authenticates the sender, so the
       // body is never signed and carries no name. Reply anchors travel with
