@@ -248,11 +248,13 @@ Ready-made builds are published in the
 
 ## Platform support
 
-| Feature            | Android (API 21+) | iOS (12+) | Linux | Windows |
+| Feature            | Android (API 21+) | iOS (16+)¹ | Linux | Windows |
 |--------------------|:-----------------:|:---------:|:-----:|:-------:|
 | BLE companion      | ✅                | ✅        | ✅   | ✅      |
 | USB companion      | ✅                | 🚧        | ✅   | ✅      |
 | TCP companion      | ✅                | 🚧        | ✅   | ✅      |
+
+¹ The **lite** profile builds for iOS 13.0; AEIC pulls in `flutter_onnxruntime`, which requires 16.0.
 
 ## Building from source
 
@@ -298,10 +300,15 @@ flutter pub get
 flutter build apk --release --split-per-abi --dart-define=MESHCORE_ENABLE_TRANSLATION=false # adds «MESHCORE_ENABLE_TRANSLATION»-flag; Android apk for example
 ```
 
-The tool copies the selected `pubspec.<profile>.yaml` over `pubspec.yaml` and swaps both the
-translation service and AEIC backend to their matching implementations. The selected profile is
-sticky: it stays active for every subsequent build until you switch again. When changing shared
-dependencies, update every profile manifest so a later switch does not overwrite the change.
+The tool copies the selected `pubspec.<profile>.yaml` over `pubspec.yaml`, swaps both the
+translation service and AEIC backend to their matching implementations, and sets the iOS
+deployment target to what that profile can build against — 13.0 for lite, 16.0 for the two that
+ship AEIC. After switching, run `flutter pub get`; for iOS also drop `ios/Pods` and
+`ios/Podfile.lock` and re-run `pod install`, since CocoaPods caches the old platform.
+
+The selected profile is sticky: it stays active for every subsequent build until you switch
+again. When changing shared dependencies, update every profile manifest so a later switch does
+not overwrite the change.
 
 ## Contact and support
 

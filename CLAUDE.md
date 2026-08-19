@@ -396,6 +396,7 @@ App version: `9.5.0-mcoa.1.8.2+39` — Dart SDK constraint: `^3.9.2`
 **Build config (`android/app/build.gradle.kts`)**: `applicationId = com.meshcore.meshcore_open`, NDK `29.0.14206865`, Java 8 core-library desugaring (`desugar_jdk_libs:2.1.4`), release signing via `key.properties` (debug fallback).
 
 ### iOS (`ios/Runner/Info.plist`)
+Deployment target is owned by the build profile, not edited by hand: `tool/use_translation_profile.dart` writes it into `ios/Podfile` and all three `IPHONEOS_DEPLOYMENT_TARGET` entries in `project.pbxproj` — 13.0 for **lite**, 16.0 for **lite-aeic** and **full**, where `flutter_onnxruntime` forces it. The two files must agree: CocoaPods fails the build outright when the Podfile platform is lower than a plugin needs. Switching a profile requires dropping `ios/Pods` and `ios/Podfile.lock` before `pod install`.
 - Display name `MCO Advanced`
 - `NSBluetoothAlwaysUsageDescription`, `NSBluetoothPeripheralUsageDescription`
 - `NSCameraUsageDescription` (QR scanning to join communities)
