@@ -247,25 +247,27 @@ exactly, the pin caption is limited to leave room for it.
 
 ### Blocking a sender in channels
 
-Long-press any incoming channel message and pick **Block sender**. Their messages keep arriving
-and keep their place in the conversation, but the text is replaced by a muted "sender blocked"
-line — tap it to read what they wrote, without the app acting on it. Nothing they send counts
-while blocked: no map pins, no removals of other people's pins, no reactions, no notifications,
-and the channel list shows the placeholder instead of a preview.
+Long-press any incoming channel message and pick **Block sender**. From that moment their
+messages still arrive and keep their place in the conversation, but the text is replaced by a
+muted "sender blocked" line — tap it to read what they wrote, without the app acting on it.
+Nothing they send afterwards counts: no map pins, no removals of other people's pins, no
+reactions, no notifications, and the channel list shows the placeholder instead of a preview.
+
+A block works forward only, with one exception: the message you blocked from. That one hides
+itself too, and anything it asked for — a map pin, a pin removal — stops counting. The rest of
+the conversation stays exactly as it is, so blocking does not rewrite history you have already
+read. The other way round, what arrived while the block was on stays hidden even after you lift
+it, so a temporary unblock cannot bring back the pins that sender dropped or the removals they
+sent.
 
 Blocking a message with a verified signature blocks that exact identity, so somebody else using
 the same name stays visible; an unsigned message blocks the name itself. The block applies in
-every channel and is shared by every radio the app connects to.
+every channel and is shared by every radio the app connects to. The same menu entry lifts it.
 
-The same menu entry lifts it, and from that moment the sender is treated normally again — but
-what arrived while they were blocked stays blocked. Those messages keep their placeholder and
-are never acted on, so a temporary unblock cannot bring back the pins they dropped or the
-removals they sent.
-
-The channel menu also has **Blocked senders**: a searchable list of everyone muted, showing the
-key each block is pinned to and the channels it covers, with a delete button per entry and an
-**Add** button for blocking a name typed by hand — that one carries no key and applies to every
-channel.
+**Blocked senders** — a searchable list of everyone muted, showing the key each block is pinned
+to and the channels it covers, with a delete button per entry and an **Add** button for blocking
+a name typed by hand (that one carries no key and applies to every channel) — sits in two menus:
+inside a channel, and on the channels list itself.
 
 ### Smaller additions
 

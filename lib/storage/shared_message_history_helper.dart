@@ -68,11 +68,49 @@ class SharedMessageHistoryHelper {
     required String currentPublicKeyHex,
     required Channel channel,
     required String messageId,
+  }) {
+    if (messageId.isEmpty) return Future.value(false);
+    return _rewriteSecondaryChannelMessages(
+      currentPublicKeyHex: currentPublicKeyHex,
+      channel: channel,
+      rewrite: (messages) =>
+          messages.where((message) => message.messageId != messageId).toList(),
+    );
+  }
+
+  /// Marks [messageId] blocked in every other node's copy of [channel].
+  ///
+  /// Same reason as the delete above: the flag has to be written where the
+  /// message actually lives, or the next merge brings back the unflagged copy.
+  Future<bool> markSecondaryChannelMessageBlocked({
+    required String currentPublicKeyHex,
+    required Channel channel,
+    required String messageId,
+  }) {
+    if (messageId.isEmpty) return Future.value(false);
+    return _rewriteSecondaryChannelMessages(
+      currentPublicKeyHex: currentPublicKeyHex,
+      channel: channel,
+      rewrite: (messages) => [
+        for (final message in messages)
+          message.messageId == messageId && !message.wasBlocked
+              ? message.copyWith(wasBlocked: true)
+              : message,
+      ],
+    );
+  }
+
+  /// Walks every other node's copy of [channel] and saves back whatever
+  /// [rewrite] returns, skipping scopes it leaves untouched.
+  Future<bool> _rewriteSecondaryChannelMessages({
+    required String currentPublicKeyHex,
+    required Channel channel,
+    required List<ChannelMessage> Function(List<ChannelMessage>) rewrite,
   }) async {
     final currentScope = scopeFor(currentPublicKeyHex);
-    if (currentScope.isEmpty || messageId.isEmpty) return false;
+    if (currentScope.isEmpty) return false;
 
-    var deleted = false;
+    var changed = false;
     for (final scope in knownScopes()) {
       if (scope == currentScope) continue;
 
@@ -91,15 +129,24 @@ class SharedMessageHistoryHelper {
         matchedIndex,
         allowLegacyMigration: false,
       );
-      final remaining = messages
-          .where((message) => message.messageId != messageId)
-          .toList();
-      if (remaining.length == messages.length) continue;
+      final rewritten = rewrite(messages);
+      if (_sameChannelMessages(messages, rewritten)) continue;
 
-      await messageStore.saveChannelMessages(matchedIndex, remaining);
-      deleted = true;
+      await messageStore.saveChannelMessages(matchedIndex, rewritten);
+      changed = true;
     }
-    return deleted;
+    return changed;
+  }
+
+  static bool _sameChannelMessages(
+    List<ChannelMessage> a,
+    List<ChannelMessage> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) return false;
+    }
+    return true;
   }
 
   /// Contact-chat counterpart of [deleteSecondaryChannelMessage].

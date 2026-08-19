@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
-import '../helpers/blocked_senders.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../l10n/l10n.dart';
@@ -29,6 +28,7 @@ import '../theme/mesh_theme.dart';
 import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/channel_widget_color_picker.dart';
@@ -393,6 +393,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(
+                    icon: Icons.block,
+                    iconColor: Colors.red,
+                    text: menuContext.l10n.chat_blockedSenders,
+                    textStyle: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () => unawaited(BlockedSendersSheet.show(context)),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
                     icon: Icons.settings,
                     text: menuContext.l10n.settings_title,
                   ),
@@ -634,11 +643,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     // Last message preview
     final messages = connector.getChannelMessages(channel);
     final lastMessage = messages.isNotEmpty ? messages.last : null;
-    // A blocked sender's body stays hidden in this list too, or the preview
-    // puts back exactly what the chat took away.
-    final lastBlocked =
-        lastMessage != null &&
-        BlockedSenders.instance.hides(lastMessage, channel.name);
+    // A hidden body stays hidden in this list too, or the preview puts back
+    // exactly what the chat took away.
+    final lastBlocked = lastMessage != null && lastMessage.wasBlocked;
     final lastMessageText = lastBlocked ? '' : (lastMessage?.text ?? '');
     final String lastPreview;
     if (lastBlocked) {

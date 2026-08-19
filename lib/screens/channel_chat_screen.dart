@@ -867,7 +867,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final connector = context.read<MeshCoreConnector>();
                     showChannelEditSheet(context, connector, widget.channel);
                   case 'blockedSenders':
-                    unawaited(_showBlockedSenders());
+                    unawaited(BlockedSendersSheet.show(context));
                   case 'clearChat':
                     _confirmClearChat();
                 }
@@ -1241,15 +1241,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final showMessageRegion = settingsService.settings.showMessageRegion;
     final isOutgoing = message.isOutgoing;
-    // A blocked sender's body is never parsed: no pin, no image, no shared
-    // contact, no coordinate link, no quote. Everything below reads `bodyText`
-    // instead of the message, so revealing the text in the bubble cannot bring
-    // those handlers back — only lifting the block does, and only for what
-    // arrives after it.
-    final blockedBody =
-        BlockedSenders.instance.hides(message, widget.channel.name)
-        ? message.text
-        : null;
+    // A body that arrived while its sender was blocked is never parsed: no
+    // pin, no image, no shared contact, no coordinate link, no quote.
+    // Everything below reads `bodyText` instead of the message, so revealing
+    // the text in the bubble cannot bring those handlers back, and neither can
+    // lifting the block — that only governs what arrives afterwards.
+    final blockedBody = message.wasBlocked ? message.text : null;
     final bodyText = blockedBody == null ? message.text : '';
     final compressionType =
         message.compressionType ??
@@ -3840,17 +3837,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Future<void> _showBlockedSenders() async {
-    await BlockedSendersSheet.show(context);
-    if (!mounted) return;
-    // The sheet writes straight to the shared table, so the chat has to redraw
-    // whatever it changed; revealed bodies are dropped along with it.
-    setState(() {
-      _channelSkipNextBottomSnap = true;
-      _revealedBlockedMessages.clear();
-    });
-  }
-
   void _toggleBlockedBody(ChannelMessage message) {
     setState(() {
       _channelSkipNextBottomSnap = true;
@@ -3868,20 +3854,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// else blocks the name alone, since an unsigned message proves nothing
   /// about who sent it.
   ///
-  /// The table updates in memory before it is persisted, so the redraw does
-  /// not wait for the write — awaiting it would leave a window where an
-  /// unrelated rebuild redraws the list without the snap being suppressed.
+  /// A rule only decides what happens to messages arriving after it, so the
+  /// one exception is [message] itself — the user pointed at it, so it is
+  /// flagged too and disappears behind the placeholder along with any command
+  /// it carried. Unblocking leaves that flag alone, as it does every other.
   void _toggleSenderBlock(ChannelMessage message) {
     final blocked = BlockedSenders.instance;
+    if (blocked.isSenderBlocked(message, widget.channel.name)) {
+      unawaited(blocked.unblock(message.senderName));
+      return;
+    }
+    unawaited(blocked.block(message));
+    _channelSkipNextBottomSnap = true;
     unawaited(
-      blocked.isSenderBlocked(message, widget.channel.name)
-          ? blocked.unblock(message.senderName)
-          : blocked.block(message),
+      context.read<MeshCoreConnector>().markChannelMessageBlocked(
+        widget.channel,
+        message,
+      ),
     );
-    setState(() {
-      _channelSkipNextBottomSnap = true;
-      _revealedBlockedMessages.clear();
-    });
   }
 
   Future<void> _showMessageActions(ChannelMessage message) async {

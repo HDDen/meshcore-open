@@ -216,8 +216,7 @@ class _BlockedSendersSheetState extends State<BlockedSendersSheet> {
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  width: double.infinity,
+                child: Center(
                   child: FilledButton.tonalIcon(
                     onPressed: () => unawaited(_promptAdd()),
                     icon: const Icon(Icons.add),

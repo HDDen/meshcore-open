@@ -33,7 +33,6 @@ import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
-import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -4488,9 +4487,9 @@ class _MapScreenState extends State<MapScreen>
       final deletions = deletionsByChannel[channel.index] =
           SharedMarkerDeletions();
       for (final message in messages) {
-        // A blocked sender's text never acts: their pins stay off the map and
-        // their `del:` commands hide nobody else's.
-        if (BlockedSenders.instance.hides(message, channel.name)) continue;
+        // Arrived while its sender was blocked: no pin, and its `del:`
+        // command hides nobody else's.
+        if (message.wasBlocked) continue;
         if (deletions.absorb(message.text, message.timestamp)) continue;
         final payload = parseMarkerText(message.text);
         if (payload == null) continue;
@@ -5256,6 +5255,22 @@ class _MapScreenState extends State<MapScreen>
                         contact.type != advTypeRoom,
                   )
                   .toList();
+              // The search box heads the whole sheet, so it narrows the
+              // channels below the contacts as well. Matched against the label
+              // the row actually shows, so an unnamed channel is findable by
+              // the "Channel N" it is displayed as.
+              final allChannels = liveConnector.channels
+                  .where((c) => !c.isEmpty)
+                  .toList();
+              final matchingChannels = query.isEmpty
+                  ? allChannels
+                  : allChannels
+                        .where(
+                          (c) => ChannelMarkerStyles.displayName(
+                            c,
+                          ).toLowerCase().contains(query),
+                        )
+                        .toList();
               return SafeArea(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
@@ -5329,9 +5344,11 @@ class _MapScreenState extends State<MapScreen>
                             ),
                             child: LinearProgressIndicator(),
                           )
-                        else if (liveConnector.channels
-                            .where((c) => !c.isEmpty)
-                            .isEmpty)
+                        // Tied to the unfiltered list: this says the node
+                        // has no channels, not that the query missed. A query
+                        // that matches nothing shows nothing, as on the
+                        // contacts above.
+                        else if (allChannels.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -5340,38 +5357,33 @@ class _MapScreenState extends State<MapScreen>
                             child: Text(context.l10n.map_noChannelsAvailable),
                           )
                         else
-                          ...liveConnector.channels
-                              .where((c) => !c.isEmpty)
-                              .map((channel) {
-                                final isPublic = _isPublicChannel(channel);
-                                final label = channel.name.isEmpty
-                                    ? 'Channel ${channel.index}'
-                                    : channel.name;
-                                return ListTile(
-                                  leading: Icon(
-                                    isPublic ? Icons.public : Icons.tag,
-                                    color: isPublic
-                                        ? MapPalette.cluster
-                                        : MapPalette.repeater,
-                                  ),
-                                  title: Text(label),
-                                  onTap: () async {
-                                    Navigator.pop(sheetContext);
-                                    final canSend = isPublic
-                                        ? await _confirmPublicShare(
-                                            context,
-                                            label,
-                                          )
-                                        : true;
-                                    if (canSend) {
-                                      liveConnector.sendChannelMessage(
-                                        channel,
-                                        markerText,
-                                      );
-                                    }
-                                  },
-                                );
-                              }),
+                          ...matchingChannels.map((channel) {
+                            final isPublic = _isPublicChannel(channel);
+                            final label = ChannelMarkerStyles.displayName(
+                              channel,
+                            );
+                            return ListTile(
+                              leading: Icon(
+                                isPublic ? Icons.public : Icons.tag,
+                                color: isPublic
+                                    ? MapPalette.cluster
+                                    : MapPalette.repeater,
+                              ),
+                              title: Text(label),
+                              onTap: () async {
+                                Navigator.pop(sheetContext);
+                                final canSend = isPublic
+                                    ? await _confirmPublicShare(context, label)
+                                    : true;
+                                if (canSend) {
+                                  liveConnector.sendChannelMessage(
+                                    channel,
+                                    markerText,
+                                  );
+                                }
+                              },
+                            );
+                          }),
                       ],
                     ),
                   ),
@@ -6074,12 +6086,7 @@ class _MapConnectorSnapshot {
           ),
     );
 
-    final markerParts = <Object?>[
-      connector.selfName,
-      // Blocking changes which messages count without changing any of them,
-      // so the revision has to ride along or the cached pins stay.
-      BlockedSenders.instance.revision,
-    ];
+    final markerParts = <Object?>[connector.selfName];
     for (final contact in connector.contacts) {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);
@@ -6118,6 +6125,9 @@ class _MapConnectorSnapshot {
             message.text,
             message.senderName,
             message.timestamp.millisecondsSinceEpoch,
+            // Blocking flags one already-received message without touching
+            // anything else about it, and that has to reach the cache.
+            message.wasBlocked,
           ),
         );
       }

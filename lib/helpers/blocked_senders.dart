@@ -4,14 +4,16 @@ import 'mcmp_app_codec.dart';
 
 /// Channel senders the user has muted.
 ///
-/// One table for the whole app, so the chat that hides a body, the map that
-/// must ignore that body's pins and the connector that must not notify about
-/// it all reach the same answer. A singleton rather than a provider: the
-/// connector consults it while parsing a frame, far from any `BuildContext`.
+/// One table for the whole app, and a singleton rather than a provider: its
+/// main caller is the connector, which consults it while parsing a frame, far
+/// from any `BuildContext`.
 ///
-/// The rule is deliberately narrow — it decides what is *shown and acted on*,
-/// never what is received or stored. Blocked messages still arrive, still sit
-/// in history, and come back in full the moment the block is lifted.
+/// A rule is asked exactly one question, and only on the receive path: is this
+/// sender muted right now? The answer is stamped onto the message as
+/// [ChannelMessage.wasBlocked] and that flag alone decides what is shown and
+/// acted on afterwards. So a block reaches forward only — what already sits in
+/// history is left alone, and what arrived during a block stays hidden after
+/// it is lifted. Nothing is ever dropped on receipt or removed from history.
 class BlockedSenders {
   BlockedSenders._();
 
@@ -19,17 +21,9 @@ class BlockedSenders {
 
   final BlockedSenderStore _store = BlockedSenderStore();
   Map<String, BlockedSenderRule>? _rules;
-  int _revision = 0;
 
-  /// Bumped on every change.
-  ///
-  /// Caches keyed on message content — the map's marker signature — know
-  /// nothing about this table, so they have to mix this in or a block leaves
-  /// them showing the pins it was meant to remove.
-  int get revision => _revision;
-
-  /// Loaded lazily and kept in memory: [hides] is asked once per message per
-  /// frame while the map builds its markers.
+  /// Loaded lazily and kept in memory: the receive path asks for it once per
+  /// incoming channel message.
   Map<String, BlockedSenderRule> get rules => _rules ??= _store.load();
 
   /// The key that actually authenticated [message], or null.
@@ -56,20 +50,14 @@ class BlockedSenders {
     return rule.keyHex == verifiedKeyOf(message) ? rule : null;
   }
 
-  /// True when a rule mutes this sender right now, whatever the message
-  /// itself remembers. Only the receive path asks this, to stamp
-  /// [ChannelMessage.wasBlocked]; everything else asks [hides].
+  /// True when a rule mutes this sender right now.
+  ///
+  /// Asked by the receive path, which stamps the answer onto the message, and
+  /// by the block/unblock menu entry, which needs to know which half it is
+  /// offering. Nothing that draws a message asks it — that reads
+  /// [ChannelMessage.wasBlocked].
   bool isSenderBlocked(ChannelMessage message, String channelName) =>
       ruleFor(message, channelName) != null;
-
-  /// True when [message] must be neither shown nor acted on.
-  ///
-  /// Either its sender is muted now, or it arrived while they were. The stored
-  /// flag never expires: lifting a block must not resurrect a marker or a
-  /// `del:` command from the muted period, and revealing the text by hand must
-  /// not either.
-  bool hides(ChannelMessage message, String channelName) =>
-      message.wasBlocked || isSenderBlocked(message, channelName);
 
   /// Mutes the sender of [message] in every channel.
   ///
@@ -123,7 +111,6 @@ class BlockedSenders {
 
   Future<void> _write(Map<String, BlockedSenderRule> updated) async {
     _rules = Map.unmodifiable(updated);
-    _revision++;
     await _store.save(updated);
   }
 }

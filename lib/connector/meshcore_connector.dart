@@ -1755,6 +1755,57 @@ class MeshCoreConnector extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  /// Marks one already-received channel message as blocked.
+  ///
+  /// A block otherwise reaches forward only. The message the block was ordered
+  /// from is the exception: it is the one the user was looking at, so it is
+  /// hidden with everything that follows and any command it carried — a marker
+  /// or a `del:` — stops counting. Marked in both scopes for the same reason
+  /// deletes are: the same message can sit in this node's store and in a
+  /// shared one, and flagging only the local copy lets the merge uncover the
+  /// unflagged twin.
+  Future<void> markChannelMessageBlocked(
+    Channel channel,
+    ChannelMessage message,
+  ) async {
+    if (message.isOutgoing || message.wasBlocked) return;
+    var changed = false;
+    final messages = _channelMessages[channel.index];
+    if (messages != null) {
+      final index = messages.indexWhere(
+        (current) => current.messageId == message.messageId,
+      );
+      if (index >= 0 && !messages[index].wasBlocked) {
+        messages[index] = messages[index].copyWith(wasBlocked: true);
+        _channelMessageStore.saveChannelMessages(channel.index, messages);
+        changed = true;
+      }
+    }
+    if (await _markSharedChannelMessageBlocked(channel, message)) {
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
+  Future<bool> _markSharedChannelMessageBlocked(
+    Channel channel,
+    ChannelMessage message,
+  ) async {
+    final secondary = _sharedChannelSecondaryMessages[channel.index];
+    if (secondary == null || secondary.isEmpty) return false;
+    final index = secondary.indexWhere(
+      (current) => current.messageId == message.messageId,
+    );
+    if (index < 0 || secondary[index].wasBlocked) return false;
+    secondary[index] = secondary[index].copyWith(wasBlocked: true);
+    await _sharedMessageHistoryHelper.markSecondaryChannelMessageBlocked(
+      currentPublicKeyHex: selfPublicKeyHex,
+      channel: channel,
+      messageId: message.messageId,
+    );
+    return true;
+  }
+
   /// Deletes the shared-history copies of [message], both the merged-in list
   /// and the other node's store it was read from. Matching by message id also
   /// catches the copy the merge hid when the same message exists in both
@@ -10249,9 +10300,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final label = channelName ?? _channelDisplayName(channelIndex);
-    // The chat hides a blocked sender's body; a notification would put it
-    // straight back on screen, so it is not raised at all.
-    if (BlockedSenders.instance.hides(message, label)) return;
+    // The chat will hide this body; a notification would put it straight back
+    // on screen, so it is not raised at all.
+    if (BlockedSenders.instance.isSenderBlocked(message, label)) return;
     final isMuted = _appSettingsService!.isChannelMuted(label);
     if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
 
