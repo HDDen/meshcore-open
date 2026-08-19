@@ -56,26 +56,45 @@ class SharedMarkerDeletion {
   }
 }
 
-/// The delete commands seen in one channel, and what they hide.
+/// The delete commands seen in one conversation, and what they hide.
+///
+/// A command of our own that has left the radio but that the mesh has not
+/// confirmed is kept apart: nobody else has acted on it yet, so it hides
+/// nothing and only fades the pin.
 class SharedMarkerDeletions {
-  final Map<String, DateTime> _latestByTarget = {};
+  final Map<String, DateTime> _confirmedByTarget = {};
+  final Map<String, DateTime> _pendingByTarget = {};
 
   /// Feeds one message. Returns true when it was a command rather than
   /// content, so the caller can skip it.
-  bool absorb(String text, DateTime timestamp) {
+  bool absorb(String text, DateTime timestamp, {bool pending = false}) {
     final target = SharedMarkerDeletion.targetOf(text);
     if (target == null) return false;
-    final known = _latestByTarget[target];
-    if (known == null || timestamp.isAfter(known)) {
-      _latestByTarget[target] = timestamp;
+    final known = pending ? _pendingByTarget : _confirmedByTarget;
+    final seen = known[target];
+    if (seen == null || timestamp.isAfter(seen)) {
+      known[target] = timestamp;
     }
     return true;
   }
 
-  /// True when a command covers this marker — same text, sent later than the
-  /// marker itself.
-  bool hides(String markerText, DateTime markerTimestamp) {
-    final at = _latestByTarget[markerText.trim()];
+  /// True when a confirmed command covers this marker — same text, sent later
+  /// than the marker itself.
+  bool hides(String markerText, DateTime markerTimestamp) =>
+      _covers(_confirmedByTarget, markerText, markerTimestamp);
+
+  /// True when a command covering this marker is still in flight. The two
+  /// maps are independent, so a second command that does get confirmed
+  /// removes the pin without waiting on an earlier one that never was.
+  bool pendingHides(String markerText, DateTime markerTimestamp) =>
+      _covers(_pendingByTarget, markerText, markerTimestamp);
+
+  static bool _covers(
+    Map<String, DateTime> commands,
+    String markerText,
+    DateTime markerTimestamp,
+  ) {
+    final at = commands[markerText.trim()];
     return at != null && at.isAfter(markerTimestamp);
   }
 }

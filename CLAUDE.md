@@ -367,14 +367,26 @@ marker sets, rather than inside `_collectSharedMarkers` — that one is cached a
 which knows nothing about style changes.
 
 **"Remove for everyone".** `helpers/shared_marker_deletions.dart` (no imports of its own) holds
-the convention: the command is the marker's own text behind a `del:` prefix, sent back into its
-channel, so a client that does not know it just shows the line as text. Nothing is stored —
-`_collectSharedMarkers` reads the commands back out of the channel history, which gives two
-rules for free: a command only hides markers **older than itself**, so re-sharing the pin later
-brings it back, and deleting the command from the chat undoes it. `del:` lines therefore have to
-count towards `markerSignature`. In the chat the command renders as the POI badge with
-`chat_poiRemoved` and a struck-through pin icon, since `parseMarkerText` is unanchored and
-matches `del:m:...` as readily as `m:...`.
+the convention: the command is the marker's own text behind a `del:` prefix, sent back where the
+pin came from — its channel, or the contact or room server that shared it — so a client that does
+not know the convention just shows the line as text. `_SharedMarker` carries `channelIndex` or
+`contactKeyHex`, exactly one of the two, and `_sendMarkerDeletion` picks the route from that.
+Nothing is stored — `_collectSharedMarkers` reads the commands back out of the conversation,
+which gives two rules for free: a command only hides markers **older than itself**, so re-sharing
+the pin later brings it back, and deleting the command from the chat undoes it. `del:` lines
+therefore have to count towards `markerSignature`, in the contact loop as well as the channel
+one. In the chat the command renders as the POI badge with `chat_poiRemoved` and a struck-through
+pin icon — in both chat screens, since `parseMarkerText` is unanchored and matches `del:m:...` as
+readily as `m:...`. That same unanchored match is why the contact loop has to `absorb` before it
+parses: without it a `del:` line drew a second pin of its own.
+
+A command of ours hides nothing until the mesh confirms it, on the same evidence the spinner
+uses: `absorb(..., pending: ...)` files it under `_pendingByTarget` instead of
+`_confirmedByTarget`, so `hides` stays false while `pendingHides` turns true and fades the pin to
+0.4 opacity. Dropping the pin outright would claim a removal nobody else has seen, and the send
+may still fail. A command that is never confirmed leaves the pin faded, which is the truth;
+deleting the command message undoes it. The two maps are independent, so a second command that
+*is* confirmed removes the pin without waiting on the first.
 
 **Wire form — the part that is easy to break.** A command must repeat the marker's label byte
 for byte, or it matches nothing. Hence:
@@ -426,6 +438,21 @@ Direct one-to-one chats are excluded on purpose: their ECDH transport already au
 sender, so an envelope there would cost bytes and prove nothing new. Queued previews
 (`schedule*Message`) are excluded too — they sign nothing, and a preview should not promise a
 badge that only materialises at commit time.
+
+**Waiting for the mesh.** `_SharedMarker.pendingDelivery` marks a pin of ours the mesh has not
+confirmed, and draws an indeterminate `CircularProgressIndicator` around the circle. The evidence
+differs by route and that is the only difference: a channel post waits for a repeat
+(`repeatCount == 0`), a direct message or room post waits for its delivery receipt
+(`status != MessageStatus.delivered`), because nobody acknowledges a broadcast. Both fields ride
+in `markerSignature` — a repeat and a receipt change nothing else about a message, so without
+them the cached pins would keep spinning.
+
+The ring must not cost the pin any layout. It is a `Positioned` with negative insets inside a
+`Stack(clipBehavior: Clip.none)` whose only sizing child is the 36×36 circle, so the marker keeps
+exactly the footprint it had. Painting outside the marker's own box is safe: flutter_map puts
+each marker in a `Positioned` inside one viewport-wide `Stack`, which clips at the viewport
+rather than per marker. Growing `Marker.height` or wrapping the circle in a larger box instead
+is what broke marker rendering once already — the pin's own box is the thing to leave alone.
 
 **Label budget.** `_maxMarkerLabelBytes` limits the pin caption at entry time: the channel
 budget for this node (which already accounts for `"<name>: "`), capped by the user's outgoing

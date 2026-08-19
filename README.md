@@ -238,8 +238,13 @@ handed out down the palette in order, and the settings are remembered per node.
 Markers received through the combined history of your other nodes are drawn as well, not only
 the ones this node heard.
 
+A pin you share spins until the mesh confirms it: a repeat heard on a channel, a delivery
+receipt in a chat.
+
 A pin can be hidden locally, removed locally, or **removed for everyone** — the last one sends a
-short command back into the same channel, and other clients drop that pin from their maps. The
+short command back where the pin came from, whether that was a channel, a contact or a room
+server, and other clients drop that pin from their maps. Your own map keeps the pin, faded, until
+the mesh confirms the command, on the same evidence the spinner waits for. The
 command is plain text, so a client that does not know the convention simply shows the line. It
 only affects pins shared before it: re-sharing the same marker afterwards brings it back, and
 deleting the command from the chat undoes it. Because the command has to repeat the marker text
