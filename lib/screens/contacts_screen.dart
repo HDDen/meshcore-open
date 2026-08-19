@@ -102,6 +102,10 @@ class _ContactsScreenState extends State<ContactsScreen>
     with DisconnectNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  /// The search box focuses itself when the user opens it, but not when the
+  /// screen arrives already filtered — a keyboard covering the list defeats
+  /// the point of jumping straight to a named contact.
+  bool _suppressSearchAutofocus = false;
   final ContactGroupStore _groupStore = ContactGroupStore();
   MeshCoreConnector? _scopeSyncConnector;
   List<ContactGroup> _groups = [];
@@ -126,9 +130,9 @@ class _ContactsScreenState extends State<ContactsScreen>
     final initialQuery = widget.initialSearchQuery?.trim();
     if (initialQuery != null && initialQuery.isNotEmpty) {
       _searchController.text = initialQuery;
+      _suppressSearchAutofocus = true;
       // The view state is shared and notifies its listeners, so it cannot be
-      // written while this frame is still building. The search box also only
-      // exists once expanded, and it autofocuses itself when it appears.
+      // written while this frame is still building.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final viewState = context.read<UiViewStateService>();
@@ -1460,7 +1464,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                             ? TextField(
                                 controller: _searchController,
                                 focusNode: _searchFocusNode,
-                                autofocus: true,
+                                autofocus: !_suppressSearchAutofocus,
                                 decoration: InputDecoration(
                                   hintText: hintText,
                                   border: InputBorder.none,
@@ -1495,6 +1499,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                             if (viewState.contactsSearchExpanded) {
                               _collapseContactsSearch(viewState);
                               return;
+                            }
+                            if (_suppressSearchAutofocus) {
+                              setState(() => _suppressSearchAutofocus = false);
                             }
                             viewState.setContactsSearchExpanded(true);
                           },
