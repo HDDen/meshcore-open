@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
@@ -4891,14 +4892,43 @@ class _MapScreenState extends State<MapScreen>
     return false;
   }
 
-  /// Dialog action labels are clipped rather than wrapped, so four of them
-  /// stay on one line however long the translation is.
-  Widget _markerActionLabel(String text) => Text(
-    text,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    textAlign: TextAlign.center,
-  );
+  /// One action of the marker dialog: icon over a small caption.
+  ///
+  /// Four translated captions never fit one line beside their icons, so they
+  /// sit under them at label size and share the width equally. No colour on
+  /// the text style, so it follows the button's foreground.
+  Widget _markerAction({
+    required IconData icon,
+    required String label,
+    required Color? color,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: color,
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        onPressed: onPressed,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, height: 1.2),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showMarkerInfo(_SharedMarker marker) {
     showDialog(
@@ -4925,74 +4955,68 @@ class _MapScreenState extends State<MapScreen>
               _buildInfoRow(context.l10n.map_flags, marker.flags),
           ],
         ),
-        // One Row instead of the default OverflowBar: with four entries it
-        // flips to a vertical stack, which turns the dialog into a column of
-        // buttons. Sharing the width and clipping the labels reads better.
-        actionsPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        // One Row instead of the default OverflowBar, which stacks four
+        // entries into a column of full-width buttons.
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
         actions: [
           Row(
+            // Top-aligned, so the icons line up across the row even when one
+            // caption wraps to a second line and its neighbours do not.
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _hiddenMarkerIds.add(marker.id);
-                    });
-                    Navigator.pop(dialogContext);
-                  },
-                  child: _markerActionLabel(context.l10n.common_hide),
-                ),
+              _markerAction(
+                icon: Icons.visibility_off_outlined,
+                label: context.l10n.common_hide,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                onPressed: () {
+                  setState(() {
+                    _hiddenMarkerIds.add(marker.id);
+                  });
+                  Navigator.pop(dialogContext);
+                },
               ),
-              Expanded(
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                  onPressed: () async {
-                    setState(() {
-                      _hiddenMarkerIds.add(marker.id);
-                      _removedMarkerIds.add(marker.id);
-                    });
-                    await _markerService.saveRemovedIds(_removedMarkerIds);
-                    if (dialogContext.mounted) {
-                      Navigator.pop(dialogContext);
-                    }
-                  },
-                  child: _markerActionLabel(context.l10n.common_remove),
-                ),
+              // Same crossed-out eye as hiding, filled and red: removing is
+              // the same gesture made permanent.
+              _markerAction(
+                icon: Icons.visibility_off,
+                label: context.l10n.common_remove,
+                color: Theme.of(context).colorScheme.error,
+                onPressed: () async {
+                  setState(() {
+                    _hiddenMarkerIds.add(marker.id);
+                    _removedMarkerIds.add(marker.id);
+                  });
+                  await _markerService.saveRemovedIds(_removedMarkerIds);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                },
               ),
               if (marker.channelIndex != null && marker.sourceText.isNotEmpty)
-                Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                    onPressed: () async {
-                      // Closed before the send, not after: the command goes
-                      // through the normal outbound queue and can sit there,
-                      // and leaving the dialog up meanwhile reads as a hang.
-                      final connector = context.read<MeshCoreConnector>();
-                      Navigator.pop(dialogContext);
-                      final sent = await _sendMarkerDeletion(connector, marker);
-                      if (!sent && mounted) {
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(
-                            context.l10n.app_offline_unableToMessage,
-                          ),
-                        );
-                      }
-                    },
-                    child: _markerActionLabel(
-                      context.l10n.map_removeMarkerForEveryone,
-                    ),
-                  ),
+                _markerAction(
+                  icon: Symbols.group_off,
+                  label: context.l10n.map_removeMarkerForEveryone,
+                  color: Theme.of(context).colorScheme.error,
+                  onPressed: () async {
+                    // Closed before the send, not after: the command goes
+                    // through the normal outbound queue and can sit there,
+                    // and leaving the dialog up meanwhile reads as a hang.
+                    final connector = context.read<MeshCoreConnector>();
+                    Navigator.pop(dialogContext);
+                    final sent = await _sendMarkerDeletion(connector, marker);
+                    if (!sent && mounted) {
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.app_offline_unableToMessage),
+                      );
+                    }
+                  },
                 ),
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: _markerActionLabel(context.l10n.common_close),
-                ),
+              _markerAction(
+                icon: Icons.close,
+                label: context.l10n.common_close,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                onPressed: () => Navigator.pop(dialogContext),
               ),
             ],
           ),
