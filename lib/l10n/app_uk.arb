@@ -2337,7 +2337,7 @@
   "contact_typeSensor": "Сенсор",
   "contact_typeUnknown": "Невідомо",
   "settings_multiAck": "Багато підтверджень",
-  "map_sharedAt": "Поділено",
+  "map_sharedAt": "Надіслано",
   "@losBlockedSpotChip": {
     "placeholders": {
       "distance": {

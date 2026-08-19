@@ -1472,7 +1472,7 @@
   "contact_typeUnknown": "Неизвестно",
   "channels_via": "через {path}",
   "settings_multiAck": "Несколько подтверждений",
-  "map_sharedAt": "Поделено",
+  "map_sharedAt": "Отправлено",
   "@losBlockedSpotChip": {
     "placeholders": {
       "distance": {

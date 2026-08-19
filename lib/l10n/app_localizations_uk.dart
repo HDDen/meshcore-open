@@ -2163,7 +2163,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_sharedPin => 'Спільний пін';
 
   @override
-  String get map_sharedAt => 'Поділено';
+  String get map_sharedAt => 'Надіслано';
 
   @override
   String get map_joinRoom => 'Приєднатись до кімнати';
