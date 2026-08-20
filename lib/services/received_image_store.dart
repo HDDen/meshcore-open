@@ -232,6 +232,16 @@ class ReceivedImageEntry {
   final bool receiverPreviewStored;
   final int receiverPreviewByteCount;
 
+  /// How often each packet of our own send was heard coming back, indexed by
+  /// chunk. One slot per data chunk plus one for parity, which rides at index
+  /// [totalChunks] — see `ImageChunkHeader.isParity`.
+  ///
+  /// An image has no single packet to count repeats on the way a text message
+  /// does: every chunk is its own frame and is repeated on its own. Empty for
+  /// received images, where a rebroadcast of someone else's packet is a
+  /// duplicate chunk rather than a repeat of ours.
+  final List<int> chunkRepeats;
+
   const ReceivedImageEntry({
     required this.streamId,
     required this.senderPrefix,
@@ -258,6 +268,7 @@ class ReceivedImageEntry {
     this.receiverPreviewPng,
     this.receiverPreviewStored = false,
     this.receiverPreviewByteCount = 0,
+    this.chunkRepeats = const <int>[],
   });
 
   ImageStreamKey get key => ImageStreamKey(
@@ -298,6 +309,7 @@ class ReceivedImageEntry {
     Object? receiverPreviewPng = _unset,
     bool? receiverPreviewStored,
     int? receiverPreviewByteCount,
+    List<int>? chunkRepeats,
   }) {
     return ReceivedImageEntry(
       streamId: streamId,
@@ -331,6 +343,7 @@ class ReceivedImageEntry {
           receiverPreviewStored ?? this.receiverPreviewStored,
       receiverPreviewByteCount:
           receiverPreviewByteCount ?? this.receiverPreviewByteCount,
+      chunkRepeats: chunkRepeats ?? this.chunkRepeats,
     );
   }
 
@@ -357,6 +370,7 @@ class ReceivedImageEntry {
     'pngByteCount': pngByteCount,
     'receiverPreviewStored': receiverPreviewStored,
     'receiverPreviewByteCount': receiverPreviewByteCount,
+    if (chunkRepeats.isNotEmpty) 'chunkRepeats': chunkRepeats,
     if (decodeMs != null) 'decodeMs': decodeMs,
     if (error != null) 'error': error,
   };
@@ -389,6 +403,9 @@ class ReceivedImageEntry {
       receiverPreviewStored: json['receiverPreviewStored'] as bool? ?? false,
       receiverPreviewByteCount:
           json['receiverPreviewByteCount'] as int? ?? 0,
+      chunkRepeats: List<int>.unmodifiable(
+        (json['chunkRepeats'] as List?)?.whereType<int>() ?? const <int>[],
+      ),
     );
   }
 
@@ -817,6 +834,13 @@ class ReceivedImageStore extends ChangeNotifier {
     final now = at ?? _clock();
     switch (outcome.status) {
       case ImageChunkStatus.malformed:
+        return null;
+
+      // Our own chunk, arriving through the decoded channel-data path. The
+      // firmware does not in fact deliver our flood echo there — it shows up
+      // in the RX log instead, which is what [noteOwnPacketRepeat] is for — so
+      // this is only reached if that ever changes. Counting here as well would
+      // then double every repeat, so it deliberately does not.
       case ImageChunkStatus.fromSelf:
         return null;
 
@@ -910,6 +934,45 @@ class ReceivedImageStore extends ChangeNotifier {
         if (result == null) return null;
         return _handleCompleted(result, now);
     }
+  }
+
+  /// Records one repeat of an image packet of ours, from the raw chunk body
+  /// as it was heard in the RX log.
+  ///
+  /// The connector cannot do this itself: the log gives it a decrypted blob,
+  /// and only the store knows which image that blob belongs to.
+  Future<ReceivedImageEntry?> noteOwnPacketRepeat(
+    Uint8List blob, {
+    required int channelIndex,
+  }) => _countOwnPacketRepeat(parseImageChunkHeader(blob), channelIndex);
+
+  /// Records one repeat of packet [ImageChunkHeader.index] of our own send.
+  ///
+  /// Silent about anything it cannot attribute: a header-less outcome, an image
+  /// we do not have an entry for, one that is not ours, or an index outside the
+  /// packet count the entry was registered with.
+  Future<ReceivedImageEntry?> _countOwnPacketRepeat(
+    ImageChunkHeader? header,
+    int channelIndex,
+  ) async {
+    if (header == null) return null;
+    final entry = entryForKey(
+      ImageStreamKey(
+        senderPrefix: header.senderPrefix,
+        imgId: header.imgId,
+        channelIndex: channelIndex,
+      ),
+    );
+    if (entry == null || !entry.isOutgoing) return null;
+    // One slot per data chunk, plus parity at index totalChunks.
+    final slots = entry.totalChunks + 1;
+    if (header.index < 0 || header.index >= slots) return null;
+    final counts = List<int>.filled(slots, 0);
+    for (var i = 0; i < entry.chunkRepeats.length && i < slots; i++) {
+      counts[i] = entry.chunkRepeats[i];
+    }
+    counts[header.index]++;
+    return _store(entry.copyWith(chunkRepeats: List<int>.unmodifiable(counts)));
   }
 
   Future<ReceivedImageEntry> _handleCompleted(

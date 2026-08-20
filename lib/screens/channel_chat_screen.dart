@@ -2784,10 +2784,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// the mandatory AI-reconstruction label.
   Widget _buildImageBubble(ReceivedImageEntry entry, double textScale) {
     final scheme = Theme.of(context).colorScheme;
-    final enableTimeSeconds = context
-        .watch<AppSettingsService>()
-        .settings
-        .enableTimeSeconds;
+    final settings = context.watch<AppSettingsService>().settings;
+    final enableTimeSeconds = settings.enableTimeSeconds;
     final isOutgoing = entry.isOutgoing;
     final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
@@ -2852,16 +2850,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
-                    child: Text(
-                      _formatTime(
-                        context,
-                        entry.firstSeen,
-                        enableSeconds: enableTimeSeconds,
-                      ),
-                      style: MeshTheme.mono(
-                        fontSize: 10 * textScale,
-                        color: metaColor,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _formatTime(
+                            context,
+                            entry.firstSeen,
+                            enableSeconds: enableTimeSeconds,
+                          ),
+                          style: MeshTheme.mono(
+                            fontSize: 10 * textScale,
+                            color: metaColor,
+                          ),
+                        ),
+                        if (settings.enableMessageTracing)
+                          ..._imagePacketRepeats(
+                            entry,
+                            textScale,
+                            metaColor,
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -2871,6 +2880,39 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ],
       ),
     );
+  }
+
+  /// The per-packet repeat counters, as a tail for the time row.
+  ///
+  /// An image has no single packet to count repeats on the way a text
+  /// message does: every chunk travels as its own frame and is repeated on
+  /// its own. The counts are therefore listed in packet order — one value
+  /// per chunk, including the ones nobody repeated, so a position that stays
+  /// at zero is visible rather than missing. Parity rides one index past the
+  /// data chunks and is appended only when it was actually heard.
+  List<Widget> _imagePacketRepeats(
+    ReceivedImageEntry entry,
+    double textScale,
+    Color metaColor,
+  ) {
+    if (!entry.isOutgoing || entry.totalChunks <= 0) {
+      return const <Widget>[];
+    }
+    final repeats = entry.chunkRepeats;
+    int countFor(int index) => index < repeats.length ? repeats[index] : 0;
+    final counts = <int>[
+      for (var i = 0; i < entry.totalChunks; i++) countFor(i),
+      if (countFor(entry.totalChunks) > 0) countFor(entry.totalChunks),
+    ];
+    return <Widget>[
+      const SizedBox(width: 6),
+      Icon(Icons.repeat, size: 11 * textScale, color: metaColor),
+      const SizedBox(width: 2),
+      Text(
+        counts.join('\u00b7'),
+        style: MeshTheme.mono(fontSize: 10 * textScale, color: metaColor),
+      ),
+    ];
   }
 
   /// GRP_DATA carries no sender name, only the 2-byte public-key prefix the

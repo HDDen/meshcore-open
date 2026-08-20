@@ -210,6 +210,17 @@ void main() async {
     onImageSenderPrefix: kImageCodecFeatureAvailable
         ? (prefix) => imageReassembler.selfPrefix = prefix
         : null,
+    // Repeats of our own image packets never reach `addChunk`: the firmware
+    // surfaces them only in the RX log. This is that path, and it carries the
+    // channel index the store needs to name the image.
+    onImageChunkRepeat: kImageCodecFeatureAvailable
+        ? (blob, channelIndex) => unawaited(
+            receivedImageStore.noteOwnPacketRepeat(
+              blob,
+              channelIndex: channelIndex,
+            ),
+          )
+        : null,
   );
 
   await connector.loadContactCache();

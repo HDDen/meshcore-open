@@ -329,6 +329,11 @@ class MeshCoreConnector extends ChangeNotifier {
   // firmware offline queue they may be minutes apart).
   ImageChunkTransport? _imageTransport;
   void Function(ImageChunkOutcome outcome)? _onImageChunk;
+
+  /// Called with the raw body of an AEIC image chunk seen in the RX log.
+  /// See [_countImageChunkRepeat] for why that log, and not the decoded
+  /// channel-data path, is where a repeat of our own packet shows up.
+  void Function(Uint8List blob, int channelIndex)? _onImageChunkRepeat;
   void Function(int senderPrefix)? _onImageSenderPrefix;
   // Intentionally global (not per-contact): tracks overall network activity.
   // Frequent RX from any source indicates a busy network with more collisions.
@@ -2659,6 +2664,7 @@ class MeshCoreConnector extends ChangeNotifier {
     ImageCodecService? imageCodecService,
     ImageChunkTransport? imageTransport,
     void Function(ImageChunkOutcome outcome)? onImageChunk,
+    void Function(Uint8List blob, int channelIndex)? onImageChunkRepeat,
     void Function(int senderPrefix)? onImageSenderPrefix,
   }) {
     _retryService = retryService;
@@ -2684,6 +2690,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _imageCodecService = imageCodecService;
     _imageTransport = imageTransport;
     _onImageChunk = onImageChunk;
+    _onImageChunkRepeat = onImageChunkRepeat;
     _onImageSenderPrefix = onImageSenderPrefix;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
@@ -10707,6 +10714,7 @@ class MeshCoreConnector extends ChangeNotifier {
           final decryptedBytes = _decryptPayload(channel.psk, encrypted);
           if (decryptedBytes == null) return;
           if (packet.payloadType == _payloadTypeGroupData) {
+            if (_countImageChunkRepeat(channel.index, decryptedBytes)) return;
             final packetRegion = _resolvePacketRegion(packet);
             final parsedMessage = _parseLogRxChannelData(
               packet,
@@ -10866,6 +10874,30 @@ class MeshCoreConnector extends ChangeNotifier {
     } catch (e) {
       appLogger.warn('Error handling log RX data frame: $e');
     }
+  }
+
+  /// Hands an AEIC image chunk heard in the RX log to whoever counts repeats,
+  /// and reports that the frame was one so the caller stops parsing it as a
+  /// message.
+  ///
+  /// This is the only place a repeat of an image packet can be observed. The
+  /// firmware does not deliver our own flood echo through the decoded
+  /// channel-data path — it surfaces only here, in `PUSH_CODE_LOG_RX_DATA`,
+  /// still encrypted, which is why the transport's own `fromSelf` outcome
+  /// never fires for it. The decrypted body is
+  /// `[dataType u16][len][payload]`, the same layout [_parseLogRxChannelData]
+  /// reads.
+  bool _countImageChunkRepeat(int channelIndex, Uint8List decryptedBytes) {
+    if (decryptedBytes.length < 3) return false;
+    final reader = BufferReader(decryptedBytes);
+    final dataType = reader.readByte() | (reader.readByte() << 8);
+    if (dataType != dataTypeAeicImage) return false;
+    final dataLength = reader.readByte();
+    // Claimed as an image frame either way: a truncated one is still not a
+    // message, and handing it on would only produce a parse failure.
+    if (dataLength > reader.remaining) return true;
+    _onImageChunkRepeat?.call(reader.readBytes(dataLength), channelIndex);
+    return true;
   }
 
   ChannelMessage? _parseLogRxChannelData(
