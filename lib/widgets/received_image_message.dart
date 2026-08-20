@@ -201,7 +201,22 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
     if (_pngRequestedFor == widget.streamId) return;
     final entry = store.entryFor(widget.streamId);
     if (entry == null) return;
-    if (entry.state != ReceivedImageState.decoded) return;
+    // Our own message needs both pictures: the crop is the placeholder's
+    // backdrop and the tap target of the preview, the preview is the bubble.
+    if (entry.isOutgoing &&
+        entry.receiverPreviewStored &&
+        entry.receiverPreviewPng == null) {
+      _pngRequestedFor = widget.streamId;
+      store.ensureReceiverPreview(widget.streamId);
+      if (entry.pngBytes == null && entry.pngStored) {
+        store.ensurePng(widget.streamId);
+      }
+      return;
+    }
+    if (entry.state != ReceivedImageState.decoded &&
+        !(entry.isOutgoing && entry.pngStored)) {
+      return;
+    }
     if (entry.pngBytes != null) return;
     _pngRequestedFor = widget.streamId;
     store.ensurePng(widget.streamId);
@@ -233,6 +248,22 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
     ReceivedImageStore store,
     ReceivedImageEntry entry,
   ) {
+    // Our own message, decoded on request: these are model pixels, identical
+    // to what the recipients get, so they are shown exactly as a received
+    // image is — R6 elements and all. A tap opens the original instead; see
+    // [_decodedBody].
+    final receiverPreview = entry.receiverPreviewPng;
+    if (receiverPreview == null && entry.receiverPreviewStored) {
+      // Stored but not read back yet; _maybeLoadPng has asked for it.
+      return _box(
+        context,
+        _progressBody(context, progress: null, label: _s.decoding),
+      );
+    }
+    if (receiverPreview != null) {
+      return _decodedBody(context, entry, receiverPreview, synthesized: true);
+    }
+
     switch (entry.state) {
       case ReceivedImageState.decoded:
         final png = entry.pngBytes;
@@ -242,7 +273,12 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
             _progressBody(context, progress: null, label: _s.decoding),
           );
         }
-        return _decodedBody(context, entry, png);
+        return _decodedBody(
+          context,
+          entry,
+          png,
+          synthesized: entry.synthesized,
+        );
 
       case ReceivedImageState.receiving:
         final total = entry.totalChunks <= 0 ? 1 : entry.totalChunks;
@@ -281,6 +317,10 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
                   )
                 : null,
           ),
+          // Our own message shows the picture we sent behind the placeholder,
+          // dimmed: it says which image this is without pretending to be the
+          // decode. A received one has nothing to show yet.
+          backdrop: entry.isOutgoing ? entry.pngBytes : null,
           onTap: () => _onProcessTap(store, entry),
         );
 
@@ -368,7 +408,12 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
 
   /// 4:3 placeholder box, same discipline as `GifMessage`, so a bubble does not
   /// resize as an image progresses.
-  Widget _box(BuildContext context, Widget child, {VoidCallback? onTap}) {
+  Widget _box(
+    BuildContext context,
+    Widget child, {
+    VoidCallback? onTap,
+    Uint8List? backdrop,
+  }) {
     final theme = Theme.of(context);
     final box = Container(
       width: widget.maxSize,
@@ -380,8 +425,27 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
       ),
       child: Center(child: child),
     );
-    if (onTap == null) return box;
-    return GestureDetector(onTap: onTap, child: box);
+    final framed = backdrop == null
+        ? box
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  // Dimmed hard: this is a hint at which picture is waiting,
+                  // and it must not read as the decode that has not run.
+                  child: Opacity(
+                    opacity: 0.22,
+                    child: Image.memory(backdrop, fit: BoxFit.cover),
+                  ),
+                ),
+                box,
+              ],
+            ),
+          );
+    if (onTap == null) return framed;
+    return GestureDetector(onTap: onTap, child: framed);
   }
 
   Widget _progressBody(
@@ -464,14 +528,32 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
 
   // ---- decoded (R6) --------------------------------------------------------
 
+  /// [synthesized] is the R6 gate and is about *these pixels*, not about who
+  /// sent the message: our own decoded preview is model output exactly like a
+  /// received one, and carries the same banner and caption.
+  ///
+  /// The full-screen tap target differs for that preview alone: a tap opens
+  /// the original we sent, which is a real photograph and correctly carries
+  /// neither element.
   Widget _decodedBody(
     BuildContext context,
     ReceivedImageEntry entry,
-    Uint8List png,
-  ) {
+    Uint8List png, {
+    required bool synthesized,
+  }) {
     final size = widget.maxSize;
+    final original = entry.pngBytes;
+    final viewerPng = synthesized && entry.isOutgoing && original != null
+        ? original
+        : png;
+    final viewerSynthesized = identical(viewerPng, png) && synthesized;
     return GestureDetector(
-      onTap: () => _openViewer(context, entry, png),
+      onTap: () => _openViewer(
+        context,
+        entry,
+        viewerPng,
+        synthesized: viewerSynthesized,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +577,7 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
                     // the inverse of what the sender did.
                     child: Image.memory(png, fit: BoxFit.fill),
                   ),
-                  if (entry.synthesized)
+                  if (synthesized)
                     const Positioned(
                       left: 0,
                       right: 0,
@@ -506,7 +588,7 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
               ),
             ),
           ),
-          if (entry.synthesized)
+          if (synthesized)
             SizedBox(
               width: size,
               child: _SyntheticCaption(bytes: entry.bitstreamByteCount),
@@ -519,13 +601,14 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
   void _openViewer(
     BuildContext context,
     ReceivedImageEntry entry,
-    Uint8List png,
-  ) {
+    Uint8List png, {
+    required bool synthesized,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => _ReceivedImageViewer(
           png: png,
-          synthesized: entry.synthesized,
+          synthesized: synthesized,
           bytes: entry.bitstreamByteCount,
         ),
       ),

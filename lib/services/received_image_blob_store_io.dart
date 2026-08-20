@@ -51,6 +51,9 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
 
   static const String _bitstreamExt = '.aeic';
   static const String _pngExt = '.png';
+
+  /// The sender's decode of their own bitstream, beside the original crop.
+  static const String _receiverPreviewExt = '.recv.png';
   static const String _sidecarExt = '.json';
   static const String _tmpExt = '.json.tmp';
 
@@ -186,6 +189,22 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
   @override
   Future<int?> pngSize(String streamId) => _size(streamId, _pngExt);
 
+  @override
+  Future<void> writeReceiverPreview(String streamId, Uint8List bytes) =>
+      _write(streamId, _receiverPreviewExt, bytes);
+
+  @override
+  Future<Uint8List?> readReceiverPreview(String streamId) =>
+      _read(streamId, _receiverPreviewExt);
+
+  @override
+  Future<void> deleteReceiverPreview(String streamId) =>
+      _delete(streamId, _receiverPreviewExt);
+
+  @override
+  Future<int?> receiverPreviewSize(String streamId) =>
+      _size(streamId, _receiverPreviewExt);
+
   /// Atomic: write `<id>.json.tmp`, then rename over `<id>.json`. `rename` is
   /// atomic within a directory on every platform we ship, so a reader either
   /// sees the old record or the new one.
@@ -262,11 +281,18 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
     for (final file in files) {
       final name = file.uri.pathSegments.last;
       if (name.endsWith(_sidecarExt) || name.endsWith(_tmpExt)) continue;
-      final dot = name.lastIndexOf('.');
-      if (dot <= 0) continue;
-      final id = name.substring(0, dot);
-      final ext = name.substring(dot);
-      if (ext != _bitstreamExt && ext != _pngExt) continue;
+      // Longest suffix first, not "everything after the last dot":
+      // `<id>.recv.png` also ends in `.png`, and splitting on the last dot
+      // would call the id `<id>.recv`, match no sidecar, and reap every stored
+      // receiver preview as an orphan on the next launch.
+      String? id;
+      for (final ext in const [_receiverPreviewExt, _bitstreamExt, _pngExt]) {
+        if (name.length > ext.length && name.endsWith(ext)) {
+          id = name.substring(0, name.length - ext.length);
+          break;
+        }
+      }
+      if (id == null) continue;
       if (result.containsKey(id)) continue;
       orphans.add(file);
     }

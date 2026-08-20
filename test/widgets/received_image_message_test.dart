@@ -107,6 +107,7 @@ void main() {
       senderPrefix: 1,
       imgId: 1,
       previewPng: Uint8List.fromList(png),
+      bitstream: Uint8List.fromList(List<int>.filled(12, 5)),
       rate: AeicRatePoint.ft32,
       chunkCount: 1,
     );
@@ -123,7 +124,8 @@ void main() {
       ),
     );
     await tester.pump();
-    // Outgoing: real crop, so NO label.
+    // Outgoing and not yet decoded: the placeholder, and no label — the only
+    // picture on screen is our own crop, dimmed behind it.
     expect(find.text('AI-reconstructed'), findsNothing);
 
     // Now an incoming decoded entry.

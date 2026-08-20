@@ -2680,6 +2680,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         senderPrefix: senderPrefix,
         imgId: chunkSet.imgId,
         previewPng: previewPng,
+        // The very bytes the recipients decode, so our own preview of their
+        // view cannot drift from what they actually get.
+        bitstream: result.payload,
         rate: aeicRatePointForUi(result.rate),
         chunkCount: chunkSet.dataChunkCount,
       );

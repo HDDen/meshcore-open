@@ -759,19 +759,27 @@ void main() {
   });
 
   group('outgoing', () {
-    test('registerOutgoing is decoded, not synthesized', () async {
+    test('registerOutgoing parks, keeping the crop and the bitstream', () async {
       final h = _build();
       final entry = await h.store.registerOutgoing(
         channelIndex: 1,
         senderPrefix: kSelf,
         imgId: 3,
         previewPng: Uint8List.fromList(List<int>.filled(64, 1)),
+        bitstream: Uint8List.fromList(List<int>.filled(20, 7)),
         rate: AeicRatePoint.ft32,
         chunkCount: 2,
       );
-      expect(entry.state, ReceivedImageState.decoded);
+      // The sender sees the same placeholder their recipients do, and nothing
+      // is decoded until they ask for it.
+      expect(entry.state, ReceivedImageState.reassembled);
+      expect(entry.needsManualDecode, isTrue);
+      expect(h.store.decodeQueue, isEmpty);
       expect(entry.isOutgoing, isTrue);
       expect(entry.synthesized, isFalse);
+      expect(entry.bitstreamStored, isTrue);
+      expect(entry.bitstreamByteCount, 20);
+      expect(entry.receiverPreviewPng, isNull);
       expect(await h.store.ensurePng(entry.streamId), isNotNull);
       expect(h.decoder.calls, 0);
     });
@@ -944,6 +952,7 @@ void main() {
           senderPrefix: kSelf,
           imgId: 5,
           previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
+          bitstream: Uint8List.fromList(List<int>.filled(16, 3)),
           rate: AeicRatePoint.ft32,
           chunkCount: 1,
         );

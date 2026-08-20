@@ -214,7 +214,23 @@ class ReceivedImageEntry {
   /// Decoded PNG, cached in memory once read. Not persisted in the sidecar and
   /// not part of [==]; callers must not hand these bytes onward without the R6
   /// caption (see `received_image_message.dart`).
+  ///
+  /// For an outgoing entry this slot holds the sender's own 512x512 crop, not
+  /// a decode — see [receiverPreviewPng].
   final Uint8List? pngBytes;
+
+  /// Our own bitstream decoded back to pixels: what the receivers of this
+  /// message will actually see.
+  ///
+  /// Only ever set for [isOutgoing]. Cached in memory like [pngBytes] and
+  /// backed by its own blob, so a decode survives a restart: re-running the
+  /// model costs far more than the file. These bytes are model output like any
+  /// other decode, so whatever renders them owes them the R6 banner and
+  /// caption.
+  final Uint8List? receiverPreviewPng;
+
+  final bool receiverPreviewStored;
+  final int receiverPreviewByteCount;
 
   const ReceivedImageEntry({
     required this.streamId,
@@ -239,6 +255,9 @@ class ReceivedImageEntry {
     this.bitstreamByteCount = 0,
     this.pngByteCount = 0,
     this.pngBytes,
+    this.receiverPreviewPng,
+    this.receiverPreviewStored = false,
+    this.receiverPreviewByteCount = 0,
   });
 
   ImageStreamKey get key => ImageStreamKey(
@@ -250,7 +269,8 @@ class ReceivedImageEntry {
   /// Bytes this entry is currently costing on disk.
   int get storedBytes =>
       (bitstreamStored ? bitstreamByteCount : 0) +
-      (pngStored ? pngByteCount : 0);
+      (pngStored ? pngByteCount : 0) +
+      (receiverPreviewStored ? receiverPreviewByteCount : 0);
 
   /// `evicted`/`failedCorrupt` can be decoded again only while the ~156 B
   /// bitstream survives.
@@ -275,6 +295,9 @@ class ReceivedImageEntry {
     int? bitstreamByteCount,
     int? pngByteCount,
     Object? pngBytes = _unset,
+    Object? receiverPreviewPng = _unset,
+    bool? receiverPreviewStored,
+    int? receiverPreviewByteCount,
   }) {
     return ReceivedImageEntry(
       streamId: streamId,
@@ -301,6 +324,13 @@ class ReceivedImageEntry {
       pngBytes: identical(pngBytes, _unset)
           ? this.pngBytes
           : pngBytes as Uint8List?,
+      receiverPreviewPng: identical(receiverPreviewPng, _unset)
+          ? this.receiverPreviewPng
+          : receiverPreviewPng as Uint8List?,
+      receiverPreviewStored:
+          receiverPreviewStored ?? this.receiverPreviewStored,
+      receiverPreviewByteCount:
+          receiverPreviewByteCount ?? this.receiverPreviewByteCount,
     );
   }
 
@@ -325,6 +355,8 @@ class ReceivedImageEntry {
     'pngStored': pngStored,
     'bitstreamByteCount': bitstreamByteCount,
     'pngByteCount': pngByteCount,
+    'receiverPreviewStored': receiverPreviewStored,
+    'receiverPreviewByteCount': receiverPreviewByteCount,
     if (decodeMs != null) 'decodeMs': decodeMs,
     if (error != null) 'error': error,
   };
@@ -354,6 +386,9 @@ class ReceivedImageEntry {
       pngStored: json['pngStored'] as bool? ?? false,
       bitstreamByteCount: json['bitstreamByteCount'] as int? ?? 0,
       pngByteCount: json['pngByteCount'] as int? ?? 0,
+      receiverPreviewStored: json['receiverPreviewStored'] as bool? ?? false,
+      receiverPreviewByteCount:
+          json['receiverPreviewByteCount'] as int? ?? 0,
     );
   }
 
@@ -395,6 +430,17 @@ abstract class ReceivedImageBlobStore {
   Future<int?> pngSize(String streamId) async =>
       (await readPng(streamId))?.length;
 
+  /// The sender's own decode of their own bitstream — what their recipients
+  /// see. A second picture, kept beside the PNG rather than in it, because an
+  /// outgoing entry's PNG is the original crop and both are shown.
+  Future<void> writeReceiverPreview(String streamId, Uint8List bytes);
+  Future<Uint8List?> readReceiverPreview(String streamId);
+  Future<void> deleteReceiverPreview(String streamId);
+
+  /// Byte length of the stored receiver preview, or null when there is none.
+  Future<int?> receiverPreviewSize(String streamId) async =>
+      (await readReceiverPreview(streamId))?.length;
+
   /// Sidecar write must be atomic (tmp + rename) so a kill cannot leave a
   /// half-written record that `readSidecars` then discards.
   Future<void> writeSidecar(String streamId, String json);
@@ -415,6 +461,7 @@ abstract class ReceivedImageBlobStore {
 class InMemoryReceivedImageBlobStore implements ReceivedImageBlobStore {
   final Map<String, Uint8List> _bitstreams = <String, Uint8List>{};
   final Map<String, Uint8List> _pngs = <String, Uint8List>{};
+  final Map<String, Uint8List> _receiverPreviews = <String, Uint8List>{};
   final Map<String, String> _sidecars = <String, String>{};
 
   @override
@@ -452,6 +499,24 @@ class InMemoryReceivedImageBlobStore implements ReceivedImageBlobStore {
   }
 
   @override
+  Future<void> writeReceiverPreview(String streamId, Uint8List bytes) async {
+    _receiverPreviews[streamId] = bytes;
+  }
+
+  @override
+  Future<Uint8List?> readReceiverPreview(String streamId) async =>
+      _receiverPreviews[streamId];
+
+  @override
+  Future<void> deleteReceiverPreview(String streamId) async {
+    _receiverPreviews.remove(streamId);
+  }
+
+  @override
+  Future<int?> receiverPreviewSize(String streamId) async =>
+      _receiverPreviews[streamId]?.length;
+
+  @override
   Future<void> writeSidecar(String streamId, String json) async {
     _sidecars[streamId] = json;
   }
@@ -471,6 +536,8 @@ class InMemoryReceivedImageBlobStore implements ReceivedImageBlobStore {
   // Test/debug helpers.
   bool hasBitstream(String streamId) => _bitstreams.containsKey(streamId);
   bool hasPng(String streamId) => _pngs.containsKey(streamId);
+  bool hasReceiverPreview(String streamId) =>
+      _receiverPreviews.containsKey(streamId);
   bool hasSidecar(String streamId) => _sidecars.containsKey(streamId);
 }
 
@@ -685,11 +752,15 @@ class ReceivedImageStore extends ChangeNotifier {
       // [ensurePng] when a bubble actually scrolls into view.
       final bitstreamBytes = await blobs.bitstreamSize(entry.streamId);
       final pngBytes = await blobs.pngSize(entry.streamId);
+      final previewBytes = await blobs.receiverPreviewSize(entry.streamId);
       entry = entry.copyWith(
         bitstreamStored: bitstreamBytes != null,
         bitstreamByteCount: bitstreamBytes ?? 0,
         pngStored: pngBytes != null,
         pngByteCount: pngBytes ?? entry.pngByteCount,
+        receiverPreviewStored: previewBytes != null,
+        receiverPreviewByteCount:
+            previewBytes ?? entry.receiverPreviewByteCount,
       );
 
       switch (entry.state) {
@@ -921,9 +992,14 @@ class ReceivedImageStore extends ChangeNotifier {
     );
   }
 
-  /// Records the local user's own send so the outgoing bubble can show the real
-  /// 512x512 crop. [previewPng] is a photograph, not a decode, so the entry is
-  /// never [ReceivedImageEntry.synthesized] and carries no R6 label.
+  /// Records the local user's own send.
+  ///
+  /// Two pictures belong to such an entry and they must not be confused.
+  /// [previewPng] is the real 512x512 crop — a photograph, never
+  /// [ReceivedImageEntry.synthesized], never labelled. [bitstream] is what the
+  /// recipients decode, and decoding it here (on demand, into
+  /// [ReceivedImageEntry.receiverPreviewPng]) yields model output that carries
+  /// the R6 elements exactly as a received image does.
   ///
   /// The send path must call this BEFORE it posts the message, and put the
   /// returned id in the message text — that sentinel is the only link between
@@ -935,6 +1011,7 @@ class ReceivedImageStore extends ChangeNotifier {
   ///   senderPrefix: selfPrefix,      // same 16 bits the chunk header carries
   ///   imgId: chunkSet.imgId,
   ///   previewPng: preview.croppedPngBytes,  // the 512x512 crop, NOT a decode
+  ///   bitstream: result.payload,            // what the recipients decode
   ///   rate: kImageSendRatePoint,
   ///   chunkCount: chunkSet.dataChunkCount,
   /// );
@@ -942,14 +1019,17 @@ class ReceivedImageStore extends ChangeNotifier {
   ///   channelIndex, ReceivedImageRef.encode(entry.streamId));
   /// ```
   ///
-  /// Nothing is ever decoded for an outgoing entry: it lands in `decoded`
-  /// directly and never enters the queue, so sending an image costs no model
-  /// memory beyond the encode that already ran.
+  /// An outgoing entry lands in `reassembled` with `needsManualDecode`, exactly
+  /// like a received image the burst cap parked: the sender sees the same
+  /// placeholder their recipients see, and nothing is decoded until they ask.
+  /// [bitstream] is kept for that — the same ~156 B the recipients will decode,
+  /// so the preview cannot differ from what they get.
   Future<ReceivedImageEntry> registerOutgoing({
     required int channelIndex,
     required int senderPrefix,
     required int imgId,
     required Uint8List previewPng,
+    required Uint8List bitstream,
     required AeicRatePoint rate,
     required int chunkCount,
     DateTime? at,
@@ -961,18 +1041,22 @@ class ReceivedImageStore extends ChangeNotifier {
       firstSeen: now,
     );
     await blobs.writePng(streamId, previewPng);
+    await blobs.writeBitstream(streamId, bitstream);
     final entry = ReceivedImageEntry(
       streamId: streamId,
       senderPrefix: senderPrefix,
       imgId: imgId,
       channelIndex: channelIndex,
       firstSeen: now,
-      state: ReceivedImageState.decoded,
+      state: ReceivedImageState.reassembled,
+      needsManualDecode: true,
       receivedChunks: chunkCount,
       totalChunks: chunkCount,
       rate: rate,
       metadataAssumed: false,
       isOutgoing: true,
+      bitstreamStored: true,
+      bitstreamByteCount: bitstream.length,
       pngStored: true,
       pngByteCount: previewPng.length,
       pngBytes: previewPng,
@@ -1239,6 +1323,28 @@ class ReceivedImageStore extends ChangeNotifier {
       return;
     }
 
+    if (current.isOutgoing) {
+      // Our own message. The PNG slot holds the original crop and must keep
+      // it: it is the backdrop of the placeholder and what a tap on the
+      // preview opens, so the decode gets a blob of its own. The state stays
+      // `reassembled`: the renderer keys off the preview's presence, and the
+      // pair "reassembled + a stored preview" survives a restart intact,
+      // whereas `decoded` would name the wrong picture.
+      await blobs.writeReceiverPreview(current.streamId, png);
+      await _store(
+        current.copyWith(
+          state: ReceivedImageState.reassembled,
+          needsManualDecode: true,
+          receiverPreviewPng: png,
+          receiverPreviewStored: true,
+          receiverPreviewByteCount: png.length,
+          decodeMs: result.durationMs > 0 ? result.durationMs : null,
+        ),
+      );
+      await evictToBudget(protect: current.streamId);
+      return;
+    }
+
     await blobs.writePng(current.streamId, png);
     await _store(
       current.copyWith(
@@ -1264,6 +1370,34 @@ class ReceivedImageStore extends ChangeNotifier {
   /// Reads (and caches) the decoded PNG for a `decoded` entry. Returns null for
   /// every other state, so a failed or corrupt image can never present as
   /// decoded pixels.
+  /// Reads our own decode back off disk. Mirrors [ensurePng]; a missing file
+  /// simply means the preview is gone and the placeholder returns, which is
+  /// recoverable with another tap.
+  Future<Uint8List?> ensureReceiverPreview(String streamId) async {
+    final entry = _entries[streamId];
+    if (entry == null) return null;
+    final cached = entry.receiverPreviewPng;
+    if (cached != null) return cached;
+    if (!entry.receiverPreviewStored) return null;
+    final bytes = await blobs.readReceiverPreview(streamId);
+    if (bytes == null) {
+      await _store(
+        entry.copyWith(
+          receiverPreviewStored: false,
+          receiverPreviewByteCount: 0,
+        ),
+      );
+      return null;
+    }
+    await _store(
+      entry.copyWith(
+        receiverPreviewPng: bytes,
+        receiverPreviewByteCount: bytes.length,
+      ),
+    );
+    return bytes;
+  }
+
   Future<Uint8List?> ensurePng(String streamId) async {
     final entry = _entries[streamId];
     if (entry == null) return null;
@@ -1302,6 +1436,7 @@ class ReceivedImageStore extends ChangeNotifier {
       _byKey.remove(entry.key);
     }
     await blobs.deletePng(streamId);
+    await blobs.deleteReceiverPreview(streamId);
     await blobs.deleteBitstream(streamId);
     await blobs.deleteSidecar(streamId);
     final listenable = _listenables[streamId];
@@ -1351,8 +1486,13 @@ class ReceivedImageStore extends ChangeNotifier {
     // 1. Age budget: nothing survives, not even the bitstream.
     for (final entry in _entries.values.toList()) {
       if (now.difference(entry.firstSeen) <= maxAge) continue;
-      if (!entry.pngStored && !entry.bitstreamStored) continue;
+      if (!entry.pngStored &&
+          !entry.bitstreamStored &&
+          !entry.receiverPreviewStored) {
+        continue;
+      }
       await blobs.deletePng(entry.streamId);
+      await blobs.deleteReceiverPreview(entry.streamId);
       await blobs.deleteBitstream(entry.streamId);
       await _store(
         entry.copyWith(
@@ -1360,6 +1500,9 @@ class ReceivedImageStore extends ChangeNotifier {
           pngStored: false,
           bitstreamStored: false,
           pngBytes: null,
+          receiverPreviewStored: false,
+          receiverPreviewByteCount: 0,
+          receiverPreviewPng: null,
         ),
       );
       _queue.remove(entry.streamId);
@@ -1372,12 +1515,20 @@ class ReceivedImageStore extends ChangeNotifier {
         guard++ < 10000) {
       final pngHolders =
           _entries.values
-              .where((e) => e.pngStored && e.streamId != protect)
+              .where(
+                (e) =>
+                    (e.pngStored || e.receiverPreviewStored) &&
+                    e.streamId != protect,
+              )
               .toList()
             ..sort((a, b) => a.firstSeen.compareTo(b.firstSeen));
       if (pngHolders.isNotEmpty) {
         final victim = pngHolders.first;
+        // Both pictures of an outgoing entry go together: they are two views
+        // of one message, and keeping the decode while dropping the original
+        // it is compared against helps nobody.
         await blobs.deletePng(victim.streamId);
+        await blobs.deleteReceiverPreview(victim.streamId);
         await _store(
           victim.copyWith(
             state: victim.state == ReceivedImageState.decoded
@@ -1385,6 +1536,9 @@ class ReceivedImageStore extends ChangeNotifier {
                 : victim.state,
             pngStored: false,
             pngBytes: null,
+            receiverPreviewStored: false,
+            receiverPreviewByteCount: 0,
+            receiverPreviewPng: null,
           ),
         );
         evicted.add(victim.streamId);
