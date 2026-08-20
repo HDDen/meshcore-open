@@ -1464,14 +1464,29 @@ class ReceivedImageStore extends ChangeNotifier {
   Future<Uint8List?> ensurePng(String streamId) async {
     final entry = _entries[streamId];
     if (entry == null) return null;
-    if (entry.state != ReceivedImageState.decoded) return null;
+    // A received image only has a PNG once it is decoded, so the state gate
+    // holds there. An outgoing one's PNG is the sender's own crop, written at
+    // registration and present whatever the state — it is the placeholder's
+    // backdrop and what a tap on the receiver preview opens. Gating it on
+    // `decoded` left that crop on disk and never read it back, which looked
+    // exactly like it had not been saved.
+    if (!entry.isOutgoing && entry.state != ReceivedImageState.decoded) {
+      return null;
+    }
     final cached = entry.pngBytes;
     if (cached != null) return cached;
     if (!entry.pngStored) return null;
     final bytes = await blobs.readPng(streamId);
     if (bytes == null) {
       await _store(
-        entry.copyWith(state: ReceivedImageState.evicted, pngStored: false),
+        // `evicted` names a decode whose pixels went; an outgoing entry has no
+        // decode in that slot, so it only loses the crop.
+        entry.isOutgoing
+            ? entry.copyWith(pngStored: false, pngBytes: null)
+            : entry.copyWith(
+                state: ReceivedImageState.evicted,
+                pngStored: false,
+              ),
       );
       return null;
     }
