@@ -39,6 +39,7 @@ import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
@@ -67,6 +68,7 @@ class MapScreen extends StatefulWidget {
   final String? highlightLabel;
   final String? highlightMarkerKey;
   final double highlightZoom;
+  final NeighborMapFocus? neighborFocus;
 
   /// Draws the red pin at [highlightPosition]. Turned off when the position is
   /// only there to centre the map on something the map already draws itself —
@@ -81,6 +83,7 @@ class MapScreen extends StatefulWidget {
     this.highlightLabel,
     this.highlightMarkerKey,
     this.highlightZoom = 15.0,
+    this.neighborFocus,
     this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
@@ -563,9 +566,17 @@ class _MapScreenState extends State<MapScreen>
             : filteredByFreshness;
 
         // Filter by location
-        final contactsWithLocation = filteredByKeyPrefix.where((c) {
+        var contactsWithLocation = filteredByKeyPrefix.where((c) {
           return c.hasLocation;
         }).toList();
+        final neighborFocus = widget.neighborFocus;
+        if (neighborFocus != null) {
+          contactsWithLocation = neighborFocus.mergeVisibleContacts(
+            currentlyVisible: contactsWithLocation,
+            mapContacts: contacts,
+            allContacts: allContacts,
+          );
+        }
 
         // All contacts with a known location — used as anchors regardless of
         // time/key-prefix filters so that repeaters are always available.
@@ -693,6 +704,12 @@ class _MapScreenState extends State<MapScreen>
                 repeaterCoverageSamples,
                 contactsWithLocation,
               );
+        final neighborFocusPolylines = neighborFocus?.buildPolylines(
+          contactsWithLocation,
+          color: Colors.purpleAccent.withValues(alpha: 0.85),
+        ) ?? const <Polyline>[];
+        final neighborFocusPoints =
+            neighborFocus?.points(contactsWithLocation) ?? const <LatLng>[];
 
         // Calculate center and zoom of all nodes, or default to (0, 0)
         LatLng center = const LatLng(0, 0);
@@ -776,6 +793,21 @@ class _MapScreenState extends State<MapScreen>
               avgLon / allPoints.length,
             );
             initialZoom = 12.0;
+          }
+        }
+        if (neighborFocusPoints.isNotEmpty) {
+          center = neighborFocus!.center(contactsWithLocation)!;
+          if (neighborFocusPoints.length == 1) {
+            initialZoom = 15.0;
+          } else {
+            initialZoom = _zoomFromStdDev(
+              _standardDeviation(
+                neighborFocusPoints.map((point) => point.latitude).toList(),
+              ),
+              _standardDeviation(
+                neighborFocusPoints.map((point) => point.longitude).toList(),
+              ),
+            );
           }
         }
         if (highlightPosition != null) {
@@ -1100,6 +1132,8 @@ class _MapScreenState extends State<MapScreen>
                       PolylineLayer(polylines: wardriveDiscoveryPolylines),
                     if (repeaterCoveragePolylines.isNotEmpty)
                       PolylineLayer(polylines: repeaterCoveragePolylines),
+                    if (neighborFocusPolylines.isNotEmpty)
+                      PolylineLayer(polylines: neighborFocusPolylines),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null &&
@@ -2653,7 +2687,7 @@ class _MapScreenState extends State<MapScreen>
       );
 
       final targetMarkers =
-          _isWardriveAnswered(guess.contact, answeredKeys: wardriveAnsweredKeys)
+          _isMapHighlighted(guess.contact, answeredKeys: wardriveAnsweredKeys)
           ? foregroundMarkers
           : markers;
       targetMarkers.add(marker);
@@ -2688,7 +2722,9 @@ class _MapScreenState extends State<MapScreen>
       // highlight (applied in _buildNodeMarkers) and no longer affects which
       // nodes are shown.
       if (contact.type == advTypeRepeater &&
-          (settings.mapShowRepeaters || _isBuildingPathTrace)) {
+          (settings.mapShowRepeaters ||
+              _isBuildingPathTrace ||
+              _neighborFocusActive)) {
         addContact = true;
       }
       if (contact.type == advTypeChat &&
@@ -2758,6 +2794,7 @@ class _MapScreenState extends State<MapScreen>
       wardriveHighlightActive: wardriveHighlightActive,
       wardriveDisableClustering: wardriveDisableClustering,
       wardriveAnsweredSignature: wardriveAnsweredSignature,
+      neighborFocusSignature: _neighborFocusSignature,
     );
     if (key != _nodeMarkersCacheKey) {
       _nodeMarkersCacheKey = key;
@@ -2827,7 +2864,7 @@ class _MapScreenState extends State<MapScreen>
 
     void addNode(Contact contact, {bool dot = false}) {
       final targetMarkers =
-          _isWardriveAnswered(contact, answeredKeys: wardriveAnsweredKeys)
+          _isMapHighlighted(contact, answeredKeys: wardriveAnsweredKeys)
           ? foregroundMarkers
           : markers;
       final overlap = isOverlap(contact);
@@ -2856,6 +2893,7 @@ class _MapScreenState extends State<MapScreen>
         overlapsMode ||
         _isBuildingPathTrace ||
         wardriveHighlightActive ||
+        _neighborFocusActive ||
         wardriveDisableClustering) {
       for (final contact in filteredContacts) {
         addNode(contact);
@@ -2887,8 +2925,27 @@ class _MapScreenState extends State<MapScreen>
     required bool active,
     required Set<String> answeredKeys,
   }) {
+    if (_neighborFocusActive && contact.type == advTypeRepeater) {
+      return widget.neighborFocus!.opacityFor(contact);
+    }
     if (!active) return 1.0;
     return _isWardriveAnswered(contact, answeredKeys: answeredKeys) ? 1.0 : 0.3;
+  }
+
+  bool get _neighborFocusActive => widget.neighborFocus != null;
+
+  int get _neighborFocusSignature => widget.neighborFocus?.signature ?? 0;
+
+  bool _isNeighborFocusContact(Contact contact) {
+    return widget.neighborFocus?.contains(contact) ?? false;
+  }
+
+  bool _isMapHighlighted(
+    Contact contact, {
+    required Set<String> answeredKeys,
+  }) {
+    return _isNeighborFocusContact(contact) ||
+        _isWardriveAnswered(contact, answeredKeys: answeredKeys);
   }
 
   bool _isWardriveAnswered(
@@ -2901,12 +2958,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   bool _publicKeysMatch(String first, String second) {
-    final firstKey = first.toLowerCase();
-    final secondKey = second.toLowerCase();
-    if (firstKey == secondKey) return true;
-    final shortest = min(firstKey.length, secondKey.length);
-    if (shortest < 8) return false;
-    return firstKey.startsWith(secondKey) || secondKey.startsWith(firstKey);
+    return NeighborMapFocus.publicKeysMatch(first, second);
   }
 
   List<WardriveSample> _selectedWardriveCoverageSamples(
@@ -6458,6 +6510,7 @@ class _NodeMarkersCacheKey {
   final bool wardriveHighlightActive;
   final bool wardriveDisableClustering;
   final int wardriveAnsweredSignature;
+  final int neighborFocusSignature;
 
   const _NodeMarkersCacheKey({
     required this.contactsSignature,
@@ -6480,6 +6533,7 @@ class _NodeMarkersCacheKey {
     required this.wardriveHighlightActive,
     required this.wardriveDisableClustering,
     required this.wardriveAnsweredSignature,
+    required this.neighborFocusSignature,
   });
 
   @override
@@ -6504,7 +6558,8 @@ class _NodeMarkersCacheKey {
         isBuildingPathTrace == other.isBuildingPathTrace &&
         wardriveHighlightActive == other.wardriveHighlightActive &&
         wardriveDisableClustering == other.wardriveDisableClustering &&
-        wardriveAnsweredSignature == other.wardriveAnsweredSignature;
+        wardriveAnsweredSignature == other.wardriveAnsweredSignature &&
+        neighborFocusSignature == other.neighborFocusSignature;
   }
 
   @override
@@ -6529,6 +6584,7 @@ class _NodeMarkersCacheKey {
     wardriveHighlightActive,
     wardriveDisableClustering,
     wardriveAnsweredSignature,
+    neighborFocusSignature,
   ]);
 }
 

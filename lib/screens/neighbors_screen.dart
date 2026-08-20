@@ -14,6 +14,8 @@ import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/neighbor_map_focus.dart';
+import 'map_screen.dart';
 
 class NeighborsScreen extends StatefulWidget {
   final Contact repeater;
@@ -304,6 +306,28 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     _pendingStatusSelection = null;
   }
 
+  void _openNeighborsMap(Contact repeater) {
+    final neighborKeys = <String>{};
+    for (final data in _parsedNeighbors ?? const <Map<String, dynamic>>[]) {
+      final contact = data['contact'];
+      if (contact is Contact && contact.type == advTypeRepeater) {
+        neighborKeys.add(contact.publicKeyHex);
+      }
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapScreen(
+          neighborFocus: NeighborMapFocus(
+            repeaterKey: repeater.publicKeyHex,
+            neighborKeys: neighborKeys,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _frameSubscription?.cancel();
@@ -344,6 +368,12 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (_hasData)
+            IconButton(
+              icon: const Icon(Icons.map_outlined),
+              tooltip: l10n.channelPath_viewMap,
+              onPressed: () => _openNeighborsMap(repeater),
+            ),
           IconButton(
             icon: Icon(isFloodMode ? Icons.waves : Icons.route),
             tooltip: l10n.repeater_routingMode,
