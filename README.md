@@ -239,7 +239,10 @@ Markers received through the combined history of your other nodes are drawn as w
 the ones this node heard.
 
 A pin you share spins until the mesh confirms it: a repeat heard on a channel, a delivery
-receipt in a chat.
+receipt in a chat. If the send gives up, the pin is struck through instead.
+
+Hiding or removing a pin from your own map applies to that pin, not to its caption: sharing a
+new pin with the same caption later shows it again.
 
 A pin can be hidden locally, removed locally, or **removed for everyone** — the last one sends a
 short command back where the pin came from, whether that was a channel, a contact or a room

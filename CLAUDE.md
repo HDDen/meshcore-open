@@ -450,16 +450,32 @@ badge that only materialises at commit time.
 confirmed, and draws an indeterminate `CircularProgressIndicator` around the circle. The evidence
 differs by route and that is the only difference: a channel post waits for a repeat
 (`repeatCount == 0`), a direct message or room post waits for its delivery receipt
-(`status != MessageStatus.delivered`), because nobody acknowledges a broadcast. Both fields ride
-in `markerSignature` — a repeat and a receipt change nothing else about a message, so without
-them the cached pins would keep spinning.
+(`status != MessageStatus.delivered`), because nobody acknowledges a broadcast. `failedDelivery`
+is the third state and looks different rather than merely stopping — a send that gave up is
+struck through with a rotated bar in `MapPalette.markerOutline`, the one shade already picked to
+read against every colour in the pin palette. `repeatCount` and both `status` fields ride in
+`markerSignature`: a repeat, a receipt and giving up change nothing else about a message, so
+without them the cached pins would keep spinning.
 
-The ring must not cost the pin any layout. It is a `Positioned` with negative insets inside a
-`Stack(clipBehavior: Clip.none)` whose only sizing child is the 36×36 circle, so the marker keeps
-exactly the footprint it had. Painting outside the marker's own box is safe: flutter_map puts
-each marker in a `Positioned` inside one viewport-wide `Stack`, which clips at the viewport
-rather than per marker. Growing `Marker.height` or wrapping the circle in a larger box instead
-is what broke marker rendering once already — the pin's own box is the thing to leave alone.
+Neither overlay may cost the pin any layout. Both are `Positioned` inside a
+`Stack(clipBehavior: Clip.none)` whose only sizing child is the 36×36 circle — `Positioned`
+never contributes to a `Stack`'s size — so the marker keeps exactly the footprint it had, and
+the ring is free to reach 6px outside it. Painting outside the marker's own box is safe:
+flutter_map puts each marker in a `Positioned` inside one viewport-wide `Stack`, which clips at
+the viewport rather than per marker. Growing `Marker.height` or wrapping the circle in a larger
+box instead is what broke marker rendering once already — the pin's own box is the thing to
+leave alone.
+
+**Hidden and removed locally.** `_hiddenMarkerIds` (session) and `_removedMarkerIds` (persisted
+by `MapMarkerService`) are `Map<String, DateTime>`, not sets, and `_isLocallyDropped` compares
+that moment against the marker's own. The reason is the same one that makes markers group into a
+trail: `buildSharedMarkerKey` carries no position, so the same caption shared to the same place
+later is the same id. As plain sets, removing one pin captioned `map_pointOfInterest` — the
+default the share dialog offers — silently swallowed every future pin under that caption, with
+no way back, since an invisible marker cannot be tapped to restore it. Bounding by time is the
+rule `del:` commands already follow. Stored entries are `"<millis>|<id>"`; a bare id from before
+this is read as removed at load time, so it keeps hiding what is already on the map without
+reaching anything shared afterwards.
 
 **Label budget.** `_maxMarkerLabelBytes` limits the pin caption at entry time: the channel
 budget for this node (which already accounts for `"<name>: "`), capped by the user's outgoing

@@ -20,6 +20,7 @@ import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
+import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
 import '../l10n/contact_localization.dart';
@@ -106,8 +107,15 @@ class _MapScreenState extends State<MapScreen>
     },
   );
   final WardriveUploadService _wardriveUploadService = WardriveUploadService();
-  final Set<String> _hiddenMarkerIds = {};
-  Set<String> _removedMarkerIds = {};
+  /// Marker ids hidden or removed locally, each with the moment it happened.
+  ///
+  /// A marker id carries no position, so the same caption shared again later
+  /// is the same id. Both sets therefore cover markers **older than the
+  /// action** — the rule a `del:` command already follows — instead of
+  /// suppressing every future pin that reuses the caption. Hiding lasts for
+  /// the session; removing is persisted.
+  final Map<String, DateTime> _hiddenMarkerIds = {};
+  Map<String, DateTime> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
   bool _isSelectingPoi = false;
   bool _hasInitializedMap = false;
@@ -328,8 +336,8 @@ class _MapScreenState extends State<MapScreen>
     // was previously removed, re-enable it now that we've loaded the saved
     // removed IDs.
     if (widget.highlightMarkerKey != null &&
-        _removedMarkerIds.contains(widget.highlightMarkerKey)) {
-      final updated = Set<String>.from(_removedMarkerIds);
+        _removedMarkerIds.containsKey(widget.highlightMarkerKey)) {
+      final updated = Map<String, DateTime>.from(_removedMarkerIds);
       updated.remove(widget.highlightMarkerKey);
       if (!mounted) return;
       setState(() {
@@ -337,6 +345,17 @@ class _MapScreenState extends State<MapScreen>
       });
       await _markerService.saveRemovedIds(updated);
     }
+  }
+
+  /// True when the user hid or removed this pin *after* it was shared.
+  ///
+  /// The comparison is what keeps a caption removed once from swallowing the
+  /// next pin that reuses it; see [_hiddenMarkerIds].
+  bool _isLocallyDropped(_SharedMarker marker) {
+    final hiddenAt = _hiddenMarkerIds[marker.id];
+    if (hiddenAt != null && hiddenAt.isAfter(marker.timestamp)) return true;
+    final removedAt = _removedMarkerIds[marker.id];
+    return removedAt != null && removedAt.isAfter(marker.timestamp);
   }
 
   bool _checkLocationPlausibility(double lat, double lon) {
@@ -498,8 +517,7 @@ class _MapScreenState extends State<MapScreen>
                   )
                   .where(
                     (marker) =>
-                        !_hiddenMarkerIds.contains(marker.id) &&
-                        !_removedMarkerIds.contains(marker.id) &&
+                        !_isLocallyDropped(marker) &&
                         _channelMarkerStyles.isVisible(marker.channelName),
                   )
                   .toList()
@@ -4493,10 +4511,15 @@ class _MapScreenState extends State<MapScreen>
             contactKeyHex: contact.publicKeyHex,
             sourceText: message.text.trim(),
             // A direct message and a room post are both acknowledged by the
-            // far side, so the receipt is the confirmation.
+            // far side, so the receipt is the confirmation. A send that gave
+            // up is not in progress any more, so it stops spinning and gets
+            // struck through instead.
             pendingDelivery:
                 message.isOutgoing &&
-                message.status != MessageStatus.delivered,
+                message.status != MessageStatus.delivered &&
+                message.status != MessageStatus.failed,
+            failedDelivery:
+                message.isOutgoing && message.status == MessageStatus.failed,
             signature: _MarkerSignature(
               status: message.mcmpSignatureStatus,
               isOutgoing: message.isOutgoing,
@@ -4556,9 +4579,16 @@ class _MapScreenState extends State<MapScreen>
             channelIndex: channel.index,
             sourceText: message.text.trim(),
             // Nobody acknowledges a broadcast, so hearing it repeated is the
-            // only confirmation a channel post ever gets.
+            // only confirmation a channel post ever gets. See the contact
+            // loop for `failed`.
             pendingDelivery:
-                message.isOutgoing && message.repeatCount == 0,
+                message.isOutgoing &&
+                message.repeatCount == 0 &&
+                message.status != ChannelMessageStatus.failed,
+            failedDelivery:
+                message.isOutgoing &&
+                message.repeatCount == 0 &&
+                message.status == ChannelMessageStatus.failed,
             signature: _MarkerSignature(
               status: message.mcmpSignatureStatus,
               isOutgoing: message.isOutgoing,
@@ -4627,7 +4657,7 @@ class _MapScreenState extends State<MapScreen>
       height: 60,
       child: GestureDetector(
         onTap: () async {
-          if (_removedMarkerIds.contains(marker.id)) {
+          if (_removedMarkerIds.containsKey(marker.id)) {
             setState(() {
               _removedMarkerIds.remove(marker.id);
             });
@@ -4673,6 +4703,43 @@ class _MapScreenState extends State<MapScreen>
                     alignment: Alignment.center,
                     child: Icon(markerIcon, color: Colors.white, size: 19),
                   ),
+                  // Both overlays are `Positioned`, which never contributes
+                  // to the `Stack`'s size, so the circle stays the only thing
+                  // that decides the marker's footprint.
+                  if (marker.failedDelivery)
+                    // Negative insets rather than `Positioned.fill`: filling
+                    // would hand the bar the circle's own 36px as a maximum
+                    // and a sized `Container` has to obey that, so the strike
+                    // came out exactly as wide as the pin. The box is the
+                    // length the bar needs; `Clip.none` above lets it overhang.
+                    Positioned(
+                      left: -7,
+                      top: -7,
+                      right: -7,
+                      bottom: -7,
+                      child: Center(
+                        child: Transform.rotate(
+                          angle: -pi / 4,
+                          child: Container(
+                            width: 50,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              // The same red the pin's destructive actions
+                              // use, so a struck-through marker and the
+                              // buttons that strike it read as one thing.
+                              color: Theme.of(context).colorScheme.error,
+                              borderRadius: BorderRadius.circular(2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: MapPalette.markerShadow,
+                                  blurRadius: 3,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (marker.pendingDelivery)
                     Positioned(
                       left: -6,
@@ -5089,7 +5156,7 @@ class _MapScreenState extends State<MapScreen>
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 onPressed: () {
                   setState(() {
-                    _hiddenMarkerIds.add(marker.id);
+                    _hiddenMarkerIds[marker.id] = DateTime.now();
                   });
                   Navigator.pop(dialogContext);
                 },
@@ -5101,9 +5168,10 @@ class _MapScreenState extends State<MapScreen>
                 label: context.l10n.common_remove,
                 color: Theme.of(context).colorScheme.error,
                 onPressed: () async {
+                  final at = DateTime.now();
                   setState(() {
-                    _hiddenMarkerIds.add(marker.id);
-                    _removedMarkerIds.add(marker.id);
+                    _hiddenMarkerIds[marker.id] = at;
+                    _removedMarkerIds[marker.id] = at;
                   });
                   await _markerService.saveRemovedIds(_removedMarkerIds);
                   if (dialogContext.mounted) {
@@ -6298,8 +6366,10 @@ class _MapConnectorSnapshot {
             message.wasBlocked,
             message.mcmpSignatureStatus,
             // The first repeat is what stops the spinner, and it changes
-            // nothing else about the message.
+            // nothing else about the message. Nor does giving up, which
+            // strikes the pin through.
             message.repeatCount,
+            message.status,
           ),
         );
       }
@@ -6592,6 +6662,10 @@ class _SharedMarker {
   /// pin stays, faded, until it is.
   final bool pendingRemoval;
 
+  /// A pin of ours whose send gave up. Struck through rather than spinning:
+  /// it is over, not in progress.
+  final bool failedDelivery;
+
   /// Signature of that same message; see [_MarkerSignature].
   final _MarkerSignature? signature;
   final List<LatLng> history;
@@ -6612,6 +6686,7 @@ class _SharedMarker {
     this.sourceText = '',
     this.pendingDelivery = false,
     this.pendingRemoval = false,
+    this.failedDelivery = false,
     this.signature,
     this.history = const [],
   });
@@ -6636,6 +6711,7 @@ class _SharedMarker {
       sourceText: sourceText,
       pendingDelivery: pendingDelivery,
       pendingRemoval: pendingRemoval,
+      failedDelivery: failedDelivery,
       signature: signature,
       history: newHistory,
     );
