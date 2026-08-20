@@ -32,6 +32,7 @@ import '../services/wardrive_foreground_service.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_upload_service.dart';
+import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
@@ -106,6 +107,8 @@ class _MapScreenState extends State<MapScreen>
   static const double _mapMaxZoom = 18.0;
   static const double _wardrivePanelBottomInset = 16.0;
   static const Duration _wardriveDiscoveryRetryDelay = Duration(seconds: 10);
+  static const String _nodeFiltersExpandedKey =
+      'map_node_filters_expanded_v1';
 
   final MapController _mapController = MapController();
   final GlobalKey _mapBodyKey = GlobalKey();
@@ -147,6 +150,7 @@ class _MapScreenState extends State<MapScreen>
   String? _selectedKey;
   LatLng? _selectedGuessPos;
   _Freshness _freshness = _Freshness.all;
+  bool _nodeFiltersExpanded = true;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _searchQuery = '';
@@ -174,6 +178,8 @@ class _MapScreenState extends State<MapScreen>
   @override
   void initState() {
     super.initState();
+    _nodeFiltersExpanded =
+        PrefsManager.instance.getBool(_nodeFiltersExpandedKey) ?? true;
     _loadRemovedMarkers();
     _pathEditFocus.addListener(() {
       if (!_pathEditFocus.hasFocus) _commitPathEdit();
@@ -3742,6 +3748,14 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  void _toggleNodeFiltersExpanded() {
+    final expanded = !_nodeFiltersExpanded;
+    setState(() => _nodeFiltersExpanded = expanded);
+    unawaited(
+      PrefsManager.instance.setBool(_nodeFiltersExpandedKey, expanded),
+    );
+  }
+
   Widget _buildTopOverlay(
     BuildContext context, {
     required MeshCoreConnector connector,
@@ -3872,44 +3886,55 @@ class _MapScreenState extends State<MapScreen>
             builder: (context, constraints) {
               final chips = <Widget>[
                 _mapChip(
-                  label: context.l10n.time_allTime,
-                  selected: _freshness == _Freshness.all,
-                  onTap: () => setState(() => _freshness = _Freshness.all),
+                  label: context.l10n.listFilter_filters,
+                  selected: _nodeFiltersExpanded,
+                  showCheckmark: false,
+                  onTap: _toggleNodeFiltersExpanded,
                 ),
-                _mapChip(
-                  label: context.l10n.map_online,
-                  selected: _freshness == _Freshness.online,
-                  color: MapPalette.online,
-                  onTap: () => setState(() => _freshness = _Freshness.online),
-                ),
-                _mapChip(
-                  label: context.l10n.map_recent,
-                  selected: _freshness == _Freshness.recent,
-                  color: MapPalette.stale,
-                  onTap: () => setState(() => _freshness = _Freshness.recent),
-                ),
-                _mapChip(
-                  label: context.l10n.map_stale,
-                  selected: _freshness == _Freshness.stale,
-                  color: MapPalette.offline,
-                  onTap: () => setState(() => _freshness = _Freshness.stale),
-                ),
-                _mapChip(
-                  label: context.l10n.map_repeaters,
-                  selected: settings.mapShowRepeaters,
-                  color: MapPalette.repeater,
-                  onTap: () => settingsService.setMapShowRepeaters(
-                    !settings.mapShowRepeaters,
+                if (_nodeFiltersExpanded) ...[
+                  _mapChip(
+                    label: context.l10n.time_allTime,
+                    selected: _freshness == _Freshness.all,
+                    onTap: () => setState(() => _freshness = _Freshness.all),
                   ),
-                ),
-                _mapChip(
-                  label: context.l10n.map_chatNodes,
-                  selected: settings.mapShowChatNodes,
-                  color: MapPalette.selected,
-                  onTap: () => settingsService.setMapShowChatNodes(
-                    !settings.mapShowChatNodes,
+                  _mapChip(
+                    label: context.l10n.map_online,
+                    selected: _freshness == _Freshness.online,
+                    color: MapPalette.online,
+                    onTap: () =>
+                        setState(() => _freshness = _Freshness.online),
                   ),
-                ),
+                  _mapChip(
+                    label: context.l10n.map_recent,
+                    selected: _freshness == _Freshness.recent,
+                    color: MapPalette.stale,
+                    onTap: () =>
+                        setState(() => _freshness = _Freshness.recent),
+                  ),
+                  _mapChip(
+                    label: context.l10n.map_stale,
+                    selected: _freshness == _Freshness.stale,
+                    color: MapPalette.offline,
+                    onTap: () =>
+                        setState(() => _freshness = _Freshness.stale),
+                  ),
+                  _mapChip(
+                    label: context.l10n.map_repeaters,
+                    selected: settings.mapShowRepeaters,
+                    color: MapPalette.repeater,
+                    onTap: () => settingsService.setMapShowRepeaters(
+                      !settings.mapShowRepeaters,
+                    ),
+                  ),
+                  _mapChip(
+                    label: context.l10n.map_chatNodes,
+                    selected: settings.mapShowChatNodes,
+                    color: MapPalette.selected,
+                    onTap: () => settingsService.setMapShowChatNodes(
+                      !settings.mapShowChatNodes,
+                    ),
+                  ),
+                ],
               ];
 
               if (constraints.maxWidth < 600) {
@@ -3948,6 +3973,7 @@ class _MapScreenState extends State<MapScreen>
     required bool selected,
     required VoidCallback onTap,
     Color? color,
+    bool showCheckmark = true,
   }) {
     final accent = color ?? MapPalette.selected;
     final brightness = Theme.of(context).brightness;
@@ -3978,7 +4004,7 @@ class _MapScreenState extends State<MapScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (selected) ...[
+                if (selected && showCheckmark) ...[
                   Icon(Icons.check, size: 13, color: panelTextPrimary),
                   const SizedBox(width: 4),
                 ],
