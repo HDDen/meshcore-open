@@ -285,12 +285,21 @@ to and the channels it covers, with a delete button per entry and an **Add** but
 a name typed by hand (that one carries no key and applies to every channel) — sits in two menus:
 inside a channel, and on the channels list itself.
 
+### Signal of the last hop in channels
+
+With message tracing on, the hop list under a channel message ends with the SNR and RSSI your
+own radio measured for the node you actually heard — the last repeater on the path, or the
+sender themselves when nobody relayed the message. Both are coloured by quality on the same
+scale as the signal indicator in the title bar. Only one of the frames a message can arrive in
+reports RSSI, so some messages show SNR alone. Switch the whole thing off in mod settings.
+
 ### Smaller additions
 
 - **Channel groups** and custom channel ordering, plus contact groups
 - **Sending delay** — schedule, review and cancel a queued outgoing message per conversation
 - **Quick answers** — canned replies available straight from the composer
 - **Per-conversation settings** — compression, signing, delay, quick answers and channel colour
+- **Map button in the repeater login window** — jumps straight to that repeater on the map
 - Numerous smaller layout, readability and navigation corrections throughout the app
 
 ## Downloads

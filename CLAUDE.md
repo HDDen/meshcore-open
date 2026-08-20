@@ -308,6 +308,42 @@ Three call sites. **Rendering**: `widgets/formatted_message_text.dart` treats ma
 
 The edits themselves are pure transforms in `helpers/markup_editing.dart` (`wrap`, `stripFormatting`), shared by all three entry points so they cannot drift apart; each caller applies the UTF-8 limiter afterwards, so a tag can never push a message past the payload budget. Wrapping an empty selection leaves the caret between a fresh pair. `stripFormatting` removes markers inside the selection or, failing that, the pair immediately around it — colour tags included, via `_surroundingPairs`.
 
+### Last-hop signal in the hop list
+
+The tracing row of a channel bubble ends its hop list with the SNR and RSSI our own radio
+measured for that reception. `ChannelMessage` carries them as `snr` (dB) and `rssi` (dBm), both
+nullable and both persisted by `channel_message_store`; anything stored before they existed has
+neither.
+
+Three frames can report a reading and only one reports both. `PUSH_CODE_LOG_RX_DATA` (0x88)
+carries `[snr*4 int8][rssi int8]` in its header — `_handleLogRxData` reads those three bytes
+instead of skipping them — while `CHANNEL_MSG_RECV_V3` (byte 1) and `CHANNEL_DATA_RECV`
+(`ChannelDataReceivedFrame.snr`, parsed all along and previously unused) carry SNR alone. A
+missing RSSI is therefore normal, not a fault.
+
+The pair describes **one** reception, so it follows the path it was heard on. In
+`_addChannelMessage`'s repeat merge: a copy that brings a longer path — the one that will be
+displayed — brings its reading with it; an identical path means the same packet reached us
+twice, once as a channel message with SNR alone and once through the RX log with both, so those
+two only fill each other's gaps; a copy that travelled a different, shorter route keeps its
+reading to itself. Mixing an SNR from one copy with an RSSI from another would describe a link
+nobody heard.
+
+Rendering lives in `helpers/signal_reading_text.dart` (`signalReadingSpans`, plus the RSSI
+colour scale) rather than in `channel_chat_screen.dart`, which is a merge hot spot. The spans
+are appended to the hop list's own `Text` instead of becoming another chip in the meta row's
+`Wrap`, so they inherit its font and only colour sets them apart — the same five-step scale the
+app-bar SNR indicator paints, SNR against the current spreading factor through `snrUiFromSNR`,
+RSSI against its own dBm thresholds. Each reading is glued on with a non-breaking space: a plain
+space is a break opportunity, and a reading must never be stranded on a line without the hop it
+belongs to. With no hop list in front of them the first reading takes no glue, or it would sit a
+space further from the route chip than every other row does.
+
+A message heard with no repeater in between has no hop list but still has a reading, so the row
+appears for it too and the route chip reads `DIRECT`. All of it is gated on
+`AppSettings.showLastHopSignal` (default on, in mod settings) on top of the existing tracing and
+`showHops` gates.
+
 ### Map raster sources
 
 Sources live in `MapRasterSourceCatalog` (`services/map_tile_cache_service.dart`) and are picked in app settings. Two carry an API key: Stadia (`mapTileApiKey`, with a shared demo key as fallback) and **Yandex** (`mapYandexApiKey`, no demo — the map silently falls back to OpenStreetMap until the user pastes their own key from the Yandex developer dashboard).
@@ -328,6 +364,18 @@ Their terms also ask for two attribution elements. The **About dialog link** is 
 `buildTileLayer` sets `evictErrorTileStrategy: EvictErrorTileStrategy.notVisible`. The flutter_map default is `none`, and since Flutter caches failed image loads as well as successful ones, a tile lost to a rate limit or a dropped connection stayed a grey square for the whole session. Evicting error tiles once they leave the viewport is what makes returning to the area re-request them.
 
 Tile requests carry a per-host `User-Agent` (`headersForUrl`): `MCO (+…)` everywhere, since the OpenStreetMap tile policy blocks library defaults like `flutter_map (…)`, and a desktop-browser string for Yandex, whose tile endpoint is built for web clients. The provider is seeded with the app agent so `TileLayer`'s `putIfAbsent` cannot overwrite it.
+
+### Opening the map on a node
+
+`widgets/contact_map_button.dart` is the icon button that jumps to the map centred on a
+contact's own position — used from the repeater login dialog. It renders nothing at all when
+`Contact.hasLocation` is false (an advert carries 0,0 until its node has a fix), so a caller
+drops it into a row unconditionally. It opens at zoom 15 because the map draws node labels only
+from `_labelZoomThreshold` (14.0) up, and reading the name is the point of going there.
+
+`MapScreen.highlightPosition` does two jobs — it centres the map *and* draws the red highlight
+pin — so `showHighlightPin` (default true, every existing call site unchanged) turns the pin off
+for a position that only names something the map already draws itself.
 
 ### Shared markers on the map
 
@@ -528,6 +576,33 @@ Anything in a chat composer that reacts to the text controller must go through `
 
 ### MCO image codec (image/GIF over LoRa)
 Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→file index of installed `.mcoimg.pack` sets and renders the **original PNG/JPG/animated GIF** when a received image's identity hash matches (`widgets/gif_message.dart`, `widgets/mco_image_message.dart`). Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
+
+### AEIC image store: pictures are paged in lazily
+
+`ReceivedImageStore.load()` deliberately restores sizes, not bytes — reattaching a few hundred
+images must not read tens of MB of PNG on the startup path — so an entry comes back with
+`pngStored` / `receiverPreviewStored` re-derived from the files actually on disk and both byte
+slots null. `ensurePng` and `ensureReceiverPreview` read them back on demand.
+
+An outgoing entry has **two** pictures: the sender's own 512×512 crop in the PNG slot (written
+by `registerOutgoing`; it is the backdrop of the placeholder and what a tap on the
+reconstruction opens) and its own decode in `receiverPreviewPng`. It stays in `reassembled`
+rather than `decoded` — `decoded` would name the wrong picture — and the renderer keys off the
+preview's presence.
+
+**Never write back a snapshot taken before an await.** `_storeSync` replaces the record whole
+rather than merging fields, so a `copyWith` built on a pre-await snapshot silently reverts
+whatever landed while it was on disk. The bubble asks for both pictures at once and awaits
+neither, so the two loaders overlap on every restart: whichever finished second used to reset
+the other's bytes to null, which showed up either as a tap opening the reconstruction instead of
+the original or as a bubble stuck on the decoding spinner. Both loaders — and the outgoing
+decode branch, around its own preview write — re-read `_entries[streamId]` after the await and
+build the update from that. A test in `test/services/received_image_store_test.dart` pins it.
+
+`registerOutgoing` takes the `aspectCode` the send path already computes for the wire. Without
+it our own entry defaults to 1:1 and the sender is the one person seeing their own photo
+squashed into a square: the stored crop is the stretched square every recipient also gets, so
+the bubble has to undo the stretch exactly the way theirs does.
 
 ### Wardriving (coverage mapping)
 Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, driven from `map_screen.dart` / `widgets/wardrive_status_panel.dart`). Each cycle (default 25 s, 5–300 s configurable) takes a GPS fix, sends a zero-hop discovery request, and listens ~10 s for `DiscoverResp` frames; each responder → a GPS-tagged `WardriveSample` (SNR/RSSI/node key/response time), plus `pingSuccess=false` "dead zone" samples when nobody answers. `wardrive_upload_service.dart` POSTs sample batches as JSON to configurable sites (default `https://meshwar-map.pages.dev/api/samples`), de-duping per endpoint. `wardrive_foreground_service.dart` runs an Android **location** foreground service (MethodChannel `mco_advanced/wardrive_foreground`), gated in Dart so ordinary BLE users don't inherit location FGS.

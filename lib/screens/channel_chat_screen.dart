@@ -2590,6 +2590,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return;
     }
 
+    // The codec stretched the whole frame into a square, which the receiver
+    // cannot undo from pixels alone. Naming the source shape here costs no
+    // extra bytes -- it rides in spare bits of the metadata byte -- and lets
+    // the receiver letterbox back. Our own entry is given the same code, or
+    // the sender would be the one person seeing the picture squashed.
+    final aspectCode = await _aspectCodeOf(sourceBytes);
+
     final ImageChunkSet chunkSet;
     try {
       chunkSet = buildImageChunks(
@@ -2597,11 +2604,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         metadata: ImageStreamMetadata(
           rate: result.rate,
           squareSize: kImageCodecSquareSize,
-          // The codec stretched the whole frame into a square, which the
-          // receiver cannot undo from pixels alone. Naming the source shape
-          // here costs no extra bytes -- it rides in spare bits of the metadata
-          // byte -- and lets the receiver letterbox back.
-          aspectCode: await _aspectCodeOf(sourceBytes),
+          aspectCode: aspectCode,
         ),
         senderPrefix: senderPrefix,
         imgId: _imageIds.next(),
@@ -2647,6 +2650,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           chunkSet: chunkSet,
           senderPrefix: senderPrefix,
           sourceBytes: sourceBytes,
+          aspectCode: aspectCode,
         );
       }
       if (!mounted) return;
@@ -2690,6 +2694,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required ImageChunkSet chunkSet,
     required int senderPrefix,
     required Uint8List sourceBytes,
+    required int aspectCode,
   }) async {
     final ReceivedImageStore store;
     try {
@@ -2712,6 +2717,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         bitstream: result.payload,
         rate: aeicRatePointForUi(result.rate),
         chunkCount: chunkSet.dataChunkCount,
+        // The stored crop is the stretched square, exactly as the recipients
+        // get it, so our bubble has to undo the stretch the same way theirs
+        // does.
+        aspectCode: aspectCode,
       );
     } on Exception catch (error) {
       debugPrint('outgoing image registration failed: $error');

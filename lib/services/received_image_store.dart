@@ -1095,6 +1095,7 @@ class ReceivedImageStore extends ChangeNotifier {
     required Uint8List bitstream,
     required AeicRatePoint rate,
     required int chunkCount,
+    int aspectCode = 0,
     DateTime? at,
   }) async {
     final now = at ?? _clock();
@@ -1117,6 +1118,7 @@ class ReceivedImageStore extends ChangeNotifier {
       totalChunks: chunkCount,
       rate: rate,
       metadataAssumed: false,
+      aspectCode: aspectCode,
       isOutgoing: true,
       bitstreamStored: true,
       bitstreamByteCount: bitstream.length,
@@ -1394,8 +1396,12 @@ class ReceivedImageStore extends ChangeNotifier {
       // pair "reassembled + a stored preview" survives a restart intact,
       // whereas `decoded` would name the wrong picture.
       await blobs.writeReceiverPreview(current.streamId, png);
+      // The file write is an await of its own, so re-read for the same reason
+      // [ensureReceiverPreview] does: a crop paged in during it would be
+      // reverted by a snapshot taken before it.
+      final live = _entries[current.streamId] ?? current;
       await _store(
-        current.copyWith(
+        live.copyWith(
           state: ReceivedImageState.reassembled,
           needsManualDecode: true,
           receiverPreviewPng: png,
@@ -1443,9 +1449,21 @@ class ReceivedImageStore extends ChangeNotifier {
     if (cached != null) return cached;
     if (!entry.receiverPreviewStored) return null;
     final bytes = await blobs.readReceiverPreview(streamId);
+    // The entry captured above is a snapshot from before the read, and
+    // [_storeSync] replaces the record whole rather than merging fields — so
+    // writing that snapshot back reverts anything stored while we were on
+    // disk. And something is: a restored outgoing message asks for both of its
+    // pictures at once, so [ensurePng] is reading the crop in parallel and
+    // caches it into the live record. Whichever of the two finished first used
+    // to have its bytes silently reset to null by the other, and the bubble
+    // then either opened the reconstruction instead of the original or sat on
+    // the decoding spinner for good. The bytes are the only thing this method
+    // learned; every other field belongs to whoever wrote it last.
+    final current = _entries[streamId];
+    if (current == null) return null;
     if (bytes == null) {
       await _store(
-        entry.copyWith(
+        current.copyWith(
           receiverPreviewStored: false,
           receiverPreviewByteCount: 0,
         ),
@@ -1453,7 +1471,7 @@ class ReceivedImageStore extends ChangeNotifier {
       return null;
     }
     await _store(
-      entry.copyWith(
+      current.copyWith(
         receiverPreviewPng: bytes,
         receiverPreviewByteCount: bytes.length,
       ),
@@ -1477,20 +1495,24 @@ class ReceivedImageStore extends ChangeNotifier {
     if (cached != null) return cached;
     if (!entry.pngStored) return null;
     final bytes = await blobs.readPng(streamId);
+    // Re-read rather than write the pre-read snapshot back; see
+    // [ensureReceiverPreview] for what the two of them do to each other.
+    final current = _entries[streamId];
+    if (current == null) return null;
     if (bytes == null) {
       await _store(
         // `evicted` names a decode whose pixels went; an outgoing entry has no
         // decode in that slot, so it only loses the crop.
-        entry.isOutgoing
-            ? entry.copyWith(pngStored: false, pngBytes: null)
-            : entry.copyWith(
+        current.isOutgoing
+            ? current.copyWith(pngStored: false, pngBytes: null)
+            : current.copyWith(
                 state: ReceivedImageState.evicted,
                 pngStored: false,
               ),
       );
       return null;
     }
-    await _store(entry.copyWith(pngBytes: bytes, pngByteCount: bytes.length));
+    await _store(current.copyWith(pngBytes: bytes, pngByteCount: bytes.length));
     return bytes;
   }
 

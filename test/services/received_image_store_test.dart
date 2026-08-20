@@ -783,6 +783,47 @@ void main() {
       expect(await h.store.ensurePng(entry.streamId), isNotNull);
       expect(h.decoder.calls, 0);
     });
+
+    test('a restart pages in both pictures without a race', () async {
+      final blobs = InMemoryReceivedImageBlobStore();
+      final h = _build(blobs: blobs);
+      final entry = await h.store.registerOutgoing(
+        channelIndex: 1,
+        senderPrefix: kSelf,
+        imgId: 4,
+        previewPng: Uint8List.fromList(List<int>.filled(64, 1)),
+        bitstream: Uint8List.fromList(List<int>.filled(20, 7)),
+        rate: AeicRatePoint.ft32,
+        chunkCount: 2,
+      );
+      await h.store.requestDecode(entry.streamId);
+      await h.store.settle();
+      expect(h.store.entryFor(entry.streamId)!.receiverPreviewStored, isTrue);
+      h.store.dispose();
+
+      final reborn = ReceivedImageStore(
+        blobs: blobs,
+        decoder: _FakeDecoder(),
+        clock: h.clock,
+      );
+      await reborn.load();
+      expect(reborn.entryFor(entry.streamId)!.pngBytes, isNull);
+
+      // What the bubble does on the first frame after a restart: it needs the
+      // crop and the receiver preview at once and awaits neither. Both
+      // write-backs used to be built from the snapshot each took before its
+      // own disk read, so whichever finished last reset the other's bytes to
+      // null — and the tap then opened the reconstruction instead of the
+      // original, or the bubble never left the decoding spinner.
+      await Future.wait([
+        reborn.ensureReceiverPreview(entry.streamId),
+        reborn.ensurePng(entry.streamId),
+      ]);
+      final loaded = reborn.entryFor(entry.streamId)!;
+      expect(loaded.pngBytes, isNotNull, reason: 'the original crop');
+      expect(loaded.receiverPreviewPng, isNotNull, reason: 'our own decode');
+      reborn.dispose();
+    });
   });
 
   group('processAutomatically (tap to process)', () {
