@@ -3506,5 +3506,6 @@
   "imageSend_previewShowOriginal": "Show original",
   "imageSend_previewAsReceived": "This is what receivers will see",
   "imageSend_previewDecodeFailed": "Could not decode the preview",
-  "settings_modSettingsLastHopSignal": "Show last hop SNR/RSSI in channels"
+  "settings_modSettingsLastHopSignal": "Show last hop SNR/RSSI in channels",
+  "repeater_cliClearNeighbors": "Clear Neighbours list"
 }

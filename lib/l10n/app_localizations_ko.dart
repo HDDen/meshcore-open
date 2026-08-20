@@ -5964,4 +5964,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_modSettingsLastHopSignal => '채널에서 마지막 홉의 SNR/RSSI 표시';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

@@ -6235,4 +6235,7 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Zobraziť SNR/RSSI posledného skoku v kanáloch';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

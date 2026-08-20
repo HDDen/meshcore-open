@@ -5831,4 +5831,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_modSettingsLastHopSignal => '在频道中显示最后一跳的 SNR/RSSI';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

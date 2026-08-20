@@ -2675,5 +2675,6 @@
   "imageSend_previewShowOriginal": "Показать оригинал",
   "imageSend_previewAsReceived": "Так изображение увидят получатели",
   "imageSend_previewDecodeFailed": "Не удалось декодировать превью",
-  "settings_modSettingsLastHopSignal": "Отображать SNR/RSSI последнего хопа в каналах"
+  "settings_modSettingsLastHopSignal": "Отображать SNR/RSSI последнего хопа в каналах",
+  "repeater_cliClearNeighbors": "Очистить Соседей"
 }

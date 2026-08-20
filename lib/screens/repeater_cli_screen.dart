@@ -44,6 +44,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     {'labelKey': 'getRadio', 'command': 'get radio'},
     {'labelKey': 'getTx', 'command': 'get tx'},
     {'labelKey': 'discovery', 'command': 'discover.neighbors'},
+    {'labelKey': 'clearNeighbors', 'command': 'neighbor.remove '},
     {'labelKey': 'neighbors', 'command': 'neighbors'},
     {'labelKey': 'version', 'command': 'ver'},
     {'labelKey': 'clock', 'command': 'clock'},
@@ -253,6 +254,8 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         return l10n.repeater_cliQuickClockSync;
       case 'discovery':
         return l10n.repeater_cliQuickDiscovery;
+      case 'clearNeighbors':
+        return l10n.repeater_cliClearNeighbors;
       default:
         return key;
     }

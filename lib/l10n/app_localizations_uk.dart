@@ -6284,4 +6284,7 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Відображати SNR/RSSI останнього хопа в каналах';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

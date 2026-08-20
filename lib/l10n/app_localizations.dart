@@ -10677,6 +10677,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show last hop SNR/RSSI in channels'**
   String get settings_modSettingsLastHopSignal;
+
+  /// No description provided for @repeater_cliClearNeighbors.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Neighbours list'**
+  String get repeater_cliClearNeighbors;
 }
 
 class _AppLocalizationsDelegate

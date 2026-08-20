@@ -6270,4 +6270,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Отображать SNR/RSSI последнего хопа в каналах';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Очистить Соседей';
 }

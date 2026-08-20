@@ -5957,4 +5957,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_modSettingsLastHopSignal => 'チャンネルで最終ホップの SNR/RSSI を表示';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

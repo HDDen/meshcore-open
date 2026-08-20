@@ -6220,4 +6220,7 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Visa SNR/RSSI för sista hoppet i kanaler';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

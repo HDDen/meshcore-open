@@ -6274,4 +6274,7 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Mostrar SNR/RSSI del último salto en los canales';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }

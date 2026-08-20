@@ -6265,4 +6265,7 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get settings_modSettingsLastHopSignal =>
       'Az utolsó ugrás SNR/RSSI értékének megjelenítése a csatornákban';
+
+  @override
+  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
 }
