@@ -93,10 +93,13 @@ const int dataTypeAeicImage = 0xAE1C;
 /// Maximum blob we will ever put in one GRP_DATA packet.
 ///
 /// Binding limits, smallest first:
-///   * app  `maxFrameSize` 172 - 9 byte RESP header = **163**  <- used
+///   * app  `maxFrameSize` 176 - 9 byte RESP header = 167
 ///   * BLE  ATT_MTU 176 - 3 notify - 9 resp header  = 164
 ///   * radio `MAX_GROUP_DATA_LENGTH` 184 - 16 - 3   = 165
 ///   * serial `MAX_CHANNEL_DATA_LENGTH` 176 - 9     = 167
+///
+/// The implementation intentionally keeps the earlier conservative 163-byte
+/// blob size for compatibility with already deployed transports.
 const int kImageChunkBlobBytes = 163;
 
 /// Per-chunk header: sender_prefix(2) + img_id(1) + idx/total(1).

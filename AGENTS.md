@@ -7,12 +7,12 @@
 ## BLE Frames & Protocol Notes
 - Nordic UART Service (NUS) UUIDs: Service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`, RX `6e400002-b5a3-f393-e0a9-e50e24dcca9e`, TX `6e400003-b5a3-f393-e0a9-e50e24dcca9e`.
 - Discovery: scans for device names matching known prefixes and filters by `platformName`/`advertisementData.advName`.
-- Frames are capped at `maxFrameSize = 172` bytes; byte 0 is the command/response/push code. I/O is `MeshCoreConnector.sendFrame` and `MeshCoreConnector.receivedFrames`.
-- Command codes (to device): `cmdAppStart`=1, `cmdSendTxtMsg`=2, `cmdSendChannelTxtMsg`=3, `cmdGetContacts`=4, `cmdGetDeviceTime`=5, `cmdSetDeviceTime`=6, `cmdSendSelfAdvert`=7, `cmdSetAdvertName`=8, `cmdAddUpdateContact`=9, `cmdSyncNextMessage`=10, `cmdSetRadioParams`=11, `cmdSetRadioTxPower`=12, `cmdResetPath`=13, `cmdSetAdvertLatLon`=14, `cmdRemoveContact`=15, `cmdShareContact`=16, `cmdExportContact`=17, `cmdImportContact`=18, `cmdReboot`=19, `cmdSendLogin`=26, `cmdGetChannel`=31, `cmdSetChannel`=32, `cmdGetRadioSettings`=57.
-- Response codes (from device): `respCodeOk`=0, `respCodeErr`=1, `respCodeContactsStart`=2, `respCodeContact`=3, `respCodeEndOfContacts`=4, `respCodeSelfInfo`=5, `respCodeSent`=6, `respCodeContactMsgRecv`=7, `respCodeChannelMsgRecv`=8, `respCodeCurrTime`=9, `respCodeNoMoreMessages`=10, `respCodeContactMsgRecvV3`=16, `respCodeChannelMsgRecvV3`=17, `respCodeChannelInfo`=18, `respCodeRadioSettings`=25.
+- Frames are capped at `maxFrameSize = 176` bytes; byte 0 is the command/response/push code. I/O is `MeshCoreConnector.sendFrame` and `MeshCoreConnector.receivedFrames`.
+- Command codes (to device): `cmdAppStart`=1, `cmdSendTxtMsg`=2, `cmdSendChannelTxtMsg`=3, `cmdGetContacts`=4, `cmdGetDeviceTime`=5, `cmdSetDeviceTime`=6, `cmdSendSelfAdvert`=7, `cmdSetAdvertName`=8, `cmdAddUpdateContact`=9, `cmdSyncNextMessage`=10, `cmdSetRadioParams`=11, `cmdSetRadioTxPower`=12, `cmdResetPath`=13, `cmdSetAdvertLatLon`=14, `cmdRemoveContact`=15, `cmdShareContact`=16, `cmdExportContact`=17, `cmdImportContact`=18, `cmdReboot`=19, `cmdSendLogin`=26, `cmdGetChannel`=31, `cmdSetChannel`=32, `cmdSendAnonReq`=57, `cmdSendChannelData`=62, `cmdSetDefaultFloodScope`=63, `cmdGetDefaultFloodScope`=64. Treat `meshcore_protocol.dart` as the source of truth for the complete table.
+- Response codes (from device): `respCodeOk`=0, `respCodeErr`=1, `respCodeContactsStart`=2, `respCodeContact`=3, `respCodeEndOfContacts`=4, `respCodeSelfInfo`=5, `respCodeSent`=6, `respCodeContactMsgRecv`=7, `respCodeChannelMsgRecv`=8, `respCodeCurrTime`=9, `respCodeNoMoreMessages`=10, `respCodeContactMsgRecvV3`=16, `respCodeChannelMsgRecvV3`=17, `respCodeChannelInfo`=18, `respCodeStats`=24, `respCodeAutoAddConfig`=25, `respCodeChannelDataRecv`=27, `respCodeDefaultFloodScope`=28.
 - Push codes (async): `pushCodeAdvert`=0x80, `pushCodePathUpdated`=0x81, `pushCodeSendConfirmed`=0x82, `pushCodeMsgWaiting`=0x83, `pushCodeLoginSuccess`=0x85, `pushCodeLoginFail`=0x86, `pushCodeLogRxData`=0x88, `pushCodeNewAdvert`=0x8A.
 - Device info: `cmdAppStart` triggers `respCodeSelfInfo` with tx power, pubkey, lat/lon, telemetry flags, radio params, and node name (see offsets in `lib/connector/meshcore_connector.dart`).
-- Radio/time helpers: `cmdGetRadioSettings` → `respCodeRadioSettings`; `cmdGetDeviceTime` → `respCodeCurrTime`; `cmdSetDeviceTime` updates device time.
+- Time helpers: `cmdGetDeviceTime` → `respCodeCurrTime`; `cmdSetDeviceTime` updates device time. Current radio settings are obtained through the device-info/query flow; do not reuse command 57, which is `cmdSendAnonReq`.
 - Reboot: the UI sends `sendCliCommand('reboot')` (the raw `cmdReboot` code exists but no frame builder is wired in yet).
 - Companion radio format: `cmdSendTxtMsg` expects `[cmd][txt_type][attempt][timestamp x4][pub_key_prefix x6][text...]` (no flags/full pubkey). CLI commands use `txtTypeCliData` in the same format, and the app maps `forceFlood` to attempt `3` when sending.
 - Group text packets (`PAYLOAD_TYPE_GRP_TXT`): payload is `[channel_hash (1)][MAC (2)][encrypted data...]`. Decrypted data layout is `[timestamp x4][txt_type][text...]` where text is `"sender: message"` (see MeshCore `BaseChatMesh::sendGroupMessage`). Sender identity is not in the payload; use `PUSH_CODE_LOG_RX_DATA` raw packet path bytes for origin hash when available.
@@ -25,7 +25,7 @@
 
 ## Coding Style & Naming Conventions
 - Follow `flutter_lints`, use `lowerCamelCase`/`UpperCamelCase`/`snake_case`, prefer `StatelessWidget` + `Consumer`, and use `const` constructors.
-- Material widgets only; keep screens simple, handle disconnects by returning to the scanner, and avoid premature abstractions.
+- Material widgets only; keep screens simple and avoid premature abstractions. Manual disconnects and USB/TCP failures return to the scanner; recoverable BLE loss keeps the current screen visible while automatic reconnection runs.
 
 ## Testing Guidelines
 - Tests use `flutter_test`; add `*_test.dart` under `test/` and run `flutter test` before UI/protocol changes.

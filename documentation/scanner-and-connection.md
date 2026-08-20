@@ -7,7 +7,7 @@ The BLE Scanner is the app's home screen, displayed immediately on launch.
 ### How to Access
 
 - Opens automatically when the app starts
-- Returns here when disconnecting from any device
+- Returns here after a manual disconnect or a non-recoverable USB/TCP connection loss
 - Accessible by navigating back from a connected session
 
 ### What the User Sees
@@ -32,8 +32,9 @@ The BLE Scanner is the app's home screen, displayed immediately on launch.
 - **USB** icon button - Opens USB connection screen (Android, Windows, Linux, macOS, Chrome web only)
 - **TCP/IP** icon button - Opens TCP connection screen (all non-web platforms)
 
-**Bottom FAB**: A single floating action button:
-- **BLE Scan** button - Toggles BLE scanning on/off; shows a spinner when scanning. **Disabled** (greyed out, not tappable) when Bluetooth is off
+**Bottom actions**:
+- **Offline** - Opens saved history without connecting to a radio
+- **BLE Scan** - Toggles BLE scanning on/off; shows a spinner when scanning. **Disabled** (greyed out, not tappable) when Bluetooth is off
 
 ### Device Tile
 
@@ -70,6 +71,22 @@ Tap a device tile or its Connect button:
 6. On success, automatically navigates to the Channels screen
 7. On failure, shows a red error snackbar
 
+### Offline History
+
+The Offline button is available on the BLE scanner and on the USB and TCP connection screens. It opens a source picker with:
+
+- **Shared mode** first: combines saved contacts, channels and messages from every known node scope.
+- One entry for each previously connected node: opens only that node's locally stored history and UI state.
+
+Offline history is read-only with respect to the radio. Chats, message search, the map, the MCOimg gallery and canvas remain available, but message sending, contact/channel changes, repeater or room login, wardrive, discovery, tracing and live device settings are blocked. The chat composer is disabled. Starting BLE, USB or TCP while offline history is open is rejected until the user leaves that mode.
+
+### Connection Loss and Recovery
+
+- A recoverable BLE loss keeps the current screen open and shows a red reconnecting snackbar. Pending messages remain queued while the connector retries indefinitely; after a successful handshake they resume naturally and a green reconnected snackbar is shown.
+- Manual disconnect returns to the selected connection screen.
+- USB and TCP do not use BLE auto-reconnect and return to their connection flow when the transport is lost.
+- On Android, the foreground-service notification reflects connected/reconnecting state. The service retains the main Flutter engine; it does not contain a second BLE connector.
+
 ---
 
 ## USB Connection
@@ -86,6 +103,7 @@ From the Scanner screen, tap the **USB** icon button in the app bar.
   - Raw port name (subtitle, only shown when it differs from the display name)
   - Chevron trailing icon (the entire tile is tappable to connect)
 - Transport switcher buttons (outlined, not FABs) to switch to BLE or TCP (these use `pushReplacement`, so back navigation returns to Scanner, not between USB/TCP)
+- An **Offline** button for opening saved history without selecting a serial port
 
 ### Key Interactions
 
@@ -111,6 +129,7 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 - **Port number** text field
 - **Connect** button
 - Transport switcher buttons (outlined, not FABs) to switch to USB or BLE
+- An **Offline** button for opening saved history without connecting to the configured endpoint
 
 ### Key Interactions
 

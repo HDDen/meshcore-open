@@ -35,7 +35,6 @@ The MeshCore BLE protocol implements a binary frame-based communication system u
    - `CMD_DEVICE_QUERY` - Get device capabilities
    - `CMD_APP_START` - Register app with device
    - `CMD_GET_BATT_AND_STORAGE` - Request battery status
-   - `CMD_GET_RADIO_SETTINGS` - Get LoRa radio parameters
 
 ## Frame Structure
 
@@ -45,7 +44,7 @@ All command frames start with a single-byte command code followed by command-spe
 
 **Format**: `[command_code][parameters...]`
 
-**Maximum Frame Size**: 172 bytes (`maxFrameSize`)
+**Maximum Frame Size**: 176 bytes (`maxFrameSize`)
 
 ### Response Frames (Device → App)
 
@@ -59,9 +58,9 @@ Push frames are unsolicited notifications from the device, using codes ≥ 0x80.
 
 **Format**: `[push_code][data...]`
 
-## Command Codes (0x01-0x39)
+## Command Codes (0x01-0x40)
 
-Commands sent from the app to the device:
+Commands implemented by the Flutter connector in this checkout:
 
 | Code | Name | Description |
 |------|------|-------------|
@@ -85,15 +84,9 @@ Commands sent from the app to the device:
 | 0x12 | `CMD_IMPORT_CONTACT` | Import contact data |
 | 0x13 | `CMD_REBOOT` | Reboot device |
 | 0x14 | `CMD_GET_BATT_AND_STORAGE` | Request battery and storage info |
-| 0x15 | `CMD_SET_TUNING_PARAMS` | Set device tuning parameters |
 | 0x16 | `CMD_DEVICE_QUERY` | Query device capabilities |
-| 0x17 | `CMD_EXPORT_PRIVATE_KEY` | Export device private key (secure) |
-| 0x18 | `CMD_IMPORT_PRIVATE_KEY` | Import device private key (secure) |
-| 0x19 | `CMD_SEND_RAW_DATA` | Send raw data to contact |
 | 0x1A | `CMD_SEND_LOGIN` | Authenticate to repeater |
 | 0x1B | `CMD_SEND_STATUS_REQ` | Request status from repeater |
-| 0x1C | `CMD_HAS_CONNECTION` | Check if connection exists to contact |
-| 0x1D | `CMD_LOGOUT` | Disconnect from repeater |
 | 0x1E | `CMD_GET_CONTACT_BY_KEY` | Get specific contact by public key |
 | 0x1F | `CMD_GET_CHANNEL` | Get channel configuration |
 | 0x20 | `CMD_SET_CHANNEL` | Configure channel |
@@ -101,24 +94,47 @@ Commands sent from the app to the device:
 | 0x22 | `CMD_SIGN_DATA` | Add data to be signed |
 | 0x23 | `CMD_SIGN_FINISH` | Finish signing and get signature |
 | 0x24 | `CMD_SEND_TRACE_PATH` | Send path trace request |
-| 0x25 | `CMD_SET_DEVICE_PIN` | Set device PIN for pairing |
 | 0x26 | `CMD_SET_OTHER_PARAMS` | Set miscellaneous parameters |
 | 0x27 | `CMD_SEND_TELEMETRY_REQ` | Request telemetry data (deprecated) |
 | 0x28 | `CMD_GET_CUSTOM_VARS` | Get custom variables |
 | 0x29 | `CMD_SET_CUSTOM_VAR` | Set custom variable |
-| 0x2A | `CMD_GET_ADVERT_PATH` | Get advertisement path for contact |
-| 0x2B | `CMD_GET_TUNING_PARAMS` | Get device tuning parameters |
 | 0x32 | `CMD_SEND_BINARY_REQ` | Send binary request to contact |
-| 0x33 | `CMD_FACTORY_RESET` | Factory reset device |
-| 0x34 | `CMD_SEND_PATH_DISCOVERY_REQ` | Request path discovery |
 | 0x36 | `CMD_SET_FLOOD_SCOPE` | Set flood routing scope (v8+) |
 | 0x37 | `CMD_SEND_CONTROL_DATA` | Send control data (v8+) |
 | 0x38 | `CMD_GET_STATS` | Get statistics (v8+, sub-types: core/radio/packets) |
-| 0x39 | `CMD_GET_RADIO_SETTINGS` | Get current radio parameters |
+| 0x39 | `CMD_SEND_ANON_REQ` | Send an anonymous request |
+| 0x3A | `CMD_SET_AUTO_ADD_CONFIG` | Set auto-add configuration |
+| 0x3B | `CMD_GET_AUTO_ADD_CONFIG` | Get auto-add configuration |
+| 0x3D | `CMD_SET_PATH_HASH_MODE` | Set path hash width |
+| 0x3E | `CMD_SEND_CHANNEL_DATA` | Send typed channel data |
+| 0x3F | `CMD_SET_DEFAULT_FLOOD_SCOPE` | Set default flood scope |
+| 0x40 | `CMD_GET_DEFAULT_FLOOD_SCOPE` | Query default flood scope |
 
-## Response Codes (0x00-0x19)
+### Firmware-Only and Legacy Command Mappings
 
-Responses from device to app:
+The following commands are retained because they are documented by older or
+firmware-specific MeshCore implementations, even though the Flutter connector
+in this checkout does not expose them. Their availability and numeric mapping
+must be verified against the exact firmware and protocol version in use.
+
+| Code | Name | Description |
+|------|------|-------------|
+| 0x15 | `CMD_SET_TUNING_PARAMS` | Set device tuning parameters |
+| 0x17 | `CMD_EXPORT_PRIVATE_KEY` | Export device private key (security-sensitive) |
+| 0x18 | `CMD_IMPORT_PRIVATE_KEY` | Import device private key (security-sensitive) |
+| 0x19 | `CMD_SEND_RAW_DATA` | Send raw data to contact |
+| 0x1C | `CMD_HAS_CONNECTION` | Check whether a connection exists to a contact |
+| 0x1D | `CMD_LOGOUT` | Disconnect from repeater |
+| 0x25 | `CMD_SET_DEVICE_PIN` | Set device PIN for pairing |
+| 0x2A | `CMD_GET_ADVERT_PATH` | Get advertisement path for contact |
+| 0x2B | `CMD_GET_TUNING_PARAMS` | Get device tuning parameters |
+| 0x33 | `CMD_FACTORY_RESET` | Factory reset device |
+| 0x34 | `CMD_SEND_PATH_DISCOVERY_REQ` | Request path discovery |
+| 0x39 | `CMD_GET_RADIO_SETTINGS` | Legacy mapping; conflicts with current `CMD_SEND_ANON_REQ` |
+
+## Response Codes (0x00-0x1C)
+
+Responses handled by the Flutter connector in this checkout:
 
 | Code | Name | Description |
 |------|------|-------------|
@@ -136,18 +152,26 @@ Responses from device to app:
 | 0x0B | `RESP_CODE_EXPORT_CONTACT` | Exported contact data |
 | 0x0C | `RESP_CODE_BATT_AND_STORAGE` | Battery and storage status |
 | 0x0D | `RESP_CODE_DEVICE_INFO` | Device capabilities |
-| 0x0E | `RESP_CODE_PRIVATE_KEY` | Exported private key |
-| 0x0F | `RESP_CODE_DISABLED` | Feature disabled |
 | 0x10 | `RESP_CODE_CONTACT_MSG_RECV_V3` | Received direct message (v3) |
 | 0x11 | `RESP_CODE_CHANNEL_MSG_RECV_V3` | Received channel message (v3) |
 | 0x12 | `RESP_CODE_CHANNEL_INFO` | Channel configuration |
 | 0x13 | `RESP_CODE_SIGN_START` | Signing operation started |
 | 0x14 | `RESP_CODE_SIGNATURE` | Digital signature result |
 | 0x15 | `RESP_CODE_CUSTOM_VARS` | Custom variables data |
+| 0x18 | `RESP_CODE_STATS` | Statistics data (v8+) |
+| 0x19 | `RESP_CODE_AUTO_ADD_CONFIG` | Auto-add configuration |
+| 0x1B | `RESP_CODE_CHANNEL_DATA_RECV` | Incoming typed channel data |
+| 0x1C | `RESP_CODE_DEFAULT_FLOOD_SCOPE` | Current default flood scope |
+
+### Firmware-Only and Legacy Response Mappings
+
+| Code | Name | Description |
+|------|------|-------------|
+| 0x0E | `RESP_CODE_PRIVATE_KEY` | Exported private key |
+| 0x0F | `RESP_CODE_DISABLED` | Feature disabled |
 | 0x16 | `RESP_CODE_ADVERT_PATH` | Advertisement path data |
 | 0x17 | `RESP_CODE_TUNING_PARAMS` | Tuning parameters |
-| 0x18 | `RESP_CODE_STATS` | Statistics data (v8+) |
-| 0x19 | `RESP_CODE_RADIO_SETTINGS` | Radio parameters |
+| 0x19 | `RESP_CODE_RADIO_SETTINGS` | Legacy mapping; conflicts with current `RESP_CODE_AUTO_ADD_CONFIG` |
 
 ## Push Codes (0x80-0x8E)
 
@@ -168,7 +192,7 @@ Asynchronous notifications from device:
 | 0x8A | `PUSH_CODE_NEW_ADVERT` | New contact advertisement |
 | 0x8B | `PUSH_CODE_TELEMETRY_RESPONSE` | Telemetry data response |
 | 0x8C | `PUSH_CODE_BINARY_RESPONSE` | Binary request response |
-| 0x8D | `PUSH_CODE_PATH_DISCOVERY_RESPONSE` | Path discovery response |
+| 0x8D | `PUSH_CODE_PATH_DISCOVERY_RESPONSE` | Path discovery response (firmware-only/legacy) |
 | 0x8E | `PUSH_CODE_CONTROL_DATA` | Control data received (v8+) |
 
 ## Key Frame Formats
@@ -572,11 +596,19 @@ Device capabilities and limits.
 
 **Example**: `[0x0D][0x03][0x10][0x08]` = v3, 32 contacts, 8 channels
 
-### RESP_CODE_RADIO_SETTINGS (0x19)
+### RESP_CODE_AUTO_ADD_CONFIG (0x19)
 
-Current LoRa radio parameters.
+Returns the current automatic-contact-addition flags.
 
-**Format**:
+### RESP_CODE_RADIO_SETTINGS (0x19, legacy/firmware-specific)
+
+In firmware variants where response code `0x19` is assigned to radio settings,
+the response contains the current LoRa parameters. This mapping conflicts with
+`RESP_CODE_AUTO_ADD_CONFIG` in the current Flutter protocol, so the expected
+layout must be selected from the negotiated protocol version and target
+firmware, not from the numeric code alone.
+
+**Legacy format**:
 ```
 [0x19][freq x4][bw x4][sf][cr]
 ```
@@ -587,15 +619,27 @@ Current LoRa radio parameters.
 - `sf` (1 byte): Spreading factor (5-12)
 - `cr` (1 byte): Coding rate (5-8, subtract 4 for actual CR)
 
-## Advanced Commands (Not Yet Implemented in Flutter)
+### RESP_CODE_CHANNEL_DATA_RECV (0x1B)
 
-The following commands are supported by the firmware but not yet implemented in the Flutter app:
+Carries an incoming typed channel `GROUP_DATA` payload.
+
+### RESP_CODE_DEFAULT_FLOOD_SCOPE (0x1C)
+
+Returns the node's current default flood scope.
+
+## Additional and Firmware-Specific Commands
+
+Some commands below are implemented by particular firmware versions but are
+not exposed by the Flutter connector in this checkout. Verify them against the
+target firmware before use, especially where the tables above document a code
+collision.
 
 ### CMD_GET_ADVERT_PATH (0x2A)
 
 Get the recently heard advertisement path for a contact.
 
-**Purpose**: Retrieves the inbound path that was used when the contact's advertisement was last received. Useful for discovering optimal paths.
+**Purpose**: Retrieves the inbound path that was used when the contact's
+advertisement was last received. Useful for discovering optimal paths.
 
 **Format**:
 ```
@@ -632,7 +676,8 @@ Request telemetry data from a contact (deprecated in favor of binary requests).
 
 Request path discovery to a contact.
 
-**Purpose**: Actively discover available paths to a contact by broadcasting a discovery request.
+**Purpose**: Actively discover available paths to a contact by broadcasting a
+discovery request.
 
 **Response**: `PUSH_CODE_PATH_DISCOVERY_RESPONSE` (0x8D) with discovered paths
 
@@ -651,7 +696,8 @@ Set flood routing scope (v8+).
 
 Factory reset the device.
 
-**Purpose**: Erase all stored data (contacts, keys, settings) and return to factory defaults.
+**Purpose**: Erase all stored data (contacts, keys, settings) and return to
+factory defaults.
 
 **Format**:
 ```
@@ -660,13 +706,15 @@ Factory reset the device.
 
 **Response**: `RESP_CODE_OK` or `RESP_CODE_ERR`
 
-**WARNING**: This erases the device's identity! Use with caution.
+**WARNING**: This erases the device's identity. Use with caution.
 
 ### CMD_EXPORT_PRIVATE_KEY (0x17) / CMD_IMPORT_PRIVATE_KEY (0x18)
 
-Export or import the device's Ed25519 private key.
+Export or import the device's Ed25519 private key on firmware variants that
+support these commands.
 
-**Security**: These commands should be protected by device PIN or other authentication.
+**Security**: These commands should be protected by device PIN or other
+authentication and are not exposed by the current Flutter connector.
 
 **Export format**:
 ```
@@ -1054,9 +1102,9 @@ const int pubKeySize = 32;         // Ed25519 public key
 const int maxPathSize = 64;        // Max routing path
 const int pathHashSize = 1;        // Path prefix size
 const int maxNameSize = 32;        // Max name length
-const int maxFrameSize = 172;      // BLE MTU constraint
+const int maxFrameSize = 176;      // app command/response frame limit
 const int maxTextPayloadBytes = 160; // Firmware limit (10 cipher blocks)
-const int appProtocolVersion = 3;  // Current protocol version
+const int appProtocolVersion = 4;  // Current protocol version
 ```
 
 ## Implementation Notes
@@ -1106,9 +1154,12 @@ The firmware implements the protocol through the `MyMesh` class which extends `B
 #### Frame Constants
 
 ```cpp
-#define MAX_FRAME_SIZE 172  // BLE MTU constraint
 #define MAX_TEXT_LEN (10*CIPHER_BLOCK_SIZE)  // 160 bytes
 ```
+
+The client-side command/response limit is the 176-byte `maxFrameSize` documented
+above. Keep firmware constants tied to the exact firmware checkout being built;
+they are not duplicated here because that source tree is versioned separately.
 
 #### Timeout Calculations
 
@@ -1158,7 +1209,9 @@ Contact list changes trigger a delayed write (5s after last change) to reduce we
 
 #### Advertisement Path Cache
 
-The firmware caches recently heard advertisement paths in volatile memory:
+Firmware variants that implement `CMD_GET_ADVERT_PATH` cache recently heard
+advertisement paths in volatile memory. A documented implementation uses this
+shape:
 
 ```cpp
 #define ADVERT_PATH_TABLE_SIZE 16
@@ -1171,7 +1224,9 @@ struct AdvertPath {
 };
 ```
 
-**Purpose**: Allows `CMD_GET_ADVERT_PATH` to retrieve inbound paths for discovered nodes.
+**Purpose**: Allows `CMD_GET_ADVERT_PATH` to retrieve inbound paths for
+discovered nodes. The exact table size and structure are firmware-specific and
+should be checked against the target firmware source.
 
 #### Expected ACK Table
 

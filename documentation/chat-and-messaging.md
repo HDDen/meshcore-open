@@ -19,7 +19,7 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 - **Title**: Contact name
 - **Subtitle**: Current routing path label (e.g., "2 hops", "flood (auto)", "direct (forced)") and unread count. Tapping the subtitle shows the full path details.
 - **Action button**:
-  - **Overflow menu** (⋮ icon): Contains Routing, Info, Telemetry, Settings, and Clear Chat. Routing opens the routing sheet where you can switch between Auto, Direct, and Flood routing and manage recent paths (hop count, round-trip time, age, success count, color-coded by repeater). Info shows a dialog with contact type, path, GPS coordinates, and public key.
+  - **Overflow menu** (⋮ icon): Contains Search Messages, Routing, Info, Telemetry, Settings, and Clear Chat. Routing opens the routing sheet where you can switch between Auto, Direct, and Flood routing and manage recent paths (hop count, round-trip time, age, success count, color-coded by repeater). Info shows a dialog with contact type, path, GPS coordinates, and public key.
 
 ### Message List
 
@@ -31,6 +31,20 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 - **Pinch-to-zoom**: Two-finger zoom (0.8x–1.8x) and double-tap to reset
 - **Jump to bottom**: Floating button appears when scrolled away from the bottom
 - **Lazy loading**: Scrolling to top loads older messages from storage
+
+### Message Search
+
+Search Messages is available from the Contacts and Channels list menus and from each contact, room-server, or channel chat. On Windows and Linux, Ctrl+F opens the same sheet.
+
+- Input is case-insensitive and debounced for 1500 ms.
+- Stored compressed text is decoded before matching; binary image payloads are not presented as searchable text.
+- Results appear in bounded batches without blocking the UI and are sorted newest first.
+- Channel searches deduplicate the same message saved under multiple node scopes and prefer a copy that can be materialized in the open chat.
+- Tapping a result opens its conversation, loads enough history to find the target, scrolls to it and briefly highlights it. Search state/results remain available when returning from the chat.
+- The Contacts entry searches contacts and room servers. The Channels entry searches channels and also the contact/room categories enabled for the Channels screen. Per-chat search limits the same engine to that one conversation.
+- With shared history enabled, configured secondary node scopes are included. Offline shared mode searches its already merged cross-node view; single-node offline mode remains limited to the selected node.
+
+The in-memory conversation window contains up to 500 messages. Older stored messages remain available through lazy loading and search.
 
 ### Input Bar
 

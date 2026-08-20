@@ -133,12 +133,15 @@ All screens are fully implemented (no remaining placeholders).
 | `ChatTextScaleService` | Pinch-to-zoom text scale for chat screens |
 | `TranslationService` | On-device LLM translation — **disabled stub** in this build (see intro) |
 | `UiViewStateService` | Contacts/channels sort/filter/search state |
+| `SettingsSectionsService` | Public stub/private-module bridge for optional settings sections and device capabilities |
 | `TimeoutPredictionService` | ML linear regression for ACK timeout prediction |
 | `StorageService` | Path history + delivery observation persistence (`Provider`, not `ChangeNotifier`) |
-| `MapTileCacheService` | OSM tile pre-cache |
+| `MapTileCacheService` | Raster map tile cache and offline-region downloads |
 | `WardriveService` | Coverage-mapping scanner: GPS-tagged SNR/RSSI samples + cloud upload (Advanced mod) |
+| `ImageCodecService` | Optional AEIC encoder/decoder backend and model lifecycle |
+| `ReceivedImageStore` | Persistent AEIC receive/send state, lazy image bytes and decode queue |
 
-Non-provider singletons wired in `main()`: `NotificationService`, `BackgroundService` (background BLE/USB keep-alive + TCP sync), `MeshCompressor` (MCMP model init), `MCOImageGalleryStore` (installs bundled image packs).
+Non-provider singletons wired in `main()`: `NotificationService`, `BackgroundService` (Android foreground-process/Flutter-engine retention for BLE, optional TCP and wardrive keep-alive reasons), `MeshCompressor` (MCMP model init), `MCOImageGalleryStore` (installs bundled image packs). `BackgroundService` does not own BLE or parse frames: the retained engine keeps the existing `MeshCoreConnector` alive.
 
 Screens consume these via `Consumer<T>` (or `context.watch<T>()` / `context.read<T>()`) for reactive UI.
 
@@ -160,6 +163,16 @@ All stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton
 | `unread_store` | Per-contact unread counts (debounced writes) |
 
 Wardrive data (samples, sessions, per-endpoint uploaded IDs, ignore list) is persisted in SharedPreferences via `wardrive_sample_store` / `wardrive_ignore_store`. The disabled translation subsystem still exposes a `translation_file_store` file path for model removal only.
+
+### Offline history mode
+
+The BLE, USB and TCP connection screens expose the same `OfflineHistoryButton`. A user can open one saved node scope or choose the shared mode, which merges every known node scope without connecting to a radio. `MeshCoreConnector.enterOfflineHistory()` binds stores to the selected synthetic scope and uses read-only loading paths with legacy migration disabled; `exitOfflineHistory()` clears the offline state before a real connection begins. Shared offline mode builds a merged contact/channel/message view up front, while single-node mode keeps that node's settings, order and unread data.
+
+Offline mode is deliberately read-only for radio/device state: chat composers and send buttons are disabled, contact/channel management, repeater/room login, wardrive, discovery, tracing and device/app-setting routes that require a live session are blocked. Local-only viewing tools remain available, including the map, message search, MCOimg gallery and canvas. `connect`, `connectUsb` and `connectTcp` reject calls while the offline session is active so incoming frames can never be written under the synthetic scope.
+
+### Stored-message search
+
+`widgets/message_search_sheet.dart` is shared by contacts, channels and individual chat screens. It searches decoded human-readable text across the requested channel/contact/room scope, includes the configured shared-history scopes, debounces input for 1500 ms and processes bounded batches through `helpers/message_search_worker.dart` so parsing does not block the UI isolate. Results are ordered newest first, deduplicated across node scopes using the same content identity used by shared channel history, and retain enough source/message identity to open the conversation and materialize/scroll to the stored message. Desktop chat/list screens expose the same action through Ctrl+F.
 
 ### Deleting a shared-history message
 
@@ -658,7 +671,7 @@ The pattern is deliberately stricter than the whole-message one: both halves mus
 Anything in a chat composer that reacts to the text controller must go through `widgets/composer_text_builder.dart`, never a bare `ValueListenableBuilder`. A `TextEditingController` notifies on every value change, **selection included**, and dragging an Android selection handle changes the selection continuously — rebuilding the text field underneath the gesture makes the handle stutter badly enough to be unusable. `ComposerTextBuilder` rebuilds only when the text actually changes; `ByteCountedTextField` keeps its own listener with the same guard, plus a byte-count cache, because its encoder runs full MCMP compression over the message and that is far too expensive to repeat per pointer move. `MarkupTextEditingController` caches its span tree for the same reason — `buildTextSpan` fires on every repaint, not just on rebuilds.
 
 ### MCO image codec (image/GIF over LoRa)
-Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→file index of installed `.mcoimg.pack` sets and renders the **original PNG/JPG/animated GIF** when a received image's identity hash matches (`widgets/gif_message.dart`, `widgets/mco_image_message.dart`). Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
+Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→ordered-candidate index of installed `.mcoimg.pack` sets and renders a matching high-quality original in priority order: `.lottie.json`, `.lottie`, `.webp`, `.png`, `.gif`, `.jpg`, `.jpeg`. Invalid candidates fall through to the next format and finally to decoded MCOimg. Lottie and animated raster originals pause outside the viewport. Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
 
 ### AEIC image store: pictures are paged in lazily
 
@@ -723,6 +736,8 @@ enum MeshCoreConnectionState {
 }
 ```
 
+Recoverable BLE loss does not navigate away from the current chat/canvas. The connector shows the reconnecting state, queues pending sends and retries indefinitely with capped exponential delay; successful `SELF_INFO` restores the ready session. Manual disconnects and non-recoverable USB/TCP loss return to their connection flow.
+
 ### Frame I/O (all transports)
 - **Send**: `MeshCoreConnector.sendFrame(Uint8List data, {String? channelSendQueueId, bool expectsGenericAck})`
 - **Receive**: `Stream<Uint8List> get receivedFrames`
@@ -750,7 +765,7 @@ enum MeshCoreConnectionState {
 
 ## Dependencies
 
-App version: `9.5.0-mcoa.1.8.2+39` — Dart SDK constraint: `^3.9.2`
+App version: `9.5.1-mcoa.1.8.6+43` — Dart SDK constraint: `^3.9.2`
 
 **Connectivity**
 
@@ -842,14 +857,14 @@ App version: `9.5.0-mcoa.1.8.2+39` — Dart SDK constraint: `^3.9.2`
 - `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` (BLE scanning on API ≤ 30)
 - `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` (optional wardrive background sampling — gated in Dart so ordinary BLE users don't inherit them)
 - `POST_NOTIFICATIONS` (API 33+)
-- `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE` (background BLE/USB connection)
+- `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE` (foreground process/engine retention for BLE and optional background TCP)
 - `WAKE_LOCK`
 - `CAMERA` (QR scanning, declared as optional feature)
 - USB host hardware feature (optional)
 
-`flutter_foreground_task` registers a connected-device `ForegroundService` (`foregroundServiceType="connectedDevice"`, `stopWithTask="false"`); a separate wardrive `location` foreground service is declared and enabled only via the Android-only wardrive path.
+`flutter_foreground_task` registers a connected-device `ForegroundService` (`foregroundServiceType="connectedDevice"`, `stopWithTask="false"`); a separate wardrive `location` foreground service is declared and enabled only via the Android-only wardrive path. `MainActivity` caches the main Flutter engine while the service has an active keep-alive reason. The engine sends an in-process heartbeat every 5 seconds; after 20 seconds without one, a surviving/restarted foreground task changes its notification to `app_connectionLostBreaked`. This heartbeat is not a BLE or LoRa packet. If Android kills the whole process, the service cannot reconstruct BLE because it has no connector of its own.
 
-**Build config (`android/app/build.gradle.kts`)**: `applicationId = com.meshcore.meshcore_open`, NDK `29.0.14206865`, Java 8 core-library desugaring (`desugar_jdk_libs:2.1.4`), release signing via `key.properties` (debug fallback).
+**Build config (`android/app/build.gradle.kts`)**: `applicationId = com.meshcore.mcoadvanced`, NDK `29.0.14206865`, Java/Kotlin 17 with core-library desugaring (`desugar_jdk_libs:2.1.4`), release signing via `key.properties` (debug fallback).
 
 ### iOS (`ios/Runner/Info.plist`)
 Deployment target is owned by the build profile, not edited by hand: `tool/use_translation_profile.dart` writes it into `ios/Podfile` and all three `IPHONEOS_DEPLOYMENT_TARGET` entries in `project.pbxproj` — 13.0 for **lite**, 16.0 for **lite-aeic** and **full**, where `flutter_onnxruntime` forces it. The two files must agree: CocoaPods fails the build outright when the Podfile platform is lower than a plugin needs. Switching a profile requires dropping `ios/Pods` and `ios/Podfile.lock` before `pod install`. The Podfile also declares `onnxruntime-objc` with `:modular_headers => true`, guarded by a check for `flutter_onnxruntime` in `.flutter-plugins-dependencies`: that pod ships no module map, so CocoaPods refuses to link the Swift plugin statically without one, and the guard keeps the lite profile from pulling a runtime it does not use.

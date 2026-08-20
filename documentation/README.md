@@ -28,4 +28,6 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 - **Share contacts** via `meshcore://` URIs and QR codes
 - **Configure radio settings** including frequency, power, bandwidth, and spreading factor
 - **Cache offline maps** for use without internet connectivity
+- **Read saved chat history offline**, either for one previously connected node or as a shared cross-node view
+- **Search decoded message text** across channels, contacts, and room servers
 - **Analyze line-of-sight** between nodes with terrain elevation profiles

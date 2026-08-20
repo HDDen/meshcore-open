@@ -31,7 +31,7 @@ RX (device → host):  [0x3E][len_lo][len_hi][payload...]
 
 - Frame start: `0x3C` (`<`) for outgoing, `0x3E` (`>`) for incoming
 - Length: 2-byte little-endian, payload only
-- Max payload: 172 bytes
+- Max payload: 176 bytes
 - TCP: `tcpNoDelay: true` (Nagle disabled), writes serialized to prevent interleaving
 
 ## Connection State Machine
@@ -76,7 +76,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 
 | Constant | Value | Description |
 |---|---|---|
-| Max frame size | 172 bytes | BLE/USB/TCP payload limit |
+| Max frame size | 176 bytes | App command/response frame limit |
 | Public key size | 32 bytes | Ed25519 public key |
 | Max path size | 64 bytes | Maximum path data |
 | Max name size | 32 bytes | Maximum node name |
@@ -127,6 +127,9 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 58 | CMD_SET_AUTO_ADD_CONFIG | Set auto-add configuration |
 | 59 | CMD_GET_AUTO_ADD_CONFIG | Get auto-add configuration |
 | 61 | CMD_SET_PATH_HASH_MODE | Set path hash width (bytes per hop) |
+| 62 | CMD_SEND_CHANNEL_DATA | Send a typed channel `GROUP_DATA` payload |
+| 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope |
+| 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
 
 ## Response / Push Codes (Device → App)
 
@@ -152,6 +155,8 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 21 | RESP_CODE_CUSTOM_VARS | Custom variables |
 | 24 | RESP_CODE_STATS | Companion radio stats |
 | 25 | RESP_CODE_AUTO_ADD_CONFIG | Auto-add flags |
+| 27 | RESP_CODE_CHANNEL_DATA_RECV | Incoming typed channel data |
+| 28 | RESP_CODE_DEFAULT_FLOOD_SCOPE | Current default flood scope |
 | 0x80 | PUSH_CODE_ADVERT | Known contact re-seen |
 | 0x81 | PUSH_CODE_PATH_UPDATED | Better path found; carries the 32-byte public key of the updated contact |
 | 0x82 | PUSH_CODE_SEND_CONFIRMED | Delivery ACK from remote; carries ACK hash (4 bytes) + trip time (4 bytes) |

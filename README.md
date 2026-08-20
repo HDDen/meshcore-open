@@ -27,6 +27,10 @@ about bringing useful functionality together in one app:
    MeshCore Open as well.
 7. **Windows/iOS builds** — ready-to-install packages are available not only for Android and Linux, 
 but also for Windows and iOS (as .ipa files)
+8. **Offline history** — read one node's saved conversations or a combined shared-history view
+   without connecting to a radio.
+9. **Message search** — search decoded text across channels, contacts and room servers, including
+   configured shared-history scopes.
 
 - **Repository:** <https://github.com/HDDen/meshcore-open>
 - **Telegram group:** <https://t.me/mcoadvanced>
@@ -302,6 +306,20 @@ own radio measured for the node you actually heard — the last repeater on the 
 sender themselves when nobody relayed the message. Both are coloured by quality on the same
 scale as the signal indicator in the title bar. Only one of the frames a message can arrive in
 reports RSSI, so some messages show SNR alone. Switch the whole thing off in mod settings.
+
+### Offline history and message search
+
+The BLE, USB and TCP connection screens can open saved history without connecting to a node.
+Choose one previously connected node to preserve its own contacts, channel order and messages,
+or choose the shared mode to combine every known node scope. Offline mode is intentionally
+read-only for mesh operations: chats and the map can be viewed and searched, while sending,
+device settings, contact/channel changes, wardrive, discovery and repeater/room login stay
+disabled.
+
+Search is available from the Contacts and Channels lists and inside individual chats. It matches
+decoded human-readable text case-insensitively, includes shared history according to its current
+settings, streams newest-first results in bounded batches, and opens the conversation scrolled
+to the selected message. Windows and Linux users can open it with `Ctrl+F`.
 
 ### Smaller additions
 
