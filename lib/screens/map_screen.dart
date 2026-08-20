@@ -66,6 +66,11 @@ class MapScreen extends StatefulWidget {
   final String? highlightLabel;
   final String? highlightMarkerKey;
   final double highlightZoom;
+
+  /// Draws the red pin at [highlightPosition]. Turned off when the position is
+  /// only there to centre the map on something the map already draws itself —
+  /// a node of its own — where a second pin underneath says nothing.
+  final bool showHighlightPin;
   final bool hideBackButton;
   final bool locationPickerMode;
 
@@ -75,6 +80,7 @@ class MapScreen extends StatefulWidget {
     this.highlightLabel,
     this.highlightMarkerKey,
     this.highlightZoom = 15.0,
+    this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
   });
@@ -1095,7 +1101,8 @@ class _MapScreenState extends State<MapScreen>
                       PolylineLayer(polylines: repeaterCoveragePolylines),
                     MarkerLayer(
                       markers: [
-                        if (highlightPosition != null)
+                        if (highlightPosition != null &&
+                            widget.showHighlightPin)
                           Marker(
                             point: highlightPosition,
                             width: 44,

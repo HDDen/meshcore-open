@@ -10,6 +10,7 @@ import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/contact_map_button.dart';
 import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import 'routing_sheet.dart';
@@ -309,6 +310,9 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
               ],
             ),
           ),
+          // Sits after the Expanded, so it hugs the right edge; it collapses
+          // to nothing when the repeater has never reported a position.
+          ContactMapButton(contact: repeater),
         ],
       ),
       content: _isLoading
