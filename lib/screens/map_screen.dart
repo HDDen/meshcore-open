@@ -36,6 +36,7 @@ import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/wardrive_coverage_helper.dart';
@@ -4549,9 +4550,16 @@ class _MapScreenState extends State<MapScreen>
       final deletions = deletionsByChannel[channel.index] =
           SharedMarkerDeletions();
       for (final message in messages) {
-        // Arrived while its sender was blocked: no pin, and its `del:`
-        // command hides nobody else's.
-        if (message.wasBlocked) continue;
+        // Blocked: no pin, and its `del:` command hides nobody else's. Both
+        // halves of the answer are asked here rather than on the finished pin
+        // list, because by then `absorb` has already recorded the command.
+        if (message.wasBlocked ||
+            BlockedSenders.instance.hidesStoredMessage(
+              message,
+              connector.channelDisplayName(channel.index),
+            )) {
+          continue;
+        }
         if (deletions.absorb(
           message.text,
           message.timestamp,
@@ -6322,11 +6330,20 @@ class _MapConnectorSnapshot {
           ),
     );
 
-    final markerParts = <Object?>[connector.selfName];
+    // The pin list is cached against this signature, so a rule added or
+    // lifted has to be visible to it: a redraw alone would serve the cache.
+    final markerParts = <Object?>[
+      connector.selfName,
+      BlockedSenders.instance.revision,
+    ];
     for (final contact in connector.contacts) {
       markerParts.add(contact.publicKeyHex);
       markerParts.add(contact.name);
       for (final message in connector.getLoadedMessagesWithShared(contact)) {
+        // Arrived while its room author was muted: no pin, and its `del:`
+        // erases nobody else's. Ahead of `absorb` for the same reason the
+        // channel loop is.
+        if (message.wasBlocked) continue;
         final text = message.text.trimLeft();
         if (!text.startsWith('m:') &&
             !text.startsWith(SharedMarkerDeletion.prefix)) {

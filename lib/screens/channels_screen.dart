@@ -28,6 +28,7 @@ import '../theme/mesh_theme.dart';
 import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
+import '../helpers/blocked_senders.dart';
 import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mco_image_message.dart';
@@ -645,7 +646,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final lastMessage = messages.isNotEmpty ? messages.last : null;
     // A hidden body stays hidden in this list too, or the preview puts back
     // exactly what the chat took away.
-    final lastBlocked = lastMessage != null && lastMessage.wasBlocked;
+    final lastBlocked =
+        lastMessage != null &&
+        (lastMessage.wasBlocked ||
+            BlockedSenders.instance.hidesStoredMessage(
+              lastMessage,
+              connector.channelDisplayName(channel.index),
+            ));
     final lastMessageText = lastBlocked ? '' : (lastMessage?.text ?? '');
     final String lastPreview;
     if (lastBlocked) {

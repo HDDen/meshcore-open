@@ -242,6 +242,7 @@ class MessageStore {
         (key, value) => MapEntry(key, value.index),
       ),
       'fourByteRoomContactKey': base64Encode(msg.fourByteRoomContactKey),
+      'wasBlocked': msg.wasBlocked,
     };
   }
 
@@ -365,6 +366,7 @@ class MessageStore {
             (key, value) => MapEntry(key, MessageStatus.values[value as int]),
           ) ??
           {},
+      wasBlocked: json['wasBlocked'] as bool? ?? false,
       fourByteRoomContactKey: json['fourByteRoomContactKey'] != null
           ? Uint8List.fromList(
               base64Decode(json['fourByteRoomContactKey'] as String),

@@ -13,11 +13,22 @@ class BlockedSenderRule {
   static const String everyChannel = '*';
 
   const BlockedSenderRule({
+    required this.blockedAt,
     this.keyHex = '',
     this.channels = const [everyChannel],
   });
 
   final String keyHex;
+
+  /// When the block was created. A stored message counts as muted when either
+  /// of its two dates is at or after this moment — see
+  /// `BlockedSenders.hidesStoredMessage`.
+  ///
+  /// Widening an existing rule keeps the original moment: re-blocking a name
+  /// to drop its key must not move the boundary forward, or everything hidden
+  /// under the keyed rule would surface again. Only a rule that did not exist
+  /// before gets the current time.
+  final DateTime blockedAt;
 
   /// Channel names this rule covers, or a single [everyChannel]. Blocking
   /// always writes the wildcard today; the list exists so a per-channel block
@@ -34,7 +45,27 @@ class BlockedSenderRule {
 
   static String normalizeChannel(String name) => name.trim().toLowerCase();
 
-  factory BlockedSenderRule.fromJson(Map<String, dynamic> json) {
+  BlockedSenderRule copyWith({
+    String? keyHex,
+    List<String>? channels,
+    DateTime? blockedAt,
+  }) => BlockedSenderRule(
+    keyHex: keyHex ?? this.keyHex,
+    channels: channels ?? this.channels,
+    blockedAt: blockedAt ?? this.blockedAt,
+  );
+
+  /// Null for a rule written before blocks carried a moment — the caller
+  /// stamps those once, rather than guessing a date here.
+  static DateTime? blockedAtOf(Map<String, dynamic> json) {
+    final millis = json['blockedAtMs'];
+    return millis is int ? DateTime.fromMillisecondsSinceEpoch(millis) : null;
+  }
+
+  factory BlockedSenderRule.fromJson(
+    Map<String, dynamic> json, {
+    required DateTime blockedAt,
+  }) {
     final channels = (json['channels'] as List?)
         ?.map((c) => c.toString())
         .where((c) => c.isNotEmpty)
@@ -44,10 +75,15 @@ class BlockedSenderRule {
       channels: (channels == null || channels.isEmpty)
           ? const [everyChannel]
           : List.unmodifiable(channels),
+      blockedAt: blockedAt,
     );
   }
 
-  Map<String, dynamic> toJson() => {'key': keyHex, 'channels': channels};
+  Map<String, dynamic> toJson() => {
+    'key': keyHex,
+    'channels': channels,
+    'blockedAtMs': blockedAt.millisecondsSinceEpoch,
+  };
 }
 
 /// Muted channel senders, kept as one JSON blob for the whole app.
@@ -58,20 +94,39 @@ class BlockedSenderRule {
 class BlockedSenderStore {
   static const String _key = 'blocked_channel_senders';
 
-  Map<String, BlockedSenderRule> load() {
+  /// Reads the table, stamping any rule written before blocks carried a
+  /// moment with [migratedAt].
+  ///
+  /// That is the load time rather than the epoch on purpose: an epoch would
+  /// make the date half of the check reach back over the whole conversation
+  /// and hide everything that sender ever wrote, which is exactly the
+  /// behaviour blocking was built not to have. Stamping "now" leaves those
+  /// rules acting as they always did — through the `wasBlocked` flag alone —
+  /// while everything from here on gets the boundary too. [migrated] reports
+  /// whether anything was stamped, so the caller can write the table back once
+  /// and stop re-stamping on every launch.
+  ({Map<String, BlockedSenderRule> rules, bool migrated}) load({
+    required DateTime migratedAt,
+  }) {
     final raw = PrefsManager.instance.getString(_key);
-    if (raw == null || raw.isEmpty) return const {};
+    if (raw == null || raw.isEmpty) return (rules: const {}, migrated: false);
     try {
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      return {
-        for (final entry in decoded.entries)
-          entry.key: BlockedSenderRule.fromJson(
-            entry.value as Map<String, dynamic>,
-          ),
-      };
+      var migrated = false;
+      final rules = <String, BlockedSenderRule>{};
+      for (final entry in decoded.entries) {
+        final json = entry.value as Map<String, dynamic>;
+        final stored = BlockedSenderRule.blockedAtOf(json);
+        if (stored == null) migrated = true;
+        rules[entry.key] = BlockedSenderRule.fromJson(
+          json,
+          blockedAt: stored ?? migratedAt,
+        );
+      }
+      return (rules: rules, migrated: migrated);
     } catch (e) {
       appLogger.warn('Failed to read blocked senders: $e');
-      return const {};
+      return (rules: const {}, migrated: false);
     }
   }
 

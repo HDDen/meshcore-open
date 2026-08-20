@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
 import '../models/channel_message.dart';
+import '../models/message.dart';
 import '../storage/blocked_sender_store.dart';
 import 'mcmp_app_codec.dart';
 
@@ -8,23 +13,134 @@ import 'mcmp_app_codec.dart';
 /// main caller is the connector, which consults it while parsing a frame, far
 /// from any `BuildContext`.
 ///
-/// A rule is asked exactly one question, and only on the receive path: is this
-/// sender muted right now? The answer is stamped onto the message as
-/// [ChannelMessage.wasBlocked] and that flag alone decides what is shown and
-/// acted on afterwards. So a block reaches forward only — what already sits in
-/// history is left alone, and what arrived during a block stays hidden after
-/// it is lifted. Nothing is ever dropped on receipt or removed from history.
-class BlockedSenders {
+/// A rule is asked two questions, and the difference between them is only
+/// which clock the moment of blocking is compared against.
+///
+/// [isSenderBlocked] — "is this sender muted right now?" — is the receive-time
+/// question. A rule that exists was created in the past, so a message arriving
+/// now is always after it; comparing our own clock with our own clock would
+/// add nothing and would misfire if the device clock stepped backwards. The
+/// answer is stamped onto the message as [ChannelMessage.wasBlocked].
+///
+/// [hidesStoredMessage] — "should this stored message be hidden?" — is the
+/// display-time question, and that one does compare dates, because it is asked
+/// about messages the receive path never stamped: merged in from another
+/// node's shared history, or stored by a path that did not consult this table.
+/// A message counts as muted when EITHER of its dates is at or after the
+/// moment of blocking. Only the packet timestamp can be forged, and both
+/// directions of forgery are harmless: an old date still loses to a real
+/// [ChannelMessage.receivedAt], and a future one can only hide the forger's
+/// own messages.
+///
+/// Neither question ever drops a message on receipt or removes one from
+/// history, and neither reaches messages that predate the block.
+class BlockedSenders extends ChangeNotifier {
   BlockedSenders._();
 
   static final BlockedSenders instance = BlockedSenders._();
+
+  /// Bumped on every change to the table.
+  ///
+  /// A listener is enough to trigger a rebuild, but not to invalidate a cache
+  /// keyed on a value — the map holds its pins against a signature and would
+  /// serve stale ones through a redraw. This is that value.
+  int get revision => _revision;
+  int _revision = 0;
 
   final BlockedSenderStore _store = BlockedSenderStore();
   Map<String, BlockedSenderRule>? _rules;
 
   /// Loaded lazily and kept in memory: the receive path asks for it once per
   /// incoming channel message.
-  Map<String, BlockedSenderRule> get rules => _rules ??= _store.load();
+  ///
+  /// Rules written before blocks carried a moment are stamped with the load
+  /// time and written straight back, so the stamp is decided once rather than
+  /// drifting with every launch. That write is the one side effect this getter
+  /// has, and it happens at most once in the table's life.
+  Map<String, BlockedSenderRule> get rules {
+    final cached = _rules;
+    if (cached != null) return cached;
+    final loaded = _store.load(migratedAt: DateTime.now());
+    _rules = Map.unmodifiable(loaded.rules);
+    if (loaded.migrated) unawaited(_store.save(loaded.rules));
+    return _rules!;
+  }
+
+  /// The author of a room post, as the table keys them: uppercase hex of the
+  /// 4-byte prefix. Null for anything that carries none, which is every
+  /// one-to-one message.
+  ///
+  /// Room authors share the one table with channel senders, keyed by this
+  /// prefix where a channel sender is keyed by its name. The two key spaces
+  /// could in principle collide — a channel sender literally named `AB12CD34`
+  /// — and if they ever did, blocking one would block the other. That is the
+  /// whole cost of not having a second table, and it is worth paying.
+  static String? roomAuthorIdOf(Message message) {
+    final prefix = message.fourByteRoomContactKey;
+    if (prefix.isEmpty) return null;
+    return prefix
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase();
+  }
+
+  /// [verifiedKeyOf] for a room post.
+  static String? verifiedRoomKeyOf(Message message) =>
+      message.mcmpSignatureStatus == McmpSignatureStatus.valid
+      ? message.verifiedSenderKeyHex?.trim().toLowerCase()
+      : null;
+
+  /// The rule muting the author of [message], or null.
+  ///
+  /// Rooms are identified by the prefix rather than by a name, so there is no
+  /// name to squat: the room server writes it, and a participant cannot choose
+  /// somebody else's. A key on the rule works as it does for channels — an
+  /// exemption, letting through only a post that provably verified to a
+  /// different key.
+  BlockedSenderRule? roomRuleFor(Message message) {
+    if (message.isOutgoing || message.isCli) return null;
+    final rules = this.rules;
+    if (rules.isEmpty) return null;
+    final id = roomAuthorIdOf(message);
+    if (id == null) return null;
+    final rule = rules[id];
+    if (rule == null || rule.keyHex.isEmpty) return rule;
+    final key = verifiedRoomKeyOf(message);
+    if (key == null) return rule;
+    return key == rule.keyHex ? rule : null;
+  }
+
+  /// True when a rule mutes this room author right now.
+  ///
+  /// The receive-time question, and the only one rooms have: a room post keeps
+  /// `receivedAt` null on purpose (the chat shows "—" for it), so there is no
+  /// arrival clock for a date boundary to compare against. The answer is
+  /// stamped onto the message as [Message.wasBlocked], and that flag is what
+  /// every display site reads.
+  bool isRoomAuthorBlocked(Message message) => roomRuleFor(message) != null;
+
+  /// Mutes the author of [message] across every room.
+  Future<void> blockRoomAuthor(Message message) async {
+    final id = roomAuthorIdOf(message);
+    if (id == null) return;
+    final existing = rules[id];
+    if (existing != null && existing.keyHex.isEmpty) return;
+    final key = verifiedRoomKeyOf(message) ?? '';
+    if (existing != null && existing.keyHex == key) return;
+    await _write({
+      ...rules,
+      id: BlockedSenderRule(
+        keyHex: existing == null ? key : '',
+        channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
+        blockedAt: existing?.blockedAt ?? DateTime.now(),
+      ),
+    });
+  }
+
+  Future<void> unblockRoomAuthor(String authorId) async {
+    if (!rules.containsKey(authorId)) return;
+    await _write({...rules}..remove(authorId));
+  }
 
   /// The key that actually authenticated [message], or null.
   ///
@@ -38,8 +154,16 @@ class BlockedSenders {
 
   /// The rule muting [message] in the channel named [channelName], or null.
   ///
-  /// A rule carrying a key matches only messages that verified against it, so
-  /// blocking a signed sender leaves anyone else using that name visible.
+  /// The key on a rule is an **exemption, not a requirement**: the rule mutes
+  /// the name, and the only message it lets through is one that provably
+  /// verified to a *different* key. That is the same reasoning blocking itself
+  /// follows — an unsigned message proves nothing about who sent it — applied
+  /// to the arriving side. Requiring the key instead meant the muted sender
+  /// walked straight out of the rule by not signing, and, worse, by being
+  /// deleted from contacts: with nobody left bearing that name a signature
+  /// verifies to `unverifiable`, which reports no key at all. Muting somebody
+  /// and then removing them from contacts is the natural pair of actions, and
+  /// it used to switch the block off.
   BlockedSenderRule? ruleFor(ChannelMessage message, String channelName) {
     if (message.isOutgoing) return null;
     final rules = this.rules;
@@ -47,17 +171,41 @@ class BlockedSenders {
     final rule = rules[message.senderName.trim()];
     if (rule == null || !rule.coversChannel(channelName)) return null;
     if (rule.keyHex.isEmpty) return rule;
-    return rule.keyHex == verifiedKeyOf(message) ? rule : null;
+    final key = verifiedKeyOf(message);
+    // No proven identity: the name is all anyone has, and the name is muted.
+    if (key == null) return rule;
+    return key == rule.keyHex ? rule : null;
   }
 
   /// True when a rule mutes this sender right now.
   ///
   /// Asked by the receive path, which stamps the answer onto the message, and
   /// by the block/unblock menu entry, which needs to know which half it is
-  /// offering. Nothing that draws a message asks it — that reads
-  /// [ChannelMessage.wasBlocked].
+  /// offering. What draws a message asks [hidesStoredMessage] instead, which
+  /// adds the date boundary this question deliberately has no use for.
   bool isSenderBlocked(ChannelMessage message, String channelName) =>
       ruleFor(message, channelName) != null;
+
+  /// True when a stored message falls inside its sender's block.
+  ///
+  /// The identity half is [ruleFor]; on top of it, the message must have
+  /// reached us at or after [BlockedSenderRule.blockedAt].
+  ///
+  /// [ChannelMessage.receivedAt] and nothing else: the moment of blocking is
+  /// known only to us, while the packet's own timestamp is chosen by the
+  /// sender, so comparing the two would measure the wrong thing even before
+  /// anyone forged anything. The one case where `receivedAt` is not our clock
+  /// — the post-connect backlog drain writes the sender's send time into it —
+  /// needs no date at all: those messages still pass through the receive path,
+  /// which stamps [ChannelMessage.wasBlocked] without consulting any clock.
+  ///
+  /// Outgoing messages never match — [ruleFor] refuses them — so adopting our
+  /// own name and getting us to block it cannot hide anything we wrote.
+  bool hidesStoredMessage(ChannelMessage message, String channelName) {
+    final rule = ruleFor(message, channelName);
+    if (rule == null) return false;
+    return !message.receivedAt.isBefore(rule.blockedAt);
+  }
 
   /// Mutes the sender of [message] in every channel.
   ///
@@ -79,10 +227,13 @@ class BlockedSenders {
     await _write({
       ...rules,
       // A second, different key under one name is more than a single-key rule
-      // can tell apart, so the block widens to the bare name.
+      // can tell apart, so the block widens to the bare name. Widening keeps
+      // the original moment: moving it forward would surface everything the
+      // keyed rule had already hidden.
       name: BlockedSenderRule(
         keyHex: existing == null ? key : '',
         channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
+        blockedAt: existing?.blockedAt ?? DateTime.now(),
       ),
     });
   }
@@ -100,7 +251,12 @@ class BlockedSenders {
         existing.channels.contains(BlockedSenderRule.everyChannel)) {
       return;
     }
-    await _write({...rules, name: const BlockedSenderRule()});
+    // Same rule as widening from the menu: an existing block keeps the moment
+    // it was created, and only a name that was not blocked before starts now.
+    await _write({
+      ...rules,
+      name: BlockedSenderRule(blockedAt: existing?.blockedAt ?? DateTime.now()),
+    });
   }
 
   Future<void> unblock(String senderName) async {
@@ -111,6 +267,10 @@ class BlockedSenders {
 
   Future<void> _write(Map<String, BlockedSenderRule> updated) async {
     _rules = Map.unmodifiable(updated);
+    _revision++;
+    // Before the await: what draws a message now asks this table directly, so
+    // the redraw must not wait on a preferences write.
+    notifyListeners();
     await _store.save(updated);
   }
 }

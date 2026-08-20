@@ -73,6 +73,14 @@ class Message {
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
 
+  /// True when this message arrived while its author was blocked.
+  ///
+  /// Room-server posts only: a one-to-one conversation is the contact itself,
+  /// which is deleted rather than muted. Stored with the message and never
+  /// cleared, exactly like `ChannelMessage.wasBlocked` — lifting a block must
+  /// not resurrect a marker or a `del:` command from the muted period.
+  final bool wasBlocked;
+
   Message({
     required this.senderKey,
     required this.text,
@@ -116,6 +124,7 @@ class Message {
     this.pathLength,
     Uint8List? pathBytes,
     Uint8List? fourByteRoomContactKey,
+    this.wasBlocked = false,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
   }) : messageId =
@@ -169,6 +178,7 @@ class Message {
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
+    bool? wasBlocked,
   }) {
     return Message(
       senderKey: senderKey,
@@ -255,6 +265,7 @@ class Message {
       reactionStatuses: reactionStatuses ?? this.reactionStatuses,
       fourByteRoomContactKey:
           fourByteRoomContactKey ?? this.fourByteRoomContactKey,
+      wasBlocked: wasBlocked ?? this.wasBlocked,
     );
   }
 

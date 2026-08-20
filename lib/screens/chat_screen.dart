@@ -24,6 +24,8 @@ import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_suggestions_panel.dart';
+import '../helpers/blocked_senders.dart';
+import '../widgets/blocked_message_body.dart';
 import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
@@ -122,6 +124,11 @@ class _ChatScreenState extends State<ChatScreen> {
   /// otherwise "show received LoRa version").
   final Set<String> _mcoVariantOverridden = {};
 
+  /// Blocked bodies the user tapped to read. Display only — a revealed body is
+  /// still never parsed — and forgotten whenever the block table changes, so a
+  /// re-blocked author starts hidden again.
+  final Set<String> _revealedBlockedMessages = {};
+
   /// Effective "render the received LoRa version" flag for a message,
   /// combining the mod setting default with the per-message override.
   bool _mcoForceLora(String messageId, bool showReplacements) {
@@ -137,6 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.addListener(_updateMentionSuggestions);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
     _textFieldFocusNode.addListener(_updateMentionSuggestions);
+    BlockedSenders.instance.addListener(_handleBlockedSendersChanged);
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
     }
@@ -552,6 +560,7 @@ class _ChatScreenState extends State<ChatScreen> {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
+    BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _textController.removeListener(_onTextFieldTextChange);
     _textController.removeListener(_updateMentionSuggestions);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
@@ -928,6 +937,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       mcoVariantOverridden: _mcoVariantOverridden.contains(
                         message.messageId,
                       ),
+                      blockedRevealed: _revealedBlockedMessages.contains(
+                        message.messageId,
+                      ),
+                      onToggleBlocked: () => setState(() {
+                        if (!_revealedBlockedMessages.remove(
+                          message.messageId,
+                        )) {
+                          _revealedBlockedMessages.add(message.messageId);
+                        }
+                      }),
                       textScale: textScale,
                       onTap: () => _openMessagePath(message, contact),
                       onLongPress: () =>
@@ -1974,6 +1993,36 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Mutes or unmutes the author of a room post.
+  ///
+  /// The message the block was ordered from is flagged too, so it disappears
+  /// behind the placeholder along with any command it carried — the same
+  /// exception a channel block makes. Unblocking clears no flags.
+  /// A body revealed by hand is forgotten whenever the table changes, so a
+  /// re-blocked author starts hidden again. The redraw itself comes from the
+  /// connector, which re-emits the same signal.
+  void _handleBlockedSendersChanged() {
+    if (!mounted || _revealedBlockedMessages.isEmpty) return;
+    setState(_revealedBlockedMessages.clear);
+  }
+
+  void _toggleRoomAuthorBlock(Message message) {
+    final blocked = BlockedSenders.instance;
+    final authorId = BlockedSenders.roomAuthorIdOf(message);
+    if (authorId == null) return;
+    if (blocked.isRoomAuthorBlocked(message)) {
+      unawaited(blocked.unblockRoomAuthor(authorId));
+      return;
+    }
+    unawaited(blocked.blockRoomAuthor(message));
+    unawaited(
+      context.read<MeshCoreConnector>().markContactMessageBlocked(
+        widget.contact,
+        message,
+      ),
+    );
+  }
+
   void _openMessagePath(Message message, Contact contact) {
     final connector = context.read<MeshCoreConnector>();
     final fourByteHex = message.fourByteRoomContactKey
@@ -2197,6 +2246,41 @@ class _ChatScreenState extends State<ChatScreen> {
                     onTap: () {
                       Navigator.pop(sheetContext);
                       _markAsUnread(message);
+                    },
+                  ),
+                // Room-server posts only, and only incoming ones. A one-to-one
+                // conversation is the contact itself, which is deleted rather
+                // than muted; and a post of ours could only be hidden by
+                // somebody adopting our own identity, which the author prefix
+                // does not allow in the first place.
+                if (contact.type == advTypeRoom &&
+                    !message.isOutgoing &&
+                    !message.isCli &&
+                    BlockedSenders.roomAuthorIdOf(message) != null)
+                  ListTile(
+                    leading: Icon(
+                      Icons.block,
+                      color: BlockedSenders.instance.isRoomAuthorBlocked(
+                        message,
+                      )
+                          ? null
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                    title: Text(
+                      BlockedSenders.instance.isRoomAuthorBlocked(message)
+                          ? context.l10n.chat_unblockSender
+                          : context.l10n.chat_blockSender,
+                      style: BlockedSenders.instance.isRoomAuthorBlocked(
+                        message,
+                      )
+                          ? null
+                          : TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleRoomAuthorBlock(message);
                     },
                   ),
                 ListTile(
@@ -2463,6 +2547,11 @@ class _MessageBubble extends StatelessWidget {
   /// chosen by the mod setting.
   final bool mcoVariantOverridden;
 
+  /// The user tapped this blocked body to read it. Display only — a revealed
+  /// body is still never parsed.
+  final bool blockedRevealed;
+  final VoidCallback? onToggleBlocked;
+
   const _MessageBubble({
     required this.message,
     required this.senderName,
@@ -2471,6 +2560,8 @@ class _MessageBubble extends StatelessWidget {
     this.isHighlighted = false,
     this.isRoomChat = false,
     this.mcoVariantOverridden = false,
+    this.blockedRevealed = false,
+    this.onToggleBlocked,
     this.onTap,
     this.onLongPress,
     this.onRetryReaction,
@@ -2513,13 +2604,20 @@ class _MessageBubble extends StatelessWidget {
         ? null
         : '$compressionRatioPrefix$compressionTypeLabel';
     final scheme = Theme.of(context).colorScheme;
-    final gifId = GifHelper.parseGif(message.text);
-    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    // A body that arrived while its author was blocked is never parsed: no
+    // pin, no image, no shared contact, no coordinate link. Everything below
+    // reads `bodyText`, so revealing the text cannot bring those handlers
+    // back, and neither can lifting the block — that governs what arrives
+    // afterwards.
+    final blockedBody = message.wasBlocked ? message.text : null;
+    final bodyText = blockedBody == null ? message.text : '';
+    final gifId = GifHelper.parseGif(bodyText);
+    final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
     final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
       metadata: mcoImageMetadata,
-      sourceText: message.text,
+      sourceText: bodyText,
       isBinary: false,
       showResolution: settingsService.settings.showMcoImageResolution,
       showFormat: settingsService.settings.showMcoImageFormat,
@@ -2528,12 +2626,12 @@ class _MessageBubble extends StatelessWidget {
     );
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
-    final poi = parseMarkerText(message.text);
+    final poi = parseMarkerText(bodyText);
     // `del:m:...` matches the marker pattern as well, so the badge is told
     // which one it is rather than guessing from the payload.
-    final poiRemoved = SharedMarkerDeletion.targetOf(message.text) != null;
-    final coordinate = parseCoordinateText(message.text);
-    final sharedContact = parseSharedContactText(message.text);
+    final poiRemoved = SharedMarkerDeletion.targetOf(bodyText) != null;
+    final coordinate = parseCoordinateText(bodyText);
+    final sharedContact = parseSharedContactText(bodyText);
     final isFailed = message.status == MessageStatus.failed;
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
@@ -2571,9 +2669,10 @@ class _MessageBubble extends StatelessWidget {
 
     // Do not strip room-server author bytes here: the parser stores them in
     // fourByteRoomContactKey, so message.text is safe to render as-is.
-    final messageText = message.text;
+    final messageText = bodyText;
     final translatedDisplayText =
-        message.translatedText != null &&
+        blockedBody == null &&
+            message.translatedText != null &&
             message.translatedText!.trim().isNotEmpty
         ? message.translatedText!.trim()
         : messageText;
@@ -2651,7 +2750,17 @@ class _MessageBubble extends StatelessWidget {
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
                         ],
-                        if (poi != null)
+                        if (blockedBody != null)
+                          BlockedMessageBody(
+                            text: blockedBody,
+                            revealed: blockedRevealed,
+                            onToggle: onToggleBlocked ?? () {},
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: bodyFontSize * textScale,
+                            ),
+                          )
+                        else if (poi != null)
                           _buildPoiMessage(
                             context,
                             poi,

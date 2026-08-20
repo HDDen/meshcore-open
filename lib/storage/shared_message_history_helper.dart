@@ -177,6 +177,37 @@ class SharedMessageHistoryHelper {
     return deleted;
   }
 
+  /// Flags one message as blocked in every other node's copy of this
+  /// conversation.
+  ///
+  /// Same reason [deleteSecondaryContactMessage] exists: flagging only our own
+  /// copy lets the next merge uncover the unflagged twin.
+  Future<bool> markSecondaryContactMessageBlocked({
+    required String currentPublicKeyHex,
+    required String contactKeyHex,
+    required String messageId,
+  }) async {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || contactKeyHex.isEmpty || messageId.isEmpty) {
+      return false;
+    }
+
+    var marked = false;
+    for (final scope in knownScopes()) {
+      if (scope == currentScope) continue;
+
+      final messageStore = MessageStore()..setPublicKeyHex = scope;
+      final messages = await messageStore.loadScopedMessages(contactKeyHex);
+      final index = messages.indexWhere((m) => m.messageId == messageId);
+      if (index < 0 || messages[index].wasBlocked) continue;
+
+      messages[index] = messages[index].copyWith(wasBlocked: true);
+      await messageStore.saveMessages(contactKeyHex, messages);
+      marked = true;
+    }
+    return marked;
+  }
+
   Future<List<Message>> loadSecondaryContactMessages({
     required String currentPublicKeyHex,
     required String contactKeyHex,

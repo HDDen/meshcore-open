@@ -1861,6 +1861,39 @@ class MeshCoreConnector extends ChangeNotifier {
   /// deletes are: the same message can sit in this node's store and in a
   /// shared one, and flagging only the local copy lets the merge uncover the
   /// unflagged twin.
+  /// The room-server twin of [markChannelMessageBlocked].
+  ///
+  /// A rule only decides what arrives after it, so the message the user
+  /// pointed at is the single exception: it is flagged directly, hides itself
+  /// behind the placeholder and drops whatever command it carried.
+  Future<void> markContactMessageBlocked(
+    Contact contact,
+    Message message,
+  ) async {
+    if (message.isOutgoing || message.wasBlocked) return;
+    final contactKeyHex = contact.publicKeyHex;
+    var changed = false;
+    final messages = _conversations[contactKeyHex];
+    if (messages != null) {
+      final index = messages.indexWhere(
+        (current) => current.messageId == message.messageId,
+      );
+      if (index >= 0 && !messages[index].wasBlocked) {
+        messages[index] = messages[index].copyWith(wasBlocked: true);
+        await _messageStore.saveMessages(contactKeyHex, messages);
+        changed = true;
+      }
+    }
+    if (await _sharedMessageHistoryHelper.markSecondaryContactMessageBlocked(
+      currentPublicKeyHex: selfPublicKeyHex ?? '',
+      contactKeyHex: contactKeyHex,
+      messageId: message.messageId,
+    )) {
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
   Future<void> markChannelMessageBlocked(
     Channel channel,
     ChannelMessage message,
@@ -2588,6 +2621,10 @@ class MeshCoreConnector extends ChangeNotifier {
           : orderedMessages;
 
       _channelMessages[channelIndex] = windowedMessages;
+      // History comes out of the store as it was written; a rule added since
+      // then has to reach it. Cheap when nothing is blocked, and a no-op when
+      // the flags are already right.
+      await applyBlockedSenderRules(channelIndex: channelIndex);
       if (notify) notifyListeners();
       return true;
     } else {
@@ -2689,6 +2726,11 @@ class MeshCoreConnector extends ChangeNotifier {
     _lastNoRetransmissionWarningSeconds =
         appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
+    // The block table is app-wide and has no provider, so the screens cannot
+    // watch it themselves. Re-emitting it here redraws the chat, the channels
+    // list and the map at once, since all three already watch the connector.
+    BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
+    BlockedSenders.instance.addListener(_handleBlockedSendersChanged);
     _settingsSectionsService?.removeListener(_handleSettingsSectionsChanged);
     _settingsSectionsService = settingsSectionsService;
     settingsSectionsService?.setDeviceVarsRequester(() async {
@@ -9265,13 +9307,22 @@ class MeshCoreConnector extends ChangeNotifier {
           }
         }
       }
+      // The receive-time question, asked once and stamped onto the message.
+      // Rooms have no arrival clock — a post keeps `receivedAt` null on
+      // purpose — so this flag is the whole mechanism there, and everything
+      // that draws or interprets the message reads it.
+      final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
+      if (blockedNow) message = message.copyWith(wasBlocked: true);
       _addMessage(message.senderKeyHex, message);
-      _maybeIncrementContactUnread(message);
+      if (!blockedNow) _maybeIncrementContactUnread(message);
       notifyListeners();
 
       // Show notification for new incoming message (run async with translation)
+      // A muted room author raises none: it would put the hidden text straight
+      // back on screen.
       if (!message.isOutgoing &&
           !message.isCli &&
+          !blockedNow &&
           _appSettingsService != null) {
         final settings = _appSettingsService!.settings;
         if (settings.notificationsEnabled && settings.notifyOnNewMessage) {
@@ -10419,6 +10470,13 @@ class MeshCoreConnector extends ChangeNotifier {
     return decoded.text ?? MCOImageV3Codec.textFromBody(decoded.body);
   }
 
+  /// The name blocking rules are matched against — see
+  /// `BlockedSenders.ruleFor`. Public so every display site asks with the same
+  /// label the receive path used; the screens' own `channel.name` is empty for
+  /// an unnamed channel where this says `Channel 3`.
+  String channelDisplayName(int channelIndex) =>
+      _channelDisplayName(channelIndex);
+
   String _channelDisplayName(int channelIndex) {
     for (final channel in _channels) {
       if (channel.index != channelIndex) continue;
@@ -11363,6 +11421,48 @@ class MeshCoreConnector extends ChangeNotifier {
         );
   }
 
+  void _handleBlockedSendersChanged() {
+    unawaited(applyBlockedSenderRules());
+    notifyListeners();
+  }
+
+  /// Stamps [ChannelMessage.wasBlocked] onto every loaded message a rule now
+  /// hides, and saves the channels that changed.
+  ///
+  /// The receive path already stamps what arrives while a rule is in force;
+  /// this covers what the date boundary reaches and the stamp did not — and it
+  /// makes the flag permanent, so lifting the block does not bring those
+  /// messages, or the map commands they carry, back. Runs on every change to
+  /// the table and once after a channel's history is read from storage.
+  ///
+  /// Only this node's own store is swept. A copy merged in from another node's
+  /// shared history is hidden by the display-time check instead of being
+  /// rewritten: it belongs to that node, and the flag it wants is the answer
+  /// *our* rules give, which is exactly what the check computes on the fly.
+  Future<void> applyBlockedSenderRules({int? channelIndex}) async {
+    if (BlockedSenders.instance.rules.isEmpty) return;
+    var changed = false;
+    for (final entry in _channelMessages.entries) {
+      if (channelIndex != null && entry.key != channelIndex) continue;
+      final label = _channelDisplayName(entry.key);
+      final messages = entry.value;
+      var touched = false;
+      for (var i = 0; i < messages.length; i++) {
+        final message = messages[i];
+        if (message.wasBlocked) continue;
+        if (!BlockedSenders.instance.hidesStoredMessage(message, label)) {
+          continue;
+        }
+        messages[i] = message.copyWith(wasBlocked: true);
+        touched = true;
+      }
+      if (!touched) continue;
+      changed = true;
+      await _channelMessageStore.saveChannelMessages(entry.key, messages);
+    }
+    if (changed) notifyListeners();
+  }
+
   void _maybeIncrementChannelUnread(
     ChannelMessage message, {
     required bool isNew,
@@ -11378,6 +11478,19 @@ class MeshCoreConnector extends ChangeNotifier {
     if (channelIndex == null) {
       _appDebugLogService?.info(
         'Skip unread increment: channelIndex is null',
+        tag: 'Unread',
+      );
+      return;
+    }
+    // The rule, not the flag: this runs before `_addChannelMessage` stamps its
+    // own copy. Without it a muted flooder drives a badge that never stops
+    // climbing and feeds the app icon through `getTotalUnreadCount`.
+    if (BlockedSenders.instance.isSenderBlocked(
+      message,
+      _channelDisplayName(channelIndex),
+    )) {
+      _appDebugLogService?.info(
+        'Skip unread increment: sender is blocked',
         tag: 'Unread',
       );
       return;
@@ -12395,6 +12508,7 @@ class MeshCoreConnector extends ChangeNotifier {
   @override
   void dispose() {
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
+    BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();

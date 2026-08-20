@@ -192,6 +192,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
+    BlockedSenders.instance.addListener(_handleBlockedSendersChanged);
     region = context.read<MeshCoreConnector>().getChannelRegion(
       widget.channel.index,
     );
@@ -375,6 +376,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
     }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
+    BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _textController.removeListener(_onTextFieldTextChange);
     _textController.removeListener(_updateMentionSuggestions);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
@@ -1245,9 +1247,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // A body that arrived while its sender was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link, no quote.
     // Everything below reads `bodyText` instead of the message, so revealing
-    // the text in the bubble cannot bring those handlers back, and neither can
-    // lifting the block — that only governs what arrives afterwards.
-    final blockedBody = message.wasBlocked ? message.text : null;
+    // the text in the bubble cannot bring those handlers back.
+    //
+    // Two independent answers, and either one hides the body. The flag was
+    // decided at the instant the message arrived, with no clock involved, and
+    // is never cleared — that is what keeps a muted batch hidden after the
+    // block is lifted. The rule is asked again here because the flag cannot
+    // reach a copy merged in from another node's shared history, which that
+    // node stored without ever seeing our rules.
+    final blockedBody =
+        message.wasBlocked ||
+            BlockedSenders.instance.hidesStoredMessage(
+              message,
+              connector.channelDisplayName(widget.channel.index),
+            )
+        ? message.text
+        : null;
     final bodyText = blockedBody == null ? message.text : '';
     final compressionType =
         message.compressionType ??
@@ -2062,7 +2077,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               ),
             ],
           ),
-          if (message.reactions.isNotEmpty) ...[
+          // Outside the bubble, so it needs the gate of its own: a
+          // placeholder must not carry a row of emoji.
+          if (blockedBody == null && message.reactions.isNotEmpty) ...[
             const SizedBox(height: 4),
             Padding(
               padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
@@ -3982,14 +3999,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// one exception is [message] itself — the user pointed at it, so it is
   /// flagged too and disappears behind the placeholder along with any command
   /// it carried. Unblocking leaves that flag alone, as it does every other.
+  /// A body revealed by hand is forgotten whenever the table changes, so a
+  /// re-blocked sender starts hidden again rather than staying open from the
+  /// last time the block was lifted. The redraw itself comes from the
+  /// connector, which re-emits the same signal.
+  void _handleBlockedSendersChanged() {
+    if (!mounted || _revealedBlockedMessages.isEmpty) return;
+    setState(_revealedBlockedMessages.clear);
+  }
+
   void _toggleSenderBlock(ChannelMessage message) {
     final blocked = BlockedSenders.instance;
-    if (blocked.isSenderBlocked(message, widget.channel.name)) {
+    final channelName = context.read<MeshCoreConnector>().channelDisplayName(
+      widget.channel.index,
+    );
+    // Either half changes how much of the list is drawn — bodies collapse to
+    // the one-line placeholder or expand back — so both skip the post-frame
+    // snap that would otherwise drag the reader to the newest message.
+    _channelSkipNextBottomSnap = true;
+    if (blocked.isSenderBlocked(message, channelName)) {
       unawaited(blocked.unblock(message.senderName));
       return;
     }
     unawaited(blocked.block(message));
-    _channelSkipNextBottomSnap = true;
     unawaited(
       context.read<MeshCoreConnector>().markChannelMessageBlocked(
         widget.channel,
@@ -4011,7 +4043,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // would do nothing.
     final isSenderBlocked = BlockedSenders.instance.isSenderBlocked(
       message,
-      widget.channel.name,
+      context.read<MeshCoreConnector>().channelDisplayName(
+        widget.channel.index,
+      ),
     );
     // Blocking is the consequential half of that entry; lifting it is not, so
     // only that half is red.
