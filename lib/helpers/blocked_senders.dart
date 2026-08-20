@@ -124,15 +124,24 @@ class BlockedSenders extends ChangeNotifier {
     final id = roomAuthorIdOf(message);
     if (id == null) return;
     final existing = rules[id];
-    if (existing != null && existing.keyHex.isEmpty) return;
     final key = verifiedRoomKeyOf(message) ?? '';
-    if (existing != null && existing.keyHex == key) return;
+    final keyHex = existing == null
+        ? key
+        : (existing.keyHex == key ? key : '');
+    // A room post keeps `receivedAt` null, so this is always "now" for a fresh
+    // rule; the walk back from the newest post is what reaches history there.
+    final blockedAt = _blockedAtFor(existing?.blockedAt, message.receivedAt);
+    if (existing != null &&
+        existing.keyHex == keyHex &&
+        !existing.blockedAt.isAfter(blockedAt)) {
+      return;
+    }
     await _write({
       ...rules,
       id: BlockedSenderRule(
-        keyHex: existing == null ? key : '',
+        keyHex: keyHex,
         channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
-        blockedAt: existing?.blockedAt ?? DateTime.now(),
+        blockedAt: blockedAt,
       ),
     });
   }
@@ -221,21 +230,62 @@ class BlockedSenders extends ChangeNotifier {
     final name = message.senderName.trim();
     if (name.isEmpty) return;
     final existing = rules[name];
-    if (existing != null && existing.keyHex.isEmpty) return;
     final key = verifiedKeyOf(message) ?? '';
-    if (existing != null && existing.keyHex == key) return;
+    // A second, different key under one name is more than a single-key rule
+    // can tell apart, so the block widens to the bare name — and a name-only
+    // rule is already the widest there is. Neither ever narrows here.
+    final keyHex = existing == null
+        ? key
+        : (existing.keyHex == key ? key : '');
+    final blockedAt = _blockedAtFor(existing?.blockedAt, message.receivedAt);
+    // Blocking the same identity again is not always a no-op any more: it
+    // still counts when the message points further back than the rule reaches.
+    if (existing != null &&
+        existing.keyHex == keyHex &&
+        !existing.blockedAt.isAfter(blockedAt)) {
+      return;
+    }
     await _write({
       ...rules,
-      // A second, different key under one name is more than a single-key rule
-      // can tell apart, so the block widens to the bare name. Widening keeps
-      // the original moment: moving it forward would surface everything the
-      // keyed rule had already hidden.
       name: BlockedSenderRule(
-        keyHex: existing == null ? key : '',
+        keyHex: keyHex,
         channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
-        blockedAt: existing?.blockedAt ?? DateTime.now(),
+        blockedAt: blockedAt,
       ),
     });
+  }
+
+  /// Where a block created from a message starts.
+  ///
+  /// The message the user pointed at, not the tap: by the time somebody
+  /// long-presses a post, that sender has usually put several more on the
+  /// screen above it, and leaving those visible was the whole complaint. So
+  /// the boundary is that message's own arrival, and everything the sender has
+  /// posted since — here and in history merged from other nodes — falls inside
+  /// the block. What sits above it in the conversation stays readable.
+  ///
+  /// Clamped to now, because `receivedAt` is our own clock in every case but
+  /// one: the post-connect backlog drain writes the sender's send time into
+  /// it, and a forged future date there would otherwise push the boundary out
+  /// of reach.
+  static DateTime _anchorAt(DateTime? receivedAt) {
+    final now = DateTime.now();
+    if (receivedAt == null || receivedAt.isAfter(now)) return now;
+    return receivedAt;
+  }
+
+  /// The moment a rule starts at, given the message it is being created from
+  /// and whatever the rule already had.
+  ///
+  /// The earlier of the two, always. Blocking again from an older message
+  /// reaches further back and strengthens the rule; blocking from a newer one
+  /// must not move the boundary forward, or everything already hidden between
+  /// the two blocks would surface again. So a rule's moment only ever travels
+  /// in one direction, and only a fresh rule starts where it was made.
+  static DateTime _blockedAtFor(DateTime? existing, DateTime? receivedAt) {
+    final anchor = _anchorAt(receivedAt);
+    if (existing == null) return anchor;
+    return existing.isBefore(anchor) ? existing : anchor;
   }
 
   /// Mutes a name typed by hand, with no key and across every channel.
@@ -251,11 +301,13 @@ class BlockedSenders extends ChangeNotifier {
         existing.channels.contains(BlockedSenderRule.everyChannel)) {
       return;
     }
-    // Same rule as widening from the menu: an existing block keeps the moment
-    // it was created, and only a name that was not blocked before starts now.
+    // No message to point at, so there is nothing that could reach further
+    // back: an existing block keeps its moment, a new one starts now.
     await _write({
       ...rules,
-      name: BlockedSenderRule(blockedAt: existing?.blockedAt ?? DateTime.now()),
+      name: BlockedSenderRule(
+        blockedAt: _blockedAtFor(existing?.blockedAt, null),
+      ),
     });
   }
 

@@ -1861,11 +1861,8 @@ class MeshCoreConnector extends ChangeNotifier {
   /// deletes are: the same message can sit in this node's store and in a
   /// shared one, and flagging only the local copy lets the merge uncover the
   /// unflagged twin.
-  /// The room-server twin of [markChannelMessageBlocked].
-  ///
-  /// A rule only decides what arrives after it, so the message the user
-  /// pointed at is the single exception: it is flagged directly, hides itself
-  /// behind the placeholder and drops whatever command it carried.
+  /// The room-server twin of [markChannelMessageBlocked], with the same walk
+  /// from the newest post back to the anchor.
   Future<void> markContactMessageBlocked(
     Contact contact,
     Message message,
@@ -1873,46 +1870,96 @@ class MeshCoreConnector extends ChangeNotifier {
     if (message.isOutgoing || message.wasBlocked) return;
     final contactKeyHex = contact.publicKeyHex;
     var changed = false;
+    final flagged = <String>{message.messageId};
     final messages = _conversations[contactKeyHex];
     if (messages != null) {
-      final index = messages.indexWhere(
+      final anchor = messages.indexWhere(
         (current) => current.messageId == message.messageId,
       );
-      if (index >= 0 && !messages[index].wasBlocked) {
-        messages[index] = messages[index].copyWith(wasBlocked: true);
-        await _messageStore.saveMessages(contactKeyHex, messages);
-        changed = true;
+      if (anchor >= 0) {
+        var touched = false;
+        for (var i = messages.length - 1; i >= anchor; i--) {
+          final current = messages[i];
+          if (current.wasBlocked) continue;
+          if (i != anchor &&
+              !BlockedSenders.instance.isRoomAuthorBlocked(current)) {
+            continue;
+          }
+          messages[i] = current.copyWith(wasBlocked: true);
+          flagged.add(current.messageId);
+          touched = true;
+        }
+        if (touched) {
+          await _messageStore.saveMessages(contactKeyHex, messages);
+          changed = true;
+        }
       }
     }
-    if (await _sharedMessageHistoryHelper.markSecondaryContactMessageBlocked(
-      currentPublicKeyHex: selfPublicKeyHex ?? '',
-      contactKeyHex: contactKeyHex,
-      messageId: message.messageId,
-    )) {
-      changed = true;
+    for (final messageId in flagged) {
+      if (await _sharedMessageHistoryHelper.markSecondaryContactMessageBlocked(
+        currentPublicKeyHex: selfPublicKeyHex,
+        contactKeyHex: contactKeyHex,
+        messageId: messageId,
+      )) {
+        changed = true;
+      }
     }
     if (changed) notifyListeners();
   }
 
+  /// Flags the message a block was ordered from, and everything that sender
+  /// posted after it.
+  ///
+  /// A rule on its own only decides what arrives once it exists, so the posts
+  /// that landed while the user was reading his way up to the one he finally
+  /// long-pressed would stay visible — commands and all. The walk runs from
+  /// the newest message backwards and stops at that anchor, so it costs only
+  /// what the user actually saw, never the whole conversation. Everything
+  /// older than the anchor is deliberately left alone: a block still does not
+  /// rewrite history the user had already read past.
+  ///
+  /// The anchor itself is flagged whatever the rule says — the user pointed at
+  /// it. The messages above it are flagged only if the rule really covers
+  /// them, so a namesake exempted by a verified key stays visible.
   Future<void> markChannelMessageBlocked(
     Channel channel,
     ChannelMessage message,
   ) async {
     if (message.isOutgoing || message.wasBlocked) return;
     var changed = false;
+    final flagged = <ChannelMessage>[];
     final messages = _channelMessages[channel.index];
     if (messages != null) {
-      final index = messages.indexWhere(
+      final label = _channelDisplayName(channel.index);
+      final anchor = messages.indexWhere(
         (current) => current.messageId == message.messageId,
       );
-      if (index >= 0 && !messages[index].wasBlocked) {
-        messages[index] = messages[index].copyWith(wasBlocked: true);
-        _channelMessageStore.saveChannelMessages(channel.index, messages);
-        changed = true;
+      if (anchor >= 0) {
+        for (var i = messages.length - 1; i >= anchor; i--) {
+          final current = messages[i];
+          if (current.wasBlocked) continue;
+          if (i != anchor &&
+              !BlockedSenders.instance.isSenderBlocked(current, label)) {
+            continue;
+          }
+          messages[i] = current.copyWith(wasBlocked: true);
+          flagged.add(current);
+        }
+        if (flagged.isNotEmpty) {
+          await _channelMessageStore.saveChannelMessages(
+            channel.index,
+            messages,
+          );
+          changed = true;
+        }
       }
     }
-    if (await _markSharedChannelMessageBlocked(channel, message)) {
-      changed = true;
+    // The anchor may exist only in a shared scope, so it is offered there even
+    // when the loop above found nothing to flag.
+    for (final blocked in {message, ...flagged}) {
+      if (await _markSharedChannelMessageBlocked(channel, blocked)) {
+        changed = true;
+      }
     }
     if (changed) notifyListeners();
   }

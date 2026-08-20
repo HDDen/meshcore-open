@@ -211,73 +211,156 @@ The node signs message bodies via `CMD_SIGN_START/DATA/FINISH` (single global si
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
 
-### Blocked channel senders
-A sender muted from a channel message's long-press menu keeps arriving — nothing is dropped on
-receipt or removed from history — but from that point on their messages are neither shown nor
-acted on. The behaviour lives in two files: `storage/blocked_sender_store.dart` (rules and JSON)
-and `helpers/blocked_senders.dart` (`BlockedSenders.instance`, a singleton rather than a provider
-because the connector consults it while parsing a frame). Two widgets carry the UI —
-`blocked_message_body.dart` for the placeholder and `blocked_senders_sheet.dart` for the list.
+### Blocked senders
 
-**A rule is a receive-time question, and only that.** `isSenderBlocked` has exactly two callers:
-`_addChannelMessage`, which stamps the answer onto the message as `ChannelMessage.wasBlocked`,
-and the menu entry, which needs to know which half it is offering. Everything that draws or
-interprets a message reads `wasBlocked` instead. So a block reaches forward only — history stays
-readable when one is added, and what arrived during a block stays hidden after it is lifted, for
-good. That is also why the block list needs no cache invalidation anywhere.
+A sender muted from a message's long-press menu keeps arriving — nothing is dropped on receipt or
+removed from history — but their messages are neither shown nor acted on. It covers **channel
+posts and room-server posts**; a one-to-one conversation has nothing to mute, being the contact
+itself, which is deleted instead. The behaviour lives in two files:
+`storage/blocked_sender_store.dart` (rules and JSON) and `helpers/blocked_senders.dart`
+(`BlockedSenders.instance`, a singleton rather than a provider because the connector consults it
+while parsing a frame). Two widgets carry the UI — `blocked_message_body.dart` for the
+placeholder and `blocked_senders_sheet.dart` for the list.
 
-The one message a block reaches backwards is the one it was ordered from:
-`markChannelMessageBlocked` flags it directly, so the message the user pointed at hides itself
-and drops whatever command it carried. It writes to both the node's own store and any shared
-scope holding the same message id, for the same reason `_deleteSharedChannelMessage` does —
-flagging only the local copy lets the next merge uncover the unflagged twin. Nothing else on
-screen changes, so `_toggleSenderBlock` leaves the redraw to the connector's notify. Unblocking
-clears no flags, that one included.
+**The table** is one app-wide JSON blob, **not** scoped by node public key like most stores here:
+a sender worth muting is worth muting from every radio this phone connects to. A row's key is the
+identity the mute is aimed at — a channel sender's name, or a room author's 4-byte public-key
+prefix as uppercase hex. Rooms are keyed by the prefix because it is the stronger identity of the
+two: a channel post carries whatever name its author typed, while the prefix is stamped on every
+post by the room server itself, so a participant cannot wear somebody else's. The two key spaces
+share one map and could in principle collide, on a channel sender literally named `AB12CD34`;
+blocking one would then block the other, and that is the whole cost of not keeping a second
+table.
 
-Rules are one app-wide JSON blob, **not** scoped by node public key like most stores here: a
-sender worth muting is worth muting from every radio this phone connects to. The key is the
-sender name; the value is a key and a channel list. Blocking a message whose MCMP v3 signature
-verified pins the rule to that key, so somebody else answering to the same name stays visible;
-anything else blocks the name alone, since an unsigned message proves nothing about who sent it.
-Never read `verifiedSenderKeyHex` without `mcmpSignatureStatus == valid` — `verifiedKeyOf` is
-the only place that pairing is made. Re-blocking a name never narrows an existing rule: on top of
-a name-only rule nothing happens at all, and a second, different key under one name widens the
-rule back to the bare name, which is the most a single-key record can express. Narrowing is a
-deliberate act, done by deleting the rule and blocking again. The channel list is always `["*"]`
-today; it exists so a per-channel block can be added later without migrating stored rules.
+A row carries three things.
 
-**What the flag reaches.** `_buildMessageBubble` computes `bodyText` once — the message text, or
-an empty string when `wasBlocked` — and every parser below reads that, so a hidden body produces
-no pin, image, shared contact, coordinate link or quote. The placeholder takes the whole body and
-a tap reveals the stored text, but revealing is a display choice: `bodyText` stays empty, so a
-revealed marker still puts nothing on the map. `_collectSharedMarkers` skips those messages
-**before** `SharedMarkerDeletions.absorb`, or a muted troll's `del:` commands would still erase
-everyone else's pins. The channels list shows the same placeholder instead of the last-message
-preview. Two things never reach the flag and are decided by the rule directly: reactions, dropped
-in `_addChannelMessage` because a reaction has no body to hide and is never stored, and
-notifications, which would put the hidden text straight back on screen.
+- **`keyHex`** — the full public key behind a verified MCMP v3 signature, and an *exemption, not
+  a requirement*. The row mutes the identity it is keyed by, and the only message it lets through
+  is one that provably verified to a **different** key. That is the reasoning blocking itself
+  follows — an unsigned message proves nothing about who sent it — applied to the arriving side.
+  Requiring the key instead would let a muted sender walk out of the rule by not signing and,
+  worse, by being deleted from contacts: with nobody left bearing that name a signature verifies
+  as `unverifiable`, which reports no key at all, and muting somebody then removing them from
+  contacts is the natural pair of actions. Never read `verifiedSenderKeyHex` without
+  `mcmpSignatureStatus == valid` — `verifiedKeyOf` and `verifiedRoomKeyOf` are the only places
+  that pairing is made.
+- **`channels`** — always `["*"]` today; it exists so a per-channel block can be added later
+  without migrating stored rules. Note that names are matched as the caller spells them, so the
+  day a row stops being a wildcard, callers have to agree on what an unnamed channel is called;
+  `MeshCoreConnector.channelDisplayName` is that one answer.
+- **`blockedAt`** — where the rule starts, and it only ever travels backwards.
 
-`wasBlocked` is persisted by `channel_message_store` and defaults to `false` for older records.
-Repeats merge through `existing.copyWith(...)` without touching it, so the first arrival decides.
-It also rides in `markerSignature`: flagging one already-received message changes nothing else
-about it, and the map's marker cache would otherwise keep drawing its pin.
-Revealing or hiding a body changes bubble heights, so `_toggleBlockedBody` sets
-`_channelSkipNextBottomSnap` — without it the post-frame snap that follows every list rebuild
-drags a reader sitting near the bottom down to the newest message.
+**The moment a rule starts at** is the message it was ordered from, not the tap: by the time
+somebody long-presses a post, that sender has usually put several more on the screen above it,
+and those are what the user is reacting to. It is clamped to now, because `receivedAt` is our own
+clock in every case but one — the post-connect backlog drain writes the sender's send time into
+it — and a forged future date would otherwise push the boundary out of reach. Blocking an
+identity again takes the **earlier** of the stored moment and the new anchor (`_blockedAtFor`):
+pointing further back strengthens the rule, pointing forward must not weaken it. A row written
+before blocks carried a moment is stamped with the load time and written straight back, so the
+stamp is decided once instead of drifting with every launch; the epoch would be the wrong default
+there, since the date arm would then reach over the whole conversation and hide everything that
+sender ever wrote.
+
+Re-blocking never narrows the identity either: a second, different key under one row widens it to
+the bare identity, the most a single-key record can express, and a row that already has no key
+stays that way. Narrowing is a deliberate act, done by deleting the row and blocking again.
+Because a re-block can still move `blockedAt` backwards, `block` bails out only when neither the
+key nor the moment would change.
+
+**Two questions, and the difference is only which clock the moment is compared against.**
+
+- `isSenderBlocked` / `isRoomAuthorBlocked` — *is this sender muted right now?* — is the
+  receive-time question, asked by `_addChannelMessage` and `_handleIncomingMessage`, and it
+  compares no dates at all. A row that exists was created in the past, so a message arriving now
+  is always after it; comparing our clock with our clock would add nothing and would misfire if
+  the device clock stepped backwards. The answer is stamped onto the message as `wasBlocked`, and
+  that flag is the arm no forged timestamp can reach — which is why the backlog drain, where both
+  of a message's dates come off the wire, is covered anyway.
+- `hidesStoredMessage` — *should this stored message be hidden?* — is the display-time question,
+  and it does compare: `ChannelMessage.receivedAt` at or after `blockedAt`. It exists for messages
+  the receive path never stamped, above all copies merged in from another node's shared history,
+  which that node stored without ever seeing our rules. The packet's own `timestamp` is never
+  consulted — the sender chooses it, and the moment of blocking is known only to us.
+
+Everything that draws or interprets a channel message asks both and hides on either. Room posts
+have the flag alone: a room post keeps `receivedAt` null on purpose (the chat shows `—` for it),
+so there is no arrival clock for a boundary to compare against.
+
+**Reaching the history already on screen.** `markChannelMessageBlocked` and
+`markContactMessageBlocked` walk the loaded conversation from the newest message backwards and
+stop at the one the block was ordered from, flagging what they pass. That costs only what the
+user actually saw, never the whole conversation, and everything older than the anchor is left
+alone — a block does not rewrite history the reader had already gone past. The anchor itself is
+flagged whatever the rule says, since the user pointed at it; the messages above it only if the
+rule really covers them, so a namesake exempted by a verified key stays visible. Both write to
+the node's own store and to any shared scope holding the same message id, for the same reason
+`_deleteSharedChannelMessage` does — flagging only the local copy lets the next merge uncover the
+unflagged twin.
+
+`applyBlockedSenderRules` is the other writer: it stamps the flag onto every loaded channel
+message the date arm hides and saves the channels that changed. It runs on every change to the
+table and once after a channel's history is read from storage, which is what makes that answer
+permanent — lifting the block does not bring those messages, or the commands they carry, back.
+Only this node's own store is swept; a copy merged in from another node is hidden by the
+display-time check instead of being rewritten, since the flag it wants is the answer *our* rules
+give, which is exactly what the check computes on the fly.
+
+**Outgoing messages are never blocked.** `ruleFor` and `roomRuleFor` refuse them on their first
+line, and the menu entry exists only for incoming messages. Without that, somebody adopting the
+user's own callsign — which a channel post allows, the name being whatever its author typed —
+could get him to mute himself. Any new display site must go through the helper rather than
+inlining a lookup of its own, or it loses the guard.
+
+**What the flag reaches.** Both chat screens compute `bodyText` once — the message text, or an
+empty string when hidden — and every parser below reads that, so a hidden body produces no pin,
+image, shared contact, coordinate link or quote. The placeholder takes the whole body and a tap
+reveals the stored text, but revealing is a display choice: `bodyText` stays empty, so a revealed
+marker still puts nothing on the map, and the revealed set is dropped whenever the table changes.
+`_collectSharedMarkers` skips hidden messages **before** `SharedMarkerDeletions.absorb`, in the
+contact loop as well as the channel one, or a muted troll's `del:` commands would still erase
+everyone else's pins. The channels list shows the placeholder instead of the last-message
+preview. Notifications and unread counts are gated on the rule directly at receive time: a
+notification would put the hidden text straight back on screen, and a badge fed by a muted
+flooder never stops climbing and reaches the OS app icon through `getTotalUnreadCount`. Reactions
+are decided by the rule too and dropped in `_addChannelMessage` — a reaction has no body to hide,
+lands in a `Map<emoji,count>` carrying no author, and is never stored, so there would be nothing
+to re-evaluate later.
+
+`wasBlocked` is persisted by `channel_message_store` and `message_store` and defaults to `false`
+for older records. Repeats merge through `existing.copyWith(...)` without touching it, so the
+first arrival decides. It also rides in `markerSignature`, next to `BlockedSenders.revision`:
+flagging a message changes nothing else about it, and the map's marker cache would otherwise keep
+drawing its pin. Revealing or hiding a body changes bubble heights, so `_toggleBlockedBody` and
+both halves of `_toggleSenderBlock` set `_channelSkipNextBottomSnap` — without it the post-frame
+snap that follows every list rebuild drags a reader sitting near the bottom down to the newest
+message.
+
+**Redrawing.** `BlockedSenders` is a `ChangeNotifier` and bumps `revision` on every write; the
+connector re-emits that signal, so the chat, the channels list and the map redraw from the one
+hook all three already watch. `revision` is a value rather than a bare notification because the
+map's pin list is cached against a signature — a redraw alone would serve the cache.
+
+**Unblocking** removes the row and clears no flags, the anchor's included. What arrived during a
+block stays hidden for good; what arrives after the row is gone is shown and acted on as normal.
 
 **The list.** `BlockedSendersSheet` opens from two overflow menus — inside a channel, below
 `channels_editChannel`, and on the channels screen, below `chat_searchMessages`. It reads and
 writes `BlockedSenders.instance` straight, since the table is app-wide and synchronous — nothing
-is passed in and nothing handed back, and no caller has to redraw, which is what makes a second
-entry point free. Neither is gated on offline mode, the list being local data. The channels
-screen hangs its handlers off `PopupMenuItem.onTap`, which runs after the menu route has popped,
-so the sheet is opened from the screen's context and `menuContext` is only used for the label.
+is passed in and nothing handed back, which is what makes a second entry point free. Neither is
+gated on offline mode, the list being local data. The channels screen hangs its handlers off
+`PopupMenuItem.onTap`, which runs after the menu route has popped, so the sheet is opened from
+the screen's context and `menuContext` is only used for the label.
 
-Its **Add** dialog takes a name and nothing else, so `blockName` writes the widest rule a name
-can carry — no key, `["*"]` — which replaces a keyed rule and no-ops when such a rule already
-exists, the same never-narrow direction `block` follows. The dialog's controller is a `State`
-field because `showDialog` completes on pop, while the dialog is still animating out and still
-reading it.
+Its **Add** dialog takes a name and nothing else, so `blockName` writes the widest row a name can
+carry — no key, `["*"]` — which replaces a keyed row and, having no message to point at, cannot
+move an existing moment backwards either. The dialog's controller is a `State` field because
+`showDialog` completes on pop, while the dialog is still animating out and still reading it.
+
+**Not covered, deliberately**: one-to-one conversations, where the contact is deleted rather than
+muted; the message search, which runs in a real isolate the table cannot be reached from; a third
+party quoting a hidden message, whose text was snapshotted into `replyToText` at receipt; and
+AEIC images, which never become a message object and carry no author name at all.
 
 ### Mentions
 `@[name]` is the wire form for naming someone — replies have always used it, and it is typed directly too. Both ends live outside the screens: `helpers/mention_autocomplete.dart` for composing, `MentionText.split` (same file) for rendering.

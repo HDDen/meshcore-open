@@ -261,24 +261,34 @@ shows the author's key bytes next to the name. If the node cannot sign, or the s
 fits the frame, the pin goes out as plain text as before. A pin that arrived signed shows the
 same signature badge next to its author in the info dialog as its chat message does.
 
-### Blocking a sender in channels
+### Blocking a sender
 
-Long-press any incoming channel message and pick **Block sender**. From that moment their
-messages still arrive and keep their place in the conversation, but the text is replaced by a
-muted "sender blocked" line — tap it to read what they wrote, without the app acting on it.
-Nothing they send afterwards counts: no map pins, no removals of other people's pins, no
-reactions, no notifications, and the channel list shows the placeholder instead of a preview.
+Long-press a message in a channel or on a room server and pick **Block sender**. Their messages
+still arrive and keep their place in the conversation, but the text is replaced by a muted
+"sender blocked" line — tap it to read what they wrote, without the app acting on it. Nothing
+they send counts any more: no map pins, no removals of other people's pins, no reactions, no
+notifications, no unread badge, and the channel list shows the placeholder instead of a preview.
 
-A block works forward only, with one exception: the message you blocked from. That one hides
-itself too, and anything it asked for — a map pin, a pin removal — stops counting. The rest of
-the conversation stays exactly as it is, so blocking does not rewrite history you have already
-read. The other way round, what arrived while the block was on stays hidden even after you lift
-it, so a temporary unblock cannot bring back the pins that sender dropped or the removals they
-sent.
+The block also covers what that sender put on the screen while you were reading: everything from
+the message you long-pressed down to the newest one goes behind the placeholder too, commands
+included. Older history stays readable — blocking does not rewrite the conversation you had
+already scrolled past.
 
-Blocking a message with a verified signature blocks that exact identity, so somebody else using
-the same name stays visible; an unsigned message blocks the name itself. The block applies in
-every channel and is shared by every radio the app connects to. The same menu entry lifts it.
+In a channel the block is aimed at the sender's name. On a room server it is aimed at the
+author's key, which the server itself stamps on every post, so nobody there can wear somebody
+else's identity.
+
+Blocking a message whose signature verified also records that key, and a post verifying to a
+*different* key then stays visible — that is a genuine namesake, and a valid signature is the
+only way to tell one apart. Everything else under that name is blocked, unsigned posts included:
+an unsigned message proves nothing about who sent it. Blocking the namesake as well widens the
+rule to the bare name.
+
+A block applies in every channel and every room, and is shared by every radio the app connects
+to. The same menu entry lifts it, and lifting it governs only what arrives afterwards: whatever
+came in while the block was on stays hidden, so a temporary unblock cannot bring back the pins
+that sender dropped or the removals they sent. Your own messages are never touched, even if
+somebody adopts your callsign and you block it.
 
 **Blocked senders** — a searchable list of everyone muted, showing the key each block is pinned
 to and the channels it covers, with a delete button per entry and an **Add** button for blocking
