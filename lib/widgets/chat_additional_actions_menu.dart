@@ -119,7 +119,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   }
 
   Future<void> _showActions(BuildContext context) async {
-    await showModalBottomSheet<void>(
+    final sendImage = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => ChatAdditionalActionsMenu(
@@ -153,8 +153,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
         onSendImage: onSendImage == null || !sendImageEnabled
             ? null
             : () {
-                Navigator.pop(sheetContext);
-                onSendImage!();
+                Navigator.pop(sheetContext, true);
               },
         onOpenCanvas: () {
           Navigator.pop(sheetContext);
@@ -166,6 +165,10 @@ class ChatAdditionalActionsButton extends StatelessWidget {
         },
       ),
     );
+
+    // iOS cannot reliably present its media picker while this bottom sheet is
+    // still being dismissed. Wait for the route to finish closing first.
+    if (sendImage == true) onSendImage?.call();
   }
 }
 

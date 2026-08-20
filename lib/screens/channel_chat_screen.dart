@@ -4,9 +4,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart' as file_selector;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart' as image_picker;
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/screens/region_management_screen.dart';
@@ -2530,14 +2532,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // of an image the sender is already holding.
     final file_selector.XFile? picked;
     try {
-      picked = await file_selector.openFile(
-        acceptedTypeGroups: const [
-          file_selector.XTypeGroup(
-            label: 'Images',
-            extensions: ['png', 'jpg', 'jpeg', 'webp'],
-          ),
-        ],
-      );
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        picked = await image_picker.ImagePicker().pickImage(
+          source: image_picker.ImageSource.gallery,
+          requestFullMetadata: false,
+        );
+      } else {
+        picked = await file_selector.openFile(
+          acceptedTypeGroups: const [
+            file_selector.XTypeGroup(
+              label: 'Images',
+              extensions: ['png', 'jpg', 'jpeg', 'webp'],
+            ),
+          ],
+        );
+      }
     } on Exception catch (e) {
       debugPrint('image pick failed: $e');
       if (!mounted) return;
