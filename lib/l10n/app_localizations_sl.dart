@@ -6227,4 +6227,17 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Ime pošiljatelja';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Prikaži kot pri prejemnikih';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Prikaži izvirnik';
+
+  @override
+  String get imageSend_previewAsReceived => 'Tako bodo sliko videli prejemniki';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Predogleda ni bilo mogoče dekodirati';
 }

@@ -531,6 +531,7 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
   /// version-1 install can send a picture and not open one. Treating the two as
   /// the same fact would let the receive path start a decode that fails
   /// halfway.
+  @override
   bool get canDecode =>
       canRunInference &&
       kImageCodecBitstreamPathAvailable &&
@@ -1048,6 +1049,32 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
       rgbBytes: await _toSquareRgb(bytes),
       ratePoint: ratePoint ?? defaultRatePoint,
     );
+  }
+
+  /// [ImageSendCodec] entry point for the compose sheet's "as received"
+  /// preview: encode-side bytes in, displayable pixels out.
+  ///
+  /// Everything is folded into null — an unusable decoder, a rejected
+  /// bitstream, a throw from a missing entropy path — because the caller's
+  /// only recourse is the same in every case: keep showing the original.
+  @override
+  Future<Uint8List?> decodeToPng(
+    Uint8List bitstream,
+    ImageCodecRatePoint rate,
+  ) async {
+    try {
+      final result = await decodeBitstream(
+        bitstream: bitstream,
+        ratePoint: aeicRatePointForUi(rate),
+        resolution: kImageCodecSquareSize,
+      );
+      if (result == null || result.status != ImageCodecStatus.completed) {
+        return null;
+      }
+      return result.pngBytes;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Decodes a reassembled bitstream back to PNG bytes.

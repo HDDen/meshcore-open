@@ -5942,4 +5942,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => '送信者名';
+
+  @override
+  String get imageSend_previewShowAsReceived => '受信側の見え方';
+
+  @override
+  String get imageSend_previewShowOriginal => '元の画像を表示';
+
+  @override
+  String get imageSend_previewAsReceived => '受信者にはこのように表示されます';
+
+  @override
+  String get imageSend_previewDecodeFailed => 'プレビューをデコードできませんでした';
 }

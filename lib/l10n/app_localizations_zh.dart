@@ -5816,4 +5816,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => '发送者名称';
+
+  @override
+  String get imageSend_previewShowAsReceived => '查看接收方效果';
+
+  @override
+  String get imageSend_previewShowOriginal => '显示原图';
+
+  @override
+  String get imageSend_previewAsReceived => '接收方将看到这样的图像';
+
+  @override
+  String get imageSend_previewDecodeFailed => '无法解码预览';
 }

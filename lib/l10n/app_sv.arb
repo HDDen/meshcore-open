@@ -3175,5 +3175,9 @@
   "chat_blockedSenders": "Blockerade avsändare",
   "chat_blockedSendersEmpty": "Inga blockerade avsändare",
   "chat_blockedSendersAllChannels": "Alla kanaler",
-  "chat_blockSenderName": "Avsändarens namn"
+  "chat_blockSenderName": "Avsändarens namn",
+  "imageSend_previewShowAsReceived": "Visa som mottaget",
+  "imageSend_previewShowOriginal": "Visa original",
+  "imageSend_previewAsReceived": "Så här ser mottagarna bilden",
+  "imageSend_previewDecodeFailed": "Det gick inte att avkoda förhandsgranskningen"
 }

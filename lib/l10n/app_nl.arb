@@ -3175,5 +3175,9 @@
   "chat_blockedSenders": "Geblokkeerde afzenders",
   "chat_blockedSendersEmpty": "Geen geblokkeerde afzenders",
   "chat_blockedSendersAllChannels": "Alle kanalen",
-  "chat_blockSenderName": "Naam afzender"
+  "chat_blockSenderName": "Naam afzender",
+  "imageSend_previewShowAsReceived": "Tonen zoals ontvangen",
+  "imageSend_previewShowOriginal": "Origineel tonen",
+  "imageSend_previewAsReceived": "Zo zien ontvangers de afbeelding",
+  "imageSend_previewDecodeFailed": "Kan de voorbeeldweergave niet decoderen"
 }

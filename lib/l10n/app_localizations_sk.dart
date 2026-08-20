@@ -6219,4 +6219,16 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Meno odosielateľa';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Zobraziť ako u príjemcov';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Zobraziť originál';
+
+  @override
+  String get imageSend_previewAsReceived => 'Takto obrázok uvidia príjemcovia';
+
+  @override
+  String get imageSend_previewDecodeFailed => 'Nepodarilo sa dekódovať náhľad';
 }

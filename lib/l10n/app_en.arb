@@ -3501,5 +3501,9 @@
   "chat_blockedSenders": "Blocked senders",
   "chat_blockedSendersEmpty": "No blocked senders",
   "chat_blockedSendersAllChannels": "All channels",
-  "chat_blockSenderName": "Sender name"
+  "chat_blockSenderName": "Sender name",
+  "imageSend_previewShowAsReceived": "Show as received",
+  "imageSend_previewShowOriginal": "Show original",
+  "imageSend_previewAsReceived": "This is what receivers will see",
+  "imageSend_previewDecodeFailed": "Could not decode the preview"
 }

@@ -3530,5 +3530,9 @@
   "chat_blockedSenders": "차단된 발신자",
   "chat_blockedSendersEmpty": "차단된 발신자가 없습니다",
   "chat_blockedSendersAllChannels": "모든 채널",
-  "chat_blockSenderName": "발신자 이름"
+  "chat_blockSenderName": "발신자 이름",
+  "imageSend_previewShowAsReceived": "수신자 화면으로 보기",
+  "imageSend_previewShowOriginal": "원본 보기",
+  "imageSend_previewAsReceived": "수신자에게는 이렇게 보입니다",
+  "imageSend_previewDecodeFailed": "미리 보기를 디코딩하지 못했습니다"
 }

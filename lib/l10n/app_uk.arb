@@ -3373,5 +3373,9 @@
   "chat_blockedSenders": "Заблоковані відправники",
   "chat_blockedSendersEmpty": "Заблокованих відправників немає",
   "chat_blockedSendersAllChannels": "Усі канали",
-  "chat_blockSenderName": "Ім'я відправника"
+  "chat_blockSenderName": "Ім'я відправника",
+  "imageSend_previewShowAsReceived": "Як побачать одержувачі",
+  "imageSend_previewShowOriginal": "Показати оригінал",
+  "imageSend_previewAsReceived": "Саме так зображення побачать одержувачі",
+  "imageSend_previewDecodeFailed": "Не вдалося декодувати попередній перегляд"
 }

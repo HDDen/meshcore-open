@@ -3498,5 +3498,9 @@
   "chat_blockedSenders": "ブロックした送信者",
   "chat_blockedSendersEmpty": "ブロックした送信者はいません",
   "chat_blockedSendersAllChannels": "すべてのチャンネル",
-  "chat_blockSenderName": "送信者名"
+  "chat_blockSenderName": "送信者名",
+  "imageSend_previewShowAsReceived": "受信側の見え方",
+  "imageSend_previewShowOriginal": "元の画像を表示",
+  "imageSend_previewAsReceived": "受信者にはこのように表示されます",
+  "imageSend_previewDecodeFailed": "プレビューをデコードできませんでした"
 }

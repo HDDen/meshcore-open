@@ -6254,4 +6254,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Имя отправителя';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Как увидят получатели';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Показать оригинал';
+
+  @override
+  String get imageSend_previewAsReceived => 'Так изображение увидят получатели';
+
+  @override
+  String get imageSend_previewDecodeFailed => 'Не удалось декодировать превью';
 }

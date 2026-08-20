@@ -3431,5 +3431,9 @@
   "chat_blockedSenders": "Zablokowani nadawcy",
   "chat_blockedSendersEmpty": "Brak zablokowanych nadawców",
   "chat_blockedSendersAllChannels": "Wszystkie kanały",
-  "chat_blockSenderName": "Nazwa nadawcy"
+  "chat_blockSenderName": "Nazwa nadawcy",
+  "imageSend_previewShowAsReceived": "Pokaż jak u odbiorców",
+  "imageSend_previewShowOriginal": "Pokaż oryginał",
+  "imageSend_previewAsReceived": "Tak obraz zobaczą odbiorcy",
+  "imageSend_previewDecodeFailed": "Nie udało się zdekodować podglądu"
 }

@@ -64,7 +64,7 @@ Future<ImageSendPreviewResult?> showImageSendPreviewSheet({
   required int originalFileBytes,
   required ImageSendCodec codec,
   ImageSendRadio? radio,
-  bool initialParity = true,
+  bool initialParity = false,
 }) {
   return showModalBottomSheet<ImageSendPreviewResult>(
     context: context,
@@ -93,7 +93,7 @@ class ImageSendPreviewSheet extends StatefulWidget {
     required this.originalFileBytes,
     required this.codec,
     this.radio,
-    this.initialParity = true,
+    this.initialParity = false,
   });
 
   @override
@@ -147,6 +147,13 @@ class _ImageSendPreviewSheetState extends State<ImageSendPreviewSheet> {
   bool _sending = false;
   bool _failed = false;
 
+  /// The bitstream decoded back to pixels — what the receiver will see.
+  /// Kept once decoded, so toggling back and forth costs nothing.
+  Uint8List? _received;
+  bool _decoding = false;
+  bool _decodeFailed = false;
+  bool _showReceived = false;
+
   /// Latest radio params seen in build; used by [_onSend] so the confirm path
   /// does not have to touch an InheritedWidget after an await.
   ImageSendRadio? _radio;
@@ -186,6 +193,33 @@ class _ImageSendPreviewSheetState extends State<ImageSendPreviewSheet> {
       });
       return null;
     }
+  }
+
+  /// Swaps the preview between the picked image and the decoded bitstream.
+  ///
+  /// The decode is the real one, as slow and as memory-hungry as a receive-side
+  /// decode, so it runs when the user asks rather than on every preview — and
+  /// only once, since the bitstream does not change.
+  Future<void> _toggleReceivedPreview() async {
+    if (_received != null) {
+      setState(() => _showReceived = !_showReceived);
+      return;
+    }
+    setState(() {
+      _decoding = true;
+      _decodeFailed = false;
+    });
+    final bitstream = await _encode();
+    final png = bitstream == null
+        ? null
+        : await widget.codec.decodeToPng(bitstream, kImageSendRatePoint);
+    if (!mounted) return;
+    setState(() {
+      _decoding = false;
+      _received = png;
+      _decodeFailed = png == null;
+      _showReceived = png != null;
+    });
   }
 
   ImageSendRadio _radioParams(BuildContext context) {
@@ -351,7 +385,12 @@ class _ImageSendPreviewSheetState extends State<ImageSendPreviewSheet> {
   /// below it are the reason this screen exists and must not be pushed off the
   /// first screenful by a full-width square.
   Widget _preview(ThemeData theme, ColorScheme colors) {
+    final l10n = context.l10n;
     final maxSide = MediaQuery.sizeOf(context).height * 0.28;
+    // Null unless the decoded picture is both available and selected, so the
+    // image below promotes it without a bang.
+    final received = _showReceived ? _received : null;
+    final showingReceived = received != null;
     return Column(
       children: [
         ConstrainedBox(
@@ -363,7 +402,7 @@ class _ImageSendPreviewSheetState extends State<ImageSendPreviewSheet> {
               child: Container(
                 color: colors.surfaceContainerHighest,
                 child: Image.memory(
-                  widget.imageBytes,
+                  received ?? widget.imageBytes,
                   fit: BoxFit.fill,
                   alignment: Alignment.center,
                   gaplessPlayback: true,
@@ -381,12 +420,45 @@ class _ImageSendPreviewSheetState extends State<ImageSendPreviewSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          context.l10n.imageSend_cropNote,
+          // The crop note describes the source picture; once the decoded one is
+          // on screen the caption has to say which of the two it is.
+          showingReceived
+              ? l10n.imageSend_previewAsReceived
+              : l10n.imageSend_cropNote,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(
             color: colors.onSurfaceVariant,
           ),
         ),
+        if (widget.codec.canDecode &&
+            widget.codec.availability == ImageCodecAvailability.ready) ...[
+          const SizedBox(height: 4),
+          TextButton.icon(
+            // Also off while the initial encode runs: `_encode` has no
+            // in-flight dedup, so a tap then would start a second one.
+            onPressed: _decoding || _sending || _encoding
+                ? null
+                : _toggleReceivedPreview,
+            icon: _decoding
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.visibility_outlined, size: 18),
+            label: Text(
+              showingReceived
+                  ? l10n.imageSend_previewShowOriginal
+                  : l10n.imageSend_previewShowAsReceived,
+            ),
+          ),
+          if (_decodeFailed)
+            Text(
+              l10n.imageSend_previewDecodeFailed,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.error),
+            ),
+        ],
       ],
     );
   }

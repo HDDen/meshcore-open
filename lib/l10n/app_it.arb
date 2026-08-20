@@ -3356,5 +3356,9 @@
   "chat_blockedSenders": "Mittenti bloccati",
   "chat_blockedSendersEmpty": "Nessun mittente bloccato",
   "chat_blockedSendersAllChannels": "Tutti i canali",
-  "chat_blockSenderName": "Nome del mittente"
+  "chat_blockSenderName": "Nome del mittente",
+  "imageSend_previewShowAsReceived": "Come lo vedranno",
+  "imageSend_previewShowOriginal": "Mostra originale",
+  "imageSend_previewAsReceived": "Ecco cosa vedranno i destinatari",
+  "imageSend_previewDecodeFailed": "Impossibile decodificare l'anteprima"
 }

@@ -6253,4 +6253,19 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Име на подателя';
+
+  @override
+  String get imageSend_previewShowAsReceived =>
+      'Както ще го видят получателите';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Покажи оригинала';
+
+  @override
+  String get imageSend_previewAsReceived =>
+      'Така ще изглежда изображението за получателите';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Неуспешно декодиране на визуализацията';
 }

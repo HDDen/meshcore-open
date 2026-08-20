@@ -3492,5 +3492,9 @@
   "chat_blockedSenders": "Expéditeurs bloqués",
   "chat_blockedSendersEmpty": "Aucun expéditeur bloqué",
   "chat_blockedSendersAllChannels": "Tous les canaux",
-  "chat_blockSenderName": "Nom de l'expéditeur"
+  "chat_blockSenderName": "Nom de l'expéditeur",
+  "imageSend_previewShowAsReceived": "Voir comme à la réception",
+  "imageSend_previewShowOriginal": "Voir l'original",
+  "imageSend_previewAsReceived": "Voici ce que verront les destinataires",
+  "imageSend_previewDecodeFailed": "Impossible de décoder l'aperçu"
 }

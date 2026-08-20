@@ -6203,4 +6203,17 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Avsändarens namn';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Visa som mottaget';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Visa original';
+
+  @override
+  String get imageSend_previewAsReceived => 'Så här ser mottagarna bilden';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Det gick inte att avkoda förhandsgranskningen';
 }

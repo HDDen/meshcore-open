@@ -6270,4 +6270,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Nome del mittente';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Come lo vedranno';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Mostra originale';
+
+  @override
+  String get imageSend_previewAsReceived => 'Ecco cosa vedranno i destinatari';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Impossibile decodificare l\'anteprima';
 }

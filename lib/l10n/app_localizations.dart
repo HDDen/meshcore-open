@@ -10647,6 +10647,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sender name'**
   String get chat_blockSenderName;
+
+  /// No description provided for @imageSend_previewShowAsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as received'**
+  String get imageSend_previewShowAsReceived;
+
+  /// No description provided for @imageSend_previewShowOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Show original'**
+  String get imageSend_previewShowOriginal;
+
+  /// No description provided for @imageSend_previewAsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'This is what receivers will see'**
+  String get imageSend_previewAsReceived;
+
+  /// No description provided for @imageSend_previewDecodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not decode the preview'**
+  String get imageSend_previewDecodeFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -5949,4 +5949,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => '발신자 이름';
+
+  @override
+  String get imageSend_previewShowAsReceived => '수신자 화면으로 보기';
+
+  @override
+  String get imageSend_previewShowOriginal => '원본 보기';
+
+  @override
+  String get imageSend_previewAsReceived => '수신자에게는 이렇게 보입니다';
+
+  @override
+  String get imageSend_previewDecodeFailed => '미리 보기를 디코딩하지 못했습니다';
 }

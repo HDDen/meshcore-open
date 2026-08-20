@@ -3393,5 +3393,9 @@
   "chat_blockedSenders": "Blokirani pošiljatelji",
   "chat_blockedSendersEmpty": "Ni blokiranih pošiljateljev",
   "chat_blockedSendersAllChannels": "Vsi kanali",
-  "chat_blockSenderName": "Ime pošiljatelja"
+  "chat_blockSenderName": "Ime pošiljatelja",
+  "imageSend_previewShowAsReceived": "Prikaži kot pri prejemnikih",
+  "imageSend_previewShowOriginal": "Prikaži izvirnik",
+  "imageSend_previewAsReceived": "Tako bodo sliko videli prejemniki",
+  "imageSend_previewDecodeFailed": "Predogleda ni bilo mogoče dekodirati"
 }

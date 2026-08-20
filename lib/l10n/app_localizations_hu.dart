@@ -6247,4 +6247,18 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Feladó neve';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Így látják a címzettek';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Eredeti megjelenítése';
+
+  @override
+  String get imageSend_previewAsReceived =>
+      'A címzettek így fogják látni a képet';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Az előnézetet nem sikerült dekódolni';
 }

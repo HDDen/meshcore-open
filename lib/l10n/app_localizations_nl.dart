@@ -6234,4 +6234,17 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chat_blockSenderName => 'Naam afzender';
+
+  @override
+  String get imageSend_previewShowAsReceived => 'Tonen zoals ontvangen';
+
+  @override
+  String get imageSend_previewShowOriginal => 'Origineel tonen';
+
+  @override
+  String get imageSend_previewAsReceived => 'Zo zien ontvangers de afbeelding';
+
+  @override
+  String get imageSend_previewDecodeFailed =>
+      'Kan de voorbeeldweergave niet decoderen';
 }

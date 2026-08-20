@@ -3393,5 +3393,9 @@
   "chat_blockedSenders": "Blokovaní odosielatelia",
   "chat_blockedSendersEmpty": "Žiadni blokovaní odosielatelia",
   "chat_blockedSendersAllChannels": "Všetky kanály",
-  "chat_blockSenderName": "Meno odosielateľa"
+  "chat_blockSenderName": "Meno odosielateľa",
+  "imageSend_previewShowAsReceived": "Zobraziť ako u príjemcov",
+  "imageSend_previewShowOriginal": "Zobraziť originál",
+  "imageSend_previewAsReceived": "Takto obrázok uvidia príjemcovia",
+  "imageSend_previewDecodeFailed": "Nepodarilo sa dekódovať náhľad"
 }

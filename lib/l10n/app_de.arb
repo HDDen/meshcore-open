@@ -3520,5 +3520,9 @@
   "chat_blockedSenders": "Blockierte Absender",
   "chat_blockedSendersEmpty": "Keine blockierten Absender",
   "chat_blockedSendersAllChannels": "Alle Kanäle",
-  "chat_blockSenderName": "Absendername"
+  "chat_blockSenderName": "Absendername",
+  "imageSend_previewShowAsReceived": "So sehen es die Empfänger",
+  "imageSend_previewShowOriginal": "Original anzeigen",
+  "imageSend_previewAsReceived": "So wird das Bild bei den Empfängern aussehen",
+  "imageSend_previewDecodeFailed": "Vorschau konnte nicht dekodiert werden"
 }
