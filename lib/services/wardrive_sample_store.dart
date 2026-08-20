@@ -14,7 +14,7 @@ class WardriveSample {
   final String publicKeyHex;
   final String? path;
   final String geohash;
-  final int? snr;
+  final double? snr;
   final int? rssi;
   final bool? pingSuccess;
   final int? responseTimeMs;
@@ -113,7 +113,7 @@ class WardriveSample {
       publicKeyHex: publicKeyHex,
       path: path ?? (publicKeyHex.isEmpty ? null : publicKeyHex),
       geohash: geohash,
-      snr: (json['snr'] as num?)?.toInt(),
+      snr: (json['snr'] as num?)?.toDouble(),
       rssi: (json['rssi'] as num?)?.toInt(),
       pingSuccess: pingSuccess,
       responseTimeMs: (json['responseTimeMs'] as num?)?.toInt(),
@@ -130,7 +130,7 @@ class WardriveSample {
     required int tag,
     required int nodeType,
     required String publicKeyHex,
-    required int snr,
+    required double snr,
     required int rssi,
     required int? responseTimeMs,
   }) {

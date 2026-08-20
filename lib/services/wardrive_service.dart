@@ -21,7 +21,7 @@ class WardriveDiscoveryResult {
   final int tag;
   final int nodeType;
   final String publicKeyHex;
-  final int snr;
+  final double snr;
   final int rssi;
   final int? responseTimeMs;
 
@@ -64,8 +64,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   final Set<String> _currentDiscoveryPublicKeys = {};
   final Set<String> _ignoredRepeaterKeys = {};
   int? _currentDiscoveryTag;
-  static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 25);
-  static const Duration _discoveryResponseWindow = Duration(seconds: 10);
+  static const Duration defaultAutoDiscoveryInterval = Duration(seconds: 30);
   static const Duration _continuousGpsMaxAge = Duration(seconds: 60);
   static const int minAutoDiscoveryIntervalSeconds = 5;
   static const int maxAutoDiscoveryIntervalSeconds = 300;
@@ -519,7 +518,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
 
       final tag = _random.nextInt(0x7fffffff);
       pendingTag = tag;
-      final payload = buildDiscoveryRequestPayload(tag, prefixOnly: false);
+      final payload = buildDiscoveryRequestPayload(tag, prefixOnly: true);
       final startedAt = DateTime.now();
       _currentDiscoveryPublicKeys.clear();
       _recentDiscoveries.clear();
@@ -530,19 +529,23 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
         longitude: _lastPhoneLongitude,
         phoneLocationAt: _lastPhoneLocationAt,
       );
+      await _connector.sendFrame(
+        buildSendControlDataFrame(payload),
+        waitForGenericAck: true,
+      );
+      final responseWindow = _autoDiscoveryInterval;
       if (_isRunning) {
         _discoveryResponsesByTag[tag] = 0;
         _discoveryFailureTimers[tag]?.cancel();
-        _discoveryFailureTimers[tag] = Timer(_discoveryResponseWindow, () {
+        _discoveryFailureTimers[tag] = Timer(responseWindow, () {
           unawaited(_saveFailedSampleIfNoResponses(tag));
         });
       }
-      await _connector.sendFrame(buildSendControlDataFrame(payload));
       _lastDiscoveryRequestAt = startedAt;
       _discoveryRequestsSent++;
-      _startDiscoveryResponseWait();
+      _startDiscoveryResponseWait(responseWindow);
       if (!startWardrive) {
-        _oneShotDiscoveryTimer = Timer(const Duration(seconds: 10), () {
+        _oneShotDiscoveryTimer = Timer(responseWindow, () {
           _acceptOneShotDiscoveryResponses = false;
           _clearDiscoveryTracking(tag);
           notifyListeners();
@@ -965,7 +968,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
 
     var snrRaw = frame[1];
     if (snrRaw > 127) snrRaw -= 256;
-    final snr = (snrRaw / 4.0).round();
+    final snr = snrRaw / 4.0;
 
     var rssi = frame[2];
     if (rssi > 127) rssi -= 256;
@@ -1063,10 +1066,10 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _startDiscoveryResponseWait() {
+  void _startDiscoveryResponseWait(Duration responseWindow) {
     _discoveryResponseWaitTimer?.cancel();
     _isAwaitingDiscoveryResponse = true;
-    _discoveryResponseWaitTimer = Timer(_discoveryResponseWindow, () {
+    _discoveryResponseWaitTimer = Timer(responseWindow, () {
       _clearDiscoveryResponseWait();
       notifyListeners();
     });
