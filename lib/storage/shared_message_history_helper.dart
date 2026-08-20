@@ -237,6 +237,29 @@ class SharedMessageHistoryHelper {
     );
   }
 
+  /// True when any other node's copy of this conversation could hold a
+  /// marker. Same substring trick as [MessageStore.mayContainMarker], and for
+  /// the same reason: loading every secondary conversation just to find pins
+  /// decodes the whole shared store.
+  ///
+  /// [scopes] is passed in rather than fetched, because [knownScopes] walks
+  /// every preferences key — asking it once per contact is what made a sweep
+  /// over a few hundred contacts expensive.
+  static bool secondaryMayContainMarker({
+    required String currentPublicKeyHex,
+    required String contactKeyHex,
+    required Set<String> scopes,
+  }) {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    if (currentScope.isEmpty || contactKeyHex.isEmpty) return false;
+    for (final scope in scopes) {
+      if (scope == currentScope) continue;
+      final store = MessageStore()..setPublicKeyHex = scope;
+      if (store.mayContainMarker(contactKeyHex)) return true;
+    }
+    return false;
+  }
+
   static Set<String> knownScopes() {
     final result = <String>{};
     for (final key in PrefsManager.instance.getKeys()) {

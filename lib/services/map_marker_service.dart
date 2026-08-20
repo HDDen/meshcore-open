@@ -15,21 +15,19 @@ class MapMarkerService {
     final prefs = PrefsManager.instance;
     final items = prefs.getStringList(_removedKey) ?? const [];
     final result = <String, DateTime>{};
-    // Entries written before removals carried a time are bare ids. They are
-    // read as removed just now, so they keep hiding what is already on the map
-    // without reaching anything shared after this load.
-    final legacyAt = DateTime.now();
     for (final item in items) {
       final separator = item.indexOf('|');
       final millis = separator < 0
           ? null
           : int.tryParse(item.substring(0, separator));
-      if (millis == null) {
-        result[item] = legacyAt;
-      } else {
-        result[item.substring(separator + 1)] =
-            DateTime.fromMillisecondsSinceEpoch(millis);
-      }
+      // Entries written before removals carried a time are bare ids, and they
+      // were created under the old meaning: "hide this caption for good".
+      // There is no way to tell which pin was actually meant, so they are
+      // dropped rather than guessed at — everything they were suppressing
+      // comes back, and removing one again now behaves properly.
+      if (millis == null) continue;
+      result[item.substring(separator + 1)] =
+          DateTime.fromMillisecondsSinceEpoch(millis);
     }
     return result;
   }

@@ -100,6 +100,33 @@ class MessageStore {
     return jsonString;
   }
 
+  /// True when this conversation's stored blob could hold a shared marker.
+  ///
+  /// A conversation is one JSON string, so deciding this by decoding it costs
+  /// as much as loading it. The map only needs the handful of conversations
+  /// that carry pins, and a substring scan over the raw string rejects the
+  /// rest for the price of reading it. False positives are fine — the caller
+  /// decodes and parses properly — false negatives are not, so this looks for
+  /// the bare marker prefix and catches `del:m:` along with `m:`.
+  ///
+  /// Deliberately not built on [_loadMessagesJson]: that one migrates legacy
+  /// keys, so peeking at a few hundred conversations through it would fire a
+  /// preferences write per contact. This reads and returns, nothing else, and
+  /// stays synchronous so a caller sweeping every contact pays no async hop.
+  bool mayContainMarker(String contactKeyHex) {
+    if (publicKeyHex.isEmpty) return false;
+    final prefs = PrefsManager.instance;
+    for (final key in [
+      '$keyFor$contactKeyHex',
+      '$_keyPrefix$contactKeyHex',
+      keyFor,
+    ]) {
+      final jsonString = prefs.getString(key);
+      if (jsonString != null && jsonString.contains('m:')) return true;
+    }
+    return false;
+  }
+
   Future<MessageStoreSummary?> loadMessageSummary(
     String contactKeyHex, {
     bool includeLegacyUnscoped = true,

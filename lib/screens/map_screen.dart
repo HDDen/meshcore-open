@@ -504,6 +504,7 @@ class _MapScreenState extends State<MapScreen>
         _channelMarkerStyles.syncTo(connector.selfPublicKeyHex);
         _channelMarkerStyles.trackChannels(connector.channels);
         connector.ensureSharedChannelHistoryLoaded();
+        connector.ensureContactHistoryLoaded();
 
         final contacts = settings.mapShowDiscoveryContacts
             ? allContacts

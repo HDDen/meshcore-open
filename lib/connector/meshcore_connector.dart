@@ -235,6 +235,15 @@ class MeshCoreConnector extends ChangeNotifier {
   static const String _reactionSendQueuePrefix = '__reaction_send__';
   int _reactionSendQueueSequence = 0;
   final Set<String> _loadedConversationKeys = {};
+
+  /// Guards [ensureContactHistoryLoaded] against overlapping passes.
+  bool _warmingContactHistory = false;
+
+  /// Contacts already examined by [ensureContactHistoryLoaded]. Kept apart
+  /// from [_loadedConversationKeys]: a conversation with no pins is never
+  /// decoded by the sweep, so it stays unloaded until its chat is opened, and
+  /// a later sweep must still skip it in one lookup.
+  final Set<String> _markerScannedContactKeys = {};
   final Map<String, Future<void>> _conversationLoadFutures = {};
   int _conversationLoadGeneration = 0;
   final Map<int, Set<String>> _processedChannelReactions =
@@ -800,6 +809,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _conversations.clear();
     _channelMessages.clear();
     _loadedConversationKeys.clear();
+    _markerScannedContactKeys.clear();
     _conversationLoadGeneration++;
     _conversationLoadFutures.clear();
     _knownContactKeys.clear();
@@ -1103,6 +1113,83 @@ class MeshCoreConnector extends ChangeNotifier {
       if (channel.isEmpty) continue;
       _ensureSharedChannelHistory(channel);
     }
+  }
+
+  /// Warms message history for every contact, for the same reason: a screen
+  /// showing all of them at once should not need each chat to have been
+  /// opened first. Unlike channels, whose messages arrive with the session,
+  /// a conversation is read from storage only when something asks for it —
+  /// which is why markers shared by contacts used to appear on the map only
+  /// after visiting the chat. Repeaters are skipped: their history is CLI
+  /// traffic, never markers.
+  ///
+  /// A conversation is one JSON blob, so warming them back to back decodes
+  /// the whole message store in a single frame. Three things keep that off the
+  /// frame at a few hundred contacts:
+  ///
+  /// * only conversations that could hold a pin are decoded at all —
+  ///   `MessageStore.mayContainMarker` rejects the rest with a substring scan
+  ///   over the raw string, and `secondaryMayContainMarker` does the same for
+  ///   every other node's copy;
+  /// * `knownScopes()` is read once for the whole sweep, not per contact — it
+  ///   walks every preferences key, so that alone dominated the cost;
+  /// * each contact is examined once ever ([_markerScannedContactKeys]), and
+  ///   the pass yields to the event loop as it goes.
+  ///
+  /// A conversation skipped this way is left unloaded rather than marked
+  /// loaded, so opening its chat still reads it as before; the map does not
+  /// need it, since a marker arriving later loads the conversation on the
+  /// receive path anyway.
+  ///
+  /// Safe to call from `build`: once everything is warm the pass finds nothing
+  /// to do, stops yielding and — importantly — does not notify, so it cannot
+  /// drive a rebuild that starts it again.
+  void ensureContactHistoryLoaded() {
+    if (_warmingContactHistory) return;
+    _warmingContactHistory = true;
+    unawaited(() async {
+      var warmed = false;
+      try {
+        final scopes = _sharedContactsEnabled
+            ? SharedMessageHistoryHelper.knownScopes()
+            : const <String>{};
+        var sinceYield = 0;
+        for (final contact in List<Contact>.from(_contacts)) {
+          if (contact.type == advTypeRepeater) continue;
+          final contactKeyHex = contact.publicKeyHex;
+          if (!_markerScannedContactKeys.add(contactKeyHex)) continue;
+
+          var opened = false;
+          if (!_loadedConversationKeys.contains(contactKeyHex) &&
+              _messageStore.mayContainMarker(contactKeyHex)) {
+            await _loadMessagesForContact(contactKeyHex);
+            opened = true;
+          }
+          if (scopes.isNotEmpty &&
+              contact.type != advTypeRoom &&
+              SharedMessageHistoryHelper.secondaryMayContainMarker(
+                currentPublicKeyHex: selfPublicKeyHex,
+                contactKeyHex: contactKeyHex,
+                scopes: scopes,
+              ) &&
+              _ensureSharedContactHistory(contact)) {
+            opened = true;
+          }
+          if (opened) warmed = true;
+          // Yield after anything that decoded, and periodically anyway: the
+          // scans are cheap each but there are hundreds of them.
+          if (opened || ++sinceYield >= 25) {
+            sinceYield = 0;
+            await Future<void>.delayed(Duration.zero);
+          }
+        }
+      } finally {
+        _warmingContactHistory = false;
+      }
+      // An empty conversation loads without notifying, so the pass reports
+      // its own result rather than relying on the loaders to have done it.
+      if (warmed) notifyListeners();
+    }());
   }
 
   Future<void> deleteMessage(Message message) async {
@@ -1631,13 +1718,17 @@ class MeshCoreConnector extends ChangeNotifier {
     }());
   }
 
-  void _ensureSharedContactHistory(Contact contact) {
-    if (!_sharedContactsEnabled || contact.type == advTypeRoom) return;
+  /// Returns true when this call actually started a load, so a caller
+  /// warming many contacts can tell a real read from a no-op.
+  bool _ensureSharedContactHistory(Contact contact) {
+    if (!_sharedContactsEnabled || contact.type == advTypeRoom) return false;
     final contactKeyHex = contact.publicKeyHex;
-    if (_hiddenSharedContactKeys.contains(contactKeyHex)) return;
-    if (_loadingSharedContactKeys.contains(contactKeyHex)) return;
-    if (_sharedContactSecondaryMessages.containsKey(contactKeyHex)) return;
-    if (selfPublicKeyHex.isEmpty || contactKeyHex.isEmpty) return;
+    if (_hiddenSharedContactKeys.contains(contactKeyHex)) return false;
+    if (_loadingSharedContactKeys.contains(contactKeyHex)) return false;
+    if (_sharedContactSecondaryMessages.containsKey(contactKeyHex)) {
+      return false;
+    }
+    if (selfPublicKeyHex.isEmpty || contactKeyHex.isEmpty) return false;
 
     final expectedPublicKeyHex = selfPublicKeyHex;
     _loadingSharedContactKeys.add(contactKeyHex);
@@ -1655,6 +1746,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _loadingSharedContactKeys.remove(contactKeyHex);
       }
     }());
+    return true;
   }
 
   List<ChannelMessage> _mergeChannelMessages(
@@ -4752,6 +4844,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _discoveredContacts.clear();
     _conversations.clear();
     _loadedConversationKeys.clear();
+    _markerScannedContactKeys.clear();
     _conversationLoadGeneration++;
     _conversationLoadFutures.clear();
     _selfPublicKey = null;

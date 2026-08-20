@@ -236,7 +236,8 @@ so a channel's markers can be told apart at a glance. Channels nobody has styled
 handed out down the palette in order, and the settings are remembered per node.
 
 Markers received through the combined history of your other nodes are drawn as well, not only
-the ones this node heard.
+the ones this node heard, and pins shared in one-to-one chats appear without opening those chats
+first. The channel picker governs channels only — contact pins are always shown.
 
 A pin you share spins until the mesh confirms it: a repeat heard on a channel, a delivery
 receipt in a chat. If the send gives up, the pin is struck through instead.

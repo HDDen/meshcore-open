@@ -337,10 +337,42 @@ pin, grouping repeats of the same marker so the older positions become its histo
 
 **Where markers come from.** `getLoadedChannelMessagesWithShared` /
 `getLoadedMessagesWithShared` merge in shared history, so pins from another node appear too.
-Those getters never start a load; the map calls `ensureSharedChannelHistoryLoaded()` from
-`build` to warm every channel (idempotent, and a no-op when shared history is off). The same
-getters feed `_MapConnectorSnapshot.markerSignature` — the marker list is cached against that
-signature, so anything that should change the pins has to be visible to it.
+Those getters never start a load, so the map warms both sides from `build`:
+`ensureSharedChannelHistoryLoaded()` for channels, `ensureContactHistoryLoaded()` for contacts.
+The contact one exists because a conversation, unlike a channel's messages, is read from storage
+only when something asks for it — without it a contact's pins appeared on the map only after that
+chat had been opened. It skips repeaters, whose history is CLI traffic. Contact pins are never
+filtered by the channel picker: that gate is `_channelMarkerStyles.isVisible(marker.channelName)`,
+and a contact marker has no channel name.
+
+`ensureContactHistoryLoaded` cannot simply warm everything in one go: a conversation is stored as
+a single JSON blob, so doing them back to back decodes the whole message store inside one frame,
+which is plainly visible as a stall — and at a few hundred contacts with shared history on, three
+separate costs pile up. The sweep answers each one:
+
+- **Decoding.** Most conversations are never decoded. `MessageStore.mayContainMarker` reads the
+  raw string and rejects it with a substring scan, and `secondaryMayContainMarker` does the same
+  across every other node's copy, so the cost stops depending on how much history exists. That
+  peek deliberately avoids `_loadMessagesJson`, whose legacy-key migration would fire a
+  preferences *write* per contact, and it is synchronous so a sweep pays no async hop per look.
+- **Scope discovery.** `SharedMessageHistoryHelper.knownScopes()` walks every preferences key
+  with three regexes, so it is read once for the whole sweep and passed down. Asking it per
+  contact was the single largest cost.
+- **Frame time.** The sweep runs in the background under `_warmingContactHistory` and yields to
+  the event loop after anything it decodes, and every 25 contacts regardless.
+
+A conversation the peek rejects is left *unloaded* rather than marked loaded, so opening its chat
+still reads it as before; a marker arriving later loads the conversation on the receive path
+anyway. `_markerScannedContactKeys` records that a contact was examined at all, so a later sweep
+skips it in one lookup — that set, not the loaded one, is what keeps the steady state cheap, and
+it is cleared wherever `_loadedConversationKeys` is.
+
+The pass only calls `notifyListeners` when it actually opened something — otherwise the notify
+would drive a rebuild that starts another pass. It reports that itself rather than trusting the
+loaders, because an empty conversation is stored and loaded without notifying at all.
+
+The same getters feed `_MapConnectorSnapshot.markerSignature` — the marker list is cached
+against that signature, so anything that should change the pins has to be visible to it.
 
 **Per-channel styling.** Each channel decides whether its markers show at all, in what colour
 and with which icon — the map's overflow menu → `map_showMarksFromChannels`. The feature is kept
@@ -474,8 +506,10 @@ later is the same id. As plain sets, removing one pin captioned `map_pointOfInte
 default the share dialog offers — silently swallowed every future pin under that caption, with
 no way back, since an invisible marker cannot be tapped to restore it. Bounding by time is the
 rule `del:` commands already follow. Stored entries are `"<millis>|<id>"`; a bare id from before
-this is read as removed at load time, so it keeps hiding what is already on the map without
-reaching anything shared afterwards.
+this is **dropped** on load. Those were written under the old meaning — "hide this caption for
+good" — and nothing records which pin was actually meant, so guessing a time would keep hiding
+pins the user never chose to remove. Dropping them brings everything back, and removing one again
+now behaves properly.
 
 **Label budget.** `_maxMarkerLabelBytes` limits the pin caption at entry time: the channel
 budget for this node (which already accounts for `"<name>: "`), capped by the user's outgoing
