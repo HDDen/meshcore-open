@@ -242,6 +242,16 @@ class ReceivedImageEntry {
   /// duplicate chunk rather than a repeat of ours.
   final List<int> chunkRepeats;
 
+  /// The flood-scope region this image travelled under, ready for display —
+  /// no leading `#`, null when there was none — and whether we know it at all.
+  ///
+  /// Known only for our own sends. An incoming image arrives as
+  /// `CHANNEL_DATA_RECV` frames, which carry neither a path nor a scope, so
+  /// there is nothing to resolve a region from; those read as unknown, exactly
+  /// like a binary text message that never also reached us through the RX log.
+  final String? region;
+  final bool regionInfoAvailable;
+
   const ReceivedImageEntry({
     required this.streamId,
     required this.senderPrefix,
@@ -269,6 +279,8 @@ class ReceivedImageEntry {
     this.receiverPreviewStored = false,
     this.receiverPreviewByteCount = 0,
     this.chunkRepeats = const <int>[],
+    this.region,
+    this.regionInfoAvailable = false,
   });
 
   ImageStreamKey get key => ImageStreamKey(
@@ -310,6 +322,8 @@ class ReceivedImageEntry {
     bool? receiverPreviewStored,
     int? receiverPreviewByteCount,
     List<int>? chunkRepeats,
+    Object? region = _unset,
+    bool? regionInfoAvailable,
   }) {
     return ReceivedImageEntry(
       streamId: streamId,
@@ -344,6 +358,8 @@ class ReceivedImageEntry {
       receiverPreviewByteCount:
           receiverPreviewByteCount ?? this.receiverPreviewByteCount,
       chunkRepeats: chunkRepeats ?? this.chunkRepeats,
+      region: identical(region, _unset) ? this.region : region as String?,
+      regionInfoAvailable: regionInfoAvailable ?? this.regionInfoAvailable,
     );
   }
 
@@ -370,6 +386,8 @@ class ReceivedImageEntry {
     'pngByteCount': pngByteCount,
     'receiverPreviewStored': receiverPreviewStored,
     'receiverPreviewByteCount': receiverPreviewByteCount,
+    'regionInfoAvailable': regionInfoAvailable,
+    if (region != null) 'region': region,
     if (chunkRepeats.isNotEmpty) 'chunkRepeats': chunkRepeats,
     if (decodeMs != null) 'decodeMs': decodeMs,
     if (error != null) 'error': error,
@@ -406,6 +424,8 @@ class ReceivedImageEntry {
       chunkRepeats: List<int>.unmodifiable(
         (json['chunkRepeats'] as List?)?.whereType<int>() ?? const <int>[],
       ),
+      region: json['region'] as String?,
+      regionInfoAvailable: json['regionInfoAvailable'] as bool? ?? false,
     );
   }
 
@@ -1096,6 +1116,8 @@ class ReceivedImageStore extends ChangeNotifier {
     required AeicRatePoint rate,
     required int chunkCount,
     int aspectCode = 0,
+    String? region,
+    bool regionInfoAvailable = false,
     DateTime? at,
   }) async {
     final now = at ?? _clock();
@@ -1125,6 +1147,8 @@ class ReceivedImageStore extends ChangeNotifier {
       pngStored: true,
       pngByteCount: previewPng.length,
       pngBytes: previewPng,
+      region: region,
+      regionInfoAvailable: regionInfoAvailable,
     );
     final stored = await _store(entry);
     await evictToBudget(protect: stored.streamId);

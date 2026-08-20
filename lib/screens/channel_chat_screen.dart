@@ -2651,6 +2651,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           senderPrefix: senderPrefix,
           sourceBytes: sourceBytes,
           aspectCode: aspectCode,
+          connector: connector,
         );
       }
       if (!mounted) return;
@@ -2695,6 +2696,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required int senderPrefix,
     required Uint8List sourceBytes,
     required int aspectCode,
+    required MeshCoreConnector connector,
   }) async {
     final ReceivedImageStore store;
     try {
@@ -2704,6 +2706,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     final previewPng = await _squarePreviewPng(sourceBytes);
     if (previewPng == null) return;
+    // Resolved the same way a text message's region line is, so the two agree
+    // on a channel whose region comes from the node's default scope.
+    final region = await connector.outgoingChannelRegionLabel(
+      widget.channel.index,
+    );
     try {
       await store.registerOutgoing(
         channelIndex: widget.channel.index,
@@ -2721,6 +2728,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         // get it, so our bubble has to undo the stretch the same way theirs
         // does.
         aspectCode: aspectCode,
+        region: region,
+        regionInfoAvailable: true,
       );
     } on Exception catch (error) {
       debugPrint('outgoing image registration failed: $error');
@@ -2884,6 +2893,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       ),
                     ),
                   ),
+                  if (settings.enableMessageTracing &&
+                      settings.showMessageRegion)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 8,
+                        right: 8,
+                        bottom: 3,
+                      ),
+                      child: Text(
+                        context.l10n.channels_messageRegion(
+                          _imageRegionLabel(entry),
+                        ),
+                        style: MeshTheme.mono(
+                          fontSize: 10 * textScale,
+                          color: metaColor,
+                        ),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
                     child: Row(
@@ -2916,6 +2943,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ],
       ),
     );
+  }
+
+  /// The region line of an image bubble, worded like a text message's.
+  ///
+  /// Only our own sends carry one: the chunk frames of an incoming image hold
+  /// neither a path nor a scope, so there is nothing to resolve, and those read
+  /// as unknown rather than claiming the channel's region. There is no
+  /// "does not match a known region" case for the same reason — nothing was
+  /// resolved to compare.
+  String _imageRegionLabel(ReceivedImageEntry entry) {
+    final region = entry.region?.trim();
+    if (region != null && region.isNotEmpty) return region;
+    if (!entry.regionInfoAvailable) {
+      return context.l10n.channels_messageRegionUnknown;
+    }
+    return context.l10n.channels_messageRegionEmpty;
   }
 
   /// The per-packet repeat counters, as a tail for the time row.

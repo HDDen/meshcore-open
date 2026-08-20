@@ -604,6 +604,15 @@ it our own entry defaults to 1:1 and the sender is the one person seeing their o
 squashed into a square: the stored crop is the stretched square every recipient also gets, so
 the bubble has to undo the stretch exactly the way theirs does.
 
+It also takes the region label the send was scoped with (`region` / `regionInfoAvailable`,
+resolved by `MeshCoreConnector.outgoingChannelRegionLabel` — the channel's region, else the
+node's default scope — exactly as a text message's label is), so an image bubble can carry the
+same region line under `showMessageRegion`. An incoming image cannot: its `CHANNEL_DATA_RECV`
+chunk frames hold neither a path nor a scope, so it reads as unknown rather than borrowing the
+channel's region. The scope on the wire is applied for images identically to text —
+`sendImageChunks` wraps the whole burst in `_runScopedChannelSend`, so every chunk of one image
+goes out under one scope and no other channel send can slip in between them.
+
 ### Wardriving (coverage mapping)
 Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, driven from `map_screen.dart` / `widgets/wardrive_status_panel.dart`). Each cycle (default 25 s, 5–300 s configurable) takes a GPS fix, sends a zero-hop discovery request, and listens ~10 s for `DiscoverResp` frames; each responder → a GPS-tagged `WardriveSample` (SNR/RSSI/node key/response time), plus `pingSuccess=false` "dead zone" samples when nobody answers. `wardrive_upload_service.dart` POSTs sample batches as JSON to configurable sites (default `https://meshwar-map.pages.dev/api/samples`), de-duping per endpoint. `wardrive_foreground_service.dart` runs an Android **location** foreground service (MethodChannel `mco_advanced/wardrive_foreground`), gated in Dart so ordinary BLE users don't inherit location FGS.
 

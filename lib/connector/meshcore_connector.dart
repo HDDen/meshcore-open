@@ -2081,6 +2081,18 @@ class MeshCoreConnector extends ChangeNotifier {
     return _outgoingChannelRegion(channelIndex);
   }
 
+  /// The region label an outgoing channel send is stamped with: the channel's
+  /// own region, or the node's default scope when the channel has none. Shaped
+  /// for display — no leading `#` — and null when there is no region at all.
+  ///
+  /// Text messages take this through [_displayPacketRegion] on the send path;
+  /// an AEIC image is not a [ChannelMessage] and carries its own copy, so it
+  /// needs the same answer from outside.
+  Future<String?> outgoingChannelRegionLabel(int channelIndex) async =>
+      _displayPacketRegion(
+        await _outgoingChannelRegionForMessage(channelIndex),
+      );
+
   void ensureContactSmazSettingLoaded(String contactKeyHex) {
     _ensureContactSmazSettingLoaded(contactKeyHex);
   }
