@@ -20,6 +20,7 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
+import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
@@ -12063,8 +12064,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: message.pathHashWidth,
         pathBytes: message.pathBytes,
         pathVariants: message.pathVariants,
-        snr: message.snr,
-        rssi: message.rssi,
+        pathObservations: message.pathObservations,
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
         packetRegionInfoAvailable: message.packetRegionInfoAvailable,
@@ -12092,31 +12092,15 @@ class MeshCoreConnector extends ChangeNotifier {
         existing.pathVariants,
         processedMessage.pathVariants,
       );
+      final mergedPathObservations = ChannelPathSignalHelper.merge(
+        existing.pathObservations,
+        processedMessage.pathObservations,
+      );
       final mergedPathLength = _mergePathLength(
         existing.pathLength,
         processedMessage.pathLength,
         mergedPathBytes.length,
       );
-      // SNR and RSSI describe one reception, so they follow the path they
-      // were heard on. A copy that brings the path we are going to display
-      // brings its reading with it; an identical path means the same
-      // reception reached us twice — once as a channel message, which reports
-      // SNR alone, once through the raw RX log, which reports both — so those
-      // two only fill each other's gaps. A copy that travelled a different,
-      // shorter route keeps its reading to itself, or the bubble would name
-      // one hop and quote the signal heard from another.
-      final double? mergedSnr;
-      final int? mergedRssi;
-      if (mergedPathBytes.length > existing.pathBytes.length) {
-        mergedSnr = processedMessage.snr;
-        mergedRssi = processedMessage.rssi;
-      } else if (listEquals(existing.pathBytes, processedMessage.pathBytes)) {
-        mergedSnr = existing.snr ?? processedMessage.snr;
-        mergedRssi = existing.rssi ?? processedMessage.rssi;
-      } else {
-        mergedSnr = existing.snr;
-        mergedRssi = existing.rssi;
-      }
       final newRepeatCount = existing.repeatCount + 1;
       final promotedFromPending =
           newRepeatCount == 1 &&
@@ -12128,8 +12112,7 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
         pathBytes: mergedPathBytes,
         pathVariants: mergedPathVariants,
-        snr: mergedSnr,
-        rssi: mergedRssi,
+        pathObservations: mergedPathObservations,
         packetRegion: existing.packetRegion ?? processedMessage.packetRegion,
         packetRegionInfoAvailable:
             existing.packetRegionInfoAvailable ||

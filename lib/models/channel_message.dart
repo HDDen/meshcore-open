@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
@@ -84,15 +85,9 @@ class ChannelMessage {
   final Uint8List pathBytes;
   final List<Uint8List> pathVariants;
 
-  /// What our own radio made of the reception this message arrived on: SNR in
-  /// dB, RSSI in dBm. They describe the link from the last hop of [pathBytes]
-  /// — the node we actually heard — to us, and belong together: a copy that
-  /// travelled another route carries another reading.
-  ///
-  /// Null when the frame that delivered the message reported none. RSSI rides
-  /// only in the raw RX log; the channel-message responses carry SNR alone.
-  final double? snr;
-  final int? rssi;
+  /// Per-route signal readings collected from repeated copies of this packet.
+  /// [snr] and [rssi] remain the bubble-compatible primary reading.
+  final List<ChannelPathObservation> pathObservations;
   final int? channelIndex;
   final String? packetRegion;
   final bool packetRegionInfoAvailable;
@@ -144,8 +139,9 @@ class ChannelMessage {
     this.pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
-    this.snr,
-    this.rssi,
+    List<ChannelPathObservation>? pathObservations,
+    double? snr,
+    int? rssi,
     this.channelIndex,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
@@ -168,10 +164,24 @@ class ChannelMessage {
        pathVariants = _mergePathVariants(
          pathBytes ?? Uint8List(0),
          pathVariants,
+       ),
+       pathObservations = ChannelPathSignalHelper.includeReading(
+         observations: pathObservations,
+         pathBytes: pathBytes ?? Uint8List(0),
+         snr: snr,
+         rssi: rssi,
        );
 
   String? get senderKeyHex =>
       senderKey != null ? pubKeyToHex(senderKey!) : null;
+
+  ChannelPathObservation? get primaryPathObservation =>
+      ChannelPathSignalHelper.find(pathObservations, pathBytes);
+
+  /// What our own radio measured for the route currently shown in the bubble.
+  /// RSSI is absent when only the channel-message response was observed.
+  double? get snr => primaryPathObservation?.snr;
+  int? get rssi => primaryPathObservation?.rssi;
 
   ChannelMessage copyWith({
     ChannelMessageStatus? status,
@@ -182,8 +192,7 @@ class ChannelMessage {
     int? pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
-    Object? snr = _unset,
-    Object? rssi = _unset,
+    List<ChannelPathObservation>? pathObservations,
     int? channelIndex,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
@@ -295,8 +304,7 @@ class ChannelMessage {
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,
       pathVariants: pathVariants ?? this.pathVariants,
-      snr: snr == _unset ? this.snr : snr as double?,
-      rssi: rssi == _unset ? this.rssi : rssi as int?,
+      pathObservations: pathObservations ?? this.pathObservations,
       channelIndex: channelIndex ?? this.channelIndex,
       packetRegion: packetRegion == _unset
           ? this.packetRegion

@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/path_hop_resolver.dart';
+import '../helpers/channel_path_signal_helper.dart';
+import '../helpers/signal_reading_text.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
 import '../helpers/mcmp_app_codec.dart';
@@ -36,6 +38,9 @@ class ChannelMessagePathScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showLastHopSignal = context.select<AppSettingsService, bool>(
+      (service) => service.settings.showLastHopSignal,
+    );
     return Consumer<MeshCoreConnector>(
       builder: (context, connector, _) {
         final l10n = context.l10n;
@@ -139,7 +144,17 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 if (!hasHopDetails)
                   _buildNoHopCard(context, l10n)
                 else
-                  _buildHopTimeline(context, hops, l10n),
+                  _buildHopTimeline(
+                    context,
+                    hops,
+                    l10n,
+                    observation: ChannelPathSignalHelper.find(
+                      message.pathObservations,
+                      primaryPathTmp,
+                    ),
+                    showLastHopSignal: showLastHopSignal,
+                    spreadingFactor: connector.currentSf,
+                  ),
                 const SizedBox(height: 16),
               ],
             ),
@@ -297,6 +312,12 @@ class ChannelMessagePathScreen extends StatelessWidget {
     int hashByteWidth,
   ) {
     final l10n = context.l10n;
+    final settings = context.read<AppSettingsService>().settings;
+    final spreadingFactor = context.read<MeshCoreConnector>().currentSf;
+    final observations = [
+      for (final variant in variants)
+        ChannelPathSignalHelper.find(message.pathObservations, variant),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -329,8 +350,25 @@ class ChannelMessagePathScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        _formatPathPrefixes(variants[i], hashByteWidth),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: _formatPathPrefixes(
+                                variants[i],
+                                hashByteWidth,
+                              ),
+                            ),
+                            if (settings.showLastHopSignal &&
+                                observations[i] != null)
+                              ...signalReadingSpans(
+                                snr: observations[i]?.snr,
+                                rssi: observations[i]?.rssi,
+                                spreadingFactor: spreadingFactor,
+                                afterHopList: true,
+                              ),
+                          ],
+                        ),
                         style: MeshTheme.mono(
                           fontSize: 11,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -375,8 +413,11 @@ class ChannelMessagePathScreen extends StatelessWidget {
   Widget _buildHopTimeline(
     BuildContext context,
     List<_PathHop> hops,
-    AppLocalizations l10n,
-  ) {
+    AppLocalizations l10n, {
+    required ChannelPathObservation? observation,
+    required bool showLastHopSignal,
+    required int? spreadingFactor,
+  }) {
     if (hops.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -390,6 +431,9 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 hops[i],
                 l10n,
                 isLast: i == hops.length - 1,
+                observation: observation,
+                showLastHopSignal: showLastHopSignal,
+                spreadingFactor: spreadingFactor,
               ),
             ),
         ],
@@ -402,6 +446,9 @@ class ChannelMessagePathScreen extends StatelessWidget {
     _PathHop hop,
     AppLocalizations l10n, {
     required bool isLast,
+    required ChannelPathObservation? observation,
+    required bool showLastHopSignal,
+    required int? spreadingFactor,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final hexPrefix = _formatPrefix(hop.prefix);
@@ -491,6 +538,22 @@ class ChannelMessagePathScreen extends StatelessWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
+                  if (isLast &&
+                      showLastHopSignal &&
+                      observation != null) ...[
+                    const SizedBox(height: 2),
+                    Text.rich(
+                      TextSpan(
+                        children: signalReadingSpans(
+                          snr: observation.snr,
+                          rssi: observation.rssi,
+                          spreadingFactor: spreadingFactor,
+                          afterHopList: false,
+                        ),
+                      ),
+                      style: MeshTheme.mono(fontSize: 11),
+                    ),
+                  ],
                 ],
               ),
             ),

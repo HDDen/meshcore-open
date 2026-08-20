@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/channel_path_signal_helper.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -635,6 +636,68 @@ void main() {
         expect(movedMessages.first.channelIndex, equals(5));
       },
     );
+
+    test('ChannelMessageStore preserves signal per observed path', () async {
+      final channel = Channel.fromHex(1, 'Test', Channel.publicChannelPsk);
+      final store = ChannelMessageStore()
+        ..publicKeyHex = '1234567890'
+        ..replaceChannels([channel]);
+      final primaryPath = Uint8List.fromList([0xAA]);
+      final alternatePath = Uint8List.fromList([0xBB, 0xCC]);
+      final message = ChannelMessage(
+        senderName: 'Alice',
+        text: 'Hello',
+        timestamp: DateTime.utc(2026),
+        isOutgoing: false,
+        status: ChannelMessageStatus.sent,
+        channelIndex: channel.index,
+        pathBytes: primaryPath,
+        pathVariants: [primaryPath, alternatePath],
+        snr: -2.5,
+        rssi: -101,
+        pathObservations: [
+          ChannelPathObservation(
+            pathBytes: alternatePath,
+            snr: 1.25,
+            rssi: -94,
+          ),
+        ],
+      );
+
+      await store.saveChannelMessages(channel.index, [message]);
+      final loaded = await store.loadChannelMessages(channel.index);
+
+      expect(loaded, hasLength(1));
+      final restored = loaded.single;
+      expect(
+        ChannelPathSignalHelper.find(
+          restored.pathObservations,
+          primaryPath,
+        )?.snr,
+        -2.5,
+      );
+      expect(
+        ChannelPathSignalHelper.find(
+          restored.pathObservations,
+          primaryPath,
+        )?.rssi,
+        -101,
+      );
+      expect(
+        ChannelPathSignalHelper.find(
+          restored.pathObservations,
+          alternatePath,
+        )?.snr,
+        1.25,
+      );
+      expect(
+        ChannelPathSignalHelper.find(
+          restored.pathObservations,
+          alternatePath,
+        )?.rssi,
+        -94,
+      );
+    });
 
     test(
       'channel settings follow the channel name when its slot changes',
