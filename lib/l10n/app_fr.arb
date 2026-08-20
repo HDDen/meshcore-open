@@ -3496,5 +3496,6 @@
   "imageSend_previewShowAsReceived": "Voir comme à la réception",
   "imageSend_previewShowOriginal": "Voir l'original",
   "imageSend_previewAsReceived": "Voici ce que verront les destinataires",
-  "imageSend_previewDecodeFailed": "Impossible de décoder l'aperçu"
+  "imageSend_previewDecodeFailed": "Impossible de décoder l'aperçu",
+  "settings_modSettingsLastHopSignal": "Afficher le SNR/RSSI du dernier saut dans les canaux"
 }

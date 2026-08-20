@@ -83,6 +83,16 @@ class ChannelMessage {
   final int? pathHashWidth;
   final Uint8List pathBytes;
   final List<Uint8List> pathVariants;
+
+  /// What our own radio made of the reception this message arrived on: SNR in
+  /// dB, RSSI in dBm. They describe the link from the last hop of [pathBytes]
+  /// — the node we actually heard — to us, and belong together: a copy that
+  /// travelled another route carries another reading.
+  ///
+  /// Null when the frame that delivered the message reported none. RSSI rides
+  /// only in the raw RX log; the channel-message responses carry SNR alone.
+  final double? snr;
+  final int? rssi;
   final int? channelIndex;
   final String? packetRegion;
   final bool packetRegionInfoAvailable;
@@ -134,6 +144,8 @@ class ChannelMessage {
     this.pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
+    this.snr,
+    this.rssi,
     this.channelIndex,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
@@ -170,6 +182,8 @@ class ChannelMessage {
     int? pathHashWidth,
     Uint8List? pathBytes,
     List<Uint8List>? pathVariants,
+    Object? snr = _unset,
+    Object? rssi = _unset,
     int? channelIndex,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
@@ -281,6 +295,8 @@ class ChannelMessage {
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,
       pathVariants: pathVariants ?? this.pathVariants,
+      snr: snr == _unset ? this.snr : snr as double?,
+      rssi: rssi == _unset ? this.rssi : rssi as int?,
       channelIndex: channelIndex ?? this.channelIndex,
       packetRegion: packetRegion == _unset
           ? this.packetRegion
@@ -321,8 +337,11 @@ class ChannelMessage {
       int? packetPathHashWidth;
       Uint8List pathBytes = Uint8List(0);
       int channelIdx;
+      // Only V3 frames report the reception, and only its SNR — RSSI reaches
+      // the app through the raw RX log push instead.
+      double? snr;
       if (code == respCodeChannelMsgRecvV3) {
-        reader.skipBytes(1); // Skip SNR
+        snr = reader.readInt8() / 4.0;
         final flags = reader.readByte();
         final hasPath = (flags & 0x01) != 0;
         reader.skipBytes(1); // Skip reserved byte
@@ -407,6 +426,7 @@ class ChannelMessage {
         pathLength: pathLen,
         pathHashWidth: packetPathHashWidth,
         pathBytes: pathBytes,
+        snr: snr,
         channelIndex: channelIdx,
       );
     } catch (e) {

@@ -10647,6 +10647,7 @@ class MeshCoreConnector extends ChangeNotifier {
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
+      snr: dataFrame.snr,
       channelIndex: dataFrame.channelIndex,
       packetHash: contentHash,
       replyToMessageId: replyReference?.messageId,
@@ -10688,7 +10689,11 @@ class MeshCoreConnector extends ChangeNotifier {
     if (frame.length < 4) return;
     try {
       final reader = BufferReader(frame);
-      reader.skipBytes(3); // Skip header
+      reader.skipBytes(1); // push code
+      // The only frame that reports both halves of the reading; the
+      // channel-message responses carry SNR alone.
+      final snr = reader.readInt8() / 4.0;
+      final rssi = reader.readInt8();
 
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
@@ -10720,6 +10725,8 @@ class MeshCoreConnector extends ChangeNotifier {
               packet,
               channel.index,
               decryptedBytes,
+              snr: snr,
+              rssi: rssi,
               packetRegion: packetRegion.region,
               packetRegionInfoAvailable: true,
               packetRegionNotMatched: packetRegion.notMatched,
@@ -10825,6 +10832,8 @@ class MeshCoreConnector extends ChangeNotifier {
             pathLength: packet.isFlood ? packet.hopCount : 0,
             pathHashWidth: packet.pathHashWidth,
             pathBytes: packet.pathBytes,
+            snr: snr,
+            rssi: rssi,
             channelIndex: channel.index,
             packetRegion: packetRegion.region,
             packetRegionInfoAvailable: true,
@@ -10904,6 +10913,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _RawPacket packet,
     int channelIndex,
     Uint8List decryptedBytes, {
+    double? snr,
+    int? rssi,
     String? packetRegion,
     bool packetRegionInfoAvailable = false,
     bool packetRegionNotMatched = false,
@@ -10973,6 +10984,8 @@ class MeshCoreConnector extends ChangeNotifier {
       pathLength: packet.isFlood ? packet.hopCount : 0,
       pathHashWidth: packet.pathHashWidth,
       pathBytes: packet.pathBytes,
+      snr: snr,
+      rssi: rssi,
       channelIndex: channelIndex,
       packetRegion: packetRegion,
       packetRegionInfoAvailable: packetRegionInfoAvailable,
@@ -11878,6 +11891,8 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: message.pathHashWidth,
         pathBytes: message.pathBytes,
         pathVariants: message.pathVariants,
+        snr: message.snr,
+        rssi: message.rssi,
         channelIndex: message.channelIndex,
         packetRegion: message.packetRegion,
         packetRegionInfoAvailable: message.packetRegionInfoAvailable,
@@ -11910,6 +11925,26 @@ class MeshCoreConnector extends ChangeNotifier {
         processedMessage.pathLength,
         mergedPathBytes.length,
       );
+      // SNR and RSSI describe one reception, so they follow the path they
+      // were heard on. A copy that brings the path we are going to display
+      // brings its reading with it; an identical path means the same
+      // reception reached us twice — once as a channel message, which reports
+      // SNR alone, once through the raw RX log, which reports both — so those
+      // two only fill each other's gaps. A copy that travelled a different,
+      // shorter route keeps its reading to itself, or the bubble would name
+      // one hop and quote the signal heard from another.
+      final double? mergedSnr;
+      final int? mergedRssi;
+      if (mergedPathBytes.length > existing.pathBytes.length) {
+        mergedSnr = processedMessage.snr;
+        mergedRssi = processedMessage.rssi;
+      } else if (listEquals(existing.pathBytes, processedMessage.pathBytes)) {
+        mergedSnr = existing.snr ?? processedMessage.snr;
+        mergedRssi = existing.rssi ?? processedMessage.rssi;
+      } else {
+        mergedSnr = existing.snr;
+        mergedRssi = existing.rssi;
+      }
       final newRepeatCount = existing.repeatCount + 1;
       final promotedFromPending =
           newRepeatCount == 1 &&
@@ -11921,6 +11956,8 @@ class MeshCoreConnector extends ChangeNotifier {
         pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
         pathBytes: mergedPathBytes,
         pathVariants: mergedPathVariants,
+        snr: mergedSnr,
+        rssi: mergedRssi,
         packetRegion: existing.packetRegion ?? processedMessage.packetRegion,
         packetRegionInfoAvailable:
             existing.packetRegionInfoAvailable ||

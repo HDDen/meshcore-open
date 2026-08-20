@@ -3377,5 +3377,6 @@
   "imageSend_previewShowAsReceived": "Як побачать одержувачі",
   "imageSend_previewShowOriginal": "Показати оригінал",
   "imageSend_previewAsReceived": "Саме так зображення побачать одержувачі",
-  "imageSend_previewDecodeFailed": "Не вдалося декодувати попередній перегляд"
+  "imageSend_previewDecodeFailed": "Не вдалося декодувати попередній перегляд",
+  "settings_modSettingsLastHopSignal": "Відображати SNR/RSSI останнього хопа в каналах"
 }

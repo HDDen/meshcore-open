@@ -37,6 +37,7 @@ import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
+import '../helpers/signal_reading_text.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -1344,6 +1345,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       displayPathHashWidth,
       message.pathLength,
     );
+    final showSignalReading =
+        settingsService.settings.showLastHopSignal &&
+        (message.snr != null || message.rssi != null);
     final noRetransmissionWarningSeconds = noRetransmissionWarningsEnabled
         ? message.noRetransmissionWarningSeconds
         : null;
@@ -1820,7 +1824,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         //   ),
                         // ],
                         if (enableTracing) ...[
-                          if (showHops && displayPath.isNotEmpty) ...[
+                          // A message heard with no repeater in between has
+                          // no hop list, but it does have a reading, and that
+                          // is the one measured over a single link rather than
+                          // the last leg of a relay. The route chip says
+                          // DIRECT and the reading follows it.
+                          if (showHops &&
+                              (displayPath.isNotEmpty ||
+                                  showSignalReading)) ...[
                             const SizedBox(height: 4),
                             Padding(
                               padding: isMediaMessage
@@ -1835,12 +1846,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     isDirect: (message.pathLength ?? -1) >= 0,
                                     hops: displayHopCount,
                                   ),
-                                  Text(
-                                    context.l10n.channels_via(
-                                      _formatPathPrefixes(
-                                        displayPath,
-                                        displayPathHashWidth,
-                                      ),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        if (displayPath.isNotEmpty)
+                                          TextSpan(
+                                            text: context.l10n.channels_via(
+                                              _formatPathPrefixes(
+                                                displayPath,
+                                                displayPathHashWidth,
+                                              ),
+                                            ),
+                                          ),
+                                        if (showSignalReading)
+                                          ...signalReadingSpans(
+                                            snr: message.snr,
+                                            rssi: message.rssi,
+                                            spreadingFactor:
+                                                connector.currentSf,
+                                            afterHopList:
+                                                displayPath.isNotEmpty,
+                                          ),
+                                      ],
                                     ),
                                     style: MeshTheme.mono(
                                       fontSize: 9.5 * textScale,

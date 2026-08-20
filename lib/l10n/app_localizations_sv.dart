@@ -6216,4 +6216,8 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Det gick inte att avkoda förhandsgranskningen';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Visa SNR/RSSI för sista hoppet i kanaler';
 }

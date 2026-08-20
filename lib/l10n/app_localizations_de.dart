@@ -6273,4 +6273,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Vorschau konnte nicht dekodiert werden';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'SNR/RSSI des letzten Hops in Kanälen anzeigen';
 }

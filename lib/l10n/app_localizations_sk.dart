@@ -6231,4 +6231,8 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => 'Nepodarilo sa dekódovať náhľad';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Zobraziť SNR/RSSI posledného skoku v kanáloch';
 }

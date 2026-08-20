@@ -3360,5 +3360,6 @@
   "imageSend_previewShowAsReceived": "Come lo vedranno",
   "imageSend_previewShowOriginal": "Mostra originale",
   "imageSend_previewAsReceived": "Ecco cosa vedranno i destinatari",
-  "imageSend_previewDecodeFailed": "Impossibile decodificare l'anteprima"
+  "imageSend_previewDecodeFailed": "Impossibile decodificare l'anteprima",
+  "settings_modSettingsLastHopSignal": "Mostra SNR/RSSI dell'ultimo hop nei canali"
 }

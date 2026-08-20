@@ -5828,4 +5828,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => '无法解码预览';
+
+  @override
+  String get settings_modSettingsLastHopSignal => '在频道中显示最后一跳的 SNR/RSSI';
 }

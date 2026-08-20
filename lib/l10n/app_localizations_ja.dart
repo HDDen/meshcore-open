@@ -5954,4 +5954,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => 'プレビューをデコードできませんでした';
+
+  @override
+  String get settings_modSettingsLastHopSignal => 'チャンネルで最終ホップの SNR/RSSI を表示';
 }

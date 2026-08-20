@@ -6163,4 +6163,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => 'Could not decode the preview';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Show last hop SNR/RSSI in channels';
 }

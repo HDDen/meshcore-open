@@ -10671,6 +10671,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not decode the preview'**
   String get imageSend_previewDecodeFailed;
+
+  /// No description provided for @settings_modSettingsLastHopSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Show last hop SNR/RSSI in channels'**
+  String get settings_modSettingsLastHopSignal;
 }
 
 class _AppLocalizationsDelegate

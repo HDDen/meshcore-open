@@ -221,6 +221,10 @@ class AppSettings {
 
   /// Wire bytes that quote fragment may spend.
   final int exactQuoteLimit;
+
+  /// Appends the SNR and RSSI our own radio measured to the hop list of a
+  /// channel message.
+  final bool showLastHopSignal;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -628,6 +632,7 @@ class AppSettings {
     this.incomingQuoteAsMentions = false,
     this.exactQuote = true,
     this.exactQuoteLimit = defaultExactQuoteLimit,
+    this.showLastHopSignal = true,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -767,6 +772,7 @@ class AppSettings {
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'exact_quote': exactQuote,
       'exact_quote_limit': exactQuoteLimit,
+      'show_last_hop_signal': showLastHopSignal,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -936,6 +942,7 @@ class AppSettings {
           json['incoming_quote_as_mentions'] as bool? ?? false,
       exactQuote: json['exact_quote'] as bool? ?? true,
       exactQuoteLimit: normalizeExactQuoteLimit(json['exact_quote_limit']),
+      showLastHopSignal: json['show_last_hop_signal'] as bool? ?? true,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1146,6 +1153,7 @@ class AppSettings {
     bool? incomingQuoteAsMentions,
     bool? exactQuote,
     int? exactQuoteLimit,
+    bool? showLastHopSignal,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1270,6 +1278,7 @@ class AppSettings {
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       exactQuote: exactQuote ?? this.exactQuote,
       exactQuoteLimit: exactQuoteLimit ?? this.exactQuoteLimit,
+      showLastHopSignal: showLastHopSignal ?? this.showLastHopSignal,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,

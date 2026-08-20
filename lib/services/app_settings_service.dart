@@ -313,6 +313,10 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setShowLastHopSignal(bool value) async {
+    await updateSettings(_settings.copyWith(showLastHopSignal: value));
+  }
+
   Future<void> setSimplifiedMentions(bool value) async {
     await updateSettings(_settings.copyWith(simplifiedMentions: value));
   }

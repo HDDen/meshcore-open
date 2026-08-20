@@ -3397,5 +3397,6 @@
   "imageSend_previewShowAsReceived": "Prikaži kot pri prejemnikih",
   "imageSend_previewShowOriginal": "Prikaži izvirnik",
   "imageSend_previewAsReceived": "Tako bodo sliko videli prejemniki",
-  "imageSend_previewDecodeFailed": "Predogleda ni bilo mogoče dekodirati"
+  "imageSend_previewDecodeFailed": "Predogleda ni bilo mogoče dekodirati",
+  "settings_modSettingsLastHopSignal": "Prikaži SNR/RSSI zadnjega skoka v kanalih"
 }

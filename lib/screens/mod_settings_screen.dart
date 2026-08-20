@@ -404,6 +404,19 @@ class ModSettingsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.signal_cellular_alt, size: 20),
+                    title: Text(context.l10n.settings_modSettingsLastHopSignal),
+                    value: settings.showLastHopSignal,
+                    onChanged: settingsService.setShowLastHopSignal,
+                  ),
+                ),
                 if (PlatformInfo.isAndroid)
                   MeshCard(
                     padding: EdgeInsets.zero,

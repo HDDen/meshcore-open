@@ -6288,4 +6288,8 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Nie udało się zdekodować podglądu';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Pokaż SNR/RSSI ostatniego przeskoku w kanałach';
 }

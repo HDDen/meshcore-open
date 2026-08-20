@@ -206,6 +206,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'pathHashWidth': msg.pathHashWidth,
       'pathBytes': base64Encode(msg.pathBytes),
       'pathVariants': msg.pathVariants.map(base64Encode).toList(),
+      'snr': msg.snr,
+      'rssi': msg.rssi,
       'packetRegion': msg.packetRegion,
       'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
       'packetRegionNotMatched': msg.packetRegionNotMatched,
@@ -323,6 +325,8 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       pathVariants: (json['pathVariants'] as List<dynamic>?)
           ?.map((entry) => Uint8List.fromList(base64Decode(entry as String)))
           .toList(),
+      snr: (json['snr'] as num?)?.toDouble(),
+      rssi: json['rssi'] as int?,
       packetRegion: json['packetRegion'] as String?,
       packetRegionInfoAvailable:
           json['packetRegionInfoAvailable'] as bool? ?? false,

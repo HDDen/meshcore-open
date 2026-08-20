@@ -6280,4 +6280,8 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Не вдалося декодувати попередній перегляд';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Відображати SNR/RSSI останнього хопа в каналах';
 }

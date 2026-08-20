@@ -3435,5 +3435,6 @@
   "imageSend_previewShowAsReceived": "Pokaż jak u odbiorców",
   "imageSend_previewShowOriginal": "Pokaż oryginał",
   "imageSend_previewAsReceived": "Tak obraz zobaczą odbiorcy",
-  "imageSend_previewDecodeFailed": "Nie udało się zdekodować podglądu"
+  "imageSend_previewDecodeFailed": "Nie udało się zdekodować podglądu",
+  "settings_modSettingsLastHopSignal": "Pokaż SNR/RSSI ostatniego przeskoku w kanałach"
 }

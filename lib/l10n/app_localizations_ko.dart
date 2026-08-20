@@ -5961,4 +5961,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => '미리 보기를 디코딩하지 못했습니다';
+
+  @override
+  String get settings_modSettingsLastHopSignal => '채널에서 마지막 홉의 SNR/RSSI 표시';
 }

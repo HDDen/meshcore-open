@@ -3502,5 +3502,6 @@
   "imageSend_previewShowAsReceived": "受信側の見え方",
   "imageSend_previewShowOriginal": "元の画像を表示",
   "imageSend_previewAsReceived": "受信者にはこのように表示されます",
-  "imageSend_previewDecodeFailed": "プレビューをデコードできませんでした"
+  "imageSend_previewDecodeFailed": "プレビューをデコードできませんでした",
+  "settings_modSettingsLastHopSignal": "チャンネルで最終ホップの SNR/RSSI を表示"
 }

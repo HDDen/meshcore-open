@@ -3402,5 +3402,6 @@
   "imageSend_previewShowAsReceived": "查看接收方效果",
   "imageSend_previewShowOriginal": "显示原图",
   "imageSend_previewAsReceived": "接收方将看到这样的图像",
-  "imageSend_previewDecodeFailed": "无法解码预览"
+  "imageSend_previewDecodeFailed": "无法解码预览",
+  "settings_modSettingsLastHopSignal": "在频道中显示最后一跳的 SNR/RSSI"
 }

@@ -3397,5 +3397,6 @@
   "imageSend_previewShowAsReceived": "Zobraziť ako u príjemcov",
   "imageSend_previewShowOriginal": "Zobraziť originál",
   "imageSend_previewAsReceived": "Takto obrázok uvidia príjemcovia",
-  "imageSend_previewDecodeFailed": "Nepodarilo sa dekódovať náhľad"
+  "imageSend_previewDecodeFailed": "Nepodarilo sa dekódovať náhľad",
+  "settings_modSettingsLastHopSignal": "Zobraziť SNR/RSSI posledného skoku v kanáloch"
 }

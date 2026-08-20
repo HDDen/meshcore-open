@@ -6268,4 +6268,8 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Неуспешно декодиране на визуализацията';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Показване на SNR/RSSI на последния хоп в каналите';
 }

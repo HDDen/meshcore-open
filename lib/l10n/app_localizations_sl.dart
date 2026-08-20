@@ -6240,4 +6240,8 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Predogleda ni bilo mogoče dekodirati';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Prikaži SNR/RSSI zadnjega skoka v kanalih';
 }

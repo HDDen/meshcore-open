@@ -3400,5 +3400,6 @@
   "imageSend_previewShowAsReceived": "Így látják a címzettek",
   "imageSend_previewShowOriginal": "Eredeti megjelenítése",
   "imageSend_previewAsReceived": "A címzettek így fogják látni a képet",
-  "imageSend_previewDecodeFailed": "Az előnézetet nem sikerült dekódolni"
+  "imageSend_previewDecodeFailed": "Az előnézetet nem sikerült dekódolni",
+  "settings_modSettingsLastHopSignal": "Az utolsó ugrás SNR/RSSI értékének megjelenítése a csatornákban"
 }

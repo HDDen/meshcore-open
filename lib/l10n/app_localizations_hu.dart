@@ -6261,4 +6261,8 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get imageSend_previewDecodeFailed =>
       'Az előnézetet nem sikerült dekódolni';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Az utolsó ugrás SNR/RSSI értékének megjelenítése a csatornákban';
 }

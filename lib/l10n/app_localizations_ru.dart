@@ -6266,4 +6266,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get imageSend_previewDecodeFailed => 'Не удалось декодировать превью';
+
+  @override
+  String get settings_modSettingsLastHopSignal =>
+      'Отображать SNR/RSSI последнего хопа в каналах';
 }

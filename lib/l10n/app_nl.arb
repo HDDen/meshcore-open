@@ -3179,5 +3179,6 @@
   "imageSend_previewShowAsReceived": "Tonen zoals ontvangen",
   "imageSend_previewShowOriginal": "Origineel tonen",
   "imageSend_previewAsReceived": "Zo zien ontvangers de afbeelding",
-  "imageSend_previewDecodeFailed": "Kan de voorbeeldweergave niet decoderen"
+  "imageSend_previewDecodeFailed": "Kan de voorbeeldweergave niet decoderen",
+  "settings_modSettingsLastHopSignal": "SNR/RSSI van de laatste hop tonen in kanalen"
 }

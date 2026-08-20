@@ -3179,5 +3179,6 @@
   "imageSend_previewShowAsReceived": "Visa som mottaget",
   "imageSend_previewShowOriginal": "Visa original",
   "imageSend_previewAsReceived": "Så här ser mottagarna bilden",
-  "imageSend_previewDecodeFailed": "Det gick inte att avkoda förhandsgranskningen"
+  "imageSend_previewDecodeFailed": "Det gick inte att avkoda förhandsgranskningen",
+  "settings_modSettingsLastHopSignal": "Visa SNR/RSSI för sista hoppet i kanaler"
 }
