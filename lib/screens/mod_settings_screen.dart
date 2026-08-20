@@ -787,6 +787,7 @@ class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
       focusNode: _focusNode,
       textAlign: TextAlign.center,
       keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(3),
@@ -796,7 +797,8 @@ class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 10),
       ),
-      onSubmitted: (_) => _commit(),
+      onSubmitted: (_) => _focusNode.unfocus(),
+      onTapOutside: (_) => _focusNode.unfocus(),
     );
   }
 }
