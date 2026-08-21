@@ -32,10 +32,10 @@ optional Ed25519 signatures around MCMP-compressed text.
 - **MCMP v3**, identified by the `mcmp3:` prefix or the registered channel
   application subtype described below, is the format specified here.
 
-MCMP v3's application format version is `3`. In the generic channel application
-envelope it currently uses subtype `0x02` and that subtype's wire revision
-`0x00`, packed as byte `0x20`. The zero low nibble does not mean MCMP v0; it is
-the first wire revision of the MCMP v3 application subtype.
+For the current MCMP v3 format, the generic channel application envelope uses
+subtype `0x02` and that subtype's wire revision `0x00`. Together they are packed
+as byte `0x20`. The zero low nibble does not mean MCMP v0; it is the first wire
+revision of the MCMP v3 application subtype.
 
 ## Conventions
 
@@ -311,6 +311,12 @@ unchanged.
 These bindings keep an otherwise identical signed message associated with the
 conversation for which it was created. The binding bytes are reconstructed by
 the verifier and are not added separately to the transmitted MCMP body.
+
+In both contexts the binding is 32 bytes long in the canonical data given to
+Ed25519, but it occupies **0 bytes in the transmitted MCMP body**. The sender
+and receiver independently reconstruct it from information they already have:
+the channel PSK or the room server's full public key. Only the resulting
+64-byte signature is stored in the body and sent over the network.
 
 ### Requesting a signature from the node
 
