@@ -116,18 +116,18 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
   if("${bundled_library}" MATCHES "libonnxruntime\\.so$")
     # The ONNX Runtime archive provides a symlink chain:
     # libonnxruntime.so -> libonnxruntime.so.1 -> versioned ELF library.
-    # flutter_onnxruntime exports only the first link, so installing it alone
-    # leaves a broken symlink in the bundle.
-    get_filename_component(ONNXRUNTIME_LIBRARY_DIR
-      "${bundled_library}" DIRECTORY)
-    file(GLOB ONNXRUNTIME_LIBRARY_CHAIN
-      "${ONNXRUNTIME_LIBRARY_DIR}/libonnxruntime.so*")
-    if(NOT ONNXRUNTIME_LIBRARY_CHAIN)
+    # Resolve it while configuring and install a regular file. Besides avoiding
+    # a broken chain, this keeps bundles archivable through \\wsl.localhost,
+    # where Windows tools cannot reliably follow Linux symlinks.
+    get_filename_component(ONNXRUNTIME_LIBRARY_REAL
+      "${bundled_library}" REALPATH)
+    if(NOT EXISTS "${ONNXRUNTIME_LIBRARY_REAL}")
       message(FATAL_ERROR
-        "ONNX Runtime library chain was not found in ${ONNXRUNTIME_LIBRARY_DIR}")
+        "ONNX Runtime library was not found: ${bundled_library}")
     endif()
-    install(FILES ${ONNXRUNTIME_LIBRARY_CHAIN}
+    install(FILES "${ONNXRUNTIME_LIBRARY_REAL}"
       DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      RENAME "libonnxruntime.so.1"
       COMPONENT Runtime)
   else()
     install(FILES "${bundled_library}"
