@@ -666,7 +666,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final lastPreviewImage = lastMessage == null || lastBlocked
         ? null
         : MCOImageMessage.tryDecode(lastMessage.text);
-    final lastTime = lastMessage?.timestamp;
+    final lastTime = lastMessage?.receivedAt;
 
     final channelLabel = channel.name.isEmpty
         ? context.l10n.channels_channelIndex(channel.index)

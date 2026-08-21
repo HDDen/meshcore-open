@@ -7,6 +7,7 @@ import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/channel_path_signal_helper.dart';
+import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'channel_name_keyed_store.dart';
@@ -141,11 +142,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {
     if (messages.length < 2) return messages;
     final ordered = List<ChannelMessage>.of(messages);
-    ordered.sort((a, b) {
-      final receivedCompare = a.receivedAt.compareTo(b.receivedAt);
-      if (receivedCompare != 0) return receivedCompare;
-      return a.messageId.compareTo(b.messageId);
-    });
+    ordered.sort(ChannelMessageTimelineHelper.compare);
     return ordered;
   }
 

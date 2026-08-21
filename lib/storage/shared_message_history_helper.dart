@@ -1,3 +1,4 @@
+import '../helpers/channel_message_timeline_helper.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/message.dart';
@@ -54,7 +55,7 @@ class SharedMessageHistoryHelper {
       );
     }
 
-    result.sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
+    result.sort(ChannelMessageTimelineHelper.compare);
     return result;
   }
 

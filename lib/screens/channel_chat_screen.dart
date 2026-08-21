@@ -965,7 +965,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       for (final message in messages)
                         _ChannelChatRow(message: message),
                       ...imageRows,
-                    ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+                    ]..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
 
                     // Reverse rows so newest appear at bottom with reverse: true.
                     final reversedRows = rows.reversed.toList();
@@ -5043,7 +5043,7 @@ class _ChannelChatRow {
 
   const _ChannelChatRow({this.message, this.image});
 
-  DateTime get timestamp => message?.timestamp ?? image!.firstSeen;
+  DateTime get receivedAt => message?.receivedAt ?? image!.firstSeen;
 
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.

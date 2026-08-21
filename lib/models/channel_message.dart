@@ -73,7 +73,7 @@ class ChannelMessage {
   final int? binaryPacketBytes;
   final DateTime timestamp;
   final DateTime receivedAt;
-  // Internal TX anchor; UI keeps using timestamp as the visible compose time.
+  // Internal first-TX anchor. UI ordering and labels use receivedAt.
   final DateTime? sentByRadioAt;
   final List<int> sentByRadioWaitSeconds;
   final bool isOutgoing;

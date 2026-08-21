@@ -608,7 +608,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
     return l10n.channelPath_timeOnly(timeLabel);
   }
 
-  // Visible timestamp stays as compose time; sentByRadioAt is the actual TX anchor.
+  // sentByRadioAt is the first actual transmission time for outgoing messages.
   String? _outgoingRadioWaitLabel(ChannelMessage message) {
     if (!message.isOutgoing) return null;
     if (message.sentByRadioWaitSeconds.isNotEmpty) {

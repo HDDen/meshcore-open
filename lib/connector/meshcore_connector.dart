@@ -21,6 +21,7 @@ import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_path_signal_helper.dart';
+import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
@@ -395,13 +396,11 @@ class MeshCoreConnector extends ChangeNotifier {
   static const Duration _contactSyncIdleTimeout = Duration(seconds: 10);
   bool _isSyncingQueuedMessages = false;
 
-  /// True only while draining the backlog the node accumulated before this
-  /// connection (the initial post-connect queued sync). During this window
-  /// queued channel messages are ordered by their original send time, since
-  /// the node replays the whole backlog "now" and the local receivedAt is
-  /// meaningless for them. Incremental live deliveries afterwards keep real
-  /// receivedAt ordering (robust to per-message radio flight time).
+  /// True only while draining the backlog accumulated before this connection.
+  /// The firmware replays it in FIFO order but exposes only the untrusted
+  /// sender timestamp, so channel messages receive a monotonic local time.
   bool _isInitialBacklogDrain = false;
+  DateTime? _lastInitialBacklogChannelReceivedAt;
   bool _deferQueuedContactMessagesUntilContacts = false;
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
@@ -1805,9 +1804,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   int _compareChannelMessages(ChannelMessage a, ChannelMessage b) {
-    final receivedCompare = a.receivedAt.compareTo(b.receivedAt);
-    if (receivedCompare != 0) return receivedCompare;
-    return a.messageId.compareTo(b.messageId);
+    return ChannelMessageTimelineHelper.compare(a, b);
   }
 
   static String _sharedChannelMessageKey(ChannelMessage message) {
@@ -6324,6 +6321,7 @@ class MeshCoreConnector extends ChangeNotifier {
           final sentByRadioAt = DateTime.now();
           final sentTimestampSeconds =
               sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+          _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
           _updateChannelMessagePacketTimestamp(
             channel.index,
             message.messageId,
@@ -6537,6 +6535,7 @@ class MeshCoreConnector extends ChangeNotifier {
         final sentByRadioAt = DateTime.now();
         final sentTimestampSeconds =
             sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+        _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
         _updateChannelMessagePacketTimestamp(
           pending.channel.index,
           pending.messageId,
@@ -6561,7 +6560,6 @@ class MeshCoreConnector extends ChangeNotifier {
           );
           return;
         }
-        _markChannelMessageSentByRadio(pending.messageId, sentByRadioAt);
         if (binaryFrame != null) {
           await _sendFrameAndWaitForCommandAck(
             binaryFrame,
@@ -7358,9 +7356,12 @@ class MeshCoreConnector extends ChangeNotifier {
       final message = channelMessages[index];
       if (!message.isOutgoing) return;
 
-      // Keep the visible message timestamp unchanged; sentByRadioAt is only
-      // for matching late log-rx repeats after radio backoff/quiet waits.
-      channelMessages[index] = message.copyWith(sentByRadioAt: sentByRadioAt);
+      final updated = ChannelMessageTimelineHelper.markFirstRadioTransmission(
+        message,
+        sentByRadioAt,
+      );
+      channelMessages[index] = updated;
+      channelMessages.sort(_compareChannelMessages);
       _scheduleChannelNoRetransmissionWarning(messageId);
       unawaited(
         _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
@@ -8066,9 +8067,9 @@ class MeshCoreConnector extends ChangeNotifier {
   void _startPostChannelInitialQueuedMessageSync() {
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
       _deferQueuedContactMessagesUntilContacts = _pendingInitialContactsSync;
-      // This drain replays the backlog accumulated before we connected;
-      // order queued channel messages by their send time until it finishes.
+      // This drain replays the backlog accumulated before we connected.
       _isInitialBacklogDrain = _pendingInitialQueuedMessageSync;
+      _lastInitialBacklogChannelReceivedAt = null;
       _pendingInitialQueuedMessageSync = false;
       _pendingQueueSync = false;
       unawaited(syncQueuedMessages(force: true));
@@ -8659,12 +8660,16 @@ class MeshCoreConnector extends ChangeNotifier {
     _continueAfterQueuedMessageSync();
   }
 
-  /// receivedAt to assign to a queued channel message. During the initial
-  /// backlog drain the node replays everything "now", so we order queued
-  /// messages by their original send time instead; live deliveries (and all
-  /// incremental syncs after the drain) keep the real arrival time.
-  DateTime _channelMessageReceivedAt(DateTime sendTimestamp, DateTime now) {
-    return _isInitialBacklogDrain ? sendTimestamp : now;
+  /// The node's queued-message frame only carries the sender-controlled packet
+  /// timestamp. Preserve FIFO replay order with a local monotonic receive time.
+  DateTime _channelMessageReceivedAt(DateTime now) {
+    if (!_isInitialBacklogDrain) return now;
+    final receivedAt = ChannelMessageTimelineHelper.nextBacklogReceivedAt(
+      now: now,
+      previous: _lastInitialBacklogChannelReceivedAt,
+    );
+    _lastInitialBacklogChannelReceivedAt = receivedAt;
+    return receivedAt;
   }
 
   bool _shouldDeferQueuedContactMessage(Uint8List frame) {
@@ -9413,9 +9418,6 @@ class MeshCoreConnector extends ChangeNotifier {
           }());
         }
       }
-      _handleQueuedMessageReceived();
-    } else if (_isSyncingQueuedMessages) {
-      _handleQueuedMessageReceived();
     }
   }
 
@@ -10609,13 +10611,9 @@ class MeshCoreConnector extends ChangeNotifier {
       );
       var message = parsed.copyWith(
         packetHash: contentHash,
-        // During the initial backlog drain, order text messages by their send
-        // time (the packet timestamp); live/incremental deliveries keep the
-        // real arrival time.
-        receivedAt: _channelMessageReceivedAt(
-          parsed.timestamp,
-          parsed.receivedAt,
-        ),
+        // The packet timestamp remains sender metadata. Timeline position is
+        // always based on this app's first receipt of the message.
+        receivedAt: _channelMessageReceivedAt(parsed.receivedAt),
       );
       final textReplyReference = _resolveChannelReplyAnchor(
         parsed.channelIndex!,
@@ -10653,9 +10651,6 @@ class MeshCoreConnector extends ChangeNotifier {
           _maybeNotifyChannelMessage(msg, translationResult: translationResult);
         }());
       }
-      _handleQueuedMessageReceived();
-    } else if (_isSyncingQueuedMessages) {
-      _handleQueuedMessageReceived();
     }
   }
 
@@ -10678,10 +10673,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     final dataFrame = parseChannelDataReceivedFrame(frame);
-    if (dataFrame == null) {
-      if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
-      return;
-    }
+    if (dataFrame == null) return;
 
     final decoded = ChannelBinaryDataHelper.tryDecodeInbound(
       dataType: dataFrame.dataType,
@@ -10693,10 +10685,7 @@ class MeshCoreConnector extends ChangeNotifier {
             payload: dataFrame.payload,
           )
         : null;
-    if (decoded == null && appDecoded == null) {
-      if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
-      return;
-    }
+    if (decoded == null && appDecoded == null) return;
     final appData = appDecoded;
 
     final channelName = _channelDisplayName(dataFrame.channelIndex);
@@ -10728,17 +10717,10 @@ class MeshCoreConnector extends ChangeNotifier {
       appData?.mcmpMessage,
     );
     final mcmpMessage = appData?.mcmpMessage;
-    // During the initial backlog drain, order by send time. MCMP v3 carries a
-    // send timestamp in its body; MCOimg / legacy binary datagrams carry none,
-    // so those fall back to arrival (delivery) order.
-    final mcmpSendSeconds = mcmpMessage?.timestamp;
-    final binarySendTime = mcmpSendSeconds != null
-        ? DateTime.fromMillisecondsSinceEpoch(mcmpSendSeconds * 1000)
-        : receivedAt;
-    final storedReceivedAt = _channelMessageReceivedAt(
-      binarySendTime,
-      receivedAt,
-    );
+    final packetTimestamp = mcmpMessage == null
+        ? decoded?.timestamp ?? receivedAt
+        : DateTime.fromMillisecondsSinceEpoch(mcmpMessage.timestamp * 1000);
+    final storedReceivedAt = _channelMessageReceivedAt(receivedAt);
     var message = ChannelMessage(
       senderName: senderName,
       text: messageText,
@@ -10760,7 +10742,7 @@ class MeshCoreConnector extends ChangeNotifier {
       mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
-      timestamp: decoded?.timestamp ?? receivedAt,
+      timestamp: packetTimestamp,
       receivedAt: storedReceivedAt,
       isOutgoing: false,
       status: ChannelMessageStatus.sent,
@@ -10800,7 +10782,6 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }());
     }
-    _handleQueuedMessageReceived();
   }
 
   void _handleLogRxData(Uint8List frame) async {
@@ -11068,12 +11049,14 @@ class MeshCoreConnector extends ChangeNotifier {
     final messageText = decoded != null
         ? decoded.text
         : _appDataMessageText(appData!);
-    final timestamp = decoded?.timestamp ?? DateTime.now();
     final replyReference = _resolveMcmpReplyReference(
       channelIndex,
       appData?.mcmpMessage,
     );
     final mcmpMessage = appData?.mcmpMessage;
+    final timestamp = mcmpMessage == null
+        ? decoded?.timestamp ?? DateTime.now()
+        : DateTime.fromMillisecondsSinceEpoch(mcmpMessage.timestamp * 1000);
     return ChannelMessage(
       senderKey: null,
       senderName: senderName,
@@ -12107,6 +12090,10 @@ class MeshCoreConnector extends ChangeNotifier {
           existing.status == ChannelMessageStatus.pending;
       _cancelChannelNoRetransmissionWarning(existing.messageId);
       messages[existingIndex] = existing.copyWith(
+        receivedAt: ChannelMessageTimelineHelper.earliestReceivedAt(
+          existing,
+          processedMessage,
+        ),
         repeatCount: newRepeatCount,
         pathLength: mergedPathLength,
         pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
@@ -12135,17 +12122,10 @@ class MeshCoreConnector extends ChangeNotifier {
       messages.add(processedMessage);
     }
 
-    final orderMessages = _isSyncingQueuedMessages;
-    if (orderMessages) {
-      messages.sort(_compareChannelMessages);
-    }
+    messages.sort(_compareChannelMessages);
 
     // Save to persistent storage
-    _channelMessageStore.saveChannelMessages(
-      channelIndex,
-      messages,
-      orderMessages: orderMessages,
-    );
+    _channelMessageStore.saveChannelMessages(channelIndex, messages);
     return isNew;
   }
 
