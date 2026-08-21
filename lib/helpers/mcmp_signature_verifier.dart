@@ -9,10 +9,9 @@ import 'mcmp_app_codec.dart';
 class McmpVerificationResult {
   final McmpSignatureStatus status;
 
-  /// Hex of the contact key associated with the signature check: the key that
-  /// verified for [McmpSignatureStatus.valid], or the single contact key the
-  /// signature was checked against for [McmpSignatureStatus.invalid]. Left null
-  /// when there is no unambiguous key (unverifiable, or a name collision).
+  /// Hex of the contact key that successfully verified the signature.
+  /// Null for every non-valid result: a candidate key that failed verification
+  /// is diagnostic input, not the authenticated sender identity.
   final String? verifiedSenderKeyHex;
 
   /// True when the sender name belonged to more than one contact at the time
@@ -127,11 +126,6 @@ class McmpSignatureVerifier {
     }
     return McmpVerificationResult(
       status: McmpSignatureStatus.invalid,
-      // Expose the checked key so the badge can anchor trust to it, but only
-      // when a single contact bore the name (a collision has no single key).
-      verifiedSenderKeyHex: candidates.length == 1
-          ? candidates.first.publicKeyHex
-          : null,
       nameCollision: collision,
     );
   }
@@ -193,12 +187,11 @@ class McmpSignatureVerifier {
         publicKey: candidate.publicKey,
       )) {
         if (!_namesMatch(candidate.name, signedName)) {
-          // The key is genuine but the signed name does not match the local
-          // contact name: rename or deliberate impersonation. The key is known,
-          // so expose it.
+          // The signature belongs to this candidate key, but the signed name
+          // conflicts with the local identity. Do not expose the key as a
+          // verified sender for a result that is deliberately invalid.
           return McmpVerificationResult(
             status: McmpSignatureStatus.invalid,
-            verifiedSenderKeyHex: candidate.publicKeyHex,
             nameCollision: collision,
           );
         }
@@ -211,9 +204,6 @@ class McmpSignatureVerifier {
     }
     return McmpVerificationResult(
       status: McmpSignatureStatus.invalid,
-      verifiedSenderKeyHex: candidates.length == 1
-          ? candidates.first.publicKeyHex
-          : null,
       nameCollision: collision,
     );
   }

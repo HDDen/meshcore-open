@@ -8,10 +8,9 @@ import '../theme/mesh_theme.dart';
 /// Compact signature-status badge for message bubbles.
 ///
 /// Outgoing MCMP v3 messages show "sent signed / unsigned". Incoming messages
-/// show the verification result; for any signed message (valid or invalid) the
-/// fingerprint of the associated key is displayed («404654...AF4322») so trust
-/// is anchored to the key, not the display name. The exception is
-/// "unverifiable", where no contact bears the name and there is no key to show.
+/// show the verification result. A fingerprint («404654...AF4322») is shown
+/// only when the signature was successfully verified, so it always identifies
+/// the key that authenticated the message rather than a failed candidate.
 /// A warning badge is added when the sender name belonged to several contacts
 /// at verification time.
 class McmpSignatureBadge extends StatelessWidget {
@@ -169,13 +168,11 @@ class McmpSignatureBadge extends StatelessWidget {
         return const SizedBox.shrink();
     }
 
-    // Any signed message shows the public key fingerprint, anchoring trust to
-    // the key rather than the display name. The exception is "unverifiable"
-    // (no contact with that name), where there is no key to show.
+    // A fingerprint identifies only the key that successfully authenticated
+    // this message. Invalid and unverifiable results expose no key.
     final fingerprint =
         showFingerprint &&
-            (status == McmpSignatureStatus.valid ||
-                status == McmpSignatureStatus.invalid) &&
+            status == McmpSignatureStatus.valid &&
             verifiedSenderKeyHex != null
         ? formatFingerprint(verifiedSenderKeyHex!)
         : null;

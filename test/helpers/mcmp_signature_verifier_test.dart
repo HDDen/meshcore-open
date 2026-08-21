@@ -97,5 +97,40 @@ void main() {
       expect(result.status, McmpSignatureStatus.valid);
       expect(result.verifiedSenderKeyHex, contact.publicKeyHex);
     });
+
+    test(
+      'does not expose the sole candidate key for an invalid signature',
+      () async {
+        final canonical = McmpAppCodec.canonicalSigningBytes(
+          context: McmpSigningContext.channel,
+          binding: McmpAppCodec.channelSigningBinding(channelPsk),
+          senderName: embeddedSenderName,
+          timestamp: timestamp,
+          flags: McmpAppCodec.packFlags(
+            hasReply: false,
+            isSigned: true,
+            hasSenderName: true,
+          ),
+          text: text,
+        );
+        final signature = await Ed25519().sign(canonical, keyPair: keyPair);
+        final message = DecodedMcmpAppMessage(
+          text: text,
+          timestamp: timestamp + 1,
+          senderName: embeddedSenderName,
+          signature: Uint8List.fromList(signature.bytes),
+        );
+
+        final result = await McmpSignatureVerifier.verifyChannelMessage(
+          message: message,
+          senderName: embeddedSenderName,
+          channelPsk: channelPsk,
+          contacts: [contact],
+        );
+
+        expect(result.status, McmpSignatureStatus.invalid);
+        expect(result.verifiedSenderKeyHex, isNull);
+      },
+    );
   });
 }
