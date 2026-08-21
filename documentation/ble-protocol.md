@@ -194,7 +194,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 Sender key, text, timestamp, outgoing flag, status (pending/sent/delivered/failed), message ID (UUID), retry count, ACK hash, trip time, path data, reactions.
 
 ### Channel Message
-Sender name, text, timestamp, status (pending/sent/failed), repeater hops, path variants, channel index, reactions, reply threading fields.
+Sender name, text, packet `timestamp`, local timeline `receivedAt`, optional first-transmission `sentByRadioAt`, status (pending/sent/failed), repeater hops, path variants, channel index, reactions, and reply threading fields. The wire frame carries only the sender-controlled packet timestamp. The app assigns `receivedAt`; channel history and UI ordering use it rather than packet time.
 
 ### Channel
 Index (0–7), name, 16-byte PSK, unread count. PSK derivation methods for hashtag (SHA-256) and community (HMAC-SHA256) channels.

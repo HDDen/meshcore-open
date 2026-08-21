@@ -83,6 +83,27 @@ Tap a channel card to open the channel chat screen.
 - **Pinch-to-zoom**: Two-finger zoom (0.8x–1.8x) and double-tap to reset text size
 - **Message tracing mode** (when enabled in App Settings): Each bubble additionally shows path prefix bytes (`via XX,YY,...`), a timestamp, and a repeat count icon
 
+### Channel Message Time and Ordering
+
+Channel messages keep packet time and local timeline time separate:
+
+- `timestamp` is the Unix timestamp embedded by the sender in the radio packet. It is sender-controlled metadata used for wire-level identity, reply/reaction anchors, and diagnostics. It does not determine where a message appears in history.
+- `receivedAt` is the app-local timeline timestamp. Incoming messages receive it on their first physical receipt, before signature verification or other asynchronous processing. Outgoing messages receive it when their first radio transmission is attempted, after any configured send delay and radio-quiet wait.
+- `sentByRadioAt` stores that same first outgoing transmission-attempt time internally. Retries never move it.
+
+History ordering, pagination, shared-history insertion, the bubble time, and the last-message time on the channel card all use `receivedAt`. A forged or badly configured packet timestamp, including one far in the future, therefore remains visible as packet metadata but cannot push the message to the end of the conversation.
+
+When shared history contains the same packet in the current node scope and a secondary scope, the current node's copy is retained. Secondary-only messages are inserted by their own stored `receivedAt`; the app does not synthesize one global first-receipt time across all radios.
+
+Repeated copies are merged by packet identity. A repeat of an outgoing message preserves its original `receivedAt` and `sentByRadioAt`; a repeat of an incoming message preserves the earliest physical receipt. The latter also corrects the case where asynchronous verification lets a later copy finish processing before the first copy.
+
+The companion firmware's queued-message response contains the sender's packet timestamp but no separate node receive time. The queue is replayed FIFO. During the initial post-connect backlog drain, the app therefore assigns local monotonic `receivedAt` values in replay order: it uses the current local time when that advances, otherwise the previous assigned time plus one second. These values represent the order and time at which the app imported the backlog, not the historical time at which the node originally heard each packet.
+
+Two compatibility details are intentional:
+
+- Legacy stored rows that predate `receivedAt` fall back to their packet `timestamp`; there is no reliable receive time to reconstruct.
+- If a transport write throws, the outgoing row retains the time of that first transmission attempt. A later retry, including replay after an unexpected BLE reconnect, does not rewrite the timeline even though the first attempt may not have reached the node.
+
 ### Message Types in Chat
 
 - **Plain text** with linkified URLs
@@ -151,4 +172,4 @@ From the channels screen overflow menu → "Manage Communities". Opens a draggab
 | Encryption | Shared PSK (symmetric) | Contact's public key (asymmetric) |
 | Sender identity | Plain text prefix in payload | Verified via public key |
 | Replies | Supported (swipe or long-press) | Not supported |
-| Retry mechanism | No automatic retry | Exponential backoff with path rotation |
+| Retry mechanism | No mesh-delivery retry; a pending app-to-node send may replay after an unexpected BLE reconnect | Exponential backoff with path rotation |

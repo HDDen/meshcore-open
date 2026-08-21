@@ -224,6 +224,28 @@ The node signs message bodies via `CMD_SIGN_START/DATA/FINISH` (single global si
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
 
+### Channel message timeline
+
+`ChannelMessage` deliberately carries three clocks. `timestamp` is sender-controlled packet metadata
+used for wire identity and reply/reaction anchors. `receivedAt` is the app-local timeline used by
+history ordering, pagination, shared-history insertion, bubble labels and channel-list previews.
+`sentByRadioAt` is the first outgoing transmission-attempt anchor. Central rules live in
+`helpers/channel_message_timeline_helper.dart`; connector receive/dedup paths and
+`ChannelMessageStore` must use that helper rather than sorting channel messages by `timestamp`.
+
+Live incoming messages are stamped before asynchronous verification. Repeated incoming copies keep
+the earliest physical receipt, which also repairs reversed async completion; self echoes preserve the
+outgoing message's first `receivedAt` and `sentByRadioAt`. Outgoing time is assigned after the send
+delay and radio-quiet wait, immediately before the transport write, and retries do not move it. This
+is intentionally the first attempt time: a transport exception does not cause a later replay to
+rewrite history.
+
+The companion backlog frame has only the sender's packet timestamp. Firmware replays the queue FIFO,
+so the initial post-connect drain assigns local monotonic `receivedAt` values in frame order (`now`,
+or previous + one second when the local clock did not advance). Legacy stored rows without
+`receivedAt` fall back to `timestamp` because their real receive time cannot be reconstructed. When
+shared history has the same packet in current and secondary scopes, the current-scope copy wins.
+
 ### Blocked senders
 
 A sender muted from a message's long-press menu keeps arriving — nothing is dropped on receipt or
@@ -265,9 +287,10 @@ A row carries three things.
 
 **The moment a rule starts at** is the message it was ordered from, not the tap: by the time
 somebody long-presses a post, that sender has usually put several more on the screen above it,
-and those are what the user is reacting to. It is clamped to now, because `receivedAt` is our own
-clock in every case but one — the post-connect backlog drain writes the sender's send time into
-it — and a forged future date would otherwise push the boundary out of reach. Blocking an
+and those are what the user is reacting to. It is clamped to now because `receivedAt` is our own
+clock: live channel messages are stamped on first physical receipt, while the post-connect
+backlog receives local monotonic times in the firmware's FIFO replay order. The sender-controlled
+packet `timestamp` is stored separately and cannot push the boundary into the future. Blocking an
 identity again takes the **earlier** of the stored moment and the new anchor (`_blockedAtFor`):
 pointing further back strengthens the rule, pointing forward must not weaken it. A row written
 before blocks carried a moment is stamped with the load time and written straight back, so the
@@ -288,8 +311,9 @@ key nor the moment would change.
   compares no dates at all. A row that exists was created in the past, so a message arriving now
   is always after it; comparing our clock with our clock would add nothing and would misfire if
   the device clock stepped backwards. The answer is stamped onto the message as `wasBlocked`, and
-  that flag is the arm no forged timestamp can reach — which is why the backlog drain, where both
-  of a message's dates come off the wire, is covered anyway.
+  that flag is the arm no forged timestamp can reach. The backlog drain is covered too: its
+  `receivedAt` is assigned locally before the message reaches this check, and its wire timestamp
+  remains metadata only.
 - `hidesStoredMessage` — *should this stored message be hidden?* — is the display-time question,
   and it does compare: `ChannelMessage.receivedAt` at or after `blockedAt`. It exists for messages
   the receive path never stamped, above all copies merged in from another node's shared history,

@@ -1126,15 +1126,22 @@ Persistent storage uses separate stores:
 - `ChannelSettingsStore`: Per-channel settings
 - `UnreadStore`: Unread message tracking
 
-**Windowing**: Only most recent 200 messages kept in memory per conversation.
+**Windowing**: Only the most recent 500 messages are kept in memory per conversation. Older stored rows remain available through pagination and search.
 
 ### Deduplication
 
 **Contact messages**: Compare timestamp + text in last 10 messages.
 
 **Channel messages**:
-- Same text + timestamp within 5 seconds = duplicate
-- Self-messages: Match sender name + path contains own public key prefix
+- New rows prefer an exact `packetHash`: text packets hash channel index + packet timestamp + decoded `"sender: text"`; typed channel-data packets hash channel index + data type + raw payload.
+- Legacy rows without a hash fall back to sender + text matching, with a 30-second window for incoming copies and a 10-minute self-echo window. Two outgoing rows are never merged, so manual resend remains a distinct message.
+- A duplicate contributes repeat/path/signal metadata but does not move an outgoing message's first transmission time. Incoming duplicates retain the earliest locally captured `receivedAt`.
+
+### Channel Message Timeline
+
+The frame's Unix `timestamp` is controlled by the sender and remains packet metadata. The app stores a separate local `receivedAt` and orders channel history, pagination, shared-history insertion, bubble labels, and channel-list previews by that value. `sentByRadioAt` records the first outgoing transmission attempt after any configured delay and radio-quiet wait; repeats and retries do not replace it.
+
+Queued channel responses do not contain a firmware receive timestamp. The companion queue is FIFO, so the initial post-connect drain assigns local monotonic `receivedAt` values in response order, using the previous value plus one second if the local clock has not advanced. A forged future packet timestamp therefore cannot move a newly received message to the end of the conversation.
 
 ### Notifications
 
@@ -1273,10 +1280,10 @@ Returned in `RESP_CODE_ERR` frames: `[0x01][err_code]`
 #### Message Windowing
 
 ```dart
-static const int _messageWindowSize = 200;
+static const int _messageWindowSize = 500;
 ```
 
-Only most recent 200 messages per contact/channel kept in memory. Older messages stored on disk but must be explicitly loaded via `loadOlderMessages()`.
+Only the most recent 500 messages per contact/channel are kept in memory. Older messages remain in persistent storage and are loaded explicitly through the contact/channel pagination paths or searched directly in storage.
 
 #### Frame Processing
 
@@ -1327,8 +1334,8 @@ On connect, if `RESP_CODE_SELF_INFO` not received within 3s, retry `CMD_APP_STAR
 **Contact messages**: Compare last 10 messages for same timestamp + text.
 
 **Channel messages**:
-- Same text within 5 seconds = duplicate
-- Self-message detection: Match sender name with self name + path contains own public key prefix
+- The Flutter client uses exact packet hashes for current stored rows and only falls back to sender/text/time heuristics for legacy rows without a hash.
+- Repeated copies merge route and signal observations while preserving the local timeline rules described above.
 
 #### Reaction Processing
 
