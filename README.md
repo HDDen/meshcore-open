@@ -313,7 +313,11 @@ With message tracing on, the hop list under a channel message ends with the SNR 
 own radio measured for the node you actually heard — the last repeater on the path, or the
 sender themselves when nobody relayed the message. Both are coloured by quality on the same
 scale as the signal indicator in the title bar. Only one of the frames a message can arrive in
-reports RSSI, so some messages show SNR alone. Switch the whole thing off in mod settings.
+reports RSSI, so some messages show SNR alone.
+
+A reading belongs to the route it was heard on, so when the same message reaches you over more
+than one path, the packet-path screen shows what each of those routes measured separately rather
+than one number for the message. Switch the whole thing off in mod settings.
 
 ### Offline history and message search
 

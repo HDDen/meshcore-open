@@ -108,10 +108,348 @@ At the byte-codec boundary used by v3:
 The current encoder emits `[flags][arithmetic stream]` unless that result is
 larger than raw UTF-8 and the first UTF-8 byte can be distinguished from the two
 flag bytes. The decoder also contains legacy fallback readers, but a new v3
-encoder should emit only the modern form above. Arithmetic interval updates,
-EOF/ESC symbols, Unicode code-point escapes, and model CDF construction are
-normatively defined by `lib/helpers/mesh_compressor.dart` together with the
-bundled model; they are not redefined by the v3 container.
+encoder must emit only the modern representation specified below.
+
+### Compressor model
+
+The model is part of the compressed-text format. Compatible implementations
+must use the contents of `assets/models/model-en-ru.json`, not merely a similar
+model with the same headline parameters. The current file has order `11`, a
+vocabulary of `672` symbols, and `12` levels of context tables.
+
+The model JSON has this schema:
+
+```json
+{
+  "o": 11,
+  "v": ["..."],
+  "c": [
+    {"context": {"symbol": 1}}
+  ]
+}
+```
+
+- `o` is the maximum context order;
+- `v` is the symbol vocabulary;
+- `c` is a list of `o + 1` tables; `c[n]` maps a context of length `n` to a
+  table of following-symbol counts;
+- a missing context or a context whose counts sum to zero does not participate
+  in CDF construction.
+
+EOF and ESC are added to the vocabulary when absent, after which the
+vocabulary is sorted with Dart's standard `String.compareTo`, lexicographically
+by UTF-16 code units. The current model already contains both symbols. Symbol
+indexes, CDF order, and the resolution of equal frequencies depend on the
+resulting vocabulary order.
+
+Sorting is not a formality. The shipped file stores the vocabulary in code
+point order rather than UTF-16 code unit order, so re-sorting genuinely changes
+it. The vocabulary holds 293 symbols outside the BMP: under UTF-16 order each
+of them compares by its leading surrogate from `0xD800..0xDBFF` and therefore
+sorts before the symbols in `0xE000..0xFFFF`, while under code point order it
+sorts after them. An implementation in a language whose strings compare by code
+point (Python, Go, Rust, C++ `std::u32string`) must sort the vocabulary by
+UTF-16 code units regardless. Otherwise the divergence shows up on neither
+Latin nor Cyrillic text and surfaces only on messages carrying emoji or symbols
+above `U+FE00`; vector 6 below covers that case.
+
+### Special symbols and context
+
+The compressor uses three control symbols:
+
+| Purpose | Symbol | Value |
+|---|---:|---:|
+| beginning of text, BOS | `\x02` | `U+0002` |
+| end of text, EOF | `\x03` | `U+0003` |
+| escape for an out-of-vocabulary symbol | `\x04` | `U+0004` |
+
+The initial context is BOS repeated `o` times. Text is traversed by Unicode
+code point (`String.runes`), not by UTF-16 code units. After each symbol, the
+actual source-text code point is appended to the context and only its final
+`o` code points are retained. This also applies to a symbol carried through
+ESC. EOF is encoded using the context left after the text.
+
+Before encoding the first symbol, the encoder scans the entire text. If any
+code point is absent from the vocabulary, `hasEscapes` is set for the whole
+message. This flag simultaneously:
+
+- becomes the first byte of the arithmetic segment;
+- enables ESC sequences;
+- gives ESC a non-zero base frequency in every CDF in the message.
+
+The flag therefore cannot be determined incrementally: it changes the
+intervals even for symbols that precede the first escape.
+
+### CDF construction
+
+Every CDF is normalized to `S = 2^20 = 1,048,576`. For a given context, the
+implementation performs these steps.
+
+1. For every order `n` from `o` down to `0`, take the final `n` code points of
+   the context and look up `c[n][context]`. Let `total` be the sum of its
+   counts. Skip tables with `total <= 0`.
+2. Compute the active order's weight in `double`:
+
+   ```text
+   confidence = total / (total + 1.5)
+   weight = (n + 1)^3 * ln(total + 1) * confidence
+   ```
+
+3. `maxMatchOrder` is the greatest active `n`. The base script boost is `32`
+   when `maxMatchOrder <= 2`, and `8` otherwise.
+4. Determine the context script from the rightmost non-BOS character. Common
+   characters are skipped while looking for a different script. Code points
+   are classified as follows:
+
+   | Condition | Class |
+   |---|---|
+   | `< 0x0041` | Common |
+   | `<= 0x024F` or `0x1E00..0x1EFF` | Latin |
+   | `0x0400..0x052F` | Cyrillic |
+   | `> 0xFFFF` | Common |
+   | everything else | Other |
+
+5. First determine the set of compatible classes. The reference
+   implementation's extra script-compatibility table is empty, so the rule is:
+   when the context script is known and is not Common, that class and Common
+   are compatible; when the context script is unknown or Common, no set is
+   created at all.
+
+   Then assign every vocabulary symbol an initial epsilon frequency by the
+   first rule that applies:
+   - ESC: `500` when `hasEscapes`, otherwise `0`;
+   - a set of compatible classes exists and the symbol's class belongs to it:
+     the full script boost;
+   - the symbol's class is Common: `max(1, scriptBoost ~/ 3)`;
+   - all other symbols: `1`.
+
+   Rule order matters. Common belongs to the compatible set whenever that set
+   exists at all, so with a known context script the Common symbols receive the
+   **full** boost rather than a third of it. The `max(1, scriptBoost ~/ 3)`
+   rule fires only where no set was created: a context of nothing but BOS, or a
+   context whose class is Common. Common is the largest class of all — it holds
+   the space, the digits, every punctuation mark below `0x41`, and every code
+   point above `0xFFFF`. Applying the rules in another order breaks the stream
+   at the first letter that enters the context.
+6. If the epsilon sum exceeds `S / 2`, replace every frequency with
+   `max(1, floor(freq * (S / 2) / epsilonTotal))`, then calculate the sum
+   again.
+7. Distribute the remaining scale `S - epsilonTotal` among active orders. For
+   each order:
+
+   ```text
+   factor = (weight / totalWeight) * (S - epsilonTotal) / total
+   contribution(symbol) = floor(count(symbol) * factor)
+   ```
+
+   Contributions from all active orders are added to the symbol's epsilon.
+8. Adjust the final sum to exactly `S`. Add the entire deficit to the first
+   symbol with the largest frequency. To remove an excess, sort indexes by
+   descending frequency, calculate `canRemove = freq - 1` for each index, and
+   remove exactly `min(canRemove, remaining)`, with no clamping at zero.
+
+   The excess-removal branch is unreachable on the normal path: step 7's
+   contributions are truncated downwards, so their sum never exceeds
+   `S - epsilonTotal` and the total is never above `S`. Reproduce it verbatim
+   all the same, rather than as "reduce frequencies down to a floor of 1": a
+   disabled ESC has frequency `0`, so `canRemove` is `-1`, and subtracting a
+   negative value would raise that frequency to `1` while increasing the
+   remaining deficit.
+9. Build `[low, high)` intervals by cumulative sum in sorted-vocabulary order.
+
+Steps 2, 6, and 7 in the reference implementation use IEEE-754 `double`,
+`math.log()`, and truncation of positive values through `.toInt()`. Different
+math libraries can theoretically move a CDF boundary by one and make the rest
+of the stream incompatible. A port must be checked against the fixed vectors
+below.
+
+In the excess-removal branch, which is unreachable on the normal path,
+`List.sort()` compares only frequencies and has no separate tie-break for equal
+values. This does not affect normal encoding. A port should nevertheless match
+the reference behavior in this defensive branch if altered arithmetic can make
+the branch reachable at all. Integer weights or a new mandatory tie-break must
+not be introduced into wire revision `0x00` without a separate format revision.
+
+### Arithmetic coder
+
+The coder uses an unsigned 32-bit state:
+
+```text
+FULL          = 2^32
+HALF          = 2^31
+QUARTER       = 2^30
+THREE_QUARTER = 3 * 2^30
+MASK          = 2^32 - 1
+low           = 0
+high          = MASK
+pending       = 0
+```
+
+For a symbol with CDF interval `[symbolLow, symbolHigh)` and sum `total`:
+
+```text
+range = high - low + 1
+high = low + floor(range * symbolHigh / total) - 1
+low  = low + floor(range * symbolLow  / total)
+```
+
+After the update, renormalize the range while one of these three cases applies:
+
+1. `high < HALF`: emit bit `0`;
+2. `low >= HALF`: emit bit `1`, then subtract `HALF` from `low` and `high`;
+3. `low >= QUARTER && high < THREE_QUARTER`: increment `pending`, then subtract
+   `QUARTER` from `low` and `high`.
+
+After the first or second case, emit all pending bits with the opposite value.
+Then shift `low` and `high` left by one bit, set the low bit of `high`, and
+mask both values to 32 bits.
+
+Finish the stream exactly as follows: increment `pending`; emit `0` when
+`low < QUARTER`, otherwise emit `1`; then emit the `pending` opposite bits.
+
+The decoder starts with `low = 0`, `high = MASK`, and fills `value` with the
+first 32 bits. Reads beyond the input array return zero. To select a symbol:
+
+```text
+range  = high - low + 1
+scaled = floor(((value - low + 1) * total - 1) / range)
+```
+
+Select the first CDF interval whose `high > scaled`, update the bounds with the
+same formulas, and apply symmetrical renormalization. Decoding stops at EOF.
+The reference limits the loop to `4096` decoded symbols; the modern byte
+decoder then re-encodes the result and requires an exact match with the input
+bytes.
+
+### Unicode escape coding
+
+After ESC, the code point is carried by two uniform arithmetic symbols: one of
+`11` variant identifiers and an offset within the selected block.
+
+| ID | Range | Size |
+|---:|---:|---:|
+| 0 | `0x0400..0x04FF` | 256 |
+| 1 | `0x0100..0x024F` | 336 |
+| 2 | `0x2000..0x206F` | 112 |
+| 3 | `0x2190..0x21FF` | 112 |
+| 4 | `0x2600..0x27BF` | 448 |
+| 5 | `0x1F300..0x1F5FF` | 768 |
+| 6 | `0x1F600..0x1F64F` | 80 |
+| 7 | `0x1F900..0x1F9FF` | 256 |
+| 8 | `0xFE00..0xFE0F` | 16 |
+| 9 | `0x1FA70..0x1FAFF` | 144 |
+| 10 | fallback | — |
+
+The block ID is encoded uniformly with `total = 11`. For IDs `0..9`, encode
+`codepoint - blockStart` uniformly with `total = blockSize`. For ID `10`, split
+the code point into three uniform 7-bit values with `total = 128`, least
+significant group first:
+
+```text
+codepoint & 0x7F
+(codepoint >> 7) & 0x7F
+(codepoint >> 14) & 0x7F
+```
+
+### Byte-stream packing
+
+Arithmetic bits are packed into bytes MSB-first. Unused low bits in the final
+byte remain zero. The v3 byte codec retains that final byte and does not remove
+trailing zero bytes.
+
+The modern encoder selects a representation as follows:
+
+1. Empty text becomes an empty `compressedText`.
+2. Non-empty text first becomes
+   `[hasEscapes:1][arithmetic stream including EOF]`.
+3. If that array is strictly longer than the source UTF-8 and the first UTF-8
+   byte is at least `0x02`, store the original UTF-8 instead.
+4. Equal lengths keep the arithmetic form. UTF-8 beginning with `0x00` or
+   `0x01` is also not selected because it cannot be distinguished from a flags
+   byte.
+
+For decoding, an empty array means empty text, a first byte greater than
+`0x01` means raw UTF-8, and `0x00` or `0x01` selects the modern arithmetic
+decoder.
+
+Legacy `mcmp2:` is a separate compressor text transport. It uses the `!`, `"`,
+and `#` markers, Base91, and removes trailing zero bytes before Base91. This
+does not apply to `mcmp3:`: textual MCMP v3 encodes the complete body in Base91,
+byte-for-byte identical to the body carried through GROUP_DATA.
+
+### Fixed compressor vectors
+
+Every example below uses an MCMP body without sender name, signature, or reply,
+and timestamp `0x01020304`. The body's first five bytes are therefore always
+`00 04 03 02 01`: zero container flags followed by the little-endian timestamp.
+
+1. Empty text:
+
+   ```text
+   text:           ""
+   compressedText: <empty>
+   body hex:       0004030201
+   text transport: mcmp3:XLZt$A
+   ```
+
+   This is a low-level body and transport vector. The public application helper
+   `encodeTextTransport()` returns an empty input unchanged instead of creating
+   an MCMP envelope, so the application's normal send path does not emit this
+   payload.
+
+2. Raw UTF-8:
+
+   ```text
+   text:           ok
+   compressedText: 6f6b
+   body hex:       00040302016f6b
+   text transport: mcmp3:XLZt$APgD
+   ```
+
+3. Arithmetic stream without escapes:
+
+   ```text
+   text:           hello hello hello hello
+   compressedText: 007d6a9f41a17e7be0
+   body hex:       0004030201007d6a9f41a17e7be0
+   text transport: mcmp3:XLZt$A1[?<Nuc]$VVB
+   ```
+
+4. Arithmetic stream with an escape for `U+10348`:
+
+   ```text
+   text:           hello hello hello hello 𐍈 hello hello hello hello
+   compressedText: 017d7bfcf35d5311aecd94a7868487438f55afd500
+   body hex:       0004030201017d7bfcf35d5311aecd94a7868487438f55afd500
+   text transport: mcmp3:XLZt$A2[=K0[`SEDWTc`fvNVp/P8~fNA
+   ```
+
+5. Cyrillic, the script-boost path with a non-Latin class:
+
+   ```text
+   text:           Привет, как дела?
+   compressedText: 00bfc4ad0b
+   body hex:       000403020100bfc4ad0b
+   text transport: mcmp3:XLZt$AT|.nTIA
+   ```
+
+6. An in-vocabulary emoji, which pins the vocabulary sort order:
+
+   ```text
+   text:           ok 👍
+   compressedText: 0082b597
+   body hex:       00040302010082b597
+   text transport: mcmp3:XLZt$A5Fr^l
+   ```
+
+A compatible port must produce the exact `compressedText`, body, and `mcmp3:`
+values above and recover the original text from each representation.
+
+Vectors 1-4 are insensitive to vocabulary order: every symbol they encode sits
+below the point where code point order diverges from UTF-16 code unit order.
+Vector 6 is chosen so that the wrong vocabulary order changes the result, which
+is exactly what it tests. Vector 5 covers the selection of a context script
+other than Latin.
 
 ## Transports
 
@@ -139,6 +477,37 @@ listed order:
 ```text
 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"
 ```
+
+The algorithm is Joachim Henke's standard basE91; the alphabet above matches
+the reference one, and the coding itself is defined as follows. The encoder
+accumulates bits in a buffer `b` with a fill counter `n`, both starting at
+zero:
+
+```text
+for each input byte:
+  b |= byte << n
+  n += 8
+  if n > 13:
+    v = b & 8191
+    if v > 88:
+      b >>= 13
+      n -= 13
+    else:
+      v = b & 16383
+      b >>= 14
+      n -= 14
+    emit alphabet[v % 91], then alphabet[v ~/ 91]
+
+after the last byte, if n != 0:
+  emit alphabet[b % 91]
+  and, if n > 7 or b > 90, emit alphabet[b ~/ 91]
+```
+
+The decoder is symmetric. Characters are read in pairs as
+`v = first + second * 91`, then `b |= v << n`, and the counter grows by `13`
+when `(v & 8191) > 88` and by `14` otherwise; bytes are then pulled out of the
+buffer while `n > 7`. A single trailing character `v` yields the final byte
+`(b | (v << n)) & 0xFF`. A character outside the alphabet is a format error.
 
 For a channel GROUP_TEXT message, the normal MeshCore outer text remains
 `senderName: mcmp3:...`; `senderName` is not normally repeated in the MCMP body.
@@ -422,11 +791,21 @@ displays a separate red clock diagnostic. This timestamp comparison is
 independent of signature validity. Message details may also show the MCMP
 timestamp whenever the two second values differ.
 
-A precise reply anchor consists of `replyAuthorName` and `replyTimestamp`. Both
-must be present together. When the enclosing message has a valid signature, the
-anchor is covered by that signature. The receiver resolves it against local
-history by exact author and timestamp matching; if the original is unavailable,
-the message remains readable without a resolved quote target.
+Structurally, a reply anchor consists of `replyAuthorName` and
+`replyTimestamp`; both fields must be present together. When the enclosing
+message has a valid signature, the anchor is covered by that signature. Anchor
+resolution depends on the transport:
+
+- in channels and room-server conversations, the trimmed author name must
+  match exactly, while `replyTimestamp` must equal either the candidate's outer
+  timestamp or its MCMP timestamp;
+- in a direct-contact conversation, `replyAuthorName` is transmitted as an
+  empty string because both participants are already known, and the original
+  message is resolved by exact timestamp matching alone.
+
+The current approximate-match tolerance is zero. If the original message is
+unavailable, the reply remains readable. Channel and room-server replies also
+retain the author name as a mention, but no concrete history record is linked.
 
 ## Size overhead
 

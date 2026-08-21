@@ -164,6 +164,8 @@ All stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton
 
 Wardrive data (samples, sessions, per-endpoint uploaded IDs, ignore list) is persisted in SharedPreferences via `wardrive_sample_store` / `wardrive_ignore_store`. The disabled translation subsystem still exposes a `translation_file_store` file path for model removal only.
 
+A few states are deliberately **unscoped by node** because they describe this phone rather than any radio's data. The blocked-sender table is managed through `BlockedSenderStore`, while the map's node-filter chip row writes its collapsed or expanded state directly under `map_node_filters_expanded_v1`. Anything holding per-radio data belongs in a scoped store instead.
+
 ### Offline history mode
 
 The BLE, USB and TCP connection screens expose the same `OfflineHistoryButton`. A user can open one saved node scope or choose the shared mode, which merges every known node scope without connecting to a radio. `MeshCoreConnector.enterOfflineHistory()` binds stores to the selected synthetic scope and uses read-only loading paths with legacy migration disabled; `exitOfflineHistory()` clears the offline state before a real connection begins. Shared offline mode builds a merged contact/channel/message view up front, while single-node mode keeps that node's settings, order and unread data.
@@ -240,9 +242,17 @@ MCMP v3 messages are not Ed25519-signed and use the authenticated contact transp
 `McmpSignatureStatus`, the verbatim MCMP timestamp/signature/reply fields, the verified full key,
 and the name-collision flag are persisted on `Message` / `ChannelMessage`. The badge shows a
 fingerprint only for `valid` results. Incoming messages also compare the MCMP timestamp with
-`message.timestamp`: a difference greater than 30 minutes adds the red clock indicator, while the
-details screen shows the distinct MCMP timestamp whenever the two second values differ. Signature
-status and timestamp comparison are separate UI fields.
+`message.timestamp` through `helpers/mcmp_timestamp_warning.dart`: a difference greater than
+`mcmpTimestampWarningThreshold` (30 minutes) adds the red clock indicator, while the details screen
+shows the distinct MCMP timestamp whenever the two second values differ. That helper detects a
+clock mismatch and nothing more — it neither establishes freshness nor proves that a replay
+occurred — and signature status and timestamp comparison stay separate UI fields.
+
+The wire format itself — body layout, flags, both transports, the canonical signing bytes, the
+destination bindings and the `CMD_SIGN_*` exchange — is specified in
+[`docs/MCMP_V3_PROTOCOL.md`](docs/MCMP_V3_PROTOCOL.md) (Russian: `docs/MCMP_V3_PROTOCOL_RU.md`).
+That document is written for other implementations, so keep it in step with the codec whenever the
+container changes.
 
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
@@ -277,6 +287,20 @@ Initial queued room posts receive monotonic local
 positions in companion FIFO order with a one-millisecond minimum step, and outgoing room posts are
 positioned at their first transmission. Legacy rows without `receivedAt` fall back to `timestamp`.
 The rules live in `helpers/room_message_timeline_helper.dart`.
+
+### Direct and room message de-duplication
+
+The node replays its offline queue on connect and can hand the same direct or room post over more
+than once, so `_handleIncomingMessage` drops an incoming message that already sits in the
+conversation. Identity is the packet timestamp in milliseconds plus the exact text, and the scan
+covers the whole loaded conversation rather than only its last entry — a duplicate need not arrive
+adjacent to its twin, since other senders' posts can be interleaved between the two copies.
+
+For a room server that pair is not enough: two participants can post identical text in the same
+second, and collapsing them would delete somebody's message. When the contact is `advTypeRoom` the
+comparison therefore also requires an equal `fourByteRoomContactKey`, the author prefix the room
+server stamps on every post. Only incoming messages are considered, and the check runs before the
+message is stored, so nothing has to be undone afterwards.
 
 ### Blocked senders
 
@@ -401,10 +425,15 @@ to re-evaluate later.
 for older records. Repeats merge through `existing.copyWith(...)` without touching it, so the
 first arrival decides. It also rides in `markerSignature`, next to `BlockedSenders.revision`:
 flagging a message changes nothing else about it, and the map's marker cache would otherwise keep
-drawing its pin. Revealing or hiding a body changes bubble heights, so `_toggleBlockedBody` and
-both halves of `_toggleSenderBlock` set `_channelSkipNextBottomSnap` — without it the post-frame
-snap that follows every list rebuild drags a reader sitting near the bottom down to the newest
-message.
+drawing its pin. Revealing or hiding a body changes bubble heights, and without a guard the
+post-frame snap that follows every list rebuild drags a reader sitting near the bottom down to the
+newest message. Two guards cover that, for the two shapes the change takes. `_toggleBlockedBody`
+is synchronous and sets `_channelSkipNextBottomSnap`, which the next snap consumes and clears.
+`_toggleSenderBlock` and `_toggleRoomAuthorBlock` are not: blocking rewrites stored history and
+the connector notifies more than once along the way, so both run their work inside
+`ChatBottomSnapGuard.run` (`helpers/chat_scroll_controller.dart`), which holds the suppression
+until the end of the frame that applies the final heights. Its generation counter is what keeps a
+second toggle started mid-flight from letting the first one lift the guard early.
 
 **Redrawing.** `BlockedSenders` is a `ChangeNotifier` and bumps `revision` on every write; the
 connector re-emits that signal, so the chat, the channels list and the map redraw from the one
@@ -463,39 +492,47 @@ The edits themselves are pure transforms in `helpers/markup_editing.dart` (`wrap
 
 ### Last-hop signal in the hop list
 
-The tracing row of a channel bubble ends its hop list with the SNR and RSSI our own radio
-measured for that reception. `ChannelMessage` carries them as `snr` (dB) and `rssi` (dBm), both
-nullable and both persisted by `channel_message_store`; anything stored before they existed has
-neither.
+The tracing row of a channel bubble ends its hop list with the SNR and RSSI our own radio measured
+for that reception, and the packet-path screen repeats them under every route it lists.
 
 Three frames can report a reading and only one reports both. `PUSH_CODE_LOG_RX_DATA` (0x88)
 carries `[snr*4 int8][rssi int8]` in its header — `_handleLogRxData` reads those three bytes
 instead of skipping them — while `CHANNEL_MSG_RECV_V3` (byte 1) and `CHANNEL_DATA_RECV`
-(`ChannelDataReceivedFrame.snr`, parsed all along and previously unused) carry SNR alone. A
-missing RSSI is therefore normal, not a fault.
+(`ChannelDataReceivedFrame.snr`) carry SNR alone. A missing RSSI is therefore normal, not a fault.
 
-The pair describes **one** reception, so it follows the path it was heard on. In
-`_addChannelMessage`'s repeat merge: a copy that brings a longer path — the one that will be
-displayed — brings its reading with it; an identical path means the same packet reached us
-twice, once as a channel message with SNR alone and once through the RX log with both, so those
-two only fill each other's gaps; a copy that travelled a different, shorter route keeps its
-reading to itself. Mixing an SNR from one copy with an RSSI from another would describe a link
-nobody heard.
+A reading describes **one** reception, so it belongs to the route it was heard on rather than to
+the message. `ChannelMessage.pathObservations` is a list of `ChannelPathObservation`
+(`helpers/channel_path_signal_helper.dart`) — path bytes plus an optional SNR and RSSI — and
+`channel_message_store` persists it with each path base64-encoded. The constructor still takes bare
+`snr` / `rssi` arguments and folds them into that list under the message's own `pathBytes`, so a
+receive path only has to hand over what its frame reported and never builds an observation itself.
+`snr` and `rssi` are getters that look up `pathBytes`, the route the bubble is currently showing.
 
-Rendering lives in `helpers/signal_reading_text.dart` (`signalReadingSpans`, plus the RSSI
-colour scale) rather than in `channel_chat_screen.dart`, which is a merge hot spot. The spans
-are appended to the hop list's own `Text` instead of becoming another chip in the meta row's
-`Wrap`, so they inherit its font and only colour sets them apart — the same five-step scale the
-app-bar SNR indicator paints, SNR against the current spreading factor through `snrUiFromSNR`,
-RSSI against its own dBm thresholds. Each reading is glued on with a non-breaking space: a plain
-space is a break opportunity, and a reading must never be stranded on a line without the hop it
-belongs to. With no hop list in front of them the first reading takes no glue, or it would sit a
-space further from the route chip than every other row does.
+`ChannelPathSignalHelper` owns every rule about the list. `includeReading` matches by exact path
+bytes and fills only the gaps of the entry it finds, so the same packet arriving twice — once as a
+channel message carrying SNR alone, once through the RX log carrying both — completes one
+observation instead of creating two. `merge`, which `_addChannelMessage`'s repeat merge calls,
+folds an incoming list into a stored one the same way. A copy that travelled a different route adds
+its own entry and never lends its numbers to another: mixing an SNR from one reception with an RSSI
+from another would describe a link nobody heard. Nothing is overwritten either, so a route keeps
+the first real reading it got.
+
+Rendering lives in `helpers/signal_reading_text.dart` (`signalReadingSpans`, plus the RSSI colour
+scale) rather than in `channel_chat_screen.dart`, which is a merge hot spot. The spans are appended
+to the hop list's own `Text` instead of becoming another chip in the meta row's `Wrap`, so they
+inherit its font and only colour sets them apart — the same five-step scale the app-bar SNR
+indicator paints, SNR against the current spreading factor through `snrUiFromSNR`, RSSI against its
+own dBm thresholds. Each reading is glued on with a non-breaking space: a plain space is a break
+opportunity, and a reading must never be stranded on a line without the hop it belongs to. With no
+hop list in front of them the first reading takes no glue, or it would sit a space further from the
+route chip than every other row does.
 
 A message heard with no repeater in between has no hop list but still has a reading, so the row
-appears for it too and the route chip reads `DIRECT`. All of it is gated on
-`AppSettings.showLastHopSignal` (default on, in mod settings) on top of the existing tracing and
-`showHops` gates.
+appears for it too and the route chip reads `DIRECT`. `channel_message_path_screen.dart` asks
+`ChannelPathSignalHelper.find` for each path variant it draws, so a packet heard over several
+routes shows what each one measured, and a variant with no observation simply shows none. All of it
+is gated on `AppSettings.showLastHopSignal` (default on, in mod settings) on top of the existing
+tracing and `showHops` gates.
 
 ### Map raster sources
 
@@ -766,6 +803,15 @@ channel's region. The scope on the wire is applied for images identically to tex
 `sendImageChunks` wraps the whole burst in `_runScopedChannelSend`, so every chunk of one image
 goes out under one scope and no other channel send can slip in between them.
 
+An image is not stored inside the message it arrived with — the message holds only a sentinel — so
+clearing a conversation has to reach this store separately, or the bytes stay on disk with nothing
+left pointing at them. The connector holds a `_deleteImagesForChannel` callback, wired in `main()`
+to `ReceivedImageStore.deleteImagesForChannel` and left null when the build has no image codec, and
+calls it from both places a channel's history ends: deleting the channel and clearing its messages.
+The store drops every entry whose `channelIndex` matches, files included. Single-message deletion
+does not currently invoke AEIC cleanup: `deleteImageForSentinel` can parse the stream id back out of
+the message text, but that helper is not wired into the connector's individual-message delete path.
+
 ### Wardriving (coverage mapping)
 Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, driven from `map_screen.dart` / `widgets/wardrive_status_panel.dart`). Each cycle (default 25 s, 5–300 s configurable) takes a GPS fix, sends a zero-hop discovery request, and listens ~10 s for `DiscoverResp` frames; each responder → a GPS-tagged `WardriveSample` (SNR/RSSI/node key/response time), plus `pingSuccess=false` "dead zone" samples when nobody answers. `wardrive_upload_service.dart` POSTs sample batches as JSON to configurable sites (default `https://meshwar-map.pages.dev/api/samples`), de-duping per endpoint. `wardrive_foreground_service.dart` runs an Android **location** foreground service (MethodChannel `mco_advanced/wardrive_foreground`), gated in Dart so ordinary BLE users don't inherit location FGS.
 
@@ -774,6 +820,9 @@ Channels can be tagged with a named region; `cmdSetFloodScope` (54) / `cmdSetDef
 
 ### DirectRepeater last-hop path selection
 `DirectRepeater` (top of `meshcore_connector.dart`) tracks the ≤5 best last-hop repeaters ranked by SNR + recency (stale after 30 min), built from advert path tails and repeater-ACK trip-times (fed to `PathHistoryService`). Feeds auto route-rotation in `preparePathForContactSend()`. Related: **path-hash mode** (`cmdSetPathHashMode`, variable 1–4 byte per-hop hash width).
+
+### Room servers on the channels screen
+Three mod settings decide how much of the contact list the channels screen borrows. `roomServerShowNotemptyOnChatscreen` adds room servers (`advTypeRoom`) and `roomServerShowNotemptyContactsOnChatscreen` adds ordinary chat contacts (`advTypeChat`) — both only where `Contact.hasMessages` is true, so an advert alone never puts a node there. `roomServerDisableRoomAndContactsSorting` (default **on**; the other two default off) keeps them out of the channel sort order, and while it is on `_visibleRoomServers()` returns nothing at all. `widgets/message_search_sheet.dart` reads the same two visibility flags, so search covers exactly what the screen shows.
 
 ### Other UX
 Per-conversation **sending delay** (schedule/commit/cancel a queued send), **quick answers** (canned composer replies, `helpers/quick_answers_helper.dart`), per-channel **widget color**, and a **translate UI shell** (`widgets/message_translation_button.dart`) that only writes the target-language setting (translation itself is disabled).
@@ -982,4 +1031,4 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |
 | `lib/screens/mod_settings_screen.dart` | Advanced-mod feature toggles |
-| `pubspec.yaml` | Dependencies and project metadata (current version `9.5.0-mcoa.1.8.2+39`) |
+| `pubspec.yaml` | Dependencies and project metadata; the `## Dependencies` section above quotes the same version |

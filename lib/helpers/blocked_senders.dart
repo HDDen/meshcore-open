@@ -26,11 +26,9 @@ import 'mcmp_app_codec.dart';
 /// display-time question, and that one does compare dates, because it is asked
 /// about messages the receive path never stamped: merged in from another
 /// node's shared history, or stored by a path that did not consult this table.
-/// A message counts as muted when EITHER of its dates is at or after the
-/// moment of blocking. Only the packet timestamp can be forged, and both
-/// directions of forgery are harmless: an old date still loses to a real
-/// [ChannelMessage.receivedAt], and a future one can only hide the forger's
-/// own messages.
+/// It compares [ChannelMessage.receivedAt] and nothing else. The packet's own
+/// timestamp is chosen by the sender, so consulting it would let the sender
+/// decide which side of the boundary his own message lands on.
 ///
 /// Neither question ever drops a message on receipt or removes one from
 /// history, and neither reaches messages that predate the block.
@@ -200,10 +198,11 @@ class BlockedSenders extends ChangeNotifier {
   /// [ChannelMessage.receivedAt] and nothing else: the moment of blocking is
   /// known only to us, while the packet's own timestamp is chosen by the
   /// sender, so comparing the two would measure the wrong thing even before
-  /// anyone forged anything. The one case where `receivedAt` is not our clock
-  /// — the post-connect backlog drain writes the sender's send time into it —
-  /// needs no date at all: those messages still pass through the receive path,
-  /// which stamps [ChannelMessage.wasBlocked] without consulting any clock.
+  /// anyone forged anything. For current records, `receivedAt` is our own
+  /// clock: live messages are stamped on first physical receipt, and the
+  /// post-connect backlog drain hands out local monotonic times in the
+  /// firmware's FIFO replay order. Legacy stored rows that predate
+  /// `receivedAt` fall back to their packet timestamp while being loaded.
   ///
   /// Outgoing messages never match — [ruleFor] refuses them — so adopting our
   /// own name and getting us to block it cannot hide anything we wrote.
@@ -261,10 +260,11 @@ class BlockedSenders extends ChangeNotifier {
   /// posted since — here and in history merged from other nodes — falls inside
   /// the block. What sits above it in the conversation stays readable.
   ///
-  /// Clamped to now, because `receivedAt` is our own clock in every case but
-  /// one: the post-connect backlog drain writes the sender's send time into
-  /// it, and a forged future date there would otherwise push the boundary out
-  /// of reach.
+  /// Clamped to now as an upper bound under the arithmetic rather than as a
+  /// defence against the sender. Current records use our own clock for
+  /// `receivedAt`, but a device clock step or a legacy row reconstructed from
+  /// its packet timestamp can still put it in the future; without the clamp,
+  /// the boundary would land beyond every message that follows.
   static DateTime _anchorAt(DateTime? receivedAt) {
     final now = DateTime.now();
     if (receivedAt == null || receivedAt.isAfter(now)) return now;

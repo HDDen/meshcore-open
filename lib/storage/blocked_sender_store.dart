@@ -20,8 +20,8 @@ class BlockedSenderRule {
 
   final String keyHex;
 
-  /// When the block was created. A stored message counts as muted when either
-  /// of its two dates is at or after this moment — see
+  /// When the block was created. A stored message counts as muted when its
+  /// `receivedAt` is at or after this moment — see
   /// `BlockedSenders.hidesStoredMessage`.
   ///
   /// Widening an existing rule keeps the original moment: re-blocking a name
