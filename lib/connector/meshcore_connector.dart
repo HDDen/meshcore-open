@@ -9388,14 +9388,26 @@ class MeshCoreConnector extends ChangeNotifier {
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = _resolveContactReplyReference(message, contact);
       }
-      if (!message.isOutgoing) {
-        final existing = _conversations[message.senderKeyHex];
-        final incomingTimestamp = message.timestamp.millisecondsSinceEpoch;
+      final incomingMessage = message;
+      if (!incomingMessage.isOutgoing) {
+        final existing = _conversations[incomingMessage.senderKeyHex];
+        final incomingTimestamp =
+            incomingMessage.timestamp.millisecondsSinceEpoch;
         if (existing != null && existing.isNotEmpty) {
-          final last = existing.last;
-          if (!last.isOutgoing &&
-              last.timestamp.millisecondsSinceEpoch == incomingTimestamp &&
-              last.text == message.text) {
+          final isRoomMessage = contact?.type == advTypeRoom;
+          final isDuplicate = existing.any(
+            (current) =>
+                !current.isOutgoing &&
+                current.timestamp.millisecondsSinceEpoch ==
+                    incomingTimestamp &&
+                current.text == incomingMessage.text &&
+                (!isRoomMessage ||
+                    listEquals(
+                      current.fourByteRoomContactKey,
+                      incomingMessage.fourByteRoomContactKey,
+                    )),
+          );
+          if (isDuplicate) {
             return;
           }
         }
