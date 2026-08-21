@@ -53,6 +53,10 @@ Compression is chosen per contact and per channel:
 
 ### Signed messages (MCMP v3, Ed25519)
 
+The complete wire format, signing sequence, and verification rules are documented in
+[`docs/MCMP_V3_PROTOCOL.md`](docs/MCMP_V3_PROTOCOL.md) and its
+[`Russian translation`](docs/MCMP_V3_PROTOCOL_RU.md).
+
 MCMPv3 messages can carry an Ed25519 signature. Signing is performed by the node itself
 (`CMD_SIGN_START/DATA/FINISH`): the app assembles a canonical byte string — a domain separator,
 a context tag (channel or room), a binding value that ties the signature to that exact
