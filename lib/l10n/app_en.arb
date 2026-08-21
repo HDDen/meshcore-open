@@ -3145,6 +3145,23 @@
   "chat_mcmpSigningFailed": "Failed to sign the message",
   "chat_mcmpAnswerTo": "MCMPv3 answer to",
   "chat_mcmpSignedTimestamp": "MCMP timestamp",
+  "chat_mcmpTimestampQueerly": "MCMP-timestamp differs from packet timestamp by {time} seconds",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Signed MCMP-timestamp significantly differs from receiving time by {time} seconds",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP timestamp",
   "chat_timestampPacket": "Packet timestamp",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: show format version badge",

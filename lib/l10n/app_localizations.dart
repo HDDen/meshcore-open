@@ -9514,6 +9514,18 @@ abstract class AppLocalizations {
   /// **'MCMP timestamp'**
   String get chat_mcmpSignedTimestamp;
 
+  /// No description provided for @chat_mcmpTimestampQueerly.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP-timestamp differs from packet timestamp by {time} seconds'**
+  String chat_mcmpTimestampQueerly(int time);
+
+  /// No description provided for @chat_mcmpTimestampQueerlyReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed MCMP-timestamp significantly differs from receiving time by {time} seconds'**
+  String chat_mcmpTimestampQueerlyReceived(int time);
+
   /// No description provided for @chat_timestampPacket.
   ///
   /// In en, this message translates to:

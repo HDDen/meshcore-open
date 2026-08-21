@@ -1225,6 +1225,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         wasMcmpV3: message.mcmpTimestamp != null,
         verifiedSenderKeyHex: message.verifiedSenderKeyHex,
         nameCollision: message.mcmpNameCollision,
+        packetTimestamp: message.timestamp,
+        mcmpTimestamp: message.mcmpTimestamp,
         textScale: 1.0,
         color: scheme.onSurface.withValues(alpha: 0.65),
         errorColor: scheme.error,

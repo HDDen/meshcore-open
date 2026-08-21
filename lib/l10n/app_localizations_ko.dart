@@ -5288,6 +5288,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
 
   @override
+  String chat_mcmpTimestampQueerly(int time) {
+    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+  }
+
+  @override
+  String chat_mcmpTimestampQueerlyReceived(int time) {
+    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+  }
+
+  @override
   String get chat_timestampPacket => '패킷 타임스탬프';
 
   @override

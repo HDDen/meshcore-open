@@ -5560,6 +5560,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
 
   @override
+  String chat_mcmpTimestampQueerly(int time) {
+    return 'MCMP-timestamp отличается от timestamp пакета на $time секунд';
+  }
+
+  @override
+  String chat_mcmpTimestampQueerlyReceived(int time) {
+    return 'Подписанная дата создания пакета сильно отличается от времени получения, на $time секунд';
+  }
+
+  @override
   String get chat_timestampPacket => 'Timestamp пакета';
 
   @override

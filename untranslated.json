@@ -1,81 +1,113 @@
 {
   "bg": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "de": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "es": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "fr": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "hu": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "it": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "ja": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "ko": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "nl": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "pl": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "pt": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "sk": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "sl": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "sv": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "uk": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ],
 
   "zh": [
     "chat_mcmpSignedTimestamp",
+    "chat_mcmpTimestampQueerly",
+    "chat_mcmpTimestampQueerlyReceived",
     "repeater_cliClearNeighbors"
   ]
 }

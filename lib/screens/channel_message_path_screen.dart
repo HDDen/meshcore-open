@@ -15,6 +15,7 @@ import '../helpers/signal_reading_text.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/mcmp_timestamp_warning.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
@@ -258,6 +259,14 @@ class ChannelMessagePathScreen extends StatelessWidget {
               l10n.chat_mcmpSignatureCheckStatus,
               _signatureStatusLabel(l10n)!,
               scheme: scheme,
+            ),
+          if (_mcmpTimestampWarningSeconds case final differenceSeconds?)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                l10n.chat_mcmpTimestampQueerly(differenceSeconds),
+                style: TextStyle(color: scheme.error),
+              ),
             ),
           _buildDetailRow(
             context,
@@ -593,6 +602,14 @@ class ChannelMessagePathScreen extends StatelessWidget {
     if (mcmpTimestamp == null) return false;
     final packetTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
     return mcmpTimestamp != packetTimestamp;
+  }
+
+  int? get _mcmpTimestampWarningSeconds {
+    if (message.isOutgoing) return null;
+    return McmpTimestampWarning.suspiciousDifferenceSeconds(
+      packetTimestamp: message.timestamp,
+      mcmpTimestamp: message.mcmpTimestamp,
+    );
   }
 
   String? _mcmpReplyTargetLabel() {

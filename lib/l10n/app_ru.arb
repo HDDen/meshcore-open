@@ -2286,6 +2286,22 @@
   "chat_mcmpSigningFailed": "Не удалось подписать сообщение",
   "chat_mcmpAnswerTo": "MCMPv3 ответ на",
   "chat_mcmpSignedTimestamp": "MCMP timestamp",
+  "chat_mcmpTimestampQueerly": "MCMP-timestamp отличается от timestamp пакета на {time} секунд",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Подписанная дата создания пакета сильно отличается от времени получения, на {time} секунд",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
   "chat_timestampPacket": "Timestamp пакета",
   "settings_modSettingsMCOimg": "MCOimg",
   "settings_modSettingsVisualShowMCOimgFormat": "MCOimg: отображать бейдж версии формата",

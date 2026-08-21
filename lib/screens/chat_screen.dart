@@ -3109,6 +3109,8 @@ class _MessageBubble extends StatelessWidget {
                               verifiedSenderKeyHex:
                                   message.verifiedSenderKeyHex,
                               nameCollision: message.mcmpNameCollision,
+                              packetTimestamp: message.timestamp,
+                              mcmpTimestamp: message.mcmpTimestamp,
                               // Direct messages never show a fingerprint;
                               // room posts do.
                               showFingerprint:

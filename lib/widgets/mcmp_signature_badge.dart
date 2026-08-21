@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/mcmp_timestamp_warning.dart';
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
 
@@ -24,6 +25,8 @@ class McmpSignatureBadge extends StatelessWidget {
   final bool wasMcmpV3;
   final String? verifiedSenderKeyHex;
   final bool nameCollision;
+  final DateTime? packetTimestamp;
+  final int? mcmpTimestamp;
 
   /// Direct messages never show a fingerprint.
   final bool showFingerprint;
@@ -39,6 +42,8 @@ class McmpSignatureBadge extends StatelessWidget {
     required this.wasMcmpV3,
     this.verifiedSenderKeyHex,
     this.nameCollision = false,
+    this.packetTimestamp,
+    this.mcmpTimestamp,
     this.showFingerprint = true,
     required this.textScale,
     required this.color,
@@ -176,6 +181,12 @@ class McmpSignatureBadge extends StatelessWidget {
             verifiedSenderKeyHex != null
         ? formatFingerprint(verifiedSenderKeyHex!)
         : null;
+    final timestampWarningSeconds = isOutgoing || packetTimestamp == null
+        ? null
+        : McmpTimestampWarning.suspiciousDifferenceSeconds(
+            packetTimestamp: packetTimestamp!,
+            mcmpTimestamp: mcmpTimestamp,
+          );
 
     Widget iconWidget = Icon(icon, size: iconSize, color: iconColor);
     if (questionOverlay) {
@@ -205,6 +216,17 @@ class McmpSignatureBadge extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Tooltip(message: tooltip, child: iconWidget),
+        if (timestampWarningSeconds != null) ...[
+          SizedBox(width: 3 * textScale),
+          Tooltip(
+            message: l10n.chat_mcmpTimestampQueerly(timestampWarningSeconds),
+            child: Icon(
+              Icons.schedule,
+              size: iconSize,
+              color: errorColor,
+            ),
+          ),
+        ],
         if (fingerprint != null) ...[
           SizedBox(width: 3 * textScale),
           Text(
