@@ -60,13 +60,17 @@ conversation (an HMAC of the channel PSK, or the room server's public key), the 
 message timestamp, the container flags, the reply anchor for replies, and the message text — and
 hands it to the node. The node signs that data with its own private key and returns only the
 resulting signature, without ever revealing the private key. The signature is placed inside the
-message and sent over the mesh; pairing it with text compression means those extra 64 bytes do
-not have to be paid for out of the text the user actually writes.
+message and sent over the mesh. The signature occupies 64 bytes inside the MCMP v3 container;
+text compression offsets part of that fixed metadata overhead when the message text compresses
+well.
 
 **Verification happens entirely inside the app** against the public keys of known contacts — the
-firmware never verifies anything. The result is shown as a
-signature badge next to the message, and sender-name collisions are resolved by the verified key
-rather than by the displayed name.
+firmware never verifies anything. Channel messages take the displayed sender name from the outer
+channel envelope and require any name embedded by another encoder to match it. Room-server posts
+carry the signed sender name inside MCMP and use the room-provided four-byte author-key prefix to
+select candidate contacts. The result is shown as a signature badge next to the message. A key
+fingerprint is displayed only after that full public key has successfully verified the signature;
+sender-name collisions are marked separately.
 
 ### Precise replies (MCMP v3)
 

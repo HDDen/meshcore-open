@@ -1126,11 +1126,11 @@ Persistent storage uses separate stores:
 - `ChannelSettingsStore`: Per-channel settings
 - `UnreadStore`: Unread message tracking
 
-**Windowing**: Only the most recent 500 messages are kept in memory per conversation. Older stored rows remain available through pagination and search.
+**Windowing**: Conversations retain at most the most recent 500 messages. The same bounded list is persisted; pagination can expand a partially loaded list only when its backing store still contains older rows.
 
 ### Deduplication
 
-**Contact messages**: Compare timestamp + text in last 10 messages.
+**Contact messages**: The loaded conversation is checked for an incoming row with the same packet timestamp and decoded text. Room posts additionally require the same four-byte author-key prefix.
 
 **Channel messages**:
 - New rows prefer an exact `packetHash`: text packets hash channel index + packet timestamp + decoded `"sender: text"`; typed channel-data packets hash channel index + data type + raw payload.
@@ -1139,11 +1139,11 @@ Persistent storage uses separate stores:
 
 ### Channel Message Timeline
 
-The frame's Unix `timestamp` is controlled by the sender and remains packet metadata. The app stores a separate local `receivedAt` and orders channel history, pagination, shared-history insertion, and channel-list previews by that value. Message bubbles display the packet `timestamp`; `receivedAt` is the stable local position of the message in the stored conversation. `sentByRadioAt` records the first outgoing transmission attempt after any configured delay and radio-quiet wait; repeats and retries do not replace it.
+The app stores display time separately from the local timeline. Incoming GROUP_TEXT uses the sender's Unix packet timestamp; incoming MCMP v3 GROUP_DATA uses the MCMP body timestamp because GROUP_DATA has no independent protocol timestamp. Outgoing rows are aligned to their first transmission attempt. Message bubbles display this model `timestamp`, while `receivedAt` orders channel history, pagination, shared-history insertion, and channel-list previews. `sentByRadioAt` records the first outgoing transmission attempt after any configured delay and radio-quiet wait; repeats and retries do not replace it.
 
-Queued channel responses do not contain a firmware receive timestamp. The companion queue is FIFO, so the initial post-connect drain assigns local monotonic `receivedAt` values in response order, using the previous value plus one millisecond if the local clock has not advanced. A forged future packet timestamp therefore cannot move a newly received message to the end of the conversation.
+Queued channel responses do not contain a firmware receive timestamp. The companion queue is FIFO, so the initial post-connect drain assigns local monotonic `receivedAt` values in response order, using the previous value plus one millisecond if the local clock has not advanced. Packet time remains separate metadata and does not affect this order.
 
-Room-server messages follow the same display/order split. Their bubbles show the sender-controlled packet `timestamp`, while history is ordered by the locally assigned `receivedAt`. Initial queued room posts retain companion FIFO order with a one-millisecond minimum step; outgoing room posts are positioned at their first transmission. Legacy stored room messages without `receivedAt` fall back to `timestamp`.
+Room-server messages follow the same display/order split. Their bubbles show the `timestamp` assigned by the room server when it stores the post, while history is ordered by the locally assigned `receivedAt`. Initial queued room posts retain companion FIFO order with a one-millisecond minimum step; outgoing room posts are positioned at their first transmission. Legacy stored room messages without `receivedAt` fall back to `timestamp`.
 
 ### Notifications
 
@@ -1285,7 +1285,7 @@ Returned in `RESP_CODE_ERR` frames: `[0x01][err_code]`
 static const int _messageWindowSize = 500;
 ```
 
-Only the most recent 500 messages per contact/channel are kept in memory. Older messages remain in persistent storage and are loaded explicitly through the contact/channel pagination paths or searched directly in storage.
+The active and persisted conversation lists are bounded to the most recent 500 messages per contact/channel. Pagination can expand a partially loaded in-memory list only while its backing store still contains older rows.
 
 #### Frame Processing
 
@@ -1333,7 +1333,7 @@ On connect, if `RESP_CODE_SELF_INFO` not received within 3s, retry `CMD_APP_STAR
 
 #### Message Deduplication
 
-**Contact messages**: Compare last 10 messages for same timestamp + text.
+**Contact messages**: Compare the incoming packet timestamp and decoded text against the loaded conversation; room posts also compare the four-byte author-key prefix.
 
 **Channel messages**:
 - The Flutter client uses exact packet hashes for current stored rows and only falls back to sender/text/time heuristics for legacy rows without a hash.

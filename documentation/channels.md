@@ -87,17 +87,17 @@ Tap a channel card to open the channel chat screen.
 
 Channel messages keep packet time and local timeline time separate:
 
-- `timestamp` is the Unix timestamp embedded by the sender in the radio packet. It is sender-controlled metadata used for wire-level identity, reply/reaction anchors, and diagnostics. It does not determine where a message appears in history.
+- `timestamp` is the time displayed in the bubble. Incoming GROUP_TEXT takes it from the sender's outer packet. Incoming MCMP v3 GROUP_DATA takes it from the MCMP body because GROUP_DATA has no separate packet timestamp. Outgoing rows are aligned to their first transmission attempt. It does not determine where a message appears in history.
 - `receivedAt` is the app-local timeline timestamp. Incoming messages receive it on their first physical receipt, before signature verification or other asynchronous processing. Outgoing messages receive it when their first radio transmission is attempted, after any configured send delay and radio-quiet wait.
 - `sentByRadioAt` stores that same first outgoing transmission-attempt time internally. Retries never move it.
 
-History ordering, pagination, shared-history insertion, the bubble time, and the last-message time on the channel card all use `receivedAt`. A forged or badly configured packet timestamp, including one far in the future, therefore remains visible as packet metadata but cannot push the message to the end of the conversation.
+History ordering, pagination, shared-history insertion, and the last-message time on the channel card use `receivedAt`. The bubble itself displays `timestamp`, so display time remains separate from the row's position in history.
 
 When shared history contains the same packet in the current node scope and a secondary scope, the current node's copy is retained. Secondary-only messages are inserted by their own stored `receivedAt`; the app does not synthesize one global first-receipt time across all radios.
 
 Repeated copies are merged by packet identity. A repeat of an outgoing message preserves its original `receivedAt` and `sentByRadioAt`; a repeat of an incoming message preserves the earliest physical receipt. The latter also corrects the case where asynchronous verification lets a later copy finish processing before the first copy.
 
-The companion firmware's queued-message response contains the sender's packet timestamp but no separate node receive time. The queue is replayed FIFO. During the initial post-connect backlog drain, the app therefore assigns local monotonic `receivedAt` values in replay order: it uses the current local time when that advances, otherwise the previous assigned time plus one second. These values represent the order and time at which the app imported the backlog, not the historical time at which the node originally heard each packet.
+The companion firmware's queued-message response contains the sender's packet timestamp but no separate node receive time. The queue is replayed FIFO. During the initial post-connect backlog drain, the app therefore assigns local monotonic `receivedAt` values in replay order: it uses the current local time when that advances, otherwise the previous assigned time plus one millisecond. These values represent the order and time at which the app imported the backlog, not the historical time at which the node originally heard each packet.
 
 Two compatibility details are intentional:
 
@@ -170,6 +170,6 @@ From the channels screen overflow menu → "Manage Communities". Opens a draggab
 |---|---|---|
 | Addressing | Broadcast to all nodes with matching PSK | Point-to-point to a specific contact |
 | Encryption | Shared PSK (symmetric) | Contact's public key (asymmetric) |
-| Sender identity | Plain text prefix in payload | Verified via public key |
+| Sender identity | Outer sender name; MCMP v3 can additionally verify a full contact key | Verified via public key |
 | Replies | Supported (swipe or long-press) | Not supported |
 | Retry mechanism | No mesh-delivery retry; a pending app-to-node send may replay after an unexpected BLE reconnect | Exponential backoff with path rotation |

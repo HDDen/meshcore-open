@@ -44,7 +44,7 @@ Search Messages is available from the Contacts and Channels list menus and from 
 - The Contacts entry searches contacts and room servers. The Channels entry searches channels and also the contact/room categories enabled for the Channels screen. Per-chat search limits the same engine to that one conversation.
 - With shared history enabled, configured secondary node scopes are included. Offline shared mode searches its already merged cross-node view; single-node offline mode remains limited to the selected node.
 
-The in-memory conversation window contains up to 500 messages. Older stored messages remain available through lazy loading and search.
+Conversation history is bounded to the most recent 500 retained messages per contact or channel. Lazy loading and search operate on the rows still present in the corresponding scoped stores.
 
 ### Input Bar
 

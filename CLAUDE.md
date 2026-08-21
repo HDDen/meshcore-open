@@ -190,7 +190,9 @@ Incoming channel activity may still advance a known contact's `lastMessageAt` fo
 2. Otherwise, the sender name is used only when it matches exactly one chat contact.
 3. With no name match, the packet path may be used only when the negotiated path-hash width is at least two bytes and exactly one contact matches.
 
-Never trust `ChannelMessage.verifiedSenderKeyHex` without also requiring `mcmpSignatureStatus == McmpSignatureStatus.valid`: failed verification may expose the single candidate key that was checked, which is diagnostic information rather than authenticated identity.
+`verifiedSenderKeyHex` is populated only when the signature is valid. Callers must still require
+`mcmpSignatureStatus == McmpSignatureStatus.valid` whenever they use it as authenticated identity;
+the badge follows the same rule and never shows a fingerprint for invalid or unverifiable results.
 
 ### Theming
 - Material 3 design (`useMaterial3: true`)
@@ -216,20 +218,42 @@ Everything below is fork-specific and lives on top of the vanilla protocol. Most
 - **MCMP** (`helpers/mesh_compressor.dart`) — context-mixing + arithmetic coder driven by the bundled `assets/models/model-en-ru.json` (EN/RU), Base91 output, prefix `mcmp2:` (legacy `mcmp:` gated off). A v3 signed/metadata container is handled by `helpers/mcmp_app_codec.dart`.
 - **SMAZ** (`helpers/smaz.dart`) — classic short-string dictionary coder.
 - **cyr2lat** (`helpers/cyr2lat.dart`) — not real compression; maps look-alike Cyrillic letters to ASCII so Cyrillic text fits the cheaper wire encoding.
-All schemes fall back to plaintext if they don't shrink the payload (`encodeIfSmaller`).
+MCMP v2 and SMAZ use their `encodeIfSmaller` paths. MCMP v3 always uses its metadata container
+when selected for an eligible message, whether signed or unsigned; structured payloads that have
+their own format stay outside the normal text-compression path.
 
 ### MCMP v3 signatures (Ed25519, verified app-side)
-The node signs message bodies via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer → serialize sessions). **Verification is done entirely in the app** (`helpers/mcmp_signature_verifier.dart`, `cryptography` package) against known contacts; firmware never verifies. `McmpSignatureStatus` propagates onto `Message` and is shown by `widgets/mcmp_signature_badge.dart`. Handles sender-name collisions.
+The node signs canonical message bytes via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer
+→ serialize sessions). The canonical data contains the v3 signing domain, channel/room context,
+the destination binding (HMAC-SHA256 derived from the channel PSK, or the room's full public key),
+sender name, MCMP timestamp, wire flags, optional reply author/timestamp, and decoded message text.
+The 64-byte Ed25519 signature is stored inside the MCMP body.
+
+**Verification is done entirely in the app** (`helpers/mcmp_signature_verifier.dart`,
+`cryptography` package) against known contacts; firmware never verifies. A normal channel body
+keeps its sender name in the outer GROUP_TEXT or GROUP_DATA envelope, and an embedded channel name
+is accepted only when it matches that displayed name. A room body embeds the signed name and the
+room post supplies the original author's four-byte public-key prefix; verification resolves that
+prefix to full contact keys and also requires the signed name to match the contact. Direct-contact
+MCMP v3 messages are not Ed25519-signed and use the authenticated contact transport status.
+
+`McmpSignatureStatus`, the verbatim MCMP timestamp/signature/reply fields, the verified full key,
+and the name-collision flag are persisted on `Message` / `ChannelMessage`. The badge shows a
+fingerprint only for `valid` results. Incoming messages also compare the MCMP timestamp with
+`message.timestamp`: a difference greater than 30 minutes adds the red clock indicator, while the
+details screen shows the distinct MCMP timestamp whenever the two second values differ. Signature
+status and timestamp comparison are separate UI fields.
 
 ### Reactions
 Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<2hex-emojiIndex>` string (`helpers/reaction_helper.dart`) — no protocol extension. Target hash = `computeReactionHash(timestampSecs, senderName?, textPrefix)`; sender name omitted for 1:1. Processed in the connector's reactions region.
 
 ### Channel message timeline
 
-`ChannelMessage` deliberately carries three clocks. `timestamp` is sender-controlled packet metadata
-used for wire identity, reply/reaction anchors, and the time shown in message bubbles. `receivedAt`
-is the app-local timeline used by history ordering, pagination, shared-history insertion and
-channel-list previews.
+`ChannelMessage` deliberately carries three clocks. `timestamp` is the time shown in message
+bubbles: incoming GROUP_TEXT takes it from the outer packet, while incoming MCMP GROUP_DATA uses
+the MCMP body timestamp because that transport has no independent packet timestamp. Outgoing rows
+are aligned to the first transmission attempt. `receivedAt` is the app-local timeline used by
+history ordering, pagination, shared-history insertion and channel-list previews.
 `sentByRadioAt` is the first outgoing transmission-attempt anchor. Central rules live in
 `helpers/channel_message_timeline_helper.dart`; connector receive/dedup paths and
 `ChannelMessageStore` must use that helper rather than sorting channel messages by `timestamp`.
@@ -247,8 +271,9 @@ or previous + one millisecond when the local clock did not advance). Legacy stor
 `receivedAt` fall back to `timestamp` because their real receive time cannot be reconstructed. When
 shared history has the same packet in current and secondary scopes, the current-scope copy wins.
 
-Room-server conversations use the same separation of clocks: `timestamp` is displayed in the
-bubble, while `receivedAt` controls stored order. Initial queued room posts receive monotonic local
+Room-server conversations use the same separation of clocks: `timestamp`, assigned by the room
+server when it stores the post, is displayed in the bubble, while `receivedAt` controls stored order.
+Initial queued room posts receive monotonic local
 positions in companion FIFO order with a one-millisecond minimum step, and outgoing room posts are
 positioned at their first transmission. Legacy rows without `receivedAt` fall back to `timestamp`.
 The rules live in `helpers/room_message_timeline_helper.dart`.
@@ -318,7 +343,8 @@ key nor the moment would change.
   compares no dates at all. A row that exists was created in the past, so a message arriving now
   is always after it; comparing our clock with our clock would add nothing and would misfire if
   the device clock stepped backwards. The answer is stamped onto the message as `wasBlocked`, and
-  that flag is the arm no forged timestamp can reach. The backlog drain is covered too: its
+  that flag keeps the receive-time decision independent from packet time. The backlog drain is
+  covered too: its
   `receivedAt` is assigned locally before the message reaches this check, and its wire timestamp
   remains metadata only.
 - `hidesStoredMessage` — *should this stored message be hidden?* — is the display-time question,

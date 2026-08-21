@@ -194,7 +194,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 Sender key, text, timestamp, outgoing flag, status (pending/sent/delivered/failed), message ID (UUID), retry count, ACK hash, trip time, path data, reactions.
 
 ### Channel Message
-Sender name, text, packet `timestamp`, local timeline `receivedAt`, optional first-transmission `sentByRadioAt`, status (pending/sent/failed), repeater hops, path variants, channel index, reactions, and reply threading fields. The wire frame carries only the sender-controlled packet timestamp. The app assigns `receivedAt`; channel history and UI ordering use it rather than packet time.
+Sender name, text, `timestamp`, local timeline `receivedAt`, optional first-transmission `sentByRadioAt`, status (pending/sent/failed), repeater hops, path variants, channel index, reactions, and reply threading fields. GROUP_TEXT supplies an independent packet timestamp. MCMP v3 GROUP_DATA has no separate protocol timestamp, so its model `timestamp` is populated from the MCMP body timestamp. The app assigns `receivedAt`; channel history and UI ordering use it, while message bubbles display `timestamp`.
 
 ### Channel
 Index (0–7), name, 16-byte PSK, unread count. PSK derivation methods for hashtag (SHA-256) and community (HMAC-SHA256) channels.
@@ -254,7 +254,7 @@ Seen inside `PUSH_CODE_LOG_RX_DATA` raw packets:
 
 ## State Management
 
-Uses Flutter `Provider` with `ChangeNotifier`. The central state holder is `MeshCoreConnector`, which owns all in-memory collections and fires debounced (50ms) `notifyListeners()` to update the UI. In-memory conversations are windowed to 200 messages per contact; older messages remain on disk and are loaded on demand.
+Uses Flutter `Provider` with `ChangeNotifier`. The central state holder is `MeshCoreConnector`, which owns all in-memory collections and fires debounced (50ms) `notifyListeners()` to update the UI. Conversation lists are bounded to the most recent 500 retained messages per contact or channel.
 
 ### Data Flow
 
