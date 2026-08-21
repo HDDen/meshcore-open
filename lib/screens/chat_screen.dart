@@ -102,6 +102,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _textController = MarkupTextEditingController();
   final _scrollController = ChatScrollController();
+  final ChatBottomSnapGuard _bottomSnapGuard = ChatBottomSnapGuard();
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();
   final GlobalKey _unreadScrollKey = GlobalKey();
@@ -860,6 +861,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_pendingUnreadScrollTarget != null) return;
+      if (_bottomSnapGuard.isSuppressed) return;
       _scrollController.scrollToBottomIfAtBottom();
     });
 
@@ -2025,19 +2027,26 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _toggleRoomAuthorBlock(Message message) {
+    unawaited(
+      _bottomSnapGuard.run(() async {
+        await _toggleRoomAuthorBlockWithoutScrolling(message);
+      }),
+    );
+  }
+
+  Future<void> _toggleRoomAuthorBlockWithoutScrolling(Message message) async {
     final blocked = BlockedSenders.instance;
     final authorId = BlockedSenders.roomAuthorIdOf(message);
     if (authorId == null) return;
     if (blocked.isRoomAuthorBlocked(message)) {
-      unawaited(blocked.unblockRoomAuthor(authorId));
+      await blocked.unblockRoomAuthor(authorId);
       return;
     }
-    unawaited(blocked.blockRoomAuthor(message));
-    unawaited(
-      context.read<MeshCoreConnector>().markContactMessageBlocked(
-        widget.contact,
-        message,
-      ),
+    await blocked.blockRoomAuthor(message);
+    if (!mounted) return;
+    await context.read<MeshCoreConnector>().markContactMessageBlocked(
+      widget.contact,
+      message,
     );
   }
 

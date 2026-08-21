@@ -124,6 +124,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final MarkupTextEditingController _textController =
       MarkupTextEditingController();
   final ChatScrollController _scrollController = ChatScrollController();
+  final ChatBottomSnapGuard _bottomSnapGuard = ChatBottomSnapGuard();
   final FocusNode _textFieldFocusNode = FocusNode();
   final FocusNode _screenFocusNode = FocusNode();
   bool _keyboardNavigationActive = true;
@@ -995,6 +996,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
                     // Auto-scroll to bottom if user is already at bottom
                     WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_bottomSnapGuard.isSuppressed) return;
                       if (_channelSkipNextBottomSnap) {
                         _channelSkipNextBottomSnap = false;
                         return;
@@ -4019,24 +4021,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   void _toggleSenderBlock(ChannelMessage message) {
+    unawaited(
+      _bottomSnapGuard.run(() async {
+        await _toggleSenderBlockWithoutScrolling(message);
+      }),
+    );
+  }
+
+  Future<void> _toggleSenderBlockWithoutScrolling(
+    ChannelMessage message,
+  ) async {
     final blocked = BlockedSenders.instance;
     final channelName = context.read<MeshCoreConnector>().channelDisplayName(
       widget.channel.index,
     );
-    // Either half changes how much of the list is drawn — bodies collapse to
-    // the one-line placeholder or expand back — so both skip the post-frame
-    // snap that would otherwise drag the reader to the newest message.
-    _channelSkipNextBottomSnap = true;
     if (blocked.isSenderBlocked(message, channelName)) {
-      unawaited(blocked.unblock(message.senderName));
+      await blocked.unblock(message.senderName);
       return;
     }
-    unawaited(blocked.block(message));
-    unawaited(
-      context.read<MeshCoreConnector>().markChannelMessageBlocked(
-        widget.channel,
-        message,
-      ),
+    await blocked.block(message);
+    if (!mounted) return;
+    await context.read<MeshCoreConnector>().markChannelMessageBlocked(
+      widget.channel,
+      message,
     );
   }
 

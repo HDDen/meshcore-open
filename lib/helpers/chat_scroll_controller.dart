@@ -100,3 +100,27 @@ class ChatScrollController extends ScrollController {
     super.dispose();
   }
 }
+
+/// Prevents list rebuilds triggered by one asynchronous operation from
+/// snapping a chat to its newest message.
+class ChatBottomSnapGuard {
+  int _generation = 0;
+  bool _isSuppressed = false;
+
+  bool get isSuppressed => _isSuppressed;
+
+  Future<void> run(Future<void> Function() operation) async {
+    final generation = ++_generation;
+    _isSuppressed = true;
+    try {
+      await operation();
+    } finally {
+      // Connector notifications can rebuild the list more than once. Keep the
+      // guard through the frame that applies the final message-height changes.
+      await WidgetsBinding.instance.endOfFrame;
+      if (generation == _generation) {
+        _isSuppressed = false;
+      }
+    }
+  }
+}
