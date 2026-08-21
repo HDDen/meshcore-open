@@ -267,7 +267,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
             _packetTimestampLabel(l10n),
             scheme: scheme,
           ),
-          if (message.mcmpIsSigned && message.mcmpTimestamp != null)
+          if (_hasDistinctMcmpTimestamp)
             _buildDetailRow(
               context,
               l10n.chat_mcmpSignedTimestamp,
@@ -586,6 +586,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
     if (rawSeconds == 0) return '—';
     final timestamp = DateTime.fromMillisecondsSinceEpoch(rawSeconds * 1000);
     return '$rawSeconds (${_formatTime(timestamp, l10n)})';
+  }
+
+  bool get _hasDistinctMcmpTimestamp {
+    final mcmpTimestamp = message.mcmpTimestamp;
+    if (mcmpTimestamp == null) return false;
+    final packetTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
+    return mcmpTimestamp != packetTimestamp;
   }
 
   String? _mcmpReplyTargetLabel() {

@@ -5553,7 +5553,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 válasz erre:';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
 
   @override
   String get chat_timestampPacket => 'A csomag időbélyege';

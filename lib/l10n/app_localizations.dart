@@ -9511,7 +9511,7 @@ abstract class AppLocalizations {
   /// No description provided for @chat_mcmpSignedTimestamp.
   ///
   /// In en, this message translates to:
-  /// **'MCMP timestamp (signed by author)'**
+  /// **'MCMP timestamp'**
   String get chat_mcmpSignedTimestamp;
 
   /// No description provided for @chat_timestampPacket.

@@ -5580,7 +5580,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'Odpowiedź MCMPv3 na';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
 
   @override
   String get chat_timestampPacket => 'Timestamp pakietu';

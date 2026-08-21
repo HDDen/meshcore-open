@@ -5526,7 +5526,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'Odpoveď MCMPv3 na';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
 
   @override
   String get chat_timestampPacket => 'Timestamp paketu';
