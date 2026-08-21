@@ -227,8 +227,9 @@ Emoji reactions ride the normal text channel as a compact `r:<4hex-targetHash>:<
 ### Channel message timeline
 
 `ChannelMessage` deliberately carries three clocks. `timestamp` is sender-controlled packet metadata
-used for wire identity and reply/reaction anchors. `receivedAt` is the app-local timeline used by
-history ordering, pagination, shared-history insertion, bubble labels and channel-list previews.
+used for wire identity, reply/reaction anchors, and the time shown in message bubbles. `receivedAt`
+is the app-local timeline used by history ordering, pagination, shared-history insertion and
+channel-list previews.
 `sentByRadioAt` is the first outgoing transmission-attempt anchor. Central rules live in
 `helpers/channel_message_timeline_helper.dart`; connector receive/dedup paths and
 `ChannelMessageStore` must use that helper rather than sorting channel messages by `timestamp`.
@@ -242,9 +243,15 @@ rewrite history.
 
 The companion backlog frame has only the sender's packet timestamp. Firmware replays the queue FIFO,
 so the initial post-connect drain assigns local monotonic `receivedAt` values in frame order (`now`,
-or previous + one second when the local clock did not advance). Legacy stored rows without
+or previous + one millisecond when the local clock did not advance). Legacy stored rows without
 `receivedAt` fall back to `timestamp` because their real receive time cannot be reconstructed. When
 shared history has the same packet in current and secondary scopes, the current-scope copy wins.
+
+Room-server conversations use the same separation of clocks: `timestamp` is displayed in the
+bubble, while `receivedAt` controls stored order. Initial queued room posts receive monotonic local
+positions in companion FIFO order with a one-millisecond minimum step, and outgoing room posts are
+positioned at their first transmission. Legacy rows without `receivedAt` fall back to `timestamp`.
+The rules live in `helpers/room_message_timeline_helper.dart`.
 
 ### Blocked senders
 
@@ -321,8 +328,8 @@ key nor the moment would change.
   consulted — the sender chooses it, and the moment of blocking is known only to us.
 
 Everything that draws or interprets a channel message asks both and hides on either. Room posts
-have the flag alone: a room post keeps `receivedAt` null on purpose (the chat shows `—` for it),
-so there is no arrival clock for a boundary to compare against.
+use the stamped `wasBlocked` flag; their `receivedAt` is the local conversation position rather
+than sender-controlled packet metadata.
 
 **Reaching the history already on screen.** `markChannelMessageBlocked` and
 `markContactMessageBlocked` walk the loaded conversation from the newest message backwards and

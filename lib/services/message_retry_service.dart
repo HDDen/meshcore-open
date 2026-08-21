@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:crypto/crypto.dart';
+import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
@@ -508,6 +509,9 @@ class MessageRetryService extends ChangeNotifier {
         final clampedWaitSeconds = waitSeconds < 0 ? 0 : waitSeconds;
         // Store the real TX anchor separately from the visible compose time.
         final updatedMessage = currentMessage.copyWith(
+          receivedAt: contact.type == advTypeRoom
+              ? currentMessage.receivedAt ?? sentByRadioAt
+              : null,
           sentByRadioAt: sentByRadioAt,
           sentByRadioWaitSeconds: [
             ...currentMessage.sentByRadioWaitSeconds,

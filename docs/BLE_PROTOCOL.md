@@ -1139,9 +1139,11 @@ Persistent storage uses separate stores:
 
 ### Channel Message Timeline
 
-The frame's Unix `timestamp` is controlled by the sender and remains packet metadata. The app stores a separate local `receivedAt` and orders channel history, pagination, shared-history insertion, bubble labels, and channel-list previews by that value. `sentByRadioAt` records the first outgoing transmission attempt after any configured delay and radio-quiet wait; repeats and retries do not replace it.
+The frame's Unix `timestamp` is controlled by the sender and remains packet metadata. The app stores a separate local `receivedAt` and orders channel history, pagination, shared-history insertion, and channel-list previews by that value. Message bubbles display the packet `timestamp`; `receivedAt` is the stable local position of the message in the stored conversation. `sentByRadioAt` records the first outgoing transmission attempt after any configured delay and radio-quiet wait; repeats and retries do not replace it.
 
-Queued channel responses do not contain a firmware receive timestamp. The companion queue is FIFO, so the initial post-connect drain assigns local monotonic `receivedAt` values in response order, using the previous value plus one second if the local clock has not advanced. A forged future packet timestamp therefore cannot move a newly received message to the end of the conversation.
+Queued channel responses do not contain a firmware receive timestamp. The companion queue is FIFO, so the initial post-connect drain assigns local monotonic `receivedAt` values in response order, using the previous value plus one millisecond if the local clock has not advanced. A forged future packet timestamp therefore cannot move a newly received message to the end of the conversation.
+
+Room-server messages follow the same display/order split. Their bubbles show the sender-controlled packet `timestamp`, while history is ordered by the locally assigned `receivedAt`. Initial queued room posts retain companion FIFO order with a one-millisecond minimum step; outgoing room posts are positioned at their first transmission. Legacy stored room messages without `receivedAt` fall back to `timestamp`.
 
 ### Notifications
 

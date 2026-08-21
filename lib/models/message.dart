@@ -15,8 +15,8 @@ class Message {
   final Uint8List senderKey;
   final String text;
   final DateTime timestamp;
-  // Wall-clock time this message was received from the air. Only set for
-  // incoming messages from regular contacts (null for room servers / outgoing).
+  // App-local conversation order. Incoming contact and room messages receive
+  // it on arrival; outgoing room posts receive it on first transmission.
   final DateTime? receivedAt;
   final bool isOutgoing;
   final bool isCli;

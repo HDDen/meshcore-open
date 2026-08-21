@@ -112,11 +112,8 @@ class BlockedSenders extends ChangeNotifier {
 
   /// True when a rule mutes this room author right now.
   ///
-  /// The receive-time question, and the only one rooms have: a room post keeps
-  /// `receivedAt` null on purpose (the chat shows "—" for it), so there is no
-  /// arrival clock for a date boundary to compare against. The answer is
-  /// stamped onto the message as [Message.wasBlocked], and that flag is what
-  /// every display site reads.
+  /// The answer is stamped onto the message as [Message.wasBlocked], and that
+  /// flag is what every display site reads.
   bool isRoomAuthorBlocked(Message message) => roomRuleFor(message) != null;
 
   /// Mutes the author of [message] across every room.
@@ -128,8 +125,8 @@ class BlockedSenders extends ChangeNotifier {
     final keyHex = existing == null
         ? key
         : (existing.keyHex == key ? key : '');
-    // A room post keeps `receivedAt` null, so this is always "now" for a fresh
-    // rule; the walk back from the newest post is what reaches history there.
+    // Use the room timeline position so the history walk and the block anchor
+    // share the same local ordering clock.
     final blockedAt = _blockedAtFor(existing?.blockedAt, message.receivedAt);
     if (existing != null &&
         existing.keyHex == keyHex &&

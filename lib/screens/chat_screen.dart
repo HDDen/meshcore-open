@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -2077,8 +2078,8 @@ class _ChatScreenState extends State<ChatScreen> {
       verifiedSenderKeyHex: message.verifiedSenderKeyHex,
       mcmpNameCollision: message.mcmpNameCollision,
       timestamp: message.timestamp,
-      // Room-server posts / outgoing have no receive time → epoch 0 renders
-      // as a dash on the path screen; contacts carry the real receivedAt.
+      // Pending outgoing messages may not have a timeline position yet;
+      // epoch 0 renders that missing value as a dash on the path screen.
       receivedAt: message.receivedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
       sentByRadioAt: message.sentByRadioAt,
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
@@ -3157,6 +3158,7 @@ class _MessageBubble extends StatelessWidget {
                               children: [
                                 Text(
                                   _formatTime(
+                                    context,
                                     message.timestamp,
                                     enableSeconds: enableTimeSeconds,
                                   ),
@@ -3526,12 +3528,17 @@ class _MessageBubble extends StatelessWidget {
     return Icon(icon, size: 12, color: color);
   }
 
-  String _formatTime(DateTime time, {required bool enableSeconds}) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    if (!enableSeconds) return '$hour:$minute';
-    final second = time.second.toString().padLeft(2, '0');
-    return '$hour:$minute:$second';
+  String _formatTime(
+    BuildContext context,
+    DateTime time, {
+    required bool enableSeconds,
+  }) {
+    final locale = Localizations.localeOf(context).toString();
+    final formattedTime = enableSeconds
+        ? DateFormat.Hms(locale).format(time)
+        : DateFormat.Hm(locale).format(time);
+    if (DateTime.now().difference(time).inDays <= 0) return formattedTime;
+    return '${DateFormat.Md(locale).format(time)} $formattedTime';
   }
 
   String? _outgoingRadioWaitLabel(Message message) {

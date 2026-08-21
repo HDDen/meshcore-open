@@ -23,6 +23,7 @@ import '../helpers/blocked_senders.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
@@ -1293,7 +1294,11 @@ class MeshCoreConnector extends ChangeNotifier {
           ),
         );
       }
-      merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      if (_isRoomConversation(contactKeyHex)) {
+        merged.sort(RoomMessageTimelineHelper.compare);
+      } else {
+        merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      }
       _conversations[contactKeyHex] = merged;
       _applyContactMessageSummaryFromMessages(contactKeyHex, merged);
       notifyListeners();
@@ -1303,6 +1308,9 @@ class MeshCoreConnector extends ChangeNotifier {
         ? await _messageStore.loadScopedMessages(contactKeyHex)
         : await _messageStore.loadMessages(contactKeyHex);
     if (generation != _conversationLoadGeneration) return;
+    if (_isRoomConversation(contactKeyHex)) {
+      allMessages.sort(RoomMessageTimelineHelper.compare);
+    }
     _applyContactMessageSummaryFromMessages(contactKeyHex, allMessages);
     if (allMessages.isNotEmpty) {
       // Keep only the most recent N messages in memory to bound memory usage
@@ -1336,7 +1344,11 @@ class MeshCoreConnector extends ChangeNotifier {
 
       // Re-sort after merging persisted and in-memory messages so the
       // conversation window remains stable after optimistic inserts.
-      mergedMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      if (_isRoomConversation(contactKeyHex)) {
+        mergedMessages.sort(RoomMessageTimelineHelper.compare);
+      } else {
+        mergedMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      }
       final windowedMergedMessages = mergedMessages.length > _messageWindowSize
           ? mergedMessages.sublist(mergedMessages.length - _messageWindowSize)
           : mergedMessages;
@@ -1353,6 +1365,11 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     return 'fallback:${message.senderKeyHex}:${message.isOutgoing}:${message.isCli}:${message.timestamp.millisecondsSinceEpoch}:${message.text}';
   }
+
+  bool _isRoomConversation(String contactKeyHex) => _contacts.any(
+    (contact) =>
+        contact.publicKeyHex == contactKeyHex && contact.type == advTypeRoom,
+  );
 
   Future<void> _refreshContactMessageSummaries({
     bool persistChanges = true,
@@ -1650,6 +1667,9 @@ class MeshCoreConnector extends ChangeNotifier {
     final allMessages = isOfflineMode
         ? await _messageStore.loadScopedMessages(contactKeyHex)
         : await _messageStore.loadMessages(contactKeyHex);
+    if (_isRoomConversation(contactKeyHex)) {
+      allMessages.sort(RoomMessageTimelineHelper.compare);
+    }
     final currentMessages = _conversations[contactKeyHex] ?? [];
 
     if (allMessages.length <= currentMessages.length) {
@@ -1663,7 +1683,11 @@ class MeshCoreConnector extends ChangeNotifier {
     final olderMessages = allMessages.sublist(startIndex, currentOffset);
 
     // Prepend to current conversation
-    _conversations[contactKeyHex] = [...olderMessages, ...currentMessages];
+    final expandedMessages = [...olderMessages, ...currentMessages];
+    if (_isRoomConversation(contactKeyHex)) {
+      expandedMessages.sort(RoomMessageTimelineHelper.compare);
+    }
+    _conversations[contactKeyHex] = expandedMessages;
     notifyListeners();
 
     return olderMessages;
@@ -3261,6 +3285,9 @@ class MeshCoreConnector extends ChangeNotifier {
       );
       if (index != -1) {
         messages[index] = message;
+        if (_isRoomConversation(contactKey)) {
+          messages.sort(RoomMessageTimelineHelper.compare);
+        }
         _messageStore.saveMessages(contactKey, messages);
         notifyListeners();
       }
@@ -5644,6 +5671,7 @@ class MeshCoreConnector extends ChangeNotifier {
       final waitSeconds = sentByRadioAt.difference(message.timestamp).inSeconds;
       _updateMessage(
         message.copyWith(
+          receivedAt: contact.type == advTypeRoom ? sentByRadioAt : null,
           sentByRadioAt: sentByRadioAt,
           sentByRadioWaitSeconds: [waitSeconds < 0 ? 0 : waitSeconds],
         ),
@@ -8712,9 +8740,15 @@ class MeshCoreConnector extends ChangeNotifier {
     try {
       // Replay direct/room queued messages only after contacts are loaded, so
       // sender prefixes can be resolved against the current contact list.
+      DateTime? previousReceivedAt;
       while (_deferredQueuedContactMessageFrames.isNotEmpty) {
         final frame = _deferredQueuedContactMessageFrames.removeAt(0);
-        await _handleIncomingMessage(frame);
+        final receivedAt = RoomMessageTimelineHelper.nextBacklogReceivedAt(
+          now: DateTime.now(),
+          previous: previousReceivedAt,
+        );
+        previousReceivedAt = receivedAt;
+        await _handleIncomingMessage(frame, receivedAt: receivedAt);
       }
     } finally {
       _deferQueuedContactMessagesUntilContacts = false;
@@ -9277,7 +9311,10 @@ class MeshCoreConnector extends ChangeNotifier {
     return false;
   }
 
-  Future<void> _handleIncomingMessage(Uint8List frame) async {
+  Future<void> _handleIncomingMessage(
+    Uint8List frame, {
+    DateTime? receivedAt,
+  }) async {
     if (_selfPublicKey == null) return;
 
     // If we're syncing the queued messages, advance the queue immediately
@@ -9310,9 +9347,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     if (message != null) {
-      final receivedAt = DateTime.now();
+      final effectiveReceivedAt = receivedAt ?? DateTime.now();
       if (!message.isOutgoing) {
-        _lastContactMsgRxTime = receivedAt;
+        _lastContactMsgRxTime = effectiveReceivedAt;
       }
       // Ignore messages from self (device hearing its own broadcast)
       // BUT allow repeated messages (pathLength indicates it went through repeater)
@@ -9332,17 +9369,20 @@ class MeshCoreConnector extends ChangeNotifier {
           pathLength: contact.pathLength < 0 ? -1 : contact.pathLength,
           pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
         );
-        // Record the air receive time for incoming DMs from regular contacts.
-        // Room-server posts intentionally keep receivedAt null (shown as "—").
-        if (!message.isOutgoing && contact.type != advTypeRoom) {
-          message = message.copyWith(receivedAt: receivedAt);
+        // receivedAt is the app-local conversation order. During the initial
+        // queue drain it preserves the companion's FIFO response sequence.
+        if (!message.isOutgoing) {
+          message = message.copyWith(receivedAt: effectiveReceivedAt);
         }
       }
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = await _applyContactMcmpVerification(message, contact);
       }
       if (contact != null) {
-        _updateContactLastMessageAt(contact.publicKeyHex, receivedAt);
+        _updateContactLastMessageAt(
+          contact.publicKeyHex,
+          effectiveReceivedAt,
+        );
       }
       await _loadMessagesForContact(message.senderKeyHex);
       if (contact != null && !message.isOutgoing && !message.isCli) {
@@ -9360,10 +9400,7 @@ class MeshCoreConnector extends ChangeNotifier {
           }
         }
       }
-      // The receive-time question, asked once and stamped onto the message.
-      // Rooms have no arrival clock — a post keeps `receivedAt` null on
-      // purpose — so this flag is the whole mechanism there, and everything
-      // that draws or interprets the message reads it.
+      // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
       if (blockedNow) message = message.copyWith(wasBlocked: true);
       _addMessage(message.senderKeyHex, message);
@@ -11597,7 +11634,9 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!message.isCli) {
       _updateContactLastMessageAt(
         pubKeyHex,
-        message.isOutgoing ? message.timestamp : DateTime.now(),
+        message.isOutgoing
+            ? message.timestamp
+            : message.receivedAt ?? DateTime.now(),
       );
     }
     _conversations.putIfAbsent(pubKeyHex, () => []);
@@ -11629,6 +11668,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     messages.add(message);
+    if (_isRoomConversation(pubKeyHex)) {
+      messages.sort(RoomMessageTimelineHelper.compare);
+    }
     if (messages.length > _messageWindowSize) {
       messages.removeRange(0, messages.length - _messageWindowSize);
     }

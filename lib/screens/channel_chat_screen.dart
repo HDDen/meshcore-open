@@ -1926,12 +1926,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  // Show the real receive time (matches the
-                                  // list ordering), not the sender's packet
-                                  // timestamp.
+                                  // Timeline order uses receivedAt, while the
+                                  // bubble shows the packet's own timestamp.
                                   _formatTime(
                                     context,
-                                    message.receivedAt,
+                                    message.timestamp,
                                     enableSeconds: enableTimeSeconds,
                                   ),
                                   style: MeshTheme.mono(

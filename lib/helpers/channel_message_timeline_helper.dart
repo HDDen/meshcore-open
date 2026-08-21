@@ -11,8 +11,14 @@ abstract final class ChannelMessageTimelineHelper {
     required DateTime now,
     DateTime? previous,
   }) {
-    if (previous == null || now.isAfter(previous)) return now;
-    return previous.add(const Duration(seconds: 1));
+    if (previous == null ||
+        now.millisecondsSinceEpoch > previous.millisecondsSinceEpoch) {
+      return now;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(
+      previous.millisecondsSinceEpoch + 1,
+      isUtc: previous.isUtc,
+    );
   }
 
   static DateTime earliestReceivedAt(
