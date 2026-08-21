@@ -72,6 +72,10 @@ set_target_properties(${BINARY_NAME}
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+# Release bundles must carry ONNX Runtime with them instead of depending on a
+# potentially incompatible system installation.
+set(USE_SYSTEM_ONNXRUNTIME OFF CACHE BOOL
+  "Bundle ONNX Runtime with the application" FORCE)
 include(flutter/generated_plugins.cmake)
 
 # Work around tinycthread/glibc 2.43+ conflict: glibc 2.43 (with Clang 21's
@@ -109,9 +113,27 @@ install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
-  install(FILES "${bundled_library}"
-    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-    COMPONENT Runtime)
+  if("${bundled_library}" MATCHES "libonnxruntime\\.so$")
+    # The ONNX Runtime archive provides a symlink chain:
+    # libonnxruntime.so -> libonnxruntime.so.1 -> versioned ELF library.
+    # flutter_onnxruntime exports only the first link, so installing it alone
+    # leaves a broken symlink in the bundle.
+    get_filename_component(ONNXRUNTIME_LIBRARY_DIR
+      "${bundled_library}" DIRECTORY)
+    file(GLOB ONNXRUNTIME_LIBRARY_CHAIN
+      "${ONNXRUNTIME_LIBRARY_DIR}/libonnxruntime.so*")
+    if(NOT ONNXRUNTIME_LIBRARY_CHAIN)
+      message(FATAL_ERROR
+        "ONNX Runtime library chain was not found in ${ONNXRUNTIME_LIBRARY_DIR}")
+    endif()
+    install(FILES ${ONNXRUNTIME_LIBRARY_CHAIN}
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  else()
+    install(FILES "${bundled_library}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  endif()
 endforeach(bundled_library)
 
 # Copy the native assets provided by the build.dart from all packages.
