@@ -5567,6 +5567,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 відповідь на';
 
   @override
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+
+  @override
   String get chat_timestampPacket => 'Timestamp пакета';
 
   @override

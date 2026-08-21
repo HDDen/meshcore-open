@@ -10214,9 +10214,9 @@ class MeshCoreConnector extends ChangeNotifier {
     );
     final result = await McmpSignatureVerifier.verifyChannelMessage(
       message: decoded,
-      // Prefer the name embedded in the signed body (foreign clients may set
-      // it even for channels); otherwise the outer envelope/text name.
-      senderName: message.mcmpSenderName ?? message.senderName,
+      // The channel transport name is what the bubble displays. The verifier
+      // independently rejects an embedded MCMP name that differs from it.
+      senderName: message.senderName,
       channelPsk: psk,
       contacts: List<Contact>.from(_contacts),
     );

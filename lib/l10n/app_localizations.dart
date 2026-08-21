@@ -9508,6 +9508,12 @@ abstract class AppLocalizations {
   /// **'MCMPv3 answer to'**
   String get chat_mcmpAnswerTo;
 
+  /// No description provided for @chat_mcmpSignedTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP timestamp (signed by author)'**
+  String get chat_mcmpSignedTimestamp;
+
   /// No description provided for @chat_timestampPacket.
   ///
   /// In en, this message translates to:

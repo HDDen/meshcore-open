@@ -5557,6 +5557,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 отговор на';
 
   @override
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+
+  @override
   String get chat_timestampPacket => 'Timestamp на пакета';
 
   @override

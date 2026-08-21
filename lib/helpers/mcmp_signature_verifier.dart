@@ -78,6 +78,17 @@ class McmpSignatureVerifier {
       return const McmpVerificationResult(status: McmpSignatureStatus.unsigned);
     }
 
+    // Channel transports already carry the displayed sender name outside the
+    // MCMP body. Foreign encoders may duplicate it inside the body, but they
+    // must not be able to sign one identity while the bubble displays another.
+    final embeddedSenderName = message.senderName;
+    if (embeddedSenderName != null &&
+        !_namesMatch(embeddedSenderName, senderName)) {
+      return const McmpVerificationResult(
+        status: McmpSignatureStatus.invalid,
+      );
+    }
+
     final candidates = _contactsNamed(contacts, senderName);
     final collision = candidates.length > 1;
     if (candidates.isEmpty) {

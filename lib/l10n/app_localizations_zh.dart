@@ -5168,6 +5168,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 回复对象';
 
   @override
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+
+  @override
   String get chat_timestampPacket => '数据包时间戳';
 
   @override

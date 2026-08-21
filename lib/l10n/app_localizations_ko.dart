@@ -5285,6 +5285,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 회신 대상';
 
   @override
+  String get chat_mcmpSignedTimestamp => 'MCMP timestamp (signed by author)';
+
+  @override
   String get chat_timestampPacket => '패킷 타임스탬프';
 
   @override

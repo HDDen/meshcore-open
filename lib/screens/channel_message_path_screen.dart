@@ -267,6 +267,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
             _packetTimestampLabel(l10n),
             scheme: scheme,
           ),
+          if (message.mcmpIsSigned && message.mcmpTimestamp != null)
+            _buildDetailRow(
+              context,
+              l10n.chat_mcmpSignedTimestamp,
+              _mcmpTimestampLabel(l10n),
+              scheme: scheme,
+            ),
           if (mcmpReplyTargetLabel != null)
             _buildDetailRow(
               context,
@@ -572,6 +579,13 @@ class ChannelMessagePathScreen extends StatelessWidget {
     // Raw packet timestamp (seconds, as stamped by the sender) plus a
     // human-readable rendering in parentheses.
     return '$rawSeconds (${_formatTime(ts, l10n)})';
+  }
+
+  String _mcmpTimestampLabel(AppLocalizations l10n) {
+    final rawSeconds = message.mcmpTimestamp!;
+    if (rawSeconds == 0) return '—';
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(rawSeconds * 1000);
+    return '$rawSeconds (${_formatTime(timestamp, l10n)})';
   }
 
   String? _mcmpReplyTargetLabel() {

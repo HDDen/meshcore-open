@@ -30,6 +30,7 @@ import '../widgets/message_status_icon.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
+import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mention_autocomplete.dart';
@@ -911,6 +912,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         message.fourByteRoomContactKey.isEmpty
                             ? Uint8List.fromList([0, 0, 0, 0])
                             : message.fourByteRoomContactKey,
+                        verifiedKeyHex:
+                            message.mcmpSignatureStatus ==
+                                McmpSignatureStatus.valid
+                            ? message.verifiedSenderKeyHex
+                            : null,
                       ) ??
                       contact;
                   fourByteHex = message.fourByteRoomContactKey
@@ -1539,11 +1545,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Contact? _resolveContactFrom4Bytes(
     MeshCoreConnector connector,
-    Uint8List key4Bytes,
-  ) {
+    Uint8List key4Bytes, {
+    String? verifiedKeyHex,
+  }) {
     // Match against saved contacts first, then nodes only seen via discovery —
     // a room poster you haven't saved may still be in the discovered list.
-    return connector.allContactsUnfiltered.cast<Contact?>().firstWhere(
+    final contacts = connector.allContactsUnfiltered;
+    final normalizedVerifiedKey = verifiedKeyHex?.trim().toLowerCase();
+    if (normalizedVerifiedKey != null && normalizedVerifiedKey.isNotEmpty) {
+      final verified = contacts.cast<Contact?>().firstWhere(
+        (contact) =>
+            contact?.publicKeyHex.toLowerCase() == normalizedVerifiedKey,
+        orElse: () => null,
+      );
+      if (verified != null) return verified;
+    }
+    return contacts.cast<Contact?>().firstWhere(
       (c) =>
           c != null &&
           listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
