@@ -332,6 +332,7 @@ class MeshCoreConnector extends ChangeNotifier {
   // firmware offline queue they may be minutes apart).
   ImageChunkTransport? _imageTransport;
   void Function(ImageChunkOutcome outcome)? _onImageChunk;
+  Future<void> Function(int channelIndex)? _deleteImagesForChannel;
 
   /// Called with the raw body of an AEIC image chunk seen in the RX log.
   /// See [_countImageChunkRepeat] for why that log, and not the decoded
@@ -2784,6 +2785,7 @@ class MeshCoreConnector extends ChangeNotifier {
     void Function(ImageChunkOutcome outcome)? onImageChunk,
     void Function(Uint8List blob, int channelIndex)? onImageChunkRepeat,
     void Function(int senderPrefix)? onImageSenderPrefix,
+    Future<void> Function(int channelIndex)? deleteImagesForChannel,
   }) {
     _retryService = retryService;
     _pathHistoryService = pathHistoryService;
@@ -2815,6 +2817,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _onImageChunk = onImageChunk;
     _onImageChunkRepeat = onImageChunkRepeat;
     _onImageSenderPrefix = onImageSenderPrefix;
+    _deleteImagesForChannel = deleteImagesForChannel;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
     _southFrameFragmentReassembler.onWarning = (message) {
@@ -8121,6 +8124,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await _channelMessageStore.clearChannelMessages(index);
     await _channelSettingsStore.clearChannelSettings(index);
     await _channelRegionStore.clearRegion(index);
+    await _deleteImagesForChannel?.call(index);
     // Clear in-memory messages for this channel
     _channelMessages.remove(index);
     // Refresh channels after deleting
@@ -13284,6 +13288,7 @@ class MeshCoreConnector extends ChangeNotifier {
           _sharedChannelIdentityKey(channel);
     }
     unawaited(_channelMessageStore.saveChannelMessages(channelIndex, messages));
+    unawaited(_deleteImagesForChannel?.call(channelIndex));
     markChannelRead(channelIndex);
     notifyListeners();
   }

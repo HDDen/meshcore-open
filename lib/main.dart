@@ -221,6 +221,11 @@ void main() async {
             ),
           )
         : null,
+    deleteImagesForChannel: kImageCodecFeatureAvailable
+        ? (channelIndex) async {
+            await receivedImageStore.deleteImagesForChannel(channelIndex);
+          }
+        : null,
   );
 
   await connector.loadContactCache();
