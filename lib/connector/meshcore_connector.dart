@@ -12020,30 +12020,41 @@ class MeshCoreConnector extends ChangeNotifier {
       // on its own line) so the mention resolves to the message it was
       // written for instead of merely the sender's newest one.
       //
-      // Two cases leave the body untouched. An MCMP v3 anchor already pins the
-      // quoted message, so a leading ">…" line there is the author's own text
-      // and must not be eaten. And with incoming replies shown as plain
-      // mentions no quote bubble is drawn at all, so stripping the fragment
-      // would silently swallow it; those arrive verbatim, fragment included,
-      // with only the mention resolved.
-      final skipExactQuote =
-          message.mcmpReplyTimestamp != null ||
-          (!message.isOutgoing &&
-              (_appSettingsService?.settings.incomingQuoteAsMentions ?? false));
-      final exactQuote = skipExactQuote
-          ? null
-          : ExactQuoteHelper.resolveReply(
+      // ExactQuoteHelper owns every rule about when that line is matched and
+      // when it is cut out; the two settings that govern quoting meet there
+      // rather than here.
+      final quoteSettings = _appSettingsService?.settings;
+      final hasMcmpAnchor = message.mcmpReplyTimestamp != null;
+      final quotesAsMentions =
+          !message.isOutgoing &&
+          (quoteSettings?.incomingQuoteAsMentions ?? false);
+      final exactQuote =
+          ExactQuoteHelper.parsesFragment(
+            quotesAsMentions: quotesAsMentions,
+            exactQuoteEnabled: quoteSettings?.exactQuote ?? true,
+            hasMcmpAnchor: hasMcmpAnchor,
+          )
+          ? ExactQuoteHelper.resolveReply(
               body: replyInfo.actualMessage,
               mentionedNode: replyInfo.mentionedNode,
               history: messages,
               extraCharMaps: [
                 for (final profile
-                    in _appSettingsService?.settings.cyr2latProfiles ??
+                    in quoteSettings?.cyr2latProfiles ??
                         const <Cyr2LatProfile>[])
                   profile.charMap,
               ],
-            );
-      final messageBody = exactQuote?.text ?? replyInfo.actualMessage;
+            )
+          : null;
+      final replyIsExact = exactQuote?.quoted != null;
+      final messageBody =
+          (ExactQuoteHelper.stripsFragment(
+                quotesAsMentions: quotesAsMentions,
+                fragmentResolved: replyIsExact,
+              )
+              ? exactQuote?.text
+              : null) ??
+          replyInfo.actualMessage;
 
       if ((replyToSenderName == null || replyToText == null) &&
           message.mcmpReplyTimestamp == null) {
@@ -12116,6 +12127,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyToMessageId: replyToMessageId,
         replyToSenderName: replyToSenderName ?? replyInfo.mentionedNode,
         replyToText: replyToText,
+        replyIsExact: replyIsExact,
         reactions: message.reactions,
       );
     }

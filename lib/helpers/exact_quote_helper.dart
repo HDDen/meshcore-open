@@ -37,6 +37,75 @@ class ExactQuoteHelper {
 
   static const String _marker = '>';
 
+  /// How an incoming reply is taken apart while replies are drawn as plain
+  /// mentions (`AppSettings.incomingQuoteAsMentions`).
+  ///
+  /// That setting exists for replies whose only anchor is a name. Plain
+  /// "@[sender]" resolves to that sender's newest message, and a quote bubble
+  /// drawn around a guess claims more than the message actually says, so a
+  /// mention is the honest rendering of it.
+  ///
+  /// A reply that names its target exactly is a different thing and keeps its
+  /// bubble. An MCMP v3 anchor carries the author and timestamp of the quoted
+  /// post; a plain-text fragment that matched a message in local history is
+  /// just as definite.
+  ///
+  /// The two are governed separately. An MCMP anchor is part of the container,
+  /// costs no payload and is never something the author typed, so it always
+  /// counts. The text fragment is the feature `AppSettings.exactQuote` turns
+  /// on and off: with it off the ">" line is not looked at, and whatever
+  /// stands there stays in the message as ordinary text. An MCMP message never
+  /// carries a fragment of its own for the same reason it needs none — so a
+  /// ">" line inside one is the author's own writing and is never touched.
+  ///
+  /// [parsesFragment] decides whether the ">fragment" line is matched against
+  /// history, [stripsFragment] decides whether the line is cut out of the body
+  /// that gets displayed and stored, and [rendersAsQuote] answers the question
+  /// the bubble itself asks.
+  static bool parsesFragment({
+    required bool quotesAsMentions,
+    required bool exactQuoteEnabled,
+    required bool hasMcmpAnchor,
+  }) {
+    // An MCMP anchor already pins the quoted message, so a leading ">" line
+    // there is the author's own text and must not be eaten.
+    if (hasMcmpAnchor) return false;
+    return !quotesAsMentions || exactQuoteEnabled;
+  }
+
+  /// A fragment is cut out only when something will display it back.
+  ///
+  /// With a bubble in front of the message the fragment would merely be
+  /// repeated, so it goes. With replies rendered as mentions and nothing
+  /// matched there is no bubble at all, and cutting the line out would
+  /// silently swallow the only excerpt the sender paid payload for; it stays
+  /// in the body verbatim instead.
+  static bool stripsFragment({
+    required bool quotesAsMentions,
+    required bool fragmentResolved,
+  }) => !quotesAsMentions || fragmentResolved;
+
+  /// Whether an incoming reply is drawn as a quote rather than as a plain
+  /// mention.
+  ///
+  /// Two anchors qualify, and both require a message that was actually found.
+  /// An MCMP v3 anchor names its target by author and timestamp, and
+  /// [replyToMessageId] is the local post it matched. [replyIsExact] is the
+  /// plain-text fragment's outcome, decided once on receipt — which is also
+  /// where `AppSettings.exactQuote` was consulted, so this answer does not
+  /// depend on it a second time.
+  ///
+  /// An anchor that resolved to nothing is deliberately not enough. There is
+  /// no message to show inside the bubble and none to scroll to, so a mention
+  /// states the little that is known more honestly than an empty quote would.
+  static bool rendersAsQuote({
+    required int? mcmpReplyTimestamp,
+    required String? replyToMessageId,
+    required bool replyIsExact,
+  }) =>
+      replyIsExact ||
+      (mcmpReplyTimestamp != null && replyToMessageId != null);
+
   /// Appended when the fragment is shorter than the message it came from, so a
   /// quote that could not be resolved still reads as an excerpt. Stripped
   /// again before matching.

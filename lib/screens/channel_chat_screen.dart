@@ -1320,10 +1320,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         blockedBody == null &&
         (message.replyToSenderName != null || message.replyToText != null);
     final replyMentionName = message.replyToSenderName?.trim();
+    // Replies render as plain mentions only while their target is a guess.
+    // One that named the message it answers — an MCMP v3 anchor, or a quote
+    // fragment that matched local history — keeps its bubble, because there is
+    // a real message to point at and its text was cut from the body for it.
+    final preciseIncomingQuote = ExactQuoteHelper.rendersAsQuote(
+      mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+      replyToMessageId: message.replyToMessageId,
+      replyIsExact: message.replyIsExact,
+    );
     final showIncomingReplyMention =
         !isOutgoing &&
         incomingQuoteAsMentions &&
         hasReplyContext &&
+        !preciseIncomingQuote &&
         replyMentionName != null &&
         replyMentionName.isNotEmpty;
     final translatedDisplayText =

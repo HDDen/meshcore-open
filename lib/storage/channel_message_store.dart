@@ -215,6 +215,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'replyToMessageId': msg.replyToMessageId,
       'replyToSenderName': msg.replyToSenderName,
       'replyToText': msg.replyToText,
+      'replyIsExact': msg.replyIsExact,
       'reactions': msg.reactions,
     };
   }
@@ -342,6 +343,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       replyToMessageId: json['replyToMessageId'] as String?,
       replyToSenderName: json['replyToSenderName'] as String?,
       replyToText: json['replyToText'] as String?,
+      replyIsExact: json['replyIsExact'] as bool? ?? false,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(key, value as int),

@@ -98,6 +98,18 @@ class ChannelMessage {
   final String? replyToMessageId;
   final String? replyToSenderName;
   final String? replyToText;
+
+  /// True when this reply's quote fragment matched a message in local history,
+  /// so [replyToMessageId] is the post the sender actually answered rather
+  /// than merely that sender's newest one.
+  ///
+  /// Decided once on receipt, because the fragment is only matched against
+  /// history there, and read while replies are drawn as plain mentions
+  /// (`AppSettings.incomingQuoteAsMentions`) — that rendering is for replies
+  /// whose target is a guess. An MCMP v3 reply needs no flag of its own:
+  /// `mcmpReplyTimestamp` together with a resolved [replyToMessageId] says
+  /// the same thing. `ExactQuoteHelper.rendersAsQuote` reads both.
+  final bool replyIsExact;
   final Map<String, int> reactions;
   final String? sharedHistorySourceName;
 
@@ -152,6 +164,7 @@ class ChannelMessage {
     this.replyToMessageId,
     this.replyToSenderName,
     this.replyToText,
+    this.replyIsExact = false,
     Map<String, int>? reactions,
     this.sharedHistorySourceName,
   }) : receivedAt = receivedAt ?? DateTime.now(),
@@ -202,6 +215,7 @@ class ChannelMessage {
     String? replyToMessageId,
     String? replyToSenderName,
     String? replyToText,
+    bool? replyIsExact,
     Object? originalText = _unset,
     Object? translatedText = _unset,
     Object? translatedLanguageCode = _unset,
@@ -321,6 +335,7 @@ class ChannelMessage {
       replyToMessageId: replyToMessageId ?? this.replyToMessageId,
       replyToSenderName: replyToSenderName ?? this.replyToSenderName,
       replyToText: replyToText ?? this.replyToText,
+      replyIsExact: replyIsExact ?? this.replyIsExact,
       reactions: reactions ?? this.reactions,
     );
   }
