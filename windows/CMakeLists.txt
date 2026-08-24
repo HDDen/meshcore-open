@@ -52,6 +52,14 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
+# flutter_onnxruntime downloads a large archive during CMake configure and its
+# upstream script has no timeout or integrity check. For AEIC profiles, keep a
+# verified copy outside build/ so normal Flutter clean builds remain offline.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/flutter/generated_plugins.cmake"
+     MCO_GENERATED_PLUGINS)
+if(MCO_GENERATED_PLUGINS MATCHES "flutter_onnxruntime")
+  include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/prepare_onnxruntime.cmake")
+endif()
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.

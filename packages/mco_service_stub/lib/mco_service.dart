@@ -71,4 +71,14 @@ class SettingsSectionsService extends ChangeNotifier {
     required McoContactActionTraceOpener openTrace,
     required McoContactActionEstimateOpener openEstimate,
   }) => const [];
+
+  List<PopupMenuEntry<dynamic>> contactHeaderActionItems(
+    BuildContext menuContext, {
+    required BuildContext navigatorContext,
+    required int? spreadingFactor,
+    required McoContactActionLoader loadRecords,
+    required McoContactActionNodeLoader loadNodes,
+    required McoContactActionTraceOpener openTrace,
+    required McoContactActionEstimateOpener openEstimate,
+  }) => const [];
 }

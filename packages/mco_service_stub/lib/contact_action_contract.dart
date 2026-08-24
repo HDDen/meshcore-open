@@ -48,12 +48,14 @@ class McoContactActionNode {
 @immutable
 class McoContactActionEstimate {
   const McoContactActionEstimate({
+    required this.label,
     required this.latitude,
     required this.longitude,
     required this.anchorLatitudes,
     required this.anchorLongitudes,
   });
 
+  final String label;
   final double latitude;
   final double longitude;
   final List<double> anchorLatitudes;

@@ -74,6 +74,7 @@ class MapScreen extends StatefulWidget {
   final List<LatLng> highlightLinks;
   final Uint8List? initialTracePath;
   final int? initialTraceHashByteWidth;
+  final bool dimRepeatersOutsideInitialTrace;
 
   /// Draws the red pin at [highlightPosition]. Turned off when the position is
   /// only there to centre the map on something the map already draws itself —
@@ -93,6 +94,7 @@ class MapScreen extends StatefulWidget {
     this.highlightLinks = const [],
     this.initialTracePath,
     this.initialTraceHashByteWidth,
+    this.dimRepeatersOutsideInitialTrace = false,
     this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
@@ -3010,11 +3012,41 @@ class _MapScreenState extends State<MapScreen>
     required bool active,
     required Set<String> answeredKeys,
   }) {
+    var opacity = 1.0;
     if (_neighborFocusActive && contact.type == advTypeRepeater) {
-      return widget.neighborFocus!.opacityFor(contact);
+      opacity = widget.neighborFocus!.opacityFor(contact);
+    } else if (active &&
+        !_isWardriveAnswered(contact, answeredKeys: answeredKeys)) {
+      opacity = 0.3;
     }
-    if (!active) return 1.0;
-    return _isWardriveAnswered(contact, answeredKeys: answeredKeys) ? 1.0 : 0.3;
+    if (_shouldDimOutsideInitialTrace(contact)) {
+      opacity = min(opacity, 0.3);
+    }
+    return opacity;
+  }
+
+  bool _shouldDimOutsideInitialTrace(Contact contact) {
+    if (!widget.dimRepeatersOutsideInitialTrace ||
+        contact.type != advTypeRepeater) {
+      return false;
+    }
+    final path = widget.initialTracePath;
+    if (path == null || path.isEmpty) return false;
+    final width = (widget.initialTraceHashByteWidth ?? 1)
+        .clamp(1, pubKeySize)
+        .toInt();
+    if (contact.publicKey.length < width) return true;
+    for (var offset = 0; offset + width <= path.length; offset += width) {
+      var matches = true;
+      for (var index = 0; index < width; index++) {
+        if (path[offset + index] != contact.publicKey[index]) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) return false;
+    }
+    return true;
   }
 
   bool get _neighborFocusActive => widget.neighborFocus != null;

@@ -582,6 +582,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                         ),
                         onTap: () => _showMessageSearch(this.context),
                       ),
+                      ..._serviceHeaderItems(
+                        context,
+                        this.context,
+                        connector,
+                      ),
                     ];
                   }
                   return <PopupMenuEntry<dynamic>>[
@@ -631,6 +636,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       ),
                       onTap: () => _showMessageSearch(this.context),
                     ),
+                    ..._serviceHeaderItems(context, this.context, connector),
                     const PopupMenuDivider(),
                     PopupMenuItem(
                       child: PopupMenuRow(
@@ -2181,6 +2187,87 @@ class _ContactsScreenState extends State<ContactsScreen>
     return records;
   }
 
+  List<McoContactActionNode> _serviceNodes(MeshCoreConnector connector) => [
+    for (final node in connector.allContactsUnfiltered)
+      if (node.hasLocation)
+        McoContactActionNode(
+          publicKey: List<int>.unmodifiable(node.publicKey),
+          latitude: node.latitude!,
+          longitude: node.longitude!,
+          lastSeen: node.lastSeen,
+        ),
+  ];
+
+  Future<void> _openServiceTrace(
+    BuildContext context,
+    List<int> pathBytes,
+    int hashByteWidth,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialTracePath: Uint8List.fromList(pathBytes),
+          initialTraceHashByteWidth: hashByteWidth,
+          dimRepeatersOutsideInitialTrace: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openServiceEstimate(
+    BuildContext context,
+    McoContactActionEstimate estimate,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          highlightPosition: LatLng(estimate.latitude, estimate.longitude),
+          highlightLabel: estimate.label,
+          highlightAsEstimate: true,
+          highlightLinks: [
+            for (var i = 0; i < estimate.anchorLatitudes.length; i++)
+              LatLng(
+                estimate.anchorLatitudes[i],
+                estimate.anchorLongitudes[i],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<PopupMenuEntry<dynamic>> _serviceHeaderItems(
+    BuildContext menuContext,
+    BuildContext navigatorContext,
+    MeshCoreConnector connector,
+  ) {
+    return navigatorContext
+        .read<SettingsSectionsService>()
+        .contactHeaderActionItems(
+          menuContext,
+          navigatorContext: navigatorContext,
+          spreadingFactor: connector.currentSf,
+          loadRecords: () => _loadServiceChannelRecords(
+            connector,
+            includeSharedHistory: navigatorContext
+                .read<AppSettingsService>()
+                .settings
+                .sharedMessageHistoryMode
+                .includesChannels,
+          ),
+          loadNodes: () => _serviceNodes(connector),
+          openTrace: (pathBytes, hashByteWidth) => _openServiceTrace(
+            navigatorContext,
+            pathBytes,
+            hashByteWidth,
+          ),
+          openEstimate: (estimate) =>
+              _openServiceEstimate(navigatorContext, estimate),
+        );
+  }
+
   void _showContactOptions(
     BuildContext context,
     MeshCoreConnector connector,
@@ -2605,53 +2692,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                             .sharedMessageHistoryMode
                             .includesChannels,
                       ),
-                      loadNodes: () => [
-                        for (final node in connector.allContactsUnfiltered)
-                          if (node.hasLocation)
-                            McoContactActionNode(
-                              publicKey: List<int>.unmodifiable(node.publicKey),
-                              latitude: node.latitude!,
-                              longitude: node.longitude!,
-                              lastSeen: node.lastSeen,
-                            ),
-                      ],
-                      openTrace: (pathBytes, hashByteWidth) async {
-                        await Navigator.push<void>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MapScreen(
-                              initialTracePath: Uint8List.fromList(pathBytes),
-                              initialTraceHashByteWidth: hashByteWidth,
-                            ),
-                          ),
-                        );
-                      },
-                      openEstimate: (estimate) async {
-                        await Navigator.push<void>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MapScreen(
-                              highlightPosition: LatLng(
-                                estimate.latitude,
-                                estimate.longitude,
-                              ),
-                              highlightLabel: contact.name,
-                              highlightAsEstimate: true,
-                              highlightLinks: [
-                                for (
-                                  var i = 0;
-                                  i < estimate.anchorLatitudes.length;
-                                  i++
-                                )
-                                  LatLng(
-                                    estimate.anchorLatitudes[i],
-                                    estimate.anchorLongitudes[i],
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                      loadNodes: () => _serviceNodes(connector),
+                      openTrace: (pathBytes, hashByteWidth) =>
+                          _openServiceTrace(context, pathBytes, hashByteWidth),
+                      openEstimate: (estimate) =>
+                          _openServiceEstimate(context, estimate),
                     ),
                 if (isRepeater)
                   ListTile(
