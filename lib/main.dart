@@ -642,7 +642,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {
           return MaterialApp(
-            title: 'MeshCore Open (Advanced mod)',
+            title: 'MCO Advanced',
             navigatorKey: MeshCoreApp._navigatorKey,
             scaffoldMessengerKey: MeshCoreApp._scaffoldMessengerKey,
             navigatorObservers: [appRouteObserver],
