@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import '../models/contact.dart';
@@ -59,6 +61,51 @@ class MentionQuery {
   });
 }
 
+/// Holds the suggestion search back while an `@name` is still being typed.
+///
+/// The search runs from a bare `TextEditingController` listener, which fires
+/// on every value change — selection included, so an Android selection drag
+/// notifies continuously — and it walks the node's contacts together with a
+/// discovery cache of up to 500 entries. Waiting for the typing to pause keeps
+/// the picker from reshuffling under a half-written name and keeps that walk
+/// off the common keystroke.
+///
+/// Only the search waits, and only while a name is being typed. Opening the
+/// picker on the bare `@` is immediate — there is no earlier keystroke to wait
+/// between, and the trigger character has always brought the list up at once.
+/// Closing it stays immediate too, as does tracking the caret range: a panel
+/// lingering after the mention has ended, or a replacement range pointing at
+/// text the user has already moved past, would be wrong rather than merely
+/// late.
+class MentionSearchDebounce {
+  MentionSearchDebounce({this.delay = const Duration(milliseconds: 750)});
+
+  final Duration delay;
+  Timer? _timer;
+
+  /// Schedules [search] for [query], dropping whatever was pending.
+  ///
+  /// An empty filter is the `@` on its own: the user has just opened a
+  /// mention and nothing is being filtered yet, so the full list appears
+  /// straight away. Every character after it restarts the wait instead, which
+  /// is where the delay belongs — between the keystrokes of a name.
+  void schedule(MentionQuery query, VoidCallback search) {
+    cancel();
+    if (query.filter.isEmpty) {
+      search();
+      return;
+    }
+    _timer = Timer(delay, search);
+  }
+
+  /// Drops a pending search. Called when the mention ends and from `dispose`,
+  /// so a timer cannot fire into a screen that is gone.
+  void cancel() {
+    _timer?.cancel();
+    _timer = null;
+  }
+}
+
 /// Turns a half-typed `@name` in a composer into a proper `@[name]` mention.
 ///
 /// The mention format is the same one replies use, so the receiving app
@@ -97,19 +144,45 @@ class MentionAutocomplete {
     );
   }
 
-  /// Contacts matching [filter], alphabetically. An empty filter lists them
-  /// all, which is what the user sees the moment they type `@`.
+  /// Contacts matching [filter], alphabetically and with no name twice. An
+  /// empty filter lists them all, which is what the user sees the moment they
+  /// type `@`.
+  ///
+  /// Callers pass the node's own contacts together with the nodes the app has
+  /// merely heard advertise, so somebody can be addressed before they have
+  /// been added to the radio. Those two sets overlap, and a mention carries
+  /// nothing but a name, so a repeated name would put visually identical rows
+  /// in the picker with nothing to choose between them. The first occurrence
+  /// wins: it keeps a real contact ahead of a discovery entry when the caller
+  /// passes them in that order, and it is what makes the surviving row the
+  /// same one on every rebuild — the callers compare suggestion lists by
+  /// public key, and an unstable pick would rebuild the picker under the
+  /// user's finger.
+  ///
+  /// Names are compared trimmed and case-insensitively, which also leaves the
+  /// sort below without ties to break.
+  ///
+  /// [excludeKeyHex] drops a single key, used for this node itself: the picker
+  /// offers people to address, and the user is not one of them.
   static List<Contact> suggestionsFor(
     Iterable<Contact> contacts,
-    String filter,
-  ) {
+    String filter, {
+    String? excludeKeyHex,
+  }) {
     final needle = filter.toLowerCase();
-    final matches = [
-      for (final contact in contacts)
-        if (contact.name.trim().isNotEmpty &&
-            (needle.isEmpty || contact.name.toLowerCase().contains(needle)))
-          contact,
-    ];
+    final seen = <String>{};
+    final matches = <Contact>[];
+    for (final contact in contacts) {
+      final name = contact.name.trim();
+      if (name.isEmpty) continue;
+      final lowered = name.toLowerCase();
+      if (needle.isNotEmpty && !lowered.contains(needle)) continue;
+      if (excludeKeyHex != null && contact.publicKeyHex == excludeKeyHex) {
+        continue;
+      }
+      if (!seen.add(lowered)) continue;
+      matches.add(contact);
+    }
     matches.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );

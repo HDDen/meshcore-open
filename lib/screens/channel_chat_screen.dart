@@ -133,6 +133,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ChannelMessage? _replyingToMessage;
   List<Contact> _mentionSuggestions = const [];
   MentionQuery? _mentionQuery;
+  final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
@@ -312,16 +313,34 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final query = _textFieldFocusNode.hasFocus
         ? MentionAutocomplete.queryAt(_textController.value)
         : null;
-    final suggestions = query == null
-        ? const <Contact>[]
-        : MentionAutocomplete.suggestionsFor(
-            context.read<MeshCoreConnector>().contacts,
-            query.filter,
-          );
-    // Remember where the mention sits even when the list itself did not
-    // change: one more typed letter moves its end, and the picker replaces
-    // exactly that range.
-    _mentionQuery = suggestions.isEmpty ? null : query;
+    // Remember where the mention sits before anything else: one more typed
+    // letter moves its end, the picker replaces exactly that range, and the
+    // list it belongs to may still be a moment behind.
+    _mentionQuery = query;
+    if (query == null) {
+      _mentionSearchDebounce.cancel();
+      if (_mentionSuggestions.isNotEmpty) {
+        setState(() => _mentionSuggestions = const []);
+      }
+      return;
+    }
+    _mentionSearchDebounce.schedule(
+      query,
+      () => _searchMentionSuggestions(query.filter),
+    );
+  }
+
+  void _searchMentionSuggestions(String filter) {
+    if (!mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    final suggestions = MentionAutocomplete.suggestionsFor(
+      // Not just the node's contacts: the app's own discovery cache holds
+      // nodes heard advertising that were never added to the radio, and those
+      // are worth addressing too.
+      connector.allContacts,
+      filter,
+      excludeKeyHex: connector.selfPublicKeyHex,
+    );
     if (_sameContacts(suggestions, _mentionSuggestions)) return;
     setState(() => _mentionSuggestions = suggestions);
   }
@@ -384,6 +403,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _textController.removeListener(_updateMentionSuggestions);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _textFieldFocusNode.removeListener(_updateMentionSuggestions);
+    _mentionSearchDebounce.cancel();
     _screenFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _textController.dispose();
