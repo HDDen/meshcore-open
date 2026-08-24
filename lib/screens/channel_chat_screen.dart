@@ -129,6 +129,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final FocusNode _screenFocusNode = FocusNode();
   bool _keyboardNavigationActive = true;
   bool _ignoreNextTextFieldFocus = false;
+  bool _suppressNextKeyboardOpenScroll = false;
   String _lastTextFieldText = '';
   ChannelMessage? _replyingToMessage;
   List<Contact> _mentionSuggestions = const [];
@@ -293,14 +294,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (!_textFieldFocusNode.hasFocus) {
       _keyboardNavigationActive = true;
       _ignoreNextTextFieldFocus = false;
+      _suppressNextKeyboardOpenScroll = false;
       return;
     }
+    final suppressKeyboardOpenScroll = _suppressNextKeyboardOpenScroll;
+    _suppressNextKeyboardOpenScroll = false;
     if (_ignoreNextTextFieldFocus) {
       _ignoreNextTextFieldFocus = false;
     } else {
       _keyboardNavigationActive = false;
     }
-    if (mounted) {
+    if (mounted && !suppressKeyboardOpenScroll) {
       _scrollController.handleKeyboardOpen();
     }
   }
@@ -422,10 +426,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   void _setReplyingTo(ChannelMessage message) {
     setState(() {
+      _channelSkipNextBottomSnap = true;
       _replyingToMessage = message;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (!_textFieldFocusNode.hasFocus) {
+        _suppressNextKeyboardOpenScroll = true;
+      }
       _textFieldFocusNode.requestFocus();
       unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
     });
