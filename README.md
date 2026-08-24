@@ -57,6 +57,12 @@ The complete wire format, signing sequence, and verification rules are documente
 [`docs/MCMP_V3_PROTOCOL.md`](docs/MCMP_V3_PROTOCOL.md) and its
 [`Russian translation`](docs/MCMP_V3_PROTOCOL_RU.md).
 
+Signing is off by default and is switched on per channel and per room server, in the same place
+that picks the MCMP version. Left off, a v3 message still carries its timestamp, precise reply
+anchor and compression — the signature is what costs an extra 64 bytes in the packet and a round
+trip to the node, so it is worth spending where it buys something. Direct one-to-one messages are
+never signed at all: the encrypted contact transport already establishes who sent them.
+
 MCMPv3 messages can carry an Ed25519 signature. Signing is performed by the node itself
 (`CMD_SIGN_START/DATA/FINISH`): the app assembles a canonical byte string — a domain separator,
 a context tag (channel or room), a binding value that ties the signature to that exact

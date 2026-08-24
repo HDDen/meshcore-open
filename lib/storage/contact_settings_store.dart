@@ -85,16 +85,24 @@ class ContactSettingsStore {
     await prefs.setBool(key, enabled);
   }
 
+  /// Default MCMP version for a channel or contact that never had one saved.
+  ///
+  /// v3 is the current container; v2 is kept only so existing conversations
+  /// that were pinned to it keep working. Applies to everything with no stored
+  /// value, not only to newly created entries — there is deliberately no
+  /// migration, so a channel or contact whose version was never written moves
+  /// to v3 on its own. `MeshCoreConnector` repeats this default in its
+  /// in-memory getters, for the window before the stored value is read back.
   Future<int> loadMcmpVersion(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load contact MCMP version.',
       );
-      return 2;
+      return 3;
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForMcmpVersion$contactKeyHex';
-    return prefs.getInt(key) ?? 2;
+    return prefs.getInt(key) ?? 3;
   }
 
   Future<void> saveMcmpVersion(String contactKeyHex, int version) async {
@@ -109,16 +117,25 @@ class ContactSettingsStore {
     await prefs.setInt(key, version);
   }
 
+  /// Whether v3 messages are signed, for a channel or contact that never had
+  /// the flag saved.
+  ///
+  /// Off: the v3 container is taken for its structure — timestamp, precise
+  /// reply anchor, compression — while a signature costs 64 body bytes and a
+  /// `CMD_SIGN_*` round trip through the node, which firmware without those
+  /// commands answers only by timing out. Signing is opted into per
+  /// conversation instead. Read only where it can apply: channels, and room
+  /// servers; a direct message is authenticated by its own transport.
   Future<bool> loadMcmpUseSign(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load contact MCMP sign setting.',
       );
-      return true;
+      return false;
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForMcmpUseSign$contactKeyHex';
-    return prefs.getBool(key) ?? true;
+    return prefs.getBool(key) ?? false;
   }
 
   Future<void> saveMcmpUseSign(String contactKeyHex, bool useSign) async {

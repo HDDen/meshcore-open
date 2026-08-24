@@ -224,6 +224,26 @@ MCMP v2 and SMAZ use their `encodeIfSmaller` paths. MCMP v3 always uses its meta
 when selected for an eligible message, whether signed or unsigned; structured payloads that have
 their own format stay outside the normal text-compression path.
 
+The MCMP version and the sign flag are per channel and per contact (`channel_settings_store` /
+`contact_settings_store`, each mirrored by a `MeshCoreConnector` getter for the window before the
+stored value is read back). **The defaults are v3, unsigned**, and each of the two lives in four
+places at once — two stores, two getters — so keep them in step. There is deliberately no migration:
+a default reaches every channel and contact whose value was never written, not only new ones, and
+only entries set by hand stay where they were put.
+
+Unsigned is the deliberate half of that. The v3 container is taken for its structure — timestamp,
+precise reply anchor, compression — while a signature costs 64 body bytes plus a `CMD_SIGN_*` round
+trip, which firmware without those commands answers only by timing out (`_signAttempts` ×
+`_signAttemptTimeout`, 5 × 3 s per message, before the send falls back to unsigned). Signing is
+opted into per conversation instead.
+
+Two consequences worth knowing. A plain chat contact never signs whatever the flag says —
+`contactMcmpUseSign` is read only inside `contact.type == advTypeRoom` branches, a direct message
+being authenticated by its own transport. And shared map markers on a channel travel as **plain
+text** under this default: `allowMarkerPayload` is fed from the same flag, and an unsigned envelope
+would cost bytes while proving nothing. A channel whose pins matter has to turn signing on, which is
+what makes a `del:` command attributable.
+
 ### MCMP v3 signatures (Ed25519, verified app-side)
 The node signs canonical message bytes via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer
 → serialize sessions). The canonical data contains the v3 signing domain, channel/room context,

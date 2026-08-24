@@ -113,6 +113,14 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         write: PrefsManager.instance.setBool,
       );
 
+  /// Default MCMP version for a channel or contact that never had one saved.
+  ///
+  /// v3 is the current container; v2 is kept only so existing conversations
+  /// that were pinned to it keep working. Applies to everything with no stored
+  /// value, not only to newly created entries — there is deliberately no
+  /// migration, so a channel or contact whose version was never written moves
+  /// to v3 on its own. `MeshCoreConnector` repeats this default in its
+  /// in-memory getters, for the window before the stored value is read back.
   Future<int> loadMcmpVersion(int channelIndex) async =>
       await _loadValue<int>(
         nameKeyPrefix: keyForMcmpVersion,
@@ -120,7 +128,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         read: PrefsManager.instance.getInt,
         write: PrefsManager.instance.setInt,
       ) ??
-      2;
+      3;
 
   Future<void> saveMcmpVersion(int channelIndex, int version) =>
       _saveValue<int>(
@@ -130,6 +138,15 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         write: PrefsManager.instance.setInt,
       );
 
+  /// Whether v3 messages are signed, for a channel or contact that never had
+  /// the flag saved.
+  ///
+  /// Off: the v3 container is taken for its structure — timestamp, precise
+  /// reply anchor, compression — while a signature costs 64 body bytes and a
+  /// `CMD_SIGN_*` round trip through the node, which firmware without those
+  /// commands answers only by timing out. Signing is opted into per
+  /// conversation instead. Read only where it can apply: channels, and room
+  /// servers; a direct message is authenticated by its own transport.
   Future<bool> loadMcmpUseSign(int channelIndex) async =>
       await _loadValue<bool>(
         nameKeyPrefix: keyForMcmpUseSign,
@@ -137,7 +154,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         read: PrefsManager.instance.getBool,
         write: PrefsManager.instance.setBool,
       ) ??
-      true;
+      false;
 
   Future<void> saveMcmpUseSign(int channelIndex, bool useSign) =>
       _saveValue<bool>(

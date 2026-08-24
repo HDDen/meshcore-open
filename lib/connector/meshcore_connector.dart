@@ -2091,12 +2091,15 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelMcmpEnabled[channelIndex] ?? false;
   }
 
+  /// Mirrors the store default (v3) for the window before the stored value
+  /// has been read back; keep the two in step.
   int channelMcmpVersion(int channelIndex) {
-    return _channelMcmpVersion[channelIndex] ?? 2;
+    return _channelMcmpVersion[channelIndex] ?? 3;
   }
 
+  /// Mirrors the store default (unsigned); keep the two in step.
   bool channelMcmpUseSign(int channelIndex) {
-    return _channelMcmpUseSign[channelIndex] ?? true;
+    return _channelMcmpUseSign[channelIndex] ?? false;
   }
 
   bool isChannelSmazEnabled(int channelIndex) {
@@ -2107,12 +2110,14 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactMcmpEnabled[contactKeyHex] ?? false;
   }
 
+  /// Mirrors the store default (v3), as [channelMcmpVersion] does.
   int contactMcmpVersion(String contactKeyHex) {
-    return _contactMcmpVersion[contactKeyHex] ?? 2;
+    return _contactMcmpVersion[contactKeyHex] ?? 3;
   }
 
+  /// Mirrors the store default (unsigned), as [channelMcmpUseSign] does.
   bool contactMcmpUseSign(String contactKeyHex) {
-    return _contactMcmpUseSign[contactKeyHex] ?? true;
+    return _contactMcmpUseSign[contactKeyHex] ?? false;
   }
 
   bool isContactSmazEnabled(String contactKeyHex) {
