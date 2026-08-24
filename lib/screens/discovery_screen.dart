@@ -11,10 +11,10 @@ import '../l10n/contact_localization.dart';
 import '../models/contact.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/contact_search.dart';
-import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/middle_ellipsis_text.dart';
 import '../widgets/popup_menu_row.dart';
 import '../helpers/snack_bar_builder.dart';
 
@@ -165,37 +165,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return ListEntrance(
       index: index,
       child: MeshCard(
-        onTap: () async {
-          try {
-            final imported = await connector.importDiscoveredContact(contact);
-            if (!context.mounted) return;
-            if (!imported) {
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactImportFailed),
-              );
-              return;
-            }
-            showDismissibleSnackBar(
-              context,
-              content: Text(context.l10n.discoveredContacts_contactAdded),
-              action: SnackBarAction(
-                label: context.l10n.common_undo,
-                onPressed: () => connector.removeContact(contact),
-              ),
-            );
-          } catch (_) {
-            if (!context.mounted) return;
-            showDismissibleSnackBar(
-              context,
-              content: Text(context.l10n.contacts_contactImportFailed),
-            );
-          }
-        },
-        onLongPress: () => _showContactContextMenu(contact, connector),
-        onSecondaryTap: PlatformInfo.isDesktop
-            ? () => _showContactContextMenu(contact, connector)
-            : null,
+        // A tap opens the menu, and adding the contact is the first entry in
+        // it. Importing straight from the tap made the most consequential
+        // action of the screen the easiest one to trigger by accident, on a
+        // list whose rows are the width of the screen.
+        onTap: () => _showContactContextMenu(contact, connector),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           children: [
@@ -211,42 +185,39 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name + type chip
+                  // 1. Name, on a line of its own
+                  Text(
+                    contact.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  // 2. Full public key, shortened only as far as the row
+                  // actually forces — same widget, font and size the contacts
+                  // list uses, so the two screens show a key the same way.
+                  MiddleEllipsisText(
+                    text: contact.publicKeyHex.toUpperCase(),
+                    style: MeshTheme.mono(
+                      fontSize: 9,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  // 3. Type, the two advert markers, and when it was heard.
+                  // The chip and the icons take their intrinsic width and the
+                  // date takes what is left, right-aligned inside it: a long
+                  // type label then squeezes the date rather than overflowing
+                  // the row.
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          contact.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
                       StatusChip(
                         label: contact.typeLabel(context.l10n).toUpperCase(),
                         color: _avatarColor(contact.type),
                         icon: _avatarIcon(contact.type),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  // Short pub key
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          contact.shortPubKeyHex,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: MeshTheme.mono(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
                       ),
                       if (contact.hasLocation) ...[
                         const SizedBox(width: 6),
@@ -268,34 +239,68 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                           ),
                         ),
                       ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: MediaQuery(
+                          data: MediaQuery.of(context).copyWith(
+                            textScaler: TextScaler.linear(
+                              MediaQuery.textScalerOf(
+                                context,
+                              ).scale(1.0).clamp(1.0, 1.3),
+                            ),
+                          ),
+                          child: Text(
+                            _formatLastSeen(context, _resolveLastSeen(contact)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                            style: MeshTheme.mono(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Last seen time
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
-                ),
-              ),
-              child: Text(
-                _formatLastSeen(context, _resolveLastSeen(contact)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-                style: MeshTheme.mono(
-                  fontSize: 11,
-                  color: scheme.onSurfaceVariant,
-                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _addDiscoveredContact(
+    Contact contact,
+    MeshCoreConnector connector,
+  ) async {
+    try {
+      final imported = await connector.importDiscoveredContact(contact);
+      if (!mounted) return;
+      if (!imported) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(context.l10n.contacts_contactImportFailed),
+        );
+        return;
+      }
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.discoveredContacts_contactAdded),
+        action: SnackBarAction(
+          label: context.l10n.common_undo,
+          onPressed: () => connector.removeContact(contact),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.contacts_contactImportFailed),
+      );
+    }
   }
 
   Future<void> _showContactContextMenu(
@@ -313,6 +318,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               BottomSheetHeader(
                 title: contact.name,
                 subtitle: contact.typeLabel(l10n),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_add_alt_1),
+                title: Text(l10n.discoveredContacts_addContact),
+                onTap: () => Navigator.of(sheetContext).pop('add_contact'),
               ),
               ListTile(
                 leading: const Icon(Icons.copy),
@@ -334,6 +344,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     if (!mounted || action == null) return;
 
     switch (action) {
+      case 'add_contact':
+        await _addDiscoveredContact(contact, connector);
+        break;
       case 'copy_contact':
         if (contact.rawPacket == null) return;
         final hexString = pubKeyToHex(contact.rawPacket!);
