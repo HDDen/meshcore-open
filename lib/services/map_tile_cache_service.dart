@@ -25,7 +25,8 @@ enum MapRasterSourcePreset {
   outdoorsDarkHC('outdoors_darkHC'),
   osmBrightDark('osm_bright_dark'),
   osmBrightDarkHC('osm_bright_darkHC'),
-  yandex('yandex');
+  yandex('yandex'),
+  yandexDark('yandex_dark');
 
   const MapRasterSourcePreset(this.id);
 
@@ -139,6 +140,20 @@ class MapRasterSourceCatalog {
     maxRequestsPerSecond: MapTileCacheService.yandexMaxRequestsPerSecond,
     consoleUrl: 'https://yandex.ru/maps-api/console',
   );
+  /// The same tiles with `theme=dark`. A separate source rather than a flag on
+  /// the one above, because the theme rides in the request and therefore in
+  /// the cache key: the two are different tiles on disk and have to be counted
+  /// and downloaded as different sources.
+  static const MapRasterSourceDefinition yandexDark =
+      MapRasterSourceDefinition(
+        id: 'yandex_dark',
+        label: 'Yandex Maps Dark',
+        description: '© Яндекс. Needs your own Tiles API key',
+        isYandex: true,
+        allowsBulkDownload: true,
+        maxRequestsPerSecond: MapTileCacheService.yandexMaxRequestsPerSecond,
+        consoleUrl: 'https://yandex.ru/maps-api/console',
+      );
   static const MapRasterSourceDefinition stamenTerrain =
       MapRasterSourceDefinition(
         id: 'stamen_terrain',
@@ -230,6 +245,8 @@ class MapRasterSourceCatalog {
         return stamenTerrain;
       case MapRasterSourcePreset.yandex:
         return yandex;
+      case MapRasterSourcePreset.yandexDark:
+        return yandexDark;
     }
   }
 
@@ -469,6 +486,9 @@ class MapTileCacheService extends ChangeNotifier {
       case MapRasterSourcePreset.outdoors:
       case MapRasterSourcePreset.osmBright:
       case MapRasterSourcePreset.yandex:
+      // Dark from the provider, like alidadeSmoothDark above: inverting it
+      // here would turn it back into a light map.
+      case MapRasterSourcePreset.yandexDark:
         return false;
     }
   }
@@ -489,6 +509,7 @@ class MapTileCacheService extends ChangeNotifier {
       case MapRasterSourcePreset.osmBright:
       case MapRasterSourcePreset.osmBrightDark:
       case MapRasterSourcePreset.yandex:
+      case MapRasterSourcePreset.yandexDark:
         return false;
     }
   }
@@ -843,6 +864,9 @@ class MapTileCacheService extends ChangeNotifier {
       final scale = AppSettings.formatMapYandexTileScale(
         settings.mapYandexTileScale,
       );
+      final theme = source.id == MapRasterSourceCatalog.yandexDark.id
+          ? '&theme=dark'
+          : '';
       return 'https://$yandexTileHost/v1/tiles/'
           '?apikey=${Uri.encodeQueryComponent(apiKey)}'
           '&lang=${_yandexLang(settings)}'
@@ -852,7 +876,8 @@ class MapTileCacheService extends ChangeNotifier {
           '&x={x}&y={y}&z={z}'
           // The signature, added by signTileUrl(), must stay the last
           // parameter, so anything new goes above it.
-          '&scale=$scale';
+          '&scale=$scale'
+          '$theme';
     }
     if (!source.isStadia) {
       return _osmUrlTemplate;
@@ -875,10 +900,17 @@ class MapTileCacheService extends ChangeNotifier {
       final x = int.tryParse(uri.queryParameters['x'] ?? '');
       final y = int.tryParse(uri.queryParameters['y'] ?? '');
       if (zoom == null || x == null || y == null) return null;
+      // Both Yandex sources share a host, so the theme is what tells their
+      // tiles apart. `tileCacheKey` drops only `apikey` and `signature`, so it
+      // is still here to be read — and it has to be, or the dark source would
+      // count and clear the light one's tiles as its own.
+      final isDark = uri.queryParameters['theme'] == 'dark';
       return CachedTileInfo(
         key: object.key,
         host: uri.host,
-        sourceId: MapRasterSourceCatalog.yandex.id,
+        sourceId: isDark
+            ? MapRasterSourceCatalog.yandexDark.id
+            : MapRasterSourceCatalog.yandex.id,
         zoom: zoom,
         x: x,
         y: y,
