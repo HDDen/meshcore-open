@@ -1786,7 +1786,6 @@ class MeshCoreConnector extends ChangeNotifier {
     return mergeChannelMessagesPreservingPrimaryOrder(primary, secondary);
   }
 
-  @visibleForTesting
   static List<ChannelMessage> mergeChannelMessagesPreservingPrimaryOrder(
     List<ChannelMessage> primary,
     List<ChannelMessage> secondary,

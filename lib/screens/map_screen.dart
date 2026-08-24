@@ -70,6 +70,10 @@ class MapScreen extends StatefulWidget {
   final String? highlightMarkerKey;
   final double highlightZoom;
   final NeighborMapFocus? neighborFocus;
+  final bool highlightAsEstimate;
+  final List<LatLng> highlightLinks;
+  final Uint8List? initialTracePath;
+  final int? initialTraceHashByteWidth;
 
   /// Draws the red pin at [highlightPosition]. Turned off when the position is
   /// only there to centre the map on something the map already draws itself —
@@ -85,6 +89,10 @@ class MapScreen extends StatefulWidget {
     this.highlightMarkerKey,
     this.highlightZoom = 15.0,
     this.neighborFocus,
+    this.highlightAsEstimate = false,
+    this.highlightLinks = const [],
+    this.initialTracePath,
+    this.initialTraceHashByteWidth,
     this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
@@ -186,8 +194,29 @@ class _MapScreenState extends State<MapScreen>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<MeshCoreConnector>().getChannels();
-        if (widget.highlightPosition != null) {
+        final connector = context.read<MeshCoreConnector>();
+        connector.getChannels();
+        final initialTrace = widget.initialTracePath;
+        if (initialTrace != null && initialTrace.isNotEmpty) {
+          final width = (widget.initialTraceHashByteWidth ??
+                  connector.pathHashByteWidth)
+              .clamp(1, pubKeySize)
+              .toInt();
+          setState(() {
+            _isBuildingPathTrace = true;
+            _pathTrace
+              ..clear()
+              ..addAll(initialTrace);
+            _pathTraceHopWidths
+              ..clear()
+              ..addAll(
+                List<int>.filled((initialTrace.length / width).ceil(), width),
+              );
+            _rebuildPathTraceAuxiliary();
+            _syncPathEditText();
+          });
+        }
+        if (widget.highlightPosition != null && widget.highlightLinks.isEmpty) {
           _mapController.move(widget.highlightPosition!, widget.highlightZoom);
         }
       }
@@ -714,6 +743,16 @@ class _MapScreenState extends State<MapScreen>
           contactsWithLocation,
           color: Colors.purpleAccent.withValues(alpha: 0.85),
         ) ?? const <Polyline>[];
+        final highlightLinkPolylines = highlightPosition == null
+            ? const <Polyline>[]
+            : [
+                for (final anchor in widget.highlightLinks)
+                  Polyline(
+                    points: [highlightPosition, anchor],
+                    strokeWidth: 2.5,
+                    color: Colors.purpleAccent.withValues(alpha: 0.85),
+                  ),
+              ];
         final neighborFocusPoints =
             neighborFocus?.points(contactsWithLocation) ?? const <LatLng>[];
 
@@ -817,8 +856,35 @@ class _MapScreenState extends State<MapScreen>
           }
         }
         if (highlightPosition != null) {
-          center = highlightPosition;
-          initialZoom = widget.highlightZoom;
+          if (widget.highlightLinks.isEmpty) {
+            center = highlightPosition;
+            initialZoom = widget.highlightZoom;
+          } else {
+            final highlightedPoints = [
+              highlightPosition,
+              ...widget.highlightLinks,
+            ];
+            center = LatLng(
+              highlightedPoints.fold<double>(
+                    0,
+                    (sum, point) => sum + point.latitude,
+                  ) /
+                  highlightedPoints.length,
+              highlightedPoints.fold<double>(
+                    0,
+                    (sum, point) => sum + point.longitude,
+                  ) /
+                  highlightedPoints.length,
+            );
+            initialZoom = _zoomFromStdDev(
+              _standardDeviation(
+                highlightedPoints.map((point) => point.latitude).toList(),
+              ),
+              _standardDeviation(
+                highlightedPoints.map((point) => point.longitude).toList(),
+              ),
+            );
+          }
         }
 
         // Re center map after removed markers have loaded
@@ -1140,6 +1206,8 @@ class _MapScreenState extends State<MapScreen>
                       PolylineLayer(polylines: repeaterCoveragePolylines),
                     if (neighborFocusPolylines.isNotEmpty)
                       PolylineLayer(polylines: neighborFocusPolylines),
+                    if (highlightLinkPolylines.isNotEmpty)
+                      PolylineLayer(polylines: highlightLinkPolylines),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null &&
@@ -1152,7 +1220,9 @@ class _MapScreenState extends State<MapScreen>
                               child: Container(
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: MapPalette.batteryLow,
+                                  color: widget.highlightAsEstimate
+                                      ? Colors.purpleAccent
+                                      : MapPalette.batteryLow,
                                   border: Border.all(
                                     color: MapPalette.markerOutline,
                                     width: 3,
@@ -1165,13 +1235,22 @@ class _MapScreenState extends State<MapScreen>
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.location_on,
+                                child: Icon(
+                                  widget.highlightAsEstimate
+                                      ? Icons.not_listed_location
+                                      : Icons.location_on,
                                   color: Colors.white,
                                   size: 25,
                                 ),
                               ),
                             ),
+                          ),
+                        if (highlightPosition != null &&
+                            widget.highlightAsEstimate &&
+                            (widget.highlightLabel?.isNotEmpty ?? false))
+                          _buildNodeLabelMarker(
+                            point: highlightPosition,
+                            label: widget.highlightLabel!,
                           ),
                         if (!settings.mapShowOverlaps &&
                             (_zoom >= _guessedZoomThreshold ||
@@ -6027,14 +6106,15 @@ class _MapScreenState extends State<MapScreen>
     // typed path rather than overwritten when the field later loses focus.
     if (_pathEditFocus.hasFocus) _pathEditFocus.unfocus();
     final connector = context.read<MeshCoreConnector>();
+    final activeWidth = _activePathHashWidth(connector);
     final hopWidth = min(
-      connector.pathHashByteWidth.clamp(1, pubKeySize),
+      activeWidth,
       contact.publicKey.length,
     ).toInt();
     final hopPrefix = contact.publicKey.sublist(0, hopWidth);
     for (final existingHop in PathHelper.splitPathBytes(
       _pathTrace,
-      connector.pathHashByteWidth,
+      activeWidth,
     )) {
       if (listEquals(existingHop, hopPrefix)) {
         return;
@@ -6072,7 +6152,7 @@ class _MapScreenState extends State<MapScreen>
   /// user is actively editing it.
   void _syncPathEditText() {
     if (_pathEditFocus.hasFocus) return;
-    final width = context.read<MeshCoreConnector>().pathHashByteWidth;
+    final width = _activePathHashWidth(context.read<MeshCoreConnector>());
     final hopText = PathHelper.splitPathBytes(
       _pathTrace,
       width,
@@ -6088,11 +6168,7 @@ class _MapScreenState extends State<MapScreen>
   /// hash mode (width * 2 hex chars) and are valid hex.
   void _commitPathEdit() {
     if (!mounted || !_isBuildingPathTrace) return;
-    final width = context
-        .read<MeshCoreConnector>()
-        .pathHashByteWidth
-        .clamp(1, pubKeySize)
-        .toInt();
+    final width = _activePathHashWidth(context.read<MeshCoreConnector>());
     final expectedLen = width * 2;
 
     var text = _pathEditController.text.toUpperCase();
@@ -6143,7 +6219,7 @@ class _MapScreenState extends State<MapScreen>
   /// no map point.
   void _rebuildPathTraceAuxiliary() {
     final connector = context.read<MeshCoreConnector>();
-    final width = connector.pathHashByteWidth;
+    final width = _activePathHashWidth(connector);
     _pathTraceContacts.clear();
     _points.clear();
     _polylines.clear();
@@ -6167,6 +6243,14 @@ class _MapScreenState extends State<MapScreen>
       }
     }
     return null;
+  }
+
+  int _activePathHashWidth(MeshCoreConnector connector) {
+    if (_pathTraceHopWidths.isNotEmpty) {
+      final first = _pathTraceHopWidths.first.clamp(1, pubKeySize).toInt();
+      if (_pathTraceHopWidths.every((width) => width == first)) return first;
+    }
+    return connector.pathHashByteWidth.clamp(1, pubKeySize).toInt();
   }
 
   void _removePath() {
@@ -6196,7 +6280,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _openPathTraceResult({required bool flipPathAround}) {
-    final hashW = context.read<MeshCoreConnector>().pathHashByteWidth;
+    final hashW = _activePathHashWidth(context.read<MeshCoreConnector>());
     // Keep the path editor active behind the result screen, so returning from
     // the trace map restores the selected repeaters for quick adjustments.
     Navigator.push(

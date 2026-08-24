@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+export 'contact_action_contract.dart';
+
+import 'contact_action_contract.dart';
+
 class McoBatteryChemistryProfile {
   const McoBatteryChemistryProfile({
     required this.id,
@@ -54,4 +58,17 @@ class SettingsSectionsService extends ChangeNotifier {
       const <LocalizationsDelegate<dynamic>>[];
 
   List<Widget> modSettingsSections(BuildContext context) => const [];
+
+  List<Widget> contactActionTiles(
+    BuildContext sheetContext, {
+    required BuildContext navigatorContext,
+    required String contactName,
+    required int contactType,
+    required String contactKeyHex,
+    required int? spreadingFactor,
+    required McoContactActionLoader loadRecords,
+    required McoContactActionNodeLoader loadNodes,
+    required McoContactActionTraceOpener openTrace,
+    required McoContactActionEstimateOpener openEstimate,
+  }) => const [];
 }
