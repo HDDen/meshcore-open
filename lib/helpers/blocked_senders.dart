@@ -212,6 +212,39 @@ class BlockedSenders extends ChangeNotifier {
     return !message.receivedAt.isBefore(rule.blockedAt);
   }
 
+  /// Whether a quoted message's text must be replaced by the placeholder.
+  ///
+  /// A reply preview carries a snapshot of somebody else's message, taken when
+  /// the reply arrived, so a muted sender's words come back on screen through
+  /// a third party's quote. This is the question that keeps them off it.
+  ///
+  /// [quoted] is the original when it is still in the loaded conversation, and
+  /// then it decides: the quote mirrors whatever the original bubble shows, so
+  /// nothing is hidden here that stays readable a few rows up, and nothing
+  /// stays readable here that was hidden there. With the original out of
+  /// memory only [senderName] is left, and a name under a rule is hidden —
+  /// the quote is text arriving now, not history the reader already scrolled
+  /// past, so the boundary that spares old messages does not apply to it.
+  ///
+  /// [isOwnQuote] refuses our own text on the first line, the way [ruleFor]
+  /// refuses outgoing messages: somebody adopting the user's callsign must not
+  /// be able to get his own words hidden from him.
+  bool hidesQuotedMessage({
+    required ChannelMessage? quoted,
+    required String? senderName,
+    required String channelName,
+    required bool isOwnQuote,
+  }) {
+    if (isOwnQuote) return false;
+    if (quoted != null) {
+      return quoted.wasBlocked || hidesStoredMessage(quoted, channelName);
+    }
+    final name = senderName?.trim();
+    if (name == null || name.isEmpty) return false;
+    final rule = rules[name];
+    return rule != null && rule.coversChannel(channelName);
+  }
+
   /// Mutes the sender of [message] in every channel.
   ///
   /// A verified MCMP v3 message blocks that exact identity — the name plus the

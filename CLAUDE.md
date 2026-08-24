@@ -476,9 +476,27 @@ carry — no key, `["*"]` — which replaces a keyed row and, having no message 
 move an existing moment backwards either. The dialog's controller is a `State` field because
 `showDialog` completes on pop, while the dialog is still animating out and still reading it.
 
+**Quotes of a hidden message.** A reply carries a snapshot of what it answers, taken when the
+reply arrived, so a muted sender's words used to come back on screen through somebody else's quote.
+`hidesQuotedMessage` is the question that keeps them off it, asked by `_buildReplyPreview` — the
+only place a quote is drawn, since one-to-one and room conversations render no preview at all.
+
+It answers from the original message when that is still in the loaded conversation, so the quote
+mirrors the bubble a few rows up: nothing is hidden here that stays readable there, and nothing
+stays readable here that was hidden there. With the original out of memory only the name is left,
+and a name under a rule is hidden — a quote is text arriving now, not history the reader already
+scrolled past, so the `blockedAt` boundary that spares old messages does not apply to it. Our own
+name is refused on the first line, as `ruleFor` refuses outgoing messages.
+
+Hiding runs through the same funnel as a bubble body: the local `replyText` becomes empty, so the
+gif, marker and AEIC parsers below it see nothing and a hidden quote can no more draw an image or
+a pin than a hidden message can. The author line stays — the block hides what was said, not that a
+reply happened — and so does the tap, which scrolls to the quoted message as before.
+`BlockedQuoteBody` (`widgets/blocked_message_body.dart`) draws the placeholder without
+`BlockedMessageBody`'s reveal-on-tap, because that tap belongs to the preview.
+
 **Not covered, deliberately**: one-to-one conversations, where the contact is deleted rather than
-muted; the message search, which runs in a real isolate the table cannot be reached from; a third
-party quoting a hidden message, whose text was snapshotted into `replyToText` at receipt; and
+muted; the message search, which runs in a real isolate the table cannot be reached from; and
 AEIC images, which never become a message object and carry no author name at all.
 
 ### Mentions

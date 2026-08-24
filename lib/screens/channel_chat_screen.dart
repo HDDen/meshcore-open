@@ -2307,7 +2307,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildReplyPreview(ChannelMessage message, double textScale) {
     final connector = context.read<MeshCoreConnector>();
     final isOwnNode = message.replyToSenderName == connector.selfName;
-    final replyText = message.replyToText ?? '';
+    // A quote is the one way a muted sender's text still reaches the screen,
+    // snapshotted into the reply when it arrived. Emptying the text here is
+    // the same funnel the bubble body uses: every parser below reads this, so
+    // a hidden quote shows no image, no pin and no coordinates either.
+    final quotedMessageId = message.replyToMessageId;
+    final quoted = quotedMessageId == null
+        ? null
+        : connector
+              .getChannelMessages(widget.channel)
+              .where((current) => current.messageId == quotedMessageId)
+              .firstOrNull;
+    final quoteBlocked = BlockedSenders.instance.hidesQuotedMessage(
+      quoted: quoted,
+      senderName: message.replyToSenderName,
+      channelName: connector.channelDisplayName(widget.channel.index),
+      isOwnQuote: isOwnNode,
+    );
+    final replyText = quoteBlocked ? '' : (message.replyToText ?? '');
     final colorScheme = Theme.of(context).colorScheme;
     final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
 
@@ -2318,7 +2335,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
 
     Widget contentPreview;
-    if (gifId != null) {
+    if (quoteBlocked) {
+      contentPreview = BlockedQuoteBody(
+        style: TextStyle(
+          fontSize: 12 * textScale,
+          color: previewTextColor.withValues(alpha: 0.55),
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    } else if (gifId != null) {
       contentPreview = ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: GifMessage(

@@ -2,6 +2,42 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 
+/// What a blocked sender's quoted message shows instead of its text.
+///
+/// The reveal-on-tap of [BlockedMessageBody] is deliberately missing: the tap
+/// on a reply preview belongs to the preview, which scrolls to the message
+/// being quoted. Hiding the text does not hide that a reply happened, so the
+/// author line above this stays as it was.
+class BlockedQuoteBody extends StatelessWidget {
+  const BlockedQuoteBody({super.key, required this.style});
+
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = style.fontSize ?? 12;
+    final color =
+        style.color ?? Theme.of(context).colorScheme.onSurface;
+    return Text.rich(
+      TextSpan(
+        children: [
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.block, size: size, color: color),
+            ),
+          ),
+          TextSpan(text: context.l10n.chat_senderBlocked),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+  }
+}
+
 /// What a blocked sender's message shows instead of its text.
 ///
 /// The text itself is kept and a tap reveals it, but revealing is a display
