@@ -408,8 +408,7 @@ class MapTileCacheService extends ChangeNotifier {
                cacheKey,
                stalePeriod: cacheLifetime,
                maxNrOfCacheObjects: 200000,
-               fileService: PinnedFreshnessFileService(
-                 pinnedHost: yandexTileHost,
+               fileService: ForcedFreshnessFileService(
                  lifetime: cacheLifetime,
                ),
              ),
@@ -1005,22 +1004,18 @@ class MapTileCacheService extends ChangeNotifier {
   }
 }
 
-/// File service that pins how long a host's responses stay fresh.
+/// File service that pins how long every successful tile response stays fresh.
 ///
-/// Yandex sends its own `Cache-Control`, and honouring it makes the cache
-/// re-validate tiles that are already on disk: rate-limit slots are spent on
-/// files we hold, redraws of visited areas queue behind the limiter, and an
-/// offline region quietly expires while the phone is nowhere near a network.
-/// The project keeps tiles for the full cache period on purpose, so freshness
-/// is pinned to that instead. Other hosts pass through untouched.
-class PinnedFreshnessFileService extends FileService {
-  PinnedFreshnessFileService({
-    required this.pinnedHost,
+/// Tile servers publish different `Cache-Control` rules, including directives
+/// that would immediately expire or prohibit caching. The app is commonly used
+/// with intermittent connectivity, so tiles that were successfully downloaded
+/// are retained and reused for the full application cache period instead.
+class ForcedFreshnessFileService extends FileService {
+  ForcedFreshnessFileService({
     required this.lifetime,
     FileService? inner,
   }) : _inner = inner ?? HttpFileService();
 
-  final String pinnedHost;
   final Duration lifetime;
   final FileService _inner;
 
@@ -1030,13 +1025,12 @@ class PinnedFreshnessFileService extends FileService {
     Map<String, String>? headers,
   }) async {
     final response = await _inner.get(url, headers: headers);
-    if (!url.contains(pinnedHost)) return response;
-    return _PinnedFreshnessResponse(response, lifetime);
+    return _ForcedFreshnessResponse(response, lifetime);
   }
 }
 
-class _PinnedFreshnessResponse implements FileServiceResponse {
-  _PinnedFreshnessResponse(this._inner, this._lifetime);
+class _ForcedFreshnessResponse implements FileServiceResponse {
+  _ForcedFreshnessResponse(this._inner, this._lifetime);
 
   final FileServiceResponse _inner;
   final Duration _lifetime;
