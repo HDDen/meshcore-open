@@ -6286,4 +6286,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Очистить Соседей';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Перезапросить разрешения на работу в фоне';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Проверить исключение из оптимизации батареи и запросить его заново';
+
+  @override
+  String get settings_backgroundPermissionsGranted => 'Разрешение уже выдано';
 }

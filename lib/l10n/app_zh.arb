@@ -3403,5 +3403,8 @@
   "imageSend_previewShowOriginal": "显示原图",
   "imageSend_previewAsReceived": "接收方将看到这样的图像",
   "imageSend_previewDecodeFailed": "无法解码预览",
-  "settings_modSettingsLastHopSignal": "在频道中显示最后一跳的 SNR/RSSI"
+  "settings_modSettingsLastHopSignal": "在频道中显示最后一跳的 SNR/RSSI",
+  "settings_backgroundPermissions": "重新申请后台运行权限",
+  "settings_backgroundPermissionsSubtitle": "检查电池优化豁免并重新申请",
+  "settings_backgroundPermissionsGranted": "权限已授予"
 }

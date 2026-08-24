@@ -6267,4 +6267,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Achtergrondrechten opnieuw aanvragen';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Controleer de uitzondering op batterijoptimalisatie en vraag deze opnieuw aan';
+
+  @override
+  String get settings_backgroundPermissionsGranted =>
+      'Toestemming is al verleend';
 }

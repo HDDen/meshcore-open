@@ -3398,5 +3398,8 @@
   "imageSend_previewShowOriginal": "Покажи оригинала",
   "imageSend_previewAsReceived": "Така ще изглежда изображението за получателите",
   "imageSend_previewDecodeFailed": "Неуспешно декодиране на визуализацията",
-  "settings_modSettingsLastHopSignal": "Показване на SNR/RSSI на последния хоп в каналите"
+  "settings_modSettingsLastHopSignal": "Показване на SNR/RSSI на последния хоп в каналите",
+  "settings_backgroundPermissions": "Заяви отново разрешения за работа във фонов режим",
+  "settings_backgroundPermissionsSubtitle": "Провери изключението от оптимизацията на батерията и го заяви отново",
+  "settings_backgroundPermissionsGranted": "Разрешението вече е дадено"
 }

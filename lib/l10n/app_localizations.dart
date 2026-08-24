@@ -10701,6 +10701,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Neighbours list'**
   String get repeater_cliClearNeighbors;
+
+  /// No description provided for @settings_backgroundPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-request background permissions'**
+  String get settings_backgroundPermissions;
+
+  /// No description provided for @settings_backgroundPermissionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the battery optimisation exemption and ask for it again'**
+  String get settings_backgroundPermissionsSubtitle;
+
+  /// No description provided for @settings_backgroundPermissionsGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission is already granted'**
+  String get settings_backgroundPermissionsGranted;
 }
 
 class _AppLocalizationsDelegate

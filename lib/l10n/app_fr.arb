@@ -3497,5 +3497,8 @@
   "imageSend_previewShowOriginal": "Voir l'original",
   "imageSend_previewAsReceived": "Voici ce que verront les destinataires",
   "imageSend_previewDecodeFailed": "Impossible de décoder l'aperçu",
-  "settings_modSettingsLastHopSignal": "Afficher le SNR/RSSI du dernier saut dans les canaux"
+  "settings_modSettingsLastHopSignal": "Afficher le SNR/RSSI du dernier saut dans les canaux",
+  "settings_backgroundPermissions": "Redemander les autorisations d'arrière-plan",
+  "settings_backgroundPermissionsSubtitle": "Vérifier l'exemption d'optimisation de la batterie et la redemander",
+  "settings_backgroundPermissionsGranted": "L'autorisation est déjà accordée"
 }

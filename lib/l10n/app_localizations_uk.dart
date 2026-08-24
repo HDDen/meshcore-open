@@ -6300,4 +6300,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Перезапитати дозволи на роботу у фоні';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Перевірити виняток з оптимізації батареї та запитати його знову';
+
+  @override
+  String get settings_backgroundPermissionsGranted => 'Дозвіл уже надано';
 }

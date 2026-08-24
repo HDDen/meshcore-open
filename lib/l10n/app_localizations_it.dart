@@ -6303,4 +6303,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Richiedi di nuovo i permessi in background';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Verifica l\'esenzione dall\'ottimizzazione della batteria e richiedila di nuovo';
+
+  @override
+  String get settings_backgroundPermissionsGranted =>
+      'Il permesso è già concesso';
 }

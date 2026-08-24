@@ -5980,4 +5980,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions => '백그라운드 실행 권한 다시 요청';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      '배터리 최적화 예외를 확인하고 다시 요청합니다';
+
+  @override
+  String get settings_backgroundPermissionsGranted => '권한이 이미 허용되어 있습니다';
 }

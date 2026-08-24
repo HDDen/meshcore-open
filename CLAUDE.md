@@ -164,7 +164,7 @@ All stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton
 
 Wardrive data (samples, sessions, per-endpoint uploaded IDs, ignore list) is persisted in SharedPreferences via `wardrive_sample_store` / `wardrive_ignore_store`. The disabled translation subsystem still exposes a `translation_file_store` file path for model removal only.
 
-A few states are deliberately **unscoped by node** because they describe this phone rather than any radio's data. The blocked-sender table is managed through `BlockedSenderStore`, while the map's node-filter chip row writes its collapsed or expanded state directly under `map_node_filters_expanded_v1`. Anything holding per-radio data belongs in a scoped store instead.
+A few states are deliberately **unscoped by node** because they describe this phone rather than any radio's data. The blocked-sender table is managed through `BlockedSenderStore`, the map's node-filter chip row writes its collapsed or expanded state directly under `map_node_filters_expanded_v1`, and whether the battery-optimization exemption has ever been asked for is recorded under `background_battery_exemption_asked_v1` (see the Android section). Anything holding per-radio data belongs in a scoped store instead.
 
 ### Offline history mode
 
@@ -1001,6 +1001,8 @@ App version: `9.5.1-mcoa.1.8.6+43` — Dart SDK constraint: `^3.9.2`
 - `WAKE_LOCK`
 - `CAMERA` (QR scanning, declared as optional feature)
 - USB host hardware feature (optional)
+
+`BackgroundService.ensureBatteryOptimizationExemption` checks Android's battery-optimization whitelist, which is what lets the foreground service — and with it the BLE or TCP link — survive Doze. It has nothing to do with wardriving, which runs its own location service. The **check** runs on every launch and on the first explicit BLE connection; the **prompt** is spent once per install and recorded in `background_battery_exemption_asked_v1`, because it throws the user out to a system screen and repeating that every launch reads as nagging for something already declined. The record is written before the prompt, so backing out of that screen still counts as the one ask. Settings → Debug has an Android-only tile that asks again on purpose, through `force: true`, which steps past both that record and the once-per-reason guard held for the current run.
 
 `flutter_foreground_task` registers a connected-device `ForegroundService` (`foregroundServiceType="connectedDevice"`, `stopWithTask="false"`); a separate wardrive `location` foreground service is declared and enabled only via the Android-only wardrive path. `MainActivity` caches the main Flutter engine while the service has an active keep-alive reason. The engine sends an in-process heartbeat every 5 seconds; after 20 seconds without one, a surviving/restarted foreground task changes its notification to `app_connectionLostBreaked`. This heartbeat is not a BLE or LoRa packet. If Android kills the whole process, the service cannot reconstruct BLE because it has no connector of its own.
 

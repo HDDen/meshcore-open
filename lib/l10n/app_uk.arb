@@ -3378,5 +3378,8 @@
   "imageSend_previewShowOriginal": "Показати оригінал",
   "imageSend_previewAsReceived": "Саме так зображення побачать одержувачі",
   "imageSend_previewDecodeFailed": "Не вдалося декодувати попередній перегляд",
-  "settings_modSettingsLastHopSignal": "Відображати SNR/RSSI останнього хопа в каналах"
+  "settings_modSettingsLastHopSignal": "Відображати SNR/RSSI останнього хопа в каналах",
+  "settings_backgroundPermissions": "Перезапитати дозволи на роботу у фоні",
+  "settings_backgroundPermissionsSubtitle": "Перевірити виняток з оптимізації батареї та запитати його знову",
+  "settings_backgroundPermissionsGranted": "Дозвіл уже надано"
 }

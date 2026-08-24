@@ -12,10 +12,12 @@ import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/radio_settings.dart';
 import '../services/app_settings_service.dart';
+import '../services/background_service.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_debug_log_service.dart';
 import 'package:mco_service/mco_service.dart';
 import '../theme/mesh_theme.dart';
+import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/mesh_ui.dart';
@@ -760,7 +762,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
           },
         ),
+        // Android only: the exemption this asks for is an Android concept, and
+        // `ensureBatteryOptimizationExemption` returns true untouched anywhere
+        // else — a tile that never does anything is worse than no tile.
+        if (PlatformInfo.isAndroid) ...[
+          const Divider(height: 1, indent: 16),
+          _tappableTile(
+            context,
+            icon: Icons.battery_saver_outlined,
+            title: l10n.settings_backgroundPermissions,
+            subtitle: l10n.settings_backgroundPermissionsSubtitle,
+            onTap: () => _requestBackgroundPermissions(context),
+          ),
+        ],
       ],
+    );
+  }
+
+  /// Asks for the battery-optimization exemption again, deliberately.
+  ///
+  /// The automatic request is spent once per install, so this is the only way
+  /// back to it — hence `force`, which steps past both the recorded ask and
+  /// the once-per-run guard. Nothing is shown when the request opens: the
+  /// system screen is the feedback. The message is for the other case, where
+  /// the exemption is already granted and pressing the button would otherwise
+  /// look like it did nothing at all.
+  Future<void> _requestBackgroundPermissions(BuildContext context) async {
+    final l10n = context.l10n;
+    final granted = await context
+        .read<BackgroundService>()
+        .ensureBatteryOptimizationExemption(reason: 'manual', force: true);
+    if (!context.mounted || !granted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(l10n.settings_backgroundPermissionsGranted),
     );
   }
 

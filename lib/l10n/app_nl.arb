@@ -3180,5 +3180,8 @@
   "imageSend_previewShowOriginal": "Origineel tonen",
   "imageSend_previewAsReceived": "Zo zien ontvangers de afbeelding",
   "imageSend_previewDecodeFailed": "Kan de voorbeeldweergave niet decoderen",
-  "settings_modSettingsLastHopSignal": "SNR/RSSI van de laatste hop tonen in kanalen"
+  "settings_modSettingsLastHopSignal": "SNR/RSSI van de laatste hop tonen in kanalen",
+  "settings_backgroundPermissions": "Achtergrondrechten opnieuw aanvragen",
+  "settings_backgroundPermissionsSubtitle": "Controleer de uitzondering op batterijoptimalisatie en vraag deze opnieuw aan",
+  "settings_backgroundPermissionsGranted": "Toestemming is al verleend"
 }

@@ -6288,4 +6288,16 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Заяви отново разрешения за работа във фонов режим';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Провери изключението от оптимизацията на батерията и го заяви отново';
+
+  @override
+  String get settings_backgroundPermissionsGranted =>
+      'Разрешението вече е дадено';
 }

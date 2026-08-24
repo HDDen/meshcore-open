@@ -632,6 +632,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.uiViewStateService),
         ChangeNotifierProvider.value(value: widget.settingsSectionsService),
         Provider.value(value: widget.storage),
+        Provider.value(value: widget.backgroundService),
         ChangeNotifierProvider.value(value: widget.mapTileCacheService),
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
         ChangeNotifierProvider.value(value: widget.wardriveService),

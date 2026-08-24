@@ -3503,5 +3503,8 @@
   "imageSend_previewShowOriginal": "元の画像を表示",
   "imageSend_previewAsReceived": "受信者にはこのように表示されます",
   "imageSend_previewDecodeFailed": "プレビューをデコードできませんでした",
-  "settings_modSettingsLastHopSignal": "チャンネルで最終ホップの SNR/RSSI を表示"
+  "settings_modSettingsLastHopSignal": "チャンネルで最終ホップの SNR/RSSI を表示",
+  "settings_backgroundPermissions": "バックグラウンド動作の許可を再要求",
+  "settings_backgroundPermissionsSubtitle": "電池の最適化の除外設定を確認し、再度要求します",
+  "settings_backgroundPermissionsGranted": "許可はすでに付与されています"
 }

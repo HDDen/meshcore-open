@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
+import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
 import 'app_debug_log_service.dart';
 
@@ -30,6 +31,8 @@ class BackgroundService {
   bool _connectionLost = false;
   int _notificationRevision = 0;
   final Set<String> _batteryOptimizationPromptReasons = {};
+  static const String _batteryOptimizationAskedKey =
+      'background_battery_exemption_asked_v1';
   Timer? _connectionHeartbeatTimer;
   Map<String, Object>? _connectionHeartbeatData;
   static const MethodChannel _engineLifecycleChannel = MethodChannel(
@@ -70,8 +73,28 @@ class BackgroundService {
     );
   }
 
+  /// Whether the exemption has ever been asked for on this install.
+  ///
+  /// App-wide and unscoped by node, like the other states that describe this
+  /// phone rather than any radio's data: the exemption belongs to the app in
+  /// Android's eyes, not to whatever it happens to be connected to.
+  bool get hasRequestedBatteryOptimizationExemption =>
+      PrefsManager.instance.getBool(_batteryOptimizationAskedKey) ?? false;
+
+  /// Checks the exemption, and asks for it at most once per install.
+  ///
+  /// The check itself is free and always runs — it is what the return value
+  /// and the log line are built from. The *prompt* is the part that is
+  /// rationed: it sends the user out to a system screen, and repeating that on
+  /// every launch reads as nagging for something already declined once. So the
+  /// first launch that finds the exemption missing asks, records that it did,
+  /// and every later one only looks.
+  ///
+  /// [force] is how the settings screen asks again on purpose: it steps past
+  /// both the recorded ask and the per-run guard below.
   Future<bool> ensureBatteryOptimizationExemption({
     required String reason,
+    bool force = false,
   }) async {
     if (!PlatformInfo.isAndroid) return true;
 
@@ -84,9 +107,25 @@ class BackgroundService {
       );
       if (ignored) return true;
 
+      if (!force && hasRequestedBatteryOptimizationExemption) {
+        _debugLogService?.info(
+          'Battery optimization exemption already requested once; '
+          'not prompting again ($reason)',
+          tag: 'Background',
+        );
+        return false;
+      }
+
       // Startup and the first explicit BLE connection may each prompt once.
       // Automatic reconnect attempts must never reopen system settings.
-      if (!_batteryOptimizationPromptReasons.add(reason)) return false;
+      if (!force && !_batteryOptimizationPromptReasons.add(reason)) {
+        return false;
+      }
+
+      // Recorded before the prompt rather than after it: what is being spent
+      // is the one interruption we allow ourselves, and it is spent whether
+      // the user grants, declines, or backs out of the system screen.
+      await PrefsManager.instance.setBool(_batteryOptimizationAskedKey, true);
 
       _debugLogService?.warn(
         'Battery optimization exemption missing; opening system request ($reason)',

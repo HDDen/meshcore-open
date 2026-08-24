@@ -3497,5 +3497,8 @@
   "imageSend_previewShowOriginal": "Ver original",
   "imageSend_previewAsReceived": "Así verán la imagen los destinatarios",
   "imageSend_previewDecodeFailed": "No se pudo decodificar la vista previa",
-  "settings_modSettingsLastHopSignal": "Mostrar SNR/RSSI del último salto en los canales"
+  "settings_modSettingsLastHopSignal": "Mostrar SNR/RSSI del último salto en los canales",
+  "settings_backgroundPermissions": "Volver a solicitar permisos en segundo plano",
+  "settings_backgroundPermissionsSubtitle": "Comprobar la exención de optimización de batería y solicitarla de nuevo",
+  "settings_backgroundPermissionsGranted": "El permiso ya está concedido"
 }

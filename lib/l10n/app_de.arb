@@ -3525,5 +3525,8 @@
   "imageSend_previewShowOriginal": "Original anzeigen",
   "imageSend_previewAsReceived": "So wird das Bild bei den Empfängern aussehen",
   "imageSend_previewDecodeFailed": "Vorschau konnte nicht dekodiert werden",
-  "settings_modSettingsLastHopSignal": "SNR/RSSI des letzten Hops in Kanälen anzeigen"
+  "settings_modSettingsLastHopSignal": "SNR/RSSI des letzten Hops in Kanälen anzeigen",
+  "settings_backgroundPermissions": "Hintergrundberechtigungen erneut anfordern",
+  "settings_backgroundPermissionsSubtitle": "Ausnahme von der Akkuoptimierung prüfen und erneut anfordern",
+  "settings_backgroundPermissionsGranted": "Berechtigung ist bereits erteilt"
 }

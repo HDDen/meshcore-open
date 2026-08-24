@@ -6251,4 +6251,15 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions =>
+      'Znova požiadať o povolenia na beh na pozadí';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Skontrolovať výnimku z optimalizácie batérie a znova o ňu požiadať';
+
+  @override
+  String get settings_backgroundPermissionsGranted => 'Povolenie je už udelené';
 }

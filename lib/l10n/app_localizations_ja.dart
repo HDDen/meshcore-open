@@ -5973,4 +5973,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions => 'バックグラウンド動作の許可を再要求';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      '電池の最適化の除外設定を確認し、再度要求します';
+
+  @override
+  String get settings_backgroundPermissionsGranted => '許可はすでに付与されています';
 }

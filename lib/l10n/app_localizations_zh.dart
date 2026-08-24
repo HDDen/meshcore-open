@@ -5847,4 +5847,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions => '重新申请后台运行权限';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle => '检查电池优化豁免并重新申请';
+
+  @override
+  String get settings_backgroundPermissionsGranted => '权限已授予';
 }

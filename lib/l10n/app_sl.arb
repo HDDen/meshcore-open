@@ -3398,5 +3398,8 @@
   "imageSend_previewShowOriginal": "Prikaži izvirnik",
   "imageSend_previewAsReceived": "Tako bodo sliko videli prejemniki",
   "imageSend_previewDecodeFailed": "Predogleda ni bilo mogoče dekodirati",
-  "settings_modSettingsLastHopSignal": "Prikaži SNR/RSSI zadnjega skoka v kanalih"
+  "settings_modSettingsLastHopSignal": "Prikaži SNR/RSSI zadnjega skoka v kanalih",
+  "settings_backgroundPermissions": "Znova zahtevaj dovoljenja za delovanje v ozadju",
+  "settings_backgroundPermissionsSubtitle": "Preveri izjemo pri optimizaciji baterije in jo znova zahtevaj",
+  "settings_backgroundPermissionsGranted": "Dovoljenje je že podeljeno"
 }

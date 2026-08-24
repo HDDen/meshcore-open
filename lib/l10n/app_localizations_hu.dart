@@ -6281,4 +6281,15 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+
+  @override
+  String get settings_backgroundPermissions => 'Háttérengedélyek újrakérése';
+
+  @override
+  String get settings_backgroundPermissionsSubtitle =>
+      'Az akkumulátor-optimalizálás alóli kivétel ellenőrzése és újrakérése';
+
+  @override
+  String get settings_backgroundPermissionsGranted =>
+      'Az engedély már meg van adva';
 }
