@@ -7665,6 +7665,15 @@ class MeshCoreConnector extends ChangeNotifier {
     try {
       if (!isConnected) return;
 
+      // The only path reset the app sends on its own. Logged because the node
+      // changes routes by itself too and announces it with
+      // PUSH_CODE_PATH_UPDATED; without a line on each side, a path that
+      // vanished gives no clue which of the two dropped it.
+      appLogger.info(
+        'Clearing device path for ${contact.name}: '
+        'devicePath=${contact.pathLength}, override=${contact.pathOverride}',
+        tag: 'Connector',
+      );
       await sendFrame(buildResetPathFrame(contact.publicKey));
       if (_activeTransport == MeshCoreTransportType.usb) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -8399,6 +8408,14 @@ class MeshCoreConnector extends ChangeNotifier {
       );
 
       if (contact != null) {
+        // The node's own decision, not ours. The new path arrives with the
+        // contact refresh below, which logs it as "Refreshing contact ...";
+        // this line is what says who started it.
+        appLogger.info(
+          'Node announced a path change for ${contact.name}, re-reading it '
+          '(override=${contact.pathOverride})',
+          tag: 'Connector',
+        );
         _pathHistoryService!.handlePathUpdated(contact);
         // Refresh just this specific contact instead of all contacts.
         // This avoids race conditions with _preserveContactsOnRefresh flag

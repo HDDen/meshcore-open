@@ -746,7 +746,15 @@ class MessageRetryService extends ChangeNotifier {
       final failedMessage = message.copyWith(status: MessageStatus.failed);
       _pendingMessages[messageId] = failedMessage;
 
+      // A route the user pinned outranks this cleanup. Every other automatic
+      // path decision steps aside for an override — `preparePathForContactSend`
+      // and `_selectPathForAttempt` both bail on it, and `resolvePathSelection`
+      // lets it win over `forceFlood` — while this branch would send
+      // CMD_RESET_PATH to the node and drop it back to flood behind the user's
+      // back. Forcing flood is a choice as much as picking hops is, so any
+      // non-null override stops it.
       if (config?.appSettingsService?.settings.clearPathOnMaxRetry == true &&
+          contact.pathOverride == null &&
           config?.clearContactPath != null) {
         config!.clearContactPath!(contact);
       }
