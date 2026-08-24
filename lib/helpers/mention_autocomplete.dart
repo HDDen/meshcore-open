@@ -190,17 +190,31 @@ class MentionAutocomplete {
   }
 
   /// Replaces the typed fragment with a finished mention and leaves the caret
-  /// right after the closing bracket — no trailing space, so the user decides
-  /// what follows.
+  /// one space past it, ready for the next word.
+  ///
+  /// The space is not added when the text already continues with whitespace —
+  /// picking a name in the middle of a sentence would otherwise leave a double
+  /// space to clean up by hand. Either way the caret ends up after exactly one
+  /// whitespace character, so the mention behaves the same wherever it was
+  /// inserted.
+  ///
+  /// A trailing space also closes the picker for good measure: [queryAt] walks
+  /// back from the caret and stops at whitespace, so nothing is being typed
+  /// any more as far as it is concerned.
   static TextEditingValue apply(
     TextEditingValue value,
     MentionQuery query,
     String name,
   ) {
-    final mention = '@[$name]';
+    final text = value.text;
+    final alreadySpaced =
+        query.end < text.length && text[query.end].trim().isEmpty;
+    final mention = alreadySpaced ? '@[$name]' : '@[$name] ';
     return TextEditingValue(
-      text: value.text.replaceRange(query.start, query.end, mention),
-      selection: TextSelection.collapsed(offset: query.start + mention.length),
+      text: text.replaceRange(query.start, query.end, mention),
+      selection: TextSelection.collapsed(
+        offset: query.start + mention.length + (alreadySpaced ? 1 : 0),
+      ),
     );
   }
 }
