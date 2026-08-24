@@ -247,12 +247,6 @@ class ChannelMessagePathScreen extends StatelessWidget {
             message.senderName,
             scheme: scheme,
           ),
-          _buildDetailRow(
-            context,
-            l10n.channelPath_timeLabel,
-            _receivedAtLabel(l10n),
-            scheme: scheme,
-          ),
           if (_signatureStatusLabel(l10n) != null)
             _buildDetailRow(
               context,
@@ -260,14 +254,12 @@ class ChannelMessagePathScreen extends StatelessWidget {
               _signatureStatusLabel(l10n)!,
               scheme: scheme,
             ),
-          if (_mcmpTimestampWarningSeconds case final differenceSeconds?)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                l10n.chat_mcmpTimestampQueerly(differenceSeconds),
-                style: TextStyle(color: scheme.error),
-              ),
-            ),
+          // The three clocks read outward from the packet: what the sender
+          // stamped on it, what he signed inside the MCMP body, and only then
+          // when it reached us. The mismatch warning stays with the signed
+          // timestamp it comments on, and cannot be stranded without it — a
+          // difference past the warning threshold also makes the two second
+          // values differ, which is what shows that row.
           _buildDetailRow(
             context,
             l10n.chat_timestampPacket,
@@ -283,6 +275,20 @@ class ChannelMessagePathScreen extends StatelessWidget {
               _mcmpTimestampLabel(l10n),
               scheme: scheme,
             ),
+          if (_mcmpTimestampWarningSeconds case final differenceSeconds?)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                l10n.chat_mcmpTimestampQueerly(differenceSeconds),
+                style: TextStyle(color: scheme.error),
+              ),
+            ),
+          _buildDetailRow(
+            context,
+            l10n.channelPath_timeLabel,
+            _receivedAtLabel(l10n),
+            scheme: scheme,
+          ),
           if (mcmpReplyTargetLabel != null)
             _buildDetailRow(
               context,
