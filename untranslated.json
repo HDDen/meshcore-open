@@ -1,5 +1,9 @@
 {
   "bg": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -7,6 +11,10 @@
   ],
 
   "de": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -14,6 +22,10 @@
   ],
 
   "es": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -21,6 +33,10 @@
   ],
 
   "fr": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -28,6 +44,10 @@
   ],
 
   "hu": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -35,6 +55,10 @@
   ],
 
   "it": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -42,6 +66,10 @@
   ],
 
   "ja": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -49,6 +77,10 @@
   ],
 
   "ko": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -56,6 +88,10 @@
   ],
 
   "nl": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -63,6 +99,10 @@
   ],
 
   "pl": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -70,6 +110,10 @@
   ],
 
   "pt": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -77,6 +121,10 @@
   ],
 
   "sk": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -84,6 +132,10 @@
   ],
 
   "sl": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -91,6 +143,10 @@
   ],
 
   "sv": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -98,6 +154,10 @@
   ],
 
   "uk": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
@@ -105,6 +165,10 @@
   ],
 
   "zh": [
+    "discoveredContacts_discoverDevices",
+    "discoveredContacts_requestName",
+    "discoveredContacts_nameRequestFailed",
+    "discoveredContacts_discoveryFailed",
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",

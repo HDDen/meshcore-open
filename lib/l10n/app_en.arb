@@ -2788,6 +2788,17 @@
   "discoveredContacts_copyContact": "Copy Contact to clipboard",
   "discoveredContacts_deleteContact": "Delete Discovered Contact",
   "discoveredContacts_deleteContactAll": "Delete All Discovered Contacts",
+  "discoveredContacts_discoverDevices": "Discover devices",
+  "discoveredContacts_requestName": "Request name",
+  "discoveredContacts_nameRequestFailed": "Failed to request the repeater name",
+  "discoveredContacts_discoveryFailed": "Failed to discover devices: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "discoveredContacts_deleteContactAllContent": "Are you sure you want to delete all discovered contacts?",
   "chat_sendCooldown": "Please wait a moment before sending again.",
   "appSettings_jumpToOldestUnread": "Jump to oldest unread",

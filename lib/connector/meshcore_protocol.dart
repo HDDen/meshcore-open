@@ -297,6 +297,7 @@ Uint8List buildDiscoveryRequestPayload(
 }
 
 const int anonReqTypeRegions = 0x01;
+const int anonReqTypeOwner = 0x02;
 
 // Repeater response codes
 const int respServerLoginOk = 0;

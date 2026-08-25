@@ -4673,6 +4673,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '発見されたすべての連絡先を削除';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Discover devices';
+
+  @override
+  String get discoveredContacts_requestName => 'Request name';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Failed to request the repeater name';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Failed to discover devices: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent =>
       '本当に、見つけたすべての連絡先を削除してもよろしいですか？';
 

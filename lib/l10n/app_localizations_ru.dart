@@ -4924,6 +4924,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удалить Все Обнаруженные Контакты';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Обнаружить устройства';
+
+  @override
+  String get discoveredContacts_requestName => 'Запросить имя';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Не удалось запросить имя репитера';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Не удалось обнаружить устройства: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent =>
       'Вы уверены, что хотите удалить все обнаруженные контакты?';
 

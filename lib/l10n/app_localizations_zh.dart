@@ -4566,6 +4566,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '删除所有发现的联系人';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Discover devices';
+
+  @override
+  String get discoveredContacts_requestName => 'Request name';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Failed to request the repeater name';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Failed to discover devices: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent => '您确定要删除所有发现的联系人吗？';
 
   @override

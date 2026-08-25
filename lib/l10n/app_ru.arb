@@ -1196,6 +1196,17 @@
   "common_deleteAll": "Удалить все",
   "discoveredContacts_deleteContactAllContent": "Вы уверены, что хотите удалить все обнаруженные контакты?",
   "discoveredContacts_deleteContactAll": "Удалить Все Обнаруженные Контакты",
+  "discoveredContacts_discoverDevices": "Обнаружить устройства",
+  "discoveredContacts_requestName": "Запросить имя",
+  "discoveredContacts_nameRequestFailed": "Не удалось запросить имя репитера",
+  "discoveredContacts_discoveryFailed": "Не удалось обнаружить устройства: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_guessedLocation": "Угаданное место",
   "map_showGuessedLocations": "Отобразить предполагаемые места расположения узлов",
   "connectionChoiceUsbLabel": "USB",

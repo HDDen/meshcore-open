@@ -4923,6 +4923,21 @@ class AppLocalizationsHu extends AppLocalizations {
       'Törölje az összes felfedezett névjegyet';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Discover devices';
+
+  @override
+  String get discoveredContacts_requestName => 'Request name';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Failed to request the repeater name';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Failed to discover devices: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent =>
       'Biztosan törli az összes felfedezett névjegyet?';
 

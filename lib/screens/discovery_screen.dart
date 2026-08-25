@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/zero_hop_device_discovery.dart';
 import '../l10n/l10n.dart';
 import '../l10n/contact_localization.dart';
 import '../models/contact.dart';
@@ -35,9 +36,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   ContactTypeFilter typeFilter = ContactTypeFilter.all;
   DiscoverySortOption discoverySortOption = DiscoverySortOption.lastSeen;
   Timer? _searchDebounce;
+  ZeroHopDeviceDiscovery? _deviceDiscovery;
+  bool _isDiscoveringDevices = false;
 
   @override
   void dispose() {
+    _deviceDiscovery?.cancel();
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
@@ -98,8 +102,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (_isDiscoveringDevices)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
           PopupMenuButton(
             itemBuilder: (context) => [
+              PopupMenuItem(
+                enabled: !_isDiscoveringDevices,
+                child: PopupMenuRow(
+                  icon: Icons.travel_explore,
+                  text: context.l10n.discoveredContacts_discoverDevices,
+                ),
+                onTap: () {
+                  unawaited(_discoverDevices(connector));
+                },
+              ),
               PopupMenuItem(
                 child: PopupMenuRow(
                   icon: Icons.delete,
@@ -161,6 +186,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final isChat = contact.type == advTypeChat;
+    final displayName = contact.name.trim().isEmpty
+        ? context.l10n.common_unknownDevice
+        : contact.name;
 
     return ListEntrance(
       index: index,
@@ -174,7 +202,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         child: Row(
           children: [
             AvatarCircle(
-              name: contact.name,
+              name: displayName,
               size: 42,
               color: isChat ? null : _avatarColor(contact.type),
               icon: _avatarIcon(contact.type),
@@ -187,7 +215,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 children: [
                   // 1. Name, on a line of its own
                   Text(
-                    contact.name,
+                    displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -272,6 +300,32 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
+  Future<void> _discoverDevices(MeshCoreConnector connector) async {
+    if (_isDiscoveringDevices) return;
+
+    final discovery = ZeroHopDeviceDiscovery(connector);
+    _deviceDiscovery = discovery;
+    setState(() => _isDiscoveringDevices = true);
+    try {
+      await discovery.run();
+    } catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(
+          context.l10n.discoveredContacts_discoveryFailed(error.toString()),
+        ),
+      );
+    } finally {
+      if (identical(_deviceDiscovery, discovery)) {
+        _deviceDiscovery = null;
+        if (mounted) {
+          setState(() => _isDiscoveringDevices = false);
+        }
+      }
+    }
+  }
+
   Future<void> _addDiscoveredContact(
     Contact contact,
     MeshCoreConnector connector,
@@ -316,9 +370,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               BottomSheetHeader(
-                title: contact.name,
+                title: contact.name.trim().isEmpty
+                    ? l10n.common_unknownDevice
+                    : contact.name,
                 subtitle: contact.typeLabel(l10n),
               ),
+              if (contact.type == advTypeRepeater)
+                ListTile(
+                  leading: const Icon(Icons.person_search),
+                  title: Text(l10n.discoveredContacts_requestName),
+                  onTap: () => Navigator.of(sheetContext).pop('request_name'),
+                ),
               ListTile(
                 leading: const Icon(Icons.person_add_alt_1),
                 title: Text(l10n.discoveredContacts_addContact),
@@ -344,6 +406,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     if (!mounted || action == null) return;
 
     switch (action) {
+      case 'request_name':
+        await _requestDiscoveredRepeaterName(contact, connector);
+        break;
       case 'add_contact':
         await _addDiscoveredContact(contact, connector);
         break;
@@ -360,6 +425,36 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       case 'delete_contact':
         connector.removeDiscoveredContact(contact);
         break;
+    }
+  }
+
+  Future<void> _requestDiscoveredRepeaterName(
+    Contact contact,
+    MeshCoreConnector connector,
+  ) async {
+    if (_isDiscoveringDevices || contact.type != advTypeRepeater) return;
+
+    final discovery = ZeroHopDeviceDiscovery(connector);
+    _deviceDiscovery = discovery;
+    setState(() => _isDiscoveringDevices = true);
+    try {
+      final name = await discovery.requestRepeaterName(contact.publicKey);
+      if (!mounted || (name != null && name.isNotEmpty)) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.discoveredContacts_nameRequestFailed),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.discoveredContacts_nameRequestFailed),
+      );
+    } finally {
+      if (identical(_deviceDiscovery, discovery)) {
+        _deviceDiscovery = null;
+        if (mounted) setState(() => _isDiscoveringDevices = false);
+      }
     }
   }
 

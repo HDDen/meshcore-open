@@ -613,6 +613,76 @@ class MeshCoreConnector extends ChangeNotifier {
     return List.unmodifiable(_discoveredContacts);
   }
 
+  /// Adds a full-key zero-hop discovery response to the local discovery list.
+  /// The response does not contain an advert, so existing contact details are
+  /// retained when available and otherwise a minimal entry is created.
+  void recordZeroHopDiscoveredContact({
+    required Uint8List publicKey,
+    required int type,
+    String? name,
+  }) {
+    if (publicKey.length != pubKeySize ||
+        listEquals(publicKey, _selfPublicKey)) {
+      return;
+    }
+
+    final publicKeyHex = pubKeyToHex(publicKey);
+    final now = DateTime.now();
+    final discoveredName = name?.trim() ?? '';
+    final contactIndex = _contacts.indexWhere(
+      (contact) => contact.publicKeyHex == publicKeyHex,
+    );
+    final discoveredIndex = _discoveredContacts.indexWhere(
+      (contact) => contact.publicKeyHex == publicKeyHex,
+    );
+
+    if (discoveredIndex >= 0) {
+      final existing = _discoveredContacts[discoveredIndex];
+      final known = contactIndex >= 0 ? _contacts[contactIndex] : null;
+      _discoveredContacts[discoveredIndex] = existing.copyWith(
+        name: discoveredName.isNotEmpty
+            ? discoveredName
+            : known != null && known.name.isNotEmpty
+            ? known.name
+            : existing.name,
+        type: type,
+        pathLength: 0,
+        path: Uint8List(0),
+        latitude: known?.latitude ?? existing.latitude,
+        longitude: known?.longitude ?? existing.longitude,
+        lastSeen: now,
+        isActive: known != null,
+        rawPacket: known?.rawPacket ?? existing.rawPacket,
+      );
+    } else {
+      final known = contactIndex >= 0 ? _contacts[contactIndex] : null;
+      if (_discoveredContacts.length >= _maxDiscoveredContacts) {
+        _evictStalestDiscoveredContact();
+      }
+      _discoveredContacts.add(
+        Contact(
+          publicKey: Uint8List.fromList(publicKey),
+          name: discoveredName.isNotEmpty
+              ? discoveredName
+              : known?.name ?? '',
+          type: type,
+          pathLength: 0,
+          path: Uint8List(0),
+          latitude: known?.latitude,
+          longitude: known?.longitude,
+          lastSeen: now,
+          lastMessageAt: known?.lastMessageAt,
+          hasMessages: known?.hasMessages ?? false,
+          isActive: known != null,
+          rawPacket: known?.rawPacket,
+        ),
+      );
+    }
+
+    unawaited(_persistDiscoveredContacts());
+    notifyListeners();
+  }
+
   List<Channel> get channels => List.unmodifiable(_channels);
   bool get isConnected => _state == MeshCoreConnectionState.connected;
   bool get isOfflineMode => _isOfflineMode;

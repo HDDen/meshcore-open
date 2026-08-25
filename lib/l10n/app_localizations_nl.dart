@@ -4908,6 +4908,21 @@ class AppLocalizationsNl extends AppLocalizations {
       'Verwijder alle ontdekte contacten';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Discover devices';
+
+  @override
+  String get discoveredContacts_requestName => 'Request name';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Failed to request the repeater name';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Failed to discover devices: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent =>
       'Weet u zeker dat u alle ontdekte contacten wilt verwijderen?';
 

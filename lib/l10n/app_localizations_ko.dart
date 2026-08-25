@@ -4678,6 +4678,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '발견된 모든 연락처 삭제';
 
   @override
+  String get discoveredContacts_discoverDevices => 'Discover devices';
+
+  @override
+  String get discoveredContacts_requestName => 'Request name';
+
+  @override
+  String get discoveredContacts_nameRequestFailed =>
+      'Failed to request the repeater name';
+
+  @override
+  String discoveredContacts_discoveryFailed(String error) {
+    return 'Failed to discover devices: $error';
+  }
+
+  @override
   String get discoveredContacts_deleteContactAllContent =>
       '정말로 모든 검색된 연락처를 삭제하시겠습니까?';
 

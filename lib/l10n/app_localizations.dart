@@ -8434,6 +8434,30 @@ abstract class AppLocalizations {
   /// **'Delete All Discovered Contacts'**
   String get discoveredContacts_deleteContactAll;
 
+  /// No description provided for @discoveredContacts_discoverDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover devices'**
+  String get discoveredContacts_discoverDevices;
+
+  /// No description provided for @discoveredContacts_requestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Request name'**
+  String get discoveredContacts_requestName;
+
+  /// No description provided for @discoveredContacts_nameRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to request the repeater name'**
+  String get discoveredContacts_nameRequestFailed;
+
+  /// No description provided for @discoveredContacts_discoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to discover devices: {error}'**
+  String discoveredContacts_discoveryFailed(String error);
+
   /// No description provided for @discoveredContacts_deleteContactAllContent.
   ///
   /// In en, this message translates to:
