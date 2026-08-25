@@ -14,6 +14,7 @@ typedef ChatMessageListBuilder =
 
 class JumpToBottomButton extends StatefulWidget {
   final ChatScrollController scrollController;
+  final VoidCallback? onJumpToBottom;
 
   static const double buttonRightInset = 16;
   static const double buttonBottomInset = 16;
@@ -21,7 +22,11 @@ class JumpToBottomButton extends StatefulWidget {
   static const double smallButtonExtent = 40;
   static const double messageListGap = 8;
 
-  const JumpToBottomButton({super.key, required this.scrollController});
+  const JumpToBottomButton({
+    super.key,
+    required this.scrollController,
+    this.onJumpToBottom,
+  });
 
   static double reservedMessageListPadding({
     required bool showJumpToBottomButton,
@@ -124,7 +129,9 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
             children: [
               if (show)
                 roundButton(
-                  onTap: widget.scrollController.jumpToBottom,
+                  onTap:
+                      widget.onJumpToBottom ??
+                      widget.scrollController.jumpToBottom,
                   icon: Icons.keyboard_arrow_down,
                 ),
               if (show && showHideKeyboardButton)

@@ -167,7 +167,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String? _highlightedMessageId;
   int _highlightSequence = 0;
   int _messageScrollGeneration = 0;
-  String? _replyReturnMessageId;
+  final List<String> _replyReturnMessageIds = [];
+  bool _replyReturnNavigationInProgress = false;
 
   MeshCoreConnector? _connector;
   StreamSubscription<void>? _mcmpSigningFailedSubscription;
@@ -845,9 +846,35 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     if (!mounted || !didScroll || resolvedMessageId == reply.messageId) return;
 
-    // Escape returns from the quoted message back to the bubble that opened it.
-    _replyReturnMessageId = reply.messageId;
+    // Each quoted-message jump adds its source to the return path. This lets
+    // the user follow a chain of nested replies and walk back through it.
+    _replyReturnMessageIds.add(reply.messageId);
     _screenFocusNode.requestFocus();
+  }
+
+  Future<bool> _returnFromReplyNavigation() async {
+    if (_replyReturnMessageIds.isEmpty) return false;
+    if (_replyReturnNavigationInProgress) return true;
+    _replyReturnNavigationInProgress = true;
+    try {
+      while (_replyReturnMessageIds.isNotEmpty) {
+        final returnMessageId = _replyReturnMessageIds.removeLast();
+        final didReturn = await _scrollToMessage(
+          returnMessageId,
+          highlightOnSuccess: true,
+        );
+        if (didReturn || !mounted) return didReturn;
+      }
+      return false;
+    } finally {
+      _replyReturnNavigationInProgress = false;
+    }
+  }
+
+  Future<void> _handleJumpToBottom() async {
+    if (await _returnFromReplyNavigation() || !mounted) return;
+    _cancelMessageScrollStabilization();
+    _scrollController.jumpToBottom();
   }
 
   Widget _channelIcon(Channel channel) {
@@ -1189,7 +1216,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             );
                           },
                         ),
-                        JumpToBottomButton(scrollController: _scrollController),
+                        JumpToBottomButton(
+                          scrollController: _scrollController,
+                          onJumpToBottom: () =>
+                              unawaited(_handleJumpToBottom()),
+                        ),
                       ],
                     );
                   },
@@ -1272,15 +1303,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _handleEscapeNavigation() async {
-    final returnMessageId = _replyReturnMessageId;
-    if (returnMessageId != null) {
-      _replyReturnMessageId = null;
-      final didReturn = await _scrollToMessage(
-        returnMessageId,
-        highlightOnSuccess: true,
-      );
-      if (didReturn || !mounted) return;
-    }
+    if (await _returnFromReplyNavigation() || !mounted) return;
 
     ChatKeyboardNavigationHistory.rememberChannel(widget.channel);
     final navigator = Navigator.of(context);
