@@ -4274,6 +4274,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pathTrace_refreshTooltip => '경로 추적 재시작';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation => '홉 중 하나 또는 여러 개에 위치 정보가 누락되었습니다!';
 
   @override

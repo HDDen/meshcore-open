@@ -4487,6 +4487,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Обновить трассировку пути.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Хоп подтвержден, эхо не услышано напрямую';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'У одного или нескольких хопов не указано местоположение!';
 

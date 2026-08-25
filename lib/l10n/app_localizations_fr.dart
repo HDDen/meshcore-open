@@ -4515,6 +4515,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Actualiser le traçage du chemin';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Un ou plusieurs des sauts manquent d\'une localisation !';
 

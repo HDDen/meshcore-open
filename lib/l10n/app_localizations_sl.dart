@@ -4470,6 +4470,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Osveži Path Trace.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Ena ali več hmelju manjka lokacija!';
 

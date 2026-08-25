@@ -4498,6 +4498,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Обнови проследяването на пътя.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Един или повече от хмелите липсва местоположение!';
 

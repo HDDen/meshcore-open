@@ -280,6 +280,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
           flipPathAround: true,
           targetContact: contact,
           pathHashByteWidth: connector.pathHashByteWidth,
+          revealMapManually: true,
         ),
       ),
     );

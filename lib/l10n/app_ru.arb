@@ -917,6 +917,7 @@
   "pathTrace_failed": "Путь трассировки не выполнен.",
   "pathTrace_notAvailable": "Трассировка пути недоступна.",
   "pathTrace_refreshTooltip": "Обновить трассировку пути.",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Хоп подтвержден, эхо не услышано напрямую",
   "contacts_pathTrace": "Трассировка пути",
   "contacts_ping": "Пинговать",
   "contacts_repeaterPathTrace": "Отследить путь к ретранслятору",

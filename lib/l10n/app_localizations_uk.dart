@@ -4495,6 +4495,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Оновити трасування шляху';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Один або декілька переходів не мають даних про геопозицію!';
 

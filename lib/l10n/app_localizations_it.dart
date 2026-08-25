@@ -4502,6 +4502,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Aggiorna tracciamento percorso.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Uno o più hop non hanno una posizione!';
 

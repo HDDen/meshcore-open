@@ -4423,6 +4423,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Refresh Path Trace.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'One or more of the hops is missing a location!';
 

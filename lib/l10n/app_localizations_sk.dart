@@ -4472,6 +4472,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Obnoviť Path Trace.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Jedna alebo viac chmeľov chýba lokalita!';
 

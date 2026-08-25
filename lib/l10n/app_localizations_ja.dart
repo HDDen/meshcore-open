@@ -4268,6 +4268,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'パスの追跡をリフレッシュする。';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation => 'ホップの1つまたは複数について、場所が特定されていません。';
 
   @override

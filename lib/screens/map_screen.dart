@@ -6351,6 +6351,7 @@ class _MapScreenState extends State<MapScreen>
           flipPathAround: flipPathAround,
           pathHashByteWidth: hashW,
           pathContacts: _pathTraceContacts,
+          revealMapManually: true,
         ),
       ),
     );

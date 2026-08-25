@@ -4186,6 +4186,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathTrace_refreshTooltip => '刷新路径追踪';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation => '某些跳缺少位置信息！';
 
   @override

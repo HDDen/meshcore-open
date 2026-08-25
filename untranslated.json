@@ -1,5 +1,6 @@
 {
   "bg": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -11,6 +12,7 @@
   ],
 
   "de": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -22,6 +24,7 @@
   ],
 
   "es": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -33,6 +36,7 @@
   ],
 
   "fr": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -44,6 +48,7 @@
   ],
 
   "hu": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -55,6 +60,7 @@
   ],
 
   "it": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -66,6 +72,7 @@
   ],
 
   "ja": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -77,6 +84,7 @@
   ],
 
   "ko": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -88,6 +96,7 @@
   ],
 
   "nl": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -99,6 +108,7 @@
   ],
 
   "pl": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -110,6 +120,7 @@
   ],
 
   "pt": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -121,6 +132,7 @@
   ],
 
   "sk": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -132,6 +144,7 @@
   ],
 
   "sl": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -143,6 +156,7 @@
   ],
 
   "sv": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -154,6 +168,7 @@
   ],
 
   "uk": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",
@@ -165,6 +180,7 @@
   ],
 
   "zh": [
+    "pathTrace_hopConfirmedNoDirectEchoTooltip",
     "discoveredContacts_discoverDevices",
     "discoveredContacts_requestName",
     "discoveredContacts_nameRequestFailed",

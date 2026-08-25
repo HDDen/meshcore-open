@@ -63,6 +63,7 @@ class PathTraceMapScreen extends StatefulWidget {
   final Contact? targetContact;
   final int pathHashByteWidth;
   final List<Contact>? pathContacts;
+  final bool revealMapManually;
 
   const PathTraceMapScreen({
     super.key,
@@ -74,6 +75,7 @@ class PathTraceMapScreen extends StatefulWidget {
     this.targetContact,
     this.pathHashByteWidth = pathHashSize,
     this.pathContacts,
+    this.revealMapManually = false,
   });
 
   @override
@@ -106,6 +108,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   /// True between sending the trace command and receiving its RESP_CODE_SENT.
   bool _awaitingTraceSent = false;
   bool _hasData = false;
+  bool _mapRevealed = false;
   PathTraceData? _traceData;
   // Inferred positions for hops that have no GPS location, keyed by hop prefix.
   Map<String, LatLng> _inferredHopPositions = {};
@@ -443,6 +446,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         _isLoading = true;
         _failed2Loaded = false;
         _hasData = false;
+        _mapRevealed = false;
         _traceData = null;
         _traceProgressTracker = null;
         _traceObservations = const [];
@@ -1166,8 +1170,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         final isImperial = settings.unitSystem == UnitSystem.imperial;
         final tileCache = context.read<MapTileCacheService>();
         final scheme = Theme.of(context).colorScheme;
+        final showMap =
+            _hasData && (!widget.revealMapManually || _mapRevealed);
+        final showMapButton =
+            _hasData && widget.revealMapManually && !_mapRevealed;
 
-        return Scaffold(
+        final screen = Scaffold(
           appBar: AppBar(
             title: Text(widget.title),
             centerTitle: true,
@@ -1189,13 +1197,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             top: false,
             child: Stack(
               children: [
-                if (!_hasData)
-                  _buildLiveTraceStatus(scheme),
-                if (_hasData)
+                if (!showMap)
+                  _buildLiveTraceStatus(
+                    scheme,
+                    bottomPadding: showMapButton ? 80 : 16,
+                  ),
+                if (showMap)
                   _buildMapPathTrace(context, tileCache, _targetContact),
-                if (_hasData && _isDesktopPlatform(defaultTargetPlatform))
+                if (showMap && _isDesktopPlatform(defaultTargetPlatform))
                   _buildDesktopMapControls(),
-                if (_hasData && _displayPaths.length > 1)
+                if (showMap && _displayPaths.length > 1)
                   PathViewModeToggle(
                     mode: _viewMode,
                     onChanged: (mode) => setState(() => _viewMode = mode),
@@ -1220,11 +1231,34 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                       ),
                     ),
                   ),
-                if (_hasData)
+                if (showMap)
                   _buildBottomPanel(context, _traceData!, isImperial),
+                if (showMapButton)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: FilledButton(
+                          onPressed: () => setState(() => _mapRevealed = true),
+                          child: Text(context.l10n.channelPath_viewMap),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
+        );
+        if (!widget.revealMapManually) return screen;
+        return PopScope(
+          canPop: !showMap,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop || !showMap) return;
+            setState(() => _mapRevealed = false);
+          },
+          child: screen,
         );
       },
     );
@@ -1987,7 +2021,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     );
   }
 
-  Widget _buildLiveTraceStatus(ColorScheme scheme) {
+  Widget _buildLiveTraceStatus(
+    ColorScheme scheme, {
+    double bottomPadding = 16,
+  }) {
     final tracker = _traceProgressTracker;
     final total = tracker?.totalStages ?? 0;
     final completed = _traceObservations.fold<int>(
@@ -2003,11 +2040,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
       child: Column(
         children: [
           const SizedBox(height: 26),
-          if (_isLoading) ...[
+          if (_isLoading && !widget.revealMapManually) ...[
             CircularProgressIndicator(color: MeshPalette.blue),
             const SizedBox(height: 12),
           ],
@@ -2107,16 +2144,19 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
     return ListTile(
       dense: true,
-      leading: Icon(
-        directObservations.isEmpty
-            ? Icons.check_circle_outline
-            : isReturnPath
-            ? Icons.call_received
-            : Icons.call_made,
-        color: directObservations.isEmpty
-            ? MeshPalette.ink3On(brightness)
-            : routeSnrUi.color,
-      ),
+      leading: directObservations.isEmpty
+          ? Tooltip(
+              message:
+                  context.l10n.pathTrace_hopConfirmedNoDirectEchoTooltip,
+              child: Icon(
+                Icons.check_circle_outline,
+                color: MeshPalette.ink3On(brightness),
+              ),
+            )
+          : Icon(
+              isReturnPath ? Icons.call_received : Icons.call_made,
+              color: routeSnrUi.color,
+            ),
       title: Text(
         '${context.l10n.pathMap_hopOf(stageNumber, latestObservation.totalStages)} · $relayLabel',
         maxLines: 1,

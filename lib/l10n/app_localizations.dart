@@ -7766,6 +7766,12 @@ abstract class AppLocalizations {
   /// **'Refresh Path Trace.'**
   String get pathTrace_refreshTooltip;
 
+  /// No description provided for @pathTrace_hopConfirmedNoDirectEchoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop confirmed; echo not heard directly'**
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip;
+
   /// No description provided for @pathTrace_someHopsNoLocation.
   ///
   /// In en, this message translates to:

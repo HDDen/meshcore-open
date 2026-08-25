@@ -4492,6 +4492,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Path Trace frissítése.';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'Egy vagy több komló helye hiányzik!';
 

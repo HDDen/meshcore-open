@@ -4455,6 +4455,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pathTrace_refreshTooltip => 'Uppdatera Path Trace';
 
   @override
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
+      'Hop confirmed; echo not heard directly';
+
+  @override
   String get pathTrace_someHopsNoLocation =>
       'En eller flera av humlen saknar en plats!';
 

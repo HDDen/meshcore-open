@@ -2512,6 +2512,7 @@
   "pathTrace_failed": "Path trace failed.",
   "pathTrace_notAvailable": "Path trace not available.",
   "pathTrace_refreshTooltip": "Refresh Path Trace.",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Hop confirmed; echo not heard directly",
   "pathTrace_someHopsNoLocation": "One or more of the hops is missing a location!",
   "pathTrace_clearTooltip": "Clear path.",
   "losSelectStartEnd": "Select start and end nodes for LOS.",
