@@ -146,6 +146,8 @@ class _MapScreenState extends State<MapScreen>
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
+  OverlayEntry? _pathTraceCancelledOverlay;
+  Timer? _pathTraceCancelledOverlayTimer;
   // Start point of the trace (self position), kept so the auxiliary map state
   // can be rebuilt after a manual edit of the hop list.
   LatLng? _pathTraceStart;
@@ -257,6 +259,7 @@ class _MapScreenState extends State<MapScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _removePathTraceCancelledOverlay();
     _searchController.dispose();
     _searchFocus.dispose();
     _pathEditController.dispose();
@@ -6470,9 +6473,8 @@ class _MapScreenState extends State<MapScreen>
                             _points.clear();
                             _polylines.clear();
                           });
-                          showDismissibleSnackBar(
-                            context,
-                            content: Text(l10n.map_pathTraceCancelled),
+                          _showPathTraceCancelledOverlay(
+                            l10n.map_pathTraceCancelled,
                           );
                         },
                         tooltip: l10n.common_cancel,
@@ -6486,6 +6488,61 @@ class _MapScreenState extends State<MapScreen>
         ),
       ),
     );
+  }
+
+  void _showPathTraceCancelledOverlay(String message) {
+    _removePathTraceCancelledOverlay();
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (overlayContext) {
+        final theme = Theme.of(overlayContext);
+        final bottomInset = MediaQuery.paddingOf(overlayContext).bottom;
+        return Positioned(
+          left: 20,
+          right: 20,
+          bottom: bottomInset + 72,
+          child: Material(
+            color: theme.colorScheme.surfaceContainerHigh,
+            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(MeshRadii.md),
+            ),
+            clipBehavior: Clip.hardEdge,
+            child: InkWell(
+              onTap: _removePathTraceCancelledOverlay,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                child: Text(
+                  message,
+                  style: theme.snackBarTheme.contentTextStyle,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    _pathTraceCancelledOverlay = entry;
+    overlay.insert(entry);
+    _pathTraceCancelledOverlayTimer = Timer(
+      const Duration(seconds: 4),
+      _removePathTraceCancelledOverlay,
+    );
+  }
+
+  void _removePathTraceCancelledOverlay() {
+    _pathTraceCancelledOverlayTimer?.cancel();
+    _pathTraceCancelledOverlayTimer = null;
+    final entry = _pathTraceCancelledOverlay;
+    _pathTraceCancelledOverlay = null;
+    if (entry != null && entry.mounted) entry.remove();
   }
 }
 

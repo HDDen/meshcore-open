@@ -8,6 +8,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
+import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
+import 'package:meshcore_open/helpers/signal_reading_text.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -93,6 +95,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
   final MapController _mapController = MapController();
+  final ScrollController _traceObservationScrollController =
+      ScrollController();
   StreamSubscription<Uint8List>? _frameSubscription;
   Timer? _timeoutTimer;
 
@@ -122,6 +126,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   // Live path resolved at trace time; used by the response handler for
   // endpoint inference so it matches the path that was actually traced.
   Uint8List _tracedPath = Uint8List(0);
+  PathTraceProgressTracker? _traceProgressTracker;
+  List<PathTraceObservation> _traceObservations = const [];
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -230,6 +236,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     _pathHistory?.removeListener(_onPathHistoryChanged);
     _playback.dispose();
     _mapController.dispose();
+    _traceObservationScrollController.dispose();
     _frameSubscription?.cancel();
     _timeoutTimer?.cancel();
     super.dispose();
@@ -427,11 +434,18 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Future<void> _doPathTrace() async {
     _playback.stop();
     _timeoutTimer?.cancel();
+    if (_traceObservationScrollController.hasClients) {
+      _traceObservationScrollController.jumpTo(0);
+    }
     _awaitingTraceSent = false;
     if (mounted) {
       setState(() {
         _isLoading = true;
         _failed2Loaded = false;
+        _hasData = false;
+        _traceData = null;
+        _traceProgressTracker = null;
+        _traceObservations = const [];
       });
     }
 
@@ -495,6 +509,17 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       ..[2] = (sentTag >> 16) & 0xFF
       ..[3] = (sentTag >> 24) & 0xFF;
 
+    final traceStageCount = path.length ~/ traceHashByteWidth;
+    _traceProgressTracker = PathTraceProgressTracker(
+      expectedTag: _sentTagBytes!,
+      route: path,
+      hashWidth: traceHashByteWidth,
+      outboundStages: widget.flipPathAround
+          ? (traceStageCount + 1) ~/ 2
+          : traceStageCount,
+      startedAt: DateTime.now(),
+    );
+
     final flags = _traceFlagsForHashWidth(traceHashByteWidth);
     final settings = context.read<AppSettingsService>().settings;
     if (settings.pathTraceHighTimeoutEnabled) {
@@ -543,6 +568,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       final frameBuffer = BufferReader(frame);
       try {
         final code = frameBuffer.readUInt8();
+
+        if (code == pushCodeLogRxData) {
+          if (!_isLoading) return;
+          final observation = _traceProgressTracker?.parse(frame);
+          if (observation == null || !mounted) return;
+          setState(() {
+            _traceObservations = [..._traceObservations, observation];
+          });
+          return;
+        }
 
         if (code == respCodeSent) {
           if (!_awaitingTraceSent || frameBuffer.remaining < 9) return;
@@ -1155,21 +1190,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             child: Stack(
               children: [
                 if (!_hasData)
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_isLoading)
-                          CircularProgressIndicator(color: MeshPalette.blue),
-                        const SizedBox(height: 16),
-                        if (!_isLoading && _failed2Loaded)
-                          Text(
-                            context.l10n.pathTrace_notAvailable,
-                            style: TextStyle(color: scheme.onSurfaceVariant),
-                          ),
-                      ],
-                    ),
-                  ),
+                  _buildLiveTraceStatus(scheme),
                 if (_hasData)
                   _buildMapPathTrace(context, tileCache, _targetContact),
                 if (_hasData && _isDesktopPlatform(defaultTargetPlatform))
@@ -1912,6 +1933,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         itemCount: pathTraceData.pathData.length + 1,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
+          final observations = _traceObservations
+              .where((observation) => observation.stageNumber == index + 1)
+              .toList(growable: false);
           final snrUi = snrUiFromSNR(
             index < pathTraceData.snrData.length
                 ? pathTraceData.snrData[index]
@@ -1932,13 +1956,21 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                 color: MeshPalette.inkOn(brightness),
               ),
             ),
-            subtitle: Text(
-              formatDirectionSubText(pathTraceData, index),
-              style: MeshTheme.mono(
-                fontSize: 12,
-                color: MeshPalette.ink3On(brightness),
-              ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formatDirectionSubText(pathTraceData, index),
+                  style: MeshTheme.mono(
+                    fontSize: 12,
+                    color: MeshPalette.ink3On(brightness),
+                  ),
+                ),
+                for (final observation in observations)
+                  _buildLocalObservationLine(observation, brightness),
+              ],
             ),
+            isThreeLine: observations.isNotEmpty,
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1953,6 +1985,231 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         },
       ),
     );
+  }
+
+  Widget _buildLiveTraceStatus(ColorScheme scheme) {
+    final tracker = _traceProgressTracker;
+    final total = tracker?.totalStages ?? 0;
+    final completed = _traceObservations.fold<int>(
+      0,
+      (value, observation) => max(value, observation.stageNumber),
+    );
+    final progress = total == 0 ? null : completed / total;
+    final brightness = Theme.of(context).brightness;
+    final furthestObservation = _traceObservations.isEmpty
+        ? null
+        : _traceObservations.reduce(
+            (a, b) => a.stageNumber >= b.stageNumber ? a : b,
+          );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 26),
+          if (_isLoading) ...[
+            CircularProgressIndicator(color: MeshPalette.blue),
+            const SizedBox(height: 12),
+          ],
+          if (total > 0) ...[
+            Text(
+              context.l10n.pathMap_hopOf(completed, total),
+              style: MeshTheme.mono(
+                fontWeight: FontWeight.w600,
+                color: MeshPalette.inkOn(brightness),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: LinearProgressIndicator(value: progress),
+            ),
+            if (tracker != null && total > tracker.outboundStages) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.call_made, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${min(completed, tracker.outboundStages)}/${tracker.outboundStages}',
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.call_received, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${max(0, completed - tracker.outboundStages)}/${total - tracker.outboundStages}',
+                  ),
+                ],
+              ),
+            ],
+          ],
+          if (!_isLoading && _failed2Loaded) ...[
+            const SizedBox(height: 12),
+            Text(
+              context.l10n.pathTrace_notAvailable,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ],
+          const SizedBox(height: 12),
+          if (completed > 0 && furthestObservation != null)
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Scrollbar(
+                    controller: _traceObservationScrollController,
+                    thumbVisibility: true,
+                    child: ListView.separated(
+                      controller: _traceObservationScrollController,
+                      itemCount: completed,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) => _buildLiveStageTile(
+                        index + 1,
+                        furthestObservation,
+                        brightness,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (completed == 0) const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveStageTile(
+    int stageNumber,
+    PathTraceObservation latestObservation,
+    Brightness brightness,
+  ) {
+    final tracker = _traceProgressTracker!;
+    final relayHash = _traceHopForStage(tracker, stageNumber);
+    final previousHopHash = stageNumber > 1
+        ? _traceHopForStage(tracker, stageNumber - 1)
+        : null;
+    final directObservations = _traceObservations
+        .where((observation) => observation.stageNumber == stageNumber)
+        .toList(growable: false);
+    final routeSnr = latestObservation.accumulatedRouteSnr[stageNumber - 1];
+    final routeSnrUi = snrUiFromSNR(
+      routeSnr,
+      context.read<MeshCoreConnector>().currentSf,
+    );
+    final previous = previousHopHash == null
+        ? context.l10n.pathTrace_you
+        : _compactTraceHop(previousHopHash);
+    final relay = _compactTraceHop(relayHash);
+    final relayLabel = _traceHopLabel(relayHash);
+    final isReturnPath = stageNumber > latestObservation.outboundStages;
+
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        directObservations.isEmpty
+            ? Icons.check_circle_outline
+            : isReturnPath
+            ? Icons.call_received
+            : Icons.call_made,
+        color: directObservations.isEmpty
+            ? MeshPalette.ink3On(brightness)
+            : routeSnrUi.color,
+      ),
+      title: Text(
+        '${context.l10n.pathMap_hopOf(stageNumber, latestObservation.totalStages)} · $relayLabel',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: MeshTheme.mono(
+          fontSize: 13,
+          color: MeshPalette.inkOn(brightness),
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              style: MeshTheme.mono(
+                fontSize: 11,
+                color: MeshPalette.ink3On(brightness),
+              ),
+              children: [
+                TextSpan(text: '$previous → $relay  '),
+                TextSpan(
+                  text: '${routeSnr.toStringAsFixed(1)}dB',
+                  style: TextStyle(color: routeSnrUi.color),
+                ),
+              ],
+            ),
+          ),
+          for (final observation in directObservations)
+            _buildLocalObservationLine(observation, brightness),
+        ],
+      ),
+      isThreeLine: directObservations.isNotEmpty,
+    );
+  }
+
+  Uint8List _traceHopForStage(
+    PathTraceProgressTracker tracker,
+    int stageNumber,
+  ) {
+    final offset = (stageNumber - 1) * tracker.hashWidth;
+    return Uint8List.fromList(
+      tracker.route.sublist(offset, offset + tracker.hashWidth),
+    );
+  }
+
+  Widget _buildLocalObservationLine(
+    PathTraceObservation observation,
+    Brightness brightness,
+  ) {
+    final relay = _compactTraceHop(observation.relayHash);
+    final timing = _formatTraceTiming(observation);
+    return Text.rich(
+      TextSpan(
+        style: MeshTheme.mono(
+          fontSize: 10.5,
+          color: MeshPalette.ink3On(brightness),
+        ),
+        children: [
+          TextSpan(text: '$relay → ${context.l10n.pathTrace_you}  '),
+          ...signalReadingSpans(
+            snr: observation.localSnr,
+            rssi: observation.localRssi,
+            spreadingFactor: context.read<MeshCoreConnector>().currentSf,
+            afterHopList: false,
+          ),
+          TextSpan(text: '  ·  $timing'),
+        ],
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  String _traceHopLabel(Uint8List hop) {
+    final connector = context.read<MeshCoreConnector>();
+    final contact = _contactForHop(hop, connector);
+    final hex = PathHelper.formatHopHex(hop);
+    return contact == null ? hex : '$hex: ${contact.name}';
+  }
+
+  String _compactTraceHop(Uint8List hop) => PathHelper.formatHopHex(hop);
+
+  String _formatTraceTiming(PathTraceObservation observation) {
+    final elapsed = _formatTraceDuration(observation.elapsed);
+    final delta = observation.sincePreviousObservation;
+    if (delta == null) return '+$elapsed';
+    return '+$elapsed  Δ${_formatTraceDuration(delta)}';
+  }
+
+  String _formatTraceDuration(Duration duration) {
+    final milliseconds = max(0, duration.inMilliseconds);
+    if (milliseconds < 1000) return '${milliseconds}ms';
+    return '${(milliseconds / 1000).toStringAsFixed(2)}s';
   }
 
   Widget _buildGenericHopList(
@@ -1982,6 +2239,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           String title;
           String subtitle;
           Widget? trailing;
+          final observations = path.isPrimary
+              ? _traceObservations
+                    .where(
+                      (observation) => observation.stageNumber == index + 1,
+                    )
+                    .toList(growable: false)
+              : const <PathTraceObservation>[];
           if (index < path.hopBytes.length) {
             final hop = path.hopBytes[index];
             final hex = PathHelper.formatHopHex(hop);
@@ -2052,13 +2316,21 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                 color: MeshPalette.inkOn(brightness),
               ),
             ),
-            subtitle: Text(
-              subtitle,
-              style: MeshTheme.mono(
-                fontSize: 11,
-                color: MeshPalette.ink3On(brightness),
-              ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  subtitle,
+                  style: MeshTheme.mono(
+                    fontSize: 11,
+                    color: MeshPalette.ink3On(brightness),
+                  ),
+                ),
+                for (final observation in observations)
+                  _buildLocalObservationLine(observation, brightness),
+              ],
             ),
+            isThreeLine: observations.isNotEmpty,
             trailing: trailing,
           );
         },
