@@ -1659,11 +1659,10 @@ class _ChannelMessagePathMapScreenState
     return markers;
   }
 
-  /// Orients recorded path bytes in the direction the packet traveled.
+  /// Normalizes legacy incoming direct-message paths for display.
+  /// Channel paths are already stored in their display order.
   Uint8List _orientPath(Uint8List bytes, int hashByteWidth) {
-    final reverse =
-        (!widget.message.isOutgoing && !widget.channelMessage) ||
-        (widget.message.isOutgoing && widget.channelMessage);
+    final reverse = !widget.message.isOutgoing && !widget.channelMessage;
     return _orientPathBytes(bytes, hashByteWidth, reverse: reverse);
   }
 
