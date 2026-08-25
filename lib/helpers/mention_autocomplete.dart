@@ -144,9 +144,9 @@ class MentionAutocomplete {
     );
   }
 
-  /// Contacts matching [filter], alphabetically and with no name twice. An
-  /// empty filter lists them all, which is what the user sees the moment they
-  /// type `@`.
+  /// Contacts whose names start with [filter], alphabetically and with no name
+  /// twice. An empty filter lists them all, which is what the user sees the
+  /// moment they type `@`.
   ///
   /// Callers pass the node's own contacts together with the nodes the app has
   /// merely heard advertise, so somebody can be addressed before they have
@@ -176,7 +176,7 @@ class MentionAutocomplete {
       final name = contact.name.trim();
       if (name.isEmpty) continue;
       final lowered = name.toLowerCase();
-      if (needle.isNotEmpty && !lowered.contains(needle)) continue;
+      if (needle.isNotEmpty && !lowered.startsWith(needle)) continue;
       if (excludeKeyHex != null && contact.publicKeyHex == excludeKeyHex) {
         continue;
       }
