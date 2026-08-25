@@ -64,10 +64,13 @@ class WardriveStatusPanel extends StatelessWidget {
     final recent = wardrive.recentDiscoveries;
     return Positioned(
       left: 16,
+      right: collapsed ? null : 74,
       bottom: 16,
       child: ConstrainedBox(
         key: panelKey,
-        constraints: const BoxConstraints(maxWidth: 300),
+        constraints: collapsed
+            ? const BoxConstraints(maxWidth: 300)
+            : const BoxConstraints(),
         child: Material(
           elevation: 4,
           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
@@ -573,40 +576,50 @@ class WardriveStatusPanel extends StatelessWidget {
             if (repeaterName != null)
               Text(
                 repeaterName,
-                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: ignoredStyle?.color,
                 ),
               ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _getNodeIcon(result.nodeType),
-                  size: 16,
-                  color: ignoredStyle?.color ?? _getNodeColor(result.nodeType),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 64,
-                  child: Text(
-                    result.publicKeyPrefix,
-                    overflow: TextOverflow.ellipsis,
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getNodeIcon(result.nodeType),
+                        size: 16,
+                        color:
+                            ignoredStyle?.color ??
+                            _getNodeColor(result.nodeType),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 64,
+                        child: Text(
+                          result.publicKeyPrefix,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: ignoredStyle?.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
                       color: ignoredStyle?.color,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'SNR ${result.snr} / RSSI ${result.rssi}$responseTime',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: ignoredStyle?.color),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
