@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
@@ -39,6 +40,7 @@ import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
+import '../helpers/contact_action_data_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
@@ -57,6 +59,7 @@ import '../theme/mesh_theme.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/repeater_login_dialog.dart';
+import '../widgets/repeater_options_sheet.dart';
 import '../widgets/room_login_dialog.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
@@ -4638,10 +4641,7 @@ class _MapScreenState extends State<MapScreen>
         return [
           action(context.l10n.map_manageRepeater, Icons.cell_tower, () {
             if (_blockMapActionIfOffline(connector)) return;
-            if (!contact.isActive) {
-              connector.importDiscoveredContact(contact);
-            }
-            _showRepeaterLogin(context, contact);
+            _showRepeaterActions(context, contact, connector);
           }),
           action(
             coverageVisible
@@ -4985,6 +4985,225 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  void _showRepeaterActions(
+    BuildContext context,
+    Contact repeater,
+    MeshCoreConnector connector,
+  ) {
+    final wardrive = context.read<WardriveService>();
+    showRepeaterOptionsSheet(
+      context: context,
+      repeater: repeater,
+      onPing: () {
+        final hashByteWidth = connector.pathHashByteWidth;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PathTraceMapScreen(
+              title: context.l10n.contacts_repeaterPing,
+              path: repeater.pathBytesForDisplay.isNotEmpty
+                  ? repeater.pathBytesForDisplay
+                  : _contactPathPrefix(repeater, hashByteWidth),
+              flipPathAround: true,
+              targetContact: repeater,
+              pathHashByteWidth: hashByteWidth,
+            ),
+          ),
+        );
+      },
+      onManage: () {
+        if (!repeater.isActive) {
+          unawaited(connector.importDiscoveredContact(repeater));
+        }
+        _showRepeaterLogin(context, repeater);
+      },
+      onToggleFavorite: () => unawaited(
+        connector.setContactFlags(
+          repeater,
+          isFavorite: !repeater.isFavorite,
+        ),
+      ),
+      extraTilesBuilder: (sheetContext) => context
+          .read<SettingsSectionsService>()
+          .contactActionTiles(
+            sheetContext,
+            navigatorContext: context,
+            contactName: repeater.name,
+            contactType: repeater.type,
+            contactKeyHex: repeater.publicKeyHex,
+            spreadingFactor: connector.currentSf,
+            loadRecords: () => ContactActionDataHelper.loadChannelRecords(
+              connector,
+              includeSharedHistory: context
+                  .read<AppSettingsService>()
+                  .settings
+                  .sharedMessageHistoryMode
+                  .includesChannels,
+            ),
+            loadNodes: () => ContactActionDataHelper.nodes(connector),
+            openTrace: (pathBytes, hashByteWidth) =>
+                _openServiceTrace(context, pathBytes, hashByteWidth),
+            openEstimate: (estimate) =>
+                _openServiceEstimate(context, estimate),
+          ),
+      ignoredInWardrive: wardrive.isRepeaterIgnored(repeater.publicKeyHex),
+      onWardriveIgnoredChanged: (ignored) => unawaited(
+        wardrive.setRepeaterIgnored(repeater.publicKeyHex, ignored),
+      ),
+      onShare: () => unawaited(_exportContactFromMap(connector, repeater)),
+      onShareZeroHop: () =>
+          unawaited(_shareContactZeroHopFromMap(connector, repeater)),
+      onDelete: () => _confirmDeleteMapContact(context, connector, repeater),
+    );
+  }
+
+  Uint8List _contactPathPrefix(Contact contact, int hashByteWidth) {
+    if (contact.publicKey.isEmpty) return Uint8List(0);
+    final width = hashByteWidth
+        .clamp(1, pubKeySize)
+        .toInt()
+        .clamp(1, contact.publicKey.length)
+        .toInt();
+    return Uint8List.fromList(contact.publicKey.sublist(0, width));
+  }
+
+  Future<void> _openServiceTrace(
+    BuildContext context,
+    List<int> pathBytes,
+    int hashByteWidth,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialTracePath: Uint8List.fromList(pathBytes),
+          initialTraceHashByteWidth: hashByteWidth,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openServiceEstimate(
+    BuildContext context,
+    McoContactActionEstimate estimate,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          highlightPosition: LatLng(estimate.latitude, estimate.longitude),
+          highlightLabel: estimate.label,
+          highlightAsEstimate: true,
+          neighborFocus: NeighborMapFocus.focusedRepeaters(
+            repeaterKeys: [
+              for (final key in estimate.anchorPublicKeys)
+                pubKeyToHex(Uint8List.fromList(key)),
+            ],
+          ),
+          highlightLinks: [
+            for (var i = 0; i < estimate.anchorLatitudes.length; i++)
+              LatLng(
+                estimate.anchorLatitudes[i],
+                estimate.anchorLongitudes[i],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportContactFromMap(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) async {
+    final response = Completer<Uint8List>();
+    late final StreamSubscription<Uint8List> subscription;
+    subscription = connector.receivedFrames.listen((frame) {
+      if (frame.isEmpty || frame.first != respCodeExportContact) return;
+      if (!response.isCompleted) {
+        response.complete(Uint8List.fromList(frame.sublist(1)));
+      }
+    });
+
+    try {
+      await connector.sendFrame(
+        buildExportContactFrame(contact.publicKey),
+        waitForGenericAck: true,
+      );
+      final packet = await response.future.timeout(const Duration(seconds: 5));
+      if (packet.length < 98) {
+        throw const FormatException('Invalid exported contact packet');
+      }
+      await Clipboard.setData(
+        ClipboardData(text: 'meshcore://${pubKeyToHex(packet)}'),
+      );
+      if (!mounted) return;
+      _showMapSnackBar(
+        content: Text(context.l10n.contacts_contactAdvertCopied),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMapSnackBar(
+        content: Text(context.l10n.contacts_contactAdvertCopyFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    } finally {
+      await subscription.cancel();
+    }
+  }
+
+  Future<void> _shareContactZeroHopFromMap(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) async {
+    try {
+      await connector.sendFrame(
+        buildZeroHopContact(contact.publicKey),
+        waitForGenericAck: true,
+      );
+      if (!mounted) return;
+      _showMapSnackBar(
+        content: Text(context.l10n.contacts_zeroHopContactAdvertSent),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMapSnackBar(
+        content: Text(context.l10n.contacts_zeroHopContactAdvertFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  void _confirmDeleteMapContact(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Contact contact,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.contacts_deleteContact),
+        content: Text(context.l10n.contacts_removeConfirm(contact.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              unawaited(connector.removeContact(contact));
+            },
+            child: Text(
+              context.l10n.common_delete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showRepeaterLogin(BuildContext context, Contact repeater) {
     showDialog(
       context: context,
@@ -5073,11 +5292,11 @@ class _MapScreenState extends State<MapScreen>
             FilledButton(
               onPressed: () {
                 if (_blockMapActionIfOffline(connector)) return;
-                if (!contact.isActive) {
-                  connector.importDiscoveredContact(contact);
-                }
                 Navigator.pop(sheetContext);
-                _showRepeaterLogin(context, contact);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _showRepeaterActions(context, contact, connector);
+                });
               },
               child: Text(context.l10n.map_manageRepeater),
             ),

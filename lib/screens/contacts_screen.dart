@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
-import '../helpers/channel_path_signal_helper.dart';
+import '../helpers/contact_action_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -23,7 +23,6 @@ import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/app_settings.dart';
-import '../models/channel_message.dart';
 import '../models/contact_group.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
@@ -31,7 +30,6 @@ import '../services/wardrive_service.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/contact_search.dart';
 import '../storage/contact_group_store.dart';
-import '../storage/shared_message_history_helper.dart';
 import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/emoji_utils.dart';
@@ -44,6 +42,7 @@ import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
+import '../widgets/repeater_options_sheet.dart';
 import '../widgets/room_login_dialog.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -2117,87 +2116,13 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<List<McoContactActionMessage>> _loadServiceChannelRecords(
     MeshCoreConnector connector, {
     required bool includeSharedHistory,
-  }) async {
-    final records = <McoContactActionMessage>[];
-    final helper = SharedMessageHistoryHelper();
-    final seenChannels = <String>{};
+  }) => ContactActionDataHelper.loadChannelRecords(
+    connector,
+    includeSharedHistory: includeSharedHistory,
+  );
 
-    for (final channel in connector.channels) {
-      if (channel.isEmpty) continue;
-      final channelKey = '${channel.name.trim()}|${channel.pskHex}';
-      if (!seenChannels.add(channelKey)) continue;
-
-      final primary = connector.getLoadedChannelMessages(channel);
-      final secondary =
-          includeSharedHistory &&
-              !connector.isOfflineMode &&
-              connector.selfPublicKeyHex.isNotEmpty
-          ? await helper.loadSecondaryChannelMessages(
-              currentPublicKeyHex: connector.selfPublicKeyHex,
-              channel: channel,
-            )
-          : const <ChannelMessage>[];
-      final messages = primary.isEmpty && secondary.isNotEmpty
-          ? MeshCoreConnector.mergeChannelMessagesPreservingPrimaryOrder(
-              [secondary.first],
-              secondary.skip(1).toList(growable: false),
-            )
-          : MeshCoreConnector.mergeChannelMessagesPreservingPrimaryOrder(
-              primary,
-              secondary,
-            );
-
-      for (final message in messages) {
-        final paths = <McoContactActionPath>[];
-        final seenPaths = <String>{};
-        final variants = message.pathVariants.isNotEmpty
-            ? message.pathVariants
-            : [message.pathBytes];
-        final width = (message.pathHashWidth ?? connector.pathHashByteWidth)
-            .clamp(1, 4)
-            .toInt();
-        for (final variant in variants) {
-          if (variant.isEmpty) continue;
-          final key = variant.join(',');
-          if (!seenPaths.add(key)) continue;
-          final reading = ChannelPathSignalHelper.find(
-            message.pathObservations,
-            variant,
-          );
-          paths.add(
-            McoContactActionPath(
-              bytes: List<int>.unmodifiable(variant),
-              hashByteWidth: width,
-              snr: reading?.snr,
-              rssi: reading?.rssi,
-            ),
-          );
-        }
-        if (paths.isEmpty) continue;
-        records.add(
-          McoContactActionMessage(
-            senderName: message.senderName,
-            receivedAt: message.receivedAt,
-            isOutgoing: message.isOutgoing,
-            paths: List<McoContactActionPath>.unmodifiable(paths),
-          ),
-        );
-      }
-      await Future<void>.delayed(Duration.zero);
-    }
-    return records;
-  }
-
-  List<McoContactActionNode> _serviceNodes(MeshCoreConnector connector) => [
-    for (final node in connector.allContactsUnfiltered)
-      if (node.hasLocation)
-        McoContactActionNode(
-          publicKey: List<int>.unmodifiable(node.publicKey),
-          latitude: node.latitude!,
-          longitude: node.longitude!,
-          lastSeen: node.lastSeen,
-        ),
-  ];
+  List<McoContactActionNode> _serviceNodes(MeshCoreConnector connector) =>
+      ContactActionDataHelper.nodes(connector);
 
   Future<void> _openServiceTrace(
     BuildContext context,
@@ -2274,17 +2199,84 @@ class _ContactsScreenState extends State<ContactsScreen>
         );
   }
 
+  void _showRepeaterOptions(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Contact repeater,
+  ) {
+    final wardrive = context.read<WardriveService>();
+    showRepeaterOptionsSheet(
+      context: context,
+      repeater: repeater,
+      onPing: () {
+        final hashByteWidth = connector.pathHashByteWidth;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PathTraceMapScreen(
+              title: context.l10n.contacts_repeaterPing,
+              path: repeater.pathBytesForDisplay.isNotEmpty
+                  ? repeater.pathBytesForDisplay
+                  : _contactPathPrefix(repeater, hashByteWidth),
+              flipPathAround: true,
+              targetContact: repeater,
+              pathHashByteWidth: hashByteWidth,
+            ),
+          ),
+        );
+      },
+      onManage: () => _showRepeaterLogin(context, repeater),
+      onToggleFavorite: () => unawaited(
+        connector.setContactFlags(
+          repeater,
+          isFavorite: !repeater.isFavorite,
+        ),
+      ),
+      extraTilesBuilder: (sheetContext) => context
+          .read<SettingsSectionsService>()
+          .contactActionTiles(
+            sheetContext,
+            navigatorContext: context,
+            contactName: repeater.name,
+            contactType: repeater.type,
+            contactKeyHex: repeater.publicKeyHex,
+            spreadingFactor: connector.currentSf,
+            loadRecords: () => _loadServiceChannelRecords(
+              connector,
+              includeSharedHistory: context
+                  .read<AppSettingsService>()
+                  .settings
+                  .sharedMessageHistoryMode
+                  .includesChannels,
+            ),
+            loadNodes: () => _serviceNodes(connector),
+            openTrace: (pathBytes, hashByteWidth) =>
+                _openServiceTrace(context, pathBytes, hashByteWidth),
+            openEstimate: (estimate) =>
+                _openServiceEstimate(context, estimate),
+          ),
+      ignoredInWardrive: wardrive.isRepeaterIgnored(repeater.publicKeyHex),
+      onWardriveIgnoredChanged: (ignored) => unawaited(
+        wardrive.setRepeaterIgnored(repeater.publicKeyHex, ignored),
+      ),
+      onShare: () => unawaited(_contactExport(repeater.publicKey)),
+      onShareZeroHop: () => unawaited(_contactZeroHop(repeater.publicKey)),
+      onDelete: () => _confirmDelete(context, connector, repeater),
+    );
+  }
+
   void _showContactOptions(
     BuildContext context,
     MeshCoreConnector connector,
     Contact contact,
   ) {
     final isRepeater = contact.type == advTypeRepeater;
+    if (isRepeater) {
+      _showRepeaterOptions(context, connector, contact);
+      return;
+    }
     final isRoom = contact.type == advTypeRoom;
     final isFavorite = contact.isFavorite;
-    final wardrive = context.read<WardriveService>();
-    bool ignoredInWardrive =
-        isRepeater && wardrive.isRepeaterIgnored(contact.publicKeyHex);
     final appSettingsService = isRoom
         ? Provider.of<AppSettingsService>(context, listen: false)
         : null;
@@ -2328,40 +2320,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   title: contact.name,
                   subtitle: contact.typeLabel(context.l10n),
                 ),
-                if (isRepeater) ...[
-                  ListTile(
-                    leading: Icon(Icons.radar, color: MeshPalette.signal),
-                    title: Text(context.l10n.contacts_ping),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      final hw = context
-                          .read<MeshCoreConnector>()
-                          .pathHashByteWidth;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PathTraceMapScreen(
-                            title: context.l10n.contacts_repeaterPing,
-                            path: contact.pathBytesForDisplay.isNotEmpty
-                                ? contact.pathBytesForDisplay
-                                : _contactPathPrefix(contact, hw),
-                            flipPathAround: true,
-                            targetContact: contact,
-                            pathHashByteWidth: hw,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.cell_tower, color: MeshPalette.warn),
-                    title: Text(context.l10n.contacts_manageRepeater),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      _showRepeaterLogin(context, contact);
-                    },
-                  ),
-                ] else if (isRoom) ...[
+                if (isRoom) ...[
                   ListTile(
                     leading: Icon(Icons.radar, color: MeshPalette.signal),
                     title: Text(context.l10n.contacts_pathTrace),
@@ -2704,32 +2663,6 @@ class _ContactsScreenState extends State<ContactsScreen>
                       openEstimate: (estimate) =>
                           _openServiceEstimate(context, estimate),
                     ),
-                if (isRepeater)
-                  ListTile(
-                    leading: Icon(
-                      ignoredInWardrive
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: ignoredInWardrive
-                          ? MeshPalette.signal
-                          : Theme.of(context).colorScheme.error,
-                    ),
-                    title: Text(
-                      ignoredInWardrive
-                          ? context.l10n.listFilter_returnToWardrive
-                          : context.l10n.listFilter_removeFromWardrive,
-                    ),
-                    onTap: () async {
-                      final nextIgnoredInWardrive = !ignoredInWardrive;
-                      setSheetState(() {
-                        ignoredInWardrive = nextIgnoredInWardrive;
-                      });
-                      await wardrive.setRepeaterIgnored(
-                        contact.publicKeyHex,
-                        nextIgnoredInWardrive,
-                      );
-                    },
-                  ),
                 ListTile(
                   leading: const Icon(Icons.copy),
                   title: Text(context.l10n.contacts_ShareContact),
