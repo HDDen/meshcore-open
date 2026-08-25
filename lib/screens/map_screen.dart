@@ -5032,14 +5032,16 @@ class _MapScreenState extends State<MapScreen>
             contactType: repeater.type,
             contactKeyHex: repeater.publicKeyHex,
             spreadingFactor: connector.currentSf,
-            loadRecords: () => ContactActionDataHelper.loadChannelRecords(
-              connector,
-              includeSharedHistory: context
-                  .read<AppSettingsService>()
-                  .settings
-                  .sharedMessageHistoryMode
-                  .includesChannels,
-            ),
+            loadRecords: ({isCancelled}) =>
+                ContactActionDataHelper.loadChannelRecords(
+                  connector,
+                  includeSharedHistory: context
+                      .read<AppSettingsService>()
+                      .settings
+                      .sharedMessageHistoryMode
+                      .includesChannels,
+                  isCancelled: isCancelled,
+                ),
             loadNodes: () => ContactActionDataHelper.nodes(connector),
             openTrace: (pathBytes, hashByteWidth) =>
                 _openServiceTrace(context, pathBytes, hashByteWidth),

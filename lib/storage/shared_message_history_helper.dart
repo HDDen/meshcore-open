@@ -24,16 +24,22 @@ class SharedMessageHistoryHelper {
   Future<List<ChannelMessage>> loadSecondaryChannelMessages({
     required String currentPublicKeyHex,
     required Channel channel,
+    bool Function()? isCancelled,
   }) async {
+    bool cancelled() => isCancelled?.call() ?? false;
+
     final currentScope = scopeFor(currentPublicKeyHex);
     if (currentScope.isEmpty) return const [];
 
     final result = <ChannelMessage>[];
+    var processedMessages = 0;
     for (final scope in knownScopes()) {
+      if (cancelled()) return const [];
       if (scope == currentScope) continue;
 
       final channelStore = ChannelStore()..setPublicKeyHex = scope;
       final channels = await channelStore.loadChannels();
+      if (cancelled()) return const [];
       final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
         channels,
         name: channel.name,
@@ -47,14 +53,19 @@ class SharedMessageHistoryHelper {
         matchedIndex,
         allowLegacyMigration: false,
       );
+      if (cancelled()) return const [];
       final sourceName = _sourceNameForScope(scope);
-      result.addAll(
-        messages.map(
-          (message) => _asHistoricalChannelMessage(message, sourceName),
-        ),
-      );
+      for (final message in messages) {
+        result.add(_asHistoricalChannelMessage(message, sourceName));
+        if (++processedMessages % 200 == 0) {
+          await Future<void>.delayed(Duration.zero);
+          if (cancelled()) return const [];
+        }
+      }
     }
 
+    await Future<void>.delayed(Duration.zero);
+    if (cancelled()) return const [];
     result.sort(ChannelMessageTimelineHelper.compare);
     return result;
   }

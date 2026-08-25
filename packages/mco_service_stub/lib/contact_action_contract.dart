@@ -65,7 +65,9 @@ class McoContactActionEstimate {
 }
 
 typedef McoContactActionLoader =
-    Future<List<McoContactActionMessage>> Function();
+    Future<List<McoContactActionMessage>> Function({
+      bool Function()? isCancelled,
+    });
 typedef McoContactActionNodeLoader = List<McoContactActionNode> Function();
 typedef McoContactActionTraceOpener =
     Future<void> Function(List<int> pathBytes, int hashByteWidth);

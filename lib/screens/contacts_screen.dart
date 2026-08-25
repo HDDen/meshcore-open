@@ -2116,9 +2116,11 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<List<McoContactActionMessage>> _loadServiceChannelRecords(
     MeshCoreConnector connector, {
     required bool includeSharedHistory,
+    bool Function()? isCancelled,
   }) => ContactActionDataHelper.loadChannelRecords(
     connector,
     includeSharedHistory: includeSharedHistory,
+    isCancelled: isCancelled,
   );
 
   List<McoContactActionNode> _serviceNodes(MeshCoreConnector connector) =>
@@ -2180,13 +2182,14 @@ class _ContactsScreenState extends State<ContactsScreen>
           menuContext,
           navigatorContext: navigatorContext,
           spreadingFactor: connector.currentSf,
-          loadRecords: () => _loadServiceChannelRecords(
+          loadRecords: ({isCancelled}) => _loadServiceChannelRecords(
             connector,
             includeSharedHistory: navigatorContext
                 .read<AppSettingsService>()
                 .settings
                 .sharedMessageHistoryMode
                 .includesChannels,
+            isCancelled: isCancelled,
           ),
           loadNodes: () => _serviceNodes(connector),
           openTrace: (pathBytes, hashByteWidth) => _openServiceTrace(
@@ -2241,13 +2244,14 @@ class _ContactsScreenState extends State<ContactsScreen>
             contactType: repeater.type,
             contactKeyHex: repeater.publicKeyHex,
             spreadingFactor: connector.currentSf,
-            loadRecords: () => _loadServiceChannelRecords(
+            loadRecords: ({isCancelled}) => _loadServiceChannelRecords(
               connector,
               includeSharedHistory: context
                   .read<AppSettingsService>()
                   .settings
                   .sharedMessageHistoryMode
                   .includesChannels,
+              isCancelled: isCancelled,
             ),
             loadNodes: () => _serviceNodes(connector),
             openTrace: (pathBytes, hashByteWidth) =>
@@ -2649,14 +2653,16 @@ class _ContactsScreenState extends State<ContactsScreen>
                       contactType: contact.type,
                       contactKeyHex: contact.publicKeyHex,
                       spreadingFactor: connector.currentSf,
-                      loadRecords: () => _loadServiceChannelRecords(
-                        connector,
-                        includeSharedHistory: context
-                            .read<AppSettingsService>()
-                            .settings
-                            .sharedMessageHistoryMode
-                            .includesChannels,
-                      ),
+                      loadRecords: ({isCancelled}) =>
+                          _loadServiceChannelRecords(
+                            connector,
+                            includeSharedHistory: context
+                                .read<AppSettingsService>()
+                                .settings
+                                .sharedMessageHistoryMode
+                                .includesChannels,
+                            isCancelled: isCancelled,
+                          ),
                       loadNodes: () => _serviceNodes(connector),
                       openTrace: (pathBytes, hashByteWidth) =>
                           _openServiceTrace(context, pathBytes, hashByteWidth),

@@ -11,12 +11,16 @@ class ContactActionDataHelper {
   static Future<List<McoContactActionMessage>> loadChannelRecords(
     MeshCoreConnector connector, {
     required bool includeSharedHistory,
+    bool Function()? isCancelled,
   }) async {
+    bool cancelled() => isCancelled?.call() ?? false;
+
     final records = <McoContactActionMessage>[];
     final helper = SharedMessageHistoryHelper();
     final seenChannels = <String>{};
 
     for (final channel in connector.channels) {
+      if (cancelled()) return const [];
       if (channel.isEmpty) continue;
       final channelKey = '${channel.name.trim()}|${channel.pskHex}';
       if (!seenChannels.add(channelKey)) continue;
@@ -29,8 +33,10 @@ class ContactActionDataHelper {
           ? await helper.loadSecondaryChannelMessages(
               currentPublicKeyHex: connector.selfPublicKeyHex,
               channel: channel,
+              isCancelled: isCancelled,
             )
           : const <ChannelMessage>[];
+      if (cancelled()) return const [];
       final messages = primary.isEmpty && secondary.isNotEmpty
           ? MeshCoreConnector.mergeChannelMessagesPreservingPrimaryOrder(
               [secondary.first],
@@ -41,7 +47,9 @@ class ContactActionDataHelper {
               secondary,
             );
 
+      var processedMessages = 0;
       for (final message in messages) {
+        if (cancelled()) return const [];
         final paths = <McoContactActionPath>[];
         final seenPaths = <String>{};
         final variants = message.pathVariants.isNotEmpty
@@ -67,17 +75,23 @@ class ContactActionDataHelper {
             ),
           );
         }
-        if (paths.isEmpty) continue;
-        records.add(
-          McoContactActionMessage(
-            senderName: message.senderName,
-            receivedAt: message.receivedAt,
-            isOutgoing: message.isOutgoing,
-            paths: List<McoContactActionPath>.unmodifiable(paths),
-          ),
-        );
+        if (paths.isNotEmpty) {
+          records.add(
+            McoContactActionMessage(
+              senderName: message.senderName,
+              receivedAt: message.receivedAt,
+              isOutgoing: message.isOutgoing,
+              paths: List<McoContactActionPath>.unmodifiable(paths),
+            ),
+          );
+        }
+        if (++processedMessages % 200 == 0) {
+          await Future<void>.delayed(Duration.zero);
+          if (cancelled()) return const [];
+        }
       }
       await Future<void>.delayed(Duration.zero);
+      if (cancelled()) return const [];
     }
     return records;
   }
