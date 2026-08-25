@@ -132,6 +132,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   bool _suppressNextKeyboardOpenScroll = false;
   String _lastTextFieldText = '';
   ChannelMessage? _replyingToMessage;
+  String? _plainReplyComposerPrefix;
   List<Contact> _mentionSuggestions = const [];
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
@@ -377,6 +378,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
     _lastTextFieldText = text;
+    final replyPrefix = _plainReplyComposerPrefix;
+    if (replyPrefix != null && !text.startsWith(replyPrefix)) {
+      setState(() {
+        _plainReplyComposerPrefix = null;
+        _replyingToMessage = null;
+      });
+    }
     if (_textFieldFocusNode.hasFocus) {
       _keyboardNavigationActive = false;
     }
@@ -425,10 +433,41 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   void _setReplyingTo(ChannelMessage message) {
+    final connector = context.read<MeshCoreConnector>();
+    final settings = context.read<AppSettingsService>().settings;
+    final draft = _composerBodyText(_textController.text);
+    final showPlainReplyInComposer =
+        settings.exactQuote &&
+        !connector.channelReplyCarriesMcmpAnchor(
+          widget.channel.index,
+          draft.isEmpty ? 'x' : draft,
+        );
+    final prefix = showPlainReplyInComposer
+        ? _formatReply(
+            senderName: message.senderName,
+            text: '',
+            quotedText: message.text,
+            quotedMessageId: message.messageId,
+          )
+        : null;
+
     setState(() {
       _channelSkipNextBottomSnap = true;
       _replyingToMessage = message;
+      _plainReplyComposerPrefix = prefix;
     });
+    if (prefix != null) {
+      final value = '$prefix$draft';
+      _textController.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+    } else if (_textController.text != draft) {
+      _textController.value = TextEditingValue(
+        text: draft,
+        selection: TextSelection.collapsed(offset: draft.length),
+      );
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (!_textFieldFocusNode.hasFocus) {
@@ -440,9 +479,31 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   void _cancelReply() {
+    final draft = _composerBodyText(_textController.text);
     setState(() {
       _replyingToMessage = null;
+      _plainReplyComposerPrefix = null;
     });
+    if (_textController.text != draft) {
+      _textController.value = TextEditingValue(
+        text: draft,
+        selection: TextSelection.collapsed(offset: draft.length),
+      );
+    }
+  }
+
+  String _composerBodyText(String text) {
+    final prefix = _plainReplyComposerPrefix;
+    if (prefix != null && text.startsWith(prefix)) {
+      return text.substring(prefix.length);
+    }
+    return text;
+  }
+
+  String _composerWireText(String text) {
+    final prefix = _plainReplyComposerPrefix;
+    if (prefix != null && text.startsWith(prefix)) return text;
+    return _applyReplyMention(text);
   }
 
   void _highlightMessage(String messageId) {
@@ -3471,7 +3532,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final scheme = Theme.of(context).colorScheme;
     final maxBytes = _maxChannelComposerBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
-    final replyBannerHeight = _replyingToMessage != null
+    final showsReplyBanner =
+        _replyingToMessage != null && _plainReplyComposerPrefix == null;
+    final replyBannerHeight = showsReplyBanner
         ? (MCOImageMessage.decodeMetadata(_replyingToMessage!.text).image !=
                   null
               ? 106.0
@@ -3492,7 +3555,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         connector.isChannelCyr2LatEnabled(widget.channel.index);
 
     String encodeComposerText(String text) {
-      final sendText = _applyReplyMention(text);
+      final sendText = _composerWireText(text);
       final binaryPayloadBytes = _channelBinaryPayloadBytes(
         connector,
         sendText,
@@ -3519,7 +3582,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onSelected: _applyMentionSuggestion,
                 ),
         ),
-        if (_replyingToMessage != null)
+        if (showsReplyBanner)
           Builder(
             builder: (context) {
               final textScale = context.select<ChatTextScaleService, double>(
@@ -3661,7 +3724,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   child: ComposerTextBuilder(
                     controller: _textController,
                     builder: (context, composerText) {
-                      final hasText = composerText.trim().isNotEmpty;
+                      final hasText = _composerBodyText(
+                        composerText,
+                      ).trim().isNotEmpty;
                       return ChatComposerSendButton(
                         tooltip: context.l10n.chat_sendMessage,
                         size: 40,
@@ -3772,7 +3837,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     bool skipReplyContext = false,
     EncodedMCOImageV3? mcoImageV3,
   }) async {
-    final rawText = quickAnswerText ?? _textController.text;
+    final rawText = quickAnswerText ??
+        _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
     final connector = context.read<MeshCoreConnector>();
