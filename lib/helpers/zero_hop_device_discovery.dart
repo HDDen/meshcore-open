@@ -8,8 +8,8 @@ import '../connector/meshcore_protocol.dart';
 
 /// Runs one full-key zero-hop discovery request and records matching replies.
 class ZeroHopDeviceDiscovery {
-  static const responseWindow = Duration(seconds: 30);
-  static const ownerRequestThrottle = Duration(milliseconds: 600);
+  static const responseWindow = Duration(seconds: 60);
+  static const ownerRequestThrottle = Duration(milliseconds: 1500);
   static const ownerRequestFallbackTimeout = Duration(seconds: 10);
   static const ownerRequestTimeoutPadding = Duration(seconds: 2);
 
@@ -22,8 +22,6 @@ class ZeroHopDeviceDiscovery {
   Completer<String?>? _ownerCompletion;
   int? _tag;
   bool _cancelled = false;
-  final List<_DiscoveredRepeater> _repeatersAwaitingNames = [];
-  final Set<String> _queuedRepeaterKeys = {};
 
   ZeroHopDeviceDiscovery(this.connector);
 
@@ -57,11 +55,6 @@ class ZeroHopDeviceDiscovery {
       _framesSubscription = null;
       _responseTimer?.cancel();
       _responseTimer = null;
-
-      for (final repeater in _repeatersAwaitingNames) {
-        if (_cancelled || !connector.isConnected) break;
-        await requestRepeaterName(repeater.publicKey);
-      }
     } finally {
       await _framesSubscription?.cancel();
       _framesSubscription = null;
@@ -109,20 +102,6 @@ class ZeroHopDeviceDiscovery {
       publicKey: publicKey,
       type: flags & 0x0F,
     );
-
-    if ((flags & 0x0F) != advTypeRepeater) return;
-    final publicKeyHex = pubKeyToHex(publicKey);
-    final discoveredContacts = connector.discoveredContacts;
-    final discoveredIndex = discoveredContacts.indexWhere(
-      (contact) => contact.publicKeyHex == publicKeyHex,
-    );
-    if (discoveredIndex < 0 ||
-        discoveredContacts[discoveredIndex].name.trim().isNotEmpty) {
-      return;
-    }
-    if (_queuedRepeaterKeys.add(publicKeyHex)) {
-      _repeatersAwaitingNames.add(_DiscoveredRepeater(publicKey));
-    }
   }
 
   Future<String?> requestRepeaterName(Uint8List publicKey) async {
@@ -229,11 +208,4 @@ class ZeroHopDeviceDiscovery {
       }
     }
   }
-}
-
-class _DiscoveredRepeater {
-  final Uint8List publicKey;
-
-  _DiscoveredRepeater(Uint8List publicKey)
-    : publicKey = Uint8List.fromList(publicKey);
 }
