@@ -42,7 +42,6 @@ import '../helpers/channel_marker_styles.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
-import '../helpers/offline_mode_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../widgets/channel_marker_settings_sheet.dart';
@@ -59,7 +58,6 @@ import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
-import '../helpers/snack_bar_builder.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 import 'line_of_sight_map_screen.dart';
@@ -146,8 +144,8 @@ class _MapScreenState extends State<MapScreen>
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
   final List<Polyline> _polylines = [];
-  OverlayEntry? _pathTraceCancelledOverlay;
-  Timer? _pathTraceCancelledOverlayTimer;
+  OverlayEntry? _mapSnackBarOverlay;
+  Timer? _mapSnackBarOverlayTimer;
   // Start point of the trace (self position), kept so the auxiliary map state
   // can be rebuilt after a manual edit of the hop list.
   LatLng? _pathTraceStart;
@@ -259,7 +257,7 @@ class _MapScreenState extends State<MapScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _removePathTraceCancelledOverlay();
+    _removeMapSnackBarOverlay();
     _searchController.dispose();
     _searchFocus.dispose();
     _pathEditController.dispose();
@@ -1063,11 +1061,7 @@ class _MapScreenState extends State<MapScreen>
                         icon: Icons.pin_drop_outlined,
                         text: context.l10n.map_showMarksFromChannels,
                       ),
-                      onTap: () => showChannelMarkerSettings(
-                        context,
-                        connector,
-                        _channelMarkerStyles,
-                      ),
+                      onTap: () => _openChannelMarkerSettings(connector),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(
@@ -1083,7 +1077,7 @@ class _MapScreenState extends State<MapScreen>
                         text: context.l10n.settings_title,
                       ),
                       onTap: () {
-                        if (blockIfOffline(context, connector)) return;
+                        if (_blockMapActionIfOffline(connector)) return;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -1478,8 +1472,7 @@ class _MapScreenState extends State<MapScreen>
 
     final waitSeconds = _wardriveDiscoveryWaitSeconds();
     if (waitSeconds != null) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveDiscoveryWait(waitSeconds)),
       );
       return;
@@ -1579,8 +1572,7 @@ class _MapScreenState extends State<MapScreen>
     }
     if (!mounted) return;
     setState(() {});
-    showDismissibleSnackBar(
-      context,
+    _showMapSnackBar(
       content: Text(
         enabled
             ? context.l10n.map_wardriveAutoUploadEnabled
@@ -1602,8 +1594,7 @@ class _MapScreenState extends State<MapScreen>
     } catch (error) {
       if (error is WardriveRequirementNotCompletedException) return;
       if (!mounted) return;
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(error.toString()),
         backgroundColor: Colors.red,
       );
@@ -1684,8 +1675,7 @@ class _MapScreenState extends State<MapScreen>
     bool includeUploaded = false,
   }) async {
     if (wardrive.savedSamplesCount == 0) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveNoSamplesToUpload),
       );
       return;
@@ -1826,15 +1816,13 @@ class _MapScreenState extends State<MapScreen>
     } on WardriveUploadCancelledException {
       if (!mounted) return;
       closeUploadDialog();
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveUploadCancelled),
       );
     } catch (error) {
       if (!mounted) return;
       closeUploadDialog();
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveUploadFailed(error.toString())),
         backgroundColor: Colors.red,
       );
@@ -2171,8 +2159,7 @@ class _MapScreenState extends State<MapScreen>
     await _wardriveUploadService.saveSites(sites);
     await _wardriveUploadService.saveSelectedSiteNames(selectedNames.toList());
     if (!mounted) return;
-    showDismissibleSnackBar(
-      context,
+    _showMapSnackBar(
       content: Text(context.l10n.map_wardriveUploadSitesUpdated),
     );
   }
@@ -2355,8 +2342,7 @@ class _MapScreenState extends State<MapScreen>
 
   Future<void> _exportWardriveSamples(WardriveService wardrive) async {
     if (wardrive.savedSamplesCount == 0) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveNoSamplesToExport),
       );
       return;
@@ -2381,14 +2367,12 @@ class _MapScreenState extends State<MapScreen>
         ),
       );
       if (!mounted) return;
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveSamplesExported),
       );
     } catch (error) {
       if (!mounted) return;
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveExportFailed(error.toString())),
         backgroundColor: Colors.red,
       );
@@ -2455,8 +2439,7 @@ class _MapScreenState extends State<MapScreen>
     try {
       final imported = await wardrive.importSamplesJson(rawJson);
       if (!mounted) return;
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(
           imported == 0
               ? context.l10n.map_wardriveNoNewSamplesImported
@@ -2465,8 +2448,7 @@ class _MapScreenState extends State<MapScreen>
       );
     } catch (error) {
       if (!mounted) return;
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveImportFailed(error.toString())),
         backgroundColor: Colors.red,
       );
@@ -2475,8 +2457,7 @@ class _MapScreenState extends State<MapScreen>
 
   Future<void> _confirmClearWardriveSamples(WardriveService wardrive) async {
     if (wardrive.savedSamplesCount == 0) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveNoSamplesToClear),
       );
       return;
@@ -2508,8 +2489,7 @@ class _MapScreenState extends State<MapScreen>
     await wardrive.clearSamples();
     if (!mounted) return;
     setState(_clearSelectedWardriveCoverage);
-    showDismissibleSnackBar(
-      context,
+    _showMapSnackBar(
       content: Text(context.l10n.map_wardriveSamplesCleared),
     );
   }
@@ -3033,6 +3013,18 @@ class _MapScreenState extends State<MapScreen>
     return opacity;
   }
 
+  void _openChannelMarkerSettings(MeshCoreConnector connector) {
+    if (ChannelMarkerStyles.orderChannels(connector.channels).isEmpty) {
+      _showMapSnackBar(
+        content: Text(context.l10n.map_noChannelsAvailable),
+      );
+      return;
+    }
+    unawaited(
+      showChannelMarkerSettings(context, connector, _channelMarkerStyles),
+    );
+  }
+
   bool _shouldDimOutsidePathTrace(Contact contact) {
     if (!_isBuildingPathTrace || contact.type != advTypeRepeater) {
       return false;
@@ -3348,8 +3340,7 @@ class _MapScreenState extends State<MapScreen>
         )
         .firstOrNull;
     if (contact == null || !contact.hasLocation) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_wardriveRepNoLocation),
       );
       return;
@@ -4646,7 +4637,7 @@ class _MapScreenState extends State<MapScreen>
         final coverageVisible = _isWardriveRepeaterCoverageVisible(contact);
         return [
           action(context.l10n.map_manageRepeater, Icons.cell_tower, () {
-            if (blockIfOffline(context, connector)) return;
+            if (_blockMapActionIfOffline(connector)) return;
             if (!contact.isActive) {
               connector.importDiscoveredContact(contact);
             }
@@ -4665,7 +4656,7 @@ class _MapScreenState extends State<MapScreen>
       case advTypeRoom:
         return [
           action(context.l10n.map_joinRoom, Icons.meeting_room, () {
-            if (blockIfOffline(context, connector)) return;
+            if (_blockMapActionIfOffline(connector)) return;
             if (!contact.isActive) {
               connector.importDiscoveredContact(contact);
             }
@@ -5081,7 +5072,7 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
-                if (blockIfOffline(context, connector)) return;
+                if (_blockMapActionIfOffline(connector)) return;
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
@@ -5118,7 +5109,7 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
-                if (blockIfOffline(context, connector)) return;
+                if (_blockMapActionIfOffline(connector)) return;
                 if (!contact.isActive) {
                   connector.importDiscoveredContact(contact);
                 }
@@ -5426,8 +5417,7 @@ class _MapScreenState extends State<MapScreen>
                     Navigator.pop(dialogContext);
                     final sent = await _sendMarkerDeletion(connector, marker);
                     if (!sent && mounted) {
-                      showDismissibleSnackBar(
-                        context,
+                      _showMapSnackBar(
                         content: Text(context.l10n.app_offline_unableToMessage),
                       );
                     }
@@ -5524,14 +5514,13 @@ class _MapScreenState extends State<MapScreen>
                   leading: const Icon(Icons.content_copy),
                   title: Text(context.l10n.map_copyCoordsFromMap),
                   onTap: () async {
-                    final messenger = ScaffoldMessenger.of(context);
                     final copiedMsg = context.l10n.map_coordsCopied;
                     Navigator.pop(sheetContext);
                     await Clipboard.setData(
                       ClipboardData(text: _formatCoordinates(position)),
                     );
                     if (!mounted) return;
-                    messenger.showSnackBar(SnackBar(content: Text(copiedMsg)));
+                    _showMapSnackBar(content: Text(copiedMsg));
                   },
                 ),
                 ListTile(
@@ -5552,7 +5541,6 @@ class _MapScreenState extends State<MapScreen>
                   leading: const Icon(Icons.my_location),
                   title: Text(context.l10n.map_setAsMyLocation),
                   onTap: () async {
-                    final messenger = ScaffoldMessenger.of(context);
                     final successMsg = context.l10n.settings_locationUpdated;
                     Navigator.pop(sheetContext);
                     if (!connector.isConnected) return;
@@ -5562,7 +5550,7 @@ class _MapScreenState extends State<MapScreen>
                     );
                     await connector.refreshDeviceInfo();
                     if (!mounted) return;
-                    messenger.showSnackBar(SnackBar(content: Text(successMsg)));
+                    _showMapSnackBar(content: Text(successMsg));
                   },
                 ),
                 ListTile(
@@ -5585,10 +5573,9 @@ class _MapScreenState extends State<MapScreen>
     required String defaultLabel,
     required String flags,
   }) async {
-    if (blockIfOffline(context, connector)) return;
+    if (_blockMapActionIfOffline(connector)) return;
     if (!connector.isConnected) {
-      showDismissibleSnackBar(
-        context,
+      _showMapSnackBar(
         content: Text(context.l10n.map_connectToShareMarkers),
       );
       return;
@@ -6474,8 +6461,8 @@ class _MapScreenState extends State<MapScreen>
                             _points.clear();
                             _polylines.clear();
                           });
-                          _showPathTraceCancelledOverlay(
-                            l10n.map_pathTraceCancelled,
+                          _showMapSnackBar(
+                            content: Text(l10n.map_pathTraceCancelled),
                           );
                         },
                         tooltip: l10n.common_cancel,
@@ -6491,8 +6478,11 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  void _showPathTraceCancelledOverlay(String message) {
-    _removePathTraceCancelledOverlay();
+  void _showMapSnackBar({
+    required Widget content,
+    Color? backgroundColor,
+  }) {
+    _removeMapSnackBarOverlay();
     final overlay = Overlay.maybeOf(context);
     if (overlay == null) return;
 
@@ -6500,28 +6490,35 @@ class _MapScreenState extends State<MapScreen>
     entry = OverlayEntry(
       builder: (overlayContext) {
         final theme = Theme.of(overlayContext);
+        final scheme = theme.colorScheme;
         final bottomInset = MediaQuery.paddingOf(overlayContext).bottom;
         return Positioned(
           left: 20,
           right: 20,
           bottom: bottomInset + 72,
           child: Material(
-            color: theme.colorScheme.surfaceContainerHigh,
+            color: backgroundColor ?? scheme.surfaceContainerHigh,
             elevation: 6,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(MeshRadii.md),
             ),
             clipBehavior: Clip.hardEdge,
             child: InkWell(
-              onTap: _removePathTraceCancelledOverlay,
+              onTap: _removeMapSnackBarOverlay,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 14,
                 ),
-                child: Text(
-                  message,
-                  style: theme.snackBarTheme.contentTextStyle,
+                child: DefaultTextStyle(
+                  style:
+                      theme.snackBarTheme.contentTextStyle ??
+                      theme.textTheme.bodyMedium!.copyWith(
+                        color: backgroundColor == null
+                            ? scheme.onSurface
+                            : scheme.onError,
+                      ),
+                  child: content,
                 ),
               ),
             ),
@@ -6530,19 +6527,28 @@ class _MapScreenState extends State<MapScreen>
       },
     );
 
-    _pathTraceCancelledOverlay = entry;
+    _mapSnackBarOverlay = entry;
     overlay.insert(entry);
-    _pathTraceCancelledOverlayTimer = Timer(
+    _mapSnackBarOverlayTimer = Timer(
       const Duration(seconds: 4),
-      _removePathTraceCancelledOverlay,
+      _removeMapSnackBarOverlay,
     );
   }
 
-  void _removePathTraceCancelledOverlay() {
-    _pathTraceCancelledOverlayTimer?.cancel();
-    _pathTraceCancelledOverlayTimer = null;
-    final entry = _pathTraceCancelledOverlay;
-    _pathTraceCancelledOverlay = null;
+  bool _blockMapActionIfOffline(MeshCoreConnector connector) {
+    if (!connector.isOfflineMode) return false;
+    _showMapSnackBar(
+      content: Text(context.l10n.app_offline_unableToMessage),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    );
+    return true;
+  }
+
+  void _removeMapSnackBarOverlay() {
+    _mapSnackBarOverlayTimer?.cancel();
+    _mapSnackBarOverlayTimer = null;
+    final entry = _mapSnackBarOverlay;
+    _mapSnackBarOverlay = null;
     if (entry != null && entry.mounted) entry.remove();
   }
 }

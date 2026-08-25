@@ -96,6 +96,18 @@ Additional filters:
 ### Legend Card (Top-Right)
 Shows node count and pin count. Tappable to expand a legend of all marker types.
 
+### In-Map Notifications
+
+Notifications produced by actions on the main map are shown near the bottom of
+the screen in a floating overlay. They appear above the bottom navigation and
+map controls without taking part in the page layout, so showing a notification
+does not move the filter, wardrive, discovery, or other floating buttons.
+
+Only one map notification is visible at a time. A newer notification replaces
+the current one; it can also be dismissed by tapping it and otherwise closes
+automatically after four seconds. Informational notifications use the regular
+surface colour, while failed or unavailable actions retain the error colour.
+
 ---
 
 ## Path Trace Map

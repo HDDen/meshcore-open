@@ -615,6 +615,18 @@ from `_labelZoomThreshold` (14.0) up, and reading the name is the point of going
 pin — so `showHighlightPin` (default true, every existing call site unchanged) turns the pin off
 for a position that only names something the map already draws itself.
 
+### Map notifications
+
+Notifications initiated by `MapScreen` use its local `_showMapSnackBar` overlay rather than
+`ScaffoldMessenger`, `showDismissibleSnackBar`, or a snackbar placed in the map's layout. The
+`OverlayEntry` is positioned 20 px from either side and 72 px above the bottom safe area, so it
+overlays the map without shifting the filter, wardrive, zero-hop, or other floating controls.
+Only one entry is kept: a new notification replaces the previous one, tapping dismisses it, and
+the four-second timer removes it automatically. Pass `colorScheme.error` as `backgroundColor`
+for failures; informational messages use `surfaceContainerHigh`. `_removeMapSnackBarOverlay`
+must remain in `dispose`, and future notifications owned by the main map should use this helper.
+The path-trace cancellation notice and offline-action rejection follow the same path.
+
 ### Shared markers on the map
 
 A marker shared into a chat is the text `m:<lat>,<lon>|<label>|<flags>`, parsed by
