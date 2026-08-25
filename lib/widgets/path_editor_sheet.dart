@@ -87,10 +87,19 @@ class _PathEditorSheetState extends State<PathEditorSheet> {
 
   List<Contact> get _repeaters {
     final query = _search.trim().toLowerCase();
+    final isKeyQuery = RegExp(r'^[0-9a-f:\-\s]+$').hasMatch(query);
+    final keyQuery = isKeyQuery
+        ? query.replaceAll(RegExp(r'[^0-9a-f]'), '')
+        : '';
     return widget.availableContacts
         .where((c) => c.type == advTypeRepeater || c.type == advTypeRoom)
         .where((c) => c.publicKey.isNotEmpty)
-        .where((c) => query.isEmpty || c.name.toLowerCase().contains(query))
+        .where(
+          (c) =>
+              query.isEmpty ||
+              c.name.toLowerCase().contains(query) ||
+              (keyQuery.isNotEmpty && c.publicKeyHex.contains(keyQuery)),
+        )
         .toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
@@ -328,30 +337,6 @@ class _PathEditorSheetState extends State<PathEditorSheet> {
                 ),
               const Divider(),
               const SizedBox(height: 8),
-              Text(l10n.pathEditor_addHops, style: theme.textTheme.titleSmall),
-              const SizedBox(height: 8),
-              TextField(
-                onChanged: (value) => setState(() => _search = value),
-                decoration: InputDecoration(
-                  labelText: l10n.pathEditor_searchRepeaters,
-                  prefixIcon: const Icon(Icons.search),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 4),
-              if (repeaters.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    l10n.path_noRepeatersFound,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              else
-                ...repeaters.map((c) => _repeaterTile(context, c)),
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
@@ -377,6 +362,30 @@ class _PathEditorSheetState extends State<PathEditorSheet> {
                   ),
                 ],
               ),
+              Text(l10n.pathEditor_addHops, style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              TextField(
+                onChanged: (value) => setState(() => _search = value),
+                decoration: InputDecoration(
+                  labelText: l10n.pathEditor_searchRepeaters,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              if (repeaters.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    l10n.path_noRepeatersFound,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                ...repeaters.map((c) => _repeaterTile(context, c)),
             ],
           ),
         ),
