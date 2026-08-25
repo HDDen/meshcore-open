@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mco_service/mco_service.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -204,7 +205,12 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
       return;
     }
 
-    if (!cacheService.source.allowsBulkDownload) {
+    final allowsBulkDownload =
+        cacheService.source.allowsBulkDownload ||
+        context
+            .read<SettingsSectionsService>()
+            .allowsRestrictedMapBulkDownload;
+    if (!allowsBulkDownload) {
       showDismissibleSnackBar(
         context,
         content: Text(
@@ -333,7 +339,12 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
   @override
   Widget build(BuildContext context) {
     final tileCache = context.watch<MapTileCacheService>();
+    final allowsRestrictedBulkDownload = context
+        .watch<SettingsSectionsService>()
+        .allowsRestrictedMapBulkDownload;
     final source = tileCache.source;
+    final allowsBulkDownload =
+        source.allowsBulkDownload || allowsRestrictedBulkDownload;
     final selectedBounds = _selectedBounds;
     final activeCachedTiles = tileCache.filterTilesForActiveSource(
       _cachedTiles,
@@ -554,7 +565,7 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                         border: const OutlineInputBorder(),
                       ),
                     ),
-                    if (!source.allowsBulkDownload) ...[
+                    if (!allowsBulkDownload) ...[
                       const SizedBox(height: 8),
                       Text(
                         l10n.mapCache_bulkDownloadDisabledForSource(
@@ -595,7 +606,7 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                             onPressed:
                                 _isDownloading ||
                                     selectedBounds == null ||
-                                    !source.allowsBulkDownload
+                                    !allowsBulkDownload
                                 ? null
                                 : _startDownload,
                           ),

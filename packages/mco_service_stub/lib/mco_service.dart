@@ -25,6 +25,8 @@ class SettingsSectionsService extends ChangeNotifier {
 
   bool get applyMService => false;
 
+  bool get allowsRestrictedMapBulkDownload => false;
+
   bool tryEnServ(String input) => false;
 
   void onAboutDialogDismissed(BuildContext context) {}
