@@ -74,7 +74,6 @@ class MapScreen extends StatefulWidget {
   final List<LatLng> highlightLinks;
   final Uint8List? initialTracePath;
   final int? initialTraceHashByteWidth;
-  final bool dimRepeatersOutsideInitialTrace;
 
   /// Draws the red pin at [highlightPosition]. Turned off when the position is
   /// only there to centre the map on something the map already draws itself —
@@ -94,7 +93,6 @@ class MapScreen extends StatefulWidget {
     this.highlightLinks = const [],
     this.initialTracePath,
     this.initialTraceHashByteWidth,
-    this.dimRepeatersOutsideInitialTrace = false,
     this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
@@ -2860,6 +2858,12 @@ class _MapScreenState extends State<MapScreen>
             Object.hash(_mapContactSignature(contact), _ageOf(contact)),
       ),
     );
+    final pathTraceSignature = _isBuildingPathTrace
+        ? Object.hash(
+            Object.hashAll(_pathTrace),
+            Object.hashAll(_pathTraceHopWidths),
+          )
+        : 0;
     final key = _NodeMarkersCacheKey(
       contactsSignature: contactsSignature,
       visibleContactsSignature: visibleContactsSignature,
@@ -2878,6 +2882,7 @@ class _MapScreenState extends State<MapScreen>
       showChatNodes: settings.mapShowChatNodes,
       showOtherNodes: settings.mapShowOtherNodes,
       isBuildingPathTrace: _isBuildingPathTrace,
+      pathTraceSignature: pathTraceSignature,
       wardriveHighlightActive: wardriveHighlightActive,
       wardriveDisableClustering: wardriveDisableClustering,
       wardriveAnsweredSignature: wardriveAnsweredSignature,
@@ -3019,32 +3024,51 @@ class _MapScreenState extends State<MapScreen>
         !_isWardriveAnswered(contact, answeredKeys: answeredKeys)) {
       opacity = 0.3;
     }
-    if (_shouldDimOutsideInitialTrace(contact)) {
+    if (_shouldDimOutsidePathTrace(contact)) {
       opacity = min(opacity, 0.3);
     }
     return opacity;
   }
 
-  bool _shouldDimOutsideInitialTrace(Contact contact) {
-    if (!widget.dimRepeatersOutsideInitialTrace ||
-        contact.type != advTypeRepeater) {
+  bool _shouldDimOutsidePathTrace(Contact contact) {
+    if (!_isBuildingPathTrace || contact.type != advTypeRepeater) {
       return false;
     }
-    final path = widget.initialTracePath;
-    if (path == null || path.isEmpty) return false;
-    final width = (widget.initialTraceHashByteWidth ?? 1)
-        .clamp(1, pubKeySize)
-        .toInt();
-    if (contact.publicKey.length < width) return true;
-    for (var offset = 0; offset + width <= path.length; offset += width) {
+    if (_pathTrace.isEmpty) return true;
+
+    bool matchesAt(int offset, int width) {
+      if (contact.publicKey.length < width ||
+          offset + width > _pathTrace.length) {
+        return false;
+      }
       var matches = true;
       for (var index = 0; index < width; index++) {
-        if (path[offset + index] != contact.publicKey[index]) {
+        if (_pathTrace[offset + index] != contact.publicKey[index]) {
           matches = false;
           break;
         }
       }
-      if (matches) return false;
+      return matches;
+    }
+
+    final recordedBytes = _pathTraceHopWidths.fold<int>(
+      0,
+      (total, width) => total + width,
+    );
+    if (_pathTraceHopWidths.isNotEmpty &&
+        recordedBytes == _pathTrace.length) {
+      var offset = 0;
+      for (final recordedWidth in _pathTraceHopWidths) {
+        final width = recordedWidth.clamp(1, pubKeySize).toInt();
+        if (matchesAt(offset, width)) return false;
+        offset += width;
+      }
+      return true;
+    }
+
+    final width = _activePathHashWidth(context.read<MeshCoreConnector>());
+    for (var offset = 0; offset + width <= _pathTrace.length; offset += width) {
+      if (matchesAt(offset, width)) return false;
     }
     return true;
   }
@@ -6649,6 +6673,7 @@ class _NodeMarkersCacheKey {
   final bool showChatNodes;
   final bool showOtherNodes;
   final bool isBuildingPathTrace;
+  final int pathTraceSignature;
   final bool wardriveHighlightActive;
   final bool wardriveDisableClustering;
   final int wardriveAnsweredSignature;
@@ -6672,6 +6697,7 @@ class _NodeMarkersCacheKey {
     required this.showChatNodes,
     required this.showOtherNodes,
     required this.isBuildingPathTrace,
+    required this.pathTraceSignature,
     required this.wardriveHighlightActive,
     required this.wardriveDisableClustering,
     required this.wardriveAnsweredSignature,
@@ -6698,6 +6724,7 @@ class _NodeMarkersCacheKey {
         showChatNodes == other.showChatNodes &&
         showOtherNodes == other.showOtherNodes &&
         isBuildingPathTrace == other.isBuildingPathTrace &&
+        pathTraceSignature == other.pathTraceSignature &&
         wardriveHighlightActive == other.wardriveHighlightActive &&
         wardriveDisableClustering == other.wardriveDisableClustering &&
         wardriveAnsweredSignature == other.wardriveAnsweredSignature &&
@@ -6723,6 +6750,7 @@ class _NodeMarkersCacheKey {
     showChatNodes,
     showOtherNodes,
     isBuildingPathTrace,
+    pathTraceSignature,
     wardriveHighlightActive,
     wardriveDisableClustering,
     wardriveAnsweredSignature,

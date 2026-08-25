@@ -14,6 +14,7 @@ import '../models/contact.dart';
 class NeighborMapFocus {
   final String repeaterKey;
   final Set<String> neighborKeys;
+  final bool _drawConnections;
 
   NeighborMapFocus({
     required String repeaterKey,
@@ -21,11 +22,22 @@ class NeighborMapFocus {
   }) : repeaterKey = repeaterKey.toLowerCase(),
        neighborKeys = Set.unmodifiable(
          neighborKeys.map((key) => key.toLowerCase()),
-       );
+       ),
+       _drawConnections = true;
+
+  /// Highlights only the listed repeaters without drawing neighbor links.
+  NeighborMapFocus.focusedRepeaters({
+    required Iterable<String> repeaterKeys,
+  }) : repeaterKey = '',
+       neighborKeys = Set.unmodifiable(
+         repeaterKeys.map((key) => key.toLowerCase()),
+       ),
+       _drawConnections = false;
 
   int get signature => Object.hash(
     repeaterKey,
     Object.hashAllUnordered(neighborKeys),
+    _drawConnections,
   );
 
   bool contains(Contact contact) {
@@ -104,6 +116,8 @@ class NeighborMapFocus {
     required Color color,
     double strokeWidth = 2.5,
   }) {
+    if (!_drawConnections) return const <Polyline>[];
+
     Contact? repeater;
     for (final contact in contacts) {
       if (contact.type == advTypeRepeater &&

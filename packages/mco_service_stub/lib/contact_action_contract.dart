@@ -51,6 +51,7 @@ class McoContactActionEstimate {
     required this.label,
     required this.latitude,
     required this.longitude,
+    required this.anchorPublicKeys,
     required this.anchorLatitudes,
     required this.anchorLongitudes,
   });
@@ -58,6 +59,7 @@ class McoContactActionEstimate {
   final String label;
   final double latitude;
   final double longitude;
+  final List<List<int>> anchorPublicKeys;
   final List<double> anchorLatitudes;
   final List<double> anchorLongitudes;
 }

@@ -101,7 +101,9 @@ class ChannelMessagePathScreen extends StatelessWidget {
                       title: context.l10n.contacts_repeaterPathTrace,
                       path: primaryPath,
                       flipPathAround: true,
-                      reversePathAround: false,
+                      // Incoming channel paths are stored sender-to-us, while
+                      // TRACE must start with the repeater nearest to us.
+                      reversePathAround: channelMessage && !message.isOutgoing,
                       pathHashByteWidth: hashByteWidth,
                     ),
                   ),

@@ -15,6 +15,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/neighbor_map_focus.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
@@ -2209,7 +2210,6 @@ class _ContactsScreenState extends State<ContactsScreen>
         builder: (_) => MapScreen(
           initialTracePath: Uint8List.fromList(pathBytes),
           initialTraceHashByteWidth: hashByteWidth,
-          dimRepeatersOutsideInitialTrace: true,
         ),
       ),
     );
@@ -2226,6 +2226,12 @@ class _ContactsScreenState extends State<ContactsScreen>
           highlightPosition: LatLng(estimate.latitude, estimate.longitude),
           highlightLabel: estimate.label,
           highlightAsEstimate: true,
+          neighborFocus: NeighborMapFocus.focusedRepeaters(
+            repeaterKeys: [
+              for (final key in estimate.anchorPublicKeys)
+                pubKeyToHex(Uint8List.fromList(key)),
+            ],
+          ),
           highlightLinks: [
             for (var i = 0; i < estimate.anchorLatitudes.length; i++)
               LatLng(
