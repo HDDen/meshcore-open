@@ -243,6 +243,7 @@ class MessageStore {
       ),
       'fourByteRoomContactKey': base64Encode(msg.fourByteRoomContactKey),
       'wasBlocked': msg.wasBlocked,
+      'sourceLabel': msg.sourceLabel,
     };
   }
 
@@ -367,6 +368,7 @@ class MessageStore {
           ) ??
           {},
       wasBlocked: json['wasBlocked'] as bool? ?? false,
+      sourceLabel: json['sourceLabel'] as String?,
       fourByteRoomContactKey: json['fourByteRoomContactKey'] != null
           ? Uint8List.fromList(
               base64Decode(json['fourByteRoomContactKey'] as String),

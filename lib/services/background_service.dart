@@ -10,6 +10,8 @@ import '../utils/platform_info.dart';
 import 'app_debug_log_service.dart';
 
 const String _connectionTaskMessageType = 'connectionHeartbeat';
+const String _connectionKeepAliveReason = 'connection';
+const String _tcpConnectionKeepAliveReason = 'tcp-connection';
 const String _connectionMonitorDataKey = 'connectionMonitorEnabled';
 const String _connectionTitleDataKey = 'connectionNotificationTitle';
 const String _connectionConnectedTextDataKey = 'connectionConnectedText';
@@ -37,6 +39,9 @@ class BackgroundService {
   Map<String, Object>? _connectionHeartbeatData;
   static const MethodChannel _engineLifecycleChannel = MethodChannel(
     'mco_advanced/engine_lifecycle',
+  );
+  static const MethodChannel _tcpWifiLockChannel = MethodChannel(
+    'mco_advanced/tcp_wifi_lock',
   );
 
   /// Allows the app to expose its current language override (e.g. from
@@ -237,10 +242,32 @@ class BackgroundService {
     await _syncConnectionMonitor(l10n: l10n);
   }
 
+  Future<void> setTcpWifiLock(bool enabled) async {
+    if (!PlatformInfo.isAndroid) return;
+    try {
+      await _tcpWifiLockChannel.invokeMethod<void>('setEnabled', {
+        'enabled': enabled,
+      });
+      _debugLogService?.info(
+        'TCP Wi-Fi lock ${enabled ? 'enabled' : 'disabled'}',
+        tag: 'Background',
+      );
+    } catch (error) {
+      _debugLogService?.warn(
+        'Failed to update TCP Wi-Fi lock: $error',
+        tag: 'Background',
+      );
+    }
+  }
+
+  bool get _monitorsConnection =>
+      _keepAliveReasons.contains(_connectionKeepAliveReason) ||
+      _keepAliveReasons.contains(_tcpConnectionKeepAliveReason);
+
   Future<void> _syncConnectionMonitor({AppLocalizations? l10n}) async {
     if (!PlatformInfo.isAndroid) return;
 
-    final monitorConnection = _keepAliveReasons.contains('connection');
+    final monitorConnection = _monitorsConnection;
     if (!monitorConnection) {
       _connectionHeartbeatTimer?.cancel();
       _connectionHeartbeatTimer = null;
@@ -326,7 +353,9 @@ class BackgroundService {
   Future<void> stop({String reason = 'connection'}) async {
     if (!PlatformInfo.isAndroid) return;
     _keepAliveReasons.remove(reason);
-    if (reason == 'connection') {
+    if ((reason == _connectionKeepAliveReason ||
+            reason == _tcpConnectionKeepAliveReason) &&
+        !_monitorsConnection) {
       _connectionLost = false;
       _notificationRevision++;
     }

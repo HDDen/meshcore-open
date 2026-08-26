@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 export 'contact_action_contract.dart';
@@ -26,6 +28,19 @@ class SettingsSectionsService extends ChangeNotifier {
   bool get applyMService => false;
 
   bool get allowsRestrictedMapBulkDownload => false;
+
+  void mcoX0({
+    required Future<void> Function(Uint8List) a,
+    required void Function(Uint8List, String?) b,
+    required bool Function() c,
+    required Future<void> Function() d,
+  }) {}
+
+  Future<void> mcoX1(Uint8List a, Future<void> Function() b) => b();
+
+  void mcoX2(Uint8List a) {}
+
+  void mcoX3(bool a) {}
 
   bool tryEnServ(String input) => false;
 

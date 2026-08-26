@@ -217,6 +217,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'replyToText': msg.replyToText,
       'replyIsExact': msg.replyIsExact,
       'reactions': msg.reactions,
+      'sourceLabel': msg.sourceLabel,
     };
   }
 
@@ -349,6 +350,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
             (key, value) => MapEntry(key, value as int),
           ) ??
           {},
+      sourceLabel: json['sourceLabel'] as String?,
     );
   }
 

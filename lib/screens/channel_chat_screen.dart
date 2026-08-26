@@ -1458,6 +1458,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ? message.originalText
         : (translatedDisplayText != bodyText ? bodyText : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
+    final sourceLabel = message.sourceLabel?.trim();
     final packetRegion = message.packetRegion?.trim();
     final String packetRegionLabel;
     if (packetRegion != null && packetRegion.isNotEmpty) {
@@ -2034,6 +2035,34 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 style: MeshTheme.mono(
                                   fontSize: 10 * textScale,
                                   color: metaColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (sourceLabel != null && sourceLabel.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Padding(
+                              padding: isMediaMessage
+                                  ? const EdgeInsets.symmetric(horizontal: 8)
+                                  : EdgeInsets.zero,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: metaColor.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    sourceLabel,
+                                    style: MeshTheme.mono(
+                                      fontSize: 9.5 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),

@@ -2728,6 +2728,7 @@ class _MessageBubble extends StatelessWidget {
         ? message.originalText
         : (translatedDisplayText != messageText ? messageText : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
+    final sourceLabel = message.sourceLabel?.trim();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -3148,6 +3149,34 @@ class _MessageBubble extends StatelessWidget {
                               textScale: textScale,
                               color: metaColor,
                               errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
+                        if (sourceLabel != null && sourceLabel.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: metaColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  sourceLabel,
+                                  style: MeshTheme.mono(
+                                    fontSize: 9.5 * textScale,
+                                    color: metaColor,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],

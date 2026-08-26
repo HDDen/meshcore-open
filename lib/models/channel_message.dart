@@ -112,6 +112,7 @@ class ChannelMessage {
   final bool replyIsExact;
   final Map<String, int> reactions;
   final String? sharedHistorySourceName;
+  final String? sourceLabel;
 
   ChannelMessage({
     this.senderKey,
@@ -167,6 +168,7 @@ class ChannelMessage {
     this.replyIsExact = false,
     Map<String, int>? reactions,
     this.sharedHistorySourceName,
+    this.sourceLabel,
   }) : receivedAt = receivedAt ?? DateTime.now(),
        messageId =
            messageId ??
@@ -198,6 +200,7 @@ class ChannelMessage {
 
   ChannelMessage copyWith({
     ChannelMessageStatus? status,
+    bool? isOutgoing,
     DateTime? timestamp,
     List<Repeat>? repeats,
     int? repeatCount,
@@ -239,6 +242,7 @@ class ChannelMessage {
     bool? wasBlocked,
     Object? binaryPacketBytes = _unset,
     Object? sharedHistorySourceName = _unset,
+    Object? sourceLabel = _unset,
     DateTime? receivedAt,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
@@ -303,6 +307,9 @@ class ChannelMessage {
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
+      sourceLabel: sourceLabel == _unset
+          ? this.sourceLabel
+          : sourceLabel as String?,
       timestamp: timestamp ?? this.timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
       sentByRadioAt: sentByRadioAt == _unset
@@ -310,7 +317,7 @@ class ChannelMessage {
           : sentByRadioAt as DateTime?,
       sentByRadioWaitSeconds:
           sentByRadioWaitSeconds ?? this.sentByRadioWaitSeconds,
-      isOutgoing: isOutgoing,
+      isOutgoing: isOutgoing ?? this.isOutgoing,
       status: status ?? this.status,
       repeats: repeats ?? this.repeats,
       repeatCount: repeatCount ?? this.repeatCount,
@@ -343,6 +350,8 @@ class ChannelMessage {
   static ChannelMessage? fromFrame(
     Uint8List frame, {
     bool includeSenderNameInCompressionRatio = false,
+    bool isOutgoing = false,
+    String? sourceLabel,
   }) {
     // CHANNEL_MSG_RECV format varies by version:
     // V3: [0]=code [1]=SNR [2]=rsv1 [3]=rsv2 [4]=channel_idx [5]=path_len [path... optional] [txt_type] [timestamp x4] [text...]
@@ -444,13 +453,14 @@ class ChannelMessage {
         mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
         mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
-        isOutgoing: false,
+        isOutgoing: isOutgoing,
         status: ChannelMessageStatus.sent,
         pathLength: pathLen,
         pathHashWidth: packetPathHashWidth,
         pathBytes: pathBytes,
         snr: snr,
         channelIndex: channelIdx,
+        sourceLabel: sourceLabel,
       );
     } catch (e) {
       appLogger.error('Error parsing channel message frame: $e');

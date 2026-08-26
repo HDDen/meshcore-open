@@ -35,7 +35,11 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   String? get activeTcpEndpoint => initialEndpoint;
 
   @override
-  Future<void> connectTcp({required String host, required int port}) async {
+  Future<void> connectTcp({
+    required String host,
+    required int port,
+    bool automaticReconnect = false,
+  }) async {
     connectTcpCalls += 1;
     lastHost = host;
     lastPort = port;

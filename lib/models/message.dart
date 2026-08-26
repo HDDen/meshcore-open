@@ -55,6 +55,7 @@ class Message {
   final String? replyToSenderName;
   final String? replyToText;
   final String? sharedHistorySourceName;
+  final String? sourceLabel;
 
   // NEW: Retry logic fields
   final String messageId;
@@ -113,6 +114,7 @@ class Message {
     this.replyToSenderName,
     this.replyToText,
     this.sharedHistorySourceName,
+    this.sourceLabel,
     this.retryCount = 0,
     this.estimatedTimeoutMs,
     this.expectedAckHash,
@@ -175,6 +177,8 @@ class Message {
     Object? replyToSenderName = _unset,
     Object? replyToText = _unset,
     Object? sharedHistorySourceName = _unset,
+    Object? sourceLabel = _unset,
+    bool? isOutgoing,
     Map<String, int>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
@@ -185,7 +189,7 @@ class Message {
       text: text,
       timestamp: timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
-      isOutgoing: isOutgoing,
+      isOutgoing: isOutgoing ?? this.isOutgoing,
       isCli: isCli ?? this.isCli,
       status: status ?? this.status,
       messageId: messageId,
@@ -248,6 +252,9 @@ class Message {
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
+      sourceLabel: sourceLabel == _unset
+          ? this.sourceLabel
+          : sourceLabel as String?,
       retryCount: retryCount ?? this.retryCount,
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,

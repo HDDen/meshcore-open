@@ -214,6 +214,10 @@ class MeshCoreConnector extends ChangeNotifier {
   BluetoothDevice? _lastDevice;
   String? _lastDeviceId;
   String? _lastDeviceDisplayName;
+  String? _lastTcpHost;
+  int? _lastTcpPort;
+  MeshCoreTransportType? _reconnectTransport;
+  bool _transportRestartInProgress = false;
   bool _manualDisconnect = false;
   bool _isRecoveringConnection = false;
   MeshCoreTransportType? _lastManualDisconnectTransport;
@@ -2878,6 +2882,16 @@ class MeshCoreConnector extends ChangeNotifier {
     BlockedSenders.instance.addListener(_handleBlockedSendersChanged);
     _settingsSectionsService?.removeListener(_handleSettingsSectionsChanged);
     _settingsSectionsService = settingsSectionsService;
+    settingsSectionsService?.mcoX0(
+      a: _writeFrameToActiveTransport,
+      b: (frame, label) => _handleCompanionFrame(
+        frame,
+        notifyExtensions: false,
+        localSourceLabel: label,
+      ),
+      c: () => isConnected,
+      d: _restartActiveTransport,
+    );
     settingsSectionsService?.setDeviceVarsRequester(() async {
       if (!isConnected) return;
       await sendFrame(buildGetCustomVarsFrame());
@@ -3022,16 +3036,20 @@ class MeshCoreConnector extends ChangeNotifier {
 
   bool get _shouldKeepTcpInBackground {
     return PlatformInfo.isAndroid &&
-        _activeTransport == MeshCoreTransportType.tcp &&
-        _state == MeshCoreConnectionState.connected &&
+        (_activeTransport == MeshCoreTransportType.tcp ||
+            _reconnectTransport == MeshCoreTransportType.tcp) &&
+        (_state == MeshCoreConnectionState.connected ||
+            _isRecoveringConnection) &&
         (_appSettingsService?.settings.backgroundTcpEnabled ?? false);
   }
 
   void _syncBackgroundTcpService() {
     if (_shouldKeepTcpInBackground) {
       unawaited(_backgroundService?.start(reason: _backgroundTcpReason));
+      unawaited(_backgroundService?.setTcpWifiLock(true));
     } else {
       unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
+      unawaited(_backgroundService?.setTcpWifiLock(false));
     }
   }
 
@@ -3842,6 +3860,7 @@ class MeshCoreConnector extends ChangeNotifier {
     await stopScan();
     _cancelReconnectTimer();
     _manualDisconnect = false;
+    _reconnectTransport = null;
     _resetConnectionHandshakeState();
     _activeTransport = MeshCoreTransportType.usb;
     _setState(MeshCoreConnectionState.connecting);
@@ -3926,7 +3945,11 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<void> connectTcp({required String host, required int port}) async {
+  Future<void> connectTcp({
+    required String host,
+    required int port,
+    bool automaticReconnect = false,
+  }) async {
     if (_isOfflineMode) {
       _appDebugLogService?.warn(
         'connectTcp ignored while offline history is open',
@@ -3943,12 +3966,26 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
+    if (!automaticReconnect &&
+        (_appSettingsService?.settings.backgroundTcpEnabled ?? false)) {
+      unawaited(
+        _backgroundService?.ensureBatteryOptimizationExemption(
+          reason: 'tcpConnection',
+        ),
+      );
+    }
+
     _appDebugLogService?.info('connectTcp: endpoint=$host:$port', tag: 'TCP');
 
     await stopScan();
-    _cancelReconnectTimer();
+    if (!automaticReconnect) {
+      _cancelReconnectTimer();
+    }
     _manualDisconnect = false;
     _lastManualDisconnectTransport = null;
+    _lastTcpHost = host.trim();
+    _lastTcpPort = port;
+    _reconnectTransport = MeshCoreTransportType.tcp;
     _resetConnectionHandshakeState();
     _activeTransport = MeshCoreTransportType.tcp;
     _setState(MeshCoreConnectionState.connecting);
@@ -4009,6 +4046,9 @@ class MeshCoreConnector extends ChangeNotifier {
       );
 
       _setState(MeshCoreConnectionState.connected);
+      _rxSilenceAnchor = DateTime.now();
+      _startRxWatchdog();
+      _syncBackgroundTcpService();
       _pendingInitialChannelSync = true;
       _pendingInitialQueuedMessageSync = true;
       _pendingInitialContactsSync = true;
@@ -4085,6 +4125,54 @@ class MeshCoreConnector extends ChangeNotifier {
         !lowerErrorText.contains('timeout');
   }
 
+  Future<void> _restartActiveTransport() async {
+    if (_transportRestartInProgress || !isConnected) return;
+
+    final transport = _activeTransport;
+    final bleDevice = _lastDevice ??
+        (_lastDeviceId == null
+            ? null
+            : BluetoothDevice.fromId(_lastDeviceId!));
+    final bleDisplayName = _lastDeviceDisplayName;
+    final tcpHost = _lastTcpHost;
+    final tcpPort = _lastTcpPort;
+    final usbPort = _usbManager.activePortKey;
+
+    final canRestart = switch (transport) {
+      MeshCoreTransportType.bluetooth => bleDevice != null,
+      MeshCoreTransportType.tcp => tcpHost != null && tcpPort != null,
+      MeshCoreTransportType.usb => usbPort != null,
+    };
+    if (!canRestart) return;
+
+    _transportRestartInProgress = true;
+    try {
+      await disconnect(manual: true);
+      switch (transport) {
+        case MeshCoreTransportType.bluetooth:
+          await connect(
+            bleDevice!,
+            displayName: bleDisplayName,
+            requestBatteryOptimizationExemption: false,
+          );
+          break;
+        case MeshCoreTransportType.tcp:
+          await connectTcp(host: tcpHost!, port: tcpPort!);
+          break;
+        case MeshCoreTransportType.usb:
+          await connectUsb(portName: usbPort!);
+          break;
+      }
+    } catch (error) {
+      _appDebugLogService?.error(
+        'Transport restart failed: $error',
+        tag: 'Connection',
+      );
+    } finally {
+      _transportRestartInProgress = false;
+    }
+  }
+
   Future<void> connect(
     BluetoothDevice device, {
     String? displayName,
@@ -4112,6 +4200,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     _activeTransport = MeshCoreTransportType.bluetooth;
+    _reconnectTransport = MeshCoreTransportType.bluetooth;
 
     await stopScan();
     _setState(MeshCoreConnectionState.connecting);
@@ -4889,11 +4978,17 @@ class MeshCoreConnector extends ChangeNotifier {
     _previousChannelsCache.clear();
   }
 
-  bool get _shouldAutoReconnect =>
-      !_isOfflineMode &&
-      !_manualDisconnect &&
-      _lastDeviceId != null &&
-      _activeTransport == MeshCoreTransportType.bluetooth;
+  bool _canAutoReconnect(MeshCoreTransportType? transport) {
+    if (_isOfflineMode || _manualDisconnect || transport == null) return false;
+    return switch (transport) {
+      MeshCoreTransportType.bluetooth => _lastDeviceId != null,
+      MeshCoreTransportType.tcp =>
+        _lastTcpHost != null && _lastTcpPort != null,
+      MeshCoreTransportType.usb => false,
+    };
+  }
+
+  bool get _shouldAutoReconnect => _canAutoReconnect(_reconnectTransport);
 
   bool get _shouldGateInitialChannelSync =>
       _activeTransport == MeshCoreTransportType.usb ||
@@ -4918,27 +5013,47 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!_shouldAutoReconnect) return;
     if (_reconnectTimer?.isActive == true) return;
 
+    final reconnectTransport = _reconnectTransport;
     final delayMs = _nextReconnectDelayMs();
     _reconnectTimer = Timer(Duration(milliseconds: delayMs), () async {
-      if (!_shouldAutoReconnect) return;
+      if (!_shouldAutoReconnect ||
+          reconnectTransport != _reconnectTransport) {
+        return;
+      }
       if (_state == MeshCoreConnectionState.connecting ||
           _state == MeshCoreConnectionState.connected) {
         return;
       }
 
-      final device =
-          _lastDevice ??
-          (_lastDeviceId == null
-              ? null
-              : BluetoothDevice.fromId(_lastDeviceId!));
-      if (device == null) return;
-
       try {
-        await connect(
-          device,
-          displayName: _lastDeviceDisplayName,
-          requestBatteryOptimizationExemption: false,
-        );
+        switch (reconnectTransport) {
+          case MeshCoreTransportType.bluetooth:
+            final device =
+                _lastDevice ??
+                (_lastDeviceId == null
+                    ? null
+                    : BluetoothDevice.fromId(_lastDeviceId!));
+            if (device == null) return;
+            await connect(
+              device,
+              displayName: _lastDeviceDisplayName,
+              requestBatteryOptimizationExemption: false,
+            );
+            break;
+          case MeshCoreTransportType.tcp:
+            final host = _lastTcpHost;
+            final port = _lastTcpPort;
+            if (host == null || port == null) return;
+            await connectTcp(
+              host: host,
+              port: port,
+              automaticReconnect: true,
+            );
+            break;
+          case MeshCoreTransportType.usb:
+          case null:
+            return;
+        }
       } catch (_) {
         _scheduleReconnect();
       }
@@ -4966,22 +5081,24 @@ class MeshCoreConnector extends ChangeNotifier {
       tag: 'Connection',
     );
 
-    unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
     if (manual) {
       // A deliberate reconnect starts a fresh watchdog recovery budget.
       // Automatic watchdog reconnects use manual=false and retain the count.
       _rxWatchdogReconnects = 0;
       _manualDisconnect = true;
       _isRecoveringConnection = false;
+      _reconnectTransport = null;
       _lastManualDisconnectTransport = transportAtDisconnect;
       _cancelReconnectTimer();
       unawaited(_backgroundService?.stop());
     } else {
       _manualDisconnect = false;
       _lastManualDisconnectTransport = null;
-      _isRecoveringConnection =
-          transportAtDisconnect == MeshCoreTransportType.bluetooth &&
-          _lastDeviceId != null;
+      _reconnectTransport = transportAtDisconnect;
+      _isRecoveringConnection = _canAutoReconnect(_reconnectTransport);
+      if (!_isRecoveringConnection) {
+        _reconnectTransport = null;
+      }
       if (_isRecoveringConnection) {
         unawaited(_backgroundService?.setConnectionLost(true));
       }
@@ -5087,7 +5204,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingChannelSentQueue.clear();
     _pendingGenericAckQueue.clear();
     final preserveChannelSendsForReconnect =
-        !manual && transportAtDisconnect == MeshCoreTransportType.bluetooth;
+        !manual &&
+        _isRecoveringConnection &&
+        (transportAtDisconnect == MeshCoreTransportType.bluetooth ||
+            transportAtDisconnect == MeshCoreTransportType.tcp);
     _shouldReplayRetriableChannelMessageSends =
         preserveChannelSendsForReconnect &&
         _retriableChannelMessageSends.isNotEmpty;
@@ -5097,14 +5217,17 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _reactionSendQueueSequence = 0;
 
-    _activeTransport = MeshCoreTransportType.bluetooth;
+    _activeTransport = _isRecoveringConnection
+        ? transportAtDisconnect
+        : MeshCoreTransportType.bluetooth;
 
     _setState(MeshCoreConnectionState.disconnected);
+    _syncBackgroundTcpService();
     _appDebugLogService?.info(
       'Disconnect complete transport=$transportLabel manual=$manual',
       tag: 'Connection',
     );
-    if (!manual && transportAtDisconnect == MeshCoreTransportType.bluetooth) {
+    if (!manual && _isRecoveringConnection) {
       _scheduleReconnect();
     }
   }
@@ -5114,11 +5237,27 @@ class MeshCoreConnector extends ChangeNotifier {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+  }) {
+    final service = _settingsSectionsService;
+    Future<void> sendDirect() => _sendFrameDirect(
+      data,
+      channelSendQueueId: channelSendQueueId,
+      expectsGenericAck: expectsGenericAck,
+      waitForGenericAck: waitForGenericAck,
+    );
+    if (service == null) return sendDirect();
+    return service.mcoX1(data, sendDirect);
+  }
+
+  Future<void> _sendFrameDirect(
+    Uint8List data, {
+    String? channelSendQueueId,
+    bool expectsGenericAck = false,
+    bool waitForGenericAck = false,
   }) async {
     if (!isConnected) {
       throw Exception("Not connected to a MeshCore device");
     }
-    _bleDebugLogService?.logFrame(data, outgoing: true);
 
     // Register the expected OK before writing. Some transports can deliver the
     // response quickly enough that waiting until after write races with _handleOk().
@@ -5130,30 +5269,7 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     try {
-      if (_activeTransport == MeshCoreTransportType.usb) {
-        await _usbManager.write(data);
-        // Brief pause so the device firmware can process each frame before the
-        // next arrives. Without this, rapid-fire frames over USB can cause the
-        // device to miss responses (especially on reconnect).
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      } else if (_activeTransport == MeshCoreTransportType.tcp) {
-        await _tcpConnector.write(data);
-      } else {
-        if (_rxCharacteristic == null) {
-          throw Exception("MeshCore RX characteristic not available");
-        }
-        // Prefer write without response when supported; fall back to write with response.
-        final properties = _rxCharacteristic!.properties;
-        final canWriteWithoutResponse = properties.writeWithoutResponse;
-        final canWriteWithResponse = properties.write;
-        if (!canWriteWithoutResponse && !canWriteWithResponse) {
-          throw Exception("MeshCore RX characteristic does not support write");
-        }
-        await _rxCharacteristic!.write(
-          data.toList(),
-          withoutResponse: canWriteWithoutResponse,
-        );
-      }
+      await _writeFrameToActiveTransport(data);
     } catch (_) {
       if (pendingAck != null) {
         _pendingGenericAckQueue.remove(pendingAck);
@@ -5171,6 +5287,38 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
     }
+  }
+
+  Future<void> _writeFrameToActiveTransport(Uint8List data) async {
+    if (!isConnected) {
+      throw Exception("Not connected to a MeshCore device");
+    }
+    _bleDebugLogService?.logFrame(data, outgoing: true);
+    if (_activeTransport == MeshCoreTransportType.usb) {
+      await _usbManager.write(data);
+      // Brief pause so the device firmware can process each frame before the
+      // next arrives. Without this, rapid-fire frames over USB can cause the
+      // device to miss responses (especially on reconnect).
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      return;
+    }
+    if (_activeTransport == MeshCoreTransportType.tcp) {
+      await _tcpConnector.write(data);
+      return;
+    }
+    if (_rxCharacteristic == null) {
+      throw Exception("MeshCore RX characteristic not available");
+    }
+    final properties = _rxCharacteristic!.properties;
+    final canWriteWithoutResponse = properties.writeWithoutResponse;
+    final canWriteWithResponse = properties.write;
+    if (!canWriteWithoutResponse && !canWriteWithResponse) {
+      throw Exception("MeshCore RX characteristic does not support write");
+    }
+    await _rxCharacteristic!.write(
+      data.toList(),
+      withoutResponse: canWriteWithoutResponse,
+    );
   }
 
   Future<void> requestBatteryStatus({bool force = false}) async {
@@ -5196,9 +5344,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _batteryPollTimer = null;
   }
 
-  // BLE-only: detects a dead notify stream (connected link, writes succeed,
-  // but no inbound frames despite expected battery-poll traffic) and
-  // recovers through the normal disconnect → auto-reconnect path.
+  // Detects a dead BLE notify stream or TCP socket (transport still reports
+  // connected, but no inbound frames despite expected battery-poll traffic)
+  // and recovers through the normal disconnect -> auto-reconnect path.
   void _startRxWatchdog() {
     // Web BLE reconnects need a user gesture, so a forced reconnect is moot.
     if (PlatformInfo.isWeb) return;
@@ -5220,7 +5368,10 @@ class MeshCoreConnector extends ChangeNotifier {
     final now = DateTime.now();
     final previousTick = _lastRxWatchdogTickAt;
     _lastRxWatchdogTickAt = now;
-    if (!isConnected || _activeTransport != MeshCoreTransportType.bluetooth) {
+    final watchesInboundTraffic =
+        _activeTransport == MeshCoreTransportType.bluetooth ||
+        _activeTransport == MeshCoreTransportType.tcp;
+    if (!isConnected || !watchesInboundTraffic) {
       return;
     }
     // A large gap between ticks means timers were suspended (background /
@@ -5248,7 +5399,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     _rxWatchdogReconnects++;
     _appDebugLogService?.warn(
-      'RX watchdog: connected but no inbound frames for '
+      'RX watchdog: $_activeTransport connected but no inbound frames for '
       '${silence.inSeconds}s, forcing reconnect '
       '($_rxWatchdogReconnects/$_rxWatchdogMaxConsecutive)',
       tag: 'Watchdog',
@@ -8260,8 +8411,15 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  void _handleCompanionFrame(Uint8List frame) {
+  void _handleCompanionFrame(
+    Uint8List frame, {
+    bool notifyExtensions = true,
+    String? localSourceLabel,
+  }) {
     if (frame.isEmpty) return;
+    if (notifyExtensions) {
+      _settingsSectionsService?.mcoX2(frame);
+    }
     _receivedFramesController.add(frame);
     _bleDebugLogService?.logFrame(frame, outgoing: false);
 
@@ -8369,19 +8527,30 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeContactMsgRecv:
       case respCodeContactMsgRecvV3:
-        if (_shouldDeferQueuedContactMessage(frame)) {
+        if (localSourceLabel == null && _shouldDeferQueuedContactMessage(frame)) {
           _deferredQueuedContactMessageFrames.add(Uint8List.fromList(frame));
           _handleQueuedMessageReceived();
         } else {
-          unawaited(_handleIncomingMessage(frame));
+          unawaited(
+            _handleIncomingMessage(
+              frame,
+              localSourceLabel: localSourceLabel,
+            ),
+          );
         }
         break;
       case respCodeChannelMsgRecv:
       case respCodeChannelMsgRecvV3:
-        _handleIncomingChannelMessage(frame);
+        _handleIncomingChannelMessage(
+          frame,
+          localSourceLabel: localSourceLabel,
+        );
         break;
       case respCodeChannelDataRecv:
-        _handleIncomingChannelData(frame);
+        _handleIncomingChannelData(
+          frame,
+          localSourceLabel: localSourceLabel,
+        );
         break;
       case respCodeDefaultFloodScope:
         // Feature-specific callers listen to receivedFrames for this response.
@@ -8648,6 +8817,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _awaitingSelfInfo = false;
     _hasCompletedSelfInfoHandshake = parsedSelfInfo;
     if (parsedSelfInfo) {
+      _reconnectAttempts = 0;
       unawaited(_backgroundService?.setConnectionLost(false));
     }
     _selfInfoRetryTimer?.cancel();
@@ -9409,6 +9579,7 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _handleIncomingMessage(
     Uint8List frame, {
     DateTime? receivedAt,
+    String? localSourceLabel,
   }) async {
     if (_selfPublicKey == null) return;
 
@@ -9443,6 +9614,14 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (message != null) {
       final effectiveReceivedAt = receivedAt ?? DateTime.now();
+      if (localSourceLabel != null) {
+        message = message.copyWith(
+          isOutgoing: true,
+          status: MessageStatus.sent,
+          receivedAt: effectiveReceivedAt,
+          sourceLabel: localSourceLabel,
+        );
+      }
       if (!message.isOutgoing) {
         _lastContactMsgRxTime = effectiveReceivedAt;
       }
@@ -10727,7 +10906,10 @@ class MeshCoreConnector extends ChangeNotifier {
     }());
   }
 
-  void _handleIncomingChannelMessage(Uint8List frame) async {
+  void _handleIncomingChannelMessage(
+    Uint8List frame, {
+    String? localSourceLabel,
+  }) async {
     // If we're syncing the queued messages, advance the queue immediately
     // before any potentially long async work (like translation/notifications).
     if (_isSyncingQueuedMessages) {
@@ -10737,14 +10919,17 @@ class MeshCoreConnector extends ChangeNotifier {
       frame,
       includeSenderNameInCompressionRatio:
           _appSettingsService?.settings.compressionRatioWithSenderName == true,
+      isOutgoing: localSourceLabel != null,
+      sourceLabel: localSourceLabel,
     );
     if (parsed != null && parsed.channelIndex != null) {
       final channelName = _channelDisplayName(parsed.channelIndex!);
-      if (_shouldDropSelfChannelMessage(
-        parsed.senderName,
-        parsed.pathBytes,
-        channelName: channelName,
-      )) {
+      if (localSourceLabel == null &&
+          _shouldDropSelfChannelMessage(
+            parsed.senderName,
+            parsed.pathBytes,
+            channelName: channelName,
+          )) {
         return;
       }
       _lastChannelMsgRxTime = parsed.receivedAt;
@@ -10798,7 +10983,10 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  void _handleIncomingChannelData(Uint8List frame) async {
+  void _handleIncomingChannelData(
+    Uint8List frame, {
+    String? localSourceLabel,
+  }) async {
     if (_isSyncingQueuedMessages) {
       _handleQueuedMessageReceived();
     }
@@ -10839,7 +11027,9 @@ class MeshCoreConnector extends ChangeNotifier {
     final isSelfDirect =
         dataFrame.pathLength == -1 &&
         senderName.trim() == (_selfName ?? '').trim();
-    if (isSelfDirect && !_isSelfChannelFilterBypassed(channelName)) {
+    if (localSourceLabel == null &&
+        isSelfDirect &&
+        !_isSelfChannelFilterBypassed(channelName)) {
       return;
     }
 
@@ -10888,7 +11078,7 @@ class MeshCoreConnector extends ChangeNotifier {
       binaryPacketBytes: dataFrame.payload.length,
       timestamp: packetTimestamp,
       receivedAt: storedReceivedAt,
-      isOutgoing: false,
+      isOutgoing: localSourceLabel != null,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
       snr: dataFrame.snr,
@@ -10897,6 +11087,7 @@ class MeshCoreConnector extends ChangeNotifier {
       replyToMessageId: replyReference?.messageId,
       replyToSenderName: replyReference?.senderName,
       replyToText: replyReference?.text,
+      sourceLabel: localSourceLabel,
     );
     message = await _verifyInboundChannelMessage(message);
 
@@ -12220,6 +12411,7 @@ class MeshCoreConnector extends ChangeNotifier {
         replyToText: replyToText,
         replyIsExact: replyIsExact,
         reactions: message.reactions,
+        sourceLabel: message.sourceLabel,
       );
     }
 
@@ -12249,6 +12441,8 @@ class MeshCoreConnector extends ChangeNotifier {
       final promotedFromPending =
           newRepeatCount == 1 &&
           existing.status == ChannelMessageStatus.pending;
+      final promotedFromClient =
+          processedMessage.sourceLabel != null && !existing.isOutgoing;
       _cancelChannelNoRetransmissionWarning(existing.messageId);
       messages[existingIndex] = existing.copyWith(
         receivedAt: ChannelMessageTimelineHelper.earliestReceivedAt(
@@ -12269,8 +12463,11 @@ class MeshCoreConnector extends ChangeNotifier {
             existing.packetRegionNotMatched ||
             processedMessage.packetRegionNotMatched,
         packetHash: existing.packetHash ?? processedMessage.packetHash,
+        isOutgoing: existing.isOutgoing || promotedFromClient,
+        sourceLabel:
+            existing.sourceLabel ?? processedMessage.sourceLabel,
         // Mark as sent when first repeat is heard
-        status: promotedFromPending
+        status: promotedFromPending || promotedFromClient
             ? ChannelMessageStatus.sent
             : existing.status,
         noRetransmissionWarningSeconds: null,
@@ -12634,6 +12831,9 @@ class MeshCoreConnector extends ChangeNotifier {
   void _setState(MeshCoreConnectionState newState) {
     if (_state != newState) {
       _state = newState;
+      _settingsSectionsService?.mcoX3(
+        newState == MeshCoreConnectionState.connected,
+      );
       if (newState == MeshCoreConnectionState.connected) {
         _isRecoveringConnection = false;
         unawaited(_transportPreferenceStore.save(_activeTransport.name));
@@ -12703,6 +12903,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _mcmpSigningFailedController.close();
     _usbManager.dispose();
     _tcpConnector.dispose();
+    unawaited(_backgroundService?.stop(reason: _backgroundTcpReason));
+    unawaited(_backgroundService?.setTcpWifiLock(false));
 
     // Flush pending unread writes before disposal
     _unreadStore.flush();
