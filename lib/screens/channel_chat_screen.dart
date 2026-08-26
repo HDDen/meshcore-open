@@ -2046,7 +2046,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   ? const EdgeInsets.symmetric(horizontal: 8)
                                   : EdgeInsets.zero,
                               child: Align(
-                                alignment: Alignment.centerRight,
+                                alignment: Alignment.centerLeft,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 4,
