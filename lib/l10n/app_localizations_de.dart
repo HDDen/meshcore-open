@@ -5967,7 +5967,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo HV (3,0–4,35 V)';
 
   @override
-  String get chat_sendImage => 'Bild senden';
+  String get chat_sendImage => 'Send image';
 
   @override
   String get chat_imagePickFailed => 'Konnte dieses Bild nicht öffnen.';
@@ -6324,4 +6324,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Berechtigung ist bereits erteilt';
+
+  @override
+  String get chat_selectSendAction => 'Sendeaktion auswählen';
+
+  @override
+  String get chat_sendImageLora => 'Bild über MeshCore senden';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

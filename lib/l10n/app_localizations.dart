@@ -10749,6 +10749,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Permission is already granted'**
   String get settings_backgroundPermissionsGranted;
+
+  /// No description provided for @chat_selectSendAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select send action'**
+  String get chat_selectSendAction;
+
+  /// No description provided for @chat_sendImageLora.
+  ///
+  /// In en, this message translates to:
+  /// **'Send image via meshcore'**
+  String get chat_sendImageLora;
+
+  /// No description provided for @reaction_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji Reactions'**
+  String get reaction_report;
 }
 
 class _AppLocalizationsDelegate

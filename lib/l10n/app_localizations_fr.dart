@@ -6351,4 +6351,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'L\'autorisation est déjà accordée';
+
+  @override
+  String get chat_selectSendAction => 'Sélectionner une action d’envoi';
+
+  @override
+  String get chat_sendImageLora => 'Envoyer une image via MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

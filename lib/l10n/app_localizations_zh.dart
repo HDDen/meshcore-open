@@ -5875,4 +5875,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => '权限已授予';
+
+  @override
+  String get chat_selectSendAction => '选择发送操作';
+
+  @override
+  String get chat_sendImageLora => '通过 MeshCore 发送图片';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

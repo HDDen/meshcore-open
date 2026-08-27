@@ -6330,4 +6330,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => 'Дозвіл уже надано';
+
+  @override
+  String get chat_selectSendAction => 'Виберіть дію надсилання';
+
+  @override
+  String get chat_sendImageLora => 'Надіслати зображення через MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

@@ -6291,4 +6291,13 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Dovoljenje je že podeljeno';
+
+  @override
+  String get chat_selectSendAction => 'Izberite dejanje pošiljanja';
+
+  @override
+  String get chat_sendImageLora => 'Pošlji sliko prek MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

@@ -6311,4 +6311,13 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Az engedély már meg van adva';
+
+  @override
+  String get chat_selectSendAction => 'Küldési művelet kiválasztása';
+
+  @override
+  String get chat_sendImageLora => 'Kép küldése MeshCore-on keresztül';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

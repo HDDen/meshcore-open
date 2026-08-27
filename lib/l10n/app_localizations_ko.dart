@@ -6009,4 +6009,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => '권한이 이미 허용되어 있습니다';
+
+  @override
+  String get chat_selectSendAction => '전송 작업 선택';
+
+  @override
+  String get chat_sendImageLora => 'MeshCore를 통해 이미지 보내기';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

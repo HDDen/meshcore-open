@@ -6281,4 +6281,13 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => 'Povolenie je už udelené';
+
+  @override
+  String get chat_selectSendAction => 'Vybrať akciu odoslania';
+
+  @override
+  String get chat_sendImageLora => 'Odoslať obrázok cez MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

@@ -8,7 +8,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "de": [
@@ -20,7 +21,9 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "chat_sendImage",
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "es": [
@@ -32,7 +35,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "fr": [
@@ -44,7 +48,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "hu": [
@@ -56,7 +61,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "it": [
@@ -68,7 +74,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "ja": [
@@ -80,7 +87,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "ko": [
@@ -92,7 +100,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "nl": [
@@ -104,7 +113,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "pl": [
@@ -116,7 +126,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "pt": [
@@ -128,7 +139,12 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
+  ],
+
+  "ru": [
+    "reaction_report"
   ],
 
   "sk": [
@@ -140,7 +156,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "sl": [
@@ -152,7 +169,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "sv": [
@@ -164,7 +182,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "uk": [
@@ -176,7 +195,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ],
 
   "zh": [
@@ -188,6 +208,7 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
-    "repeater_cliClearNeighbors"
+    "repeater_cliClearNeighbors",
+    "reaction_report"
   ]
 }

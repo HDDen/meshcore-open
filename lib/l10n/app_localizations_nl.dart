@@ -6298,4 +6298,13 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Toestemming is al verleend';
+
+  @override
+  String get chat_selectSendAction => 'Verzendactie selecteren';
+
+  @override
+  String get chat_sendImageLora => 'Afbeelding verzenden via MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

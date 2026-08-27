@@ -6316,4 +6316,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => 'Разрешение уже выдано';
+
+  @override
+  String get chat_selectSendAction => 'Выберите действие отправки';
+
+  @override
+  String get chat_sendImageLora => 'Отправить изображение через MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

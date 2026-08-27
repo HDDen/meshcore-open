@@ -6267,4 +6267,13 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Behörigheten är redan beviljad';
+
+  @override
+  String get chat_selectSendAction => 'Välj sändningsåtgärd';
+
+  @override
+  String get chat_sendImageLora => 'Skicka bild via MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

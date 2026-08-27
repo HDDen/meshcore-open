@@ -6002,4 +6002,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_backgroundPermissionsGranted => '許可はすでに付与されています';
+
+  @override
+  String get chat_selectSendAction => '送信アクションを選択';
+
+  @override
+  String get chat_sendImageLora => 'MeshCore経由で画像を送信';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }

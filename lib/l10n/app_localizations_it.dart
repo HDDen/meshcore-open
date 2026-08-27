@@ -6334,4 +6334,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settings_backgroundPermissionsGranted =>
       'Il permesso è già concesso';
+
+  @override
+  String get chat_selectSendAction => 'Seleziona azione di invio';
+
+  @override
+  String get chat_sendImageLora => 'Invia immagine tramite MeshCore';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 }
