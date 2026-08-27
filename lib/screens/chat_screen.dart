@@ -485,9 +485,6 @@ class _ChatScreenState extends State<ChatScreen> {
     } else {
       _keyboardNavigationActive = false;
     }
-    if (mounted) {
-      _scrollController.handleKeyboardOpen();
-    }
   }
 
   /// Keeps the mention picker in sync with the caret. Room servers relay to a
