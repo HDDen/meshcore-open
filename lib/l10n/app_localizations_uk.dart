@@ -1478,11 +1478,13 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get chat_selectSendAction => 'Виберіть дію надсилання';
+
+  @override
   String get chat_sendGif => 'Надіслати GIF';
 
   @override
-  String get chat_sendImage =>
-      'Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення';
+  String get chat_sendImageLora => 'Надіслати зображення через MeshCore';
 
   @override
   String get chat_imagePickFailed => 'Неможливо відкрити це изображення';
@@ -1498,6 +1500,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chat_me => 'Я';
+
+  @override
+  String get reaction_report => 'Emoji Reactions';
 
   @override
   String get emojiCategorySmileys => 'Емодзі';
