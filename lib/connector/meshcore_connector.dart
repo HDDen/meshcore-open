@@ -2898,6 +2898,7 @@ class MeshCoreConnector extends ChangeNotifier {
       ),
       c: () => isConnected,
       d: _restartActiveTransport,
+      e: () => this,
     );
     settingsSectionsService?.setDeviceVarsRequester(() async {
       if (!isConnected) return;
