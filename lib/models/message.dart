@@ -70,7 +70,7 @@ class Message {
   final int? tripTimeMs;
   final int? pathLength;
   final Uint8List pathBytes;
-  final Map<String, int> reactions;
+  final Map<String, List<String?>> reactions;
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
 
@@ -127,7 +127,7 @@ class Message {
     Uint8List? pathBytes,
     Uint8List? fourByteRoomContactKey,
     this.wasBlocked = false,
-    Map<String, int>? reactions,
+    Map<String, List<String?>>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
   }) : messageId =
            messageId ??
@@ -179,7 +179,7 @@ class Message {
     Object? sharedHistorySourceName = _unset,
     Object? sourceLabel = _unset,
     bool? isOutgoing,
-    Map<String, int>? reactions,
+    Map<String, List<String?>>? reactions,
     Map<String, MessageStatus>? reactionStatuses,
     Uint8List? fourByteRoomContactKey,
     bool? wasBlocked,

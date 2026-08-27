@@ -347,7 +347,12 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       replyIsExact: json['replyIsExact'] as bool? ?? false,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, value as int),
+            (key, value) => MapEntry(
+              key,
+              (value is int)
+                  ? List<String?>.filled(value, null)
+                  : List<String?>.from(value),
+            ),
           ) ??
           {},
       sourceLabel: json['sourceLabel'] as String?,

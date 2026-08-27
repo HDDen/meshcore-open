@@ -530,6 +530,7 @@
       }
     }
   },
+  "chat_selectSendAction": "Sendeaktion auswählen",
   "chat_sendGif": "GIF senden",
   "chat_reply": "Antworten",
   "chat_addReaction": "Reaktion hinzufügen",
@@ -3427,7 +3428,7 @@
   },
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3,0–4,35 V)",
-  "chat_sendImage": "Bild senden",
+  "chat_sendImageLora": "Bild über MeshCore senden",
   "chat_imagePickFailed": "Konnte dieses Bild nicht öffnen.",
   "imageMessages_enableTitle": "Bildnachrichten aktivieren",
   "imageMessages_enableSubtitle": "Bilder über das Netzwerk senden. Einmaliges Herunterladen eines Bildmodells erforderlich.",

@@ -3406,5 +3406,7 @@
   "settings_modSettingsLastHopSignal": "在频道中显示最后一跳的 SNR/RSSI",
   "settings_backgroundPermissions": "重新申请后台运行权限",
   "settings_backgroundPermissionsSubtitle": "检查电池优化豁免并重新申请",
-  "settings_backgroundPermissionsGranted": "权限已授予"
+  "settings_backgroundPermissionsGranted": "权限已授予",
+  "chat_selectSendAction": "选择发送操作",
+  "chat_sendImageLora": "通过 MeshCore 发送图片"
 }

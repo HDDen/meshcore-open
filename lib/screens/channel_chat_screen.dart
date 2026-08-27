@@ -2563,7 +2563,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       runSpacing: 6,
       children: message.reactions.entries.map((entry) {
         final emoji = entry.key;
-        final count = entry.value;
+        final count = entry.value.length;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2572,32 +2572,84 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             borderRadius: BorderRadius.circular(MeshRadii.pill),
             border: Border.all(color: scheme.outlineVariant, width: 1),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                emoji,
-                style: MeshTheme.emoji(fontSize: 16),
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
-                ),
-              ),
-              if (count > 1) ...[
-                const SizedBox(width: 4),
+          child: InkWell(
+            onTap: () => _showReactionsReport(message),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  '$count',
-                  style: MeshTheme.mono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+                  emoji,
+                  style: MeshTheme.emoji(fontSize: 16),
+                  textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
                   ),
                 ),
+                if (count > 1) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: MeshTheme.mono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showReactionsReport(ChannelMessage message) {
+    final scheme = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.reaction_report),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Scrollbar(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              children: message.reactionList().map((reaction) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(MeshRadii.pill),
+                      border: Border.all(
+                        color: scheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          reaction.emoji,
+                          style: MeshTheme.emoji(fontSize: 16),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(reaction.senderName ?? '???')),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -3656,6 +3708,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                /*
+                 * Upstream dev places this compact popup in the composer.
+                 * MCOa keeps it disabled because ChatAdditionalActionsButton
+                 * below opens our complete bottom-sheet actions menu.
+                 *
+                 * PopupMenuButton<String>(
+                 *   icon: const Icon(Icons.add_circle_outline),
+                 *   position: PopupMenuPosition.over,
+                 *   tooltip: context.l10n.chat_selectSendAction,
+                 *   onSelected: (action) {
+                 *     switch (action) {
+                 *       case 'gif':
+                 *         _showGifPicker(context);
+                 *         break;
+                 *       case 'meshcore-image':
+                 *         _showImageSendPreview();
+                 *         break;
+                 *     }
+                 *   },
+                 *   itemBuilder: (context) => [
+                 *     PopupMenuItem(
+                 *       value: 'gif',
+                 *       child: Text(context.l10n.chat_sendGif),
+                 *     ),
+                 *     PopupMenuItem(
+                 *       value: 'meshcore-image',
+                 *       child: Text(context.l10n.chat_sendImageLora),
+                 *     ),
+                 *   ],
+                 * ),
+                 */
                 ChatComposerSideAction(
                   child: ChatAdditionalActionsButton(
                     canvasActive: settings.canvasActive,
@@ -4479,12 +4562,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
     if (emojiIndex == null) return; // Unknown emoji, skip
-    final timestampSecs = message.timestamp.millisecondsSinceEpoch ~/ 1000;
-    final hash = ReactionHelper.computeReactionHash(
-      timestampSecs,
-      message.senderName,
-      message.text,
-    );
+    final hash = message.computeReactionHash();
     final reactionText = ReactionHelper.encodeReaction(hash, emojiIndex);
     connector.sendChannelMessage(widget.channel, reactionText);
   }

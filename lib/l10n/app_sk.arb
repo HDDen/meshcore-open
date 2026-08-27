@@ -3401,5 +3401,7 @@
   "settings_modSettingsLastHopSignal": "Zobraziť SNR/RSSI posledného skoku v kanáloch",
   "settings_backgroundPermissions": "Znova požiadať o povolenia na beh na pozadí",
   "settings_backgroundPermissionsSubtitle": "Skontrolovať výnimku z optimalizácie batérie a znova o ňu požiadať",
-  "settings_backgroundPermissionsGranted": "Povolenie je už udelené"
+  "settings_backgroundPermissionsGranted": "Povolenie je už udelené",
+  "chat_selectSendAction": "Vybrať akciu odoslania",
+  "chat_sendImageLora": "Odoslať obrázok cez MeshCore"
 }

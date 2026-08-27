@@ -3540,5 +3540,8 @@
   "repeater_cliClearNeighbors": "Clear Neighbours list",
   "settings_backgroundPermissions": "Re-request background permissions",
   "settings_backgroundPermissionsSubtitle": "Check the battery optimisation exemption and ask for it again",
-  "settings_backgroundPermissionsGranted": "Permission is already granted"
+  "settings_backgroundPermissionsGranted": "Permission is already granted",
+  "chat_selectSendAction": "Select send action",
+  "chat_sendImageLora": "Send image via meshcore",
+  "reaction_report": "Emoji Reactions"
 }

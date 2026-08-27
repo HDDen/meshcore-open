@@ -3401,5 +3401,7 @@
   "settings_modSettingsLastHopSignal": "Prikaži SNR/RSSI zadnjega skoka v kanalih",
   "settings_backgroundPermissions": "Znova zahtevaj dovoljenja za delovanje v ozadju",
   "settings_backgroundPermissionsSubtitle": "Preveri izjemo pri optimizaciji baterije in jo znova zahtevaj",
-  "settings_backgroundPermissionsGranted": "Dovoljenje je že podeljeno"
+  "settings_backgroundPermissionsGranted": "Dovoljenje je že podeljeno",
+  "chat_selectSendAction": "Izberite dejanje pošiljanja",
+  "chat_sendImageLora": "Pošlji sliko prek MeshCore"
 }

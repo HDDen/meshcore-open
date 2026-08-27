@@ -110,7 +110,7 @@ class ChannelMessage {
   /// `mcmpReplyTimestamp` together with a resolved [replyToMessageId] says
   /// the same thing. `ExactQuoteHelper.rendersAsQuote` reads both.
   final bool replyIsExact;
-  final Map<String, int> reactions;
+  final Map<String, List<String?>> reactions;
   final String? sharedHistorySourceName;
   final String? sourceLabel;
 
@@ -166,7 +166,7 @@ class ChannelMessage {
     this.replyToSenderName,
     this.replyToText,
     this.replyIsExact = false,
-    Map<String, int>? reactions,
+    Map<String, List<String?>>? reactions,
     this.sharedHistorySourceName,
     this.sourceLabel,
   }) : receivedAt = receivedAt ?? DateTime.now(),
@@ -246,7 +246,7 @@ class ChannelMessage {
     DateTime? receivedAt,
     Object? sentByRadioAt = _unset,
     List<int>? sentByRadioWaitSeconds,
-    Map<String, int>? reactions,
+    Map<String, List<String?>>? reactions,
   }) {
     return ChannelMessage(
       senderKey: senderKey,
@@ -580,8 +580,35 @@ class ChannelMessage {
     );
   }
 
-  static ReactionInfo? parseReaction(String text) {
-    return ReactionHelper.parseReaction(text);
+  ReactionInfo? parseReaction() {
+    final reactionInfo = ReactionHelper.parseReaction(text);
+    reactionInfo?.senderName = senderName;
+    return reactionInfo;
+  }
+
+  String computeReactionHash() {
+    return ReactionHelper.computeReactionHash(
+      timestamp.millisecondsSinceEpoch ~/ 1000,
+      senderName,
+      text,
+    );
+  }
+
+  List<ReactionInfo> reactionList() {
+    final hash = computeReactionHash();
+    final result = <ReactionInfo>[];
+    for (final entry in reactions.entries) {
+      for (final senderName in entry.value) {
+        result.add(
+          ReactionInfo(
+            targetHash: hash,
+            emoji: entry.key,
+            senderName: senderName,
+          ),
+        );
+      }
+    }
+    return result;
   }
 }
 

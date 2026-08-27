@@ -3500,5 +3500,7 @@
   "settings_modSettingsLastHopSignal": "Mostrar SNR/RSSI del último salto en los canales",
   "settings_backgroundPermissions": "Volver a solicitar permisos en segundo plano",
   "settings_backgroundPermissionsSubtitle": "Comprobar la exención de optimización de batería y solicitarla de nuevo",
-  "settings_backgroundPermissionsGranted": "El permiso ya está concedido"
+  "settings_backgroundPermissionsGranted": "El permiso ya está concedido",
+  "chat_selectSendAction": "Seleccionar acción de envío",
+  "chat_sendImageLora": "Enviar imagen mediante MeshCore"
 }

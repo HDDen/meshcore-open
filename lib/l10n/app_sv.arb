@@ -3183,5 +3183,7 @@
   "settings_modSettingsLastHopSignal": "Visa SNR/RSSI för sista hoppet i kanaler",
   "settings_backgroundPermissions": "Begär bakgrundsbehörigheter på nytt",
   "settings_backgroundPermissionsSubtitle": "Kontrollera undantaget från batterioptimering och begär det igen",
-  "settings_backgroundPermissionsGranted": "Behörigheten är redan beviljad"
+  "settings_backgroundPermissionsGranted": "Behörigheten är redan beviljad",
+  "chat_selectSendAction": "Välj sändningsåtgärd",
+  "chat_sendImageLora": "Skicka bild via MeshCore"
 }

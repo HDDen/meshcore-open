@@ -3439,5 +3439,7 @@
   "settings_modSettingsLastHopSignal": "Pokaż SNR/RSSI ostatniego przeskoku w kanałach",
   "settings_backgroundPermissions": "Ponownie poproś o uprawnienia do pracy w tle",
   "settings_backgroundPermissionsSubtitle": "Sprawdź wyjątek od optymalizacji baterii i poproś o niego ponownie",
-  "settings_backgroundPermissionsGranted": "Uprawnienie zostało już przyznane"
+  "settings_backgroundPermissionsGranted": "Uprawnienie zostało już przyznane",
+  "chat_selectSendAction": "Wybierz czynność wysyłania",
+  "chat_sendImageLora": "Wyślij obraz przez MeshCore"
 }

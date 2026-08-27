@@ -3506,5 +3506,7 @@
   "settings_modSettingsLastHopSignal": "チャンネルで最終ホップの SNR/RSSI を表示",
   "settings_backgroundPermissions": "バックグラウンド動作の許可を再要求",
   "settings_backgroundPermissionsSubtitle": "電池の最適化の除外設定を確認し、再度要求します",
-  "settings_backgroundPermissionsGranted": "許可はすでに付与されています"
+  "settings_backgroundPermissionsGranted": "許可はすでに付与されています",
+  "chat_selectSendAction": "送信アクションを選択",
+  "chat_sendImageLora": "MeshCore経由で画像を送信"
 }

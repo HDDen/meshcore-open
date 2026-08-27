@@ -3404,5 +3404,7 @@
   "settings_modSettingsLastHopSignal": "Az utolsó ugrás SNR/RSSI értékének megjelenítése a csatornákban",
   "settings_backgroundPermissions": "Háttérengedélyek újrakérése",
   "settings_backgroundPermissionsSubtitle": "Az akkumulátor-optimalizálás alóli kivétel ellenőrzése és újrakérése",
-  "settings_backgroundPermissionsGranted": "Az engedély már meg van adva"
+  "settings_backgroundPermissionsGranted": "Az engedély már meg van adva",
+  "chat_selectSendAction": "Küldési művelet kiválasztása",
+  "chat_sendImageLora": "Kép küldése MeshCore-on keresztül"
 }

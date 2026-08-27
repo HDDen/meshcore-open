@@ -3183,5 +3183,7 @@
   "settings_modSettingsLastHopSignal": "SNR/RSSI van de laatste hop tonen in kanalen",
   "settings_backgroundPermissions": "Achtergrondrechten opnieuw aanvragen",
   "settings_backgroundPermissionsSubtitle": "Controleer de uitzondering op batterijoptimalisatie en vraag deze opnieuw aan",
-  "settings_backgroundPermissionsGranted": "Toestemming is al verleend"
+  "settings_backgroundPermissionsGranted": "Toestemming is al verleend",
+  "chat_selectSendAction": "Verzendactie selecteren",
+  "chat_sendImageLora": "Afbeelding verzenden via MeshCore"
 }

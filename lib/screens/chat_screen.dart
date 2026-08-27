@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
+import '../utils/app_logger.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -1074,9 +1075,29 @@ class _ChatScreenState extends State<ChatScreen> {
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            ChatComposerSideAction(
+          child: Row(
+            children: [
+              /*
+               * Upstream dev places this compact popup in the composer.
+               * MCOa keeps it disabled because ChatAdditionalActionsButton
+               * below opens our complete bottom-sheet actions menu.
+               *
+               * PopupMenuButton<String>(
+               *   icon: const Icon(Icons.add_circle_outline),
+               *   position: PopupMenuPosition.over,
+               *   tooltip: context.l10n.chat_selectSendAction,
+               *   onSelected: (action) {
+               *     if (action == 'gif') _showGifPicker(context);
+               *   },
+               *   itemBuilder: (context) => [
+               *     PopupMenuItem(
+               *       value: 'gif',
+               *       child: Text(context.l10n.chat_sendGif),
+               *     ),
+               *   ],
+               * ),
+               */
+              ChatComposerSideAction(
               child: ChatAdditionalActionsButton(
                 canvasActive: settings.canvasActive,
                 offlineMode: connector.isOfflineMode,
@@ -2563,6 +2584,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final senderName = liveContact.type == advTypeRoom
         ? senderContact.name
         : null;
+    appLogger.info('Sending reaction using senderName: $senderName');
     final hash = ReactionHelper.computeReactionHash(
       timestampSecs,
       senderName,
@@ -3451,7 +3473,7 @@ class _MessageBubble extends StatelessWidget {
       runSpacing: 6,
       children: message.reactions.entries.map((entry) {
         final emoji = entry.key;
-        final count = entry.value;
+        final count = entry.value.length;
         final status = message.reactionStatuses[emoji];
         final isPending =
             status == MessageStatus.pending || status == MessageStatus.sent;

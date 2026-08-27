@@ -3364,5 +3364,7 @@
   "settings_modSettingsLastHopSignal": "Mostra SNR/RSSI dell'ultimo hop nei canali",
   "settings_backgroundPermissions": "Richiedi di nuovo i permessi in background",
   "settings_backgroundPermissionsSubtitle": "Verifica l'esenzione dall'ottimizzazione della batteria e richiedila di nuovo",
-  "settings_backgroundPermissionsGranted": "Il permesso è già concesso"
+  "settings_backgroundPermissionsGranted": "Il permesso è già concesso",
+  "chat_selectSendAction": "Seleziona azione di invio",
+  "chat_sendImageLora": "Invia immagine tramite MeshCore"
 }

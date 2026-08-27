@@ -2708,5 +2708,7 @@
   "repeater_cliClearNeighbors": "Очистить Соседей",
   "settings_backgroundPermissions": "Перезапросить разрешения на работу в фоне",
   "settings_backgroundPermissionsSubtitle": "Проверить исключение из оптимизации батареи и запросить его заново",
-  "settings_backgroundPermissionsGranted": "Разрешение уже выдано"
+  "settings_backgroundPermissionsGranted": "Разрешение уже выдано",
+  "chat_selectSendAction": "Выберите действие отправки",
+  "chat_sendImageLora": "Отправить изображение через MeshCore"
 }
