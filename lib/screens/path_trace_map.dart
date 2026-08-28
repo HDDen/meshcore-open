@@ -1203,9 +1203,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             child: Stack(
               children: [
                 if (!showMap)
-                  _buildLiveTraceStatus(
-                    scheme,
-                    bottomPadding: showMapButton ? 80 : 16,
+                  Positioned.fill(
+                    child: _buildLiveTraceStatus(
+                      scheme,
+                      bottomPadding: showMapButton ? 80 : 16,
+                    ),
                   ),
                 if (showMap)
                   _buildMapPathTrace(context, tileCache, _targetContact),
