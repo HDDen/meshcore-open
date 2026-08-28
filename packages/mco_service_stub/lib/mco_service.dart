@@ -35,6 +35,7 @@ class SettingsSectionsService extends ChangeNotifier {
     required bool Function() c,
     required Future<void> Function() d,
     required Object Function() e,
+    required Object? Function(int, Uint8List) f,
   }) {}
 
   Future<void> mcoX1(Uint8List a, Future<void> Function() b) => b();

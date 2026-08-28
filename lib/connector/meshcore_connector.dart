@@ -2897,6 +2897,10 @@ class MeshCoreConnector extends ChangeNotifier {
       c: () => isConnected,
       d: _restartActiveTransport,
       e: () => this,
+      f: (a, b) => ChannelBinaryDataHelper.tryDecodeAppData(
+        dataType: a,
+        payload: b,
+      ),
     );
     settingsSectionsService?.setDeviceVarsRequester(() async {
       if (!isConnected) return;
