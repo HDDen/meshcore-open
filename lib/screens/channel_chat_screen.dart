@@ -4214,7 +4214,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required bool enableSeconds,
   }) {
     final now = DateTime.now();
-    final diff = now.difference(time);
     final locale = Localizations.localeOf(context).toString();
     if (locale != _cachedFormatLocale) {
       _cachedFormatLocale = locale;
@@ -4224,11 +4223,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     final hm = enableSeconds ? _hmsFormat.format(time) : _hmFormat.format(time);
 
-    if (diff.inDays > 0) {
-      return '${_mdFormat.format(time)} $hm';
-    } else {
-      return hm;
-    }
+    if (DateUtils.isSameDay(now, time)) return hm;
+    return '${_mdFormat.format(time)} $hm';
   }
 
   int? _outgoingRadioWaitSeconds(ChannelMessage message) {

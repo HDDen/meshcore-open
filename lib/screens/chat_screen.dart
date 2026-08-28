@@ -3617,7 +3617,7 @@ class _MessageBubble extends StatelessWidget {
     final formattedTime = enableSeconds
         ? DateFormat.Hms(locale).format(time)
         : DateFormat.Hm(locale).format(time);
-    if (DateTime.now().difference(time).inDays <= 0) return formattedTime;
+    if (DateUtils.isSameDay(DateTime.now(), time)) return formattedTime;
     return '${DateFormat.Md(locale).format(time)} $formattedTime';
   }
 
