@@ -2717,6 +2717,10 @@ class _MessageBubble extends StatelessWidget {
         : (isOutgoing ? MeshPalette.meInk : scheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.65);
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
+    final showDeliveryProgress =
+        isOutgoing &&
+        message.status != MessageStatus.delivered &&
+        message.deliveryProgressTotalSteps > 0;
     const bodyFontSize = 14.0;
 
     // Asymmetric radius: outgoing — top-left large, others also large; outgoing bottom-right tight.
@@ -2795,9 +2799,11 @@ class _MessageBubble extends StatelessWidget {
                       borderRadius: borderRadius,
                       border: Border.all(color: bubbleBorder, width: 1),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                         if (!isOutgoing) ...[
                           Padding(
                             padding: isMediaMessage
@@ -3352,6 +3358,23 @@ class _MessageBubble extends StatelessWidget {
                                 ? const EdgeInsets.symmetric(horizontal: 8)
                                 : EdgeInsets.zero,
                           ),
+                        if (showDeliveryProgress)
+                          const SizedBox(height: 5),
+                          ],
+                        ),
+                        if (showDeliveryProgress)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: _MessageDeliveryProgressBar(
+                              totalSteps:
+                                  message.deliveryProgressTotalSteps,
+                              completedSteps:
+                                  message.deliveryProgressCompletedSteps,
+                              color: metaColor,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -3631,6 +3654,42 @@ class _MessageBubble extends StatelessWidget {
         .difference(message.timestamp)
         .inSeconds;
     return (waitSeconds < 0 ? 0 : waitSeconds).toString();
+  }
+}
+
+class _MessageDeliveryProgressBar extends StatelessWidget {
+  final int totalSteps;
+  final int completedSteps;
+  final Color color;
+
+  const _MessageDeliveryProgressBar({
+    required this.totalSteps,
+    required this.completedSteps,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final safeTotal = totalSteps.clamp(1, 65).toInt();
+    final safeCompleted = completedSteps.clamp(0, safeTotal);
+    return SizedBox(
+      height: 2,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: List.generate(safeTotal, (index) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: index + 1 < safeTotal ? 1 : 0),
+              child: ColoredBox(
+                color: index < safeCompleted
+                    ? color
+                    : color.withValues(alpha: 0.2),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }
 

@@ -8602,6 +8602,7 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case pushCodeLogRxData:
         _lastRadioRxTime = DateTime.now();
+        _retryService?.handleRxLogFrame(frame);
         _handleRxData(frame);
         _handleLogRxData(frame);
         break;

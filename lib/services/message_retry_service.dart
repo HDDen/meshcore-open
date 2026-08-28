@@ -8,6 +8,7 @@ import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/path_selection.dart';
+import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
@@ -119,6 +120,8 @@ class MessageRetryService extends ChangeNotifier {
   final Set<String> _activeMessages = {};
   final Set<String> _resolvedMessages = {};
   final Map<String, String> _expectedHashToMessageId = {};
+  final Map<String, DirectMessageProgressTracker> _progressTrackers = {};
+  final Map<String, List<Uint8List>> _retiredProgressPayloads = {};
   bool _sendingPaused = false;
   int _sendingGeneration = 0;
 
@@ -415,6 +418,14 @@ class MessageRetryService extends ChangeNotifier {
     // Re-read after potential schedule update
     final effectiveMessage = _pendingMessages[messageId] ?? message;
     final attemptStartedAt = DateTime.now();
+    final hopCount = effectiveMessage.pathLength ?? -1;
+    final progressMessage = effectiveMessage.copyWith(
+      deliveryProgressTotalSteps: hopCount >= 0 ? hopCount + 1 : 0,
+      deliveryProgressCompletedSteps: 0,
+    );
+    _pendingMessages[messageId] = progressMessage;
+    _retireProgressTracker(messageId);
+    config.updateMessage(progressMessage);
 
     // Sync path settings with device before sending
     if (config.setContactPath != null && config.clearContactPath != null) {
@@ -582,6 +593,7 @@ class MessageRetryService extends ChangeNotifier {
     }
 
     final message = _pendingMessages[messageId]!;
+    _armProgressTracker(messageId, message, contact);
     _ackHashToMessageId[ackHashHex] = (
       messageId: messageId,
       timestamp: DateTime.now(),
@@ -629,6 +641,79 @@ class MessageRetryService extends ChangeNotifier {
 
   bool get hasPendingMessages => _pendingMessages.isNotEmpty;
 
+  void handleRxLogFrame(Uint8List frame) {
+    final echo = DirectMessageEcho.tryParse(frame);
+    if (echo == null || _progressTrackers.isEmpty) return;
+
+    final boundMatches = <(DirectMessageProgressTracker, int)>[];
+    final unboundMatches = <(DirectMessageProgressTracker, int)>[];
+    for (final tracker in _progressTrackers.values) {
+      final stage = tracker.matchingStage(echo);
+      if (stage == null) continue;
+      (tracker.isBound ? boundMatches : unboundMatches).add((tracker, stage));
+    }
+
+    final matches = boundMatches.isNotEmpty ? boundMatches : unboundMatches;
+    // The packet carries only one-byte source/destination hashes. Refuse an
+    // ambiguous first match instead of crediting the wrong conversation.
+    if (matches.length != 1) return;
+
+    final (tracker, completedHops) = matches.single;
+    final message = _pendingMessages[tracker.messageId];
+    if (message == null || message.retryCount != tracker.attemptIndex) return;
+
+    tracker.bind(echo);
+    if (completedHops <= message.deliveryProgressCompletedSteps) return;
+    final updatedMessage = message.copyWith(
+      deliveryProgressCompletedSteps: completedHops.clamp(
+        0,
+        message.deliveryProgressTotalSteps,
+      ).toInt(),
+    );
+    _pendingMessages[tracker.messageId] = updatedMessage;
+    _config?.updateMessage(updatedMessage);
+  }
+
+  void _armProgressTracker(
+    String messageId,
+    Message message,
+    Contact contact,
+  ) {
+    final existing = _progressTrackers[messageId];
+    if (existing?.attemptIndex == message.retryCount) return;
+    _retireProgressTracker(messageId);
+    final hopCount = message.pathLength;
+    final selfPublicKey = _config?.getSelfPublicKey?.call();
+    if (hopCount == null ||
+        hopCount <= 0 ||
+        selfPublicKey == null ||
+        selfPublicKey.isEmpty ||
+        contact.publicKey.isEmpty ||
+        message.pathBytes.isEmpty ||
+        message.pathBytes.length % hopCount != 0) {
+      return;
+    }
+    final pathHashWidth = message.pathBytes.length ~/ hopCount;
+    if (pathHashWidth < 1 || pathHashWidth > 4) return;
+
+    _progressTrackers[messageId] = DirectMessageProgressTracker(
+      messageId: messageId,
+      attemptIndex: message.retryCount,
+      destinationHash: contact.publicKey.first,
+      sourceHash: selfPublicKey.first,
+      pathHashWidth: pathHashWidth,
+      route: message.pathBytes,
+      rejectedPayloads:
+          _retiredProgressPayloads[messageId] ?? const <Uint8List>[],
+    );
+  }
+
+  void _retireProgressTracker(String messageId) {
+    final payload = _progressTrackers.remove(messageId)?.boundPayload;
+    if (payload == null) return;
+    _retiredProgressPayloads.putIfAbsent(messageId, () => []).add(payload);
+  }
+
   /// Update the stored contact snapshot for all pending messages to this contact.
   /// Call this when the contact's pathOverride changes so retries use the new path.
   void updatePendingContact(Contact contact) {
@@ -669,6 +754,8 @@ class MessageRetryService extends ChangeNotifier {
     _pendingContacts.remove(messageId);
     _preparedOutboundTexts.remove(messageId);
     _attemptPathHistory.remove(messageId);
+    _progressTrackers.remove(messageId);
+    _retiredProgressPayloads.remove(messageId);
     _timeoutTimers.remove(messageId);
     _resolvedMessages.remove(messageId);
     // Cancellation (and other cleanup paths) must release the active in-flight
@@ -882,6 +969,8 @@ class MessageRetryService extends ChangeNotifier {
         status: MessageStatus.delivered,
         deliveredAt: DateTime.now(),
         tripTimeMs: tripTimeMs,
+        deliveryProgressCompletedSteps:
+            message.deliveryProgressTotalSteps,
       );
 
       final wasAlreadyResolved = _resolvedMessages.contains(matchedMessageId);
@@ -1001,6 +1090,8 @@ class MessageRetryService extends ChangeNotifier {
     _sendQueue.clear();
     _activeMessages.clear();
     _resolvedMessages.clear();
+    _progressTrackers.clear();
+    _retiredProgressPayloads.clear();
     super.dispose();
   }
 }

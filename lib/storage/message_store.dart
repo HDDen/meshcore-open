@@ -237,6 +237,8 @@ class MessageStore {
       'pathBytes': msg.pathBytes.isNotEmpty
           ? base64Encode(msg.pathBytes)
           : null,
+      'deliveryProgressTotalSteps': msg.deliveryProgressTotalSteps,
+      'deliveryProgressCompletedSteps': msg.deliveryProgressCompletedSteps,
       'reactions': msg.reactions,
       'reactionStatuses': msg.reactionStatuses.map(
         (key, value) => MapEntry(key, value.index),
@@ -357,6 +359,10 @@ class MessageStore {
       tripTimeMs: json['tripTimeMs'] as int?,
       pathLength: decodedPathLength,
       pathBytes: decodedPathBytes,
+      deliveryProgressTotalSteps:
+          json['deliveryProgressTotalSteps'] as int? ?? 0,
+      deliveryProgressCompletedSteps:
+          json['deliveryProgressCompletedSteps'] as int? ?? 0,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(

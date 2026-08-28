@@ -70,6 +70,8 @@ class Message {
   final int? tripTimeMs;
   final int? pathLength;
   final Uint8List pathBytes;
+  final int deliveryProgressTotalSteps;
+  final int deliveryProgressCompletedSteps;
   final Map<String, List<String?>> reactions;
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
@@ -125,6 +127,8 @@ class Message {
     this.tripTimeMs,
     this.pathLength,
     Uint8List? pathBytes,
+    this.deliveryProgressTotalSteps = 0,
+    this.deliveryProgressCompletedSteps = 0,
     Uint8List? fourByteRoomContactKey,
     this.wasBlocked = false,
     Map<String, List<String?>>? reactions,
@@ -153,6 +157,8 @@ class Message {
     int? tripTimeMs,
     int? pathLength,
     Uint8List? pathBytes,
+    int? deliveryProgressTotalSteps,
+    int? deliveryProgressCompletedSteps,
     bool? isCli,
     Object? originalText = _unset,
     Object? translatedText = _unset,
@@ -268,6 +274,11 @@ class Message {
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
       pathLength: pathLength ?? this.pathLength,
       pathBytes: pathBytes ?? this.pathBytes,
+      deliveryProgressTotalSteps:
+          deliveryProgressTotalSteps ?? this.deliveryProgressTotalSteps,
+      deliveryProgressCompletedSteps:
+          deliveryProgressCompletedSteps ??
+          this.deliveryProgressCompletedSteps,
       reactions: reactions ?? this.reactions,
       reactionStatuses: reactionStatuses ?? this.reactionStatuses,
       fourByteRoomContactKey:
