@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
+import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
 import 'package:meshcore_open/helpers/signal_reading_text.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -97,6 +98,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
   final MapController _mapController = MapController();
+  final double? _sessionInitialZoom = MapSessionZoom.value;
   final ScrollController _traceObservationScrollController =
       ScrollController();
   StreamSubscription<Uint8List>? _frameSubscription;
@@ -877,7 +879,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         _initialCenter = _points.isNotEmpty
             ? _points.first
             : const LatLng(0, 0);
-        _initialZoom = _points.isNotEmpty ? 13.0 : 2.0;
+        _initialZoom = (_sessionInitialZoom ??
+                (_points.isNotEmpty ? 13.0 : 2.0))
+            .clamp(_mapMinZoom, _mapMaxZoom)
+            .toDouble();
         _bounds = _points.length > 1 ? LatLngBounds.fromPoints(_points) : null;
         _mapKey = ValueKey(
           '${context.l10n.pathTrace_you},${_traceData!.pathData.map(PathHelper.formatHopHex).join(',')}',
@@ -1709,7 +1714,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         ),
         initialCenter: _initialCenter!,
         initialZoom: _initialZoom,
-        initialCameraFit: _bounds == null
+        initialCameraFit: _bounds == null || _sessionInitialZoom != null
             ? null
             : CameraFit.bounds(
                 bounds: _bounds!,
@@ -1720,6 +1725,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         maxZoom: _mapMaxZoom,
         onPositionChanged: (camera, hasGesture) {
           if (!mounted) return;
+          MapSessionZoom.remember(camera.zoom);
           // A manual pan/zoom releases the follow lock.
           if (hasGesture && _followPacket) {
             setState(() {

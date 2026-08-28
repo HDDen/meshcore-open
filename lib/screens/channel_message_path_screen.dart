@@ -16,6 +16,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcmp_timestamp_warning.dart';
+import '../helpers/map_session_zoom.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
@@ -767,6 +768,7 @@ class _ChannelMessagePathMapScreenState
   static const double _mapMaxZoom = 18.0;
 
   final MapController _mapController = MapController();
+  final double? _sessionInitialZoom = MapSessionZoom.value;
   Uint8List? _selectedPath;
   double _pathDistance = 0.0;
   bool _showNodeLabels = true;
@@ -1179,7 +1181,10 @@ class _ChannelMessagePathMapScreenState
         final initialCenter = points.isNotEmpty
             ? points.first
             : const LatLng(0, 0);
-        final initialZoom = points.isNotEmpty ? 13.0 : 2.0;
+        final initialZoom = (_sessionInitialZoom ??
+                (points.isNotEmpty ? 13.0 : 2.0))
+            .clamp(_mapMinZoom, _mapMaxZoom)
+            .toDouble();
         if (!_didReceivePositionUpdate) {
           _showNodeLabels = initialZoom >= _labelZoomThreshold;
         }
@@ -1205,7 +1210,8 @@ class _ChannelMessagePathMapScreenState
                   options: MapOptions(
                     initialCenter: initialCenter,
                     initialZoom: initialZoom,
-                    initialCameraFit: bounds == null
+                    initialCameraFit:
+                        bounds == null || _sessionInitialZoom != null
                         ? null
                         : CameraFit.bounds(
                             bounds: bounds,
@@ -1229,6 +1235,7 @@ class _ChannelMessagePathMapScreenState
                     ),
                     onPositionChanged: (camera, hasGesture) {
                       if (!mounted) return;
+                      MapSessionZoom.remember(camera.zoom);
                       // A manual pan/zoom releases the follow lock.
                       if (hasGesture && _followPacket) {
                         setState(() {

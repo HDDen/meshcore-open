@@ -42,6 +42,7 @@ import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/map_session_zoom.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
@@ -114,6 +115,13 @@ class _MapScreenState extends State<MapScreen>
   static const double _guessedZoomThreshold = 12.0;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
+  static LatLng? _sessionCenter;
+
+  bool get _usesMainMapCenterMemory =>
+      !widget.locationPickerMode &&
+      widget.highlightPosition == null &&
+      widget.neighborFocus == null &&
+      (widget.initialTracePath == null || widget.initialTracePath!.isEmpty);
   static const double _wardrivePanelBottomInset = 16.0;
   static const Duration _wardriveDiscoveryRetryDelay = Duration(seconds: 10);
   static const String _nodeFiltersExpandedKey =
@@ -220,7 +228,14 @@ class _MapScreenState extends State<MapScreen>
           });
         }
         if (widget.highlightPosition != null && widget.highlightLinks.isEmpty) {
-          _mapController.move(widget.highlightPosition!, widget.highlightZoom);
+          _mapController.move(
+            widget.highlightPosition!,
+            MapSessionZoom.resolve(
+              widget.highlightZoom,
+              minZoom: _mapMinZoom,
+              maxZoom: _mapMaxZoom,
+            ),
+          );
         }
       }
     });
@@ -310,6 +325,17 @@ class _MapScreenState extends State<MapScreen>
     _isCurrentRouteActive = true;
     _syncWardriveScreenWakelock();
     _syncWardriveFollowMe();
+    final zoom = MapSessionZoom.value;
+    if (zoom != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final camera = _mapController.camera;
+        final target = zoom.clamp(_mapMinZoom, _mapMaxZoom).toDouble();
+        if ((camera.zoom - target).abs() > 0.001) {
+          _mapController.move(camera.center, target);
+        }
+      });
+    }
   }
 
   @override
@@ -844,6 +870,9 @@ class _MapScreenState extends State<MapScreen>
             initialZoom = 12.0;
           }
         }
+        if (_usesMainMapCenterMemory && _sessionCenter != null) {
+          center = _sessionCenter!;
+        }
         if (neighborFocusPoints.isNotEmpty) {
           center = neighborFocus!.center(contactsWithLocation)!;
           if (neighborFocusPoints.length == 1) {
@@ -890,6 +919,11 @@ class _MapScreenState extends State<MapScreen>
             );
           }
         }
+        initialZoom = MapSessionZoom.resolve(
+          initialZoom,
+          minZoom: _mapMinZoom,
+          maxZoom: _mapMaxZoom,
+        );
 
         // Re center map after removed markers have loaded
         if (!_hasInitializedMap && _removedMarkersLoaded) {
@@ -1177,6 +1211,10 @@ class _MapScreenState extends State<MapScreen>
                       );
                     },
                     onPositionChanged: (camera, hasGesture) {
+                      MapSessionZoom.remember(camera.zoom);
+                      if (_usesMainMapCenterMemory) {
+                        _sessionCenter = camera.center;
+                      }
                       // Track zoom in half-step buckets so cluster/marker
                       // detail levels update without rebuilding every frame.
                       final bucket = (camera.zoom * 2).roundToDouble() / 2;

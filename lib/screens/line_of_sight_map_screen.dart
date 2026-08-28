@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../helpers/map_session_zoom.dart';
 import '../screens/channels_screen.dart';
 import '../screens/contacts_screen.dart';
 import '../models/app_settings.dart';
@@ -65,6 +66,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
 
   final LineOfSightService _lineOfSightService = LineOfSightService();
   final MapController _mapController = MapController();
+  final double? _sessionInitialZoom = MapSessionZoom.value;
   final DraggableScrollableController _panelController =
       DraggableScrollableController();
 
@@ -369,7 +371,10 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
     final bounds = mapPoints.length > 1
         ? LatLngBounds.fromPoints(mapPoints)
         : null;
-    final initialZoom = mapPoints.length > 1 ? 13.0 : 2.0;
+    final initialZoom = (_sessionInitialZoom ??
+            (mapPoints.length > 1 ? 13.0 : 2.0))
+        .clamp(_mapMinZoom, _mapMaxZoom)
+        .toDouble();
     final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
     if (!_didReceivePositionUpdate) {
       _showMarkerLabels = initialZoom >= _labelZoomThreshold;
@@ -404,7 +409,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             options: MapOptions(
               initialCenter: initialCenter,
               initialZoom: initialZoom,
-              initialCameraFit: bounds == null
+              initialCameraFit: bounds == null || _sessionInitialZoom != null
                   ? null
                   : CameraFit.bounds(
                       bounds: bounds,
@@ -429,6 +434,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
               onLongPress: (_, point) => _addCustomPoint(point),
               onSecondaryTap: (_, point) => _addCustomPoint(point),
               onPositionChanged: (camera, hasGesture) {
+                MapSessionZoom.remember(camera.zoom);
                 final shouldShow = camera.zoom >= _labelZoomThreshold;
                 if (!_didReceivePositionUpdate ||
                     shouldShow != _showMarkerLabels) {
