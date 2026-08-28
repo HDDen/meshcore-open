@@ -8,6 +8,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -22,6 +24,8 @@
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
     "chat_sendImage",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -35,6 +39,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -48,6 +54,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -61,6 +69,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -74,6 +84,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -87,6 +99,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -100,6 +114,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -113,6 +129,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -126,6 +144,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -139,6 +159,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -156,6 +178,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -169,6 +193,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -182,6 +208,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -195,6 +223,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ],
@@ -208,6 +238,8 @@
     "chat_mcmpSignedTimestamp",
     "chat_mcmpTimestampQueerly",
     "chat_mcmpTimestampQueerlyReceived",
+    "chat_hideBlockedSenderMessages",
+    "chat_showBlockedSenderMessages",
     "repeater_cliClearNeighbors",
     "reaction_report"
   ]

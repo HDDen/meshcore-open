@@ -70,6 +70,7 @@ class ChannelMessage {
   /// resurrect a marker or a `del:` command from the muted period, and
   /// revealing the text by hand must not either.
   final bool wasBlocked;
+
   final int? binaryPacketBytes;
   final DateTime timestamp;
   final DateTime receivedAt;

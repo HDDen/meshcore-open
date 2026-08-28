@@ -6288,6 +6288,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_blockSenderName => 'Имя отправителя';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Скрывать виджеты сообщений';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Показывать виджеты сообщений';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Как увидят получатели';
 
   @override

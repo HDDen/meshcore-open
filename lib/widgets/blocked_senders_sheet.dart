@@ -62,6 +62,18 @@ class _BlockedSendersSheetState extends State<BlockedSendersSheet> {
     setState(() {});
   }
 
+  Future<void> _toggleMessageWidgets(
+    String name,
+    BlockedSenderRule rule,
+  ) async {
+    await BlockedSenders.instance.setMessageWidgetsHidden(
+      name,
+      !rule.hideMessageWidgets,
+    );
+    if (!mounted) return;
+    setState(() {});
+  }
+
   Future<void> _promptAdd() async {
     _addController.clear();
     final name = await showDialog<String>(
@@ -143,11 +155,30 @@ class _BlockedSendersSheetState extends State<BlockedSendersSheet> {
         overflow: TextOverflow.ellipsis,
         style: faded,
       ),
-      trailing: IconButton(
-        tooltip: context.l10n.common_delete,
-        icon: const Icon(Icons.delete_outline),
-        color: theme.colorScheme.error,
-        onPressed: () => unawaited(_remove(name)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: rule.hideMessageWidgets
+                ? context.l10n.chat_showBlockedSenderMessages
+                : context.l10n.chat_hideBlockedSenderMessages,
+            icon: Icon(
+              rule.hideMessageWidgets
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+            ),
+            color: rule.hideMessageWidgets
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+            onPressed: () => unawaited(_toggleMessageWidgets(name, rule)),
+          ),
+          IconButton(
+            tooltip: context.l10n.common_delete,
+            icon: const Icon(Icons.delete_outline),
+            color: theme.colorScheme.error,
+            onPressed: () => unawaited(_remove(name)),
+          ),
+        ],
       ),
     );
   }

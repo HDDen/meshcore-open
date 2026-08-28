@@ -6253,6 +6253,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_blockSenderName => 'Meno odosielateľa';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Zobraziť ako u príjemcov';
 
   @override

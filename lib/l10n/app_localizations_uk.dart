@@ -6300,6 +6300,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_blockSenderName => 'Ім\'я відправника';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Як побачать одержувачі';
 
   @override

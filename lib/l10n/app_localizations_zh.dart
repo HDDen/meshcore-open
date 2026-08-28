@@ -5850,6 +5850,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_blockSenderName => '发送者名称';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => '查看接收方效果';
 
   @override

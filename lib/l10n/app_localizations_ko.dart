@@ -5983,6 +5983,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_blockSenderName => '발신자 이름';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => '수신자 화면으로 보기';
 
   @override

@@ -10696,6 +10696,18 @@ abstract class AppLocalizations {
   /// **'Sender name'**
   String get chat_blockSenderName;
 
+  /// No description provided for @chat_hideBlockedSenderMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide message rows'**
+  String get chat_hideBlockedSenderMessages;
+
+  /// No description provided for @chat_showBlockedSenderMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Show message rows'**
+  String get chat_showBlockedSenderMessages;
+
   /// No description provided for @imageSend_previewShowAsReceived.
   ///
   /// In en, this message translates to:

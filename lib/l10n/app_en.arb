@@ -3532,6 +3532,8 @@
   "chat_blockedSendersEmpty": "No blocked senders",
   "chat_blockedSendersAllChannels": "All channels",
   "chat_blockSenderName": "Sender name",
+  "chat_hideBlockedSenderMessages": "Hide message rows",
+  "chat_showBlockedSenderMessages": "Show message rows",
   "imageSend_previewShowAsReceived": "Show as received",
   "imageSend_previewShowOriginal": "Show original",
   "imageSend_previewAsReceived": "This is what receivers will see",

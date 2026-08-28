@@ -6268,6 +6268,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chat_blockSenderName => 'Naam afzender';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Tonen zoals ontvangen';
 
   @override

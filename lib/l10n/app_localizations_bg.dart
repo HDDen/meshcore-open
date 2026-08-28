@@ -6287,6 +6287,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_blockSenderName => 'Име на подателя';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived =>
       'Както ще го видят получателите';
 

@@ -306,7 +306,11 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
       mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
-      wasBlocked: json['wasBlocked'] as bool? ?? false,
+      // Fold the short-lived whole-row flag into the permanent receive-time
+      // stamp while reading stores written by builds that carried both.
+      wasBlocked:
+          (json['wasBlocked'] as bool? ?? false) ||
+          (json['hiddenByBlockedSender'] as bool? ?? false),
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       receivedAt: DateTime.fromMillisecondsSinceEpoch(

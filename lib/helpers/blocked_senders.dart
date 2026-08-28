@@ -45,6 +45,15 @@ class BlockedSenders extends ChangeNotifier {
   int get revision => _revision;
   int _revision = 0;
 
+  /// Whether the most recent notification may require old messages to gain
+  /// their permanent [ChannelMessage.wasBlocked] stamp.
+  ///
+  /// The whole-row visibility switch is evaluated while drawing and proxying,
+  /// so changing only that switch must not walk or rewrite message history.
+  bool get lastChangeRequiresMessageStamp =>
+      _lastChangeRequiresMessageStamp;
+  bool _lastChangeRequiresMessageStamp = false;
+
   final BlockedSenderStore _store = BlockedSenderStore();
   Map<String, BlockedSenderRule>? _rules;
 
@@ -137,6 +146,7 @@ class BlockedSenders extends ChangeNotifier {
         keyHex: keyHex,
         channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
         blockedAt: blockedAt,
+        hideMessageWidgets: existing?.hideMessageWidgets ?? false,
       ),
     });
   }
@@ -212,6 +222,17 @@ class BlockedSenders extends ChangeNotifier {
     return !message.receivedAt.isBefore(rule.blockedAt);
   }
 
+  /// Whether this rule currently removes the whole channel-message row.
+  ///
+  /// [ChannelMessage.wasBlocked] is the receive-time answer and never follows
+  /// this switch. The date check also covers shared and legacy history whose
+  /// owning receive path could not stamp our app-wide rule.
+  bool hidesMessageWidget(ChannelMessage message, String channelName) {
+    final rule = ruleFor(message, channelName);
+    if (rule == null || !rule.hideMessageWidgets) return false;
+    return message.wasBlocked || !message.receivedAt.isBefore(rule.blockedAt);
+  }
+
   /// Whether a quoted message's text must be replaced by the placeholder.
   ///
   /// A reply preview carries a snapshot of somebody else's message, taken when
@@ -280,6 +301,7 @@ class BlockedSenders extends ChangeNotifier {
         keyHex: keyHex,
         channels: existing?.channels ?? const [BlockedSenderRule.everyChannel],
         blockedAt: blockedAt,
+        hideMessageWidgets: existing?.hideMessageWidgets ?? false,
       ),
     });
   }
@@ -337,6 +359,7 @@ class BlockedSenders extends ChangeNotifier {
       ...rules,
       name: BlockedSenderRule(
         blockedAt: _blockedAtFor(existing?.blockedAt, null),
+        hideMessageWidgets: existing?.hideMessageWidgets ?? false,
       ),
     });
   }
@@ -347,9 +370,26 @@ class BlockedSenders extends ChangeNotifier {
     await _write({...rules}..remove(name));
   }
 
-  Future<void> _write(Map<String, BlockedSenderRule> updated) async {
+  Future<void> setMessageWidgetsHidden(
+    String senderName,
+    bool hidden,
+  ) async {
+    final name = senderName.trim();
+    final rule = rules[name];
+    if (rule == null || rule.hideMessageWidgets == hidden) return;
+    await _write(
+      {...rules, name: rule.copyWith(hideMessageWidgets: hidden)},
+      requiresMessageStamp: false,
+    );
+  }
+
+  Future<void> _write(
+    Map<String, BlockedSenderRule> updated, {
+    bool requiresMessageStamp = true,
+  }) async {
     _rules = Map.unmodifiable(updated);
     _revision++;
+    _lastChangeRequiresMessageStamp = requiresMessageStamp;
     // Before the await: what draws a message now asks this table directly, so
     // the redraw must not wait on a preferences write.
     notifyListeners();

@@ -16,6 +16,7 @@ class BlockedSenderRule {
     required this.blockedAt,
     this.keyHex = '',
     this.channels = const [everyChannel],
+    this.hideMessageWidgets = false,
   });
 
   final String keyHex;
@@ -37,6 +38,9 @@ class BlockedSenderRule {
   /// wildcard, callers have to agree on what an unnamed channel is called.
   final List<String> channels;
 
+  /// Whether channel message rows covered by this rule are omitted entirely.
+  final bool hideMessageWidgets;
+
   bool coversChannel(String channelName) {
     if (channels.contains(everyChannel)) return true;
     final wanted = normalizeChannel(channelName);
@@ -49,10 +53,12 @@ class BlockedSenderRule {
     String? keyHex,
     List<String>? channels,
     DateTime? blockedAt,
+    bool? hideMessageWidgets,
   }) => BlockedSenderRule(
     keyHex: keyHex ?? this.keyHex,
     channels: channels ?? this.channels,
     blockedAt: blockedAt ?? this.blockedAt,
+    hideMessageWidgets: hideMessageWidgets ?? this.hideMessageWidgets,
   );
 
   /// Null for a rule written before blocks carried a moment — the caller
@@ -76,6 +82,7 @@ class BlockedSenderRule {
           ? const [everyChannel]
           : List.unmodifiable(channels),
       blockedAt: blockedAt,
+      hideMessageWidgets: json['hideMessageWidgets'] as bool? ?? false,
     );
   }
 
@@ -83,6 +90,7 @@ class BlockedSenderRule {
     'key': keyHex,
     'channels': channels,
     'blockedAtMs': blockedAt.millisecondsSinceEpoch,
+    'hideMessageWidgets': hideMessageWidgets,
   };
 }
 

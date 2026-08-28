@@ -559,7 +559,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
     return [
-      ...connector.getChannelMessages(widget.channel),
+      ...connector.getChannelMessages(widget.channel).where(
+        (message) => !connector.hidesChannelMessageWidget(
+          message,
+          widget.channel.index,
+        ),
+      ),
       ...connector.getPendingChannelMessages(widget.channel.index),
     ];
   }

@@ -6281,6 +6281,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_blockSenderName => 'Feladó neve';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Így látják a címzettek';
 
   @override

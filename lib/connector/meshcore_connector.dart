@@ -2776,9 +2776,7 @@ class MeshCoreConnector extends ChangeNotifier {
           : orderedMessages;
 
       _channelMessages[channelIndex] = windowedMessages;
-      // History comes out of the store as it was written; a rule added since
-      // then has to reach it. Cheap when nothing is blocked, and a no-op when
-      // the flags are already right.
+      // A stored or shared-history row may predate receive-time stamping.
       await applyBlockedSenderRules(channelIndex: channelIndex);
       if (notify) notifyListeners();
       return true;
@@ -11803,24 +11801,139 @@ class MeshCoreConnector extends ChangeNotifier {
         );
   }
 
+  bool hidesChannelMessageWidget(ChannelMessage message, int channelIndex) {
+    return BlockedSenders.instance.hidesMessageWidget(
+      message,
+      _channelDisplayName(channelIndex),
+    );
+  }
+
+  bool mcoX4(Uint8List frame) {
+    if (frame.isEmpty) return false;
+    try {
+      ChannelMessage? message;
+      int? channelIndex;
+      switch (frame.first) {
+        case respCodeChannelMsgRecv:
+        case respCodeChannelMsgRecvV3:
+          message = ChannelMessage.fromFrame(frame);
+          channelIndex = message?.channelIndex;
+          break;
+        case respCodeChannelDataRecv:
+          final dataFrame = parseChannelDataReceivedFrame(frame);
+          if (dataFrame == null) return false;
+          message = _proxyFilterChannelDataMessage(
+            dataFrame.channelIndex,
+            dataFrame.dataType,
+            dataFrame.payload,
+          );
+          channelIndex = dataFrame.channelIndex;
+          break;
+        case pushCodeLogRxData:
+          return _hidesProxyLogRxFrame(frame);
+        default:
+          return false;
+      }
+      if (message == null || channelIndex == null) return false;
+      return hidesChannelMessageWidget(message, channelIndex);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  ChannelMessage? _proxyFilterChannelDataMessage(
+    int channelIndex,
+    int dataType,
+    Uint8List payload,
+  ) {
+    final decoded = ChannelBinaryDataHelper.tryDecodeInbound(
+      dataType: dataType,
+      payload: payload,
+    );
+    final appDecoded = decoded == null
+        ? ChannelBinaryDataHelper.tryDecodeAppData(
+            dataType: dataType,
+            payload: payload,
+          )
+        : null;
+    if (decoded == null && appDecoded == null) return null;
+    final mcmpMessage = appDecoded?.mcmpMessage;
+    final timestamp = mcmpMessage == null
+        ? decoded?.timestamp ?? DateTime.now()
+        : DateTime.fromMillisecondsSinceEpoch(
+            mcmpMessage.timestamp * 1000,
+          );
+    return ChannelMessage(
+      senderName: decoded?.senderName ?? appDecoded!.senderName,
+      text: '',
+      timestamp: timestamp,
+      receivedAt: DateTime.now(),
+      isOutgoing: false,
+      status: ChannelMessageStatus.sent,
+      channelIndex: channelIndex,
+    );
+  }
+
+  bool _hidesProxyLogRxFrame(Uint8List frame) {
+    if (frame.length < 4) return false;
+    final reader = BufferReader(frame)..skipBytes(3);
+    final packet = _parseRawPacket(reader.readRemainingBytes());
+    if (packet == null ||
+        (packet.payloadType != _payloadTypeGroupText &&
+            packet.payloadType != _payloadTypeGroupData)) {
+      return false;
+    }
+    final payload = BufferReader(packet.payload);
+    final channelHash = payload.readByte();
+    final encrypted = Uint8List.fromList(payload.readRemainingBytes());
+    final channelsToSearch = _channels.isNotEmpty ? _channels : _cachedChannels;
+    for (final channel in channelsToSearch) {
+      if (channel.isEmpty || _computeChannelHash(channel.psk) != channelHash) {
+        continue;
+      }
+      final decryptedBytes = _decryptPayload(channel.psk, encrypted);
+      if (decryptedBytes == null) return false;
+      ChannelMessage? message;
+      if (packet.payloadType == _payloadTypeGroupData) {
+        message = _parseLogRxChannelData(
+          packet,
+          channel.index,
+          decryptedBytes,
+        );
+      } else {
+        if (decryptedBytes.length < 6) return false;
+        final decrypted = BufferReader(decryptedBytes);
+        final timestamp = decrypted.readUInt32LE();
+        final txtType = decrypted.readByte();
+        if ((txtType >> 2) != 0) return false;
+        final sender = _splitSenderText(decrypted.readCString()).senderName;
+        message = ChannelMessage(
+          senderName: sender,
+          text: '',
+          timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp * 1000),
+          receivedAt: DateTime.now(),
+          isOutgoing: false,
+          status: ChannelMessageStatus.sent,
+          channelIndex: channel.index,
+        );
+      }
+      return message != null &&
+          hidesChannelMessageWidget(message, channel.index);
+    }
+    return false;
+  }
+
   void _handleBlockedSendersChanged() {
-    unawaited(applyBlockedSenderRules());
+    if (BlockedSenders.instance.lastChangeRequiresMessageStamp) {
+      unawaited(applyBlockedSenderRules());
+    }
     notifyListeners();
   }
 
-  /// Stamps [ChannelMessage.wasBlocked] onto every loaded message a rule now
-  /// hides, and saves the channels that changed.
+  /// Permanently stamps messages reached by a newly created or widened block.
   ///
-  /// The receive path already stamps what arrives while a rule is in force;
-  /// this covers what the date boundary reaches and the stamp did not — and it
-  /// makes the flag permanent, so lifting the block does not bring those
-  /// messages, or the map commands they carry, back. Runs on every change to
-  /// the table and once after a channel's history is read from storage.
-  ///
-  /// Only this node's own store is swept. A copy merged in from another node's
-  /// shared history is hidden by the display-time check instead of being
-  /// rewritten: it belongs to that node, and the flag it wants is the answer
-  /// *our* rules give, which is exactly what the check computes on the fly.
+  /// Whole-row visibility is deliberately absent here: its eye switch is read
+  /// dynamically and never rewrites channel history.
   Future<void> applyBlockedSenderRules({int? channelIndex}) async {
     if (BlockedSenders.instance.rules.isEmpty) return;
     var changed = false;

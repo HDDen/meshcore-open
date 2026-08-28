@@ -6185,6 +6185,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_blockSenderName => 'Sender name';
 
   @override
+  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+
+  @override
+  String get chat_showBlockedSenderMessages => 'Show message rows';
+
+  @override
   String get imageSend_previewShowAsReceived => 'Show as received';
 
   @override

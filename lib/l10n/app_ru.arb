@@ -2700,6 +2700,8 @@
   "chat_blockedSendersEmpty": "Заблокированных отправителей нет",
   "chat_blockedSendersAllChannels": "Все каналы",
   "chat_blockSenderName": "Имя отправителя",
+  "chat_hideBlockedSenderMessages": "Скрывать виджеты сообщений",
+  "chat_showBlockedSenderMessages": "Показывать виджеты сообщений",
   "imageSend_previewShowAsReceived": "Как увидят получатели",
   "imageSend_previewShowOriginal": "Показать оригинал",
   "imageSend_previewAsReceived": "Так изображение увидят получатели",
