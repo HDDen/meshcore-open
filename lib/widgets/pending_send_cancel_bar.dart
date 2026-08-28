@@ -59,8 +59,7 @@ class _PendingSendCancelBarState extends State<PendingSendCancelBar> {
 
     return InkWell(
       onTap: widget.onCancel,
-      child: SizedBox(
-        width: double.infinity,
+      child: IntrinsicWidth(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
