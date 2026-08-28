@@ -78,6 +78,16 @@ set(USE_SYSTEM_ONNXRUNTIME OFF CACHE BOOL
   "Bundle ONNX Runtime with the application" FORCE)
 include(flutter/generated_plugins.cmake)
 
+# The executable is installed in the bundle root and correctly uses
+# $ORIGIN/lib. The ONNX plugin itself is installed inside lib/, so its
+# dependency on libonnxruntime.so.1 must be resolved relative to that directory
+# instead. RUNPATH is not inherited from the executable for indirect
+# dependencies.
+if(TARGET flutter_onnxruntime_plugin)
+  set_target_properties(flutter_onnxruntime_plugin PROPERTIES
+    INSTALL_RPATH "$ORIGIN")
+endif()
+
 # Work around tinycthread/glibc 2.43+ conflict: glibc 2.43 (with Clang 21's
 # C23 default) exports once_flag from stdlib.h bt tinycthread in flserial
 # defines once_flag as a preprocessor macro, causing a typedef clash.
