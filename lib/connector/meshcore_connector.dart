@@ -2950,6 +2950,14 @@ class MeshCoreConnector extends ChangeNotifier {
               contactKey: contactKey,
               deviceTimeoutMs: deviceTimeoutMs,
             ),
+        calculatePhysicsMaxTimeout:
+            (pathLength, pathBytes, messageBytes, attempt) =>
+                _calculatePhysicsMaxTimeout(
+                  pathLength: pathLength,
+                  pathBytes: pathBytes,
+                  messageBytes: messageBytes,
+                  attempt: attempt,
+                ),
         getSelfPublicKey: () => _selfPublicKey,
         // The retry service computes wire-facing values (ACK hashes); it must
         // never see the size-estimation signature placeholder.
@@ -9160,10 +9168,27 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  /// Hard ceiling on any ML-derived or physics-fallback timeout (ms).
-  /// Prevents the flood formula (500 + 16·airtime at SF12 ≈ 150s) and an
-  /// unstable OLS model from producing multi-minute waits.
-  static const int _hardMaxTimeoutMs = 45000;
+  /// Absolute 120-second ceiling for ML-derived and physics-fallback timeouts.
+  static const int _hardMaxTimeoutMs = 120000;
+
+  int _calculatePhysicsMaxTimeout({
+    required int pathLength,
+    required int pathBytes,
+    required int messageBytes,
+    required int attempt,
+  }) {
+    // Match BaseChatMesh::composeMsgPacket(), Utils::encryptThenMAC() and
+    // Packet::getRawLength(): timestamp/type, optional extended attempt,
+    // AES block padding, address hashes, MAC, packet header and path.
+    final plaintextBytes = 5 + messageBytes + (attempt > 3 ? 2 : 0);
+    final encryptedBytes = ((plaintextBytes + 15) ~/ 16) * 16;
+    final radioPacketBytes = 2 + pathBytes + 2 + 2 + encryptedBytes;
+    final airtime = _estimateAirtimeMs(radioPacketBytes);
+    return _physicsMaxTimeout(
+      pathLength,
+      airtime,
+    ).clamp(0, _hardMaxTimeoutMs).toInt();
+  }
 
   /// Calculate timeout for a message based on radio settings and path length.
   /// Returns timeout in milliseconds, considering number of hops.

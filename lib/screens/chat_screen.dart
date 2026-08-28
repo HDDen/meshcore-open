@@ -3359,7 +3359,7 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                           ),
                         if (showDeliveryProgress)
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 6),
                           ],
                         ),
                         if (showDeliveryProgress)

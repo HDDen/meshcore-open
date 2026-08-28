@@ -51,6 +51,13 @@ class RetryServiceConfig {
     int? deviceTimeoutMs,
   })?
   calculateTimeout;
+  final int Function(
+    int pathLength,
+    int pathBytes,
+    int messageBytes,
+    int attempt,
+  )?
+  calculatePhysicsMaxTimeout;
   final Uint8List? Function()? getSelfPublicKey;
   final String Function(Contact, String)? prepareContactOutboundText;
   final AppSettingsService? appSettingsService;
@@ -72,6 +79,7 @@ class RetryServiceConfig {
     this.clearContactPath,
     this.setContactPath,
     this.calculateTimeout,
+    this.calculatePhysicsMaxTimeout,
     this.getSelfPublicKey,
     this.prepareContactOutboundText,
     this.appSettingsService,
@@ -90,9 +98,9 @@ class MessageRetryService extends ChangeNotifier {
   /// shared globally; cap at 6 to leave two slots of headroom.
   static const int _maxGlobalInFlight = 6;
 
-  /// Fallback timeouts for attempts that never got RESP_CODE_SENT: a quick
-  /// retry when the transport write never happened, and a generous ceiling
-  /// for a lost node response (normally answered in well under a second).
+  /// Fallback for a transport write that never happened. The fixed sent
+  /// fallback is retained only for integrations without an airtime calculator
+  /// and legacy pending state that has no stored estimate.
   static const int _failedSendRetryMs = 2000;
   static const int _sentRespFallbackMs = 15000;
 
@@ -544,11 +552,33 @@ class MessageRetryService extends ChangeNotifier {
         !_resolvedMessages.contains(messageId) &&
         finalMessage.status == MessageStatus.pending &&
         finalMessage.retryCount == attempt) {
+      final fallbackTimeoutMs = sentByRadioAt == null
+          ? _failedSendRetryMs
+          : _calculateSentResponseFallbackTimeout(finalMessage, contact);
       _startTimeoutTimer(
         messageId,
-        sentByRadioAt == null ? _failedSendRetryMs : _sentRespFallbackMs,
+        fallbackTimeoutMs,
       );
     }
+  }
+
+  int _calculateSentResponseFallbackTimeout(
+    Message message,
+    Contact contact,
+  ) {
+    final config = _config;
+    final calculate = config?.calculatePhysicsMaxTimeout;
+    if (config == null || calculate == null) return _sentRespFallbackMs;
+    final outboundText =
+        _preparedOutboundTexts[message.messageId] ??
+        config.prepareContactOutboundText?.call(contact, message.text) ??
+        message.text;
+    return calculate(
+      message.pathLength ?? contact.pathLength,
+      message.pathBytes.length,
+      utf8.encode(outboundText).length,
+      message.retryCount,
+    );
   }
 
   bool updateMessageFromSent(int ackHash, int timeoutMs) {
