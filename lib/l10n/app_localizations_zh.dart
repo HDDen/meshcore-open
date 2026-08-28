@@ -45,7 +45,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_close => '关闭';
 
   @override
-  String get common_done => 'Done';
+  String get common_done => '完成';
 
   @override
   String get common_edit => '编辑';
@@ -513,7 +513,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_actions => '操作';
 
   @override
-  String get settings_deleteAllPaths => 'Delete All Paths';
+  String get settings_deleteAllPaths => '删除所有路径';
 
   @override
   String get settings_deleteAllPathsSubtitle =>
@@ -773,16 +773,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_languageUk => '乌克兰语';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 字节';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 字节';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 字节';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 字节';
 
   @override
   String get appSettings_enableMessageTracing => '启用消息追踪';
@@ -1040,7 +1040,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return '搜索联系人...';
+    return '搜索 $number$str 个联系人...';
   }
 
   @override
@@ -1223,7 +1223,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String channels_via(String path) {
-    return 'via $path';
+    return '经由 $path';
   }
 
   @override
@@ -1731,7 +1731,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes 已送达，$failures 失败';
   }
 
   @override
@@ -1742,7 +1742,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '$count of 64 hops';
+    return '$count / 64 跳';
   }
 
   @override
@@ -1945,22 +1945,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_flags => '标志';
 
   @override
-  String get map_type => 'Type';
+  String get map_type => '类型';
 
   @override
-  String get map_path => 'Path';
+  String get map_path => '路径';
 
   @override
-  String get map_location => 'Location';
+  String get map_location => '位置';
 
   @override
-  String get map_estLocation => 'Est. Location';
+  String get map_estLocation => '估计位置';
 
   @override
-  String get map_publicKey => 'Public Key';
+  String get map_publicKey => '公钥';
 
   @override
-  String get map_publicKeyPrefixHint => 'e.g. ab12';
+  String get map_publicKeyPrefixHint => '例如 ab12';
 
   @override
   String get map_shareMarkerHere => '在此分享标记';
@@ -2480,39 +2480,39 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => '已缓存的瓦片';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => '已缓存瓦片概况';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return '$source 已禁用离线批量下载。';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return '在此应用配置中，$source 的离线批量下载已禁用。';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return '来源：$source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return '该来源的已缓存瓦片：$count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return '所选区域/缩放级别中已缓存：$count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return '缓存大小约为：$size';
   }
 
   @override
@@ -4186,8 +4186,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathTrace_refreshTooltip => '刷新路径追踪';
 
   @override
-  String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip => '跳数已确认，但未直接收到回声';
 
   @override
   String get pathTrace_someHopsNoLocation => '某些跳缺少位置信息！';
@@ -4336,7 +4335,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String distanceUnit,
     String distanceFromB,
   ) {
-    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+    return '被 $obstruction $heightUnit 遮挡，距 A $distanceFromA，距 B $distanceFromB（$distanceUnit）。';
   }
 
   @override
@@ -4355,7 +4354,7 @@ class AppLocalizationsZh extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return '从 $baselineFreq MHz 处的 k=$baselineK 开始，计算调整当前 $frequencyMHz MHz 频段的 k 因子，该因子定义了弯曲的无线电范围上限。';
+    return '从 $baselineFreq MHz 处的 k=$baselineK 开始，计算将当前 $frequencyMHz MHz 频段的 k 因子调整为 $kFactor，该因子定义了弯曲的无线电范围上限。';
   }
 
   @override
@@ -4570,18 +4569,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '删除所有发现的联系人';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => '发现设备';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => '请求名称';
 
   @override
-  String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+  String get discoveredContacts_nameRequestFailed => '无法请求转发节点的名称';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return '发现设备失败：$error';
   }
 
   @override
@@ -4775,24 +4773,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translation_systemLanguage => '系统语言';
 
   @override
-  String get background_serviceTitle => 'MeshCore running';
+  String get background_serviceTitle => 'MeshCore 正在运行';
 
   @override
   String get background_serviceText => 'Keeping BLE connected';
 
   @override
   String appSettings_translationModelDeleted(String name) {
-    return 'Deleted $name';
+    return '已删除 $name';
   }
 
   @override
   String appSettings_translationModelDeleteFailed(String error) {
-    return 'Failed to delete: $error';
+    return '删除失败：$error';
   }
 
   @override
   String channels_channelUpdateFailed(String error) {
-    return 'Failed to update channel: $error';
+    return '更新频道失败：$error';
   }
 
   @override
@@ -4840,19 +4838,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_dmSendAsBinary => '以二进制发送扩展格式（私聊消息）';
 
   @override
-  String get contact_typeChat => 'Chat';
+  String get contact_typeChat => '聊天';
 
   @override
-  String get contact_typeRepeater => 'Repeater';
+  String get contact_typeRepeater => '转发节点';
 
   @override
-  String get contact_typeRoom => 'Room';
+  String get contact_typeRoom => '房间';
 
   @override
-  String get contact_typeSensor => 'Sensor';
+  String get contact_typeSensor => '传感器';
 
   @override
-  String get contact_typeUnknown => 'Unknown';
+  String get contact_typeUnknown => '未知';
 
   @override
   String get map_zoomIn => '放大';
@@ -5187,16 +5185,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 回复对象';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'MCMP 时间戳';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP 时间戳与数据包时间戳相差 $time 秒';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return '已签名的 MCMP 时间戳与接收时间相差较大，达 $time 秒';
   }
 
   @override
@@ -5516,7 +5514,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return '房间 $name';
   }
 
   @override
@@ -5586,7 +5584,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_cropNote => '调整大小至512 × 512 · 宽高比未保留';
 
   @override
-  String get imageSend_originalSize => '原文';
+  String get imageSend_originalSize => '原图';
 
   @override
   String get imageSend_onAirSize => '直播中';
@@ -5850,10 +5848,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_blockSenderName => '发送者名称';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => '隐藏消息行';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => '显示消息行';
 
   @override
   String get imageSend_previewShowAsReceived => '查看接收方效果';
@@ -5871,7 +5869,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsLastHopSignal => '在频道中显示最后一跳的 SNR/RSSI';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => '清空邻居列表';
 
   @override
   String get settings_backgroundPermissions => '重新申请后台运行权限';
@@ -5889,5 +5887,5 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_sendImageLora => '通过 MeshCore 发送图片';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => '表情回应';
 }

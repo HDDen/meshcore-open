@@ -801,9 +801,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Teselas en caché",
+  "mapCache_cachedTileSummaryLabel": "Resumen de teselas en caché",
+  "mapCache_bulkDownloadDisabledForSource": "Las descargas masivas sin conexión están desactivadas para {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -811,7 +811,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Las descargas masivas sin conexión para {source} están desactivadas en esta configuración de la aplicación.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -819,7 +819,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Fuente: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -827,7 +827,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Teselas en caché para la fuente: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -835,7 +835,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "En caché en el área/zoom seleccionado: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -843,7 +843,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Tamaño aproximado de la caché: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -851,7 +851,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, O {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -2017,7 +2017,7 @@
   "losFrequencyLabel": "Frecuencia",
   "losFrequencyInfoTooltip": "Ver detalles del cálculo",
   "losFrequencyDialogTitle": "Cálculo del horizonte radioeléctrico",
-  "losFrequencyDialogDescription": "A partir de k={baselineK} en {baselineFreq} MHz, el cálculo ajusta el factor k para la banda actual de {frequencyMHz} MHz, que define el límite curvo del horizonte de radio.",
+  "losFrequencyDialogDescription": "A partir de k={baselineK} en {baselineFreq} MHz, el cálculo ajusta el factor k a {kFactor} para la banda actual de {frequencyMHz} MHz, que define el límite curvo del horizonte de radio.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2438,12 +2438,12 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_type": "Tipo",
+  "map_path": "Ruta",
+  "map_location": "Ubicación",
+  "map_estLocation": "Ubic. estimada",
+  "map_publicKey": "Clave pública",
+  "map_publicKeyPrefixHint": "p. ej. ab12",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repetidor",
   "contact_typeRoom": "Sala",
@@ -2698,7 +2698,7 @@
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Iniciar",
   "map_wardriveStop": "Detener",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Descubrimiento sin saltos",
   "map_wardriveDiscoverySent": "Solicitud de discovery wardrive enviada.",
   "map_wardriveUploadCancelled": "Carga de wardrive cancelada.",
   "map_wardriveDiscoveryFailed": "Discovery wardrive falló: {error}",
@@ -3414,7 +3414,7 @@
   "imageMessages_autoProcessSubtitle": "Reconstruya cada imagen tan pronto como llegue. Utiliza aproximadamente 2 GB de memoria durante un segundo cada vez; desactívelo para reconstruir con un toque.",
   "imageSend_title": "Enviar imagen",
   "imageSend_cropNote": "Redimensionado a 512 × 512 · la relación de aspecto no se conservó",
-  "imageSend_originalSize": "Texto original",
+  "imageSend_originalSize": "Original",
   "imageSend_onAirSize": "En emisión",
   "imageSend_quality": "Calidad",
   "imageSend_qualityStandard": "Estándar",
@@ -3502,5 +3502,38 @@
   "settings_backgroundPermissionsSubtitle": "Comprobar la exención de optimización de batería y solicitarla de nuevo",
   "settings_backgroundPermissionsGranted": "El permiso ya está concedido",
   "chat_selectSendAction": "Seleccionar acción de envío",
-  "chat_sendImageLora": "Enviar imagen mediante MeshCore"
+  "chat_sendImageLora": "Enviar imagen mediante MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Salto confirmado, eco no escuchado directamente",
+  "discoveredContacts_discoverDevices": "Descubrir dispositivos",
+  "discoveredContacts_requestName": "Solicitar nombre",
+  "discoveredContacts_nameRequestFailed": "No se pudo solicitar el nombre del repetidor",
+  "discoveredContacts_discoveryFailed": "No se pudieron descubrir los dispositivos: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Marca de tiempo MCMP",
+  "chat_mcmpTimestampQueerly": "La marca de tiempo MCMP difiere de la del paquete en {time} segundos",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "La marca de tiempo MCMP firmada difiere notablemente de la hora de recepción, en {time} segundos",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Ocultar las filas de mensajes",
+  "chat_showBlockedSenderMessages": "Mostrar las filas de mensajes",
+  "repeater_cliClearNeighbors": "Borrar lista de vecinos",
+  "reaction_report": "Reacciones con emoji"
 }

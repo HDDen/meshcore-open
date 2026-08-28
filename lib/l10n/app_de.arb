@@ -299,7 +299,7 @@
   "contacts_title": "Kontakte",
   "contacts_noContacts": "Noch keine Kontakte",
   "contacts_contactsWillAppear": "Kontakte werden angezeigt, wenn Geräte Ankündigungen senden.",
-  "contacts_searchContacts": "Kontakte suchen...",
+  "contacts_searchContacts": "Suche {number}{str} Kontakte...",
   "@contacts_searchContacts": {
     "placeholders": {
       "number": {
@@ -802,9 +802,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Zwischengespeicherte Kacheln",
+  "mapCache_cachedTileSummaryLabel": "Übersicht der zwischengespeicherten Kacheln",
+  "mapCache_bulkDownloadDisabledForSource": "Offline-Massendownloads sind für {source} deaktiviert.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -812,7 +812,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Offline-Massendownloads sind für {source} in dieser App-Konfiguration deaktiviert.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -820,7 +820,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Quelle: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -828,7 +828,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Zwischengespeicherte Kacheln für die Quelle: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -836,7 +836,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Im gewählten Bereich/Zoom zwischengespeichert: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -844,7 +844,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Ungefähre Cache-Größe: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -852,7 +852,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "N {north}, S {south}, O {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -976,8 +976,8 @@
   "repeater_lastRssi": "Letzter RSSI",
   "repeater_lastSnr": "Letzter SNR",
   "repeater_noiseFloor": "Rauschpegel",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "TX-Sendezeit",
+  "repeater_rxAirtime": "RX-Empfangszeit",
   "repeater_packetStatistics": "Paketstatistiken",
   "repeater_sent": "Gesendet",
   "repeater_received": "Empfangen",
@@ -1501,7 +1501,7 @@
   "channelPath_repeaterHops": "Repeater-Sprünge",
   "channelPath_noHopDetails": "Die Detailangaben für dieses Paket sind nicht verfügbar.",
   "channelPath_messageDetails": "Nachrichtendetails",
-  "channelPath_senderLabel": "Sender",
+  "channelPath_senderLabel": "Absender",
   "channelPath_timeLabel": "Empfangs-/Erstellungszeit",
   "channelPath_repeatsLabel": "Wiederholungen",
   "channelPath_pathLabel": "Pfad {index}",
@@ -2021,7 +2021,7 @@
   "losFrequencyLabel": "Frequenz",
   "losFrequencyInfoTooltip": "Details zur Berechnung anzeigen",
   "losFrequencyDialogTitle": "Berechnung des Funkhorizonts",
-  "losFrequencyDialogDescription": "Ausgehend von k={baselineK} bei {baselineFreq} MHz passt die Berechnung den k-Faktor für das aktuelle {frequencyMHz} MHz-Band an, das die gekrümmte Funkhorizontobergrenze definiert.",
+  "losFrequencyDialogDescription": "Ausgehend von k={baselineK} bei {baselineFreq} MHz passt die Berechnung den k-Faktor auf {kFactor} für das aktuelle {frequencyMHz} MHz-Band an, das die gekrümmte Funkhorizontobergrenze definiert.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2720,14 +2720,14 @@
   "pathMap_unfollowPacket": "Fixierung aufheben",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Bei Auswahl senden",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 Byte",
+  "repeater_pathHashModeOption1": "1 - 2 Bytes",
+  "repeater_pathHashModeOption2": "2 - 3 Bytes",
+  "repeater_pathHashModeOption3": "3 - 4 Bytes",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Start",
   "map_wardriveStop": "Stopp",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Zero-Hop-Erkennung",
   "map_wardriveDiscoverySent": "Wardrive-Discovery-Anfrage gesendet.",
   "map_wardriveUploadCancelled": "Wardrive-Upload abgebrochen.",
   "map_wardriveDiscoveryFailed": "Wardrive-Discovery fehlgeschlagen: {error}",
@@ -3443,7 +3443,7 @@
   "imageMessages_autoProcessSubtitle": "Rekonstruiere jedes Bild sofort nach dem Eintreffen. Verbraucht etwa 2 GB Arbeitsspeicher für jede zweite Wiederherstellung; deaktiviere die automatische Rekonstruktion mit einem Tippen.",
   "imageSend_title": "Bild senden",
   "imageSend_cropNote": "Für 512 × 512 skaliert · Seitenverhältnis nicht erhalten",
-  "imageSend_originalSize": "Originaltext:\n\nThe quick brown fox jumps over the lazy dog.\n\nÜbersetzung:\n\nDer schnelle braune Fuchs springt über den faulen Hund.",
+  "imageSend_originalSize": "Original",
   "imageSend_onAirSize": "On air",
   "imageSend_quality": "Qualität",
   "imageSend_qualityStandard": "Standard",
@@ -3529,5 +3529,39 @@
   "settings_modSettingsLastHopSignal": "SNR/RSSI des letzten Hops in Kanälen anzeigen",
   "settings_backgroundPermissions": "Hintergrundberechtigungen erneut anfordern",
   "settings_backgroundPermissionsSubtitle": "Ausnahme von der Akkuoptimierung prüfen und erneut anfordern",
-  "settings_backgroundPermissionsGranted": "Berechtigung ist bereits erteilt"
+  "settings_backgroundPermissionsGranted": "Berechtigung ist bereits erteilt",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Hop bestätigt, Echo nicht direkt gehört",
+  "discoveredContacts_discoverDevices": "Geräte entdecken",
+  "discoveredContacts_requestName": "Namen anfordern",
+  "discoveredContacts_nameRequestFailed": "Der Name des Repeaters konnte nicht angefordert werden",
+  "discoveredContacts_discoveryFailed": "Geräte konnten nicht entdeckt werden: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP-Zeitstempel",
+  "chat_mcmpTimestampQueerly": "MCMP-Zeitstempel weicht um {time} Sekunden vom Paket-Zeitstempel ab",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Der signierte MCMP-Zeitstempel weicht deutlich von der Empfangszeit ab, um {time} Sekunden",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_sendImage": "Bild senden",
+  "chat_hideBlockedSenderMessages": "Nachrichtenzeilen ausblenden",
+  "chat_showBlockedSenderMessages": "Nachrichtenzeilen anzeigen",
+  "repeater_cliClearNeighbors": "Nachbarliste leeren",
+  "reaction_report": "Emoji-Reaktionen"
 }

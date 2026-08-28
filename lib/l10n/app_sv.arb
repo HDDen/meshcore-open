@@ -108,7 +108,7 @@
   "settings_privacyModeEnabled": "Privatläget är aktiverat",
   "settings_privacyModeDisabled": "Privatläge är avstängt",
   "settings_actions": "Åtgärder",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "Ta bort alla rutter",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Skicka Annons",
   "settings_sendAdvertisementSubtitle": "Sändning finns nu",
@@ -299,7 +299,7 @@
   "contacts_title": "Kontakter",
   "contacts_noContacts": "Inga kontakter ännu",
   "contacts_contactsWillAppear": "Kontakter kommer att visas när enheter annonserar.",
-  "contacts_searchContacts": "Sök kontakter...",
+  "contacts_searchContacts": "Sök {number}{str} kontakter...",
   "contacts_noUnreadContacts": "Inga oinlästa kontakter",
   "contacts_noContactsFound": "Inga kontakter eller grupper hittades.",
   "contacts_deleteContact": "Ta bort Kontakt",
@@ -779,9 +779,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Cachade rutor",
+  "mapCache_cachedTileSummaryLabel": "Sammanfattning av cachade rutor",
+  "mapCache_bulkDownloadDisabledForSource": "Offline-massnedladdningar är avstängda för {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -789,7 +789,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Offline-massnedladdningar för {source} är avstängda i den här appkonfigurationen.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -797,7 +797,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Källa: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Cachade rutor för källan: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -813,7 +813,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Cachade i valt område/zoom: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -821,7 +821,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Ungefärlig cachestorlek: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -829,7 +829,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "N {north}, S {south}, Ö {east}, V {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -953,8 +953,8 @@
   "repeater_lastRssi": "Senaste RSSI",
   "repeater_lastSnr": "Sista SNR",
   "repeater_noiseFloor": "Ljudnivå",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "TX-sändningstid",
+  "repeater_rxAirtime": "RX-mottagningstid",
   "repeater_packetStatistics": "Paketstatistik",
   "repeater_sent": "Skickat",
   "repeater_received": "Mottaget",
@@ -1890,7 +1890,7 @@
   "losFrequencyLabel": "Frekvens",
   "losFrequencyInfoTooltip": "Visa detaljer om beräkningen",
   "losFrequencyDialogTitle": "Beräkning av radiohorisonten",
-  "losFrequencyDialogDescription": "Med start från k={baselineK} vid {baselineFreq} MHz, justerar beräkningen k-faktorn för det aktuella {frequencyMHz} MHz-bandet, som definierar den böjda radiohorisonten.",
+  "losFrequencyDialogDescription": "Med start från k={baselineK} vid {baselineFreq} MHz justerar beräkningen k-faktorn till {kFactor} för det aktuella {frequencyMHz} MHz-bandet, som definierar den böjda radiohorisonten.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2284,10 +2284,10 @@
   "repeater_cliHelpStatsPackets": "(Endast för seriell kommunikation) Visar statistik på paketnivå.",
   "repeater_cliHelpStatsRadio": "(Enbart för serier) Visar radiostatistik.",
   "repeater_cliHelpStatsCore": "(Enbart för seriell kommunikation) Visar grundläggande firmware-statistik.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "Klar",
+  "background_serviceTitle": "MeshCore körs",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "{name} borttagen",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2295,7 +2295,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Det gick inte att ta bort: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2303,7 +2303,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Det gick inte att uppdatera kanalen: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2311,17 +2311,17 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_type": "Typ",
+  "map_path": "Rutt",
+  "map_location": "Plats",
+  "map_estLocation": "Ungef. plats",
+  "map_publicKey": "Publik nyckel",
+  "map_publicKeyPrefixHint": "t.ex. ab12",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
+  "contact_typeRoom": "Rum",
   "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
+  "contact_typeUnknown": "Okänd",
   "channels_via": "via {path}",
   "map_sharedAt": "Delad",
   "@losBlockedSpotChip": {
@@ -2363,7 +2363,7 @@
   "losBlockedSpotsTitle": "Reserverade platser",
   "losSelectedObstructionTitle": "Vald hinder",
   "losBlockedSpotsHint": "Klicka på en markerad plats för att framhäva den på kartan.",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Blockerad av {obstruction} {heightUnit}, {distanceFromA} från A och {distanceFromB} från B ({distanceUnit}).",
   "chat_markAsUnread": "Markera som oläst",
   "settings_companionDebugLog": "Följande felsökningslogg",
   "chat_newMessages": "Nya meddelanden",
@@ -2455,7 +2455,7 @@
   "pathEditor_removeHop": "Ta bort humlen",
   "pathEditor_unknownHop": "Okänd förstärkare",
   "map_zoomIn": "Zooma in",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "routing_deliveryCounts": "{successes} levererade, {failures} misslyckade",
   "map_zoomOut": "Zooma ut",
   "map_centerMap": "Kartöversikt",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth kräver en Chromium-baserad webbläsare.",
@@ -2588,7 +2588,7 @@
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Starta",
   "map_wardriveStop": "Stoppa",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Upptäckt utan hopp",
   "map_wardriveDiscoverySent": "Wardrive discovery-begäran har skickats.",
   "map_wardriveUploadCancelled": "Wardrive-uppladdningen har avbrutits.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery misslyckades: {error}",
@@ -2868,7 +2868,7 @@
   "chat_searchMessages_results": "Sökresultat",
   "chat_searchMessages_results_found": "{count} meddelanden hittades",
   "chat_searchMessages_results_channel": "Kanal {name}",
-  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_room": "Rum {name}",
   "chat_searchMessages_results_contact": "Konversation med {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "I offlineläge kan du inte skicka meddelanden eller utföra andra åtgärder",
@@ -3082,12 +3082,12 @@
   },
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3,0-4,35 V)",
-  "chat_sendImage": "Send vagnbild",
+  "chat_sendImage": "Skicka bild",
   "chat_imagePickFailed": "Kunde inte öppna det bildet",
   "imageMessages_enableTitle": "Bildermeddelanden",
   "imageMessages_enableSubtitle": "Send bilder över mönstret. Det kräver en enkelt bildmodellhämtning.",
   "imageMessages_modelSectionTitle": "Bildmodell",
-  "imageMessages_downloadModel": "Download",
+  "imageMessages_downloadModel": "Ladda ner",
   "imageMessages_cancelDownload": "Avbud",
   "imageMessages_removeModel": "Förhåll dig från modellen",
   "imageMessages_modelReady": "Färdig",
@@ -3095,38 +3095,38 @@
   "imageMessages_downloadFailed": "Bildmodellen kunde inte laddas ner.",
   "imageMessages_autoProcessTitle": "Automatiska bilder automatiserar",
   "imageMessages_autoProcessSubtitle": "Rekonstruera varje bild så snart den ankommer. Använder cirka 2 GB minne varje gång; låt det omför att rekonstruera genom ett tap.",
-  "imageSend_title": "Send vagnbild",
-  "imageSend_cropNote": "Reserverat till 512 × 512 · förhållandet mellan storlek inte bevarat",
-  "imageSend_originalSize": "Ovanstående text (engelska)\n\nTranslation (svenskt):",
-  "imageSend_onAirSize": "Underför hjärnan",
+  "imageSend_title": "Skicka bild",
+  "imageSend_cropNote": "Skalad till 512 × 512 · bildförhållandet bevaras inte",
+  "imageSend_originalSize": "Original",
+  "imageSend_onAirSize": "I etern",
   "imageSend_quality": "Kvalitet",
   "imageSend_qualityStandard": "Standard",
   "imageSend_qualityHigh": "Hög",
   "imageSend_packetsLabel": "Paket",
-  "imageSend_airtimeLabel": "Tid i övrighet",
-  "imageSend_sizeLabel": "Ladning",
+  "imageSend_airtimeLabel": "Sändningstid",
+  "imageSend_sizeLabel": "Nyttolast",
   "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paket}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
-  "imageSend_radioUnknownTitle": "Radioindikatorer inte kända",
-  "imageSend_radioUnknownBody": "Förkoppna till ett enhet så kan tiden på air beräknas.",
-  "imageSend_longSendTitle": "Långförsending",
-  "imageSend_longSendBody": "Detta kommer att bevara kanalen roughly {duration}.",
-  "imageSend_floodNote": "Flodledning: varje repeater i ramen retransmitterar varje paket, så kan kanalen vara på arbete långare än den här tiden.",
-  "imageSend_parityTitle": "Omedlningspaket",
-  "imageSend_paritySubtitle": "En ytterligare paket. Gruppmeddelanden inte akceras, så den här tar hänsyn till att mottar kan återuppbygga bilden om ett enkelt paket förlorats.",
-  "imageSend_send": "Sänd",
-  "imageSend_cancel": "Avbud",
-  "imageSend_encodeFailed": "Denna bild kan inte kodas.",
-  "imageSend_codecDownloading": "Bildmodellen downloads fortfarande.",
-  "imageSend_codecUnavailable": "Bildsendning är inte tillgänglig på detta enhet.",
-  "imageSend_codecDisabled": "Bildmeddelanden är offna i inställningarna.",
-  "imageSend_deviceUnsupported": "Denna radi kan inte senda bildpaket. Använd ett äventyrsgerät med companionsystemfirmware 13 eller nyare.",
-  "imageSend_directMessagesUnsupported": "Bilder senders som gruppod, så de kan endast skickas till ett kanal – inte i en direkt meddelning.",
-  "imageSend_tooLarge": "Bilden kodades till mer paket än meshformaten tillåter.",
+  "imageSend_radioUnknownTitle": "Radioinställningarna är okända",
+  "imageSend_radioUnknownBody": "Anslut till en enhet så att sändningstiden kan beräknas.",
+  "imageSend_longSendTitle": "Lång sändning",
+  "imageSend_longSendBody": "Det här upptar kanalen i ungefär {duration}.",
+  "imageSend_floodNote": "Flood-routing: varje repeater inom räckhåll sänder om varje paket, så kanalen är upptagen längre än så.",
+  "imageSend_parityTitle": "Lägg till återställningspaket",
+  "imageSend_paritySubtitle": "Ett extra paket. Gruppmeddelanden kvitteras inte, så det här låter mottagaren återskapa bilden om ett enstaka paket går förlorat.",
+  "imageSend_send": "Skicka",
+  "imageSend_cancel": "Avbryt",
+  "imageSend_encodeFailed": "Den här bilden kunde inte kodas.",
+  "imageSend_codecDownloading": "Bildmodellen hämtas fortfarande.",
+  "imageSend_codecUnavailable": "Bildsändning är inte tillgänglig på den här enheten.",
+  "imageSend_codecDisabled": "Bildmeddelanden är avstängda i inställningarna.",
+  "imageSend_deviceUnsupported": "Den här radion kan inte skicka bildpaket. Anslut en enhet med companion-firmware 13 eller senare.",
+  "imageSend_directMessagesUnsupported": "Bilder färdas som gruppdata och kan därför bara skickas till en kanal — inte i ett direktmeddelande.",
+  "imageSend_tooLarge": "Bilden kodades till fler paket än mesh-formatet tillåter.",
   "imageSend_sentConfirmation": "Bilden skickades som {count} {count, plural, =1{paket} other{paket}}.",
   "imageSend_sendFailed": "Bilden kunde inte skickas: {error}",
-  "imageSend_sendingProgress": "Bild sendning — paket {sent} av {total}",
+  "imageSend_sendingProgress": "Skickar bild — paket {sent} av {total}",
   "receivedImage_senderPrefix": "Nod {prefix}",
   "receivedImage_incoming": "VANTA {received} av {total} paket",
   "receivedImage_queued": "Att väta att decodera",
@@ -3185,5 +3185,38 @@
   "settings_backgroundPermissionsSubtitle": "Kontrollera undantaget från batterioptimering och begär det igen",
   "settings_backgroundPermissionsGranted": "Behörigheten är redan beviljad",
   "chat_selectSendAction": "Välj sändningsåtgärd",
-  "chat_sendImageLora": "Skicka bild via MeshCore"
+  "chat_sendImageLora": "Skicka bild via MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Hoppet bekräftat, ekot hördes inte direkt",
+  "discoveredContacts_discoverDevices": "Upptäck enheter",
+  "discoveredContacts_requestName": "Begär namn",
+  "discoveredContacts_nameRequestFailed": "Det gick inte att begära repeaterns namn",
+  "discoveredContacts_discoveryFailed": "Det gick inte att upptäcka enheter: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP-tidsstämpel",
+  "chat_mcmpTimestampQueerly": "MCMP-tidsstämpeln skiljer sig {time} sekunder från paketets tidsstämpel",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Den signerade MCMP-tidsstämpeln skiljer sig avsevärt från mottagningstiden, med {time} sekunder",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Dölj meddelanderader",
+  "chat_showBlockedSenderMessages": "Visa meddelanderader",
+  "repeater_cliClearNeighbors": "Rensa grannlistan",
+  "reaction_report": "Emoji-reaktioner"
 }

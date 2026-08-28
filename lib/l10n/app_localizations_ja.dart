@@ -783,16 +783,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_languageUk => 'ウクライナ語';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 バイト';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 バイト';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 バイト';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 バイト';
 
   @override
   String get appSettings_enableMessageTracing => 'メッセージ追跡を有効にする';
@@ -1983,7 +1983,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_publicKey => '公開鍵';
 
   @override
-  String get map_publicKeyPrefixHint => 'e.g. ab12';
+  String get map_publicKeyPrefixHint => '例: ab12';
 
   @override
   String get map_shareMarkerHere => 'ここにマーカーを共有';
@@ -2507,39 +2507,39 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'キャッシュ済みのタイル';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => 'キャッシュ済みタイルの概要';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return '$source ではオフラインの一括ダウンロードは無効です。';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'このアプリ構成では、$source のオフライン一括ダウンロードは無効です。';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return '出典: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'この出典のキャッシュ済みタイル数: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return '選択した範囲/ズームでのキャッシュ数: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'おおよそのキャッシュサイズ: $size';
   }
 
   @override
@@ -2549,7 +2549,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return '北 $north, 南 $south, 東 $east, 西 $west';
   }
 
   @override
@@ -4269,7 +4269,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'ホップは確認済み、エコーは直接受信していません';
 
   @override
   String get pathTrace_someHopsNoLocation => 'ホップの1つまたは複数について、場所が特定されていません。';
@@ -4337,7 +4337,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String clearance,
     String heightUnit,
   ) {
-    return '$distance $distanceUnit, clear LOS, min clearance $clearance $heightUnit';
+    return '$distance $distanceUnit、見通し良好、最小クリアランス $clearance $heightUnit';
   }
 
   @override
@@ -4347,7 +4347,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String obstruction,
     String heightUnit,
   ) {
-    return '$distance $distanceUnit, blocked by $obstruction $heightUnit';
+    return '$distance $distanceUnit、$obstruction $heightUnit により遮蔽';
   }
 
   @override
@@ -4358,7 +4358,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String losStatusSummary(int clear, int total, int blocked, int unknown) {
-    return 'LOS: $clear/$total clear, $blocked blocked, $unknown unknown';
+    return '見通し: $clear/$total 良好、$blocked 遮蔽、$unknown 不明';
   }
 
   @override
@@ -4438,7 +4438,7 @@ class AppLocalizationsJa extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'k=$baselineK ( $baselineFreq MHz) から開始し、現在の $frequencyMHz MHz の帯域に対して k の値を調整します。これにより、曲面状の無線通信範囲の限界が定義されます。';
+    return 'k=$baselineK ( $baselineFreq MHz) から開始し、現在の $frequencyMHz MHz の帯域に対して k の値を $kFactor に調整します。これにより、曲面状の無線通信範囲の限界が定義されます。';
   }
 
   @override
@@ -4517,8 +4517,8 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'messages',
-      one: 'message',
+      other: '件のメッセージ',
+      one: '件のメッセージ',
     );
     return '$count $_temp0';
   }
@@ -4677,18 +4677,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '発見されたすべての連絡先を削除';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'デバイスを検出';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => '名前を要求';
 
   @override
-  String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+  String get discoveredContacts_nameRequestFailed => 'リピータの名前を要求できませんでした';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'デバイスを検出できませんでした: $error';
   }
 
   @override
@@ -5298,16 +5297,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 の返信先';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'MCMP タイムスタンプ';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP タイムスタンプがパケットのタイムスタンプと $time 秒ずれています';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return '署名された MCMP タイムスタンプが受信時刻と大きく異なります（$time 秒）';
   }
 
   @override
@@ -5709,8 +5708,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get imageSend_cropNote => '512 × 512にリサイズされました。アスペクト比は保持されませんでした。';
 
   @override
-  String get imageSend_originalSize =>
-      '原文：\nThe early morning light filtered through the curtains, casting a soft glow on the room.\n\n翻訳：\n早朝の光がカーテンをすり抜け、部屋に柔らかな光を投げかけていた。';
+  String get imageSend_originalSize => 'オリジナル';
 
   @override
   String get imageSend_onAirSize => '放送中';
@@ -5976,10 +5974,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_blockSenderName => '送信者名';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'メッセージ行を非表示にする';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'メッセージ行を表示する';
 
   @override
   String get imageSend_previewShowAsReceived => '受信側の見え方';
@@ -5997,7 +5995,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsLastHopSignal => 'チャンネルで最終ホップの SNR/RSSI を表示';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => '近隣リストをクリア';
 
   @override
   String get settings_backgroundPermissions => 'バックグラウンド動作の許可を再要求';
@@ -6016,5 +6014,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_sendImageLora => 'MeshCore経由で画像を送信';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => '絵文字リアクション';
 }

@@ -2670,7 +2670,7 @@
   "losFrequencyLabel": "Frequency",
   "losFrequencyInfoTooltip": "View calculation details",
   "losFrequencyDialogTitle": "Radio horizon calculation",
-  "losFrequencyDialogDescription": "Starting from k={baselineK} at {baselineFreq} MHz, the calculation adjusts the k-factor for the current {frequencyMHz} MHz band, which defines the curved radio horizon cap.",
+  "losFrequencyDialogDescription": "Starting from k={baselineK} at {baselineFreq} MHz, the calculation adjusts the k-factor to {kFactor} for the current {frequencyMHz} MHz band, which defines the curved radio horizon cap.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {

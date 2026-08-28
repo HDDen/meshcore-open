@@ -2199,7 +2199,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_wardriveStop => 'Стоп';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Обнаружение без хопов';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2617,39 +2617,39 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Закэшированные плитки';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => 'Сводка по кэшу плиток';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Массовая офлайн-загрузка отключена для $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Массовая офлайн-загрузка для $source отключена в конфигурации приложения.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Источник: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Закэшировано плиток для источника: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'Закэшировано в выбранной области/масштабе: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Примерный размер кэша: $size';
   }
 
   @override
@@ -5961,7 +5961,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo HV (3,0–4,35 В)';
 
   @override
-  String get chat_sendImage => 'Отправьте изображение';
+  String get chat_sendImage => 'Отправить изображение';
 
   @override
   String get chat_imagePickFailed => 'Не удалось открыть это изображение';
@@ -6005,7 +6005,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Примерно каждое изображение реконструируйте сразу после его поступления. Для этого на каждый раз используется около 2 ГБ памяти; отключите реконструкцию касанием.';
 
   @override
-  String get imageSend_title => 'Отправьте изображение';
+  String get imageSend_title => 'Отправить изображение';
 
   @override
   String get imageSend_cropNote =>
@@ -6330,5 +6330,5 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_sendImageLora => 'Отправить изображение через MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Реакции эмодзи';
 }

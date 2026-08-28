@@ -113,7 +113,7 @@
   "settings_privacyModeEnabled": "隐私模式已启用",
   "settings_privacyModeDisabled": "隐私模式已关闭",
   "settings_actions": "操作",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "删除所有路径",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "发送广播",
   "settings_sendAdvertisementSubtitle": "立即发送广播",
@@ -308,7 +308,7 @@
   "contacts_title": "联系人",
   "contacts_noContacts": "暂无联系人",
   "contacts_contactsWillAppear": "当设备发送广播时，联系人将显示。",
-  "contacts_searchContacts": "搜索联系人...",
+  "contacts_searchContacts": "搜索 {number}{str} 个联系人...",
   "contacts_noUnreadContacts": "没有未读内容",
   "contacts_noContactsFound": "未找到任何联系人或群聊",
   "contacts_deleteContact": "删除联系人",
@@ -805,9 +805,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "已缓存的瓦片",
+  "mapCache_cachedTileSummaryLabel": "已缓存瓦片概况",
+  "mapCache_bulkDownloadDisabledForSource": "{source} 已禁用离线批量下载。",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -815,7 +815,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "在此应用配置中，{source} 的离线批量下载已禁用。",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -823,7 +823,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "来源：{source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -831,7 +831,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "该来源的已缓存瓦片：{count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -839,7 +839,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "所选区域/缩放级别中已缓存：{count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -847,7 +847,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "缓存大小约为：{size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1925,7 +1925,7 @@
   "losFrequencyLabel": "频率",
   "losFrequencyInfoTooltip": "查看计算详情",
   "losFrequencyDialogTitle": "无线电地平线计算",
-  "losFrequencyDialogDescription": "从 {baselineFreq} MHz 处的 k={baselineK} 开始，计算调整当前 {frequencyMHz} MHz 频段的 k 因子，该因子定义了弯曲的无线电范围上限。",
+  "losFrequencyDialogDescription": "从 {baselineFreq} MHz 处的 k={baselineK} 开始，计算将当前 {frequencyMHz} MHz 频段的 k 因子调整为 {kFactor}，该因子定义了弯曲的无线电范围上限。",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2319,10 +2319,10 @@
   "repeater_cliHelpStatsPackets": "（仅显示序列信息）显示数据包级别的统计信息。",
   "repeater_cliHelpStatsRadio": "（仅显示序列信息）显示收音机相关统计数据。",
   "repeater_cliHelpStatsCore": "（仅显示序列号）显示核心固件统计信息。",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "完成",
+  "background_serviceTitle": "MeshCore 正在运行",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "已删除 {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2330,7 +2330,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "删除失败：{error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2338,7 +2338,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "更新频道失败：{error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2346,18 +2346,18 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
+  "map_type": "类型",
+  "map_path": "路径",
+  "map_location": "位置",
+  "map_estLocation": "估计位置",
+  "map_publicKey": "公钥",
+  "map_publicKeyPrefixHint": "例如 ab12",
+  "contact_typeChat": "聊天",
+  "contact_typeRepeater": "转发节点",
+  "contact_typeRoom": "房间",
+  "contact_typeSensor": "传感器",
+  "contact_typeUnknown": "未知",
+  "channels_via": "经由 {path}",
   "map_sharedAt": "已分享",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2398,7 +2398,7 @@
   "losBlockedSpotsHint": "点击地图上的某个被遮盖的区域，以突出显示该区域。",
   "losSelectedObstructionTitle": "选择性阻碍",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "被 {obstruction} {heightUnit} 遮挡，距 A {distanceFromA}，距 B {distanceFromB}（{distanceUnit}）。",
   "chat_markAsUnread": "标记为未读",
   "settings_companionDebugLog": "调试日志",
   "chat_newMessages": "新的消息",
@@ -2487,8 +2487,8 @@
   "pathEditor_tooManyHops": "最多 64 个跳跃",
   "pathEditor_usePath": "请使用此路径",
   "pathEditor_removeHop": "去除啤酒花",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
-  "pathEditor_hopCounter": "{count} of 64 hops",
+  "routing_deliveryCounts": "{successes} 已送达，{failures} 失败",
+  "pathEditor_hopCounter": "{count} / 64 跳",
   "pathEditor_unknownHop": "未知的重复器",
   "map_zoomIn": "放大",
   "map_zoomOut": "放大",
@@ -2592,10 +2592,10 @@
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "pathMap_partialAnimation": "{count, plural, =1{1 跳无位置信息 — 显示的路径不完整} other{{count} 跳无位置信息 — 显示的路径不完整}}",
   "settings_quickAnswersSendAtSelect": "选择时发送",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 字节",
+  "repeater_pathHashModeOption1": "1 - 2 字节",
+  "repeater_pathHashModeOption2": "2 - 3 字节",
+  "repeater_pathHashModeOption3": "3 - 4 字节",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "开始",
   "map_wardriveStop": "停止",
@@ -3086,7 +3086,7 @@
   "chat_searchMessages_results": "搜索结果",
   "chat_searchMessages_results_found": "找到 {count} 条消息",
   "chat_searchMessages_results_channel": "频道 {name}",
-  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_room": "房间 {name}",
   "chat_searchMessages_results_contact": "与 {name} 的对话",
   "app_offline": "离线",
   "app_offline_unableToMessage": "离线模式下无法发送消息或执行其他操作",
@@ -3320,7 +3320,7 @@
   "imageMessages_autoProcessSubtitle": "每次图像到达后立即重建，每次需要约2GB的内存；若想关闭重建功能，可通过点击取消开启。",
   "imageSend_title": "发送图片",
   "imageSend_cropNote": "调整大小至512 × 512 · 宽高比未保留",
-  "imageSend_originalSize": "原文",
+  "imageSend_originalSize": "原图",
   "imageSend_onAirSize": "直播中",
   "imageSend_quality": "质量",
   "imageSend_qualityStandard": "标准",
@@ -3408,5 +3408,38 @@
   "settings_backgroundPermissionsSubtitle": "检查电池优化豁免并重新申请",
   "settings_backgroundPermissionsGranted": "权限已授予",
   "chat_selectSendAction": "选择发送操作",
-  "chat_sendImageLora": "通过 MeshCore 发送图片"
+  "chat_sendImageLora": "通过 MeshCore 发送图片",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "跳数已确认，但未直接收到回声",
+  "discoveredContacts_discoverDevices": "发现设备",
+  "discoveredContacts_requestName": "请求名称",
+  "discoveredContacts_nameRequestFailed": "无法请求转发节点的名称",
+  "discoveredContacts_discoveryFailed": "发现设备失败：{error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP 时间戳",
+  "chat_mcmpTimestampQueerly": "MCMP 时间戳与数据包时间戳相差 {time} 秒",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "已签名的 MCMP 时间戳与接收时间相差较大，达 {time} 秒",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "隐藏消息行",
+  "chat_showBlockedSenderMessages": "显示消息行",
+  "repeater_cliClearNeighbors": "清空邻居列表",
+  "reaction_report": "表情回应"
 }

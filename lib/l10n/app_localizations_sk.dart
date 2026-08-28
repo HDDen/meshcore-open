@@ -24,7 +24,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_cancel => 'Zrušiť';
 
   @override
-  String get common_ok => 'OK\nDobre';
+  String get common_ok => 'OK';
 
   @override
   String get common_connect => 'Pripojiť';
@@ -45,7 +45,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get common_close => 'Zavrieť';
 
   @override
-  String get common_done => 'Done';
+  String get common_done => 'Hotovo';
 
   @override
   String get common_edit => 'Upraviť';
@@ -540,7 +540,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_actions => 'Možné akcie';
 
   @override
-  String get settings_deleteAllPaths => 'Delete All Paths';
+  String get settings_deleteAllPaths => 'Odstrániť všetky cesty';
 
   @override
   String get settings_deleteAllPathsSubtitle =>
@@ -812,16 +812,16 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrajinská';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 bajt';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 bajty';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 bajty';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 bajty';
 
   @override
   String get appSettings_enableMessageTracing => 'Povoliť sledovanie správ';
@@ -1108,7 +1108,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return 'Vyhľadávajte kontakty...';
+    return 'Hľadať $number$str kontaktov...';
   }
 
   @override
@@ -1298,7 +1298,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String channels_via(String path) {
-    return 'via $path';
+    return 'cez $path';
   }
 
   @override
@@ -1825,7 +1825,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String routing_lastWorked(String when) {
-    return 'worked $when';
+    return 'fungovalo $when';
   }
 
   @override
@@ -1833,7 +1833,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes doručených, $failures zlyhalo';
   }
 
   @override
@@ -2054,22 +2054,22 @@ class AppLocalizationsSk extends AppLocalizations {
   String get map_flags => 'Zástavy';
 
   @override
-  String get map_type => 'Type';
+  String get map_type => 'Typ';
 
   @override
-  String get map_path => 'Path';
+  String get map_path => 'Cesta';
 
   @override
-  String get map_location => 'Location';
+  String get map_location => 'Poloha';
 
   @override
-  String get map_estLocation => 'Est. Location';
+  String get map_estLocation => 'Odh. poloha';
 
   @override
-  String get map_publicKey => 'Public Key';
+  String get map_publicKey => 'Verejný kľúč';
 
   @override
-  String get map_publicKeyPrefixHint => 'e.g. ab12';
+  String get map_publicKeyPrefixHint => 'napr. ab12';
 
   @override
   String get map_shareMarkerHere => 'Zdieľte značku tu';
@@ -2607,39 +2607,39 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Dlaždice v cache';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => 'Prehľad dlaždíc v cache';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Hromadné offline sťahovanie je pre $source vypnuté.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Hromadné offline sťahovanie pre $source je v tejto konfigurácii aplikácie vypnuté.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Zdroj: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Dlaždice v cache pre zdroj: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'V cache vo vybranej oblasti/priblížení: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Približná veľkosť cache: $size';
   }
 
   @override
@@ -2649,7 +2649,7 @@ class AppLocalizationsSk extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return 'S $north, J $south, V $east, Z $west';
   }
 
   @override
@@ -2883,10 +2883,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get repeater_noiseFloor => 'Hladina šumu';
 
   @override
-  String get repeater_txAirtime => 'TX Airtime';
+  String get repeater_txAirtime => 'Čas vysielania TX';
 
   @override
-  String get repeater_rxAirtime => 'RX Airtime';
+  String get repeater_rxAirtime => 'Čas príjmu RX';
 
   @override
   String get repeater_chanUtil => 'Využitie kanálu';
@@ -2967,7 +2967,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get repeater_frequencyHelper => '300–2500 MHz';
 
   @override
-  String get repeater_txPower => 'TX Power';
+  String get repeater_txPower => 'TX výkon';
 
   @override
   String get repeater_txPowerHelper => '1-30 dBm';
@@ -3272,12 +3272,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String repeater_actionSucceeded(String action) {
-    return '$action succeeded';
+    return '$action prebehlo úspešne';
   }
 
   @override
   String repeater_actionFailed(String action, String error) {
-    return '$action failed: $error';
+    return '$action zlyhalo: $error';
   }
 
   @override
@@ -4473,7 +4473,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Skok potvrdený, echo nebolo počuť priamo';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4629,7 +4629,7 @@ class AppLocalizationsSk extends AppLocalizations {
     String distanceUnit,
     String distanceFromB,
   ) {
-    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+    return 'Blokované prekážkou $obstruction $heightUnit, $distanceFromA od A a $distanceFromB od B ($distanceUnit).';
   }
 
   @override
@@ -4648,7 +4648,7 @@ class AppLocalizationsSk extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Počnúc od k=$baselineK pri $baselineFreq MHz výpočet upraví k-faktor pre aktuálne pásmo $frequencyMHz MHz, ktorý definuje zakrivený strop rádiového horizontu.';
+    return 'Počnúc od k=$baselineK pri $baselineFreq MHz výpočet upraví k-faktor na $kFactor pre aktuálne pásmo $frequencyMHz MHz, ktorý definuje zakrivený strop rádiového horizontu.';
   }
 
   @override
@@ -4904,18 +4904,18 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zmazať všetky objavené kontakty';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Objaviť zariadenia';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Vyžiadať meno';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Nepodarilo sa vyžiadať meno opakovača';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Nepodarilo sa objaviť zariadenia: $error';
   }
 
   @override
@@ -5123,24 +5123,24 @@ class AppLocalizationsSk extends AppLocalizations {
   String get translation_systemLanguage => 'Jazyk systému';
 
   @override
-  String get background_serviceTitle => 'MeshCore running';
+  String get background_serviceTitle => 'MeshCore beží';
 
   @override
   String get background_serviceText => 'Keeping BLE connected';
 
   @override
   String appSettings_translationModelDeleted(String name) {
-    return 'Deleted $name';
+    return '$name odstránené';
   }
 
   @override
   String appSettings_translationModelDeleteFailed(String error) {
-    return 'Failed to delete: $error';
+    return 'Nepodarilo sa odstrániť: $error';
   }
 
   @override
   String channels_channelUpdateFailed(String error) {
-    return 'Failed to update channel: $error';
+    return 'Nepodarilo sa aktualizovať kanál: $error';
   }
 
   @override
@@ -5195,16 +5195,16 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contact_typeChat => 'Chat';
 
   @override
-  String get contact_typeRepeater => 'Repeater';
+  String get contact_typeRepeater => 'Opakovač';
 
   @override
   String get contact_typeRoom => 'Room';
 
   @override
-  String get contact_typeSensor => 'Sensor';
+  String get contact_typeSensor => 'Senzor';
 
   @override
-  String get contact_typeUnknown => 'Unknown';
+  String get contact_typeUnknown => 'Neznámy';
 
   @override
   String get map_zoomIn => 'Zväčšiť';
@@ -5545,16 +5545,16 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'Odpoveď MCMPv3 na';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'Timestamp MCMP';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'Timestamp MCMP sa líši od timestampu paketu o $time sekúnd';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'Podpísaný timestamp MCMP sa výrazne líši od času prijatia, o $time sekúnd';
   }
 
   @override
@@ -5787,7 +5787,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_contactTypeNode => 'Uzol';
 
   @override
-  String get chat_contactTypeRepeater => 'Repeater';
+  String get chat_contactTypeRepeater => 'Opakovač';
 
   @override
   String get chat_contactTypeRoom => 'Room server';
@@ -5929,7 +5929,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo HV (3.0-4.35V)';
 
   @override
-  String get chat_sendImage => 'Vyslat obraz';
+  String get chat_sendImage => 'Odoslať obrázok';
 
   @override
   String get chat_imagePickFailed => 'Nesmiela jsem otvoriť tento obrázok';
@@ -5972,24 +5972,23 @@ class AppLocalizationsSk extends AppLocalizations {
       'Rekonstruujte každý obraz tak, ako pridá. Používajete okolo 2 GB pamäti pre drugú hodinu; odložte rekonstrukciu tým kliknutím.';
 
   @override
-  String get imageSend_title => 'Vyslat obraz';
+  String get imageSend_title => 'Odoslať obrázok';
 
   @override
   String get imageSend_cropNote =>
-      'Zmeneno na 512 × 512 · vzorýst nie byl zachovan';
+      'Zmenené na 512 × 512 · pomer strán sa nezachová';
 
   @override
-  String get imageSend_originalSize =>
-      'Výborný text:\n\n\"Language is the road map of a culture. It tells us where to go as a society and helps us understand the world around us. Learning a new language opens up new perspectives and opportunities, allowing us to connect with people from different backgrounds and build bridges between cultures.\"\n\nSlovenská preklada:\n\n\"Jazyk je cesta pre zručnosti a odráža kultúru. Dá nám uvedomi, dokádať, kúdy sa pohladneme a pomáha našej společnosti poradiť sa v rôznych okolnosti a porozumieť o svetu kolem nás. Nauka nového jazyka otviera nové perspektívy a možnosti, čo pohybuje našu schopnosť sa spoluprávať s ľudmi z rôznych okolnosti a budovať mosty medzi kultúry.\"';
+  String get imageSend_originalSize => 'Originál';
 
   @override
-  String get imageSend_onAirSize => 'V prúce';
+  String get imageSend_onAirSize => 'V éteri';
 
   @override
   String get imageSend_quality => 'Kvalita';
 
   @override
-  String get imageSend_qualityStandard => 'Stándard';
+  String get imageSend_qualityStandard => 'Štandard';
 
   @override
   String get imageSend_qualityHigh => 'Vysoká';
@@ -5998,10 +5997,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get imageSend_packetsLabel => 'Pakety';
 
   @override
-  String get imageSend_airtimeLabel => 'Čas na anteni';
+  String get imageSend_airtimeLabel => 'Čas vysielania';
 
   @override
-  String get imageSend_sizeLabel => 'Základ';
+  String get imageSend_sizeLabel => 'Užitočné dáta';
 
   @override
   String imageSend_packetsCount(int count) {
@@ -6023,63 +6022,62 @@ class AppLocalizationsSk extends AppLocalizations {
   String get imageSend_unknownValue => '—';
 
   @override
-  String get imageSend_radioUnknownTitle => 'Nastavenia radio nezná';
+  String get imageSend_radioUnknownTitle => 'Nastavenia rádia sú neznáme';
 
   @override
   String get imageSend_radioUnknownBody =>
-      'Zkonečte s určým prijemcem, aby sa mohlo výpočet času, ktorý je v prúbežu.';
+      'Pripoj sa k zariadeniu, aby sa dal vypočítať čas vysielania.';
 
   @override
-  String get imageSend_longSendTitle => 'Dlouhá transmisia';
+  String get imageSend_longSendTitle => 'Dlhé vysielanie';
 
   @override
   String imageSend_longSendBody(String duration) {
-    return 'Tento dôvod udrží kanál priamo na $duration.';
+    return 'Toto obsadí kanál približne na $duration.';
   }
 
   @override
   String get imageSend_floodNote =>
-      'Povodný routing: každý repeater v rozsahu zrňa každý paket, takže kanál zostá zajetší dlouше, než tu.';
+      'Flood smerovanie: každý opakovač v dosahu preposiela každý paket, takže kanál zostane obsadený dlhšie.';
 
   @override
-  String get imageSend_parityTitle => 'Poučný paket pre očudenie';
+  String get imageSend_parityTitle => 'Pridať obnovovací paket';
 
   @override
   String get imageSend_paritySubtitle =>
-      'Jedný dodatný paket. Skúsené súhlasy nie sa uznávaú, takže to umožňuje prechovávaču opraviť obraz, pokiaľ sa jedný paket niebyl ztrácený.';
+      'Jeden paket navyše. Skupinové správy sa nepotvrdzujú, takže vďaka nemu dokáže príjemca obnoviť obrázok, ak sa stratí jeden paket.';
 
   @override
-  String get imageSend_send => 'Odeslať';
+  String get imageSend_send => 'Odoslať';
 
   @override
-  String get imageSend_cancel => 'Zastavenie';
+  String get imageSend_cancel => 'Zrušiť';
 
   @override
-  String get imageSend_encodeFailed => 'Tento obráz nie byla byla schována.';
+  String get imageSend_encodeFailed => 'Tento obrázok sa nepodarilo zakódovať.';
 
   @override
-  String get imageSend_codecDownloading =>
-      'Model prehľadovania prebeža stále stále stále prechádza.';
+  String get imageSend_codecDownloading => 'Model obrázkov sa ešte sťahuje.';
 
   @override
   String get imageSend_codecUnavailable =>
-      'Zobrazenie nie je dostupný na tomto zariadení.';
+      'Odosielanie obrázkov nie je na tomto zariadení dostupné.';
 
   @override
   String get imageSend_codecDisabled =>
-      'Zobrazy s prešteľkami sú v nastavení vypnené.';
+      'Obrázkové správy sú v nastaveniach vypnuté.';
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Tento radiok nie môže odeslať obrazové pakety. Podeďte správne určité zařízení s oprogramovaním spolupráce 13 alebo novším.';
+      'Toto rádio nedokáže odosielať obrázkové pakety. Pripoj zariadenie s companion firmvérom 13 alebo novším.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
-      'Obrazy sa prechádzajú jako skupinové údaje, preto sa ich môžu odeslať len na kanál — nie v príbeh sa.';
+      'Obrázky cestujú ako skupinové dáta, takže sa dajú poslať len do kanála — nie v priamej správe.';
 
   @override
   String get imageSend_tooLarge =>
-      'Tento obraz byl skodyrovany do viac paketov, ako umožňuje si sítka format.';
+      'Tento obrázok sa zakódoval do väčšieho počtu paketov, než formát mesh dovoľuje.';
 
   @override
   String imageSend_sentConfirmation(int count) {
@@ -6094,12 +6092,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String imageSend_sendFailed(String error) {
-    return 'Obraz nemôžlo odeslať: $error';
+    return 'Obrázok sa nepodarilo odoslať: $error';
   }
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return 'Vysyťanie obrazu — pakét $sent z $total';
+    return 'Odosielanie obrázka — paket $sent z $total';
   }
 
   @override
@@ -6253,10 +6251,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_blockSenderName => 'Meno odosielateľa';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Skryť riadky správ';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'Zobraziť riadky správ';
 
   @override
   String get imageSend_previewShowAsReceived => 'Zobraziť ako u príjemcov';
@@ -6275,7 +6273,7 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zobraziť SNR/RSSI posledného skoku v kanáloch';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Vymazať zoznam susedov';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6295,5 +6293,5 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_sendImageLora => 'Odoslať obrázok cez MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Emoji reakcie';
 }

@@ -4598,7 +4598,7 @@ class AppLocalizationsEn extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Starting from k=$baselineK at $baselineFreq MHz, the calculation adjusts the k-factor for the current $frequencyMHz MHz band, which defines the curved radio horizon cap.';
+    return 'Starting from k=$baselineK at $baselineFreq MHz, the calculation adjusts the k-factor to $kFactor for the current $frequencyMHz MHz band, which defines the curved radio horizon cap.';
   }
 
   @override

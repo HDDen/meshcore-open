@@ -784,16 +784,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_languageUk => '우크라이나어';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1바이트';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2바이트';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3바이트';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4바이트';
 
   @override
   String get appSettings_enableMessageTracing => '메시지 추적 기능 활성화';
@@ -2509,39 +2509,39 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => '캐시된 타일';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => '캐시된 타일 요약';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return '$source에서는 오프라인 일괄 다운로드가 비활성화되어 있습니다.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return '이 앱 구성에서는 $source의 오프라인 일괄 다운로드가 비활성화되어 있습니다.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return '출처: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return '이 출처의 캐시된 타일: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return '선택한 영역/확대 수준에 캐시됨: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return '대략적인 캐시 크기: $size';
   }
 
   @override
@@ -2551,7 +2551,7 @@ class AppLocalizationsKo extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return '북 $north, 남 $south, 동 $east, 서 $west';
   }
 
   @override
@@ -4275,7 +4275,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      '홉은 확인됨, 에코는 직접 수신되지 않음';
 
   @override
   String get pathTrace_someHopsNoLocation => '홉 중 하나 또는 여러 개에 위치 정보가 누락되었습니다!';
@@ -4444,7 +4444,7 @@ class AppLocalizationsKo extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return '$baselineK에서 시작하여 $baselineFreq MHz의 주파수에서 계산을 시작하면, 현재 $frequencyMHz MHz 대역에 대한 k-값을 조정하여, 이는 곡선형 라디오 지평선 상한선을 정의합니다.';
+    return '$baselineFreq MHz에서 k=$baselineK으로 시작하여, 현재 $frequencyMHz MHz 대역에 맞춰 k-값을 $kFactor(으)로 조정합니다. 이 값이 곡선형 무선 지평선 상한을 정의합니다.';
   }
 
   @override
@@ -4682,18 +4682,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get discoveredContacts_deleteContactAll => '발견된 모든 연락처 삭제';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => '장치 검색';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => '이름 요청';
 
   @override
-  String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+  String get discoveredContacts_nameRequestFailed => '리피터 이름을 요청하지 못했습니다';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return '장치를 검색하지 못했습니다: $error';
   }
 
   @override
@@ -5304,16 +5303,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3 회신 대상';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'MCMP 타임스탬프';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP 타임스탬프가 패킷 타임스탬프와 $time초 차이가 납니다';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return '서명된 MCMP 타임스탬프가 수신 시각과 크게 다릅니다($time초)';
   }
 
   @override
@@ -5668,7 +5667,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_batteryLipoHv => '리포 HV (3.0-4.35V)';
 
   @override
-  String get chat_sendImage => '이미지를 보내세요';
+  String get chat_sendImage => '이미지 보내기';
 
   @override
   String get chat_imagePickFailed => '그 이미지를 열 수 없었어요.';
@@ -5710,16 +5709,16 @@ class AppLocalizationsKo extends AppLocalizations {
       '이미지가 도착하는 즉시 재구성하세요. 매번 2GB의 메모리를 사용하며, 탭으로 재구성을 원할 경우 해제하세요.';
 
   @override
-  String get imageSend_title => '이미지를 보내세요';
+  String get imageSend_title => '이미지 보내기';
 
   @override
   String get imageSend_cropNote => '512 × 512로 크기가 조정되었으며, 종횡비는 유지되지 않았습니다.';
 
   @override
-  String get imageSend_originalSize => '원문 없음';
+  String get imageSend_originalSize => '원본';
 
   @override
-  String get imageSend_onAirSize => '방송 중';
+  String get imageSend_onAirSize => '전송량';
 
   @override
   String get imageSend_quality => '품질';
@@ -5728,13 +5727,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get imageSend_qualityStandard => '표준';
 
   @override
-  String get imageSend_qualityHigh => '높다';
+  String get imageSend_qualityHigh => '높음';
 
   @override
   String get imageSend_packetsLabel => '패킷';
 
   @override
-  String get imageSend_airtimeLabel => '방송 시간';
+  String get imageSend_airtimeLabel => '전송 시간';
 
   @override
   String get imageSend_sizeLabel => '페이로드';
@@ -5762,10 +5761,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get imageSend_radioUnknownTitle => '라디오 설정 정보 없음';
 
   @override
-  String get imageSend_radioUnknownBody => '방송 시간을 계산할 수 있도록 기기와 연결하세요.';
+  String get imageSend_radioUnknownBody => '전송 시간을 계산할 수 있도록 기기에 연결하세요.';
 
   @override
-  String get imageSend_longSendTitle => '장거리 송신';
+  String get imageSend_longSendTitle => '긴 전송';
 
   @override
   String imageSend_longSendBody(String duration) {
@@ -5774,17 +5773,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      '홍수 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.';
+      '플러딩 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.';
 
   @override
-  String get imageSend_parityTitle => '회복 패킷';
+  String get imageSend_parityTitle => '복구 패킷 추가';
 
   @override
   String get imageSend_paritySubtitle =>
       '추가 한 개의 패킷입니다. 그룹 메시지는 확인되지 않으므로, 하나의 패킷이 손실되었을 경우 수신자가 이미지를 다시 구성할 수 있습니다.';
 
   @override
-  String get imageSend_send => '보내다';
+  String get imageSend_send => '보내기';
 
   @override
   String get imageSend_cancel => '취소';
@@ -5830,7 +5829,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return '이미지 전송 — $sent개의 $total 패킷';
+    return '이미지 전송 — 패킷 $sent/$total';
   }
 
   @override
@@ -5983,10 +5982,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_blockSenderName => '발신자 이름';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => '메시지 행 숨기기';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => '메시지 행 표시';
 
   @override
   String get imageSend_previewShowAsReceived => '수신자 화면으로 보기';
@@ -6004,7 +6003,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsLastHopSignal => '채널에서 마지막 홉의 SNR/RSSI 표시';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => '이웃 목록 지우기';
 
   @override
   String get settings_backgroundPermissions => '백그라운드 실행 권한 다시 요청';
@@ -6023,5 +6022,5 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_sendImageLora => 'MeshCore를 통해 이미지 보내기';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => '이모지 리액션';
 }

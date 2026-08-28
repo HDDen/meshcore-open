@@ -299,7 +299,7 @@
   "contacts_title": "Контакти",
   "contacts_noContacts": "Няма контакти към момента.",
   "contacts_contactsWillAppear": "Контактите ще се появят, когато устройствата рекламират.",
-  "contacts_searchContacts": "Търсене на контакти...",
+  "contacts_searchContacts": "Търсене на {number}{str} контакти...",
   "contacts_noUnreadContacts": "Няма непрочетени контакти",
   "contacts_noContactsFound": "Няма намерени контакти или групи.",
   "contacts_deleteContact": "Изтрий Контакт",
@@ -779,9 +779,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Кеширани плочки",
+  "mapCache_cachedTileSummaryLabel": "Обобщение за кешираните плочки",
+  "mapCache_bulkDownloadDisabledForSource": "Масовото офлайн изтегляне е изключено за {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -789,7 +789,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Масовото офлайн изтегляне за {source} е изключено в конфигурацията на приложението.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -797,7 +797,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Източник: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Кеширани плочки за източника: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -813,7 +813,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Кеширани в избраната област/мащаб: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -821,7 +821,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Приблизителен размер на кеша: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1925,7 +1925,7 @@
   "losFrequencyLabel": "Честота",
   "losFrequencyInfoTooltip": "Преглед на детайли за изчислението",
   "losFrequencyDialogTitle": "Изчисляване на радиохоризонта",
-  "losFrequencyDialogDescription": "Започвайки от k={baselineK} при {baselineFreq} MHz, изчислението коригира k-фактора за текущата {frequencyMHz} MHz лента, която определя границата на извития радиохоризонт.",
+  "losFrequencyDialogDescription": "Започвайки от k={baselineK} при {baselineFreq} MHz, изчислението коригира k-фактора до {kFactor} за текущата {frequencyMHz} MHz лента, която определя границата на извития радиохоризонт.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2592,14 +2592,14 @@
   "pathMap_unfollowPacket": "Спри проследяването на пакета",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Изпращане при избор",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 байт",
+  "repeater_pathHashModeOption1": "1 - 2 байта",
+  "repeater_pathHashModeOption2": "2 - 3 байта",
+  "repeater_pathHashModeOption3": "3 - 4 байта",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Старт",
   "map_wardriveStop": "Стоп",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Откриване без хопове",
   "map_wardriveDiscoverySent": "Заявката за wardrive discovery е изпратена.",
   "map_wardriveUploadCancelled": "Качването на wardrive е отменено.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery неуспешно: {error}",
@@ -3300,7 +3300,7 @@
   },
   "settings_infoHardware": "Оборудование",
   "appSettings_batteryLipoHv": "LiPo ВЗГ (3,0-4,35 В)",
-  "chat_sendImage": "Изпрати изображение",
+  "chat_sendImage": "Изпращане на изображение",
   "chat_imagePickFailed": "Не мог да откривам та изображин",
   "imageMessages_enableTitle": "Абilitiraм изображените сообщения",
   "imageMessages_enableSubtitle": "Изправате изображения чрез сетката. Треба е одноразовна загрузка модел на изображение.",
@@ -3313,38 +3313,38 @@
   "imageMessages_downloadFailed": "Модел за изображение не може да бъде скачан.",
   "imageMessages_autoProcessTitle": "Автоматически обрабатвате изображения",
   "imageMessages_autoProcessSubtitle": "Катализиране на всята изображение сразу по пришествие. Използване на около 2 ГБ на втора пъти; откажете от реконструкцията чаке при натискане.",
-  "imageSend_title": "Изпрати изображение",
-  "imageSend_cropNote": "Масштабиран до 512 × 512 · соотношение сторон не съхранясе",
-  "imageSend_originalSize": "Късно на използване на език:",
+  "imageSend_title": "Изпращане на изображение",
+  "imageSend_cropNote": "Преоразмерено до 512 × 512 · съотношението на страните не се запазва",
+  "imageSend_originalSize": "Оригинал",
   "imageSend_onAirSize": "В ефир",
   "imageSend_quality": "Качество",
   "imageSend_qualityStandard": "Стандарт",
-  "imageSend_qualityHigh": "Высок",
+  "imageSend_qualityHigh": "Високо",
   "imageSend_packetsLabel": "Пакети",
-  "imageSend_airtimeLabel": "Времето на изкъсване",
-  "imageSend_sizeLabel": "Баланса",
+  "imageSend_airtimeLabel": "Време в ефир",
+  "imageSend_sizeLabel": "Полезен товар",
   "imageSend_packetsCount": "{count} {count, plural, =1{пакет} other{пакета}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
-  "imageSend_radioUnknownTitle": "Настройки на радио неизвестни",
-  "imageSend_radioUnknownBody": "Усредете се с устройство, за да се отработа часът на изстъпане.",
-  "imageSend_longSendTitle": "Долга пресилка",
-  "imageSend_longSendBody": "Тази буде поддержива открит отряд на около {duration}.",
-  "imageSend_floodNote": "Руйжинг на превъште: всички ретранслятори в диапазонта превратят всички пакети, тъйа каналят оставря дълше, от този час.",
-  "imageSend_parityTitle": "Возобновителен пакет",
-  "imageSend_paritySubtitle": "Едно дополително пакет. Групни извещания не принимаются, след това разбирателят едно пакетто, какщо е пропущен един пакет.",
-  "imageSend_send": "Отправляй",
-  "imageSend_cancel": "Отмена",
-  "imageSend_encodeFailed": "Тази изображение не може да бъде кодирано.",
-  "imageSend_codecDownloading": "Модел на изображение еще разгрузира.",
-  "imageSend_codecUnavailable": "Изглед отправа не е доступен на този устройство.",
-  "imageSend_codecDisabled": "Изображенията на извещенията е отключена в настройките.",
-  "imageSend_deviceUnsupported": "Та радиота не може да пресылава изображени пакети. Подключите устройство, който работи с компанионски прошивка 13 или новия.",
-  "imageSend_directMessagesUnsupported": "Изображенията се превозводя се как групова информация, следато да се отправят единствено на канал — не в лична вестка.",
-  "imageSend_tooLarge": "Таата изображение е кодирано в по-числа пакети, отгоре както формат на сетта разрешава.",
+  "imageSend_radioUnknownTitle": "Настройките на радиото са неизвестни",
+  "imageSend_radioUnknownBody": "Свържи се с устройство, за да може да се изчисли времето в ефир.",
+  "imageSend_longSendTitle": "Дълго предаване",
+  "imageSend_longSendBody": "Това ще заеме канала за около {duration}.",
+  "imageSend_floodNote": "Flood маршрутизация: всеки повторител в обхват препредава всеки пакет, така че каналът остава зает по-дълго от това.",
+  "imageSend_parityTitle": "Добавяне на възстановяващ пакет",
+  "imageSend_paritySubtitle": "Един допълнителен пакет. Груповите съобщения не се потвърждават, така че това позволява на получателя да възстанови изображението, ако един пакет се загуби.",
+  "imageSend_send": "Изпрати",
+  "imageSend_cancel": "Отказ",
+  "imageSend_encodeFailed": "Това изображение не можа да бъде кодирано.",
+  "imageSend_codecDownloading": "Моделът за изображения все още се изтегля.",
+  "imageSend_codecUnavailable": "Изпращането на изображения не е достъпно на това устройство.",
+  "imageSend_codecDisabled": "Съобщенията с изображения са изключени в настройките.",
+  "imageSend_deviceUnsupported": "Това радио не може да изпраща пакети с изображения. Свържи устройство с companion фърмуер 13 или по-нов.",
+  "imageSend_directMessagesUnsupported": "Изображенията пътуват като групови данни, затова могат да се изпращат само в канал — не в лично съобщение.",
+  "imageSend_tooLarge": "Това изображение се кодира в повече пакети, отколкото форматът mesh позволява.",
   "imageSend_sentConfirmation": "Изображението е изпратено като {count} {count, plural, =1{пакет} other{пакета}}.",
-  "imageSend_sendFailed": "Изображение не може да бъде отправено: {error}",
-  "imageSend_sendingProgress": "Отправка наизображение — пакет {sent} от {total}",
+  "imageSend_sendFailed": "Изображението не можа да бъде изпратено: {error}",
+  "imageSend_sendingProgress": "Изпращане на изображение — пакет {sent} от {total}",
   "receivedImage_senderPrefix": "Узъдето {prefix}",
   "receivedImage_incoming": "{received} от {total} пакета",
   "receivedImage_queued": "Ожидането за декодиране",
@@ -3403,5 +3403,38 @@
   "settings_backgroundPermissionsSubtitle": "Провери изключението от оптимизацията на батерията и го заяви отново",
   "settings_backgroundPermissionsGranted": "Разрешението вече е дадено",
   "chat_selectSendAction": "Изберете действие за изпращане",
-  "chat_sendImageLora": "Изпращане на изображение чрез MeshCore"
+  "chat_sendImageLora": "Изпращане на изображение чрез MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Хопът е потвърден, ехото не е чуто директно",
+  "discoveredContacts_discoverDevices": "Открий устройства",
+  "discoveredContacts_requestName": "Заяви име",
+  "discoveredContacts_nameRequestFailed": "Неуспешна заявка за името на повторителя",
+  "discoveredContacts_discoveryFailed": "Неуспешно откриване на устройства: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP timestamp",
+  "chat_mcmpTimestampQueerly": "MCMP timestamp се различава от timestamp на пакета с {time} секунди",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Подписаният MCMP timestamp се различава значително от времето на получаване, с {time} секунди",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Скриване на редовете със съобщения",
+  "chat_showBlockedSenderMessages": "Показване на редовете със съобщения",
+  "repeater_cliClearNeighbors": "Изчисти списъка със съседи",
+  "reaction_report": "Емоджи реакции"
 }

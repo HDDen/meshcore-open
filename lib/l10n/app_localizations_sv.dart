@@ -45,7 +45,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get common_close => 'Stänga';
 
   @override
-  String get common_done => 'Done';
+  String get common_done => 'Klar';
 
   @override
   String get common_edit => 'Redigera';
@@ -537,7 +537,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_actions => 'Åtgärder';
 
   @override
-  String get settings_deleteAllPaths => 'Delete All Paths';
+  String get settings_deleteAllPaths => 'Ta bort alla rutter';
 
   @override
   String get settings_deleteAllPathsSubtitle =>
@@ -1102,7 +1102,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return 'Sök kontakter...';
+    return 'Sök $number$str kontakter...';
   }
 
   @override
@@ -1821,7 +1821,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes levererade, $failures misslyckade';
   }
 
   @override
@@ -2040,22 +2040,22 @@ class AppLocalizationsSv extends AppLocalizations {
   String get map_flags => 'Flaggor';
 
   @override
-  String get map_type => 'Type';
+  String get map_type => 'Typ';
 
   @override
-  String get map_path => 'Path';
+  String get map_path => 'Rutt';
 
   @override
-  String get map_location => 'Location';
+  String get map_location => 'Plats';
 
   @override
-  String get map_estLocation => 'Est. Location';
+  String get map_estLocation => 'Ungef. plats';
 
   @override
-  String get map_publicKey => 'Public Key';
+  String get map_publicKey => 'Publik nyckel';
 
   @override
-  String get map_publicKeyPrefixHint => 'e.g. ab12';
+  String get map_publicKeyPrefixHint => 't.ex. ab12';
 
   @override
   String get map_shareMarkerHere => 'Dela markeringen här';
@@ -2176,7 +2176,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get map_wardriveStop => 'Stoppa';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Upptäckt utan hopp';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2598,39 +2598,40 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Cachade rutor';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel =>
+      'Sammanfattning av cachade rutor';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Offline-massnedladdningar är avstängda för $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Offline-massnedladdningar för $source är avstängda i den här appkonfigurationen.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Källa: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Cachade rutor för källan: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'Cachade i valt område/zoom: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Ungefärlig cachestorlek: $size';
   }
 
   @override
@@ -2640,7 +2641,7 @@ class AppLocalizationsSv extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return 'N $north, S $south, Ö $east, V $west';
   }
 
   @override
@@ -2874,10 +2875,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_noiseFloor => 'Ljudnivå';
 
   @override
-  String get repeater_txAirtime => 'TX Airtime';
+  String get repeater_txAirtime => 'TX-sändningstid';
 
   @override
-  String get repeater_rxAirtime => 'RX Airtime';
+  String get repeater_rxAirtime => 'RX-mottagningstid';
 
   @override
   String get repeater_chanUtil => 'Användning av kanal';
@@ -4456,7 +4457,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Hoppet bekräftat, ekot hördes inte direkt';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4610,7 +4611,7 @@ class AppLocalizationsSv extends AppLocalizations {
     String distanceUnit,
     String distanceFromB,
   ) {
-    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+    return 'Blockerad av $obstruction $heightUnit, $distanceFromA från A och $distanceFromB från B ($distanceUnit).';
   }
 
   @override
@@ -4629,7 +4630,7 @@ class AppLocalizationsSv extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Med start från k=$baselineK vid $baselineFreq MHz, justerar beräkningen k-faktorn för det aktuella $frequencyMHz MHz-bandet, som definierar den böjda radiohorisonten.';
+    return 'Med start från k=$baselineK vid $baselineFreq MHz justerar beräkningen k-faktorn till $kFactor för det aktuella $frequencyMHz MHz-bandet, som definierar den böjda radiohorisonten.';
   }
 
   @override
@@ -4882,18 +4883,18 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ta bort alla upptäckta kontakter';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Upptäck enheter';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Begär namn';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Det gick inte att begära repeaterns namn';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Det gick inte att upptäcka enheter: $error';
   }
 
   @override
@@ -5104,24 +5105,24 @@ class AppLocalizationsSv extends AppLocalizations {
   String get translation_systemLanguage => 'Språk för systemet';
 
   @override
-  String get background_serviceTitle => 'MeshCore running';
+  String get background_serviceTitle => 'MeshCore körs';
 
   @override
   String get background_serviceText => 'Keeping BLE connected';
 
   @override
   String appSettings_translationModelDeleted(String name) {
-    return 'Deleted $name';
+    return '$name borttagen';
   }
 
   @override
   String appSettings_translationModelDeleteFailed(String error) {
-    return 'Failed to delete: $error';
+    return 'Det gick inte att ta bort: $error';
   }
 
   @override
   String channels_channelUpdateFailed(String error) {
-    return 'Failed to update channel: $error';
+    return 'Det gick inte att uppdatera kanalen: $error';
   }
 
   @override
@@ -5182,13 +5183,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contact_typeRepeater => 'Repeater';
 
   @override
-  String get contact_typeRoom => 'Room';
+  String get contact_typeRoom => 'Rum';
 
   @override
   String get contact_typeSensor => 'Sensor';
 
   @override
-  String get contact_typeUnknown => 'Unknown';
+  String get contact_typeUnknown => 'Okänd';
 
   @override
   String get map_zoomIn => 'Zooma in';
@@ -5529,16 +5530,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3-svar på';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'MCMP-tidsstämpel';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP-tidsstämpeln skiljer sig $time sekunder från paketets tidsstämpel';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'Den signerade MCMP-tidsstämpeln skiljer sig avsevärt från mottagningstiden, med $time sekunder';
   }
 
   @override
@@ -5887,7 +5888,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'Rum $name';
   }
 
   @override
@@ -5912,7 +5913,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo HV (3,0-4,35 V)';
 
   @override
-  String get chat_sendImage => 'Send vagnbild';
+  String get chat_sendImage => 'Skicka bild';
 
   @override
   String get chat_imagePickFailed => 'Kunde inte öppna det bildet';
@@ -5928,7 +5929,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get imageMessages_modelSectionTitle => 'Bildmodell';
 
   @override
-  String get imageMessages_downloadModel => 'Download';
+  String get imageMessages_downloadModel => 'Ladda ner';
 
   @override
   String get imageMessages_cancelDownload => 'Avbud';
@@ -5956,18 +5957,17 @@ class AppLocalizationsSv extends AppLocalizations {
       'Rekonstruera varje bild så snart den ankommer. Använder cirka 2 GB minne varje gång; låt det omför att rekonstruera genom ett tap.';
 
   @override
-  String get imageSend_title => 'Send vagnbild';
+  String get imageSend_title => 'Skicka bild';
 
   @override
   String get imageSend_cropNote =>
-      'Reserverat till 512 × 512 · förhållandet mellan storlek inte bevarat';
+      'Skalad till 512 × 512 · bildförhållandet bevaras inte';
 
   @override
-  String get imageSend_originalSize =>
-      'Ovanstående text (engelska)\n\nTranslation (svenskt):';
+  String get imageSend_originalSize => 'Original';
 
   @override
-  String get imageSend_onAirSize => 'Underför hjärnan';
+  String get imageSend_onAirSize => 'I etern';
 
   @override
   String get imageSend_quality => 'Kvalitet';
@@ -5982,10 +5982,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get imageSend_packetsLabel => 'Paket';
 
   @override
-  String get imageSend_airtimeLabel => 'Tid i övrighet';
+  String get imageSend_airtimeLabel => 'Sändningstid';
 
   @override
-  String get imageSend_sizeLabel => 'Ladning';
+  String get imageSend_sizeLabel => 'Nyttolast';
 
   @override
   String imageSend_packetsCount(int count) {
@@ -6007,63 +6007,62 @@ class AppLocalizationsSv extends AppLocalizations {
   String get imageSend_unknownValue => '—';
 
   @override
-  String get imageSend_radioUnknownTitle => 'Radioindikatorer inte kända';
+  String get imageSend_radioUnknownTitle => 'Radioinställningarna är okända';
 
   @override
   String get imageSend_radioUnknownBody =>
-      'Förkoppna till ett enhet så kan tiden på air beräknas.';
+      'Anslut till en enhet så att sändningstiden kan beräknas.';
 
   @override
-  String get imageSend_longSendTitle => 'Långförsending';
+  String get imageSend_longSendTitle => 'Lång sändning';
 
   @override
   String imageSend_longSendBody(String duration) {
-    return 'Detta kommer att bevara kanalen roughly $duration.';
+    return 'Det här upptar kanalen i ungefär $duration.';
   }
 
   @override
   String get imageSend_floodNote =>
-      'Flodledning: varje repeater i ramen retransmitterar varje paket, så kan kanalen vara på arbete långare än den här tiden.';
+      'Flood-routing: varje repeater inom räckhåll sänder om varje paket, så kanalen är upptagen längre än så.';
 
   @override
-  String get imageSend_parityTitle => 'Omedlningspaket';
+  String get imageSend_parityTitle => 'Lägg till återställningspaket';
 
   @override
   String get imageSend_paritySubtitle =>
-      'En ytterligare paket. Gruppmeddelanden inte akceras, så den här tar hänsyn till att mottar kan återuppbygga bilden om ett enkelt paket förlorats.';
+      'Ett extra paket. Gruppmeddelanden kvitteras inte, så det här låter mottagaren återskapa bilden om ett enstaka paket går förlorat.';
 
   @override
-  String get imageSend_send => 'Sänd';
+  String get imageSend_send => 'Skicka';
 
   @override
-  String get imageSend_cancel => 'Avbud';
+  String get imageSend_cancel => 'Avbryt';
 
   @override
-  String get imageSend_encodeFailed => 'Denna bild kan inte kodas.';
+  String get imageSend_encodeFailed => 'Den här bilden kunde inte kodas.';
 
   @override
-  String get imageSend_codecDownloading =>
-      'Bildmodellen downloads fortfarande.';
+  String get imageSend_codecDownloading => 'Bildmodellen hämtas fortfarande.';
 
   @override
   String get imageSend_codecUnavailable =>
-      'Bildsendning är inte tillgänglig på detta enhet.';
+      'Bildsändning är inte tillgänglig på den här enheten.';
 
   @override
   String get imageSend_codecDisabled =>
-      'Bildmeddelanden är offna i inställningarna.';
+      'Bildmeddelanden är avstängda i inställningarna.';
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Denna radi kan inte senda bildpaket. Använd ett äventyrsgerät med companionsystemfirmware 13 eller nyare.';
+      'Den här radion kan inte skicka bildpaket. Anslut en enhet med companion-firmware 13 eller senare.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
-      'Bilder senders som gruppod, så de kan endast skickas till ett kanal – inte i en direkt meddelning.';
+      'Bilder färdas som gruppdata och kan därför bara skickas till en kanal — inte i ett direktmeddelande.';
 
   @override
   String get imageSend_tooLarge =>
-      'Bilden kodades till mer paket än meshformaten tillåter.';
+      'Bilden kodades till fler paket än mesh-formatet tillåter.';
 
   @override
   String imageSend_sentConfirmation(int count) {
@@ -6083,7 +6082,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return 'Bild sendning — paket $sent av $total';
+    return 'Skickar bild — paket $sent av $total';
   }
 
   @override
@@ -6237,10 +6236,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_blockSenderName => 'Avsändarens namn';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Dölj meddelanderader';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'Visa meddelanderader';
 
   @override
   String get imageSend_previewShowAsReceived => 'Visa som mottaget';
@@ -6260,7 +6259,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Visa SNR/RSSI för sista hoppet i kanaler';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Rensa grannlistan';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6281,5 +6280,5 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_sendImageLora => 'Skicka bild via MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Emoji-reaktioner';
 }

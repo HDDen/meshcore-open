@@ -108,7 +108,7 @@
   "settings_privacyModeEnabled": "Ochranný režim je povolený.",
   "settings_privacyModeDisabled": "Ochranný režim je vypnutý",
   "settings_actions": "Možné akcie",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "Odstrániť všetky cesty",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Odoslať reklamu",
   "settings_sendAdvertisementSubtitle": "Momentálne priezornejšie.",
@@ -299,7 +299,7 @@
   "contacts_title": "Kontakty",
   "contacts_noContacts": "Zatiaľ žiadne kontakty.",
   "contacts_contactsWillAppear": "Kontakty sa zobrazia, keď zariadenia spúšťajú reklamu.",
-  "contacts_searchContacts": "Vyhľadávajte kontakty...",
+  "contacts_searchContacts": "Hľadať {number}{str} kontaktov...",
   "contacts_noUnreadContacts": "Žiadne neprečítané kontakty",
   "contacts_noContactsFound": "Neboli nájdených žiadnych kontaktov ani skupiny.",
   "contacts_deleteContact": "Odstrániť kontakt",
@@ -779,9 +779,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Dlaždice v cache",
+  "mapCache_cachedTileSummaryLabel": "Prehľad dlaždíc v cache",
+  "mapCache_bulkDownloadDisabledForSource": "Hromadné offline sťahovanie je pre {source} vypnuté.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -789,7 +789,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Hromadné offline sťahovanie pre {source} je v tejto konfigurácii aplikácie vypnuté.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -797,7 +797,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Zdroj: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Dlaždice v cache pre zdroj: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -813,7 +813,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "V cache vo vybranej oblasti/priblížení: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -821,7 +821,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Približná veľkosť cache: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -829,7 +829,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "S {north}, J {south}, V {east}, Z {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -953,8 +953,8 @@
   "repeater_lastRssi": "Posledná RSSI",
   "repeater_lastSnr": "Posledný SNR",
   "repeater_noiseFloor": "Hladina šumu",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "Čas vysielania TX",
+  "repeater_rxAirtime": "Čas príjmu RX",
   "repeater_packetStatistics": "Statistiky balíka",
   "repeater_sent": "Odoslané",
   "repeater_received": "Prišlo",
@@ -1034,7 +1034,7 @@
   "repeater_radioSettings": "Nastavenia rádia",
   "repeater_frequencyMhz": "Frekvencia (MHz)",
   "repeater_frequencyHelper": "300–2500 MHz",
-  "repeater_txPower": "TX Power",
+  "repeater_txPower": "TX výkon",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Šírka pásma",
   "repeater_spreadingFactor": "Šírenie faktoru",
@@ -1147,7 +1147,7 @@
   "repeater_sendAdvertZeroHopSubtitle": "Zverejnite reklamnú správu, ktorá sa prenáša len raz (bez prenosov).",
   "repeater_clockSync": "Synchronizujte hodiny teraz",
   "repeater_clockSyncSubtitle": "Nastavte čas na vašom telefóne, aby odpovedal na volania z vysielacieho zariadenia.",
-  "repeater_actionSucceeded": "{action} succeeded",
+  "repeater_actionSucceeded": "{action} prebehlo úspešne",
   "@repeater_actionSucceeded": {
     "placeholders": {
       "action": {
@@ -1155,7 +1155,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} zlyhalo: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -1658,7 +1658,7 @@
   "community_scanQr": "Skontrolujte komunitný QR kód",
   "community_scanInstructions": "Zamerte kameru na komunitný QR kód.",
   "community_showQr": "Zobraziť QR kód",
-  "common_ok": "OK\nDobre",
+  "common_ok": "OK",
   "community_publicChannel": "Komunita verejná",
   "community_hashtagChannel": "Komunitný Hashtag",
   "community_name": "Komunita",
@@ -1925,7 +1925,7 @@
   "losFrequencyLabel": "Frekvencia",
   "losFrequencyInfoTooltip": "Zobraziť podrobnosti výpočtu",
   "losFrequencyDialogTitle": "Výpočet rádiového horizontu",
-  "losFrequencyDialogDescription": "Počnúc od k={baselineK} pri {baselineFreq} MHz výpočet upraví k-faktor pre aktuálne pásmo {frequencyMHz} MHz, ktorý definuje zakrivený strop rádiového horizontu.",
+  "losFrequencyDialogDescription": "Počnúc od k={baselineK} pri {baselineFreq} MHz výpočet upraví k-faktor na {kFactor} pre aktuálne pásmo {frequencyMHz} MHz, ktorý definuje zakrivený strop rádiového horizontu.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2319,10 +2319,10 @@
   "repeater_cliHelpStatsPackets": "(Len pre sériové záznamy) Zobrazuje štatistiky na úrovni paketov.",
   "repeater_cliHelpStatsRadio": "(Len pre sériu) Zobrazuje údaje o rádiových staniciach.",
   "repeater_cliHelpStatsCore": "(Len pre sériové modely) Zobrazuje základné štatistiky firmvéru.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "Hotovo",
+  "background_serviceTitle": "MeshCore beží",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "{name} odstránené",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2330,7 +2330,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Nepodarilo sa odstrániť: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2338,7 +2338,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Nepodarilo sa aktualizovať kanál: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2346,18 +2346,18 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_type": "Typ",
+  "map_path": "Cesta",
+  "map_location": "Poloha",
+  "map_estLocation": "Odh. poloha",
+  "map_publicKey": "Verejný kľúč",
+  "map_publicKeyPrefixHint": "napr. ab12",
   "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
+  "contact_typeRepeater": "Opakovač",
   "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
+  "contact_typeSensor": "Senzor",
+  "contact_typeUnknown": "Neznámy",
+  "channels_via": "cez {path}",
   "map_sharedAt": "Zdieľané",
   "@losBlockedSpotChip": {
     "placeholders": {
@@ -2398,7 +2398,7 @@
   "losBlockedSpotsHint": "Kliknite na zablokované miesto, aby ste ho zvýraznili na mape.",
   "losSelectedObstructionTitle": "Vybraná prekážka",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Blokované prekážkou {obstruction} {heightUnit}, {distanceFromA} od A a {distanceFromB} od B ({distanceUnit}).",
   "chat_markAsUnread": "Označenie ako neprečítané",
   "settings_companionDebugLogSubtitle": "Príkazy, odpovede a surové dáta pre protokoly BLE/TCP/USB",
   "settings_companionDebugLog": "Logovanie pre ladenie (sprievodný log)",
@@ -2483,9 +2483,9 @@
   "pathEditor_advancedHex": "Pokročilé: pôvodná hexová cesta",
   "pathEditor_hexLabel": "Prefiksy pre hexadecimálne čísla",
   "pathEditor_hexHelper": "Dve hexové čísla na každý krok, oddelené čiarkami",
-  "routing_lastWorked": "worked {when}",
+  "routing_lastWorked": "fungovalo {when}",
   "pathEditor_invalidTokens": "Neplatné: {tokens}",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "routing_deliveryCounts": "{successes} doručených, {failures} zlyhalo",
   "pathEditor_tooManyHops": "Maximálne 64 krokov",
   "pathEditor_usePath": "Použite túto cestu",
   "pathEditor_removeHop": "Odstráňte chmel",
@@ -2592,10 +2592,10 @@
   "pathMap_unfollowPacket": "Odomknúť pohľad od paketu",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Odoslať pri výbere",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 bajt",
+  "repeater_pathHashModeOption1": "1 - 2 bajty",
+  "repeater_pathHashModeOption2": "2 - 3 bajty",
+  "repeater_pathHashModeOption3": "3 - 4 bajty",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Spustiť",
   "map_wardriveStop": "Zastaviť",
@@ -3055,7 +3055,7 @@
   "chat_contactIsYou": "Toto je váš vlastný kontakt",
   "chat_contactType": "Typ kontaktu: {contacttype}",
   "chat_contactTypeNode": "Uzol",
-  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRepeater": "Opakovač",
   "chat_contactTypeRoom": "Room server",
   "chat_contactTypeSensor": "Senzor",
   "chat_myLocation": "Odoslať moju polohu",
@@ -3300,7 +3300,7 @@
   },
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3.0-4.35V)",
-  "chat_sendImage": "Vyslat obraz",
+  "chat_sendImage": "Odoslať obrázok",
   "chat_imagePickFailed": "Nesmiela jsem otvoriť tento obrázok",
   "imageMessages_enableTitle": "Zabezpečte zobrazi",
   "imageMessages_enableSubtitle": "Odeslanie obrazov pre mšťanie. Potrebujete jednorazové stáhnutie modelu obrazov.",
@@ -3313,38 +3313,38 @@
   "imageMessages_downloadFailed": "Model s obrázkom nemôžno sťažovať.",
   "imageMessages_autoProcessTitle": "Automaticky prepojiť slučaje.",
   "imageMessages_autoProcessSubtitle": "Rekonstruujte každý obraz tak, ako pridá. Používajete okolo 2 GB pamäti pre drugú hodinu; odložte rekonstrukciu tým kliknutím.",
-  "imageSend_title": "Vyslat obraz",
-  "imageSend_cropNote": "Zmeneno na 512 × 512 · vzorýst nie byl zachovan",
-  "imageSend_originalSize": "Výborný text:\n\n\"Language is the road map of a culture. It tells us where to go as a society and helps us understand the world around us. Learning a new language opens up new perspectives and opportunities, allowing us to connect with people from different backgrounds and build bridges between cultures.\"\n\nSlovenská preklada:\n\n\"Jazyk je cesta pre zručnosti a odráža kultúru. Dá nám uvedomi, dokádať, kúdy sa pohladneme a pomáha našej společnosti poradiť sa v rôznych okolnosti a porozumieť o svetu kolem nás. Nauka nového jazyka otviera nové perspektívy a možnosti, čo pohybuje našu schopnosť sa spoluprávať s ľudmi z rôznych okolnosti a budovať mosty medzi kultúry.\"",
-  "imageSend_onAirSize": "V prúce",
+  "imageSend_title": "Odoslať obrázok",
+  "imageSend_cropNote": "Zmenené na 512 × 512 · pomer strán sa nezachová",
+  "imageSend_originalSize": "Originál",
+  "imageSend_onAirSize": "V éteri",
   "imageSend_quality": "Kvalita",
-  "imageSend_qualityStandard": "Stándard",
+  "imageSend_qualityStandard": "Štandard",
   "imageSend_qualityHigh": "Vysoká",
   "imageSend_packetsLabel": "Pakety",
-  "imageSend_airtimeLabel": "Čas na anteni",
-  "imageSend_sizeLabel": "Základ",
+  "imageSend_airtimeLabel": "Čas vysielania",
+  "imageSend_sizeLabel": "Užitočné dáta",
   "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paketov}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
-  "imageSend_radioUnknownTitle": "Nastavenia radio nezná",
-  "imageSend_radioUnknownBody": "Zkonečte s určým prijemcem, aby sa mohlo výpočet času, ktorý je v prúbežu.",
-  "imageSend_longSendTitle": "Dlouhá transmisia",
-  "imageSend_longSendBody": "Tento dôvod udrží kanál priamo na {duration}.",
-  "imageSend_floodNote": "Povodný routing: každý repeater v rozsahu zrňa každý paket, takže kanál zostá zajetší dlouше, než tu.",
-  "imageSend_parityTitle": "Poučný paket pre očudenie",
-  "imageSend_paritySubtitle": "Jedný dodatný paket. Skúsené súhlasy nie sa uznávaú, takže to umožňuje prechovávaču opraviť obraz, pokiaľ sa jedný paket niebyl ztrácený.",
-  "imageSend_send": "Odeslať",
-  "imageSend_cancel": "Zastavenie",
-  "imageSend_encodeFailed": "Tento obráz nie byla byla schována.",
-  "imageSend_codecDownloading": "Model prehľadovania prebeža stále stále stále prechádza.",
-  "imageSend_codecUnavailable": "Zobrazenie nie je dostupný na tomto zariadení.",
-  "imageSend_codecDisabled": "Zobrazy s prešteľkami sú v nastavení vypnené.",
-  "imageSend_deviceUnsupported": "Tento radiok nie môže odeslať obrazové pakety. Podeďte správne určité zařízení s oprogramovaním spolupráce 13 alebo novším.",
-  "imageSend_directMessagesUnsupported": "Obrazy sa prechádzajú jako skupinové údaje, preto sa ich môžu odeslať len na kanál — nie v príbeh sa.",
-  "imageSend_tooLarge": "Tento obraz byl skodyrovany do viac paketov, ako umožňuje si sítka format.",
+  "imageSend_radioUnknownTitle": "Nastavenia rádia sú neznáme",
+  "imageSend_radioUnknownBody": "Pripoj sa k zariadeniu, aby sa dal vypočítať čas vysielania.",
+  "imageSend_longSendTitle": "Dlhé vysielanie",
+  "imageSend_longSendBody": "Toto obsadí kanál približne na {duration}.",
+  "imageSend_floodNote": "Flood smerovanie: každý opakovač v dosahu preposiela každý paket, takže kanál zostane obsadený dlhšie.",
+  "imageSend_parityTitle": "Pridať obnovovací paket",
+  "imageSend_paritySubtitle": "Jeden paket navyše. Skupinové správy sa nepotvrdzujú, takže vďaka nemu dokáže príjemca obnoviť obrázok, ak sa stratí jeden paket.",
+  "imageSend_send": "Odoslať",
+  "imageSend_cancel": "Zrušiť",
+  "imageSend_encodeFailed": "Tento obrázok sa nepodarilo zakódovať.",
+  "imageSend_codecDownloading": "Model obrázkov sa ešte sťahuje.",
+  "imageSend_codecUnavailable": "Odosielanie obrázkov nie je na tomto zariadení dostupné.",
+  "imageSend_codecDisabled": "Obrázkové správy sú v nastaveniach vypnuté.",
+  "imageSend_deviceUnsupported": "Toto rádio nedokáže odosielať obrázkové pakety. Pripoj zariadenie s companion firmvérom 13 alebo novším.",
+  "imageSend_directMessagesUnsupported": "Obrázky cestujú ako skupinové dáta, takže sa dajú poslať len do kanála — nie v priamej správe.",
+  "imageSend_tooLarge": "Tento obrázok sa zakódoval do väčšieho počtu paketov, než formát mesh dovoľuje.",
   "imageSend_sentConfirmation": "Obrázok odoslaný ako {count} {count, plural, =1{paket} other{paketov}}.",
-  "imageSend_sendFailed": "Obraz nemôžlo odeslať: {error}",
-  "imageSend_sendingProgress": "Vysyťanie obrazu — pakét {sent} z {total}",
+  "imageSend_sendFailed": "Obrázok sa nepodarilo odoslať: {error}",
+  "imageSend_sendingProgress": "Odosielanie obrázka — paket {sent} z {total}",
   "receivedImage_senderPrefix": "Vęzlo {prefix}",
   "receivedImage_incoming": "Otrzymané {received} z {total} pakotí",
   "receivedImage_queued": "Čekanie na dekódovanie",
@@ -3403,5 +3403,38 @@
   "settings_backgroundPermissionsSubtitle": "Skontrolovať výnimku z optimalizácie batérie a znova o ňu požiadať",
   "settings_backgroundPermissionsGranted": "Povolenie je už udelené",
   "chat_selectSendAction": "Vybrať akciu odoslania",
-  "chat_sendImageLora": "Odoslať obrázok cez MeshCore"
+  "chat_sendImageLora": "Odoslať obrázok cez MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Skok potvrdený, echo nebolo počuť priamo",
+  "discoveredContacts_discoverDevices": "Objaviť zariadenia",
+  "discoveredContacts_requestName": "Vyžiadať meno",
+  "discoveredContacts_nameRequestFailed": "Nepodarilo sa vyžiadať meno opakovača",
+  "discoveredContacts_discoveryFailed": "Nepodarilo sa objaviť zariadenia: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Timestamp MCMP",
+  "chat_mcmpTimestampQueerly": "Timestamp MCMP sa líši od timestampu paketu o {time} sekúnd",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Podpísaný timestamp MCMP sa výrazne líši od času prijatia, o {time} sekúnd",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Skryť riadky správ",
+  "chat_showBlockedSenderMessages": "Zobraziť riadky správ",
+  "repeater_cliClearNeighbors": "Vymazať zoznam susedov",
+  "reaction_report": "Emoji reakcie"
 }

@@ -473,9 +473,9 @@
   "mapCache_downloadTilesButton": "Загрузить плитки",
   "mapCache_clearCacheButton": "Очистить кэш",
   "mapCache_failedDownloads": "Неудачных загрузок: {count}",
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Закэшированные плитки",
+  "mapCache_cachedTileSummaryLabel": "Сводка по кэшу плиток",
+  "mapCache_bulkDownloadDisabledForSource": "Массовая офлайн-загрузка отключена для {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -483,7 +483,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Массовая офлайн-загрузка для {source} отключена в конфигурации приложения.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -491,7 +491,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Источник: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -499,7 +499,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Закэшировано плиток для источника: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -507,7 +507,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Закэшировано в выбранной области/масштабе: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -515,7 +515,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Примерный размер кэша: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1929,7 +1929,7 @@
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Старт",
   "map_wardriveStop": "Стоп",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Обнаружение без хопов",
   "map_wardriveDiscoverySent": "Запрос wardrive discovery отправлен.",
   "map_wardriveUploadCancelled": "Выгрузка wardrive отменена.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery не удалось: {error}",
@@ -2607,7 +2607,7 @@
   },
   "settings_infoHardware": "Оборудование",
   "appSettings_batteryLipoHv": "LiPo HV (3,0–4,35 В)",
-  "chat_sendImage": "Отправьте изображение",
+  "chat_sendImage": "Отправить изображение",
   "chat_imagePickFailed": "Не удалось открыть это изображение",
   "imageMessages_enableTitle": "Включить изображения в сообщения",
   "imageMessages_enableSubtitle": "Отправьте изображения через сеть. Требуется однократная загрузка шаблона изображения.",
@@ -2620,7 +2620,7 @@
   "imageMessages_downloadFailed": "Модель изображения не удалось скачать.",
   "imageMessages_autoProcessTitle": "Автоматически обрабатывать изображения",
   "imageMessages_autoProcessSubtitle": "Примерно каждое изображение реконструируйте сразу после его поступления. Для этого на каждый раз используется около 2 ГБ памяти; отключите реконструкцию касанием.",
-  "imageSend_title": "Отправьте изображение",
+  "imageSend_title": "Отправить изображение",
   "imageSend_cropNote": "Меняется размер на 512 × 512 · соотношение сторон не сохраняется",
   "imageSend_originalSize": "Оригинал",
   "imageSend_onAirSize": "В эфире",
@@ -2712,5 +2712,6 @@
   "settings_backgroundPermissionsSubtitle": "Проверить исключение из оптимизации батареи и запросить его заново",
   "settings_backgroundPermissionsGranted": "Разрешение уже выдано",
   "chat_selectSendAction": "Выберите действие отправки",
-  "chat_sendImageLora": "Отправить изображение через MeshCore"
+  "chat_sendImageLora": "Отправить изображение через MeshCore",
+  "reaction_report": "Реакции эмодзи"
 }

@@ -821,16 +821,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainien';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 octet';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 octets';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 octets';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 octets';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -2204,7 +2204,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get map_wardriveStop => 'Arrêter';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Découverte sans saut';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2633,39 +2633,40 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Tuiles en cache';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel =>
+      'Récapitulatif des tuiles en cache';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Les téléchargements groupés hors ligne sont désactivés pour $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Les téléchargements groupés hors ligne pour $source sont désactivés dans cette configuration de l\'application.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Source : $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Tuiles en cache pour la source : $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'En cache dans la zone/le zoom sélectionné : $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Taille approximative du cache : $size';
   }
 
   @override
@@ -2909,10 +2910,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get repeater_noiseFloor => 'Niveau de Bruit';
 
   @override
-  String get repeater_txAirtime => 'TX Airtime';
+  String get repeater_txAirtime => 'Temps d\'antenne TX';
 
   @override
-  String get repeater_rxAirtime => 'RX Airtime';
+  String get repeater_rxAirtime => 'Temps d\'antenne RX';
 
   @override
   String get repeater_chanUtil => 'Utilisation du canal';
@@ -4516,7 +4517,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Saut confirmé, écho non entendu directement';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4692,7 +4693,7 @@ class AppLocalizationsFr extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'À partir de k=$baselineK à $baselineFreq MHz, le calcul ajuste le facteur k pour la bande actuelle de $frequencyMHz MHz, ce qui définit la limite incurvée de l\'horizon radio.';
+    return 'À partir de k=$baselineK à $baselineFreq MHz, le calcul ajuste le facteur k à $kFactor pour la bande actuelle de $frequencyMHz MHz, ce qui définit la limite incurvée de l\'horizon radio.';
   }
 
   @override
@@ -4955,18 +4956,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Supprimer tous les contacts découverts';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Découvrir les appareils';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Demander le nom';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Impossible de demander le nom du répéteur';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Échec de la découverte des appareils : $error';
   }
 
   @override
@@ -5257,7 +5258,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contact_typeRepeater => 'Répéteur';
 
   @override
-  String get contact_typeRoom => 'Room';
+  String get contact_typeRoom => 'Salon';
 
   @override
   String get contact_typeSensor => 'Capteur';
@@ -5606,16 +5607,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'Réponse MCMPv3 à';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'Horodatage MCMP';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'L\'horodatage MCMP diffère de celui du paquet de $time secondes';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'L\'horodatage MCMP signé diffère nettement de l\'heure de réception, de $time secondes';
   }
 
   @override
@@ -5970,7 +5971,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String chat_searchMessages_results_room(String name) {
-    return 'Room $name';
+    return 'Salon $name';
   }
 
   @override
@@ -5995,7 +5996,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'Tension élevée LiPo (3,0-4,35 V)';
 
   @override
-  String get chat_sendImage => 'Envoyer l\'image';
+  String get chat_sendImage => 'Envoyer une image';
 
   @override
   String get chat_imagePickFailed => 'Je n\'ai pas pu ouvrir cette image';
@@ -6039,15 +6040,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Reconstruisez chaque image dès son arrivée. Cela utilise environ 2 Go de mémoire pendant une seconde à chaque fois ; désactivez la reconstruction au toucher pour éviter cela.';
 
   @override
-  String get imageSend_title => 'Envoyer l\'image';
+  String get imageSend_title => 'Envoyer une image';
 
   @override
   String get imageSend_cropNote =>
       'Redimensionné à 512 × 512 · le rapport d’aspect n’a pas été conservé';
 
   @override
-  String get imageSend_originalSize =>
-      'Texte original\n\nVeuillez traduire le texte suivant en français :';
+  String get imageSend_originalSize => 'Original';
 
   @override
   String get imageSend_onAirSize => 'En direct';
@@ -6321,10 +6321,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_blockSenderName => 'Nom de l\'expéditeur';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Masquer les lignes de messages';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages =>
+      'Afficher les lignes de messages';
 
   @override
   String get imageSend_previewShowAsReceived => 'Voir comme à la réception';
@@ -6344,7 +6345,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Afficher le SNR/RSSI du dernier saut dans les canaux';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Effacer la liste des voisins';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6365,5 +6366,5 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_sendImageLora => 'Envoyer une image via MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Réactions emoji';
 }

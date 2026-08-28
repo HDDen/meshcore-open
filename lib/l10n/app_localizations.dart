@@ -8036,7 +8036,7 @@ abstract class AppLocalizations {
   /// Explain how the calculation uses the baseline frequency and derived k-factor.
   ///
   /// In en, this message translates to:
-  /// **'Starting from k={baselineK} at {baselineFreq} MHz, the calculation adjusts the k-factor for the current {frequencyMHz} MHz band, which defines the curved radio horizon cap.'**
+  /// **'Starting from k={baselineK} at {baselineFreq} MHz, the calculation adjusts the k-factor to {kFactor} for the current {frequencyMHz} MHz band, which defines the curved radio horizon cap.'**
   String losFrequencyDialogDescription(
     double baselineK,
     double baselineFreq,

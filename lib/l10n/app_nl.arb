@@ -108,7 +108,7 @@
   "settings_privacyModeEnabled": "Privacy modus is ingeschakeld",
   "settings_privacyModeDisabled": "Privacy modus is uitgeschakeld",
   "settings_actions": "Acties",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "Alle paden verwijderen",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Verzend Advertentie",
   "settings_sendAdvertisementSubtitle": "Nu aanwezigheid uitzenden",
@@ -299,7 +299,7 @@
   "contacts_title": "Contacten",
   "contacts_noContacts": "Nog geen contacten.",
   "contacts_contactsWillAppear": "Contacten verschijnen wanneer apparaten zich aanbieden.",
-  "contacts_searchContacts": "Zoek contacten...",
+  "contacts_searchContacts": "Zoek {number}{str} contacten...",
   "contacts_noUnreadContacts": "Geen ongelezen contacten",
   "contacts_noContactsFound": "Geen contacten of groepen gevonden.",
   "contacts_deleteContact": "Verwijder Contact",
@@ -524,7 +524,7 @@
   "gifPicker_failedSearch": "Zoeken mislukt",
   "gifPicker_noInternet": "Geen internetverbinding",
   "debugLog_appTitle": "Debuglog van de app",
-  "debugLog_bleTitle": "BLE Debug Log",
+  "debugLog_bleTitle": "BLE-debuglogboek",
   "debugLog_copyLog": "Kopieer log",
   "debugLog_clearLog": "Log wissen",
   "debugLog_copied": "Debuglog gekopieerd",
@@ -779,9 +779,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Tegels in cache",
+  "mapCache_cachedTileSummaryLabel": "Overzicht van tegels in cache",
+  "mapCache_bulkDownloadDisabledForSource": "Offline bulkdownloads zijn uitgeschakeld voor {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -789,7 +789,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Offline bulkdownloads voor {source} zijn uitgeschakeld in deze app-configuratie.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -797,7 +797,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Bron: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Tegels in cache voor de bron: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -813,7 +813,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "In cache in het geselecteerde gebied/zoomniveau: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -821,7 +821,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Geschatte cachegrootte: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -829,7 +829,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "N {north}, Z {south}, O {east}, W {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -1034,7 +1034,7 @@
   "repeater_radioSettings": "Radio Instellingen",
   "repeater_frequencyMhz": "Frequentie (MHz)",
   "repeater_frequencyHelper": "300-2500 MHz",
-  "repeater_txPower": "TX Power",
+  "repeater_txPower": "TX-vermogen",
   "repeater_txPowerHelper": "1-30 dBm",
   "repeater_bandwidth": "Bandbreedte",
   "repeater_spreadingFactor": "Spreidingsfactor",
@@ -1155,7 +1155,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} mislukt: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -1890,7 +1890,7 @@
   "losFrequencyLabel": "Frequentie",
   "losFrequencyInfoTooltip": "Bekijk details van de berekening",
   "losFrequencyDialogTitle": "Berekening van de radiohorizon",
-  "losFrequencyDialogDescription": "Beginnend met k={baselineK} bij {baselineFreq} MHz, wordt bij de berekening de k-factor aangepast voor de huidige {frequencyMHz} MHz-band, die de gebogen radiohorizonkap definieert.",
+  "losFrequencyDialogDescription": "Beginnend met k={baselineK} bij {baselineFreq} MHz, wordt bij de berekening de k-factor naar {kFactor} aangepast voor de huidige {frequencyMHz} MHz-band, die de gebogen radiohorizonkap definieert.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2284,10 +2284,10 @@
   "repeater_cliHelpStatsPackets": "(Alleen voor seriële verbindingen) Toont statistieken op pakketniveau.",
   "repeater_cliHelpStatsRadio": "(Alleen voor serienummers) Toont radio-statistieken.",
   "repeater_cliHelpStatsCore": "(Alleen voor seriële communicatie) Toont de belangrijkste firmware-statistieken.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "Klaar",
+  "background_serviceTitle": "MeshCore actief",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "{name} verwijderd",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2295,7 +2295,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Verwijderen mislukt: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2303,7 +2303,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Kan kanaal niet bijwerken: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2312,16 +2312,16 @@
     }
   },
   "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_path": "Pad",
+  "map_location": "Locatie",
+  "map_estLocation": "Gesch. locatie",
+  "map_publicKey": "Publieke sleutel",
+  "map_publicKeyPrefixHint": "bijv. ab12",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Repeater",
   "contact_typeRoom": "Room",
   "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
+  "contact_typeUnknown": "Onbekend",
   "channels_via": "via {path}",
   "map_sharedAt": "Gedeeld",
   "@losBlockedSpotChip": {
@@ -2363,7 +2363,7 @@
   "losBlockedSpotsHint": "Tik op een geblokkeerd gebied om het op de kaart te markeren.",
   "losBlockedSpotsTitle": "Geplande plaatsen",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Geblokkeerd door {obstruction} {heightUnit}, {distanceFromA} vanaf A en {distanceFromB} vanaf B ({distanceUnit}).",
   "settings_companionDebugLog": "Debuglog voor aanvullende informatie",
   "chat_newMessages": "Nieuwe berichten",
   "chat_markAsUnread": "Markeer als ongelezen",
@@ -2455,7 +2455,7 @@
   "pathEditor_removeHop": "Verwijder de hop",
   "pathEditor_unknownHop": "Onbekend type zender",
   "map_zoomIn": "Inzoomen",
-  "routing_lastWorked": "worked {when}",
+  "routing_lastWorked": "werkte {when}",
   "map_zoomOut": "Inzoomen",
   "map_centerMap": "Centraal overzicht",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth vereist een Chromium-browser.",
@@ -2588,7 +2588,7 @@
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Starten",
   "map_wardriveStop": "Stoppen",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Ontdekking zonder hops",
   "map_wardriveDiscoverySent": "Wardrive discovery-verzoek verzonden.",
   "map_wardriveUploadCancelled": "Wardrive-upload geannuleerd.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery is mislukt: {error}",
@@ -3082,12 +3082,12 @@
   },
   "settings_infoHardware": "Hardware",
   "appSettings_batteryLipoHv": "LiPo HV (3,0-4,35 V)",
-  "chat_sendImage": "Beeld verzenden",
+  "chat_sendImage": "Afbeelding verzenden",
   "chat_imagePickFailed": "Kunde die afbeelding niet openen",
   "imageMessages_enableTitle": "Bijbehorende afbeeldingen activeren",
   "imageMessages_enableSubtitle": "Beeldjes verzenden via het netwerk. Vereist eenmalig afdaling van een beeldmodel.",
   "imageMessages_modelSectionTitle": "Beeldmodel",
-  "imageMessages_downloadModel": "Download",
+  "imageMessages_downloadModel": "Downloaden",
   "imageMessages_cancelDownload": "Annuleren",
   "imageMessages_removeModel": "Model verwijderen",
   "imageMessages_modelReady": "Klaar",
@@ -3095,7 +3095,7 @@
   "imageMessages_downloadFailed": "Het beeldmodel kon niet worden gedownload.",
   "imageMessages_autoProcessTitle": "Beeldverwerking automatisch",
   "imageMessages_autoProcessSubtitle": "Reconstrueer elk beeld direct nadat het binnenkomt. Het gebruikt ongeveer 2 GB geheugen voor elke keer; schakel het reconstrueren uit met een tik als je het niet nodig hebt.",
-  "imageSend_title": "Beeld verzenden",
+  "imageSend_title": "Afbeelding verzenden",
   "imageSend_cropNote": "Aangepast aan 512 × 512 · het aspectverhouding is niet behouden",
   "imageSend_originalSize": "Oorspronkelijk",
   "imageSend_onAirSize": "Op de lucht",
@@ -3185,5 +3185,38 @@
   "settings_backgroundPermissionsSubtitle": "Controleer de uitzondering op batterijoptimalisatie en vraag deze opnieuw aan",
   "settings_backgroundPermissionsGranted": "Toestemming is al verleend",
   "chat_selectSendAction": "Verzendactie selecteren",
-  "chat_sendImageLora": "Afbeelding verzenden via MeshCore"
+  "chat_sendImageLora": "Afbeelding verzenden via MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Hop bevestigd, echo niet rechtstreeks gehoord",
+  "discoveredContacts_discoverDevices": "Apparaten ontdekken",
+  "discoveredContacts_requestName": "Naam opvragen",
+  "discoveredContacts_nameRequestFailed": "Kan de naam van de repeater niet opvragen",
+  "discoveredContacts_discoveryFailed": "Kan geen apparaten ontdekken: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP-timestamp",
+  "chat_mcmpTimestampQueerly": "MCMP-timestamp wijkt {time} seconden af van de timestamp van het pakket",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "De ondertekende MCMP-timestamp wijkt sterk af van het ontvangsttijdstip, met {time} seconden",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Berichtregels verbergen",
+  "chat_showBlockedSenderMessages": "Berichtregels tonen",
+  "repeater_cliClearNeighbors": "Burenlijst wissen",
+  "reaction_report": "Emoji-reacties"
 }

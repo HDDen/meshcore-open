@@ -301,7 +301,7 @@
   "contacts_title": "Контакти",
   "contacts_noContacts": "Контактів не знайдено.",
   "contacts_contactsWillAppear": "Контакти з'являться, коли пристрої надішлють оголошення.",
-  "contacts_searchContacts": "Пошук контактів...",
+  "contacts_searchContacts": "Пошук {number}{str} контактів...",
   "contacts_noUnreadContacts": "Немає непрочитаних контактів",
   "contacts_noContactsFound": "Контактів або груп не знайдено.",
   "contacts_deleteContact": "Видалити контакт",
@@ -788,9 +788,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Закешовані плитки",
+  "mapCache_cachedTileSummaryLabel": "Зведення про закешовані плитки",
+  "mapCache_bulkDownloadDisabledForSource": "Масове офлайн-завантаження вимкнено для {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -798,7 +798,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Масове офлайн-завантаження для {source} вимкнено в цій конфігурації застосунку.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -806,7 +806,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Джерело: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -814,7 +814,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Закешовано плиток для джерела: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -822,7 +822,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Закешовано у вибраній області/масштабі: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -830,7 +830,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Приблизний розмір кешу: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1156,7 +1156,7 @@
   "repeater_sendAdvertZeroHopSubtitle": "Розповсюдити рекламу з однією переадресацією (без повторного розповсюдження)",
   "repeater_clockSync": "Синхронізувати годинник зараз",
   "repeater_clockSyncSubtitle": "Передайте час вашого телефону на ретранслятор.",
-  "repeater_actionSucceeded": "{action} succeeded",
+  "repeater_actionSucceeded": "{action} виконано успішно",
   "@repeater_actionSucceeded": {
     "placeholders": {
       "action": {
@@ -1164,7 +1164,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} не вдалося: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -1933,7 +1933,7 @@
   "losFrequencyLabel": "Частота",
   "losFrequencyInfoTooltip": "Переглянути деталі розрахунку",
   "losFrequencyDialogTitle": "Розрахунок радіогоризонту",
-  "losFrequencyDialogDescription": "Починаючи з k={baselineK} на {baselineFreq} МГц, обчислення коригує k-фактор для поточного діапазону {frequencyMHz} МГц, який визначає викривлену межу радіогоризонту.",
+  "losFrequencyDialogDescription": "Починаючи з k={baselineK} на {baselineFreq} МГц, обчислення коригує k-фактор до {kFactor} для поточного діапазону {frequencyMHz} МГц, який визначає викривлену межу радіогоризонту.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2377,7 +2377,7 @@
   "losBlockedSpotsTitle": "Заблоковані місця",
   "losSelectedObstructionTitle": "Вибраний об'єкт перешкоди",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Заблоковано перешкодою {obstruction} {heightUnit}: {distanceFromA} від A і {distanceFromB} від B ({distanceUnit}).",
   "settings_companionDebugLog": "Журнал відлачування (для супутника)",
   "settings_companionDebugLogSubtitle": "Команди, відповіді та необроблена інформація для протоколів BLE/TCP/USB",
   "chat_newMessages": "Нові повідомлення",
@@ -2463,8 +2463,8 @@
   "pathEditor_hexLabel": "Префікси для шестнадцяткової системи числення",
   "pathEditor_hexHelper": "Два шестизначні символи на кожний крок, розділені комами",
   "pathEditor_invalidTokens": "Неправильно: {tokens}",
-  "routing_lastWorked": "worked {when}",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "routing_lastWorked": "спрацював {when}",
+  "routing_deliveryCounts": "{successes} доставлено, {failures} невдалих",
   "pathEditor_tooManyHops": "Максимум 64 хмелеві колоди",
   "pathEditor_usePath": "Використовуйте цей шлях",
   "pathEditor_removeHop": "Видалити хміль",
@@ -2571,14 +2571,14 @@
   "pathMap_unfollowPacket": "Відв'язати вигляд від пакету",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Надсилати при виборі",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 байт",
+  "repeater_pathHashModeOption1": "1 - 2 байти",
+  "repeater_pathHashModeOption2": "2 - 3 байти",
+  "repeater_pathHashModeOption3": "3 - 4 байти",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Старт",
   "map_wardriveStop": "Стоп",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Виявлення без хопів",
   "map_wardriveDiscoverySent": "Запит wardrive discovery надіслано.",
   "map_wardriveUploadCancelled": "Вивантаження wardrive скасовано.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery не вдалося: {error}",
@@ -3280,7 +3280,7 @@
   },
   "settings_infoHardware": "Оборудовання",
   "appSettings_batteryLipoHv": "ЛиPo HV (3,0-4,35 В)",
-  "chat_sendImage": "Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення",
+  "chat_sendImage": "Надіслати зображення",
   "chat_imagePickFailed": "Неможливо відкрити це изображення",
   "imageMessages_enableTitle": "Підтримка зображень для посилання",
   "imageMessages_enableSubtitle": "Пошукуєте изображення через сеть. Вимagaєте однократне скачання моделю изображення.",
@@ -3293,38 +3293,38 @@
   "imageMessages_downloadFailed": "Модель для зображень не можна сказати.",
   "imageMessages_autoProcessTitle": "Автоматично оброблювати obraзи",
   "imageMessages_autoProcessSubtitle": "Кожна картинка повинні бути відтворена на мій момент прибуття. Використовує приблизно 2 ГБ пам'яті на кожен раз; відключіть від відтворення за допомогою кlikу.",
-  "imageSend_title": "Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення",
-  "imageSend_cropNote": "Манітовано до 512 × 512 · соотношення варість не зберігається",
+  "imageSend_title": "Надіслати зображення",
+  "imageSend_cropNote": "Змінено розмір до 512 × 512 · співвідношення сторін не зберігається",
   "imageSend_originalSize": "Оригінал",
-  "imageSend_onAirSize": "На ері",
-  "imageSend_quality": "Качество",
+  "imageSend_onAirSize": "В ефірі",
+  "imageSend_quality": "Якість",
   "imageSend_qualityStandard": "Стандарт",
-  "imageSend_qualityHigh": "Висок",
+  "imageSend_qualityHigh": "Висока",
   "imageSend_packetsLabel": "Пакети",
-  "imageSend_airtimeLabel": "Час на ері",
-  "imageSend_sizeLabel": "Підлог",
+  "imageSend_airtimeLabel": "Час в ефірі",
+  "imageSend_sizeLabel": "Корисне навантаження",
   "imageSend_packetsCount": "{count} {count, plural, one{пакет} few{пакети} many{пакетів} other{пакета}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
-  "imageSend_radioUnknownTitle": "Настройки радио неизвестні",
-  "imageSend_radioUnknownBody": "Залучіться до пристрою, щоб можна було розрахунювати час в етері.",
-  "imageSend_longSendTitle": "Длуга передача",
-  "imageSend_longSendBody": "Це забезпечить канал на approximativno {duration} хвилин.",
-  "imageSend_floodNote": "Рухування потоків: кожен ретрансатор у діапазоні відправлює кожен пакет, тому канал залишається занятшим довше, ніж це.",
-  "imageSend_parityTitle": "Пакет відновлення",
-  "imageSend_paritySubtitle": "Один дополний пакет. Групові посилання не відповідають, тому це дозволяє відвідувачу відтворити зображення, якщо один пакет втрачений.",
-  "imageSend_send": "Пошутить",
-  "imageSend_cancel": "Завершити",
-  "imageSend_encodeFailed": "Це изображення не може бути кодировано.",
-  "imageSend_codecDownloading": "Модель для відтворення изображень ще збирається.",
-  "imageSend_codecUnavailable": "Постій для відправлення изображень на цьому пристрої не доступний.",
-  "imageSend_codecDisabled": "Пictesovani posyly wyключені в настройках.",
-  "imageSend_deviceUnsupported": "Цей радіопередач не може отправляти пакети зображень. Зконнете пристрої, що працює з обладнанням керемонітом компаньєр 13 або новшим.",
-  "imageSend_directMessagesUnsupported": "Фотографії передаються як дані групою, тому їх можна відправляти лише на канал — не в прямому посилання.",
-  "imageSend_tooLarge": "Це изображення кодує більше пакітів, ніж дозволяє формат сети.",
+  "imageSend_radioUnknownTitle": "Налаштування радіо невідомі",
+  "imageSend_radioUnknownBody": "Підключися до пристрою, щоб можна було розрахувати час в ефірі.",
+  "imageSend_longSendTitle": "Довга передача",
+  "imageSend_longSendBody": "Це займе канал приблизно на {duration}.",
+  "imageSend_floodNote": "Флудова маршрутизація: кожен ретранслятор у радіусі дії ретранслює кожен пакет, тому канал залишається зайнятим довше.",
+  "imageSend_parityTitle": "Додати пакет відновлення",
+  "imageSend_paritySubtitle": "Один додатковий пакет. Групові повідомлення не підтверджуються, тож це дозволяє отримувачу відновити зображення, якщо один пакет загубиться.",
+  "imageSend_send": "Надіслати",
+  "imageSend_cancel": "Скасувати",
+  "imageSend_encodeFailed": "Це зображення не вдалося закодувати.",
+  "imageSend_codecDownloading": "Модель зображень ще завантажується.",
+  "imageSend_codecUnavailable": "Надсилання зображень на цьому пристрої недоступне.",
+  "imageSend_codecDisabled": "Повідомлення із зображеннями вимкнені в налаштуваннях.",
+  "imageSend_deviceUnsupported": "Це радіо не може надсилати пакети зображень. Підключи пристрій із companion-прошивкою 13 або новішою.",
+  "imageSend_directMessagesUnsupported": "Зображення передаються як групові дані, тому їх можна надіслати лише в канал — не в приватному повідомленні.",
+  "imageSend_tooLarge": "Це зображення закодувалося в більше пакетів, ніж дозволяє формат mesh.",
   "imageSend_sentConfirmation": "Зображення надіслано як {count} {count, plural, =1{пакет} other{пакетів}}.",
-  "imageSend_sendFailed": "Изображення не можна відправити: {error}",
-  "imageSend_sendingProgress": "Пошускаємо изображення — пакет {sent} з {total}",
+  "imageSend_sendFailed": "Не вдалося надіслати зображення: {error}",
+  "imageSend_sendingProgress": "Надсилання зображення — пакет {sent} з {total}",
   "receivedImage_senderPrefix": "Нод {prefix}",
   "receivedImage_incoming": "Підходяче: {received} з {total} пакітів",
   "receivedImage_queued": "Очікування розслівання коду",
@@ -3339,7 +3339,7 @@
   "receivedImage_openSettings": "Заведіть",
   "receivedImage_tapToProcess": "Кликніть для обробки",
   "receivedImage_awaiting": "{bytes} байтів · {packets} {packets, plural, =1{пакет} other{пакетів}}",
-  "imageSend_secondsValue": "{seconds} секунди",
+  "imageSend_secondsValue": "{seconds} с",
   "imageSend_minutesSecondsValue": "{minutes} хв {seconds} с",
   "app_connectionLostBreaked": "Зʼєднання з нодою розірвано",
   "map_copyCoordsFromMap": "Скопіювати координати точки",
@@ -3383,5 +3383,38 @@
   "settings_backgroundPermissionsSubtitle": "Перевірити виняток з оптимізації батареї та запитати його знову",
   "settings_backgroundPermissionsGranted": "Дозвіл уже надано",
   "chat_selectSendAction": "Виберіть дію надсилання",
-  "chat_sendImageLora": "Надіслати зображення через MeshCore"
+  "chat_sendImageLora": "Надіслати зображення через MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Хоп підтверджено, відлуння не почуто напряму",
+  "discoveredContacts_discoverDevices": "Виявити пристрої",
+  "discoveredContacts_requestName": "Запитати ім'я",
+  "discoveredContacts_nameRequestFailed": "Не вдалося запитати ім'я ретранслятора",
+  "discoveredContacts_discoveryFailed": "Не вдалося виявити пристрої: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP timestamp",
+  "chat_mcmpTimestampQueerly": "MCMP timestamp відрізняється від timestamp пакета на {time} секунд",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Підписаний MCMP timestamp суттєво відрізняється від часу отримання, на {time} секунд",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Приховувати рядки повідомлень",
+  "chat_showBlockedSenderMessages": "Показувати рядки повідомлень",
+  "repeater_cliClearNeighbors": "Очистити список сусідів",
+  "reaction_report": "Емодзі-реакції"
 }

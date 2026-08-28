@@ -815,16 +815,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appSettings_languageUk => 'Українська';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 байт';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 байти';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 байти';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 байти';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -1116,7 +1116,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return 'Пошук контактів...';
+    return 'Пошук $number$str контактів...';
   }
 
   @override
@@ -1831,7 +1831,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String routing_lastWorked(String when) {
-    return 'worked $when';
+    return 'спрацював $when';
   }
 
   @override
@@ -1839,7 +1839,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes доставлено, $failures невдалих';
   }
 
   @override
@@ -2196,7 +2196,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_wardriveStop => 'Стоп';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Виявлення без хопів';
 
   @override
   String get map_wardriveDiscoverySent => 'Запит wardrive discovery надіслано.';
@@ -2613,39 +2613,40 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Закешовані плитки';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel =>
+      'Зведення про закешовані плитки';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Масове офлайн-завантаження вимкнено для $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Масове офлайн-завантаження для $source вимкнено в цій конфігурації застосунку.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Джерело: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Закешовано плиток для джерела: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'Закешовано у вибраній області/масштабі: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Приблизний розмір кешу: $size';
   }
 
   @override
@@ -3287,12 +3288,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String repeater_actionSucceeded(String action) {
-    return '$action succeeded';
+    return '$action виконано успішно';
   }
 
   @override
   String repeater_actionFailed(String action, String error) {
-    return '$action failed: $error';
+    return '$action не вдалося: $error';
   }
 
   @override
@@ -4496,7 +4497,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Хоп підтверджено, відлуння не почуто напряму';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4653,7 +4654,7 @@ class AppLocalizationsUk extends AppLocalizations {
     String distanceUnit,
     String distanceFromB,
   ) {
-    return 'Blocked by $obstruction $heightUnit, $distanceFromA from A and $distanceFromB from B ($distanceUnit).';
+    return 'Заблоковано перешкодою $obstruction $heightUnit: $distanceFromA від A і $distanceFromB від B ($distanceUnit).';
   }
 
   @override
@@ -4672,7 +4673,7 @@ class AppLocalizationsUk extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Починаючи з k=$baselineK на $baselineFreq МГц, обчислення коригує k-фактор для поточного діапазону $frequencyMHz МГц, який визначає викривлену межу радіогоризонту.';
+    return 'Починаючи з k=$baselineK на $baselineFreq МГц, обчислення коригує k-фактор до $kFactor для поточного діапазону $frequencyMHz МГц, який визначає викривлену межу радіогоризонту.';
   }
 
   @override
@@ -4934,18 +4935,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Видалити всі виявлені контакти';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Виявити пристрої';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Запитати ім\'я';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Не вдалося запитати ім\'я ретранслятора';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Не вдалося виявити пристрої: $error';
   }
 
   @override
@@ -5590,12 +5591,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP timestamp відрізняється від timestamp пакета на $time секунд';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'Підписаний MCMP timestamp суттєво відрізняється від часу отримання, на $time секунд';
   }
 
   @override
@@ -5972,8 +5973,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'ЛиPo HV (3,0-4,35 В)';
 
   @override
-  String get chat_sendImage =>
-      'Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення';
+  String get chat_sendImage => 'Надіслати зображення';
 
   @override
   String get chat_imagePickFailed => 'Неможливо відкрити це изображення';
@@ -6016,36 +6016,35 @@ class AppLocalizationsUk extends AppLocalizations {
       'Кожна картинка повинні бути відтворена на мій момент прибуття. Використовує приблизно 2 ГБ пам\'яті на кожен раз; відключіть від відтворення за допомогою кlikу.';
 
   @override
-  String get imageSend_title =>
-      'Нашкоду зовні\n\n(or more naturally, depending on context)\n\nПошукуєте изображення';
+  String get imageSend_title => 'Надіслати зображення';
 
   @override
   String get imageSend_cropNote =>
-      'Манітовано до 512 × 512 · соотношення варість не зберігається';
+      'Змінено розмір до 512 × 512 · співвідношення сторін не зберігається';
 
   @override
   String get imageSend_originalSize => 'Оригінал';
 
   @override
-  String get imageSend_onAirSize => 'На ері';
+  String get imageSend_onAirSize => 'В ефірі';
 
   @override
-  String get imageSend_quality => 'Качество';
+  String get imageSend_quality => 'Якість';
 
   @override
   String get imageSend_qualityStandard => 'Стандарт';
 
   @override
-  String get imageSend_qualityHigh => 'Висок';
+  String get imageSend_qualityHigh => 'Висока';
 
   @override
   String get imageSend_packetsLabel => 'Пакети';
 
   @override
-  String get imageSend_airtimeLabel => 'Час на ері';
+  String get imageSend_airtimeLabel => 'Час в ефірі';
 
   @override
-  String get imageSend_sizeLabel => 'Підлог';
+  String get imageSend_sizeLabel => 'Корисне навантаження';
 
   @override
   String imageSend_packetsCount(int count) {
@@ -6069,64 +6068,63 @@ class AppLocalizationsUk extends AppLocalizations {
   String get imageSend_unknownValue => '—';
 
   @override
-  String get imageSend_radioUnknownTitle => 'Настройки радио неизвестні';
+  String get imageSend_radioUnknownTitle => 'Налаштування радіо невідомі';
 
   @override
   String get imageSend_radioUnknownBody =>
-      'Залучіться до пристрою, щоб можна було розрахунювати час в етері.';
+      'Підключися до пристрою, щоб можна було розрахувати час в ефірі.';
 
   @override
-  String get imageSend_longSendTitle => 'Длуга передача';
+  String get imageSend_longSendTitle => 'Довга передача';
 
   @override
   String imageSend_longSendBody(String duration) {
-    return 'Це забезпечить канал на approximativno $duration хвилин.';
+    return 'Це займе канал приблизно на $duration.';
   }
 
   @override
   String get imageSend_floodNote =>
-      'Рухування потоків: кожен ретрансатор у діапазоні відправлює кожен пакет, тому канал залишається занятшим довше, ніж це.';
+      'Флудова маршрутизація: кожен ретранслятор у радіусі дії ретранслює кожен пакет, тому канал залишається зайнятим довше.';
 
   @override
-  String get imageSend_parityTitle => 'Пакет відновлення';
+  String get imageSend_parityTitle => 'Додати пакет відновлення';
 
   @override
   String get imageSend_paritySubtitle =>
-      'Один дополний пакет. Групові посилання не відповідають, тому це дозволяє відвідувачу відтворити зображення, якщо один пакет втрачений.';
+      'Один додатковий пакет. Групові повідомлення не підтверджуються, тож це дозволяє отримувачу відновити зображення, якщо один пакет загубиться.';
 
   @override
-  String get imageSend_send => 'Пошутить';
+  String get imageSend_send => 'Надіслати';
 
   @override
-  String get imageSend_cancel => 'Завершити';
+  String get imageSend_cancel => 'Скасувати';
 
   @override
-  String get imageSend_encodeFailed =>
-      'Це изображення не може бути кодировано.';
+  String get imageSend_encodeFailed => 'Це зображення не вдалося закодувати.';
 
   @override
   String get imageSend_codecDownloading =>
-      'Модель для відтворення изображень ще збирається.';
+      'Модель зображень ще завантажується.';
 
   @override
   String get imageSend_codecUnavailable =>
-      'Постій для відправлення изображень на цьому пристрої не доступний.';
+      'Надсилання зображень на цьому пристрої недоступне.';
 
   @override
   String get imageSend_codecDisabled =>
-      'Пictesovani posyly wyключені в настройках.';
+      'Повідомлення із зображеннями вимкнені в налаштуваннях.';
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Цей радіопередач не може отправляти пакети зображень. Зконнете пристрої, що працює з обладнанням керемонітом компаньєр 13 або новшим.';
+      'Це радіо не може надсилати пакети зображень. Підключи пристрій із companion-прошивкою 13 або новішою.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
-      'Фотографії передаються як дані групою, тому їх можна відправляти лише на канал — не в прямому посилання.';
+      'Зображення передаються як групові дані, тому їх можна надіслати лише в канал — не в приватному повідомленні.';
 
   @override
   String get imageSend_tooLarge =>
-      'Це изображення кодує більше пакітів, ніж дозволяє формат сети.';
+      'Це зображення закодувалося в більше пакетів, ніж дозволяє формат mesh.';
 
   @override
   String imageSend_sentConfirmation(int count) {
@@ -6141,12 +6139,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String imageSend_sendFailed(String error) {
-    return 'Изображення не можна відправити: $error';
+    return 'Не вдалося надіслати зображення: $error';
   }
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return 'Пошускаємо изображення — пакет $sent з $total';
+    return 'Надсилання зображення — пакет $sent з $total';
   }
 
   @override
@@ -6208,7 +6206,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String imageSend_secondsValue(String seconds) {
-    return '$seconds секунди';
+    return '$seconds с';
   }
 
   @override
@@ -6300,10 +6298,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_blockSenderName => 'Ім\'я відправника';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Приховувати рядки повідомлень';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'Показувати рядки повідомлень';
 
   @override
   String get imageSend_previewShowAsReceived => 'Як побачать одержувачі';
@@ -6324,7 +6322,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відображати SNR/RSSI останнього хопа в каналах';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Очистити список сусідів';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6344,5 +6342,5 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_sendImageLora => 'Надіслати зображення через MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Емодзі-реакції';
 }

@@ -972,9 +972,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "キャッシュ済みのタイル",
+  "mapCache_cachedTileSummaryLabel": "キャッシュ済みタイルの概要",
+  "mapCache_bulkDownloadDisabledForSource": "{source} ではオフラインの一括ダウンロードは無効です。",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -982,7 +982,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "このアプリ構成では、{source} のオフライン一括ダウンロードは無効です。",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -990,7 +990,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "出典: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -998,7 +998,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "この出典のキャッシュ済みタイル数: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -1006,7 +1006,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "選択した範囲/ズームでのキャッシュ数: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -1014,7 +1014,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "おおよそのキャッシュサイズ: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1022,7 +1022,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "北 {north}, 南 {south}, 東 {east}, 西 {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -2001,7 +2001,7 @@
   },
   "losRun": "LOS（レーティングシステム）を使用する",
   "losNoElevationData": "標高データは含まれていません",
-  "losProfileClear": "{distance} {distanceUnit}, clear LOS, min clearance {clearance} {heightUnit}",
+  "losProfileClear": "{distance} {distanceUnit}、見通し良好、最小クリアランス {clearance} {heightUnit}",
   "@losProfileClear": {
     "placeholders": {
       "distance": {
@@ -2018,7 +2018,7 @@
       }
     }
   },
-  "losProfileBlocked": "{distance} {distanceUnit}, blocked by {obstruction} {heightUnit}",
+  "losProfileBlocked": "{distance} {distanceUnit}、{obstruction} {heightUnit} により遮蔽",
   "@losProfileBlocked": {
     "placeholders": {
       "distance": {
@@ -2037,7 +2037,7 @@
   },
   "losStatusChecking": "LOS：確認中…",
   "losStatusNoData": "LOS: データの欠如",
-  "losStatusSummary": "LOS: {clear}/{total} clear, {blocked} blocked, {unknown} unknown",
+  "losStatusSummary": "見通し: {clear}/{total} 良好、{blocked} 遮蔽、{unknown} 不明",
   "@losStatusSummary": {
     "placeholders": {
       "clear": {
@@ -2067,7 +2067,7 @@
   "losFrequencyLabel": "周波数",
   "losFrequencyInfoTooltip": "計算の詳細を見る",
   "losFrequencyDialogTitle": "ラジオによる水平線計算",
-  "losFrequencyDialogDescription": "k={baselineK} ( {baselineFreq} MHz) から開始し、現在の {frequencyMHz} MHz の帯域に対して k の値を調整します。これにより、曲面状の無線通信範囲の限界が定義されます。",
+  "losFrequencyDialogDescription": "k={baselineK} ( {baselineFreq} MHz) から開始し、現在の {frequencyMHz} MHz の帯域に対して k の値を {kFactor} に調整します。これにより、曲面状の無線通信範囲の限界が定義されます。",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2115,7 +2115,7 @@
   "contacts_contactAdvertCopied": "広告がクリップボードにコピーされました。",
   "contacts_contactAdvertCopyFailed": "広告のコピーがクリップボードにコピーできませんでした。",
   "notification_activityTitle": "メッシュコアの活動",
-  "notification_messagesCount": "{count} {count, plural, =1{message} other{messages}}",
+  "notification_messagesCount": "{count} {count, plural, =1{件のメッセージ} other{件のメッセージ}}",
   "@notification_messagesCount": {
     "placeholders": {
       "count": {
@@ -2448,7 +2448,7 @@
   "map_location": "位置",
   "map_estLocation": "推定位置",
   "map_publicKey": "公開鍵",
-  "map_publicKeyPrefixHint": "e.g. ab12",
+  "map_publicKeyPrefixHint": "例: ab12",
   "contact_typeChat": "チャット",
   "contact_typeRepeater": "リピータ",
   "contact_typeRoom": "ルーム",
@@ -2697,10 +2697,10 @@
   "pathMap_unfollowPacket": "パケットの追跡を解除",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "選択時に送信",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 バイト",
+  "repeater_pathHashModeOption1": "1 - 2 バイト",
+  "repeater_pathHashModeOption2": "2 - 3 バイト",
+  "repeater_pathHashModeOption3": "3 - 4 バイト",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "開始",
   "map_wardriveStop": "停止",
@@ -3420,7 +3420,7 @@
   "imageMessages_autoProcessSubtitle": "画像が届き次第、すぐに再構築してください。1回あたり約2GBのメモリを使用します。タップで再構築を解除できます。",
   "imageSend_title": "画像を送信",
   "imageSend_cropNote": "512 × 512にリサイズされました。アスペクト比は保持されませんでした。",
-  "imageSend_originalSize": "原文：\nThe early morning light filtered through the curtains, casting a soft glow on the room.\n\n翻訳：\n早朝の光がカーテンをすり抜け、部屋に柔らかな光を投げかけていた。",
+  "imageSend_originalSize": "オリジナル",
   "imageSend_onAirSize": "放送中",
   "imageSend_quality": "品質",
   "imageSend_qualityStandard": "標準",
@@ -3508,5 +3508,38 @@
   "settings_backgroundPermissionsSubtitle": "電池の最適化の除外設定を確認し、再度要求します",
   "settings_backgroundPermissionsGranted": "許可はすでに付与されています",
   "chat_selectSendAction": "送信アクションを選択",
-  "chat_sendImageLora": "MeshCore経由で画像を送信"
+  "chat_sendImageLora": "MeshCore経由で画像を送信",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "ホップは確認済み、エコーは直接受信していません",
+  "discoveredContacts_discoverDevices": "デバイスを検出",
+  "discoveredContacts_requestName": "名前を要求",
+  "discoveredContacts_nameRequestFailed": "リピータの名前を要求できませんでした",
+  "discoveredContacts_discoveryFailed": "デバイスを検出できませんでした: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP タイムスタンプ",
+  "chat_mcmpTimestampQueerly": "MCMP タイムスタンプがパケットのタイムスタンプと {time} 秒ずれています",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "署名された MCMP タイムスタンプが受信時刻と大きく異なります（{time} 秒）",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "メッセージ行を非表示にする",
+  "chat_showBlockedSenderMessages": "メッセージ行を表示する",
+  "repeater_cliClearNeighbors": "近隣リストをクリア",
+  "reaction_report": "絵文字リアクション"
 }

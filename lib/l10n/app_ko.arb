@@ -954,9 +954,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "캐시된 타일",
+  "mapCache_cachedTileSummaryLabel": "캐시된 타일 요약",
+  "mapCache_bulkDownloadDisabledForSource": "{source}에서는 오프라인 일괄 다운로드가 비활성화되어 있습니다.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -964,7 +964,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "이 앱 구성에서는 {source}의 오프라인 일괄 다운로드가 비활성화되어 있습니다.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -972,7 +972,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "출처: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -980,7 +980,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "이 출처의 캐시된 타일: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -988,7 +988,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "선택한 영역/확대 수준에 캐시됨: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -996,7 +996,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "대략적인 캐시 크기: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1004,7 +1004,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "북 {north}, 남 {south}, 동 {east}, 서 {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -2007,7 +2007,7 @@
   "losFrequencyLabel": "빈도",
   "losFrequencyInfoTooltip": "계산 내역 보기",
   "losFrequencyDialogTitle": "라디오 수신 가능 범위 계산",
-  "losFrequencyDialogDescription": "{baselineK}에서 시작하여 {baselineFreq} MHz의 주파수에서 계산을 시작하면, 현재 {frequencyMHz} MHz 대역에 대한 k-값을 조정하여, 이는 곡선형 라디오 지평선 상한선을 정의합니다.",
+  "losFrequencyDialogDescription": "{baselineFreq} MHz에서 k={baselineK}으로 시작하여, 현재 {frequencyMHz} MHz 대역에 맞춰 k-값을 {kFactor}(으)로 조정합니다. 이 값이 곡선형 무선 지평선 상한을 정의합니다.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2729,10 +2729,10 @@
     }
   },
   "settings_quickAnswersSendAtSelect": "선택 시 전송",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1바이트",
+  "repeater_pathHashModeOption1": "1 - 2바이트",
+  "repeater_pathHashModeOption2": "2 - 3바이트",
+  "repeater_pathHashModeOption3": "3 - 4바이트",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "시작",
   "map_wardriveStop": "중지",
@@ -3437,7 +3437,7 @@
   },
   "settings_infoHardware": "하드웨어",
   "appSettings_batteryLipoHv": "리포 HV (3.0-4.35V)",
-  "chat_sendImage": "이미지를 보내세요",
+  "chat_sendImage": "이미지 보내기",
   "chat_imagePickFailed": "그 이미지를 열 수 없었어요.",
   "imageMessages_enableTitle": "이미지 메시지 활성화",
   "imageMessages_enableSubtitle": "메시를 통해 이미지를 전송하세요. 일회성 이미지 모델 다운로드가 필요합니다.",
@@ -3450,27 +3450,27 @@
   "imageMessages_downloadFailed": "이미지 모델을 다운로드할 수 없었습니다.",
   "imageMessages_autoProcessTitle": "자동으로 프로세스 이미지를 처리합니다.",
   "imageMessages_autoProcessSubtitle": "이미지가 도착하는 즉시 재구성하세요. 매번 2GB의 메모리를 사용하며, 탭으로 재구성을 원할 경우 해제하세요.",
-  "imageSend_title": "이미지를 보내세요",
+  "imageSend_title": "이미지 보내기",
   "imageSend_cropNote": "512 × 512로 크기가 조정되었으며, 종횡비는 유지되지 않았습니다.",
-  "imageSend_originalSize": "원문 없음",
-  "imageSend_onAirSize": "방송 중",
+  "imageSend_originalSize": "원본",
+  "imageSend_onAirSize": "전송량",
   "imageSend_quality": "품질",
   "imageSend_qualityStandard": "표준",
-  "imageSend_qualityHigh": "높다",
+  "imageSend_qualityHigh": "높음",
   "imageSend_packetsLabel": "패킷",
-  "imageSend_airtimeLabel": "방송 시간",
+  "imageSend_airtimeLabel": "전송 시간",
   "imageSend_sizeLabel": "페이로드",
   "imageSend_packetsCount": "{count} {count, plural, =1{패킷} other{패킷}}",
   "imageSend_range": "{min}~{max}",
   "imageSend_unknownValue": "—",
   "imageSend_radioUnknownTitle": "라디오 설정 정보 없음",
-  "imageSend_radioUnknownBody": "방송 시간을 계산할 수 있도록 기기와 연결하세요.",
-  "imageSend_longSendTitle": "장거리 송신",
+  "imageSend_radioUnknownBody": "전송 시간을 계산할 수 있도록 기기에 연결하세요.",
+  "imageSend_longSendTitle": "긴 전송",
   "imageSend_longSendBody": "이것은 약 {duration} 동안 채널을 유지할 것입니다.",
-  "imageSend_floodNote": "홍수 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.",
-  "imageSend_parityTitle": "회복 패킷",
+  "imageSend_floodNote": "플러딩 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.",
+  "imageSend_parityTitle": "복구 패킷 추가",
   "imageSend_paritySubtitle": "추가 한 개의 패킷입니다. 그룹 메시지는 확인되지 않으므로, 하나의 패킷이 손실되었을 경우 수신자가 이미지를 다시 구성할 수 있습니다.",
-  "imageSend_send": "보내다",
+  "imageSend_send": "보내기",
   "imageSend_cancel": "취소",
   "imageSend_encodeFailed": "이 이미지는 인코딩할 수 없습니다.",
   "imageSend_codecDownloading": "이미지 모델이 아직 다운로드 중입니다.",
@@ -3481,7 +3481,7 @@
   "imageSend_tooLarge": "그 이미지는 메시 형식이 허용하는 것보다 더 많은 패킷으로 인코딩되었습니다.",
   "imageSend_sentConfirmation": "이미지가 {count} {count, plural, =1{패킷} other{패킷}}로 전송되었습니다.",
   "imageSend_sendFailed": "이미지를 보낼 수 없습니다: {error}",
-  "imageSend_sendingProgress": "이미지 전송 — {sent}개의 {total} 패킷",
+  "imageSend_sendingProgress": "이미지 전송 — 패킷 {sent}/{total}",
   "receivedImage_senderPrefix": "노드 {prefix}",
   "receivedImage_incoming": "{total}개 패킷 중 {received}개",
   "receivedImage_queued": "해독을 기다리는 중입니다.",
@@ -3540,5 +3540,38 @@
   "settings_backgroundPermissionsSubtitle": "배터리 최적화 예외를 확인하고 다시 요청합니다",
   "settings_backgroundPermissionsGranted": "권한이 이미 허용되어 있습니다",
   "chat_selectSendAction": "전송 작업 선택",
-  "chat_sendImageLora": "MeshCore를 통해 이미지 보내기"
+  "chat_sendImageLora": "MeshCore를 통해 이미지 보내기",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "홉은 확인됨, 에코는 직접 수신되지 않음",
+  "discoveredContacts_discoverDevices": "장치 검색",
+  "discoveredContacts_requestName": "이름 요청",
+  "discoveredContacts_nameRequestFailed": "리피터 이름을 요청하지 못했습니다",
+  "discoveredContacts_discoveryFailed": "장치를 검색하지 못했습니다: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "MCMP 타임스탬프",
+  "chat_mcmpTimestampQueerly": "MCMP 타임스탬프가 패킷 타임스탬프와 {time}초 차이가 납니다",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "서명된 MCMP 타임스탬프가 수신 시각과 크게 다릅니다({time}초)",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "메시지 행 숨기기",
+  "chat_showBlockedSenderMessages": "메시지 행 표시",
+  "repeater_cliClearNeighbors": "이웃 목록 지우기",
+  "reaction_report": "이모지 리액션"
 }

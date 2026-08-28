@@ -297,7 +297,7 @@
   "contacts_title": "Contatti",
   "contacts_noContacts": "Nessun contatto ancora",
   "contacts_contactsWillAppear": "I contatti appariranno quando i dispositivi si annunciano.",
-  "contacts_searchContacts": "Cerca contatti...",
+  "contacts_searchContacts": "Cerca {number}{str} contatti...",
   "@contacts_searchContacts": {
     "placeholders": {
       "number": {
@@ -845,9 +845,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Tessere nella cache",
+  "mapCache_cachedTileSummaryLabel": "Riepilogo delle tessere nella cache",
+  "mapCache_bulkDownloadDisabledForSource": "I download offline in blocco sono disattivati per {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -855,7 +855,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "I download offline in blocco per {source} sono disattivati in questa configurazione dell'app.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -863,7 +863,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Fonte: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -871,7 +871,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Tessere nella cache per la fonte: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -879,7 +879,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "Nella cache nell'area/zoom selezionato: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -887,7 +887,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Dimensione approssimativa della cache: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -895,7 +895,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, O {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -1221,7 +1221,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} non riuscita: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -2062,7 +2062,7 @@
   "losFrequencyLabel": "Frequenza",
   "losFrequencyInfoTooltip": "Visualizza i dettagli del calcolo",
   "losFrequencyDialogTitle": "Calcolo dell’orizzonte radio",
-  "losFrequencyDialogDescription": "Partendo da k={baselineK} a {baselineFreq} MHz, il calcolo regola il fattore k per l'attuale banda {frequencyMHz} MHz, che definisce il limite curvo dell'orizzonte radio.",
+  "losFrequencyDialogDescription": "Partendo da k={baselineK} a {baselineFreq} MHz, il calcolo regola il fattore k a {kFactor} per l'attuale banda {frequencyMHz} MHz, che definisce il limite curvo dell'orizzonte radio.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2459,9 +2459,9 @@
   "repeater_cliHelpStatsRadio": "(Solo per serie TV) Visualizza statistiche relative alla trasmissione radiofonica.",
   "repeater_cliHelpStatsCore": "(Solo per serie) Visualizza le statistiche del firmware di base.",
   "common_done": "Fatto",
-  "background_serviceTitle": "MeshCore running",
+  "background_serviceTitle": "MeshCore in esecuzione",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "{name} eliminato",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2469,7 +2469,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Impossibile eliminare: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2544,7 +2544,7 @@
   "losBlockedSpotsHint": "Tocca un punto bloccato sulla mappa per evidenziarlo.",
   "losBlockedSpotsTitle": "Posti occupati",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Bloccato da {obstruction} {heightUnit}, {distanceFromA} da A e {distanceFromB} da B ({distanceUnit}).",
   "settings_companionDebugLogSubtitle": "Comandi, risposte e dati grezzi per protocolli BLE/TCP/USB",
   "settings_companionDebugLog": "Registro di debug per il supporto",
   "chat_newMessages": "Nuovi messaggi",
@@ -2769,7 +2769,7 @@
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Avvia",
   "map_wardriveStop": "Ferma",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Rilevamento senza hop",
   "map_wardriveDiscoverySent": "Richiesta di wardrive discovery inviata.",
   "map_wardriveUploadCancelled": "Caricamento wardrive annullato.",
   "map_wardriveDiscoveryFailed": "Wardrive discovery non riuscito: {error}",
@@ -3018,7 +3018,7 @@
   "chat_contactIsYou": "È il tuo contatto",
   "chat_contactType": "Tipo di contatto: {contacttype}",
   "chat_contactTypeNode": "Nodo",
-  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRepeater": "Ripetitore",
   "chat_contactTypeRoom": "Room server",
   "chat_contactTypeSensor": "Sensore",
   "chat_myLocation": "Invia la mia posizione",
@@ -3278,7 +3278,7 @@
   "imageMessages_autoProcessSubtitle": "Ricostruisci ogni immagine non appena arriva. Utilizza circa 2 GB di memoria per un secondo ogni volta; disattiva la ricostruzione con un semplice tocco.",
   "imageSend_title": "Invia immagine",
   "imageSend_cropNote": "Ridimensionato a 512 × 512 · rapporto d'aspetto non conservato",
-  "imageSend_originalSize": "Traduzione:\n\nOriginal text:\n\nPlease translate the following English text into Italian:\n\nOriginal text:\n\n(No original English text provided)",
+  "imageSend_originalSize": "Originale",
   "imageSend_onAirSize": "In onda",
   "imageSend_quality": "Qualità",
   "imageSend_qualityStandard": "Standard",
@@ -3366,5 +3366,38 @@
   "settings_backgroundPermissionsSubtitle": "Verifica l'esenzione dall'ottimizzazione della batteria e richiedila di nuovo",
   "settings_backgroundPermissionsGranted": "Il permesso è già concesso",
   "chat_selectSendAction": "Seleziona azione di invio",
-  "chat_sendImageLora": "Invia immagine tramite MeshCore"
+  "chat_sendImageLora": "Invia immagine tramite MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Hop confermato, eco non ricevuta direttamente",
+  "discoveredContacts_discoverDevices": "Scopri dispositivi",
+  "discoveredContacts_requestName": "Richiedi nome",
+  "discoveredContacts_nameRequestFailed": "Impossibile richiedere il nome del ripetitore",
+  "discoveredContacts_discoveryFailed": "Impossibile rilevare i dispositivi: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Timestamp MCMP",
+  "chat_mcmpTimestampQueerly": "Il timestamp MCMP differisce da quello del pacchetto di {time} secondi",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Il timestamp MCMP firmato differisce notevolmente dall'ora di ricezione, di {time} secondi",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Nascondi le righe dei messaggi",
+  "chat_showBlockedSenderMessages": "Mostra le righe dei messaggi",
+  "repeater_cliClearNeighbors": "Cancella elenco vicini",
+  "reaction_report": "Reazioni emoji"
 }

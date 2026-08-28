@@ -108,7 +108,7 @@
   "settings_privacyModeEnabled": "Privatni način je omogočen.",
   "settings_privacyModeDisabled": "Privatni način je onemogočen.",
   "settings_actions": "Akcije",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "Izbriši vse poti",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Pošlji Oglas",
   "settings_sendAdvertisementSubtitle": "Trenutna prisotnost v oddajah",
@@ -299,7 +299,7 @@
   "contacts_title": "Stiki",
   "contacts_noContacts": "Ni stikov.",
   "contacts_contactsWillAppear": "Stiki se bodo prikazali, ko se naprave oglasijo.",
-  "contacts_searchContacts": "Iskanje stikov...",
+  "contacts_searchContacts": "Išči {number}{str} stikov...",
   "contacts_noUnreadContacts": "Ne prebrani stiki.",
   "contacts_noContactsFound": "Stiki niso najdeni.",
   "contacts_deleteContact": "Izbriši stik",
@@ -779,9 +779,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Ploščice v predpomnilniku",
+  "mapCache_cachedTileSummaryLabel": "Povzetek ploščic v predpomnilniku",
+  "mapCache_bulkDownloadDisabledForSource": "Množično prenašanje za brez povezave je za {source} onemogočeno.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -789,7 +789,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Množično prenašanje za brez povezave za {source} je v tej konfiguraciji aplikacije onemogočeno.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -797,7 +797,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Vir: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Ploščice v predpomnilniku za vir: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -813,7 +813,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "V predpomnilniku na izbranem območju/povečavi: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -821,7 +821,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Približna velikost predpomnilnika: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -829,7 +829,7 @@
       }
     }
   },
-  "mapCache_boundsLabel": "N {north}, S {south}, E {east}, W {west}",
+  "mapCache_boundsLabel": "S {north}, J {south}, V {east}, Z {west}",
   "@mapCache_boundsLabel": {
     "placeholders": {
       "north": {
@@ -953,8 +953,8 @@
   "repeater_lastRssi": "Potredno RSSI",
   "repeater_lastSnr": "Nazadnje zabeležena SNR",
   "repeater_noiseFloor": "Šumovita raven",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "Čas oddajanja TX",
+  "repeater_rxAirtime": "Čas sprejema RX",
   "repeater_packetStatistics": "Statistika paketa",
   "repeater_sent": "Pošljeno",
   "repeater_received": "Prejeto",
@@ -1748,7 +1748,7 @@
   "contacts_roomPathTrace": "Sledenje poti do strežnika sobe",
   "contacts_roomPing": "Ping strežnik sobe",
   "contacts_chatTraceRoute": "Slediti poti žarkov",
-  "contacts_pathTraceTo": "Trace route to {name}",
+  "contacts_pathTraceTo": "Sledi poti do {name}",
   "appSettings_languageRu": "Ruščina",
   "appSettings_languageUk": "Ukrajinsko",
   "appSettings_enableMessageTracing": "Omogoči sledenje sporočilom",
@@ -1925,7 +1925,7 @@
   "losFrequencyLabel": "Frekvenca",
   "losFrequencyInfoTooltip": "Prikaži podrobnosti izračuna",
   "losFrequencyDialogTitle": "Izračun radijskega horizonta",
-  "losFrequencyDialogDescription": "Začenši od k={baselineK} pri {baselineFreq} MHz, izračun prilagodi k-faktor za trenutni pas {frequencyMHz} MHz, ki določa ukrivljeno zgornjo mejo radijskega horizonta.",
+  "losFrequencyDialogDescription": "Začenši od k={baselineK} pri {baselineFreq} MHz, izračun prilagodi k-faktor na {kFactor} za trenutni pas {frequencyMHz} MHz, ki določa ukrivljeno zgornjo mejo radijskega horizonta.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2318,10 +2318,10 @@
   "repeater_cliHelpStatsPackets": "(Samo za serijske povezave) Prikazuje statistiko na nivoju paketov.",
   "repeater_cliHelpStatsRadio": "(Samo za serije) Prikazuje statistične podatke o radiju.",
   "repeater_cliHelpStatsCore": "(Samo za serijske naprave) Prikazuje osnovne statistične podatke.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "Končano",
+  "background_serviceTitle": "MeshCore se izvaja",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "{name} izbrisano",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2329,7 +2329,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Brisanje ni uspelo: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2337,7 +2337,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Kanala ni bilo mogoče posodobiti: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2345,17 +2345,17 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
+  "map_type": "Vrsta",
+  "map_path": "Pot",
+  "map_location": "Lokacija",
+  "map_estLocation": "Ocenj. lokacija",
+  "map_publicKey": "Javni ključ",
+  "map_publicKeyPrefixHint": "npr. ab12",
+  "contact_typeChat": "Klepet",
+  "contact_typeRepeater": "Ponovitelj",
+  "contact_typeRoom": "Soba",
+  "contact_typeSensor": "Senzor",
+  "contact_typeUnknown": "Neznano",
   "channels_via": "via {path}",
   "settings_multiAck": "Več potrdil",
   "map_sharedAt": "Deljeno",
@@ -2398,7 +2398,7 @@
   "losSelectedObstructionTitle": "Izbrano ovire",
   "losBlockedSpotsTitle": "Zasedena parkirišča",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Zaprto zaradi {obstruction} {heightUnit}, {distanceFromA} od A in {distanceFromB} od B ({distanceUnit}).",
   "settings_companionDebugLog": "Log zapis za odpravljanje napak",
   "chat_markAsUnread": "Označiti kot neneobdelano",
   "chat_newMessages": "Nove novice",
@@ -2490,7 +2490,7 @@
   "pathEditor_removeHop": "Odstranite hmelj",
   "pathEditor_unknownHop": "Neznani ponovitelj",
   "map_zoomIn": "Povečaj",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "routing_deliveryCounts": "{successes} dostavljenih, {failures} neuspešnih",
   "map_zoomOut": "Povečajte pogled",
   "map_centerMap": "Krajšarska karta",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth zahteva brskalnik Chromium.",
@@ -2592,10 +2592,10 @@
   "pathMap_unfollowPacket": "Odkleni pogled od paketa",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Pošlji ob izbiri",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 bajt",
+  "repeater_pathHashModeOption1": "1 - 2 bajta",
+  "repeater_pathHashModeOption2": "2 - 3 bajti",
+  "repeater_pathHashModeOption3": "3 - 4 bajti",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Začni",
   "map_wardriveStop": "Ustavi",
@@ -3086,7 +3086,7 @@
   "chat_searchMessages_results": "Rezultati iskanja",
   "chat_searchMessages_results_found": "Najdenih {count} sporočil",
   "chat_searchMessages_results_channel": "Kanal {name}",
-  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_room": "Soba {name}",
   "chat_searchMessages_results_contact": "Pogovor z {name}",
   "app_offline": "Brez povezave",
   "app_offline_unableToMessage": "V načinu brez povezave ne morete pošiljati sporočil ali izvajati drugih dejanj",
@@ -3300,7 +3300,7 @@
   },
   "settings_infoHardware": "Hardver",
   "appSettings_batteryLipoHv": "LiPo HV (3,0–4,35 V)",
-  "chat_sendImage": "Sločaji slik",
+  "chat_sendImage": "Pošlji sliko",
   "chat_imagePickFailed": "Nispeval sem tega ta slik",
   "imageMessages_enableTitle": "Pozivni izkričile slike",
   "imageMessages_enableSubtitle": "Prešli vzorce pre mrežo. Potrebno je jednokratno stworiti model vzorca.",
@@ -3313,38 +3313,38 @@
   "imageMessages_downloadFailed": "Obrazni model ne može biti preuzet.",
   "imageMessages_autoProcessTitle": "Avtomatizirane slike",
   "imageMessages_autoProcessSubtitle": "Katero je oblikovanje svega oblikov, ko se pošteva. Za drugo okolo časa se koristi ok. 2 GB pamične prostore; odločite se za oblikovanje s tukom.",
-  "imageSend_title": "Sločaji slik",
-  "imageSend_cropNote": "Zadovoljno izmenjeno na 512 × 512 · vzorovni odnos ne ohranjen",
-  "imageSend_originalSize": "Original text:\n\nThe early bird catches the worm.\n\nTranslation:\n\nPojdi prvi, zlati v kroku.",
-  "imageSend_onAirSize": "Na vodi",
+  "imageSend_title": "Pošlji sliko",
+  "imageSend_cropNote": "Spremenjeno na 512 × 512 · razmerje stranic ni ohranjeno",
+  "imageSend_originalSize": "Izvirnik",
+  "imageSend_onAirSize": "V etru",
   "imageSend_quality": "Kakovost",
   "imageSend_qualityStandard": "Standard",
-  "imageSend_qualityHigh": "Vysoko",
-  "imageSend_packetsLabel": "Pakete",
-  "imageSend_airtimeLabel": "Čas v eteru",
-  "imageSend_sizeLabel": "Napravo",
+  "imageSend_qualityHigh": "Visoka",
+  "imageSend_packetsLabel": "Paketi",
+  "imageSend_airtimeLabel": "Čas v etru",
+  "imageSend_sizeLabel": "Uporabni podatki",
   "imageSend_packetsCount": "{count} {count, plural, =1{paket} other{paketov}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
-  "imageSend_radioUnknownTitle": "Naslušniki radio neznane",
-  "imageSend_radioUnknownBody": "Poučajte se na stroj, da se lahko izračunuje čas v prikazu.",
-  "imageSend_longSendTitle": "Dluga preposlana",
-  "imageSend_longSendBody": "Ovo bo ohranilo kanal prihodno za obliko {duration}.",
-  "imageSend_floodNote": "Povlatni potok: sve repeaterje v območju pretrasirajo svak paket, pa kanál ostane zanudnejši od tega.",
-  "imageSend_parityTitle": "Pobavni paket zdržbe",
-  "imageSend_paritySubtitle": "Jedna dodatna paczka. Grupni izjasi ne izvajajo potvarnosti, pa ta izdelka omogoča preuzimanju ponovno izgleda, če je zgubjen pojedni paket.",
-  "imageSend_send": "Posyłaj",
-  "imageSend_cancel": "Odločite",
-  "imageSend_encodeFailed": "Ovo slikovo ne more biti zakodirano.",
-  "imageSend_codecDownloading": "Obrazni model še pospeva preborjanje.",
-  "imageSend_codecUnavailable": "Poslanje slike nema na tem zelo naročnem naročnem.",
-  "imageSend_codecDisabled": "Obrazi s pomanjkanjem so v nastavnih.",
-  "imageSend_deviceUnsupported": "Taj radio ne može posredovati slike pakuete. Prepoštijo izbirni napravnik s kompanijskimi programi na čevem 13 ali novšejšim.",
-  "imageSend_directMessagesUnsupported": "Obrazy se pojavijo kot skupnih podatkov, pa lahko ih poslujejo samo na kanal — ne v prilogih.",
-  "imageSend_tooLarge": "Taj slik je zakodiran v viših pakotnih od športne formate, ki omogoča mrežni format.",
+  "imageSend_radioUnknownTitle": "Nastavitve radia so neznane",
+  "imageSend_radioUnknownBody": "Poveži se z napravo, da je mogoče izračunati čas oddajanja.",
+  "imageSend_longSendTitle": "Dolgo oddajanje",
+  "imageSend_longSendBody": "To bo zasedlo kanal približno {duration}.",
+  "imageSend_floodNote": "Poplavno usmerjanje: vsak ponovitelj v dosegu znova odda vsak paket, zato kanal ostane zaseden dlje od tega.",
+  "imageSend_parityTitle": "Dodaj obnovitveni paket",
+  "imageSend_paritySubtitle": "En dodaten paket. Skupinska sporočila niso potrjena, zato lahko prejemnik z njim obnovi sliko, če se izgubi en sam paket.",
+  "imageSend_send": "Pošlji",
+  "imageSend_cancel": "Prekliči",
+  "imageSend_encodeFailed": "Te slike ni bilo mogoče kodirati.",
+  "imageSend_codecDownloading": "Model za slike se še prenaša.",
+  "imageSend_codecUnavailable": "Pošiljanje slik na tej napravi ni na voljo.",
+  "imageSend_codecDisabled": "Slikovna sporočila so v nastavitvah izklopljena.",
+  "imageSend_deviceUnsupported": "Ta radio ne more pošiljati slikovnih paketov. Poveži napravo s companion vdelano programsko opremo 13 ali novejšo.",
+  "imageSend_directMessagesUnsupported": "Slike potujejo kot skupinski podatki, zato jih je mogoče poslati samo v kanal — ne v neposrednem sporočilu.",
+  "imageSend_tooLarge": "Ta slika se je kodirala v več paketov, kot jih dovoljuje format mesh.",
   "imageSend_sentConfirmation": "Slika poslana kot {count} {count, plural, =1{paket} other{paketov}}.",
-  "imageSend_sendFailed": "Obraz ne može biti poslany: {error}",
-  "imageSend_sendingProgress": "Prekazivanje izkaza — paket {sent} od {total}",
+  "imageSend_sendFailed": "Slike ni bilo mogoče poslati: {error}",
+  "imageSend_sendingProgress": "Pošiljanje slike — paket {sent} od {total}",
   "receivedImage_senderPrefix": "Vrtitev {prefix}",
   "receivedImage_incoming": "Otrteno od {received} na {total} poslovanih potokov",
   "receivedImage_queued": "Čekanje, da se dekodira",
@@ -3403,5 +3403,38 @@
   "settings_backgroundPermissionsSubtitle": "Preveri izjemo pri optimizaciji baterije in jo znova zahtevaj",
   "settings_backgroundPermissionsGranted": "Dovoljenje je že podeljeno",
   "chat_selectSendAction": "Izberite dejanje pošiljanja",
-  "chat_sendImageLora": "Pošlji sliko prek MeshCore"
+  "chat_sendImageLora": "Pošlji sliko prek MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Skok potrjen, odmev ni bil slišan neposredno",
+  "discoveredContacts_discoverDevices": "Odkrij naprave",
+  "discoveredContacts_requestName": "Zahtevaj ime",
+  "discoveredContacts_nameRequestFailed": "Imena ponovitelja ni bilo mogoče zahtevati",
+  "discoveredContacts_discoveryFailed": "Naprav ni bilo mogoče odkriti: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Časovni žig MCMP",
+  "chat_mcmpTimestampQueerly": "Časovni žig MCMP se od časovnega žiga paketa razlikuje za {time} sekund",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Podpisani časovni žig MCMP se močno razlikuje od časa prejema, za {time} sekund",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Skrij vrstice sporočil",
+  "chat_showBlockedSenderMessages": "Prikaži vrstice sporočil",
+  "repeater_cliClearNeighbors": "Počisti seznam sosedov",
+  "reaction_report": "Reakcije z emoji"
 }

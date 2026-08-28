@@ -108,7 +108,7 @@
   "settings_privacyModeEnabled": "Tryb prywatności włączony",
   "settings_privacyModeDisabled": "Tryb prywatności wyłączony",
   "settings_actions": "Działania",
-  "settings_deleteAllPaths": "Delete All Paths",
+  "settings_deleteAllPaths": "Usuń wszystkie trasy",
   "settings_deleteAllPathsSubtitle": "Clear all path data from contacts.",
   "settings_sendAdvertisement": "Wyślij rozgłoszenie",
   "settings_sendAdvertisementSubtitle": "Nadaj obecność teraz",
@@ -789,9 +789,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Kafelki w pamięci podręcznej",
+  "mapCache_cachedTileSummaryLabel": "Podsumowanie kafelków w pamięci podręcznej",
+  "mapCache_bulkDownloadDisabledForSource": "Zbiorcze pobieranie offline jest wyłączone dla {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -799,7 +799,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Zbiorcze pobieranie offline dla {source} jest wyłączone w tej konfiguracji aplikacji.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -807,7 +807,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Źródło: {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -815,7 +815,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Kafelki w pamięci podręcznej dla źródła: {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -823,7 +823,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "W pamięci podręcznej w wybranym obszarze/powiększeniu: {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -831,7 +831,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Przybliżony rozmiar pamięci podręcznej: {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -1165,7 +1165,7 @@
       }
     }
   },
-  "repeater_actionFailed": "{action} failed: {error}",
+  "repeater_actionFailed": "{action} nie powiodło się: {error}",
   "@repeater_actionFailed": {
     "placeholders": {
       "action": {
@@ -1963,7 +1963,7 @@
   "losFrequencyLabel": "Częstotliwość",
   "losFrequencyInfoTooltip": "Zobacz szczegóły obliczenia",
   "losFrequencyDialogTitle": "Obliczanie horyzontu radiowego",
-  "losFrequencyDialogDescription": "Zaczynając od k={baselineK} przy {baselineFreq} MHz, obliczenia korygują współczynnik k dla bieżącego pasma {frequencyMHz} MHz, które definiuje zakrzywiony limit horyzontu radiowego.",
+  "losFrequencyDialogDescription": "Zaczynając od k={baselineK} przy {baselineFreq} MHz, obliczenia korygują współczynnik k do {kFactor} dla bieżącego pasma {frequencyMHz} MHz, które definiuje zakrzywiony limit horyzontu radiowego.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2356,10 +2356,10 @@
   "repeater_cliHelpStatsPackets": "(Tylko dla serialu) Prezentuje statystyki na poziomie pakietów.",
   "repeater_cliHelpStatsRadio": "(Tylko serial) Prezentuje statystyki dotyczące nadawania radiowego.",
   "repeater_cliHelpStatsCore": "(Tylko wersja serialowa) Wyświetla podstawowe statystyki o oprogramowaniu.",
-  "common_done": "Done",
-  "background_serviceTitle": "MeshCore running",
+  "common_done": "Gotowe",
+  "background_serviceTitle": "MeshCore działa",
   "background_serviceText": "Keeping BLE connected",
-  "appSettings_translationModelDeleted": "Deleted {name}",
+  "appSettings_translationModelDeleted": "Usunięto {name}",
   "@appSettings_translationModelDeleted": {
     "placeholders": {
       "name": {
@@ -2367,7 +2367,7 @@
       }
     }
   },
-  "appSettings_translationModelDeleteFailed": "Failed to delete: {error}",
+  "appSettings_translationModelDeleteFailed": "Nie udało się usunąć: {error}",
   "@appSettings_translationModelDeleteFailed": {
     "placeholders": {
       "error": {
@@ -2375,7 +2375,7 @@
       }
     }
   },
-  "channels_channelUpdateFailed": "Failed to update channel: {error}",
+  "channels_channelUpdateFailed": "Nie udało się zaktualizować kanału: {error}",
   "@channels_channelUpdateFailed": {
     "placeholders": {
       "error": {
@@ -2383,18 +2383,18 @@
       }
     }
   },
-  "map_type": "Type",
-  "map_path": "Path",
-  "map_location": "Location",
-  "map_estLocation": "Est. Location",
-  "map_publicKey": "Public Key",
-  "map_publicKeyPrefixHint": "e.g. ab12",
-  "contact_typeChat": "Chat",
-  "contact_typeRepeater": "Repeater",
-  "contact_typeRoom": "Room",
-  "contact_typeSensor": "Sensor",
-  "contact_typeUnknown": "Unknown",
-  "channels_via": "via {path}",
+  "map_type": "Typ",
+  "map_path": "Ścieżka",
+  "map_location": "Lokalizacja",
+  "map_estLocation": "Szac. lokalizacja",
+  "map_publicKey": "Klucz publiczny",
+  "map_publicKeyPrefixHint": "np. ab12",
+  "contact_typeChat": "Czat",
+  "contact_typeRepeater": "Przekaźnik",
+  "contact_typeRoom": "Pokój",
+  "contact_typeSensor": "Czujnik",
+  "contact_typeUnknown": "Nieznany",
+  "channels_via": "przez {path}",
   "settings_multiAck": "Wielokrotne potwierdzenia odbioru",
   "map_sharedAt": "Udostępnione",
   "@losBlockedSpotChip": {
@@ -2436,7 +2436,7 @@
   "losBlockedSpotsTitle": "Zablokowane miejsca",
   "losBlockedSpotsHint": "Kliknij zablokowane miejsce, aby je zaznaczyć na mapie.",
   "losBlockedSpotChip": "{distance} {distanceUnit} • {obstruction} {heightUnit}",
-  "losSelectedObstructionDetails": "Blocked by {obstruction} {heightUnit}, {distanceFromA} from A and {distanceFromB} from B ({distanceUnit}).",
+  "losSelectedObstructionDetails": "Zablokowane przez {obstruction} {heightUnit}, {distanceFromA} od A i {distanceFromB} od B ({distanceUnit}).",
   "chat_newMessages": "Nowe wiadomości",
   "settings_companionDebugLogSubtitle": "Polecenia, odpowiedzi i surowe dane związane z protokołami BLE/TCP/USB",
   "chat_markAsUnread": "Oznacz jako nieprzeczytane",
@@ -2528,7 +2528,7 @@
   "pathEditor_removeHop": "Usuń dziką psiankę",
   "pathEditor_unknownHop": "Nieznany repeater",
   "map_zoomIn": "Przybliż",
-  "routing_deliveryCounts": "{successes} delivered, {failures} failed",
+  "routing_deliveryCounts": "{successes} dostarczono, {failures} nieudanych",
   "map_zoomOut": "Przybliż z powrotem",
   "map_centerMap": "Mapa centrum",
   "chrome_bluetoothRequiresChromium": "Web Bluetooth wymaga przeglądarki Chromium.",
@@ -2630,10 +2630,10 @@
   "pathMap_unfollowPacket": "Przestań śledzić pakiet",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Wyślij po wybraniu",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 bajt",
+  "repeater_pathHashModeOption1": "1 - 2 bajty",
+  "repeater_pathHashModeOption2": "2 - 3 bajty",
+  "repeater_pathHashModeOption3": "3 - 4 bajty",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Start",
   "map_wardriveStop": "Stop",
@@ -3093,7 +3093,7 @@
   "chat_contactIsYou": "To Twój własny kontakt",
   "chat_contactType": "Typ kontaktu: {contacttype}",
   "chat_contactTypeNode": "Węzeł",
-  "chat_contactTypeRepeater": "Repeater",
+  "chat_contactTypeRepeater": "Przekaźnik",
   "chat_contactTypeRoom": "Serwer pokoju",
   "chat_contactTypeSensor": "Czujnik",
   "chat_myLocation": "Wyślij moją lokalizację",
@@ -3124,7 +3124,7 @@
   "chat_searchMessages_results": "Wyniki wyszukiwania",
   "chat_searchMessages_results_found": "Znaleziono {count} wiadomości",
   "chat_searchMessages_results_channel": "Kanał {name}",
-  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_room": "Pokój {name}",
   "chat_searchMessages_results_contact": "Rozmowa z {name}",
   "app_offline": "Offline",
   "app_offline_unableToMessage": "W trybie offline nie możesz wysyłać wiadomości ani wykonywać innych działań",
@@ -3360,7 +3360,7 @@
   "imageSend_qualityHigh": "Wysoko",
   "imageSend_packetsLabel": "Pakiet",
   "imageSend_airtimeLabel": "Czas w eterze",
-  "imageSend_sizeLabel": "Payload",
+  "imageSend_sizeLabel": "Ładunek danych",
   "imageSend_packetsCount": "{count} {count, plural, =1{pakiet} other{pakietów}}",
   "imageSend_range": "{min}–{max}",
   "imageSend_unknownValue": "—",
@@ -3441,5 +3441,38 @@
   "settings_backgroundPermissionsSubtitle": "Sprawdź wyjątek od optymalizacji baterii i poproś o niego ponownie",
   "settings_backgroundPermissionsGranted": "Uprawnienie zostało już przyznane",
   "chat_selectSendAction": "Wybierz czynność wysyłania",
-  "chat_sendImageLora": "Wyślij obraz przez MeshCore"
+  "chat_sendImageLora": "Wyślij obraz przez MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Skok potwierdzony, echo nie zostało usłyszane bezpośrednio",
+  "discoveredContacts_discoverDevices": "Odkryj urządzenia",
+  "discoveredContacts_requestName": "Zażądaj nazwy",
+  "discoveredContacts_nameRequestFailed": "Nie udało się pobrać nazwy przekaźnika",
+  "discoveredContacts_discoveryFailed": "Nie udało się odkryć urządzeń: {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Timestamp MCMP",
+  "chat_mcmpTimestampQueerly": "Timestamp MCMP różni się od timestampu pakietu o {time} sekund",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "Podpisany timestamp MCMP znacznie różni się od czasu odbioru, o {time} sekund",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Ukryj wiersze wiadomości",
+  "chat_showBlockedSenderMessages": "Pokaż wiersze wiadomości",
+  "repeater_cliClearNeighbors": "Wyczyść listę sąsiadów",
+  "reaction_report": "Reakcje emoji"
 }

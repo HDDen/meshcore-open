@@ -822,16 +822,16 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageUk => 'Украински';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 байт';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 байта';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 байта';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 байта';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -1126,7 +1126,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return 'Търсене на контакти...';
+    return 'Търсене на $number$str контакти...';
   }
 
   @override
@@ -2205,7 +2205,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get map_wardriveStop => 'Стоп';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Откриване без хопове';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2629,39 +2629,40 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Кеширани плочки';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel =>
+      'Обобщение за кешираните плочки';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Масовото офлайн изтегляне е изключено за $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Масовото офлайн изтегляне за $source е изключено в конфигурацията на приложението.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Източник: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Кеширани плочки за източника: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'Кеширани в избраната област/мащаб: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Приблизителен размер на кеша: $size';
   }
 
   @override
@@ -4499,7 +4500,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Хопът е потвърден, ехото не е чуто директно';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4674,7 +4675,7 @@ class AppLocalizationsBg extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Започвайки от k=$baselineK при $baselineFreq MHz, изчислението коригира k-фактора за текущата $frequencyMHz MHz лента, която определя границата на извития радиохоризонт.';
+    return 'Започвайки от k=$baselineK при $baselineFreq MHz, изчислението коригира k-фактора до $kFactor за текущата $frequencyMHz MHz лента, която определя границата на извития радиохоризонт.';
   }
 
   @override
@@ -4928,18 +4929,18 @@ class AppLocalizationsBg extends AppLocalizations {
       'Изтриване на Всички Открити Контакти';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Открий устройства';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Заяви име';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Неуспешна заявка за името на повторителя';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Неуспешно откриване на устройства: $error';
   }
 
   @override
@@ -5580,12 +5581,12 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP timestamp се различава от timestamp на пакета с $time секунди';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'Подписаният MCMP timestamp се различава значително от времето на получаване, с $time секунди';
   }
 
   @override
@@ -5962,7 +5963,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo ВЗГ (3,0-4,35 В)';
 
   @override
-  String get chat_sendImage => 'Изпрати изображение';
+  String get chat_sendImage => 'Изпращане на изображение';
 
   @override
   String get chat_imagePickFailed => 'Не мог да откривам та изображин';
@@ -6006,14 +6007,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Катализиране на всята изображение сразу по пришествие. Използване на около 2 ГБ на втора пъти; откажете от реконструкцията чаке при натискане.';
 
   @override
-  String get imageSend_title => 'Изпрати изображение';
+  String get imageSend_title => 'Изпращане на изображение';
 
   @override
   String get imageSend_cropNote =>
-      'Масштабиран до 512 × 512 · соотношение сторон не съхранясе';
+      'Преоразмерено до 512 × 512 · съотношението на страните не се запазва';
 
   @override
-  String get imageSend_originalSize => 'Късно на използване на език:';
+  String get imageSend_originalSize => 'Оригинал';
 
   @override
   String get imageSend_onAirSize => 'В ефир';
@@ -6025,16 +6026,16 @@ class AppLocalizationsBg extends AppLocalizations {
   String get imageSend_qualityStandard => 'Стандарт';
 
   @override
-  String get imageSend_qualityHigh => 'Высок';
+  String get imageSend_qualityHigh => 'Високо';
 
   @override
   String get imageSend_packetsLabel => 'Пакети';
 
   @override
-  String get imageSend_airtimeLabel => 'Времето на изкъсване';
+  String get imageSend_airtimeLabel => 'Време в ефир';
 
   @override
-  String get imageSend_sizeLabel => 'Баланса';
+  String get imageSend_sizeLabel => 'Полезен товар';
 
   @override
   String imageSend_packetsCount(int count) {
@@ -6056,64 +6057,65 @@ class AppLocalizationsBg extends AppLocalizations {
   String get imageSend_unknownValue => '—';
 
   @override
-  String get imageSend_radioUnknownTitle => 'Настройки на радио неизвестни';
+  String get imageSend_radioUnknownTitle =>
+      'Настройките на радиото са неизвестни';
 
   @override
   String get imageSend_radioUnknownBody =>
-      'Усредете се с устройство, за да се отработа часът на изстъпане.';
+      'Свържи се с устройство, за да може да се изчисли времето в ефир.';
 
   @override
-  String get imageSend_longSendTitle => 'Долга пресилка';
+  String get imageSend_longSendTitle => 'Дълго предаване';
 
   @override
   String imageSend_longSendBody(String duration) {
-    return 'Тази буде поддержива открит отряд на около $duration.';
+    return 'Това ще заеме канала за около $duration.';
   }
 
   @override
   String get imageSend_floodNote =>
-      'Руйжинг на превъште: всички ретранслятори в диапазонта превратят всички пакети, тъйа каналят оставря дълше, от този час.';
+      'Flood маршрутизация: всеки повторител в обхват препредава всеки пакет, така че каналът остава зает по-дълго от това.';
 
   @override
-  String get imageSend_parityTitle => 'Возобновителен пакет';
+  String get imageSend_parityTitle => 'Добавяне на възстановяващ пакет';
 
   @override
   String get imageSend_paritySubtitle =>
-      'Едно дополително пакет. Групни извещания не принимаются, след това разбирателят едно пакетто, какщо е пропущен един пакет.';
+      'Един допълнителен пакет. Груповите съобщения не се потвърждават, така че това позволява на получателя да възстанови изображението, ако един пакет се загуби.';
 
   @override
-  String get imageSend_send => 'Отправляй';
+  String get imageSend_send => 'Изпрати';
 
   @override
-  String get imageSend_cancel => 'Отмена';
+  String get imageSend_cancel => 'Отказ';
 
   @override
   String get imageSend_encodeFailed =>
-      'Тази изображение не може да бъде кодирано.';
+      'Това изображение не можа да бъде кодирано.';
 
   @override
   String get imageSend_codecDownloading =>
-      'Модел на изображение еще разгрузира.';
+      'Моделът за изображения все още се изтегля.';
 
   @override
   String get imageSend_codecUnavailable =>
-      'Изглед отправа не е доступен на този устройство.';
+      'Изпращането на изображения не е достъпно на това устройство.';
 
   @override
   String get imageSend_codecDisabled =>
-      'Изображенията на извещенията е отключена в настройките.';
+      'Съобщенията с изображения са изключени в настройките.';
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Та радиота не може да пресылава изображени пакети. Подключите устройство, който работи с компанионски прошивка 13 или новия.';
+      'Това радио не може да изпраща пакети с изображения. Свържи устройство с companion фърмуер 13 или по-нов.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
-      'Изображенията се превозводя се как групова информация, следато да се отправят единствено на канал — не в лична вестка.';
+      'Изображенията пътуват като групови данни, затова могат да се изпращат само в канал — не в лично съобщение.';
 
   @override
   String get imageSend_tooLarge =>
-      'Таата изображение е кодирано в по-числа пакети, отгоре както формат на сетта разрешава.';
+      'Това изображение се кодира в повече пакети, отколкото форматът mesh позволява.';
 
   @override
   String imageSend_sentConfirmation(int count) {
@@ -6128,12 +6130,12 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String imageSend_sendFailed(String error) {
-    return 'Изображение не може да бъде отправено: $error';
+    return 'Изображението не можа да бъде изпратено: $error';
   }
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return 'Отправка наизображение — пакет $sent от $total';
+    return 'Изпращане на изображение — пакет $sent от $total';
   }
 
   @override
@@ -6287,10 +6289,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_blockSenderName => 'Име на подателя';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages =>
+      'Скриване на редовете със съобщения';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages =>
+      'Показване на редовете със съобщения';
 
   @override
   String get imageSend_previewShowAsReceived =>
@@ -6312,7 +6316,7 @@ class AppLocalizationsBg extends AppLocalizations {
       'Показване на SNR/RSSI на последния хоп в каналите';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Изчисти списъка със съседи';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6333,5 +6337,5 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_sendImageLora => 'Изпращане на изображение чрез MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Емоджи реакции';
 }

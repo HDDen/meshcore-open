@@ -2061,22 +2061,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get map_flags => 'Banderas';
 
   @override
-  String get map_type => 'Type';
+  String get map_type => 'Tipo';
 
   @override
-  String get map_path => 'Path';
+  String get map_path => 'Ruta';
 
   @override
-  String get map_location => 'Location';
+  String get map_location => 'Ubicación';
 
   @override
-  String get map_estLocation => 'Est. Location';
+  String get map_estLocation => 'Ubic. estimada';
 
   @override
-  String get map_publicKey => 'Public Key';
+  String get map_publicKey => 'Clave pública';
 
   @override
-  String get map_publicKeyPrefixHint => 'e.g. ab12';
+  String get map_publicKeyPrefixHint => 'p. ej. ab12';
 
   @override
   String get map_shareMarkerHere => 'Compartir marcador aquí';
@@ -2197,7 +2197,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get map_wardriveStop => 'Detener';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Descubrimiento sin saltos';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2618,39 +2618,39 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Teselas en caché';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel => 'Resumen de teselas en caché';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Las descargas masivas sin conexión están desactivadas para $source.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Las descargas masivas sin conexión para $source están desactivadas en esta configuración de la aplicación.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Fuente: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Teselas en caché para la fuente: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'En caché en el área/zoom seleccionado: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Tamaño aproximado de la caché: $size';
   }
 
   @override
@@ -2660,7 +2660,7 @@ class AppLocalizationsEs extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return 'N $north, S $south, E $east, O $west';
   }
 
   @override
@@ -4492,7 +4492,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Salto confirmado, eco no escuchado directamente';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4669,7 +4669,7 @@ class AppLocalizationsEs extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'A partir de k=$baselineK en $baselineFreq MHz, el cálculo ajusta el factor k para la banda actual de $frequencyMHz MHz, que define el límite curvo del horizonte de radio.';
+    return 'A partir de k=$baselineK en $baselineFreq MHz, el cálculo ajusta el factor k a $kFactor para la banda actual de $frequencyMHz MHz, que define el límite curvo del horizonte de radio.';
   }
 
   @override
@@ -4928,18 +4928,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Eliminar Todos los Contactos Descubiertos';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Descubrir dispositivos';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Solicitar nombre';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'No se pudo solicitar el nombre del repetidor';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'No se pudieron descubrir los dispositivos: $error';
   }
 
   @override
@@ -5576,16 +5576,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'Respuesta MCMPv3 a';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'Marca de tiempo MCMP';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'La marca de tiempo MCMP difiere de la del paquete en $time segundos';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'La marca de tiempo MCMP firmada difiere notablemente de la hora de recepción, en $time segundos';
   }
 
   @override
@@ -6015,7 +6015,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Redimensionado a 512 × 512 · la relación de aspecto no se conservó';
 
   @override
-  String get imageSend_originalSize => 'Texto original';
+  String get imageSend_originalSize => 'Original';
 
   @override
   String get imageSend_onAirSize => 'En emisión';
@@ -6290,10 +6290,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chat_blockSenderName => 'Nombre del remitente';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Ocultar las filas de mensajes';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'Mostrar las filas de mensajes';
 
   @override
   String get imageSend_previewShowAsReceived => 'Ver como lo recibirán';
@@ -6314,7 +6314,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mostrar SNR/RSSI del último salto en los canales';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Borrar lista de vecinos';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6335,5 +6335,5 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chat_sendImageLora => 'Enviar imagen mediante MeshCore';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Reacciones con emoji';
 }

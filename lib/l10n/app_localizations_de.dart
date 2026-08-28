@@ -817,16 +817,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainisch';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 byte';
+  String get repeater_pathHashModeOption0 => '0 - 1 Byte';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bytes';
+  String get repeater_pathHashModeOption1 => '1 - 2 Bytes';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bytes';
+  String get repeater_pathHashModeOption2 => '2 - 3 Bytes';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bytes';
+  String get repeater_pathHashModeOption3 => '3 - 4 Bytes';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -1120,7 +1120,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String contacts_searchContacts(int number, String str) {
-    return 'Kontakte suchen...';
+    return 'Suche $number$str Kontakte...';
   }
 
   @override
@@ -2202,7 +2202,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get map_wardriveStop => 'Stopp';
 
   @override
-  String get map_wardriveZeroHopDiscovery => 'Zero-hop discovery';
+  String get map_wardriveZeroHopDiscovery => 'Zero-Hop-Erkennung';
 
   @override
   String get map_wardriveDiscoverySent =>
@@ -2623,39 +2623,40 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get mapCache_cachedTilesLabel => 'Cached tiles';
+  String get mapCache_cachedTilesLabel => 'Zwischengespeicherte Kacheln';
 
   @override
-  String get mapCache_cachedTileSummaryLabel => 'Cached tile summary';
+  String get mapCache_cachedTileSummaryLabel =>
+      'Übersicht der zwischengespeicherten Kacheln';
 
   @override
   String mapCache_bulkDownloadDisabledForSource(String source) {
-    return 'Offline bulk downloads are disabled for $source.';
+    return 'Offline-Massendownloads sind für $source deaktiviert.';
   }
 
   @override
   String mapCache_bulkDownloadDisabledInConfig(String source) {
-    return 'Offline bulk downloads are disabled for $source in this app configuration.';
+    return 'Offline-Massendownloads sind für $source in dieser App-Konfiguration deaktiviert.';
   }
 
   @override
   String mapCache_summarySource(String source) {
-    return 'Source: $source';
+    return 'Quelle: $source';
   }
 
   @override
   String mapCache_summaryCachedTilesForSource(int count) {
-    return 'Cached tiles for source: $count';
+    return 'Zwischengespeicherte Kacheln für die Quelle: $count';
   }
 
   @override
   String mapCache_summaryCachedInSelection(int count) {
-    return 'Cached in selected area/zoom: $count';
+    return 'Im gewählten Bereich/Zoom zwischengespeichert: $count';
   }
 
   @override
   String mapCache_summaryApproxCacheSize(String size) {
-    return 'Approx cache size: $size';
+    return 'Ungefähre Cache-Größe: $size';
   }
 
   @override
@@ -2665,7 +2666,7 @@ class AppLocalizationsDe extends AppLocalizations {
     String east,
     String west,
   ) {
-    return 'N $north, S $south, E $east, W $west';
+    return 'N $north, S $south, O $east, W $west';
   }
 
   @override
@@ -2899,10 +2900,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get repeater_noiseFloor => 'Rauschpegel';
 
   @override
-  String get repeater_txAirtime => 'TX Airtime';
+  String get repeater_txAirtime => 'TX-Sendezeit';
 
   @override
-  String get repeater_rxAirtime => 'RX Airtime';
+  String get repeater_rxAirtime => 'RX-Empfangszeit';
 
   @override
   String get repeater_chanUtil => 'Nutzung des Kanals';
@@ -4174,7 +4175,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelPath_messageDetails => 'Nachrichtendetails';
 
   @override
-  String get channelPath_senderLabel => 'Sender';
+  String get channelPath_senderLabel => 'Absender';
 
   @override
   String get channelPath_timeLabel => 'Empfangs-/Erstellungszeit';
@@ -4497,7 +4498,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pathTrace_hopConfirmedNoDirectEchoTooltip =>
-      'Hop confirmed; echo not heard directly';
+      'Hop bestätigt, Echo nicht direkt gehört';
 
   @override
   String get pathTrace_someHopsNoLocation =>
@@ -4673,7 +4674,7 @@ class AppLocalizationsDe extends AppLocalizations {
     double frequencyMHz,
     double kFactor,
   ) {
-    return 'Ausgehend von k=$baselineK bei $baselineFreq MHz passt die Berechnung den k-Faktor für das aktuelle $frequencyMHz MHz-Band an, das die gekrümmte Funkhorizontobergrenze definiert.';
+    return 'Ausgehend von k=$baselineK bei $baselineFreq MHz passt die Berechnung den k-Faktor auf $kFactor für das aktuelle $frequencyMHz MHz-Band an, das die gekrümmte Funkhorizontobergrenze definiert.';
   }
 
   @override
@@ -4932,18 +4933,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alle entdeckten Kontakte löschen';
 
   @override
-  String get discoveredContacts_discoverDevices => 'Discover devices';
+  String get discoveredContacts_discoverDevices => 'Geräte entdecken';
 
   @override
-  String get discoveredContacts_requestName => 'Request name';
+  String get discoveredContacts_requestName => 'Namen anfordern';
 
   @override
   String get discoveredContacts_nameRequestFailed =>
-      'Failed to request the repeater name';
+      'Der Name des Repeaters konnte nicht angefordert werden';
 
   @override
   String discoveredContacts_discoveryFailed(String error) {
-    return 'Failed to discover devices: $error';
+    return 'Geräte konnten nicht entdeckt werden: $error';
   }
 
   @override
@@ -5583,16 +5584,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_mcmpAnswerTo => 'MCMPv3-Antwort auf';
 
   @override
-  String get chat_mcmpSignedTimestamp => 'MCMP timestamp';
+  String get chat_mcmpSignedTimestamp => 'MCMP-Zeitstempel';
 
   @override
   String chat_mcmpTimestampQueerly(int time) {
-    return 'MCMP-timestamp differs from packet timestamp by $time seconds';
+    return 'MCMP-Zeitstempel weicht um $time Sekunden vom Paket-Zeitstempel ab';
   }
 
   @override
   String chat_mcmpTimestampQueerlyReceived(int time) {
-    return 'Signed MCMP-timestamp significantly differs from receiving time by $time seconds';
+    return 'Der signierte MCMP-Zeitstempel weicht deutlich von der Empfangszeit ab, um $time Sekunden';
   }
 
   @override
@@ -5967,7 +5968,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appSettings_batteryLipoHv => 'LiPo HV (3,0–4,35 V)';
 
   @override
-  String get chat_sendImage => 'Send image';
+  String get chat_sendImage => 'Bild senden';
 
   @override
   String get chat_imagePickFailed => 'Konnte dieses Bild nicht öffnen.';
@@ -6017,8 +6018,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Für 512 × 512 skaliert · Seitenverhältnis nicht erhalten';
 
   @override
-  String get imageSend_originalSize =>
-      'Originaltext:\n\nThe quick brown fox jumps over the lazy dog.\n\nÜbersetzung:\n\nDer schnelle braune Fuchs springt über den faulen Hund.';
+  String get imageSend_originalSize => 'Original';
 
   @override
   String get imageSend_onAirSize => 'On air';
@@ -6293,10 +6293,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_blockSenderName => 'Absendername';
 
   @override
-  String get chat_hideBlockedSenderMessages => 'Hide message rows';
+  String get chat_hideBlockedSenderMessages => 'Nachrichtenzeilen ausblenden';
 
   @override
-  String get chat_showBlockedSenderMessages => 'Show message rows';
+  String get chat_showBlockedSenderMessages => 'Nachrichtenzeilen anzeigen';
 
   @override
   String get imageSend_previewShowAsReceived => 'So sehen es die Empfänger';
@@ -6317,7 +6317,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'SNR/RSSI des letzten Hops in Kanälen anzeigen';
 
   @override
-  String get repeater_cliClearNeighbors => 'Clear Neighbours list';
+  String get repeater_cliClearNeighbors => 'Nachbarliste leeren';
 
   @override
   String get settings_backgroundPermissions =>
@@ -6338,5 +6338,5 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_sendImageLora => 'Bild über MeshCore senden';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Emoji-Reaktionen';
 }

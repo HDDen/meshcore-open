@@ -801,9 +801,9 @@
       }
     }
   },
-  "mapCache_cachedTilesLabel": "Cached tiles",
-  "mapCache_cachedTileSummaryLabel": "Cached tile summary",
-  "mapCache_bulkDownloadDisabledForSource": "Offline bulk downloads are disabled for {source}.",
+  "mapCache_cachedTilesLabel": "Tuiles en cache",
+  "mapCache_cachedTileSummaryLabel": "Récapitulatif des tuiles en cache",
+  "mapCache_bulkDownloadDisabledForSource": "Les téléchargements groupés hors ligne sont désactivés pour {source}.",
   "@mapCache_bulkDownloadDisabledForSource": {
     "placeholders": {
       "source": {
@@ -811,7 +811,7 @@
       }
     }
   },
-  "mapCache_bulkDownloadDisabledInConfig": "Offline bulk downloads are disabled for {source} in this app configuration.",
+  "mapCache_bulkDownloadDisabledInConfig": "Les téléchargements groupés hors ligne pour {source} sont désactivés dans cette configuration de l'application.",
   "@mapCache_bulkDownloadDisabledInConfig": {
     "placeholders": {
       "source": {
@@ -819,7 +819,7 @@
       }
     }
   },
-  "mapCache_summarySource": "Source: {source}",
+  "mapCache_summarySource": "Source : {source}",
   "@mapCache_summarySource": {
     "placeholders": {
       "source": {
@@ -827,7 +827,7 @@
       }
     }
   },
-  "mapCache_summaryCachedTilesForSource": "Cached tiles for source: {count}",
+  "mapCache_summaryCachedTilesForSource": "Tuiles en cache pour la source : {count}",
   "@mapCache_summaryCachedTilesForSource": {
     "placeholders": {
       "count": {
@@ -835,7 +835,7 @@
       }
     }
   },
-  "mapCache_summaryCachedInSelection": "Cached in selected area/zoom: {count}",
+  "mapCache_summaryCachedInSelection": "En cache dans la zone/le zoom sélectionné : {count}",
   "@mapCache_summaryCachedInSelection": {
     "placeholders": {
       "count": {
@@ -843,7 +843,7 @@
       }
     }
   },
-  "mapCache_summaryApproxCacheSize": "Approx cache size: {size}",
+  "mapCache_summaryApproxCacheSize": "Taille approximative du cache : {size}",
   "@mapCache_summaryApproxCacheSize": {
     "placeholders": {
       "size": {
@@ -975,8 +975,8 @@
   "repeater_lastRssi": "Dernier RSSI",
   "repeater_lastSnr": "Dernier SNR",
   "repeater_noiseFloor": "Niveau de Bruit",
-  "repeater_txAirtime": "TX Airtime",
-  "repeater_rxAirtime": "RX Airtime",
+  "repeater_txAirtime": "Temps d'antenne TX",
+  "repeater_rxAirtime": "Temps d'antenne RX",
   "repeater_packetStatistics": "Statistiques des paquets",
   "repeater_sent": "Envoyé",
   "repeater_received": "Reçu",
@@ -2010,7 +2010,7 @@
   "losFrequencyLabel": "Fréquence",
   "losFrequencyInfoTooltip": "Voir les détails du calcul",
   "losFrequencyDialogTitle": "Calcul de l’horizon radio",
-  "losFrequencyDialogDescription": "À partir de k={baselineK} à {baselineFreq} MHz, le calcul ajuste le facteur k pour la bande actuelle de {frequencyMHz} MHz, ce qui définit la limite incurvée de l'horizon radio.",
+  "losFrequencyDialogDescription": "À partir de k={baselineK} à {baselineFreq} MHz, le calcul ajuste le facteur k à {kFactor} pour la bande actuelle de {frequencyMHz} MHz, ce qui définit la limite incurvée de l'horizon radio.",
   "@losFrequencyDialogDescription": {
     "description": "Explain how the calculation uses the baseline frequency and derived k-factor.",
     "placeholders": {
@@ -2445,7 +2445,7 @@
   "map_publicKeyPrefixHint": "p. ex. ab12",
   "contact_typeChat": "Chat",
   "contact_typeRepeater": "Répéteur",
-  "contact_typeRoom": "Room",
+  "contact_typeRoom": "Salon",
   "contact_typeSensor": "Capteur",
   "contact_typeUnknown": "Inconnu",
   "channels_via": "via {path}",
@@ -2691,14 +2691,14 @@
   "pathMap_unfollowPacket": "Déverrouiller la vue du paquet",
   "pathMap_gpsCount": "{confirmed}/{total} GPS",
   "settings_quickAnswersSendAtSelect": "Envoyer à la sélection",
-  "repeater_pathHashModeOption0": "0 - 1 byte",
-  "repeater_pathHashModeOption1": "1 - 2 bytes",
-  "repeater_pathHashModeOption2": "2 - 3 bytes",
-  "repeater_pathHashModeOption3": "3 - 4 bytes",
+  "repeater_pathHashModeOption0": "0 - 1 octet",
+  "repeater_pathHashModeOption1": "1 - 2 octets",
+  "repeater_pathHashModeOption2": "2 - 3 octets",
+  "repeater_pathHashModeOption3": "3 - 4 octets",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Démarrer",
   "map_wardriveStop": "Arrêter",
-  "map_wardriveZeroHopDiscovery": "Zero-hop discovery",
+  "map_wardriveZeroHopDiscovery": "Découverte sans saut",
   "map_wardriveDiscoverySent": "Requête de discovery wardrive envoyée.",
   "map_wardriveUploadCancelled": "Téléversement wardrive annulé.",
   "map_wardriveDiscoveryFailed": "Discovery wardrive échouée : {error}",
@@ -3185,7 +3185,7 @@
   "chat_searchMessages_results": "Résultats de la recherche",
   "chat_searchMessages_results_found": "{count} messages trouvés",
   "chat_searchMessages_results_channel": "Canal {name}",
-  "chat_searchMessages_results_room": "Room {name}",
+  "chat_searchMessages_results_room": "Salon {name}",
   "chat_searchMessages_results_contact": "Conversation avec {name}",
   "app_offline": "Hors ligne",
   "app_offline_unableToMessage": "Vous ne pouvez pas envoyer de messages ni effectuer d'autres actions en mode hors ligne",
@@ -3399,7 +3399,7 @@
   },
   "settings_infoHardware": "Matériel",
   "appSettings_batteryLipoHv": "Tension élevée LiPo (3,0-4,35 V)",
-  "chat_sendImage": "Envoyer l'image",
+  "chat_sendImage": "Envoyer une image",
   "chat_imagePickFailed": "Je n'ai pas pu ouvrir cette image",
   "imageMessages_enableTitle": "Messages avec images",
   "imageMessages_enableSubtitle": "Envoyer des images via le maillage. Nécessite un téléchargement unique du modèle d'image.",
@@ -3412,9 +3412,9 @@
   "imageMessages_downloadFailed": "Le modèle d'image ne pouvait pas être téléchargé.",
   "imageMessages_autoProcessTitle": "Traiter automatiquement les images",
   "imageMessages_autoProcessSubtitle": "Reconstruisez chaque image dès son arrivée. Cela utilise environ 2 Go de mémoire pendant une seconde à chaque fois ; désactivez la reconstruction au toucher pour éviter cela.",
-  "imageSend_title": "Envoyer l'image",
+  "imageSend_title": "Envoyer une image",
   "imageSend_cropNote": "Redimensionné à 512 × 512 · le rapport d’aspect n’a pas été conservé",
-  "imageSend_originalSize": "Texte original\n\nVeuillez traduire le texte suivant en français :",
+  "imageSend_originalSize": "Original",
   "imageSend_onAirSize": "En direct",
   "imageSend_quality": "Qualité",
   "imageSend_qualityStandard": "Standard",
@@ -3502,5 +3502,38 @@
   "settings_backgroundPermissionsSubtitle": "Vérifier l'exemption d'optimisation de la batterie et la redemander",
   "settings_backgroundPermissionsGranted": "L'autorisation est déjà accordée",
   "chat_selectSendAction": "Sélectionner une action d’envoi",
-  "chat_sendImageLora": "Envoyer une image via MeshCore"
+  "chat_sendImageLora": "Envoyer une image via MeshCore",
+  "pathTrace_hopConfirmedNoDirectEchoTooltip": "Saut confirmé, écho non entendu directement",
+  "discoveredContacts_discoverDevices": "Découvrir les appareils",
+  "discoveredContacts_requestName": "Demander le nom",
+  "discoveredContacts_nameRequestFailed": "Impossible de demander le nom du répéteur",
+  "discoveredContacts_discoveryFailed": "Échec de la découverte des appareils : {error}",
+  "@discoveredContacts_discoveryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_mcmpSignedTimestamp": "Horodatage MCMP",
+  "chat_mcmpTimestampQueerly": "L'horodatage MCMP diffère de celui du paquet de {time} secondes",
+  "@chat_mcmpTimestampQueerly": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_mcmpTimestampQueerlyReceived": "L'horodatage MCMP signé diffère nettement de l'heure de réception, de {time} secondes",
+  "@chat_mcmpTimestampQueerlyReceived": {
+    "placeholders": {
+      "time": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_hideBlockedSenderMessages": "Masquer les lignes de messages",
+  "chat_showBlockedSenderMessages": "Afficher les lignes de messages",
+  "repeater_cliClearNeighbors": "Effacer la liste des voisins",
+  "reaction_report": "Réactions emoji"
 }
