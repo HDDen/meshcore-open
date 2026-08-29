@@ -100,6 +100,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
   final MapController _mapController = MapController();
+  final GlobalKey _mapBodyKey = GlobalKey();
+  final GlobalKey _hopListPanelKey = GlobalKey();
   final double? _sessionInitialZoom = MapSessionZoom.value;
   final ScrollController _traceObservationScrollController =
       ScrollController();
@@ -123,8 +125,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   List<Polyline> _polylines = [];
   LatLng? _initialCenter = LatLng(0, 0);
   double _initialZoom = 2.0;
-  LatLngBounds? _bounds;
-  ValueKey<String> _mapKey = const ValueKey('initial');
   double _pathDistanceMeters = 0.0;
   bool _showNodeLabels = true;
   Contact? _targetContact;
@@ -149,6 +149,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   bool _panelCollapsed = false;
   bool _animationEnabled = true;
   bool _followPacket = false;
+  bool _mapReady = false;
+  String? _scheduledViewportFit;
+  String? _completedViewportFit;
 
   String _formatPathPrefixes(Uint8List pathBytes, [int? hashByteWidth]) {
     return PathHelper.splitPathBytes(
@@ -301,12 +304,15 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   }
 
   void _resetMapView() {
-    final bounds = _bounds;
+    final viewportPoints = _pathViewportPoints();
+    final bounds = viewportPoints.length > 1
+        ? LatLngBounds.fromPoints(viewportPoints)
+        : null;
     if (bounds != null) {
       _mapController.fitCamera(
         CameraFit.bounds(
           bounds: bounds,
-          padding: const EdgeInsets.all(64),
+          padding: _pathViewportPadding(),
           maxZoom: 16,
         ),
       );
@@ -316,6 +322,66 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     if (center != null) {
       _mapController.move(center, _initialZoom);
     }
+  }
+
+  List<LatLng> _pathViewportPoints() {
+    if (_viewMode == PathViewMode.combined) {
+      return _visiblePaths.expand((path) => path.points).toList();
+    }
+    return _selectedPath?.points ?? _points;
+  }
+
+  void _schedulePathViewportFit() {
+    if (!_mapReady) return;
+    final viewportPoints = _pathViewportPoints();
+    final signature = [
+      _selectedPathId,
+      _viewMode.name,
+      _panelCollapsed,
+      for (final point in viewportPoints)
+        '${point.latitude},${point.longitude}',
+    ].join('|');
+    if (_completedViewportFit == signature ||
+        _scheduledViewportFit == signature) {
+      return;
+    }
+    _scheduledViewportFit = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _scheduledViewportFit != signature) return;
+      _scheduledViewportFit = null;
+      _completedViewportFit = signature;
+      _resetMapView();
+    });
+  }
+
+  EdgeInsets _pathViewportPadding() {
+    const horizontalPadding = 64.0;
+    const topPadding = 64.0;
+    const panelClearance = 42.0;
+    final bodyBox = _mapBodyKey.currentContext?.findRenderObject();
+    if (bodyBox is! RenderBox || !bodyBox.hasSize) {
+      return const EdgeInsets.fromLTRB(64, 64, 64, 320);
+    }
+
+    final hopPanelBox = _hopListPanelKey.currentContext?.findRenderObject();
+    var bottomPadding = bodyBox.size.height * 0.40;
+    if (hopPanelBox is RenderBox && hopPanelBox.hasSize) {
+      final offset = hopPanelBox.localToGlobal(
+        Offset.zero,
+        ancestor: bodyBox,
+      );
+      bottomPadding = max(
+        bottomPadding,
+        bodyBox.size.height - offset.dy + panelClearance,
+      );
+    }
+
+    return EdgeInsets.fromLTRB(
+      horizontalPadding,
+      topPadding,
+      horizontalPadding,
+      bottomPadding,
+    );
   }
 
   Widget _buildDesktopMapControls() {
@@ -898,10 +964,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                 (_points.isNotEmpty ? 13.0 : 2.0))
             .clamp(_mapMinZoom, _mapMaxZoom)
             .toDouble();
-        _bounds = _points.length > 1 ? LatLngBounds.fromPoints(_points) : null;
-        _mapKey = ValueKey(
-          '${context.l10n.pathTrace_you},${_traceData!.pathData.map(PathHelper.formatHopHex).join(',')}',
-        );
         _pathDistanceMeters = getPathDistanceMeters(_points);
         _primaryOutboundHops = _outboundHops(pathData);
         _rebuildDisplayPaths(connector);
@@ -1193,6 +1255,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             _hasData && (!widget.revealMapManually || _mapRevealed);
         final showMapButton =
             _hasData && widget.revealMapManually && !_mapRevealed;
+        if (showMap) _schedulePathViewportFit();
 
         final screen = Scaffold(
           appBar: AppBar(
@@ -1215,6 +1278,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           body: SafeArea(
             top: false,
             child: Stack(
+              key: _mapBodyKey,
               children: [
                 if (!showMap)
                   Positioned.fill(
@@ -1262,7 +1326,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: FilledButton(
-                          onPressed: () => setState(() => _mapRevealed = true),
+                          onPressed: () => setState(() {
+                            _mapReady = false;
+                            _completedViewportFit = null;
+                            _mapRevealed = true;
+                          }),
                           child: Text(context.l10n.channelPath_viewMap),
                         ),
                       ),
@@ -1277,7 +1345,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           canPop: !showMap,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop || !showMap) return;
-            setState(() => _mapRevealed = false);
+            setState(() {
+              _mapReady = false;
+              _scheduledViewportFit = null;
+              _mapRevealed = false;
+            });
           },
           child: screen,
         );
@@ -1713,7 +1785,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   ) {
     final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
     return FlutterMap(
-      key: _mapKey,
       mapController: _mapController,
       options: MapOptions(
         interactionOptions: InteractionOptions(
@@ -1731,13 +1802,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         ),
         initialCenter: _initialCenter!,
         initialZoom: _initialZoom,
-        initialCameraFit: _bounds == null || _sessionInitialZoom != null
-            ? null
-            : CameraFit.bounds(
-                bounds: _bounds!,
-                padding: const EdgeInsets.all(64),
-                maxZoom: 16,
-              ),
+        onMapReady: () {
+          if (!mounted) return;
+          setState(() {
+            _mapReady = true;
+            _completedViewportFit = null;
+          });
+        },
         minZoom: _mapMinZoom,
         maxZoom: _mapMaxZoom,
         onPositionChanged: (camera, hasGesture) {
@@ -1851,6 +1922,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       right: 16,
       bottom: 16,
       child: SizedBox(
+        key: _hopListPanelKey,
         height: cardHeight,
         child: DecoratedBox(
           decoration: BoxDecoration(

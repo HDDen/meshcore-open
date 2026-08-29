@@ -15,6 +15,7 @@ import 'utils/platform_info.dart';
 import 'connector/meshcore_connector.dart';
 import 'models/image_codec_support.dart';
 import 'screens/scanner_screen.dart';
+import 'screens/startup_error_screen.dart';
 import 'services/image_chunk_transport.dart';
 import 'services/image_codec_backend.dart' show kImageCodecFeatureAvailable;
 import 'services/image_codec_service.dart';
@@ -46,9 +47,29 @@ import 'utils/app_route_observer.dart';
 import 'widgets/edge_swipe_pop.dart';
 import 'widgets/image_send_codec_binding.dart';
 
-void main() async {
+String _startupErrorCode = 'MCO-STARTUP-001';
+String _startupStage = 'Flutter initialization';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  try {
+    await _startApplication();
+  } catch (error, stackTrace) {
+    runApp(
+      StartupErrorApp(
+        report: StartupFailureReport(
+          code: _startupErrorCode,
+          stage: _startupStage,
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _startApplication() async {
   // On desktop, debugPrint is not suppressed in release builds and every
   // call is a synchronous stdout write. The connector logs heavily on hot
   // paths (frame handling, queue/channel sync), which shows up as syscall
@@ -59,7 +80,9 @@ void main() async {
   }
 
   // Initialize SharedPreferences cache
+  _setStartupStage('MCO-STARTUP-101', 'Shared preferences');
   await PrefsManager.initialize();
+  _setStartupStage('MCO-STARTUP-102', 'Message compression model');
   await MeshCompressor.instance.initialize();
 
   // Initialize services
@@ -90,6 +113,7 @@ void main() async {
   // model registry and its "process automatically" default straight off
   // `appSettingsService.settings`, so this cannot stay where it used to be
   // (after the constructions) without those two starting out wrong.
+  _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
   await settingsSectionsService.initialize();
   appSettingsService.setExtraBatteryProfilesProvider(
@@ -161,6 +185,7 @@ void main() async {
   );
 
   // Initialize notification service
+  _setStartupStage('MCO-STARTUP-104', 'Desktop services');
   final notificationService = NotificationService();
   await notificationService.initialize();
   if (PlatformInfo.isAndroid &&
@@ -183,6 +208,7 @@ void main() async {
   );
   _registerThirdPartyLicenses();
 
+  _setStartupStage('MCO-STARTUP-105', 'Local models and application state');
   await chatTextScaleService.initialize();
   await translationService.refreshDownloadedModels();
   await imageCodecService.refreshDownloadedModels();
@@ -228,14 +254,17 @@ void main() async {
         : null,
   );
 
+  _setStartupStage('MCO-STARTUP-106', 'Contacts and channel settings');
   await connector.loadContactCache();
   await connector.loadChannelSettings();
   await connector.loadCachedChannels();
 
   // Load persisted channel messages
+  _setStartupStage('MCO-STARTUP-107', 'Message history');
   await connector.loadAllChannelMessages();
   await connector.loadUnreadState();
 
+  _setStartupStage('MCO-STARTUP-108', 'User interface');
   runApp(
     MeshCoreApp(
       connector: connector,
@@ -258,6 +287,11 @@ void main() async {
       imageReassembler: imageReassembler,
     ),
   );
+}
+
+void _setStartupStage(String code, String stage) {
+  _startupErrorCode = code;
+  _startupStage = stage;
 }
 
 /// [ReceivedImageDecoder] over [ImageCodecService].

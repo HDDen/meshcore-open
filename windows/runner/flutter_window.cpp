@@ -8,6 +8,11 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+namespace {
+constexpr UINT_PTR kFirstFrameTimerId = 1;
+constexpr UINT kFirstFrameTimeoutMs = 15000;
+}  // namespace
+
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
@@ -32,9 +37,12 @@ bool FlutterWindow::OnCreate() {
   RegisterWindowActivationChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
+  flutter_controller_->engine()->SetNextFrameCallback([this]() {
+    ::KillTimer(GetHandle(), kFirstFrameTimerId);
     this->Show();
   });
+
+  ::SetTimer(GetHandle(), kFirstFrameTimerId, kFirstFrameTimeoutMs, nullptr);
 
   // Flutter can complete the first frame before the "show window" callback is
   // registered. The following call ensures a frame is pending to ensure the
@@ -83,6 +91,7 @@ void FlutterWindow::RestoreAndFocus() {
 }
 
 void FlutterWindow::OnDestroy() {
+  ::KillTimer(GetHandle(), kFirstFrameTimerId);
   if (flutter_controller_) {
     window_activation_channel_.reset();
     flutter_controller_ = nullptr;
@@ -95,6 +104,18 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == WM_TIMER && wparam == kFirstFrameTimerId) {
+    ::KillTimer(hwnd, kFirstFrameTimerId);
+    Show();
+    ::MessageBoxW(
+        hwnd,
+        L"Flutter did not render the first application frame within 15 "
+        L"seconds.\n\nError code: MCO-WIN-STARTUP-001\n\nPlease "
+        L"include this code when reporting the problem.",
+        L"MCO Advanced startup error", MB_OK | MB_ICONERROR);
+    return 0;
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Singleton wrapper for SharedPreferences to avoid redundant getInstance() calls.
@@ -13,7 +16,27 @@ class PrefsManager {
 
   /// Initialize the cached instance. Call this once during app startup in main().
   static Future<void> initialize() async {
-    _instance ??= await SharedPreferences.getInstance();
+    if (_instance != null) return;
+    try {
+      _instance = await SharedPreferences.getInstance();
+    } on FormatException {
+      if (!Platform.isWindows) rethrow;
+      if (!await _quarantineCorruptWindowsPreferences()) rethrow;
+      SharedPreferences.resetStatic();
+      _instance = await SharedPreferences.getInstance();
+    }
+  }
+
+  static Future<bool> _quarantineCorruptWindowsPreferences() async {
+    final supportDirectory = await getApplicationSupportDirectory();
+    final preferencesFile = File(
+      '${supportDirectory.path}${Platform.pathSeparator}shared_preferences.json',
+    );
+    if (!await preferencesFile.exists()) return false;
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    await preferencesFile.rename('${preferencesFile.path}.corrupt-$timestamp');
+    return true;
   }
 
   /// Get the cached SharedPreferences instance.

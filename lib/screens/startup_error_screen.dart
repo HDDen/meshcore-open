@@ -1,0 +1,214 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+class StartupFailureReport {
+  StartupFailureReport({
+    required this.code,
+    required this.stage,
+    required this.error,
+    required this.stackTrace,
+  }) : occurredAt = DateTime.now().toUtc();
+
+  final String code;
+  final String stage;
+  final Object error;
+  final StackTrace stackTrace;
+  final DateTime occurredAt;
+
+  String get platform => defaultTargetPlatform.name;
+
+  String get buildMode => kReleaseMode
+      ? 'release'
+      : kProfileMode
+      ? 'profile'
+      : 'debug';
+
+  String get text => '''
+MCO startup failure
+Code: $code
+Stage: $stage
+Platform: $platform
+Build mode: $buildMode
+Time (UTC): ${occurredAt.toIso8601String()}
+Error type: ${error.runtimeType}
+Error: $error
+
+Stack trace:
+$stackTrace
+''';
+}
+
+class StartupErrorApp extends StatelessWidget {
+  const StartupErrorApp({super.key, required this.report});
+
+  final StartupFailureReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        colorSchemeSeed: const Color(0xFF03A9E6),
+      ),
+      home: StartupErrorScreen(report: report),
+    );
+  }
+}
+
+class StartupErrorScreen extends StatefulWidget {
+  const StartupErrorScreen({super.key, required this.report});
+
+  final StartupFailureReport report;
+
+  @override
+  State<StartupErrorScreen> createState() => _StartupErrorScreenState();
+}
+
+class _StartupErrorScreenState extends State<StartupErrorScreen> {
+  bool _copied = false;
+
+  bool get _isRussian =>
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru';
+
+  Future<void> _copyReport() async {
+    await Clipboard.setData(ClipboardData(text: widget.report.text));
+    if (!mounted) return;
+    setState(() => _copied = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final report = widget.report;
+    final colors = Theme.of(context).colorScheme;
+    final title = _isRussian
+        ? 'Не удалось запустить приложение'
+        : 'The application could not start';
+    final description = _isRussian
+        ? 'Скопируйте отчёт и приложите его к сообщению об ошибке.'
+        : 'Copy this report and attach it to the bug report.';
+
+    return Scaffold(
+      body: SafeArea(
+        child: SelectionArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 840),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 56,
+                      color: colors.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(description, textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    _ReportRow(
+                      label: _isRussian ? 'Код ошибки' : 'Error code',
+                      value: report.code,
+                    ),
+                    _ReportRow(
+                      label: _isRussian ? 'Этап запуска' : 'Startup stage',
+                      value: report.stage,
+                    ),
+                    _ReportRow(
+                      label: _isRussian ? 'Платформа' : 'Platform',
+                      value: '${report.platform} / ${report.buildMode}',
+                    ),
+                    _ReportRow(
+                      label: _isRussian ? 'Тип ошибки' : 'Error type',
+                      value: report.error.runtimeType.toString(),
+                    ),
+                    _ReportRow(
+                      label: _isRussian ? 'Сообщение' : 'Message',
+                      value: report.error.toString(),
+                    ),
+                    const SizedBox(height: 16),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(bottom: 16),
+                      title: Text(
+                        _isRussian
+                            ? 'Технические подробности'
+                            : 'Technical details',
+                      ),
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            report.stackTrace.toString(),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(fontFamily: 'monospace'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.center,
+                      child: FilledButton.icon(
+                        onPressed: _copyReport,
+                        icon: Icon(_copied ? Icons.check : Icons.copy),
+                        label: Text(
+                          _copied
+                              ? (_isRussian ? 'Отчёт скопирован' : 'Copied')
+                              : (_isRussian
+                                    ? 'Скопировать отчёт'
+                                    : 'Copy report'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportRow extends StatelessWidget {
+  const _ReportRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 150,
+            child: Text(
+              label,
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+}

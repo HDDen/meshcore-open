@@ -10,6 +10,7 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  guint first_frame_timeout_id;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -17,7 +18,34 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView *view)
 {
+  if (self->first_frame_timeout_id != 0) {
+    g_source_remove(self->first_frame_timeout_id);
+    self->first_frame_timeout_id = 0;
+  }
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
+}
+
+static gboolean first_frame_timeout_cb(gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  self->first_frame_timeout_id = 0;
+
+  GtkWindow* window = gtk_application_get_active_window(
+      GTK_APPLICATION(self));
+  if (window == nullptr) {
+    return G_SOURCE_REMOVE;
+  }
+
+  gtk_widget_show(GTK_WIDGET(window));
+  GtkWidget* dialog = gtk_message_dialog_new(
+      window, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
+      "Flutter did not render the first application frame within 15 seconds.\n\n"
+      "Error code: MCO-LINUX-STARTUP-001\n\n"
+      "Please include this code when reporting the problem.");
+  gtk_window_set_title(GTK_WINDOW(dialog), "MCO Advanced startup error");
+  g_signal_connect_swapped(dialog, "response",
+                           G_CALLBACK(gtk_widget_destroy), dialog);
+  gtk_widget_show(dialog);
+  return G_SOURCE_REMOVE;
 }
 
 // Implements GApplication::activate.
@@ -69,6 +97,8 @@ static void my_application_activate(GApplication* application) {
   // Show the window when Flutter renders.
   // Requires the view to be realized so we can start rendering.
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb), self);
+  self->first_frame_timeout_id = g_timeout_add_seconds(
+      15, first_frame_timeout_cb, self);
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
@@ -116,6 +146,10 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  if (self->first_frame_timeout_id != 0) {
+    g_source_remove(self->first_frame_timeout_id);
+    self->first_frame_timeout_id = 0;
+  }
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
@@ -128,7 +162,9 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {}
+static void my_application_init(MyApplication* self) {
+  self->first_frame_timeout_id = 0;
+}
 
 MyApplication* my_application_new() {
   // Set the program name to the application ID, which helps various systems
