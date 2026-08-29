@@ -39,6 +39,7 @@ import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
+import 'storage/message_history_storage.dart';
 import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
@@ -56,13 +57,20 @@ Future<void> main() async {
   try {
     await _startApplication();
   } catch (error, stackTrace) {
+    final migrationConflict = error is MessageHistoryMigrationConflict
+        ? error
+        : null;
     runApp(
       StartupErrorApp(
         report: StartupFailureReport(
-          code: _startupErrorCode,
+          code: migrationConflict == null
+              ? _startupErrorCode
+              : 'MCO-HISTORY-MIGRATION-001',
           stage: _startupStage,
           error: error,
           stackTrace: stackTrace,
+          dataPath: migrationConflict?.dataPath,
+          showHistoryMigrationConflictHelp: migrationConflict != null,
         ),
       ),
     );
@@ -82,6 +90,17 @@ Future<void> _startApplication() async {
   // Initialize SharedPreferences cache
   _setStartupStage('MCO-STARTUP-101', 'Shared preferences');
   await PrefsManager.initialize();
+  _setStartupStage('MCO-STARTUP-100', 'Message history migration');
+  final historyMigrated = await MessageHistoryStorage.instance
+      .initializeAndMigrate(
+        onMigrationStarted: () async {
+          runApp(const MessageHistoryMigrationApp());
+          await WidgetsBinding.instance.endOfFrame;
+        },
+      );
+  if (historyMigrated) {
+    await MessageHistoryStorage.instance.restartAfterMigration();
+  }
   _setStartupStage('MCO-STARTUP-102', 'Message compression model');
   await MeshCompressor.instance.initialize();
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -17,14 +18,10 @@ class PrefsManager {
   /// Initialize the cached instance. Call this once during app startup in main().
   static Future<void> initialize() async {
     if (_instance != null) return;
-    try {
-      _instance = await SharedPreferences.getInstance();
-    } on FormatException {
-      if (!Platform.isWindows) rethrow;
-      if (!await _quarantineCorruptWindowsPreferences()) rethrow;
-      SharedPreferences.resetStatic();
-      _instance = await SharedPreferences.getInstance();
+    if (Platform.isWindows) {
+      await _quarantineCorruptWindowsPreferences();
     }
+    _instance = await SharedPreferences.getInstance();
   }
 
   static Future<bool> _quarantineCorruptWindowsPreferences() async {
@@ -33,6 +30,15 @@ class PrefsManager {
       '${supportDirectory.path}${Platform.pathSeparator}shared_preferences.json',
     );
     if (!await preferencesFile.exists()) return false;
+
+    final contents = await preferencesFile.readAsString();
+    if (contents.isEmpty) return false;
+    try {
+      jsonDecode(contents);
+      return false;
+    } on FormatException {
+      // Quarantine below, before SharedPreferences creates its static cache.
+    }
 
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     await preferencesFile.rename('${preferencesFile.path}.corrupt-$timestamp');

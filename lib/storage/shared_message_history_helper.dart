@@ -6,6 +6,7 @@ import 'channel_identity_matcher.dart';
 import 'channel_message_store.dart';
 import 'channel_store.dart';
 import 'message_store.dart';
+import 'message_history_storage.dart';
 import 'node_identity_store.dart';
 import 'prefs_manager.dart';
 
@@ -305,7 +306,12 @@ class SharedMessageHistoryHelper {
 
   static Set<String> knownScopes() {
     final result = <String>{};
-    for (final key in PrefsManager.instance.getKeys()) {
+    final keys = <String>{
+      ...PrefsManager.instance.getKeys(),
+      ...MessageHistoryStorage.instance.getKeys(MessageHistoryKind.direct),
+      ...MessageHistoryStorage.instance.getKeys(MessageHistoryKind.channel),
+    };
+    for (final key in keys) {
       final channelsMatch = _channelsKeyPattern.firstMatch(key);
       if (channelsMatch != null) {
         result.add(channelsMatch.group(1)!.toLowerCase());

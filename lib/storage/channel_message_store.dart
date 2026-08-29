@@ -11,7 +11,7 @@ import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'channel_name_keyed_store.dart';
-import 'prefs_manager.dart';
+import 'message_history_storage.dart';
 
 class ChannelMessageStore with ChannelNameKeyedStore {
   static const String _keyPrefix = 'channel_messages_';
@@ -34,7 +34,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       );
       return;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) {
       appLogger.warn(
@@ -49,7 +49,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final jsonList = orderedMessages.map((msg) => _messageToJson(msg)).toList();
     final jsonString = jsonEncode(jsonList);
 
-    await prefs.setString(key, jsonString);
+    await history.setString(MessageHistoryKind.channel, key, jsonString);
   }
 
   /// Load messages for a specific channel
@@ -89,15 +89,21 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       );
       return null;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return null;
-    var jsonString = prefs.getString(key);
+    var jsonString = history.getString(MessageHistoryKind.channel, key);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyIndexFallback) {
       jsonString =
-          prefs.getString('$keyFor$channelIndex') ??
-          prefs.getString('$_keyPrefix$channelIndex');
+          history.getString(
+            MessageHistoryKind.channel,
+            '$keyFor$channelIndex',
+          ) ??
+          history.getString(
+            MessageHistoryKind.channel,
+            '$_keyPrefix$channelIndex',
+          );
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
@@ -112,24 +118,29 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       );
       return null;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return null;
     final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
-    String? jsonString = prefs.getString(key);
+    String? jsonString = history.getString(MessageHistoryKind.channel, key);
     if ((jsonString == null || jsonString.isEmpty) &&
         allowLegacyMigration &&
         allowsLegacyIndexMigration) {
       // One-time migration from the old slot-based storage.
       final legacyJsonString =
-          prefs.getString(scopedIndexKey) ?? prefs.getString(oldKey);
-      await prefs.remove(scopedIndexKey);
-      await prefs.remove(oldKey);
+          history.getString(MessageHistoryKind.channel, scopedIndexKey) ??
+          history.getString(MessageHistoryKind.channel, oldKey);
+      await history.remove(MessageHistoryKind.channel, scopedIndexKey);
+      await history.remove(MessageHistoryKind.channel, oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         appLogger.info('Migrating channel messages to name-keyed storage $key');
-        await prefs.setString(key, legacyJsonString);
+        await history.setString(
+          MessageHistoryKind.channel,
+          key,
+          legacyJsonString,
+        );
         jsonString = legacyJsonString;
       }
     }
@@ -148,18 +159,25 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
   /// Clear messages for a specific channel
   Future<void> clearChannelMessages(int channelIndex) async {
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
-    if (key != null) await prefs.remove(key);
-    await prefs.remove('$keyFor$channelIndex');
+    if (key != null) {
+      await history.remove(MessageHistoryKind.channel, key);
+    }
+    await history.remove(
+      MessageHistoryKind.channel,
+      '$keyFor$channelIndex',
+    );
   }
 
   /// Clear all channel messages
   Future<void> clearAllChannelMessages() async {
-    final prefs = PrefsManager.instance;
-    final keys = prefs.getKeys().where((k) => k.startsWith(keyFor));
+    final history = MessageHistoryStorage.instance;
+    final keys = history
+        .getKeys(MessageHistoryKind.channel)
+        .where((k) => k.startsWith(keyFor));
     for (var key in keys) {
-      await prefs.remove(key);
+      await history.remove(MessageHistoryKind.channel, key);
     }
   }
 

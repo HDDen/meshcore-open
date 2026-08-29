@@ -7,7 +7,7 @@ import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../utils/app_logger.dart';
-import 'prefs_manager.dart';
+import 'message_history_storage.dart';
 
 class MessageStore {
   static const String _keyPrefix = 'messages_';
@@ -26,10 +26,14 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot save messages.');
       return;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final jsonList = messages.map(_messageToJson).toList();
-    await prefs.setString(key, jsonEncode(jsonList));
+    await history.setString(
+      MessageHistoryKind.direct,
+      key,
+      jsonEncode(jsonList),
+    );
   }
 
   Future<List<Message>> loadMessages(String contactKeyHex) async {
@@ -61,11 +65,14 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
-    var jsonString = prefs.getString(key);
+    var jsonString = history.getString(MessageHistoryKind.direct, key);
     if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
-      jsonString = prefs.getString('$_keyPrefix$contactKeyHex');
+      jsonString = history.getString(
+        MessageHistoryKind.direct,
+        '$_keyPrefix$contactKeyHex',
+      );
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
@@ -75,24 +82,31 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    String? jsonString = prefs.getString(key);
+    String? jsonString = history.getString(MessageHistoryKind.direct, key);
     if (jsonString == null || jsonString.isEmpty) {
       // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(oldKey);
-      prefs.remove(oldKey);
+      final legacyJsonString = history.getString(
+        MessageHistoryKind.direct,
+        oldKey,
+      );
+      await history.remove(MessageHistoryKind.direct, oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         appLogger.info(
           'Migrating messages from legacy key $oldKey to scoped key $key',
         );
-        await prefs.setString(key, legacyJsonString);
+        await history.setString(
+          MessageHistoryKind.direct,
+          key,
+          legacyJsonString,
+        );
         jsonString = legacyJsonString;
       }
     }
     if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
+      jsonString = history.getString(MessageHistoryKind.direct, keyFor);
     }
     if (jsonString == null || jsonString.isEmpty) {
       return null;
@@ -115,13 +129,13 @@ class MessageStore {
   /// stays synchronous so a caller sweeping every contact pays no async hop.
   bool mayContainMarker(String contactKeyHex) {
     if (publicKeyHex.isEmpty) return false;
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     for (final key in [
       '$keyFor$contactKeyHex',
       '$_keyPrefix$contactKeyHex',
       keyFor,
     ]) {
-      final jsonString = prefs.getString(key);
+      final jsonString = history.getString(MessageHistoryKind.direct, key);
       if (jsonString != null && jsonString.contains('m:')) return true;
     }
     return false;
@@ -135,12 +149,15 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    var jsonString = prefs.getString(key);
+    var jsonString = history.getString(MessageHistoryKind.direct, key);
     if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
-      final legacyJsonString = prefs.getString(oldKey);
+      final legacyJsonString = history.getString(
+        MessageHistoryKind.direct,
+        oldKey,
+      );
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         jsonString = legacyJsonString;
       }
@@ -186,9 +203,9 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot clear messages.');
       return;
     }
-    final prefs = PrefsManager.instance;
+    final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
-    await prefs.remove(key);
+    await history.remove(MessageHistoryKind.direct, key);
   }
 
   Map<String, dynamic> _messageToJson(Message msg) {
