@@ -3535,5 +3535,7 @@
   "chat_hideBlockedSenderMessages": "Masquer les lignes de messages",
   "chat_showBlockedSenderMessages": "Afficher les lignes de messages",
   "repeater_cliClearNeighbors": "Effacer la liste des voisins",
-  "reaction_report": "Réactions emoji"
+  "reaction_report": "Réactions emoji",
+  "settings_modSettingsMapAndLocation": "Carte et localisation",
+  "settings_modSettingsAlwaysRequestMapLocation": "Toujours demander la localisation à l'ouverture de la carte"
 }

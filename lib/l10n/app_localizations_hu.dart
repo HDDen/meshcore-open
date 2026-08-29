@@ -5846,6 +5846,13 @@ class AppLocalizationsHu extends AppLocalizations {
       'A korábbi fogd-és-vidd működés megtartása: a csatornák sorrendjének módosítása a csomóponton is módosítja a sorrendjüket, a névjegyek és szerverek pedig nem rendezhetők';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Térkép és helymeghatározás';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'A térkép megnyitásakor mindig kérje le a helyet';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Pontos idézés használata a normál üzenetekhez';
 

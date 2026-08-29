@@ -5850,6 +5850,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mantener el comportamiento anterior de arrastrar y soltar: cambiar el orden de los canales cambia su orden en el nodo, y no se pueden ordenar los contactos ni los servidores';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Mapa y ubicación';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Solicitar siempre la ubicación al abrir el mapa';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Usar citas precisas en los mensajes normales';
 

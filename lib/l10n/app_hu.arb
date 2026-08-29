@@ -3439,5 +3439,7 @@
   "chat_hideBlockedSenderMessages": "Üzenetsorok elrejtése",
   "chat_showBlockedSenderMessages": "Üzenetsorok megjelenítése",
   "repeater_cliClearNeighbors": "Szomszédok listájának törlése",
-  "reaction_report": "Emoji reakciók"
+  "reaction_report": "Emoji reakciók",
+  "settings_modSettingsMapAndLocation": "Térkép és helymeghatározás",
+  "settings_modSettingsAlwaysRequestMapLocation": "A térkép megnyitásakor mindig kérje le a helyet"
 }

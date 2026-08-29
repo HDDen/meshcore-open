@@ -10000,6 +10000,18 @@ abstract class AppLocalizations {
   /// **'Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers'**
   String get settings_modSettingsRoomServerDisableRoomAndContactsSorting;
 
+  /// No description provided for @settings_modSettingsMapAndLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Map and location'**
+  String get settings_modSettingsMapAndLocation;
+
+  /// No description provided for @settings_modSettingsAlwaysRequestMapLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Always request location when opening maps'**
+  String get settings_modSettingsAlwaysRequestMapLocation;
+
   /// No description provided for @settings_modSettingsExactQuote.
   ///
   /// In en, this message translates to:

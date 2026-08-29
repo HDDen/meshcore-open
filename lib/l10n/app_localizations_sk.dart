@@ -5817,6 +5817,13 @@ class AppLocalizationsSk extends AppLocalizations {
       'Zachovať doterajšie správanie presúvania: zmena poradia kanálov zmení ich poradie na uzle a kontakty ani servery sa nedajú zoradiť';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Mapa a poloha';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Pri otvorení mapy vždy vyžiadať polohu';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Používať presné citovanie pre bežné správy';
 

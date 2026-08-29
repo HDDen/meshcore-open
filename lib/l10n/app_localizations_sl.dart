@@ -5825,6 +5825,13 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ohrani dosedanje delovanje povleci-in-spusti: sprememba vrstnega reda kanalov spremeni njihov vrstni red na vozlišču, stikov in strežnikov pa ni mogoče razvrščati';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Zemljevid in lokacija';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Ob odpiranju zemljevida vedno zahtevaj lokacijo';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Uporabi natančno citiranje za navadna sporočila';
 

@@ -3474,5 +3474,7 @@
   "chat_hideBlockedSenderMessages": "Ukryj wiersze wiadomości",
   "chat_showBlockedSenderMessages": "Pokaż wiersze wiadomości",
   "repeater_cliClearNeighbors": "Wyczyść listę sąsiadów",
-  "reaction_report": "Reakcje emoji"
+  "reaction_report": "Reakcje emoji",
+  "settings_modSettingsMapAndLocation": "Mapa i lokalizacja",
+  "settings_modSettingsAlwaysRequestMapLocation": "Zawsze pytaj o lokalizację przy otwieraniu mapy"
 }

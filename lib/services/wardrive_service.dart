@@ -123,7 +123,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool get isRunning => _isRunning;
   bool get hasMapState => _isRunning || _showMapState;
   bool get usesPhoneLocationForDisplay =>
-      hasMapState && (_isRunning || _usePhoneLocationForDisplay);
+      hasMapState && _usePhoneLocationForDisplay;
   bool get isSendingDiscovery => _isSendingDiscovery;
   bool get isAwaitingDiscoveryResponse => _isAwaitingDiscoveryResponse;
   bool get isUpdatingLocation => _isUpdatingLocation;
@@ -157,6 +157,45 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
           sample.publicKeyHex,
         ),
       ),
+    );
+  }
+
+  Future<({double latitude, double longitude})?> requestPhoneLocation() async {
+    await _updateNodeLocationFromPhone(reportErrors: false);
+    final latitude = _lastPhoneLatitude;
+    final longitude = _lastPhoneLongitude;
+    if (latitude == null || longitude == null) return null;
+    return (latitude: latitude, longitude: longitude);
+  }
+
+  Future<
+    ({
+      double latitude,
+      double longitude,
+      bool fromPhone,
+      DateTime? phoneLocationAt,
+    })?
+  >
+  _resolveDiscoveryLocation({required bool reportPhoneErrors}) async {
+    await _updateNodeLocationFromPhone(reportErrors: reportPhoneErrors);
+    final phoneLatitude = _lastPhoneLatitude;
+    final phoneLongitude = _lastPhoneLongitude;
+    if (phoneLatitude != null && phoneLongitude != null) {
+      return (
+        latitude: phoneLatitude,
+        longitude: phoneLongitude,
+        fromPhone: true,
+        phoneLocationAt: _lastPhoneLocationAt,
+      );
+    }
+
+    final nodeLocation = await _connector.refreshSelfLocation();
+    if (nodeLocation == null) return null;
+    return (
+      latitude: nodeLocation.latitude,
+      longitude: nodeLocation.longitude,
+      fromPhone: false,
+      phoneLocationAt: null,
     );
   }
 
@@ -480,14 +519,6 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
-    if (startWardrive) {
-      start();
-    } else {
-      _showMapState = true;
-      _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
-      _acceptOneShotDiscoveryResponses = true;
-      _oneShotDiscoveryTimer?.cancel();
-    }
     _isSendingDiscovery = true;
     notifyListeners();
 
@@ -499,20 +530,24 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     final previousRequestAt = _lastDiscoveryRequestAt;
     int? pendingTag;
     try {
-      await _updateNodeLocationFromPhone(reportErrors: startWardrive);
-      if (_lastPhoneLatitude == null || _lastPhoneLongitude == null) {
-        if (startWardrive) {
-          // Wardrive pings are location-bound measurements; skip the radio
-          // request if the phone did not provide a fresh GPS fix for this point.
-          throw StateError(
-            _lastLocationError ?? 'Phone GPS is not available for this request',
-          );
-        }
+      final location = await _resolveDiscoveryLocation(
+        reportPhoneErrors: startWardrive,
+      );
+      if (startWardrive && location == null) {
+        throw StateError(
+          _lastLocationError ??
+              'Phone and node locations are not available for this request',
+        );
       }
-      if (!startWardrive &&
-          _lastPhoneLatitude != null &&
-          _lastPhoneLongitude != null) {
-        _usePhoneLocationForDisplay = true;
+
+      _usePhoneLocationForDisplay = location?.fromPhone ?? false;
+      if (startWardrive) {
+        start();
+      } else {
+        _showMapState = true;
+        _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
+        _acceptOneShotDiscoveryResponses = true;
+        _oneShotDiscoveryTimer?.cancel();
         notifyListeners();
       }
 
@@ -525,9 +560,9 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       _currentDiscoveryTag = tag;
       _pendingDiscoveryRequests[tag] = _WardriveDiscoveryRequest(
         startedAt: startedAt,
-        latitude: _lastPhoneLatitude,
-        longitude: _lastPhoneLongitude,
-        phoneLocationAt: _lastPhoneLocationAt,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+        phoneLocationAt: location?.phoneLocationAt,
       );
       await _connector.sendFrame(
         buildSendControlDataFrame(payload),

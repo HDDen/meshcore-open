@@ -42,6 +42,7 @@ import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
@@ -77,6 +78,9 @@ class MapScreen extends StatefulWidget {
   final Uint8List? initialTracePath;
   final int? initialTraceHashByteWidth;
 
+  /// Resolves a local trace origin and fits the initially supplied route.
+  final bool initializeInitialTraceViewport;
+
   /// Draws the red pin at [highlightPosition]. Turned off when the position is
   /// only there to centre the map on something the map already draws itself —
   /// a node of its own — where a second pin underneath says nothing.
@@ -95,6 +99,7 @@ class MapScreen extends StatefulWidget {
     this.highlightLinks = const [],
     this.initialTracePath,
     this.initialTraceHashByteWidth,
+    this.initializeInitialTraceViewport = false,
     this.showHighlightPin = true,
     this.hideBackButton = false,
     this.locationPickerMode = false,
@@ -160,6 +165,13 @@ class _MapScreenState extends State<MapScreen>
   // Start point of the trace (self position), kept so the auxiliary map state
   // can be rebuilt after a manual edit of the hop list.
   LatLng? _pathTraceStart;
+  Future<LatLng?>? _preferredMapLocationFuture;
+  LatLng? _preferredMapLocation;
+  bool _mapLocationResolutionStarted = false;
+  bool _mapLocationResolutionReady = false;
+  bool _alwaysRequestMapLocation = false;
+  bool _initialTraceViewportReady = false;
+  bool _initialTraceViewportFitted = false;
   final TextEditingController _pathEditController = TextEditingController();
   final FocusNode _pathEditFocus = FocusNode();
   bool _mapControlsCollapsed = true;
@@ -209,23 +221,7 @@ class _MapScreenState extends State<MapScreen>
         connector.getChannels();
         final initialTrace = widget.initialTracePath;
         if (initialTrace != null && initialTrace.isNotEmpty) {
-          final width = (widget.initialTraceHashByteWidth ??
-                  connector.pathHashByteWidth)
-              .clamp(1, pubKeySize)
-              .toInt();
-          setState(() {
-            _isBuildingPathTrace = true;
-            _pathTrace
-              ..clear()
-              ..addAll(initialTrace);
-            _pathTraceHopWidths
-              ..clear()
-              ..addAll(
-                List<int>.filled((initialTrace.length / width).ceil(), width),
-              );
-            _rebuildPathTraceAuxiliary();
-            _syncPathEditText();
-          });
+          unawaited(_initializeInitialTrace(connector, initialTrace));
         }
         if (widget.highlightPosition != null && widget.highlightLinks.isEmpty) {
           _mapController.move(
@@ -244,6 +240,19 @@ class _MapScreenState extends State<MapScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_mapLocationResolutionStarted) {
+      _mapLocationResolutionStarted = true;
+      _alwaysRequestMapLocation = context
+          .read<AppSettingsService>()
+          .settings
+          .alwaysRequestMapLocation;
+      _preferredMapLocationFuture = MapLocationHelper.resolve(
+        enabled: _alwaysRequestMapLocation,
+        wardrive: context.read<WardriveService>(),
+        connector: context.read<MeshCoreConnector>(),
+      );
+      unawaited(_applyPreferredMapLocation());
+    }
     final route = ModalRoute.of(context);
     if (route is PageRoute<dynamic> && _observedRoute != route) {
       if (_observedRoute != null) {
@@ -489,10 +498,9 @@ class _MapScreenState extends State<MapScreen>
     BuildContext context, {
     required LatLng center,
     required double zoom,
-    required MeshCoreConnector connector,
+    required LatLng? selfPosition,
   }) {
-    final hasSelf =
-        connector.selfLatitude != null && connector.selfLongitude != null;
+    final hasSelf = selfPosition != null;
     final toggleIcon = _mapControlsCollapsed
         ? Icons.add_location_alt_outlined
         : Icons.close;
@@ -544,10 +552,7 @@ class _MapScreenState extends State<MapScreen>
                       icon: const Icon(Icons.my_location),
                       tooltip: context.l10n.map_setAsMyLocation,
                       onPressed: () => _mapController.move(
-                        LatLng(
-                          connector.selfLatitude!,
-                          connector.selfLongitude!,
-                        ),
+                        selfPosition,
                         max(_zoom, 14),
                       ),
                     ),
@@ -799,6 +804,7 @@ class _MapScreenState extends State<MapScreen>
             sharedMarkers.isNotEmpty ||
             wardriveSamplePoints.isNotEmpty ||
             selfDisplayPosition != null ||
+            _points.isNotEmpty ||
             _isSelectingPoi ||
             highlightPosition != null;
         if (contactsWithLocation.isNotEmpty ||
@@ -926,17 +932,20 @@ class _MapScreenState extends State<MapScreen>
         );
 
         // Re center map after removed markers have loaded
-        if (!_hasInitializedMap && _removedMarkersLoaded) {
+        if (!_hasInitializedMap &&
+            _removedMarkersLoaded &&
+            _mapLocationResolutionReady) {
           _hasInitializedMap = true;
           _showNodeLabels = initialZoom >= _labelZoomThreshold;
           _zoom = initialZoom;
-          if (hasMapContent) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              if (hasMapContent) {
                 _mapController.move(center, initialZoom);
               }
-            });
-          }
+              _fitInitialTraceViewport();
+            }
+          });
         }
 
         // The map is one of the tab-like entries, which stay arrow-less and
@@ -1027,19 +1036,13 @@ class _MapScreenState extends State<MapScreen>
                   itemBuilder: (context) => [
                     if (!connector.isOfflineMode &&
                         !_isBuildingPathTrace &&
-                        connector.selfLatitude != null &&
-                        connector.selfLongitude != null)
+                        selfDisplayPosition != null)
                       PopupMenuItem(
                         child: PopupMenuRow(
                           icon: Icons.radar,
                           text: context.l10n.contacts_pathTrace,
                         ),
-                        onTap: () => _startPath(
-                          LatLng(
-                            connector.selfLatitude!,
-                            connector.selfLongitude!,
-                          ),
-                        ),
+                        onTap: () => _startPath(selfDisplayPosition),
                       ),
                     if (!_isBuildingPathTrace)
                       PopupMenuItem(
@@ -1049,15 +1052,11 @@ class _MapScreenState extends State<MapScreen>
                         ),
                         onTap: () {
                           final candidates = <LineOfSightEndpoint>[];
-                          if (connector.selfLatitude != null &&
-                              connector.selfLongitude != null) {
+                          if (selfDisplayPosition != null) {
                             candidates.add(
                               LineOfSightEndpoint(
                                 label: context.l10n.pathTrace_you,
-                                point: LatLng(
-                                  connector.selfLatitude!,
-                                  connector.selfLongitude!,
-                                ),
+                                point: selfDisplayPosition,
                                 color: MapPalette.selected,
                                 icon: Icons.person_pin_circle,
                               ),
@@ -1459,7 +1458,7 @@ class _MapScreenState extends State<MapScreen>
             context,
             center: center,
             zoom: zoom,
-            connector: connector,
+            selfPosition: _selfDisplayPosition(connector, wardrive),
           ),
           const SizedBox(height: 12),
         ],
@@ -1564,7 +1563,11 @@ class _MapScreenState extends State<MapScreen>
   ) async {
     switch (action) {
       case WardriveDataAction.start:
-        wardrive.start();
+        try {
+          await wardrive.sendZeroHopDiscoveryRequest();
+        } catch (error) {
+          debugPrint('[Wardrive] Start failed: $error');
+        }
         break;
       case WardriveDataAction.stop:
         wardrive.stop();
@@ -3450,6 +3453,10 @@ class _MapScreenState extends State<MapScreen>
       // do not write it into the node advert or persisted node coordinates.
       return LatLng(phoneLat, phoneLon);
     }
+    if (wardrive.hasMapState) {
+      return MapLocationHelper.nodeLocation(connector);
+    }
+    if (_preferredMapLocation != null) return _preferredMapLocation;
 
     final selfLat = connector.selfLatitude;
     final selfLon = connector.selfLongitude;
@@ -5118,6 +5125,7 @@ class _MapScreenState extends State<MapScreen>
         builder: (_) => MapScreen(
           initialTracePath: Uint8List.fromList(pathBytes),
           initialTraceHashByteWidth: hashByteWidth,
+          initializeInitialTraceViewport: true,
         ),
       ),
     );
@@ -6537,6 +6545,92 @@ class _MapScreenState extends State<MapScreen>
         _points.add(LatLng(contact.latitude!, contact.longitude!));
       }
     }
+  }
+
+  Future<void> _initializeInitialTrace(
+    MeshCoreConnector connector,
+    Uint8List initialTrace,
+  ) async {
+    final width = (widget.initialTraceHashByteWidth ??
+            connector.pathHashByteWidth)
+        .clamp(1, pubKeySize)
+        .toInt();
+    setState(() {
+      _isBuildingPathTrace = true;
+      _pathTrace
+        ..clear()
+        ..addAll(initialTrace);
+      _pathTraceHopWidths
+        ..clear()
+        ..addAll(
+          List<int>.filled((initialTrace.length / width).ceil(), width),
+        );
+      _rebuildPathTraceAuxiliary();
+      _syncPathEditText();
+    });
+
+    if (!widget.initializeInitialTraceViewport ||
+        !_alwaysRequestMapLocation) {
+      return;
+    }
+    final start = await _preferredMapLocationFuture!;
+    if (!mounted) return;
+    setState(() {
+      _pathTraceStart = start;
+      _initialTraceViewportReady = true;
+      _rebuildPathTraceAuxiliary();
+    });
+    _fitInitialTraceViewport();
+  }
+
+  Future<void> _applyPreferredMapLocation() async {
+    final location = await _preferredMapLocationFuture!;
+    if (!mounted) return;
+    setState(() {
+      _preferredMapLocation = location;
+      _mapLocationResolutionReady = true;
+    });
+  }
+
+  void _fitInitialTraceViewport() {
+    if (!_alwaysRequestMapLocation ||
+        !widget.initializeInitialTraceViewport ||
+        !_initialTraceViewportReady ||
+        _initialTraceViewportFitted ||
+        !_hasInitializedMap ||
+        _points.isEmpty) {
+      return;
+    }
+    _initialTraceViewportFitted = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_points.length == 1) {
+        _mapController.move(_points.first, 15);
+        return;
+      }
+
+      final latitudes = _points.map((point) => point.latitude).toList();
+      final longitudes = _points.map((point) => point.longitude).toList();
+      final minLatitude = latitudes.reduce(min);
+      final maxLatitude = latitudes.reduce(max);
+      final minLongitude = longitudes.reduce(min);
+      final maxLongitude = longitudes.reduce(max);
+      if (minLatitude == maxLatitude && minLongitude == maxLongitude) {
+        _mapController.move(_points.first, 15);
+        return;
+      }
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds(
+            LatLng(minLatitude, minLongitude),
+            LatLng(maxLatitude, maxLongitude),
+          ),
+          padding: const EdgeInsets.fromLTRB(48, 72, 96, 160),
+          maxZoom: 16,
+        ),
+      );
+    });
   }
 
   Contact? _contactForHopPrefix(MeshCoreConnector connector, List<int> prefix) {

@@ -3416,5 +3416,7 @@
   "chat_hideBlockedSenderMessages": "Приховувати рядки повідомлень",
   "chat_showBlockedSenderMessages": "Показувати рядки повідомлень",
   "repeater_cliClearNeighbors": "Очистити список сусідів",
-  "reaction_report": "Емодзі-реакції"
+  "reaction_report": "Емодзі-реакції",
+  "settings_modSettingsMapAndLocation": "Карта та геопозиція",
+  "settings_modSettingsAlwaysRequestMapLocation": "Завжди запитувати геопозицію при відкритті карти"
 }

@@ -3436,5 +3436,7 @@
   "chat_hideBlockedSenderMessages": "Skrij vrstice sporočil",
   "chat_showBlockedSenderMessages": "Prikaži vrstice sporočil",
   "repeater_cliClearNeighbors": "Počisti seznam sosedov",
-  "reaction_report": "Reakcije z emoji"
+  "reaction_report": "Reakcije z emoji",
+  "settings_modSettingsMapAndLocation": "Zemljevid in lokacija",
+  "settings_modSettingsAlwaysRequestMapLocation": "Ob odpiranju zemljevida vedno zahtevaj lokacijo"
 }

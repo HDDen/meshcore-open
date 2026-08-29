@@ -5802,6 +5802,13 @@ class AppLocalizationsSv extends AppLocalizations {
       'Behåll den tidigare dra-och-släpp-funktionen: att ändra kanalernas ordning ändrar deras ordning på noden, och kontakter eller servrar kan inte sorteras';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Karta och plats';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Begär alltid plats när kartan öppnas';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Använd exakt citering för vanliga meddelanden';
 

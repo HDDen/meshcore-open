@@ -3563,5 +3563,7 @@
   "chat_hideBlockedSenderMessages": "Nachrichtenzeilen ausblenden",
   "chat_showBlockedSenderMessages": "Nachrichtenzeilen anzeigen",
   "repeater_cliClearNeighbors": "Nachbarliste leeren",
-  "reaction_report": "Emoji-Reaktionen"
+  "reaction_report": "Emoji-Reaktionen",
+  "settings_modSettingsMapAndLocation": "Karte und Standort",
+  "settings_modSettingsAlwaysRequestMapLocation": "Beim Öffnen der Karte immer den Standort abfragen"
 }

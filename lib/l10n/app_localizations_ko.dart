@@ -5564,6 +5564,12 @@ class AppLocalizationsKo extends AppLocalizations {
       '기존 드래그 앤 드롭 동작 유지: 채널 순서를 바꾸면 노드의 순서도 바뀌며, 연락처나 서버는 정렬할 수 없습니다';
 
   @override
+  String get settings_modSettingsMapAndLocation => '지도 및 위치';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation => '지도를 열 때 항상 위치 요청';
+
+  @override
   String get settings_modSettingsExactQuote => '일반 메시지에 정확한 인용 사용';
 
   @override

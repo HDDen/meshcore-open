@@ -5843,6 +5843,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Manter o comportamento anterior de arrastar e soltar: alterar a ordem dos canais altera a ordem deles no nó, e não é possível ordenar contatos ou servidores';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Mapa e localização';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Sempre solicitar a localização ao abrir o mapa';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Usar citações precisas em mensagens normais';
 

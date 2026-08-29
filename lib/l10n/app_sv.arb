@@ -3218,5 +3218,7 @@
   "chat_hideBlockedSenderMessages": "Dölj meddelanderader",
   "chat_showBlockedSenderMessages": "Visa meddelanderader",
   "repeater_cliClearNeighbors": "Rensa grannlistan",
-  "reaction_report": "Emoji-reaktioner"
+  "reaction_report": "Emoji-reaktioner",
+  "settings_modSettingsMapAndLocation": "Karta och plats",
+  "settings_modSettingsAlwaysRequestMapLocation": "Begär alltid plats när kartan öppnas"
 }

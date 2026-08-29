@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
+import 'package:meshcore_open/helpers/map_location_helper.dart';
 import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
 import 'package:meshcore_open/helpers/signal_reading_text.dart';
@@ -20,6 +21,7 @@ import 'package:meshcore_open/models/path_playback.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
+import 'package:meshcore_open/services/wardrive_service.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:meshcore_open/widgets/snr_indicator.dart';
@@ -133,6 +135,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Uint8List _tracedPath = Uint8List(0);
   PathTraceProgressTracker? _traceProgressTracker;
   List<PathTraceObservation> _traceObservations = const [];
+  late final Future<LatLng?> _preferredSelfPositionFuture;
+  LatLng? _preferredSelfPosition;
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -232,6 +236,14 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     _playback.addListener(_followPacketCamera);
     _pathHistory = context.read<PathHistoryService>();
     _pathHistory!.addListener(_onPathHistoryChanged);
+    _preferredSelfPositionFuture = MapLocationHelper.resolve(
+      enabled: context
+          .read<AppSettingsService>()
+          .settings
+          .alwaysRequestMapLocation,
+      wardrive: context.read<WardriveService>(),
+      connector: context.read<MeshCoreConnector>(),
+    );
     _setupFrameListener();
     _doPathTrace();
   }
@@ -638,6 +650,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   Future<void> _handleTraceResponse(Uint8List frame) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    _preferredSelfPosition = await _preferredSelfPositionFuture;
+    if (!mounted) return;
 
     final buffer = BufferReader(frame);
     try {
@@ -687,8 +701,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         publicKey: connector.selfPublicKey ?? Uint8List(0),
         name: context.l10n.pathTrace_you,
         type: advTypeChat,
-        latitude: connector.selfLatitude,
-        longitude: connector.selfLongitude,
+        latitude: _selfPosition(connector)?.latitude,
+        longitude: _selfPosition(connector)?.longitude,
         lastSeen: DateTime.now(),
       );
       if (widget.pathContacts != null) {
@@ -843,7 +857,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         _targetContactIsGuessed = targetGuessed;
 
         _points = <LatLng>[];
-        _points.add(LatLng(connector.selfLatitude!, connector.selfLongitude!));
+        final selfPosition = _selfPosition(connector);
+        if (selfPosition != null) _points.add(selfPosition);
         String hopLast = '';
         String hopLastLast = '';
         for (final hop in _traceData!.pathData) {
@@ -1024,11 +1039,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     required MeshCoreConnector connector,
     PathRecord? record,
   }) {
-    final selfLat = connector.selfLatitude;
-    final selfLon = connector.selfLongitude;
-    if (selfLat == null || selfLon == null) return null;
+    final selfPosition = _selfPosition(connector);
+    if (selfPosition == null) return null;
 
-    final points = <LatLng>[LatLng(selfLat, selfLon)];
+    final points = <LatLng>[selfPosition];
     final labels = <String>[context.l10n.pathTrace_you];
     final confirmed = <bool>[true];
     final hopOrdinals = <int>[-1];
@@ -1361,10 +1375,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     required bool showLabels,
     required Contact? target,
   }) {
-    final selfLat = context.read<MeshCoreConnector>().selfLatitude;
-    final selfLon = context.read<MeshCoreConnector>().selfLongitude;
-    if (selfLat != null && selfLon != null) {
-      final selfPoint = LatLng(selfLat, selfLon);
+    final selfPoint = _selfPosition(context.read<MeshCoreConnector>());
+    if (selfPoint != null) {
       markers.add(
         Marker(
           point: selfPoint,
@@ -1465,6 +1477,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       }
     }
   }
+
+  LatLng? _selfPosition(MeshCoreConnector connector) =>
+      _preferredSelfPosition ?? MapLocationHelper.nodeLocation(connector);
 
   /// Markers for the union of hops across all visible paths, with a badge on
   /// repeaters used by more than one path.

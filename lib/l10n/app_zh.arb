@@ -3441,5 +3441,7 @@
   "chat_hideBlockedSenderMessages": "隐藏消息行",
   "chat_showBlockedSenderMessages": "显示消息行",
   "repeater_cliClearNeighbors": "清空邻居列表",
-  "reaction_report": "表情回应"
+  "reaction_report": "表情回应",
+  "settings_modSettingsMapAndLocation": "地图与位置",
+  "settings_modSettingsAlwaysRequestMapLocation": "打开地图时始终请求位置"
 }

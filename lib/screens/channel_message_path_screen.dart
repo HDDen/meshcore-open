@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -14,8 +15,10 @@ import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/signal_reading_text.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/wardrive_service.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcmp_timestamp_warning.dart';
+import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
@@ -774,6 +777,8 @@ class _ChannelMessagePathMapScreenState
   bool _showNodeLabels = true;
   bool _didReceivePositionUpdate = false;
   int? _focusedHopIndex;
+  late final Future<LatLng?> _preferredSelfPositionFuture;
+  LatLng? _preferredSelfPosition;
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -789,7 +794,25 @@ class _ChannelMessagePathMapScreenState
     _selectedPath = widget.initialPath;
     _playback = PathPlaybackController(this);
     _playback.addListener(_followPacketCamera);
+    _preferredSelfPositionFuture = MapLocationHelper.resolve(
+      enabled: context
+          .read<AppSettingsService>()
+          .settings
+          .alwaysRequestMapLocation,
+      wardrive: context.read<WardriveService>(),
+      connector: context.read<MeshCoreConnector>(),
+    );
+    unawaited(_applyPreferredSelfPosition());
   }
+
+  Future<void> _applyPreferredSelfPosition() async {
+    final position = await _preferredSelfPositionFuture;
+    if (!mounted) return;
+    setState(() => _preferredSelfPosition = position);
+  }
+
+  LatLng? _selfPosition(MeshCoreConnector connector) =>
+      _preferredSelfPosition ?? MapLocationHelper.nodeLocation(connector);
 
   /// Keeps the camera centered on the packet while the follow lock is on.
   void _followPacketCamera() {
@@ -839,8 +862,7 @@ class _ChannelMessagePathMapScreenState
     required MeshCoreConnector connector,
   }) {
     final l10n = context.l10n;
-    final selfLat = connector.selfLatitude;
-    final selfLon = connector.selfLongitude;
+    final selfPosition = _selfPosition(connector);
 
     final points = <LatLng>[];
     final labels = <String>[];
@@ -851,8 +873,8 @@ class _ChannelMessagePathMapScreenState
     var locatedHops = 0;
 
     void addSelf() {
-      if (selfLat == null || selfLon == null) return;
-      points.add(LatLng(selfLat, selfLon));
+      if (selfPosition == null) return;
+      points.add(selfPosition);
       labels.add(l10n.pathTrace_you);
       confirmed.add(true);
       rowIdx.add(-1);
@@ -1097,6 +1119,7 @@ class _ChannelMessagePathMapScreenState
           connector,
           context.l10n,
           width,
+          endpoint: _selfPosition(connector),
           resolveFromEnd: !widget.message.isOutgoing,
         );
 
@@ -1111,6 +1134,7 @@ class _ChannelMessagePathMapScreenState
                   connector,
                   context.l10n,
                   width,
+                  endpoint: _selfPosition(connector),
                   resolveFromEnd: !widget.message.isOutgoing,
                 );
           final display = _buildDisplayPath(
@@ -1151,10 +1175,10 @@ class _ChannelMessagePathMapScreenState
         _schedulePlaybackSync(selectedDisplay);
 
         final points = <LatLng>[];
+        final selfPosition = _selfPosition(connector);
 
-        if ((widget.message.isOutgoing && !widget.channelMessage) ||
-            (widget.message.isOutgoing && widget.channelMessage)) {
-          points.add(LatLng(connector.selfLatitude!, connector.selfLongitude!));
+        if (widget.message.isOutgoing && selfPosition != null) {
+          points.add(selfPosition);
         }
 
         for (final hop in hops) {
@@ -1163,9 +1187,8 @@ class _ChannelMessagePathMapScreenState
           }
         }
 
-        if ((!widget.message.isOutgoing && !widget.channelMessage) ||
-            (!widget.message.isOutgoing && widget.channelMessage)) {
-          points.add(LatLng(connector.selfLatitude!, connector.selfLongitude!));
+        if (!widget.message.isOutgoing && selfPosition != null) {
+          points.add(selfPosition);
         }
 
         final polylines = points.length > 1
@@ -1192,7 +1215,8 @@ class _ChannelMessagePathMapScreenState
             ? LatLngBounds.fromPoints(points)
             : null;
         final mapKey = ValueKey(
-          '${_formatPathPrefixes(selectedPath, width)},${context.l10n.pathTrace_you}',
+          '${_formatPathPrefixes(selectedPath, width)},'
+          '${context.l10n.pathTrace_you},$selfPosition',
         );
         _pathDistance = _getPathDistance(points);
 
@@ -1496,11 +1520,9 @@ class _ChannelMessagePathMapScreenState
   }
 
   List<Marker> _buildSelfMarkers({required bool showLabels}) {
-    final selfLat = context.read<MeshCoreConnector>().selfLatitude;
-    final selfLon = context.read<MeshCoreConnector>().selfLongitude;
-    if (selfLat == null || selfLon == null) return const [];
+    final selfPoint = _selfPosition(context.read<MeshCoreConnector>());
+    if (selfPoint == null) return const [];
     final markers = <Marker>[];
-    final selfPoint = LatLng(selfLat, selfLon);
     markers.add(
       Marker(
         point: selfPoint,
@@ -2062,18 +2084,17 @@ List<_PathHop> _buildPathHops(
   MeshCoreConnector connector,
   AppLocalizations l10n,
   int hashByteWidth, {
+  LatLng? endpoint,
   bool resolveFromEnd = false,
 }) {
   if (pathBytes.isEmpty) return const [];
   final width = hashByteWidth.clamp(1, 4).toInt();
-  final endpoint =
-      (connector.selfLatitude != null && connector.selfLongitude != null)
-      ? LatLng(connector.selfLatitude!, connector.selfLongitude!)
-      : null;
+  final effectiveEndpoint =
+      endpoint ?? MapLocationHelper.nodeLocation(connector);
   final resolvedContacts = PathHopResolver.resolve(
     pathBytes: pathBytes,
     contacts: connector.allContacts,
-    endpoint: endpoint,
+    endpoint: effectiveEndpoint,
     resolveFromEnd: resolveFromEnd,
     pathHashByteWidth: width,
   );

@@ -2388,6 +2388,8 @@
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Отображать серверы с историей в одном экране с каналами",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Отображать контакты с историей в одном экране с каналами",
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера",
+  "settings_modSettingsMapAndLocation": "Карта и геолокация",
+  "settings_modSettingsAlwaysRequestMapLocation": "Всегда в картах запрашивать местоположение",
   "settings_modSettingsExactQuote": "Использовать уточнённое цитирование для обычных сообщений",
   "settings_modSettingsExactQuoteLimit": "Лимит байт для построения цитаты",
   "settings_modSettingsExactQuoteLimitDscr": "Лимит по умолчанию - 15. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов",

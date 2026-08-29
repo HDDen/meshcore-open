@@ -5832,6 +5832,13 @@ class AppLocalizationsNl extends AppLocalizations {
       'De oude werking van slepen-en-neerzetten behouden: de volgorde van de kanalen wijzigen wijzigt hun volgorde op de node, en contacten of servers kunnen niet worden gesorteerd';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Kaart en locatie';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Bij het openen van de kaart altijd de locatie opvragen';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Nauwkeurig citeren gebruiken voor gewone berichten';
 

@@ -5872,6 +5872,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Zachowaj dotychczasowe działanie przeciągania: zmiana kolejności kanałów zmienia ich kolejność na węźle, a kontaktów ani serwerów nie można sortować';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Mapa i lokalizacja';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Zawsze pytaj o lokalizację przy otwieraniu mapy';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Używaj dokładnego cytowania w zwykłych wiadomościach';
 

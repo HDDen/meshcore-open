@@ -2137,6 +2137,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         builder: (_) => MapScreen(
           initialTracePath: Uint8List.fromList(pathBytes),
           initialTraceHashByteWidth: hashByteWidth,
+          initializeInitialTraceViewport: true,
         ),
       ),
     );

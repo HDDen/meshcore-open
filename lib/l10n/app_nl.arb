@@ -3218,5 +3218,7 @@
   "chat_hideBlockedSenderMessages": "Berichtregels verbergen",
   "chat_showBlockedSenderMessages": "Berichtregels tonen",
   "repeater_cliClearNeighbors": "Burenlijst wissen",
-  "reaction_report": "Emoji-reacties"
+  "reaction_report": "Emoji-reacties",
+  "settings_modSettingsMapAndLocation": "Kaart en locatie",
+  "settings_modSettingsAlwaysRequestMapLocation": "Bij het openen van de kaart altijd de locatie opvragen"
 }

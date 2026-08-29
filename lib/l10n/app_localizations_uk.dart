@@ -5860,6 +5860,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Залишити колишню механіку drag-n-drop: зміна порядку каналів змінює їхній порядок на ноді, і не можна сортувати контакти чи сервери';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Карта та геопозиція';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Завжди запитувати геопозицію при відкритті карти';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Використовувати уточнене цитування для звичайних повідомлень';
 

@@ -3276,6 +3276,8 @@
   "settings_modSettingsRoomServerShowNotemptyOnChatscreen": "Show room-servers with messages history against channels in single screen",
   "settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen": "Show contacts with messages history against channels in single screen",
   "settings_modSettingsRoomServerDisableRoomAndContactsSorting": "Keep the existing drag-and-drop functionality: changing the order of channels changes their order on the node, and you cannot sort contacts or servers",
+  "settings_modSettingsMapAndLocation": "Map and location",
+  "settings_modSettingsAlwaysRequestMapLocation": "Always request location when opening maps",
   "settings_modSettingsExactQuote": "Use precise quotes for regular messages",
   "settings_modSettingsExactQuoteLimit": "Bytes limit for precise quote",
   "settings_modSettingsExactQuoteLimitDscr": "Default limit is 15. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature",

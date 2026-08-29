@@ -192,6 +192,7 @@ class AppSettings {
   final bool hideRadioStatsButton;
   final bool snrIndicatorAllRepActivity;
   final bool hideMapZoomControls;
+  final bool alwaysRequestMapLocation;
   final bool showMcoImageResolution;
   final bool showMcoImageFormat;
   final bool showMcoImageAlgorithm;
@@ -614,6 +615,7 @@ class AppSettings {
     this.hideRadioStatsButton = false,
     this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
+    this.alwaysRequestMapLocation = true,
     this.showMcoImageResolution = false,
     this.showMcoImageFormat = true,
     this.showMcoImageAlgorithm = true,
@@ -753,6 +755,7 @@ class AppSettings {
       'hide_radio_stats_button': hideRadioStatsButton,
       'snr_indicator_all_rep_activity': snrIndicatorAllRepActivity,
       'hide_map_zoom_controls': hideMapZoomControls,
+      'always_request_map_location': alwaysRequestMapLocation,
       'show_mco_image_resolution': showMcoImageResolution,
       'show_mco_image_format': showMcoImageFormat,
       'show_mco_image_algorithm': showMcoImageAlgorithm,
@@ -912,6 +915,8 @@ class AppSettings {
       snrIndicatorAllRepActivity:
           json['snr_indicator_all_rep_activity'] as bool? ?? true,
       hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
+      alwaysRequestMapLocation:
+          json['always_request_map_location'] as bool? ?? true,
       showMcoImageResolution:
           json['show_mco_image_resolution'] as bool? ?? false,
       showMcoImageFormat: json['show_mco_image_format'] as bool? ?? true,
@@ -1135,6 +1140,7 @@ class AppSettings {
     bool? hideRadioStatsButton,
     bool? snrIndicatorAllRepActivity,
     bool? hideMapZoomControls,
+    bool? alwaysRequestMapLocation,
     bool? showMcoImageResolution,
     bool? showMcoImageFormat,
     bool? showMcoImageAlgorithm,
@@ -1249,6 +1255,8 @@ class AppSettings {
       snrIndicatorAllRepActivity:
           snrIndicatorAllRepActivity ?? this.snrIndicatorAllRepActivity,
       hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,
+      alwaysRequestMapLocation:
+          alwaysRequestMapLocation ?? this.alwaysRequestMapLocation,
       showMcoImageResolution:
           showMcoImageResolution ?? this.showMcoImageResolution,
       showMcoImageFormat: showMcoImageFormat ?? this.showMcoImageFormat,

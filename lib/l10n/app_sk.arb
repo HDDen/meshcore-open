@@ -3436,5 +3436,7 @@
   "chat_hideBlockedSenderMessages": "Skryť riadky správ",
   "chat_showBlockedSenderMessages": "Zobraziť riadky správ",
   "repeater_cliClearNeighbors": "Vymazať zoznam susedov",
-  "reaction_report": "Emoji reakcie"
+  "reaction_report": "Emoji reakcie",
+  "settings_modSettingsMapAndLocation": "Mapa a poloha",
+  "settings_modSettingsAlwaysRequestMapLocation": "Pri otvorení mapy vždy vyžiadať polohu"
 }

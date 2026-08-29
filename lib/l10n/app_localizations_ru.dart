@@ -5848,6 +5848,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оставить прежнюю механику drag-n-drop: смена порядка каналов меняет их порядок на ноде, и нельзя сортировать контакты/сервера';
 
   @override
+  String get settings_modSettingsMapAndLocation => 'Карта и геолокация';
+
+  @override
+  String get settings_modSettingsAlwaysRequestMapLocation =>
+      'Всегда в картах запрашивать местоположение';
+
+  @override
   String get settings_modSettingsExactQuote =>
       'Использовать уточнённое цитирование для обычных сообщений';
 
