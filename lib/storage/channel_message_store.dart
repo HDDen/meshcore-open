@@ -152,6 +152,27 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     return _channelMessagesFromJson(jsonString, channelIndex);
   }
 
+  Future<List<ChannelMessage>> loadChannelMessagesAfter(
+    int channelIndex, {
+    required ChannelMessage after,
+    required int limit,
+    bool allowLegacyMigration = true,
+  }) async {
+    final key = await _ensureChannelHistoryKey(
+      channelIndex,
+      allowLegacyMigration: allowLegacyMigration,
+    );
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getStringAfter(
+      MessageHistoryKind.channel,
+      key,
+      timelineAtMs: after.receivedAt.millisecondsSinceEpoch,
+      messageId: after.messageId,
+      limit: limit,
+    );
+    return _channelMessagesFromJson(jsonString, channelIndex);
+  }
+
   List<ChannelMessage> _channelMessagesFromJson(
     String? jsonString,
     int channelIndex,

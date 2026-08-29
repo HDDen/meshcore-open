@@ -1813,6 +1813,32 @@ class MeshCoreConnector extends ChangeNotifier {
     return olderMessages;
   }
 
+  /// Appends the next persisted page after the newest loaded direct message.
+  /// Kept as a dormant counterpart to [loadOlderMessages] until a screen needs
+  /// bidirectional history navigation.
+  Future<List<Message>> loadNewerMessages(
+    String contactKeyHex, {
+    int count = 50,
+  }) async {
+    if (isOfflineSharedMode) return const [];
+    final currentMessages = _conversations[contactKeyHex] ?? [];
+    if (currentMessages.isEmpty) return const [];
+    final newerMessages = await _messageStore.loadMessagesAfter(
+      contactKeyHex,
+      after: currentMessages.last,
+      limit: count,
+    );
+    if (newerMessages.isEmpty) return const [];
+
+    final expandedMessages = [...currentMessages, ...newerMessages];
+    if (_isRoomConversation(contactKeyHex)) {
+      expandedMessages.sort(RoomMessageTimelineHelper.compare);
+    }
+    _conversations[contactKeyHex] = expandedMessages;
+    notifyListeners();
+    return newerMessages;
+  }
+
   List<ChannelMessage> getChannelMessages(Channel channel) {
     final primary = _channelMessages[channel.index] ?? [];
     if (isOfflineMode) return primary;
@@ -2913,6 +2939,32 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
 
     return olderMessages;
+  }
+
+  /// Appends the next persisted page after the newest loaded channel message.
+  /// No screen calls this yet; it is the forward half of cursor pagination.
+  Future<List<ChannelMessage>> loadNewerChannelMessages(
+    int channelIndex, {
+    int count = 50,
+  }) async {
+    if (isOfflineSharedMode) return const [];
+    final currentMessages = _channelMessages[channelIndex] ?? [];
+    if (currentMessages.isEmpty) return const [];
+    final newerMessages = await _channelMessageStore
+        .loadChannelMessagesAfter(
+          channelIndex,
+          after: currentMessages.last,
+          limit: count,
+          allowLegacyMigration: !isOfflineMode,
+        );
+    if (newerMessages.isEmpty) return const [];
+
+    _channelMessages[channelIndex] = _orderedChannelMessages([
+      ...currentMessages,
+      ...newerMessages,
+    ]);
+    notifyListeners();
+    return newerMessages;
   }
 
   /// Load all persisted channel messages on startup

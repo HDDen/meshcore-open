@@ -292,6 +292,30 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     return (await query.get()).reversed.map((row) => row.messageJson).toList();
   }
 
+  Future<List<String>> readMessageJsonAfter(
+    int kind,
+    String storageKey, {
+    required MessageHistoryCursor cursor,
+    required int limit,
+  }) async {
+    if (limit <= 0) return const [];
+    final query = select(historyMessages)
+      ..where(
+        (row) =>
+            row.kind.equals(kind) &
+            row.storageKey.equals(storageKey) &
+            (row.timelineAtMs.isBiggerThanValue(cursor.timelineAtMs) |
+                (row.timelineAtMs.equals(cursor.timelineAtMs) &
+                    row.messageId.isBiggerThanValue(cursor.messageId))),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.asc(row.timelineAtMs),
+        (row) => OrderingTerm.asc(row.messageId),
+      ])
+      ..limit(limit);
+    return (await query.get()).map((row) => row.messageJson).toList();
+  }
+
   Future<List<String>> searchMessageJson(
     int kind,
     String storageKey,

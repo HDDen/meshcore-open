@@ -109,6 +109,23 @@ class MessageStore {
     return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
+  Future<List<Message>> loadMessagesAfter(
+    String contactKeyHex, {
+    required Message after,
+    required int limit,
+  }) async {
+    final key = await _ensureScopedHistory(contactKeyHex);
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getStringAfter(
+      MessageHistoryKind.direct,
+      key,
+      timelineAtMs: _timelineAt(after).millisecondsSinceEpoch,
+      messageId: after.messageId,
+      limit: limit,
+    );
+    return _messagesFromJson(jsonString, contextKey: contactKeyHex);
+  }
+
   Future<List<Message>> loadScopedMessages(String contactKeyHex) async {
     final jsonString = await loadMessagesJsonForSearch(contactKeyHex);
     return _messagesFromJson(jsonString, contextKey: contactKeyHex);

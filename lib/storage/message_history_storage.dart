@@ -243,6 +243,39 @@ class MessageHistoryStorage {
     return messages.isEmpty ? null : '[${messages.join(',')}]';
   }
 
+  Future<String?> getStringAfter(
+    MessageHistoryKind kind,
+    String key, {
+    required int timelineAtMs,
+    required String messageId,
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (limit <= 0) return null;
+    if (kIsWeb) {
+      final value = PrefsManager.instance.getString(key);
+      if (value == null) return null;
+      final messages = _decodeMessageList(value, key);
+      final anchor = messages.indexWhere(
+        (message) => message['messageId'] == messageId,
+      );
+      if (anchor < 0 || anchor >= messages.length - 1) return null;
+      final available = messages.length - anchor - 1;
+      final count = available < limit ? available : limit;
+      return jsonEncode(messages.sublist(anchor + 1, anchor + 1 + count));
+    }
+    final messages = await _database!.readMessageJsonAfter(
+      kind.index,
+      key,
+      cursor: MessageHistoryCursor(
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+      ),
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
   Future<String?> searchString(
     MessageHistoryKind kind,
     String key,
