@@ -789,6 +789,7 @@ class _ChannelMessagePathMapScreenState
   bool _panelCollapsed = false;
   bool _animationEnabled = true;
   bool _followPacket = false;
+  bool _mapReady = false;
   String? _scheduledViewportFit;
   String? _completedViewportFit;
 
@@ -1054,6 +1055,7 @@ class _ChannelMessagePathMapScreenState
     required double initialZoom,
     required LatLngBounds? bounds,
   }) {
+    if (!_mapReady) return;
     if (_completedViewportFit == signature ||
         _scheduledViewportFit == signature) {
       return;
@@ -1285,10 +1287,6 @@ class _ChannelMessagePathMapScreenState
         final bounds = viewportPoints.length > 1
             ? LatLngBounds.fromPoints(viewportPoints)
             : null;
-        final mapKey = ValueKey(
-          '${_formatPathPrefixes(selectedPath, width)},'
-          '${context.l10n.pathTrace_you},$selfPosition',
-        );
         final viewportFitSignature = [
           _formatPathPrefixes(selectedPath, width),
           selfPosition,
@@ -1315,11 +1313,14 @@ class _ChannelMessagePathMapScreenState
               key: _mapBodyKey,
               children: [
                 FlutterMap(
-                  key: mapKey,
                   mapController: _mapController,
                   options: MapOptions(
                     initialCenter: initialCenter,
                     initialZoom: initialZoom,
+                    onMapReady: () {
+                      if (!mounted || _mapReady) return;
+                      setState(() => _mapReady = true);
+                    },
                     minZoom: _mapMinZoom,
                     maxZoom: _mapMaxZoom,
                     interactionOptions: InteractionOptions(
