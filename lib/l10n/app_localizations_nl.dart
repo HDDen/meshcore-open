@@ -6320,4 +6320,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get reaction_report => 'Emoji-reacties';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Berichtgeschiedenis is gedeeltelijk overgezet';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Bij het overzetten konden $histories gesprekken en $messages losse berichten niet worden hersteld. De overige geschiedenis is bewaard gebleven.';
+  }
 }

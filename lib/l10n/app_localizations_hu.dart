@@ -6333,4 +6333,16 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get reaction_report => 'Emoji reakciók';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Az üzenetelőzmények csak részben lettek átköltöztetve';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Az átköltöztetés során $histories beszélgetést és $messages külön üzenetet nem sikerült helyreállítani. A többi előzmény megmaradt.';
+  }
 }

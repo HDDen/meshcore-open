@@ -6022,4 +6022,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reaction_report => '絵文字リアクション';
+
+  @override
+  String get messageHistoryMigrationWarningTitle => 'メッセージ履歴は一部のみ移行されました';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return '移行中に $histories 件の会話と $messages 件の個別メッセージを復元できませんでした。残りの履歴は保持されています。';
+  }
 }

@@ -3220,5 +3220,17 @@
   "repeater_cliClearNeighbors": "Rensa grannlistan",
   "reaction_report": "Emoji-reaktioner",
   "settings_modSettingsMapAndLocation": "Karta och plats",
-  "settings_modSettingsAlwaysRequestMapLocation": "Begär alltid plats när kartan öppnas"
+  "settings_modSettingsAlwaysRequestMapLocation": "Begär alltid plats när kartan öppnas",
+  "messageHistoryMigrationWarningTitle": "Meddelandehistoriken flyttades bara delvis",
+  "messageHistoryMigrationWarningDescription": "Vid flytten gick det inte att återställa {histories} konversationer och {messages} enskilda meddelanden. Resten av historiken bevarades.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

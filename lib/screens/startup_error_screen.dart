@@ -2,8 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../storage/message_history_database.dart';
+
 class MessageHistoryMigrationApp extends StatelessWidget {
-  const MessageHistoryMigrationApp({super.key});
+  const MessageHistoryMigrationApp({super.key, required this.progress});
+
+  final ValueListenable<LegacyMessageHistoryProgress> progress;
 
   @override
   Widget build(BuildContext context) {
@@ -13,13 +17,15 @@ class MessageHistoryMigrationApp extends StatelessWidget {
         brightness: Brightness.dark,
         colorSchemeSeed: const Color(0xFF03A9E6),
       ),
-      home: const _MessageHistoryMigrationScreen(),
+      home: _MessageHistoryMigrationScreen(progress: progress),
     );
   }
 }
 
 class _MessageHistoryMigrationScreen extends StatelessWidget {
-  const _MessageHistoryMigrationScreen();
+  const _MessageHistoryMigrationScreen({required this.progress});
+
+  final ValueListenable<LegacyMessageHistoryProgress> progress;
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +36,62 @@ class _MessageHistoryMigrationScreen extends StatelessWidget {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 24),
-                Text(
-                  isRussian
-                      ? 'Перенос истории сообщений…'
-                      : 'Migrating message history…',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isRussian
-                      ? 'Приложение перезапустится автоматически.'
-                      : 'The application will restart automatically.',
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            child: ValueListenableBuilder<LegacyMessageHistoryProgress>(
+              valueListenable: progress,
+              builder: (context, value, _) {
+                final total = value.totalHistories;
+                final completed = value.completedHistories;
+                final current = total == 0
+                    ? 0
+                    : (completed < total ? completed + 1 : total);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      value: total == 0 ? null : completed / total,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      isRussian
+                          ? 'Перенос истории сообщений…'
+                          : 'Migrating message history…',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    if (total > 0)
+                      Text(
+                        isRussian
+                            ? 'Диалог $current из $total · сообщений: '
+                                  '${value.processedMessages}'
+                            : 'Conversation $current of $total · messages: '
+                                  '${value.processedMessages}',
+                        textAlign: TextAlign.center,
+                      ),
+                    if (value.skippedHistories > 0 ||
+                        value.skippedMessages > 0) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        isRussian
+                            ? 'Пропущено диалогов: '
+                                  '${value.skippedHistories}, сообщений: '
+                                  '${value.skippedMessages}'
+                            : 'Skipped conversations: '
+                                  '${value.skippedHistories}, messages: '
+                                  '${value.skippedMessages}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      isRussian
+                          ? 'Приложение перезапустится автоматически.'
+                          : 'The application will restart automatically.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -64,16 +106,12 @@ class StartupFailureReport {
     required this.stage,
     required this.error,
     required this.stackTrace,
-    this.dataPath,
-    this.showHistoryMigrationConflictHelp = false,
   }) : occurredAt = DateTime.now().toUtc();
 
   final String code;
   final String stage;
   final Object error;
   final StackTrace stackTrace;
-  final String? dataPath;
-  final bool showHistoryMigrationConflictHelp;
   final DateTime occurredAt;
 
   String get platform => defaultTargetPlatform.name;
@@ -84,7 +122,8 @@ class StartupFailureReport {
       ? 'profile'
       : 'debug';
 
-  String get text => '''
+  String get text =>
+      '''
 MCO startup failure
 Code: $code
 Stage: $stage
@@ -93,8 +132,6 @@ Build mode: $buildMode
 Time (UTC): ${occurredAt.toIso8601String()}
 Error type: ${error.runtimeType}
 Error: $error
-${dataPath == null ? '' : 'Application data path: $dataPath'}
-
 Stack trace:
 $stackTrace
 ''';
@@ -129,7 +166,6 @@ class StartupErrorScreen extends StatefulWidget {
 
 class _StartupErrorScreenState extends State<StartupErrorScreen> {
   bool _copied = false;
-  bool _pathCopied = false;
 
   bool get _isRussian =>
       WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru';
@@ -140,14 +176,6 @@ class _StartupErrorScreenState extends State<StartupErrorScreen> {
     setState(() => _copied = true);
   }
 
-  Future<void> _copyDataPath() async {
-    final dataPath = widget.report.dataPath;
-    if (dataPath == null) return;
-    await Clipboard.setData(ClipboardData(text: dataPath));
-    if (!mounted) return;
-    setState(() => _pathCopied = true);
-  }
-
   @override
   Widget build(BuildContext context) {
     final report = widget.report;
@@ -155,13 +183,9 @@ class _StartupErrorScreenState extends State<StartupErrorScreen> {
     final title = _isRussian
         ? 'Не удалось запустить приложение'
         : 'The application could not start';
-    final description = report.showHistoryMigrationConflictHelp
-        ? (_isRussian
-              ? 'Обнаружена история одновременно в старом файле настроек и в новых отдельных файлах.'
-              : 'Message history exists in both the legacy settings file and the new separate files.')
-        : (_isRussian
-              ? 'Скопируйте отчёт и приложите его к сообщению об ошибке.'
-              : 'Copy this report and attach it to the bug report.');
+    final description = _isRussian
+        ? 'Скопируйте отчёт и приложите его к сообщению об ошибке.'
+        : 'Copy this report and attach it to the bug report.';
 
     return Scaffold(
       body: SafeArea(
@@ -174,11 +198,7 @@ class _StartupErrorScreenState extends State<StartupErrorScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 56,
-                      color: colors.error,
-                    ),
+                    Icon(Icons.error_outline, size: 56, color: colors.error),
                     const SizedBox(height: 16),
                     Text(
                       title,
@@ -208,41 +228,6 @@ class _StartupErrorScreenState extends State<StartupErrorScreen> {
                       label: _isRussian ? 'Сообщение' : 'Message',
                       value: report.error.toString(),
                     ),
-                    if (report.dataPath != null) ...[
-                      _ReportRow(
-                        label: _isRussian
-                            ? 'Папка данных'
-                            : 'Application data',
-                        value: report.dataPath!,
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          onPressed: _copyDataPath,
-                          icon: const Icon(Icons.folder_copy_outlined),
-                          label: Text(
-                            _pathCopied
-                                ? (_isRussian ? 'Путь скопирован' : 'Copied')
-                                : (_isRussian
-                                      ? 'Скопировать путь к данным'
-                                      : 'Copy data path'),
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (report.showHistoryMigrationConflictHelp) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        _isRussian
-                            ? 'Чтобы продолжить, выберите один вариант:\n\n'
-                                  '1. Удалите direct_message_history.json и channel_message_history.json, затем запустите приложение снова для автоматической миграции.\n\n'
-                                  '2. Сохраните резервную копию shared_preferences.json и вручную удалите из него записи messages_* и channel_messages_*, оставив отдельные файлы историй.'
-                            : 'To continue, choose one option:\n\n'
-                                  '1. Delete direct_message_history.json and channel_message_history.json, then start the application again to retry automatic migration.\n\n'
-                                  '2. Back up shared_preferences.json and manually remove its messages_* and channel_messages_* entries, keeping the separate history files.',
-                      ),
-                    ],
                     const SizedBox(height: 16),
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,

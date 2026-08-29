@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
+
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
@@ -7,6 +9,7 @@ import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../utils/app_logger.dart';
+import 'message_history_database.dart';
 import 'message_history_storage.dart';
 
 class MessageStore {
@@ -36,23 +39,117 @@ class MessageStore {
     );
   }
 
+  Future<void> saveMessage(String contactKeyHex, Message message) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot save message.');
+      return;
+    }
+    await MessageHistoryStorage.instance.setString(
+      MessageHistoryKind.direct,
+      '$keyFor$contactKeyHex',
+      jsonEncode([_messageToJson(message)]),
+    );
+  }
+
+  Future<void> replaceMessages(
+    String contactKeyHex,
+    List<Message> messages,
+  ) async {
+    if (publicKeyHex.isEmpty) return;
+    final key = '$keyFor$contactKeyHex';
+    await MessageHistoryStorage.instance.replaceString(
+      MessageHistoryKind.direct,
+      key,
+      jsonEncode(messages.map(_messageToJson).toList()),
+    );
+  }
+
+  Future<void> deleteMessage(String contactKeyHex, String messageId) async {
+    if (publicKeyHex.isEmpty || messageId.isEmpty) return;
+    await MessageHistoryStorage.instance.deleteMessage(
+      MessageHistoryKind.direct,
+      '$keyFor$contactKeyHex',
+      messageId,
+    );
+  }
+
   Future<List<Message>> loadMessages(String contactKeyHex) async {
     final jsonString = await _loadMessagesJson(contactKeyHex);
-    return _messagesFromJson(jsonString);
+    return _messagesFromJson(jsonString, contextKey: contactKeyHex);
+  }
+
+  Future<List<Message>> loadLatestMessages(
+    String contactKeyHex, {
+    required int limit,
+  }) async {
+    final key = await _ensureScopedHistory(contactKeyHex);
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getLatestString(
+      MessageHistoryKind.direct,
+      key,
+      limit: limit,
+    );
+    return _messagesFromJson(jsonString, contextKey: contactKeyHex);
+  }
+
+  Future<List<Message>> loadMessagesBefore(
+    String contactKeyHex, {
+    required Message before,
+    required int limit,
+  }) async {
+    final key = await _ensureScopedHistory(contactKeyHex);
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getStringBefore(
+      MessageHistoryKind.direct,
+      key,
+      timelineAtMs: _timelineAt(before).millisecondsSinceEpoch,
+      messageId: before.messageId,
+      limit: limit,
+    );
+    return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
   Future<List<Message>> loadScopedMessages(String contactKeyHex) async {
     final jsonString = await loadMessagesJsonForSearch(contactKeyHex);
-    return _messagesFromJson(jsonString);
+    return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
-  List<Message> _messagesFromJson(String? jsonString) {
+  List<Message> _messagesFromJson(
+    String? jsonString, {
+    required String contextKey,
+  }) {
     if (jsonString == null) return [];
 
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
-    } catch (e) {
+      final messages = <Message>[];
+      for (var index = 0; index < jsonList.length; index++) {
+        final entry = jsonList[index];
+        try {
+          if (entry is! Map<String, dynamic>) {
+            throw const FormatException('Message entry is not an object');
+          }
+          messages.add(decodeStoredMessage(entry));
+        } catch (error, stackTrace) {
+          if (error is OutOfMemoryError || error is StackOverflowError) {
+            rethrow;
+          }
+          appLogger.warn(
+            'Skipping invalid direct message at index $index '
+            'for $contextKey: '
+            '${error.runtimeType}: $error\n$stackTrace',
+            tag: 'MessageHistory',
+          );
+        }
+      }
+      return messages;
+    } catch (error) {
+      if (error is OutOfMemoryError || error is StackOverflowError) rethrow;
+      appLogger.warn(
+        'Could not decode direct message history for $contextKey: '
+        '${error.runtimeType}: $error',
+        tag: 'MessageHistory',
+      );
       return [];
     }
   }
@@ -60,6 +157,7 @@ class MessageStore {
   Future<String?> loadMessagesJsonForSearch(
     String contactKeyHex, {
     bool includeLegacyUnscoped = false,
+    String? normalizedQuery,
   }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
@@ -67,12 +165,24 @@ class MessageStore {
     }
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
-    var jsonString = history.getString(MessageHistoryKind.direct, key);
-    if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
-      jsonString = history.getString(
-        MessageHistoryKind.direct,
-        '$_keyPrefix$contactKeyHex',
-      );
+    var jsonString = normalizedQuery == null
+        ? await history.getString(MessageHistoryKind.direct, key)
+        : await history.searchString(
+            MessageHistoryKind.direct,
+            key,
+            normalizedQuery,
+          );
+    if ((jsonString == null || jsonString.isEmpty) &&
+        includeLegacyUnscoped &&
+        !history.getKeys(MessageHistoryKind.direct).contains(key)) {
+      final legacyKey = '$_keyPrefix$contactKeyHex';
+      jsonString = normalizedQuery == null
+          ? await history.getString(MessageHistoryKind.direct, legacyKey)
+          : await history.searchString(
+              MessageHistoryKind.direct,
+              legacyKey,
+              normalizedQuery,
+            );
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
@@ -85,10 +195,13 @@ class MessageStore {
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    String? jsonString = history.getString(MessageHistoryKind.direct, key);
+    String? jsonString = await history.getString(
+      MessageHistoryKind.direct,
+      key,
+    );
     if (jsonString == null || jsonString.isEmpty) {
       // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = history.getString(
+      final legacyJsonString = await history.getString(
         MessageHistoryKind.direct,
         oldKey,
       );
@@ -106,7 +219,7 @@ class MessageStore {
       }
     }
     if (jsonString == null || jsonString.isEmpty) {
-      jsonString = history.getString(MessageHistoryKind.direct, keyFor);
+      jsonString = await history.getString(MessageHistoryKind.direct, keyFor);
     }
     if (jsonString == null || jsonString.isEmpty) {
       return null;
@@ -114,19 +227,48 @@ class MessageStore {
     return jsonString;
   }
 
-  /// True when this conversation's stored blob could hold a shared marker.
+  Future<String?> _ensureScopedHistory(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot load messages.');
+      return null;
+    }
+    final history = MessageHistoryStorage.instance;
+    final key = '$keyFor$contactKeyHex';
+    if (history.getKeys(MessageHistoryKind.direct).contains(key)) return key;
+
+    final oldKey = '$_keyPrefix$contactKeyHex';
+    final legacyJsonString = await history.getString(
+      MessageHistoryKind.direct,
+      oldKey,
+    );
+    if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
+      await history.remove(MessageHistoryKind.direct, oldKey);
+      await history.replaceString(
+        MessageHistoryKind.direct,
+        key,
+        legacyJsonString,
+      );
+      return key;
+    }
+    if (history.getKeys(MessageHistoryKind.direct).contains(keyFor)) {
+      return keyFor;
+    }
+    return null;
+  }
+
+  DateTime _timelineAt(Message message) {
+    if (message.fourByteRoomContactKey.isNotEmpty) {
+      return message.receivedAt ?? message.timestamp;
+    }
+    return message.timestamp;
+  }
+
+  /// True when this conversation could hold a shared marker.
   ///
-  /// A conversation is one JSON string, so deciding this by decoding it costs
-  /// as much as loading it. The map only needs the handful of conversations
-  /// that carry pins, and a substring scan over the raw string rejects the
-  /// rest for the price of reading it. False positives are fine — the caller
-  /// decodes and parses properly — false negatives are not, so this looks for
-  /// the bare marker prefix and catches `del:m:` along with `m:`.
+  /// The database prepares a small key cache at startup, so the map can reject
+  /// conversations without markers without loading their message rows.
   ///
-  /// Deliberately not built on [_loadMessagesJson]: that one migrates legacy
-  /// keys, so peeking at a few hundred conversations through it would fire a
-  /// preferences write per contact. This reads and returns, nothing else, and
-  /// stays synchronous so a caller sweeping every contact pays no async hop.
+  /// This stays synchronous so a sweep over every contact pays no async hop.
   bool mayContainMarker(String contactKeyHex) {
     if (publicKeyHex.isEmpty) return false;
     final history = MessageHistoryStorage.instance;
@@ -135,8 +277,7 @@ class MessageStore {
       '$_keyPrefix$contactKeyHex',
       keyFor,
     ]) {
-      final jsonString = history.getString(MessageHistoryKind.direct, key);
-      if (jsonString != null && jsonString.contains('m:')) return true;
+      if (history.mayContainMarker(key)) return true;
     }
     return false;
   }
@@ -152,9 +293,14 @@ class MessageStore {
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    var jsonString = history.getString(MessageHistoryKind.direct, key);
+    final MessageHistorySummaryRow? databaseSummary = await history
+        .directSummary(key);
+    if (databaseSummary != null) {
+      return _summaryFromDatabase(databaseSummary);
+    }
+    var jsonString = await history.getString(MessageHistoryKind.direct, key);
     if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
-      final legacyJsonString = history.getString(
+      final legacyJsonString = await history.getString(
         MessageHistoryKind.direct,
         oldKey,
       );
@@ -177,7 +323,11 @@ class MessageStore {
         final timestampMs = entry['timestamp'] as int?;
         if (timestampMs == null) continue;
         messageCount++;
-        final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMs);
+        final roomAuthorKey = entry['fourByteRoomContactKey'] as String?;
+        final timelineMs = roomAuthorKey?.isNotEmpty == true
+            ? (entry['receivedAt'] as int? ?? timestampMs)
+            : timestampMs;
+        final timestamp = DateTime.fromMillisecondsSinceEpoch(timelineMs);
         if (latestMessageAt == null || timestamp.isAfter(latestMessageAt)) {
           latestMessageAt = timestamp;
           final rawText = entry['text'];
@@ -198,6 +348,69 @@ class MessageStore {
     }
   }
 
+  Future<Map<String, MessageStoreSummary>> loadMessageSummaries(
+    Iterable<String> contactKeyHexes, {
+    bool includeLegacyUnscoped = false,
+  }) async {
+    final contactKeys = contactKeyHexes.toSet();
+    if (publicKeyHex.isEmpty || contactKeys.isEmpty) return const {};
+
+    if (kIsWeb) {
+      final result = <String, MessageStoreSummary>{};
+      for (final contactKeyHex in contactKeys) {
+        final summary = await loadMessageSummary(
+          contactKeyHex,
+          includeLegacyUnscoped: includeLegacyUnscoped,
+        );
+        if (summary != null) result[contactKeyHex] = summary;
+      }
+      return result;
+    }
+
+    final scopedStorageKeys = {
+      for (final contactKeyHex in contactKeys)
+        '$keyFor$contactKeyHex': contactKeyHex,
+    };
+    final legacyStorageKeys = includeLegacyUnscoped
+        ? {
+            for (final contactKeyHex in contactKeys)
+              '$_keyPrefix$contactKeyHex': contactKeyHex,
+          }
+        : const <String, String>{};
+    final databaseSummaries = await MessageHistoryStorage.instance
+        .directSummaries([
+          ...scopedStorageKeys.keys,
+          ...legacyStorageKeys.keys,
+        ]);
+    final result = <String, MessageStoreSummary>{};
+    for (final contactKeyHex in contactKeys) {
+      final scoped = databaseSummaries['$keyFor$contactKeyHex'];
+      final legacy = databaseSummaries['$_keyPrefix$contactKeyHex'];
+      final summary = scoped ?? legacy;
+      if (summary != null) {
+        result[contactKeyHex] = _summaryFromDatabase(summary);
+      }
+    }
+    return result;
+  }
+
+  MessageStoreSummary _summaryFromDatabase(
+    MessageHistorySummaryRow databaseSummary,
+  ) {
+    final latestMessageText =
+        MessageTextCodec.tryDecodeKnownCompression(
+          databaseSummary.latestRawText,
+        ) ??
+        databaseSummary.latestRawText;
+    return MessageStoreSummary(
+      messageCount: databaseSummary.messageCount,
+      latestMessageAt: DateTime.fromMillisecondsSinceEpoch(
+        databaseSummary.latestTimestampMs,
+      ),
+      latestMessageText: latestMessageText,
+    );
+  }
+
   Future<void> clearMessages(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot clear messages.');
@@ -212,6 +425,7 @@ class MessageStore {
     return {
       'senderKey': base64Encode(msg.senderKey),
       'text': msg.text,
+      'rawText': msg.rawText ?? msg.text,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'receivedAt': msg.receivedAt?.millisecondsSinceEpoch,
       'isOutgoing': msg.isOutgoing,
@@ -266,14 +480,15 @@ class MessageStore {
     };
   }
 
-  Message _messageFromJson(Map<String, dynamic> json) {
-    final rawText = json['text'] as String;
+  static Message decodeStoredMessage(Map<String, dynamic> json) {
+    final storedText = json['text'] as String;
+    final rawText = json['rawText'] as String? ?? storedText;
     final isCli = json['isCli'] as bool? ?? false;
     final wasMcmpCompressed =
         json['wasMcmpCompressed'] as bool? ??
         MeshCompressor.instance.hasPrefix(rawText);
-    final decodedText = isCli
-        ? rawText
+    final decodedText = json['rawText'] != null || isCli
+        ? storedText
         : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
     final detectedCompression = isCli
         ? null
@@ -313,6 +528,7 @@ class MessageStore {
     return Message(
       senderKey: Uint8List.fromList(base64Decode(json['senderKey'] as String)),
       text: decodedText,
+      rawText: rawText,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       receivedAt: json['receivedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['receivedAt'] as int)
@@ -405,7 +621,7 @@ class MessageStore {
     );
   }
 
-  McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
+  static McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
     if (value is! String) return McmpSignatureStatus.none;
     for (final status in McmpSignatureStatus.values) {
       if (status.name == value) return status;

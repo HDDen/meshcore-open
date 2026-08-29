@@ -6362,4 +6362,16 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get reaction_report => 'Reakcje emoji';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Historia wiadomości została przeniesiona częściowo';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Podczas przenoszenia nie udało się odtworzyć rozmów: $histories oraz pojedynczych wiadomości: $messages. Pozostała historia została zachowana.';
+  }
 }

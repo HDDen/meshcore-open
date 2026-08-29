@@ -3441,5 +3441,17 @@
   "repeater_cliClearNeighbors": "Szomszédok listájának törlése",
   "reaction_report": "Emoji reakciók",
   "settings_modSettingsMapAndLocation": "Térkép és helymeghatározás",
-  "settings_modSettingsAlwaysRequestMapLocation": "A térkép megnyitásakor mindig kérje le a helyet"
+  "settings_modSettingsAlwaysRequestMapLocation": "A térkép megnyitásakor mindig kérje le a helyet",
+  "messageHistoryMigrationWarningTitle": "Az üzenetelőzmények csak részben lettek átköltöztetve",
+  "messageHistoryMigrationWarningDescription": "Az átköltöztetés során {histories} beszélgetést és {messages} külön üzenetet nem sikerült helyreállítani. A többi előzmény megmaradt.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

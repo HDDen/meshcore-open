@@ -145,7 +145,7 @@ class SharedMessageHistoryHelper {
       final rewritten = rewrite(messages);
       if (_sameChannelMessages(messages, rewritten)) continue;
 
-      await messageStore.saveChannelMessages(matchedIndex, rewritten);
+      await messageStore.replaceChannelMessages(matchedIndex, rewritten);
       changed = true;
     }
     return changed;
@@ -184,7 +184,7 @@ class SharedMessageHistoryHelper {
           .toList();
       if (remaining.length == messages.length) continue;
 
-      await messageStore.saveMessages(contactKeyHex, remaining);
+      await messageStore.deleteMessage(contactKeyHex, messageId);
       deleted = true;
     }
     return deleted;
@@ -224,24 +224,34 @@ class SharedMessageHistoryHelper {
   Future<List<Message>> loadSecondaryContactMessages({
     required String currentPublicKeyHex,
     required String contactKeyHex,
+    bool Function()? isCancelled,
   }) async {
+    bool cancelled() => isCancelled?.call() ?? false;
+
     final currentScope = scopeFor(currentPublicKeyHex);
     if (currentScope.isEmpty || contactKeyHex.isEmpty) return const [];
 
     final result = <Message>[];
+    var processedMessages = 0;
     for (final scope in knownScopes()) {
+      if (cancelled()) return const [];
       if (scope == currentScope) continue;
 
       final messageStore = MessageStore()..setPublicKeyHex = scope;
       final messages = await messageStore.loadScopedMessages(contactKeyHex);
+      if (cancelled()) return const [];
       final sourceName = _sourceNameForScope(scope);
-      result.addAll(
-        messages.map(
-          (message) => _asHistoricalContactMessage(message, sourceName),
-        ),
-      );
+      for (final message in messages) {
+        result.add(_asHistoricalContactMessage(message, sourceName));
+        if (++processedMessages % 200 == 0) {
+          await Future<void>.delayed(Duration.zero);
+          if (cancelled()) return const [];
+        }
+      }
     }
 
+    await Future<void>.delayed(Duration.zero);
+    if (cancelled()) return const [];
     result.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return result;
   }
@@ -250,45 +260,57 @@ class SharedMessageHistoryHelper {
     required String currentPublicKeyHex,
     required String contactKeyHex,
   }) async {
-    final currentScope = scopeFor(currentPublicKeyHex);
-    if (currentScope.isEmpty || contactKeyHex.isEmpty) return null;
+    return (await loadSecondaryContactMessageSummaries(
+      currentPublicKeyHex: currentPublicKeyHex,
+      contactKeyHexes: [contactKeyHex],
+    ))[contactKeyHex];
+  }
 
-    DateTime? latestMessageAt;
-    String latestMessageText = '';
-    var messageCount = 0;
+  Future<Map<String, MessageStoreSummary>>
+  loadSecondaryContactMessageSummaries({
+    required String currentPublicKeyHex,
+    required Iterable<String> contactKeyHexes,
+  }) async {
+    final currentScope = scopeFor(currentPublicKeyHex);
+    final contactKeys = contactKeyHexes.where((key) => key.isNotEmpty).toSet();
+    if (currentScope.isEmpty || contactKeys.isEmpty) return const {};
+
+    final result = <String, MessageStoreSummary>{};
     for (final scope in knownScopes()) {
       if (scope == currentScope) continue;
 
       final messageStore = MessageStore()..setPublicKeyHex = scope;
-      final summary = await messageStore.loadMessageSummary(
-        contactKeyHex,
+      final summaries = await messageStore.loadMessageSummaries(
+        contactKeys,
         includeLegacyUnscoped: false,
       );
-      if (summary == null) continue;
-      messageCount += summary.messageCount;
-      if (latestMessageAt == null ||
-          summary.latestMessageAt.isAfter(latestMessageAt)) {
-        latestMessageAt = summary.latestMessageAt;
-        latestMessageText = summary.latestMessageText;
+      for (final entry in summaries.entries) {
+        final existing = result[entry.key];
+        final summary = entry.value;
+        result[entry.key] = MessageStoreSummary(
+          messageCount: (existing?.messageCount ?? 0) + summary.messageCount,
+          latestMessageAt:
+              existing == null ||
+                  summary.latestMessageAt.isAfter(existing.latestMessageAt)
+              ? summary.latestMessageAt
+              : existing.latestMessageAt,
+          latestMessageText:
+              existing == null ||
+                  summary.latestMessageAt.isAfter(existing.latestMessageAt)
+              ? summary.latestMessageText
+              : existing.latestMessageText,
+        );
       }
     }
-
-    if (messageCount == 0 || latestMessageAt == null) return null;
-    return MessageStoreSummary(
-      messageCount: messageCount,
-      latestMessageAt: latestMessageAt,
-      latestMessageText: latestMessageText,
-    );
+    return result;
   }
 
   /// True when any other node's copy of this conversation could hold a
-  /// marker. Same substring trick as [MessageStore.mayContainMarker], and for
-  /// the same reason: loading every secondary conversation just to find pins
-  /// decodes the whole shared store.
+  /// marker. This uses the database's cached marker keys, so loading every
+  /// secondary conversation just to find pins is unnecessary.
   ///
   /// [scopes] is passed in rather than fetched, because [knownScopes] walks
-  /// every preferences key — asking it once per contact is what made a sweep
-  /// over a few hundred contacts expensive.
+  /// every known storage key, so asking it once per contact is still wasteful.
   static bool secondaryMayContainMarker({
     required String currentPublicKeyHex,
     required String contactKeyHex,

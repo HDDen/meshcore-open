@@ -3438,5 +3438,17 @@
   "repeater_cliClearNeighbors": "Počisti seznam sosedov",
   "reaction_report": "Reakcije z emoji",
   "settings_modSettingsMapAndLocation": "Zemljevid in lokacija",
-  "settings_modSettingsAlwaysRequestMapLocation": "Ob odpiranju zemljevida vedno zahtevaj lokacijo"
+  "settings_modSettingsAlwaysRequestMapLocation": "Ob odpiranju zemljevida vedno zahtevaj lokacijo",
+  "messageHistoryMigrationWarningTitle": "Zgodovina sporočil je bila prenesena le delno",
+  "messageHistoryMigrationWarningDescription": "Med prenosom ni bilo mogoče obnoviti {histories} pogovorov in {messages} posameznih sporočil. Preostala zgodovina je ohranjena.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -6346,4 +6346,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reaction_report => 'Emoji-Reaktionen';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Nachrichtenverlauf wurde nur teilweise übertragen';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Beim Übertragen konnten $histories Unterhaltungen und $messages einzelne Nachrichten nicht wiederhergestellt werden. Der übrige Verlauf blieb erhalten.';
+  }
 }

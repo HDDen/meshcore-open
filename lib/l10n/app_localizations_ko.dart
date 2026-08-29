@@ -6029,4 +6029,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get reaction_report => '이모지 리액션';
+
+  @override
+  String get messageHistoryMigrationWarningTitle => '메시지 기록이 일부만 이전되었습니다';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return '이전 중에 대화 $histories개와 개별 메시지 $messages개를 복원하지 못했습니다. 나머지 기록은 유지되었습니다.';
+  }
 }

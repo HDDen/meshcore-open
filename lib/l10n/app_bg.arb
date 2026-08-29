@@ -3438,5 +3438,17 @@
   "repeater_cliClearNeighbors": "Изчисти списъка със съседи",
   "reaction_report": "Емоджи реакции",
   "settings_modSettingsMapAndLocation": "Карта и местоположение",
-  "settings_modSettingsAlwaysRequestMapLocation": "Винаги да се иска местоположение при отваряне на картата"
+  "settings_modSettingsAlwaysRequestMapLocation": "Винаги да се иска местоположение при отваряне на картата",
+  "messageHistoryMigrationWarningTitle": "Историята на съобщенията е пренесена частично",
+  "messageHistoryMigrationWarningDescription": "При преноса не бяха възстановени разговори: {histories} и отделни съобщения: {messages}. Останалата история е запазена.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

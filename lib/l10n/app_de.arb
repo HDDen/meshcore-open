@@ -3565,5 +3565,17 @@
   "repeater_cliClearNeighbors": "Nachbarliste leeren",
   "reaction_report": "Emoji-Reaktionen",
   "settings_modSettingsMapAndLocation": "Karte und Standort",
-  "settings_modSettingsAlwaysRequestMapLocation": "Beim Öffnen der Karte immer den Standort abfragen"
+  "settings_modSettingsAlwaysRequestMapLocation": "Beim Öffnen der Karte immer den Standort abfragen",
+  "messageHistoryMigrationWarningTitle": "Nachrichtenverlauf wurde nur teilweise übertragen",
+  "messageHistoryMigrationWarningDescription": "Beim Übertragen konnten {histories} Unterhaltungen und {messages} einzelne Nachrichten nicht wiederhergestellt werden. Der übrige Verlauf blieb erhalten.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -2715,5 +2715,17 @@
   "settings_backgroundPermissionsGranted": "Разрешение уже выдано",
   "chat_selectSendAction": "Выберите действие отправки",
   "chat_sendImageLora": "Отправить изображение через MeshCore",
-  "reaction_report": "Реакции эмодзи"
+  "reaction_report": "Реакции эмодзи",
+  "messageHistoryMigrationWarningTitle": "История сообщений перенесена частично",
+  "messageHistoryMigrationWarningDescription": "При переносе истории не удалось восстановить диалогов: {histories}, отдельных сообщений: {messages}. Остальная история сохранена.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

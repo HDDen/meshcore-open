@@ -52,6 +52,55 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     await history.setString(MessageHistoryKind.channel, key, jsonString);
   }
 
+  Future<void> saveChannelMessage(
+    int channelIndex,
+    ChannelMessage message,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot save channel message.');
+      return;
+    }
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) {
+      appLogger.warn(
+        'Channel name is not registered. Cannot save channel message.',
+      );
+      return;
+    }
+    await MessageHistoryStorage.instance.setString(
+      MessageHistoryKind.channel,
+      key,
+      jsonEncode([_messageToJson(message)]),
+    );
+  }
+
+  Future<void> replaceChannelMessages(
+    int channelIndex,
+    List<ChannelMessage> messages, {
+    bool orderMessages = true,
+  }) async {
+    if (publicKeyHex.isEmpty) return;
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return;
+    final ordered = orderMessages ? _orderedMessages(messages) : messages;
+    await MessageHistoryStorage.instance.replaceString(
+      MessageHistoryKind.channel,
+      key,
+      jsonEncode(ordered.map(_messageToJson).toList()),
+    );
+  }
+
+  Future<void> deleteChannelMessage(int channelIndex, String messageId) async {
+    if (publicKeyHex.isEmpty || messageId.isEmpty) return;
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return;
+    await MessageHistoryStorage.instance.deleteMessage(
+      MessageHistoryKind.channel,
+      key,
+      messageId,
+    );
+  }
+
   /// Load messages for a specific channel
   Future<List<ChannelMessage>> loadChannelMessages(
     int channelIndex, {
@@ -61,27 +110,93 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       channelIndex,
       allowLegacyMigration: allowLegacyMigration,
     );
-    if (jsonString == null) return [];
+    return _channelMessagesFromJson(jsonString, channelIndex);
+  }
 
+  Future<List<ChannelMessage>> loadLatestChannelMessages(
+    int channelIndex, {
+    required int limit,
+    bool allowLegacyMigration = true,
+  }) async {
+    final key = await _ensureChannelHistoryKey(
+      channelIndex,
+      allowLegacyMigration: allowLegacyMigration,
+    );
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getLatestString(
+      MessageHistoryKind.channel,
+      key,
+      limit: limit,
+    );
+    return _channelMessagesFromJson(jsonString, channelIndex);
+  }
+
+  Future<List<ChannelMessage>> loadChannelMessagesBefore(
+    int channelIndex, {
+    required ChannelMessage before,
+    required int limit,
+    bool allowLegacyMigration = true,
+  }) async {
+    final key = await _ensureChannelHistoryKey(
+      channelIndex,
+      allowLegacyMigration: allowLegacyMigration,
+    );
+    if (key == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance.getStringBefore(
+      MessageHistoryKind.channel,
+      key,
+      timelineAtMs: before.receivedAt.millisecondsSinceEpoch,
+      messageId: before.messageId,
+      limit: limit,
+    );
+    return _channelMessagesFromJson(jsonString, channelIndex);
+  }
+
+  List<ChannelMessage> _channelMessagesFromJson(
+    String? jsonString,
+    int channelIndex,
+  ) {
+    if (jsonString == null) return const [];
     try {
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return _orderedMessages(
-        jsonList
-            .map(
-              (json) =>
-                  _messageFromJson(json).copyWith(channelIndex: channelIndex),
-            )
-            .toList(),
+      final messages = <ChannelMessage>[];
+      for (var index = 0; index < jsonList.length; index++) {
+        final entry = jsonList[index];
+        try {
+          if (entry is! Map<String, dynamic>) {
+            throw const FormatException('Message entry is not an object');
+          }
+          messages.add(
+            decodeStoredMessage(entry).copyWith(channelIndex: channelIndex),
+          );
+        } catch (error, stackTrace) {
+          if (error is OutOfMemoryError || error is StackOverflowError) {
+            rethrow;
+          }
+          appLogger.warn(
+            'Skipping invalid channel message at index $index '
+            'for channel $channelIndex: ${error.runtimeType}: $error\n'
+            '$stackTrace',
+            tag: 'MessageHistory',
+          );
+        }
+      }
+      return _orderedMessages(messages);
+    } catch (error) {
+      if (error is OutOfMemoryError || error is StackOverflowError) rethrow;
+      appLogger.warn(
+        'Could not decode message history for channel $channelIndex: '
+        '${error.runtimeType}: $error',
+        tag: 'MessageHistory',
       );
-    } catch (e) {
-      // If parsing fails, return empty list
-      return [];
+      return const [];
     }
   }
 
   Future<String?> loadChannelMessagesJsonForSearch(
     int channelIndex, {
     bool includeLegacyIndexFallback = false,
+    String? normalizedQuery,
   }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
@@ -92,20 +207,43 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return null;
-    var jsonString = history.getString(MessageHistoryKind.channel, key);
+    var jsonString = normalizedQuery == null
+        ? await history.getString(MessageHistoryKind.channel, key)
+        : await history.searchString(
+            MessageHistoryKind.channel,
+            key,
+            normalizedQuery,
+          );
     if ((jsonString == null || jsonString.isEmpty) &&
-        includeLegacyIndexFallback) {
+        includeLegacyIndexFallback &&
+        !history.getKeys(MessageHistoryKind.channel).contains(key)) {
       jsonString =
-          history.getString(
-            MessageHistoryKind.channel,
+          await _historyStringForSearch(
+            history,
             '$keyFor$channelIndex',
+            normalizedQuery,
           ) ??
-          history.getString(
-            MessageHistoryKind.channel,
+          await _historyStringForSearch(
+            history,
             '$_keyPrefix$channelIndex',
+            normalizedQuery,
           );
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
+  }
+
+  Future<String?> _historyStringForSearch(
+    MessageHistoryStorage history,
+    String key,
+    String? normalizedQuery,
+  ) {
+    return normalizedQuery == null
+        ? history.getString(MessageHistoryKind.channel, key)
+        : history.searchString(
+            MessageHistoryKind.channel,
+            key,
+            normalizedQuery,
+          );
   }
 
   Future<String?> _loadChannelMessagesJson(
@@ -124,14 +262,17 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
-    String? jsonString = history.getString(MessageHistoryKind.channel, key);
+    String? jsonString = await history.getString(
+      MessageHistoryKind.channel,
+      key,
+    );
     if ((jsonString == null || jsonString.isEmpty) &&
         allowLegacyMigration &&
         allowsLegacyIndexMigration) {
       // One-time migration from the old slot-based storage.
       final legacyJsonString =
-          history.getString(MessageHistoryKind.channel, scopedIndexKey) ??
-          history.getString(MessageHistoryKind.channel, oldKey);
+          await history.getString(MessageHistoryKind.channel, scopedIndexKey) ??
+          await history.getString(MessageHistoryKind.channel, oldKey);
       await history.remove(MessageHistoryKind.channel, scopedIndexKey);
       await history.remove(MessageHistoryKind.channel, oldKey);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
@@ -150,6 +291,33 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     return jsonString;
   }
 
+  Future<String?> _ensureChannelHistoryKey(
+    int channelIndex, {
+    required bool allowLegacyMigration,
+  }) async {
+    if (publicKeyHex.isEmpty) return null;
+    final history = MessageHistoryStorage.instance;
+    final key = channelStorageKey(keyFor, channelIndex);
+    if (key == null) return null;
+    if (history.getKeys(MessageHistoryKind.channel).contains(key)) return key;
+    if (!allowLegacyMigration || !allowsLegacyIndexMigration) return null;
+
+    final scopedIndexKey = '$keyFor$channelIndex';
+    final oldKey = '$_keyPrefix$channelIndex';
+    final legacyJsonString =
+        await history.getString(MessageHistoryKind.channel, scopedIndexKey) ??
+        await history.getString(MessageHistoryKind.channel, oldKey);
+    await history.remove(MessageHistoryKind.channel, scopedIndexKey);
+    await history.remove(MessageHistoryKind.channel, oldKey);
+    if (legacyJsonString == null || legacyJsonString.isEmpty) return null;
+    await history.replaceString(
+      MessageHistoryKind.channel,
+      key,
+      legacyJsonString,
+    );
+    return key;
+  }
+
   List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {
     if (messages.length < 2) return messages;
     final ordered = List<ChannelMessage>.of(messages);
@@ -164,10 +332,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     if (key != null) {
       await history.remove(MessageHistoryKind.channel, key);
     }
-    await history.remove(
-      MessageHistoryKind.channel,
-      '$keyFor$channelIndex',
-    );
+    await history.remove(MessageHistoryKind.channel, '$keyFor$channelIndex');
   }
 
   /// Clear all channel messages
@@ -187,6 +352,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'senderKey': msg.senderKey != null ? base64Encode(msg.senderKey!) : null,
       'senderName': msg.senderName,
       'text': msg.text,
+      'rawText': msg.rawText ?? msg.text,
       'originalText': msg.originalText,
       'translatedText': msg.translatedText,
       'translatedLanguageCode': msg.translatedLanguageCode,
@@ -211,6 +377,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'wasBinaryTransport': msg.wasBinaryTransport,
       'wasBlocked': msg.wasBlocked,
       'binaryPacketBytes': msg.binaryPacketBytes,
+      'rawPayload': msg.rawPayload != null
+          ? base64Encode(msg.rawPayload!)
+          : null,
       'timestamp': msg.timestamp.millisecondsSinceEpoch,
       'receivedAt': msg.receivedAt.millisecondsSinceEpoch,
       'sentByRadioAt': msg.sentByRadioAt?.millisecondsSinceEpoch,
@@ -240,13 +409,15 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   }
 
   /// Convert JSON map to ChannelMessage
-  ChannelMessage _messageFromJson(Map<String, dynamic> json) {
-    final rawText = json['text'] as String;
+  static ChannelMessage decodeStoredMessage(Map<String, dynamic> json) {
+    final storedText = json['text'] as String;
+    final rawText = json['rawText'] as String? ?? storedText;
     final wasMcmpCompressed =
         json['wasMcmpCompressed'] as bool? ??
         MeshCompressor.instance.hasPrefix(rawText);
-    final decodedText =
-        MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText;
+    final decodedText = json['rawText'] != null
+        ? storedText
+        : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
     final detectedCompression = MessageCompressionMetadata.fromEncodedText(
       encodedText: rawText,
       decodedText: decodedText,
@@ -289,6 +460,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           : null,
       senderName: json['senderName'] as String,
       text: decodedText,
+      rawText: rawText,
       originalText: json['originalText'] as String?,
       translatedText: json['translatedText'] as String?,
       translatedLanguageCode: json['translatedLanguageCode'] as String?,
@@ -326,6 +498,9 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       wasBlocked: json['wasBlocked'] as bool? ?? false,
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
+      rawPayload: json['rawPayload'] is String
+          ? Uint8List.fromList(base64Decode(json['rawPayload'] as String))
+          : null,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       receivedAt: DateTime.fromMillisecondsSinceEpoch(
         (json['receivedAt'] as int?) ?? (json['timestamp'] as int),
@@ -377,7 +552,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     );
   }
 
-  McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
+  static McmpSignatureStatus _parseMcmpSignatureStatus(dynamic value) {
     if (value is! String) return McmpSignatureStatus.none;
     for (final status in McmpSignatureStatus.values) {
       if (status.name == value) return status;
@@ -396,7 +571,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     };
   }
 
-  Repeat _repeatFromJson(Map<String, dynamic> json) {
+  static Repeat _repeatFromJson(Map<String, dynamic> json) {
     return Repeat(
       repeaterKey: json['repeaterKey'] != null
           ? Uint8List.fromList(base64Decode(json['repeaterKey']))

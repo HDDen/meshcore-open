@@ -3443,5 +3443,17 @@
   "repeater_cliClearNeighbors": "清空邻居列表",
   "reaction_report": "表情回应",
   "settings_modSettingsMapAndLocation": "地图与位置",
-  "settings_modSettingsAlwaysRequestMapLocation": "打开地图时始终请求位置"
+  "settings_modSettingsAlwaysRequestMapLocation": "打开地图时始终请求位置",
+  "messageHistoryMigrationWarningTitle": "消息历史仅部分迁移",
+  "messageHistoryMigrationWarningDescription": "迁移过程中有 {histories} 个会话和 {messages} 条单独消息无法恢复。其余历史已保留。",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

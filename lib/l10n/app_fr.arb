@@ -3537,5 +3537,17 @@
   "repeater_cliClearNeighbors": "Effacer la liste des voisins",
   "reaction_report": "Réactions emoji",
   "settings_modSettingsMapAndLocation": "Carte et localisation",
-  "settings_modSettingsAlwaysRequestMapLocation": "Toujours demander la localisation à l'ouverture de la carte"
+  "settings_modSettingsAlwaysRequestMapLocation": "Toujours demander la localisation à l'ouverture de la carte",
+  "messageHistoryMigrationWarningTitle": "L'historique des messages n'a été migré que partiellement",
+  "messageHistoryMigrationWarningDescription": "Lors de la migration, {histories} conversations et {messages} messages isolés n'ont pas pu être restaurés. Le reste de l'historique a été conservé.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

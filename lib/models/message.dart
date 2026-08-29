@@ -14,6 +14,7 @@ class Message {
 
   final Uint8List senderKey;
   final String text;
+  final String? rawText;
   final DateTime timestamp;
   // App-local conversation order. Incoming contact and room messages receive
   // it on arrival; outgoing room posts receive it on first transmission.
@@ -87,6 +88,7 @@ class Message {
   Message({
     required this.senderKey,
     required this.text,
+    this.rawText,
     required this.timestamp,
     this.receivedAt,
     required this.isOutgoing,
@@ -193,6 +195,7 @@ class Message {
     return Message(
       senderKey: senderKey,
       text: text,
+      rawText: rawText,
       timestamp: timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
       isOutgoing: isOutgoing ?? this.isOutgoing,
@@ -315,6 +318,7 @@ class Message {
       return Message(
         senderKey: senderKey,
         text: text,
+        rawText: rawText,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: false,
         isCli: false,
@@ -339,6 +343,7 @@ class Message {
   static Message outgoing(
     Uint8List recipientKey,
     String text, {
+    String? rawText,
     String? messageId,
     DateTime? timestamp,
     String? originalText,
@@ -360,6 +365,7 @@ class Message {
     return Message(
       senderKey: recipientKey,
       text: text,
+      rawText: rawText,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,

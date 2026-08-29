@@ -3537,5 +3537,17 @@
   "repeater_cliClearNeighbors": "Borrar lista de vecinos",
   "reaction_report": "Reacciones con emoji",
   "settings_modSettingsMapAndLocation": "Mapa y ubicación",
-  "settings_modSettingsAlwaysRequestMapLocation": "Solicitar siempre la ubicación al abrir el mapa"
+  "settings_modSettingsAlwaysRequestMapLocation": "Solicitar siempre la ubicación al abrir el mapa",
+  "messageHistoryMigrationWarningTitle": "El historial de mensajes se migró parcialmente",
+  "messageHistoryMigrationWarningDescription": "Durante la migración no se pudieron recuperar {histories} conversaciones ni {messages} mensajes sueltos. El resto del historial se conservó.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

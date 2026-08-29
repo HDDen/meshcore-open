@@ -3543,5 +3543,17 @@
   "repeater_cliClearNeighbors": "近隣リストをクリア",
   "reaction_report": "絵文字リアクション",
   "settings_modSettingsMapAndLocation": "地図と位置情報",
-  "settings_modSettingsAlwaysRequestMapLocation": "地図を開くときに常に位置情報を取得する"
+  "settings_modSettingsAlwaysRequestMapLocation": "地図を開くときに常に位置情報を取得する",
+  "messageHistoryMigrationWarningTitle": "メッセージ履歴は一部のみ移行されました",
+  "messageHistoryMigrationWarningDescription": "移行中に {histories} 件の会話と {messages} 件の個別メッセージを復元できませんでした。残りの履歴は保持されています。",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

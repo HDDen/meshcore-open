@@ -6345,4 +6345,16 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get reaction_report => 'Емоджи реакции';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Историята на съобщенията е пренесена частично';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'При преноса не бяха възстановени разговори: $histories и отделни съобщения: $messages. Останалата история е запазена.';
+  }
 }

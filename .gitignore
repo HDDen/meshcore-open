@@ -81,6 +81,7 @@ keystore.properties
 
 # Generated files
 *.g.dart
+!lib/storage/message_history_database.g.dart
 *.freezed.dart
 *.mocks.dart
 

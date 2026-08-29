@@ -40,6 +40,8 @@ import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'storage/message_history_storage.dart';
+import 'storage/message_store.dart';
+import 'storage/channel_message_store.dart';
 import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
@@ -57,20 +59,13 @@ Future<void> main() async {
   try {
     await _startApplication();
   } catch (error, stackTrace) {
-    final migrationConflict = error is MessageHistoryMigrationConflict
-        ? error
-        : null;
     runApp(
       StartupErrorApp(
         report: StartupFailureReport(
-          code: migrationConflict == null
-              ? _startupErrorCode
-              : 'MCO-HISTORY-MIGRATION-001',
+          code: _startupErrorCode,
           stage: _startupStage,
           error: error,
           stackTrace: stackTrace,
-          dataPath: migrationConflict?.dataPath,
-          showHistoryMigrationConflictHelp: migrationConflict != null,
         ),
       ),
     );
@@ -93,8 +88,19 @@ Future<void> _startApplication() async {
   _setStartupStage('MCO-STARTUP-100', 'Message history migration');
   final historyMigrated = await MessageHistoryStorage.instance
       .initializeAndMigrate(
+        validateMessage: (kind, message) {
+          if (kind == MessageHistoryKind.direct.index) {
+            MessageStore.decodeStoredMessage(message);
+          } else if (kind == MessageHistoryKind.channel.index) {
+            ChannelMessageStore.decodeStoredMessage(message);
+          }
+        },
         onMigrationStarted: () async {
-          runApp(const MessageHistoryMigrationApp());
+          runApp(
+            MessageHistoryMigrationApp(
+              progress: MessageHistoryStorage.instance.migrationProgress,
+            ),
+          );
           await WidgetsBinding.instance.endOfFrame;
         },
       );
@@ -515,7 +521,43 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           reason: 'startup',
         ),
       );
+      unawaited(_showMessageHistoryMigrationWarning());
     });
+  }
+
+  Future<void> _showMessageHistoryMigrationWarning() async {
+    try {
+      final warning = await MessageHistoryStorage.instance
+          .pendingMigrationWarning();
+      if (warning == null || !mounted) return;
+      final l10n = AppLocalizations.of(context);
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.messageHistoryMigrationWarningTitle),
+          content: Text(
+            l10n.messageHistoryMigrationWarningDescription(
+              warning.skippedHistories,
+              warning.skippedMessages,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      await MessageHistoryStorage.instance.acknowledgeMigrationWarning();
+    } catch (error, stackTrace) {
+      appLogger.warn(
+        'Could not show message history migration warning: '
+        '${error.runtimeType}: $error\n$stackTrace',
+        tag: 'MessageHistory',
+      );
+    }
   }
 
   @override
@@ -664,6 +706,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void didHaveMemoryPressure() {
     super.didHaveMemoryPressure();
+    widget.connector.trimInactiveMessageHistoryWindows();
     unawaited(widget.imageCodecService.handleMemoryPressure());
     unawaited(widget.receivedImageStore.handleMemoryPressure());
   }

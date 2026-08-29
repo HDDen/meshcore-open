@@ -6288,4 +6288,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get reaction_report => 'Emoji-reaktioner';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Meddelandehistoriken flyttades bara delvis';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Vid flytten gick det inte att återställa $histories konversationer och $messages enskilda meddelanden. Resten av historiken bevarades.';
+  }
 }

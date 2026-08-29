@@ -1,32 +1,20 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'message_history_database.dart';
 import 'prefs_manager.dart';
 
 enum MessageHistoryKind { direct, channel }
-
-class MessageHistoryMigrationConflict implements Exception {
-  const MessageHistoryMigrationConflict(this.dataPath);
-
-  final String dataPath;
-
-  @override
-  String toString() =>
-      'Message history migration cannot continue because legacy history and '
-      'separate history files both exist.';
-}
 
 class MessageHistoryStorage {
   MessageHistoryStorage._();
 
   static final MessageHistoryStorage instance = MessageHistoryStorage._();
 
-  static const String directFileName = 'direct_message_history.json';
-  static const String channelFileName = 'channel_message_history.json';
+  static const String databaseFileName = 'message_history.sqlite';
   static const String _directPrefix = 'messages_';
   static const String _channelPrefix = 'channel_messages_';
   static final RegExp _directKeyPattern = RegExp(
@@ -36,95 +24,146 @@ class MessageHistoryStorage {
     r'^channel_messages_(?:[0-9a-fA-F]{10}(?:\d+|name_[A-Za-z0-9_-]+)|\d+)$',
   );
 
-  _JsonHistoryFile? _directFile;
-  _JsonHistoryFile? _channelFile;
+  MessageHistoryDatabase? _database;
+  final Map<MessageHistoryKind, Set<String>> _keys = {
+    for (final kind in MessageHistoryKind.values) kind: <String>{},
+  };
+  final Set<String> _directMarkerKeys = {};
+  final ValueNotifier<LegacyMessageHistoryProgress> migrationProgress =
+      ValueNotifier(
+        const LegacyMessageHistoryProgress(
+          completedHistories: 0,
+          totalHistories: 0,
+          processedMessages: 0,
+        ),
+      );
   bool _initialized = false;
-
-  bool get usesSeparateFiles =>
-      !Platform.isAndroid &&
-      !Platform.isIOS &&
-      (Platform.isWindows || Platform.isLinux);
 
   Future<bool> initializeAndMigrate({
     Future<void> Function()? onMigrationStarted,
+    LegacyMessageValidator? validateMessage,
   }) async {
     if (_initialized) return false;
-    if (!usesSeparateFiles) {
+
+    if (kIsWeb) {
+      final prefs = PrefsManager.instance;
+      for (final key in prefs.getKeys()) {
+        final kind = key.startsWith(_channelPrefix)
+            ? MessageHistoryKind.channel
+            : key.startsWith(_directPrefix)
+            ? MessageHistoryKind.direct
+            : null;
+        if (kind == null) continue;
+        _keys[kind]!.add(key);
+        if (kind == MessageHistoryKind.direct &&
+            (prefs.getString(key)?.contains('m:') ?? false)) {
+          _directMarkerKeys.add(key);
+        }
+      }
       _initialized = true;
       return false;
     }
 
-    final directory = await getApplicationSupportDirectory();
-    final directFile = _JsonHistoryFile(
-      File('${directory.path}${Platform.pathSeparator}$directFileName'),
-    );
-    final channelFile = _JsonHistoryFile(
-      File('${directory.path}${Platform.pathSeparator}$channelFileName'),
-    );
     final prefs = PrefsManager.instance;
-    final directKeys = prefs
+    final directPreferenceKeys = prefs
         .getKeys()
         .where(_directKeyPattern.hasMatch)
         .toList();
-    final channelKeys = prefs
+    final channelPreferenceKeys = prefs
         .getKeys()
         .where(_channelKeyPattern.hasMatch)
         .toList();
-    final hasLegacyHistory = directKeys.isNotEmpty || channelKeys.isNotEmpty;
-    final hasDirectFile = await directFile.exists();
-    final hasChannelFile = await channelFile.exists();
+    final hasPreferenceHistory =
+        directPreferenceKeys.isNotEmpty || channelPreferenceKeys.isNotEmpty;
 
-    if (hasLegacyHistory && (hasDirectFile || hasChannelFile)) {
-      throw MessageHistoryMigrationConflict(directory.path);
-    }
-
-    if (hasLegacyHistory) {
-      await onMigrationStarted?.call();
-      await directFile.createFromLegacy(
-        _readLegacyEntries(prefs, directKeys),
-      );
-      await channelFile.createFromLegacy(
-        _readLegacyEntries(prefs, channelKeys),
-      );
-
-      // Keep removal sequential. The preferences plugin rewrites its JSON file
-      // per mutation; concurrent removals can corrupt that file.
-      for (final key in [...directKeys, ...channelKeys]) {
-        await prefs.remove(key);
+    final database = MessageHistoryDatabase();
+    _database = database;
+    try {
+      final migrationComplete = await database.isLegacyMigrationComplete();
+      var migrated = false;
+      if (!migrationComplete && hasPreferenceHistory) {
+        await onMigrationStarted?.call();
+        final histories = _readPreferenceHistories(
+          prefs,
+          directPreferenceKeys,
+          channelPreferenceKeys,
+        );
+        migrationProgress.value = LegacyMessageHistoryProgress(
+          completedHistories: 0,
+          totalHistories: histories.length,
+          processedMessages: 0,
+        );
+        await database.importLegacyHistories(
+          histories,
+          onProgress: (progress) => migrationProgress.value = progress,
+          validateMessage: validateMessage,
+        );
+        migrated = true;
+      } else if (!migrationComplete) {
+        await database.markLegacyMigrationComplete();
       }
-      _directFile = directFile;
-      _channelFile = channelFile;
+
+      if (hasPreferenceHistory) {
+        // The database transaction and its completion marker are committed
+        // before cleanup. If cleanup is interrupted, the next launch safely
+        // resumes these removals without importing the same messages twice.
+        for (final key in [...directPreferenceKeys, ...channelPreferenceKeys]) {
+          await prefs.remove(key);
+        }
+      }
+
+      await _refreshCaches();
       _initialized = true;
-      return true;
+      return migrated;
+    } catch (_) {
+      await database.close();
+      _database = null;
+      rethrow;
     }
-
-    await directFile.loadOrCreate();
-    await channelFile.loadOrCreate();
-    _directFile = directFile;
-    _channelFile = channelFile;
-    _initialized = true;
-    return false;
   }
 
-  Map<String, String> _readLegacyEntries(
+  List<LegacyMessageHistoryEntry> _readPreferenceHistories(
     SharedPreferences prefs,
-    Iterable<String> keys,
+    Iterable<String> directKeys,
+    Iterable<String> channelKeys,
   ) {
-    final result = <String, String>{};
-    for (final key in keys) {
-      final value = prefs.getString(key);
-      if (value == null) {
-        throw FormatException('History entry is not a string: $key');
+    final entries = <LegacyMessageHistoryEntry>[];
+    void append(Iterable<String> keys, MessageHistoryKind kind) {
+      for (final key in keys) {
+        final storedValue = prefs.get(key);
+        final value = storedValue is String ? storedValue : null;
+        entries.add(
+          LegacyMessageHistoryEntry(
+            kind: kind.index,
+            storageKey: key,
+            jsonValue: value,
+          ),
+        );
       }
-      result[key] = value;
     }
-    return result;
+
+    append(directKeys, MessageHistoryKind.direct);
+    append(channelKeys, MessageHistoryKind.channel);
+    return entries;
   }
 
-  Future<Never> restartAfterMigration() async {
-    if (!usesSeparateFiles) {
-      throw StateError('Automatic restart is only available on desktop.');
+  Future<void> _refreshCaches() async {
+    for (final kind in MessageHistoryKind.values) {
+      _keys[kind]!
+        ..clear()
+        ..addAll(await _database!.storageKeys(kind.index));
     }
+    _directMarkerKeys
+      ..clear()
+      ..addAll(
+        await _database!.markerStorageKeys(MessageHistoryKind.direct.index),
+      );
+  }
+
+  Future<void> restartAfterMigration() async {
+    if (kIsWeb) return;
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return;
+    await _database?.close();
     await Process.start(
       Platform.resolvedExecutable,
       Platform.executableArguments,
@@ -133,24 +172,114 @@ class MessageHistoryStorage {
     exit(0);
   }
 
-  String? getString(MessageHistoryKind kind, String key) {
+  Future<LegacyMessageMigrationWarning?> pendingMigrationWarning() async {
     _requireInitialized();
-    if (!usesSeparateFiles) return PrefsManager.instance.getString(key);
-    return _fileFor(kind).getString(key);
+    if (kIsWeb) return null;
+    return _database!.pendingLegacyMigrationWarning();
+  }
+
+  Future<void> acknowledgeMigrationWarning() async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.acknowledgeLegacyMigrationWarning();
+  }
+
+  Future<String?> getString(MessageHistoryKind kind, String key) async {
+    _requireInitialized();
+    if (kIsWeb) return PrefsManager.instance.getString(key);
+    final messages = await _database!.readMessageJson(kind.index, key);
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> getLatestString(
+    MessageHistoryKind kind,
+    String key, {
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) {
+      final value = PrefsManager.instance.getString(key);
+      if (value == null) return null;
+      final messages = _decodeMessageList(value, key);
+      final start = messages.length > limit ? messages.length - limit : 0;
+      return jsonEncode(messages.sublist(start));
+    }
+    final messages = await _database!.readLatestMessageJson(
+      kind.index,
+      key,
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> getStringBefore(
+    MessageHistoryKind kind,
+    String key, {
+    required int timelineAtMs,
+    required String messageId,
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) {
+      final value = PrefsManager.instance.getString(key);
+      if (value == null) return null;
+      final messages = _decodeMessageList(value, key);
+      final anchor = messages.indexWhere(
+        (message) => message['messageId'] == messageId,
+      );
+      if (anchor <= 0) return null;
+      final start = anchor > limit ? anchor - limit : 0;
+      return jsonEncode(messages.sublist(start, anchor));
+    }
+    final messages = await _database!.readMessageJsonBefore(
+      kind.index,
+      key,
+      cursor: MessageHistoryCursor(
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+      ),
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> searchString(
+    MessageHistoryKind kind,
+    String key,
+    String normalizedQuery,
+  ) async {
+    _requireInitialized();
+    if (normalizedQuery.isEmpty || kIsWeb) return getString(kind, key);
+    final messages = await _database!.searchMessageJson(
+      kind.index,
+      key,
+      normalizedQuery,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<MessageHistorySummaryRow?> directSummary(String key) async {
+    _requireInitialized();
+    if (kIsWeb) return null;
+    return _database!.readDirectSummary(key);
+  }
+
+  Future<Map<String, MessageHistorySummaryRow>> directSummaries(
+    Iterable<String> keys,
+  ) async {
+    _requireInitialized();
+    if (kIsWeb) return const {};
+    return _database!.readDirectSummaries(keys);
   }
 
   Set<String> getKeys(MessageHistoryKind kind) {
     _requireInitialized();
-    if (!usesSeparateFiles) {
-      final prefix = kind == MessageHistoryKind.direct
-          ? _directPrefix
-          : _channelPrefix;
-      return PrefsManager.instance
-          .getKeys()
-          .where((key) => key.startsWith(prefix))
-          .toSet();
-    }
-    return _fileFor(kind).keys;
+    return Set.unmodifiable(_keys[kind]!);
+  }
+
+  bool mayContainMarker(String key) {
+    _requireInitialized();
+    return _directMarkerKeys.contains(key);
   }
 
   Future<void> setString(
@@ -159,27 +288,138 @@ class MessageHistoryStorage {
     String value,
   ) async {
     _requireInitialized();
-    if (!usesSeparateFiles) {
-      await PrefsManager.instance.setString(key, value);
+    final messages = _decodeMessageList(value, key);
+    if (messages.isEmpty) return;
+    if (kIsWeb) {
+      final existingValue = PrefsManager.instance.getString(key);
+      final existing = existingValue == null
+          ? <Map<String, dynamic>>[]
+          : _decodeMessageList(existingValue, key);
+      final indexes = <String, int>{};
+      for (var index = 0; index < existing.length; index++) {
+        final id = existing[index]['messageId'];
+        if (id is String && id.isNotEmpty) indexes[id] = index;
+      }
+      for (final message in messages) {
+        final id = message['messageId'];
+        final index = id is String ? indexes[id] : null;
+        if (index == null) {
+          existing.add(message);
+          if (id is String && id.isNotEmpty) indexes[id] = existing.length - 1;
+        } else {
+          existing[index] = message;
+        }
+      }
+      final encoded = jsonEncode(existing);
+      await PrefsManager.instance.setString(key, encoded);
+      _keys[kind]!.add(key);
+      if (kind == MessageHistoryKind.direct) {
+        if (encoded.contains('m:')) {
+          _directMarkerKeys.add(key);
+        } else {
+          _directMarkerKeys.remove(key);
+        }
+      }
       return;
     }
-    await _fileFor(kind).setString(key, value);
+    final containsMarker = await _database!.upsertMessages(
+      kind.index,
+      key,
+      messages,
+    );
+    _keys[kind]!.add(key);
+    // Point upserts keep this cache add-only. A stale positive only causes one
+    // harmless extra history read; replace/delete paths recompute it exactly.
+    if (kind == MessageHistoryKind.direct && containsMarker) {
+      _directMarkerKeys.add(key);
+    }
+  }
+
+  Future<void> replaceString(
+    MessageHistoryKind kind,
+    String key,
+    String value,
+  ) async {
+    _requireInitialized();
+    final messages = _decodeMessageList(value, key);
+    if (kIsWeb) {
+      if (messages.isEmpty) {
+        await remove(kind, key);
+        return;
+      }
+      await PrefsManager.instance.setString(key, value);
+    } else {
+      final containsMarker = await _database!.replaceMessages(
+        kind.index,
+        key,
+        messages,
+      );
+      if (kind == MessageHistoryKind.direct) {
+        if (containsMarker) {
+          _directMarkerKeys.add(key);
+        } else {
+          _directMarkerKeys.remove(key);
+        }
+      }
+    }
+    if (messages.isEmpty) {
+      _keys[kind]!.remove(key);
+      _directMarkerKeys.remove(key);
+      return;
+    }
+    _keys[kind]!.add(key);
+    if (kind == MessageHistoryKind.direct && kIsWeb) {
+      final hasMarker = value.contains('m:');
+      if (hasMarker) {
+        _directMarkerKeys.add(key);
+      } else {
+        _directMarkerKeys.remove(key);
+      }
+    }
+  }
+
+  Future<void> deleteMessage(
+    MessageHistoryKind kind,
+    String key,
+    String messageId,
+  ) async {
+    _requireInitialized();
+    if (kIsWeb) {
+      final value = PrefsManager.instance.getString(key);
+      if (value == null) return;
+      final messages = _decodeMessageList(value, key)
+        ..removeWhere((message) => message['messageId'] == messageId);
+      await replaceString(kind, key, jsonEncode(messages));
+      return;
+    }
+    final state = await _database!.deleteMessage(kind.index, key, messageId);
+    if (!state.hasMessages) {
+      _keys[kind]!.remove(key);
+    }
+    if (kind == MessageHistoryKind.direct) {
+      if (state.containsMarker) {
+        _directMarkerKeys.add(key);
+      } else {
+        _directMarkerKeys.remove(key);
+      }
+    }
   }
 
   Future<void> remove(MessageHistoryKind kind, String key) async {
     _requireInitialized();
-    if (!usesSeparateFiles) {
+    if (kIsWeb) {
       await PrefsManager.instance.remove(key);
+      _keys[kind]!.remove(key);
+      if (kind == MessageHistoryKind.direct) {
+        _directMarkerKeys.remove(key);
+      }
       return;
     }
-    await _fileFor(kind).remove(key);
-  }
-
-  _JsonHistoryFile _fileFor(MessageHistoryKind kind) {
-    return switch (kind) {
-      MessageHistoryKind.direct => _directFile!,
-      MessageHistoryKind.channel => _channelFile!,
-    };
+    await _database!.removeHistory(kind.index, key);
+    _keys[kind]!.remove(key);
+    if (kind == MessageHistoryKind.direct) {
+      _directMarkerKeys.remove(key);
+    }
   }
 
   void _requireInitialized() {
@@ -187,117 +427,17 @@ class MessageHistoryStorage {
       throw StateError('MessageHistoryStorage is not initialized.');
     }
   }
-}
 
-class _JsonHistoryFile {
-  _JsonHistoryFile(this.file);
-
-  static const int _formatVersion = 1;
-
-  final File file;
-  final Map<String, Object?> _entries = {};
-  Future<void> _writeTail = Future.value();
-
-  Future<bool> exists() async {
-    return await file.exists() ||
-        await File('${file.path}.previous').exists() ||
-        await File('${file.path}.tmp').exists();
-  }
-
-  Set<String> get keys => Set.unmodifiable(_entries.keys);
-
-  String? getString(String key) {
-    final value = _entries[key];
-    return value == null ? null : jsonEncode(value);
-  }
-
-  Future<void> loadOrCreate() async {
-    await _recoverInterruptedWrite();
-    if (!await file.exists()) {
-      await createFromLegacy(const {});
-      return;
+  List<Map<String, dynamic>> _decodeMessageList(String value, String key) {
+    final decoded = jsonDecode(value);
+    if (decoded is! List) {
+      throw FormatException('History entry is not a JSON array: $key');
     }
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! Map<String, dynamic> ||
-        decoded['version'] != _formatVersion ||
-        decoded['entries'] is! Map<String, dynamic>) {
-      throw const FormatException('Unsupported message history file format');
-    }
-    _entries
-      ..clear()
-      ..addAll(decoded['entries'] as Map<String, dynamic>);
-  }
-
-  Future<void> _recoverInterruptedWrite() async {
-    if (await file.exists()) return;
-    final previous = File('${file.path}.previous');
-    if (await previous.exists()) {
-      await previous.rename(file.path);
-      return;
-    }
-    final temporary = File('${file.path}.tmp');
-    if (await temporary.exists()) {
-      await temporary.rename(file.path);
-    }
-  }
-
-  Future<void> createFromLegacy(Map<String, String> legacyEntries) async {
-    _entries
-      ..clear()
-      ..addEntries(
-        legacyEntries.entries.map(
-          (entry) {
-            final decoded = jsonDecode(entry.value);
-            if (decoded is! List) {
-              throw FormatException(
-                'History entry is not a JSON array: ${entry.key}',
-              );
-            }
-            return MapEntry(entry.key, decoded);
-          },
-        ),
-      );
-    await _persist();
-  }
-
-  Future<void> setString(String key, String value) {
-    return _enqueue(() async {
-      _entries[key] = jsonDecode(value);
-      await _persist();
-    });
-  }
-
-  Future<void> remove(String key) {
-    return _enqueue(() async {
-      if (_entries.remove(key) == null) return;
-      await _persist();
-    });
-  }
-
-  Future<void> _enqueue(Future<void> Function() operation) {
-    final result = _writeTail.then((_) => operation());
-    _writeTail = result.then<void>((_) {}, onError: (_, _) {});
-    return result;
-  }
-
-  Future<void> _persist() async {
-    await file.parent.create(recursive: true);
-    final temporary = File('${file.path}.tmp');
-    final previous = File('${file.path}.previous');
-    await temporary.writeAsString(
-      jsonEncode({'version': _formatVersion, 'entries': _entries}),
-      flush: true,
-    );
-    if (await previous.exists()) await previous.delete();
-    if (await file.exists()) await file.rename(previous.path);
-    try {
-      await temporary.rename(file.path);
-      if (await previous.exists()) await previous.delete();
-    } catch (_) {
-      if (!await file.exists() && await previous.exists()) {
-        await previous.rename(file.path);
+    return decoded.map((entry) {
+      if (entry is! Map<String, dynamic>) {
+        throw FormatException('History message is not an object: $key');
       }
-      rethrow;
-    }
+      return Map<String, dynamic>.from(entry);
+    }).toList();
   }
 }

@@ -5894,4 +5894,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reaction_report => '表情回应';
+
+  @override
+  String get messageHistoryMigrationWarningTitle => '消息历史仅部分迁移';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return '迁移过程中有 $histories 个会话和 $messages 条单独消息无法恢复。其余历史已保留。';
+  }
 }

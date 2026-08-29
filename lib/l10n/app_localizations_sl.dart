@@ -6313,4 +6313,16 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get reaction_report => 'Reakcije z emoji';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Zgodovina sporočil je bila prenesena le delno';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Med prenosom ni bilo mogoče obnoviti $histories pogovorov in $messages posameznih sporočil. Preostala zgodovina je ohranjena.';
+  }
 }

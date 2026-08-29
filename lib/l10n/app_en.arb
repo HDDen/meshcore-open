@@ -3547,5 +3547,17 @@
   "settings_backgroundPermissionsGranted": "Permission is already granted",
   "chat_selectSendAction": "Select send action",
   "chat_sendImageLora": "Send image via meshcore",
-  "reaction_report": "Emoji Reactions"
+  "reaction_report": "Emoji Reactions",
+  "messageHistoryMigrationWarningTitle": "Message history was partially migrated",
+  "messageHistoryMigrationWarningDescription": "Some history could not be restored during migration: {histories} conversations and {messages} individual messages. The remaining history was preserved.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

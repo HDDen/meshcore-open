@@ -3575,5 +3575,17 @@
   "repeater_cliClearNeighbors": "이웃 목록 지우기",
   "reaction_report": "이모지 리액션",
   "settings_modSettingsMapAndLocation": "지도 및 위치",
-  "settings_modSettingsAlwaysRequestMapLocation": "지도를 열 때 항상 위치 요청"
+  "settings_modSettingsAlwaysRequestMapLocation": "지도를 열 때 항상 위치 요청",
+  "messageHistoryMigrationWarningTitle": "메시지 기록이 일부만 이전되었습니다",
+  "messageHistoryMigrationWarningDescription": "이전 중에 대화 {histories}개와 개별 메시지 {messages}개를 복원하지 못했습니다. 나머지 기록은 유지되었습니다.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

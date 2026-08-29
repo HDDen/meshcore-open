@@ -35,6 +35,7 @@ class ChannelMessage {
   final Uint8List? senderKey;
   final String senderName;
   final String text;
+  final String? rawText;
   final String? originalText;
   final String? translatedText;
   final String? translatedLanguageCode;
@@ -72,6 +73,7 @@ class ChannelMessage {
   final bool wasBlocked;
 
   final int? binaryPacketBytes;
+  final Uint8List? rawPayload;
   final DateTime timestamp;
   final DateTime receivedAt;
   // Internal first-TX anchor. UI ordering and labels use receivedAt.
@@ -119,6 +121,7 @@ class ChannelMessage {
     this.senderKey,
     required this.senderName,
     required this.text,
+    this.rawText,
     this.originalText,
     this.translatedText,
     this.translatedLanguageCode,
@@ -141,6 +144,7 @@ class ChannelMessage {
     this.wasBinaryTransport = false,
     this.wasBlocked = false,
     this.binaryPacketBytes,
+    this.rawPayload,
     required this.timestamp,
     DateTime? receivedAt,
     this.sentByRadioAt,
@@ -242,6 +246,7 @@ class ChannelMessage {
     bool? wasBinaryTransport,
     bool? wasBlocked,
     Object? binaryPacketBytes = _unset,
+    Uint8List? rawPayload,
     Object? sharedHistorySourceName = _unset,
     Object? sourceLabel = _unset,
     DateTime? receivedAt,
@@ -253,6 +258,7 @@ class ChannelMessage {
       senderKey: senderKey,
       senderName: senderName,
       text: text,
+      rawText: rawText,
       originalText: originalText == _unset
           ? this.originalText
           : originalText as String?,
@@ -305,6 +311,7 @@ class ChannelMessage {
       binaryPacketBytes: binaryPacketBytes == _unset
           ? this.binaryPacketBytes
           : binaryPacketBytes as int?,
+      rawPayload: rawPayload ?? this.rawPayload,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
@@ -438,6 +445,7 @@ class ChannelMessage {
         senderKey: null,
         senderName: senderName,
         text: decodedText,
+        rawText: actualText,
         wasMcmpCompressed:
             MeshCompressor.instance.hasPrefix(actualText) ||
             McmpAppCodec.isTextPayload(actualText),
@@ -474,6 +482,7 @@ class ChannelMessage {
     String text,
     String senderName,
     int channelIndex, {
+    String? rawText,
     String? messageId,
     DateTime? timestamp,
     DateTime? receivedAt,
@@ -497,6 +506,7 @@ class ChannelMessage {
     int? mcmpReplyTimestamp,
     bool wasBinaryTransport = false,
     int? binaryPacketBytes,
+    Uint8List? rawPayload,
     String? packetRegion,
     bool packetRegionInfoAvailable = false,
     bool packetRegionNotMatched = false,
@@ -505,6 +515,7 @@ class ChannelMessage {
       senderKey: null,
       senderName: senderName,
       text: text,
+      rawText: rawText,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
@@ -522,6 +533,7 @@ class ChannelMessage {
       mcmpReplyTimestamp: mcmpReplyTimestamp,
       wasBinaryTransport: wasBinaryTransport,
       binaryPacketBytes: binaryPacketBytes,
+      rawPayload: rawPayload,
       timestamp: timestamp ?? DateTime.now(),
       receivedAt: receivedAt,
       isOutgoing: true,

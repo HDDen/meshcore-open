@@ -3220,5 +3220,17 @@
   "repeater_cliClearNeighbors": "Burenlijst wissen",
   "reaction_report": "Emoji-reacties",
   "settings_modSettingsMapAndLocation": "Kaart en locatie",
-  "settings_modSettingsAlwaysRequestMapLocation": "Bij het openen van de kaart altijd de locatie opvragen"
+  "settings_modSettingsAlwaysRequestMapLocation": "Bij het openen van de kaart altijd de locatie opvragen",
+  "messageHistoryMigrationWarningTitle": "Berichtgeschiedenis is gedeeltelijk overgezet",
+  "messageHistoryMigrationWarningDescription": "Bij het overzetten konden {histories} gesprekken en {messages} losse berichten niet worden hersteld. De overige geschiedenis is bewaard gebleven.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

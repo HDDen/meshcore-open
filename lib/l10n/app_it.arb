@@ -3401,5 +3401,17 @@
   "repeater_cliClearNeighbors": "Cancella elenco vicini",
   "reaction_report": "Reazioni emoji",
   "settings_modSettingsMapAndLocation": "Mappa e posizione",
-  "settings_modSettingsAlwaysRequestMapLocation": "Richiedi sempre la posizione all'apertura della mappa"
+  "settings_modSettingsAlwaysRequestMapLocation": "Richiedi sempre la posizione all'apertura della mappa",
+  "messageHistoryMigrationWarningTitle": "La cronologia dei messaggi è stata migrata solo in parte",
+  "messageHistoryMigrationWarningDescription": "Durante la migrazione non è stato possibile recuperare {histories} conversazioni e {messages} singoli messaggi. Il resto della cronologia è stato conservato.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

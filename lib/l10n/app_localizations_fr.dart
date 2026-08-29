@@ -6374,4 +6374,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get reaction_report => 'Réactions emoji';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'L\'historique des messages n\'a été migré que partiellement';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Lors de la migration, $histories conversations et $messages messages isolés n\'ont pas pu être restaurés. Le reste de l\'historique a été conservé.';
+  }
 }

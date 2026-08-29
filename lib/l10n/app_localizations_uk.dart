@@ -6350,4 +6350,16 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get reaction_report => 'Емодзі-реакції';
+
+  @override
+  String get messageHistoryMigrationWarningTitle =>
+      'Історію повідомлень перенесено частково';
+
+  @override
+  String messageHistoryMigrationWarningDescription(
+    int histories,
+    int messages,
+  ) {
+    return 'Під час перенесення не вдалося відновити діалогів: $histories, окремих повідомлень: $messages. Решту історії збережено.';
+  }
 }

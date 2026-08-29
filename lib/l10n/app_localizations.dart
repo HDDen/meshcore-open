@@ -10791,6 +10791,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Emoji Reactions'**
   String get reaction_report;
+
+  /// No description provided for @messageHistoryMigrationWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Message history was partially migrated'**
+  String get messageHistoryMigrationWarningTitle;
+
+  /// No description provided for @messageHistoryMigrationWarningDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Some history could not be restored during migration: {histories} conversations and {messages} individual messages. The remaining history was preserved.'**
+  String messageHistoryMigrationWarningDescription(int histories, int messages);
 }
 
 class _AppLocalizationsDelegate

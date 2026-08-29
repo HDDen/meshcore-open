@@ -238,6 +238,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             connector: connector,
             settings: settings,
             generation: generation,
+            normalizedQuery: normalizedQuery,
             channelFilter: widget.channelFilter,
           ),
         );
@@ -251,6 +252,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
               includeContacts: true,
               includeRooms: false,
               generation: generation,
+              normalizedQuery: normalizedQuery,
             ),
           );
         }
@@ -264,6 +266,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
               includeContacts: false,
               includeRooms: true,
               generation: generation,
+              normalizedQuery: normalizedQuery,
             ),
           );
         }
@@ -275,6 +278,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             includeContacts: true,
             includeRooms: true,
             generation: generation,
+            normalizedQuery: normalizedQuery,
             contactFilter: widget.contactFilter,
           ),
         );
@@ -356,6 +360,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required MeshCoreConnector connector,
     required AppSettings settings,
     required int generation,
+    required String normalizedQuery,
     Channel? channelFilter,
   }) async {
     final currentScope = SharedMessageHistoryHelper.scopeFor(
@@ -388,6 +393,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         channelCandidates: candidates,
         channelIndex: channel.index,
         scope: currentScope,
+        normalizedQuery: normalizedQuery,
         includeLegacyIndexFallback: true,
       );
       if (source != null) result.add(source);
@@ -424,6 +430,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
           channelCandidates: candidates,
           channelIndex: matchedIndex,
           scope: scope,
+          normalizedQuery: normalizedQuery,
         );
         if (source != null) result.add(source);
       }
@@ -437,11 +444,13 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required List<Channel> channelCandidates,
     required int channelIndex,
     required String scope,
+    required String normalizedQuery,
     bool includeLegacyIndexFallback = false,
   }) async {
     final jsonString = await store.loadChannelMessagesJsonForSearch(
       channelIndex,
       includeLegacyIndexFallback: includeLegacyIndexFallback,
+      normalizedQuery: normalizedQuery,
     );
     if (jsonString == null) return null;
     return _MessageSearchSourceDescriptor(
@@ -540,6 +549,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required bool includeContacts,
     required bool includeRooms,
     required int generation,
+    required String normalizedQuery,
     Contact? contactFilter,
   }) async {
     final currentScope = SharedMessageHistoryHelper.scopeFor(
@@ -571,6 +581,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         store: currentStore,
         contact: contact,
         scope: currentScope,
+        normalizedQuery: normalizedQuery,
         includeLegacyUnscoped: true,
       );
       if (source != null) result.add(source);
@@ -596,6 +607,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
           store: store,
           contact: contact,
           scope: scope,
+          normalizedQuery: normalizedQuery,
         );
         if (source != null) result.add(source);
       }
@@ -623,11 +635,17 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required MessageStore store,
     required Contact contact,
     required String scope,
+    required String normalizedQuery,
     bool includeLegacyUnscoped = false,
   }) async {
     final jsonString = await store.loadMessagesJsonForSearch(
       contact.publicKeyHex,
       includeLegacyUnscoped: includeLegacyUnscoped,
+      normalizedQuery:
+          contact.type == advTypeRoom ||
+              contact.name.toLowerCase().contains(normalizedQuery)
+          ? null
+          : normalizedQuery,
     );
     if (jsonString == null) return null;
     final resultType = contact.type == advTypeRoom

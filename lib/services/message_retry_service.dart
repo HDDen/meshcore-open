@@ -257,6 +257,7 @@ class MessageRetryService extends ChangeNotifier {
     final message = Message(
       senderKey: contact.publicKey,
       text: text,
+      rawText: effectiveOutbound,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,

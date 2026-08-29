@@ -3438,5 +3438,17 @@
   "repeater_cliClearNeighbors": "Vymazať zoznam susedov",
   "reaction_report": "Emoji reakcie",
   "settings_modSettingsMapAndLocation": "Mapa a poloha",
-  "settings_modSettingsAlwaysRequestMapLocation": "Pri otvorení mapy vždy vyžiadať polohu"
+  "settings_modSettingsAlwaysRequestMapLocation": "Pri otvorení mapy vždy vyžiadať polohu",
+  "messageHistoryMigrationWarningTitle": "História správ bola prenesená len čiastočne",
+  "messageHistoryMigrationWarningDescription": "Pri prenose sa nepodarilo obnoviť {histories} konverzácií a {messages} jednotlivých správ. Zvyšok histórie zostal zachovaný.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

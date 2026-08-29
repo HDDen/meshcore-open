@@ -3476,5 +3476,17 @@
   "repeater_cliClearNeighbors": "Wyczyść listę sąsiadów",
   "reaction_report": "Reakcje emoji",
   "settings_modSettingsMapAndLocation": "Mapa i lokalizacja",
-  "settings_modSettingsAlwaysRequestMapLocation": "Zawsze pytaj o lokalizację przy otwieraniu mapy"
+  "settings_modSettingsAlwaysRequestMapLocation": "Zawsze pytaj o lokalizację przy otwieraniu mapy",
+  "messageHistoryMigrationWarningTitle": "Historia wiadomości została przeniesiona częściowo",
+  "messageHistoryMigrationWarningDescription": "Podczas przenoszenia nie udało się odtworzyć rozmów: {histories} oraz pojedynczych wiadomości: {messages}. Pozostała historia została zachowana.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -3418,5 +3418,17 @@
   "repeater_cliClearNeighbors": "Очистити список сусідів",
   "reaction_report": "Емодзі-реакції",
   "settings_modSettingsMapAndLocation": "Карта та геопозиція",
-  "settings_modSettingsAlwaysRequestMapLocation": "Завжди запитувати геопозицію при відкритті карти"
+  "settings_modSettingsAlwaysRequestMapLocation": "Завжди запитувати геопозицію при відкритті карти",
+  "messageHistoryMigrationWarningTitle": "Історію повідомлень перенесено частково",
+  "messageHistoryMigrationWarningDescription": "Під час перенесення не вдалося відновити діалогів: {histories}, окремих повідомлень: {messages}. Решту історії збережено.",
+  "@messageHistoryMigrationWarningDescription": {
+    "placeholders": {
+      "histories": {
+        "type": "int"
+      },
+      "messages": {
+        "type": "int"
+      }
+    }
+  }
 }
