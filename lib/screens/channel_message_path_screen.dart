@@ -19,7 +19,6 @@ import '../services/wardrive_service.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcmp_timestamp_warning.dart';
 import '../helpers/map_location_helper.dart';
-import '../helpers/map_session_zoom.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
@@ -771,7 +770,10 @@ class _ChannelMessagePathMapScreenState
   static const double _mapMaxZoom = 18.0;
 
   final MapController _mapController = MapController();
-  final double? _sessionInitialZoom = MapSessionZoom.value;
+  final GlobalKey _mapBodyKey = GlobalKey();
+  final GlobalKey _pathViewModeToggleKey = GlobalKey();
+  final GlobalKey _pathSelectorKey = GlobalKey();
+  final GlobalKey _hopListPanelKey = GlobalKey();
   Uint8List? _selectedPath;
   double _pathDistance = 0.0;
   bool _showNodeLabels = true;
@@ -787,6 +789,8 @@ class _ChannelMessagePathMapScreenState
   bool _panelCollapsed = false;
   bool _animationEnabled = true;
   bool _followPacket = false;
+  String? _scheduledViewportFit;
+  String? _completedViewportFit;
 
   @override
   void initState() {
@@ -1035,13 +1039,78 @@ class _ChannelMessagePathMapScreenState
       _mapController.fitCamera(
         CameraFit.bounds(
           bounds: bounds,
-          padding: const EdgeInsets.all(64),
+          padding: _pathViewportPadding(),
           maxZoom: 16,
         ),
       );
       return;
     }
     _mapController.move(initialCenter, initialZoom);
+  }
+
+  void _schedulePathViewportFit({
+    required String signature,
+    required LatLng initialCenter,
+    required double initialZoom,
+    required LatLngBounds? bounds,
+  }) {
+    if (_completedViewportFit == signature ||
+        _scheduledViewportFit == signature) {
+      return;
+    }
+    _scheduledViewportFit = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _scheduledViewportFit != signature) return;
+      _scheduledViewportFit = null;
+      _completedViewportFit = signature;
+      _resetMapView(
+        initialCenter: initialCenter,
+        initialZoom: initialZoom,
+        bounds: bounds,
+      );
+    });
+  }
+
+  EdgeInsets _pathViewportPadding() {
+    const horizontalPadding = 64.0;
+    const panelClearance = 42.0;
+    final bodyBox = _mapBodyKey.currentContext?.findRenderObject();
+    if (bodyBox is! RenderBox || !bodyBox.hasSize) {
+      return const EdgeInsets.fromLTRB(64, 260, 64, 320);
+    }
+
+    double bottomOf(GlobalKey key) {
+      final box = key.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return 0;
+      final offset = box.localToGlobal(Offset.zero, ancestor: bodyBox);
+      return offset.dy + box.size.height;
+    }
+
+    final topOverlayBottom = max(
+      bottomOf(_pathViewModeToggleKey),
+      bottomOf(_pathSelectorKey),
+    );
+    final topPadding = max(64.0, topOverlayBottom + panelClearance);
+
+    final hopPanelBox = _hopListPanelKey.currentContext?.findRenderObject();
+    var bottomPadding = bodyBox.size.height * 0.40;
+    if (hopPanelBox is RenderBox && hopPanelBox.hasSize) {
+      final offset = hopPanelBox.localToGlobal(
+        Offset.zero,
+        ancestor: bodyBox,
+      );
+      bottomPadding = max(
+        bottomPadding,
+        bodyBox.size.height - offset.dy + panelClearance,
+      );
+    }
+
+    return EdgeInsets.fromLTRB(
+      horizontalPadding,
+      topPadding,
+      horizontalPadding,
+      bottomPadding,
+    );
   }
 
   Widget _buildDesktopMapControls({
@@ -1201,22 +1270,38 @@ class _ChannelMessagePathMapScreenState
               ]
             : <Polyline>[];
 
-        final initialCenter = points.isNotEmpty
-            ? points.first
+        final viewportPoints = effectiveMode == PathViewMode.combined
+            ? visibleDisplays.expand((path) => path.points).toList()
+            : (selectedDisplay?.points ?? points);
+        final initialCenter = viewportPoints.isNotEmpty
+            ? viewportPoints.first
             : const LatLng(0, 0);
-        final initialZoom = (_sessionInitialZoom ??
-                (points.isNotEmpty ? 13.0 : 2.0))
+        final initialZoom = (viewportPoints.isNotEmpty ? 13.0 : 2.0)
             .clamp(_mapMinZoom, _mapMaxZoom)
             .toDouble();
         if (!_didReceivePositionUpdate) {
           _showNodeLabels = initialZoom >= _labelZoomThreshold;
         }
-        final bounds = points.length > 1
-            ? LatLngBounds.fromPoints(points)
+        final bounds = viewportPoints.length > 1
+            ? LatLngBounds.fromPoints(viewportPoints)
             : null;
         final mapKey = ValueKey(
           '${_formatPathPrefixes(selectedPath, width)},'
           '${context.l10n.pathTrace_you},$selfPosition',
+        );
+        final viewportFitSignature = [
+          _formatPathPrefixes(selectedPath, width),
+          selfPosition,
+          effectiveMode.name,
+          _panelCollapsed,
+          for (final point in viewportPoints)
+            '${point.latitude},${point.longitude}',
+        ].join('|');
+        _schedulePathViewportFit(
+          signature: viewportFitSignature,
+          initialCenter: initialCenter,
+          initialZoom: initialZoom,
+          bounds: bounds,
         );
         _pathDistance = _getPathDistance(points);
 
@@ -1227,6 +1312,7 @@ class _ChannelMessagePathMapScreenState
           body: SafeArea(
             top: false,
             child: Stack(
+              key: _mapBodyKey,
               children: [
                 FlutterMap(
                   key: mapKey,
@@ -1234,14 +1320,6 @@ class _ChannelMessagePathMapScreenState
                   options: MapOptions(
                     initialCenter: initialCenter,
                     initialZoom: initialZoom,
-                    initialCameraFit:
-                        bounds == null || _sessionInitialZoom != null
-                        ? null
-                        : CameraFit.bounds(
-                            bounds: bounds,
-                            padding: const EdgeInsets.all(64),
-                            maxZoom: 16,
-                          ),
                     minZoom: _mapMinZoom,
                     maxZoom: _mapMaxZoom,
                     interactionOptions: InteractionOptions(
@@ -1259,7 +1337,6 @@ class _ChannelMessagePathMapScreenState
                     ),
                     onPositionChanged: (camera, hasGesture) {
                       if (!mounted) return;
-                      MapSessionZoom.remember(camera.zoom);
                       // A manual pan/zoom releases the follow lock.
                       if (hasGesture && _followPacket) {
                         setState(() {
@@ -1346,6 +1423,7 @@ class _ChannelMessagePathMapScreenState
                   ),
                 if (entries.length > 1)
                   PathViewModeToggle(
+                    key: _pathViewModeToggleKey,
                     mode: effectiveMode,
                     onChanged: (mode) => setState(() => _viewMode = mode),
                   ),
@@ -1413,6 +1491,7 @@ class _ChannelMessagePathMapScreenState
       top: topOffset,
       child: SafeArea(
         child: Card(
+          key: _pathSelectorKey,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(
@@ -1768,6 +1847,7 @@ class _ChannelMessagePathMapScreenState
       right: 16,
       bottom: 16,
       child: SizedBox(
+        key: _hopListPanelKey,
         height: cardHeight,
         child: Container(
           decoration: BoxDecoration(

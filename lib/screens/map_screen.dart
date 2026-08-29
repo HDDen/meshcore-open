@@ -135,6 +135,7 @@ class _MapScreenState extends State<MapScreen>
   final MapController _mapController = MapController();
   final GlobalKey _mapBodyKey = GlobalKey();
   final GlobalKey _wardrivePanelKey = GlobalKey();
+  final GlobalKey _pathTracePanelKey = GlobalKey();
   final MapMarkerService _markerService = MapMarkerService();
   late final ChannelMarkerStyles _channelMarkerStyles = ChannelMarkerStyles(
     onChanged: () {
@@ -159,6 +160,8 @@ class _MapScreenState extends State<MapScreen>
   final List<int> _pathTraceHopWidths = [];
   final List<Contact> _pathTraceContacts = [];
   final List<LatLng> _points = [];
+  final List<bool> _pathTraceSegmentEstimated = [];
+  final Map<String, LatLng> _pathTracePositionOverrides = {};
   final List<Polyline> _polylines = [];
   OverlayEntry? _mapSnackBarOverlay;
   Timer? _mapSnackBarOverlayTimer;
@@ -694,18 +697,9 @@ class _MapScreenState extends State<MapScreen>
             ? _cachedGuessedLocations
             : <_GuessedLocation>[];
 
-        _polylines.clear();
-        _polylines.addAll(
-          _points.length > 1
-              ? [
-                  Polyline(
-                    points: _points,
-                    strokeWidth: 4,
-                    color: MapPalette.selected,
-                  ),
-                ]
-              : <Polyline>[],
-        );
+        _polylines
+          ..clear()
+          ..addAll(_buildPathTracePolylines());
 
         // Collect polylines for shared markers' history with dashed lines
         final List<Polyline> sharedMarkerPolylines = [];
@@ -6436,13 +6430,11 @@ class _MapScreenState extends State<MapScreen>
     setState(() {
       _pathTrace.addAll(hopPrefix); // Add the hop-width pubkey prefix.
       _pathTraceHopWidths.add(hopWidth);
-      _pathTraceContacts.add(
-        contact.copyWith(
-          latitude: position?.latitude ?? contact.latitude,
-          longitude: position?.longitude ?? contact.longitude,
-        ),
-      ); // Add contact to path trace contacts
-      _points.add(position ?? LatLng(contact.latitude!, contact.longitude!));
+      if (position != null) {
+        _pathTracePositionOverrides[PathHelper.formatHopHex(hopPrefix)] =
+            position;
+      }
+      _rebuildPathTraceAuxiliary();
       _syncPathEditText();
     });
   }
@@ -6455,6 +6447,8 @@ class _MapScreenState extends State<MapScreen>
       _pathTraceHopWidths.clear();
       _pathTraceContacts.clear();
       _points.clear();
+      _pathTraceSegmentEstimated.clear();
+      _pathTracePositionOverrides.clear();
       _polylines.clear();
       _points.add(position);
       _syncPathEditText();
@@ -6535,16 +6529,68 @@ class _MapScreenState extends State<MapScreen>
     final width = _activePathHashWidth(connector);
     _pathTraceContacts.clear();
     _points.clear();
+    _pathTraceSegmentEstimated.clear();
     _polylines.clear();
     if (_pathTraceStart != null) _points.add(_pathTraceStart!);
+    var skippedUnlocatedHop = false;
+    final activeHopKeys = <String>{};
     for (final hop in PathHelper.splitPathBytes(_pathTrace, width)) {
+      final hopKey = PathHelper.formatHopHex(hop);
+      activeHopKeys.add(hopKey);
       final contact = _contactForHopPrefix(connector, hop);
-      if (contact == null) continue;
-      _pathTraceContacts.add(contact);
-      if (contact.hasLocation) {
-        _points.add(LatLng(contact.latitude!, contact.longitude!));
+      final overridePosition = _pathTracePositionOverrides[hopKey];
+      if (contact != null) {
+        _pathTraceContacts.add(
+          overridePosition == null
+              ? contact
+              : contact.copyWith(
+                  latitude: overridePosition.latitude,
+                  longitude: overridePosition.longitude,
+                ),
+        );
       }
+      final position = overridePosition ??
+          (contact?.hasLocation ?? false
+              ? LatLng(contact!.latitude!, contact.longitude!)
+              : null);
+      if (position == null) {
+        skippedUnlocatedHop = true;
+        continue;
+      }
+      if (_points.isNotEmpty) {
+        _pathTraceSegmentEstimated.add(skippedUnlocatedHop);
+      }
+      _points.add(position);
+      skippedUnlocatedHop = false;
     }
+    _pathTracePositionOverrides.removeWhere(
+      (hopKey, _) => !activeHopKeys.contains(hopKey),
+    );
+  }
+
+  List<Polyline> _buildPathTracePolylines() {
+    final lines = <Polyline>[];
+    var index = 0;
+    while (index < _pathTraceSegmentEstimated.length) {
+      final estimated = _pathTraceSegmentEstimated[index];
+      var end = index + 1;
+      while (end < _pathTraceSegmentEstimated.length &&
+          _pathTraceSegmentEstimated[end] == estimated) {
+        end++;
+      }
+      lines.add(
+        Polyline(
+          points: _points.sublist(index, end + 1),
+          strokeWidth: 4,
+          color: MapPalette.selected,
+          pattern: estimated
+              ? StrokePattern.dashed(segments: const [10, 7])
+              : const StrokePattern.solid(),
+        ),
+      );
+      index = end;
+    }
+    return lines;
   }
 
   Future<void> _initializeInitialTrace(
@@ -6569,12 +6615,12 @@ class _MapScreenState extends State<MapScreen>
       _syncPathEditText();
     });
 
-    if (!widget.initializeInitialTraceViewport ||
-        !_alwaysRequestMapLocation) {
+    if (!widget.initializeInitialTraceViewport) {
       return;
     }
-    final start = await _preferredMapLocationFuture!;
+    final resolvedStart = await _preferredMapLocationFuture!;
     if (!mounted) return;
+    final start = resolvedStart ?? MapLocationHelper.nodeLocation(connector);
     setState(() {
       _pathTraceStart = start;
       _initialTraceViewportReady = true;
@@ -6593,8 +6639,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _fitInitialTraceViewport() {
-    if (!_alwaysRequestMapLocation ||
-        !widget.initializeInitialTraceViewport ||
+    if (!widget.initializeInitialTraceViewport ||
         !_initialTraceViewportReady ||
         _initialTraceViewportFitted ||
         !_hasInitializedMap ||
@@ -6626,11 +6671,28 @@ class _MapScreenState extends State<MapScreen>
             LatLng(minLatitude, minLongitude),
             LatLng(maxLatitude, maxLongitude),
           ),
-          padding: const EdgeInsets.fromLTRB(48, 72, 96, 160),
+          padding: EdgeInsets.fromLTRB(
+            48,
+            _initialTraceTopPadding(),
+            96,
+            160,
+          ),
           maxZoom: 16,
         ),
       );
     });
+  }
+
+  double _initialTraceTopPadding() {
+    const panelTop = 16.0;
+    const clearanceBelowPanel = 42.0;
+    const fallbackPanelHeight = 220.0;
+    final renderObject = _pathTracePanelKey.currentContext
+        ?.findRenderObject();
+    final panelHeight = renderObject is RenderBox && renderObject.hasSize
+        ? renderObject.size.height
+        : fallbackPanelHeight;
+    return panelTop + panelHeight + clearanceBelowPanel;
   }
 
   Contact? _contactForHopPrefix(MeshCoreConnector connector, List<int> prefix) {
@@ -6671,9 +6733,7 @@ class _MapScreenState extends State<MapScreen>
           _pathTrace.length,
         );
       }
-      if (_pathTraceContacts.isNotEmpty) _pathTraceContacts.removeLast();
-      if (_points.isNotEmpty) _points.removeLast();
-      _polylines.clear(); // Clear polylines
+      _rebuildPathTraceAuxiliary();
       _syncPathEditText();
     });
   }
@@ -6708,6 +6768,7 @@ class _MapScreenState extends State<MapScreen>
       left: 16,
       right: 16,
       child: DecoratedBox(
+        key: _pathTracePanelKey,
         decoration: BoxDecoration(
           color: MapPalette.panelOn(brightness),
           borderRadius: BorderRadius.circular(MeshRadii.md),
@@ -6811,7 +6872,10 @@ class _MapScreenState extends State<MapScreen>
                             _isBuildingPathTrace = false;
                             _pathTrace.clear();
                             _pathTraceHopWidths.clear();
+                            _pathTraceContacts.clear();
                             _points.clear();
+                            _pathTraceSegmentEstimated.clear();
+                            _pathTracePositionOverrides.clear();
                             _polylines.clear();
                           });
                           _showMapSnackBar(
