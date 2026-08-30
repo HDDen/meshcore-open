@@ -6313,4 +6313,155 @@ class AppLocalizationsSk extends AppLocalizations {
   ) {
     return 'Pri prenose sa nepodarilo obnoviť $histories konverzácií a $messages jednotlivých správ. Zvyšok histórie zostal zachovaný.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Spravovať úložisko';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Úložisko správ';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Správa databázy';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Štatistiky, obnova a údržba histórie správ';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Stav databázy';
+
+  @override
+  String get messageHistoryDatabasePath => 'Cesta k databáze';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Veľkosť súboru';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Súkromné správy';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Správy z kanálov';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Možno uvoľniť';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Karanténa migrácie';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Odmietnuté záznamy: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty =>
+      'Žiadne odmietnuté záznamy';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Zopakovať obnovu';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'Znova skontrolovať karanténu aktuálnym parserom a vrátiť opravené správy do histórie.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Obnovené: $restored, zostáva: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Exportovať diagnostiku';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Vytvoriť správu bez textu správ a bez kľúčov kontaktov.';
+
+  @override
+  String get messageHistoryDatabaseRecovery => 'Exportovať údaje na obnovu';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Vytvoriť súbor len s odmietnutými záznamami. Môže obsahovať súkromnú komunikáciu.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Export dôverných údajov';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Súbor na obnovu obsahuje pôvodný text odmietnutých správ a identifikátory konverzácií. Pred odovzdaním komukoľvek si ho skontroluj.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Odstrániť karanténu po exporte?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Súbor na obnovu je uložený. Odstrániť exportované odmietnuté údaje z databázy?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Odstrániť karanténu';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Odstrániť odmietnuté údaje bez možnosti obnovy.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Odstrániť odmietnuté údaje?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'Po odstránení sa správy z karantény už nebudú dať obnoviť ani exportovať.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Údržba';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Uvoľniť nevyužité miesto';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Postupne vrátiť operačnému systému nevyužité stránky SQLite.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (úplne prestavať databázu)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Úplne prestavať súbor databázy. Operácia môže trvať a vyžadovať ďalšie voľné miesto.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Úplne prestavať databázu?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Nezatváraj aplikáciu, kým sa operácia nedokončí. SQLite môže potrebovať ďalšie miesto vo veľkosti súčasnej databázy.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Kopírovať cestu';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Cesta skopírovaná';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Súbor uložený: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Odstránené záznamy: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Operácia dokončená';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Operácia zlyhala: $error';
+  }
 }

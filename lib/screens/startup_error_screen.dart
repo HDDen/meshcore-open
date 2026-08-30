@@ -106,12 +106,14 @@ class StartupFailureReport {
     required this.stage,
     required this.error,
     required this.stackTrace,
+    this.dataPath,
   }) : occurredAt = DateTime.now().toUtc();
 
   final String code;
   final String stage;
   final Object error;
   final StackTrace stackTrace;
+  final String? dataPath;
   final DateTime occurredAt;
 
   String get platform => defaultTargetPlatform.name;
@@ -132,7 +134,7 @@ Build mode: $buildMode
 Time (UTC): ${occurredAt.toIso8601String()}
 Error type: ${error.runtimeType}
 Error: $error
-Stack trace:
+${dataPath == null ? '' : 'Application data: $dataPath\n'}Stack trace:
 $stackTrace
 ''';
 }
@@ -224,6 +226,13 @@ class _StartupErrorScreenState extends State<StartupErrorScreen> {
                       label: _isRussian ? 'Тип ошибки' : 'Error type',
                       value: report.error.runtimeType.toString(),
                     ),
+                    if (report.dataPath != null)
+                      _ReportRow(
+                        label: _isRussian
+                            ? 'Данные приложения'
+                            : 'Application data',
+                        value: report.dataPath!,
+                      ),
                     _ReportRow(
                       label: _isRussian ? 'Сообщение' : 'Message',
                       value: report.error.toString(),

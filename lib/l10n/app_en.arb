@@ -3559,5 +3559,67 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Manage storage",
+  "settings_modSettingsMessageStorage": "Message storage",
+  "messageHistoryDatabaseTitle": "Database management",
+  "messageHistoryDatabaseSubtitle": "Message history statistics, recovery and maintenance",
+  "messageHistoryDatabaseOverview": "Database status",
+  "messageHistoryDatabasePath": "Database path",
+  "messageHistoryDatabaseFileSize": "File size",
+  "messageHistoryDatabaseDirectCount": "Direct messages",
+  "messageHistoryDatabaseChannelCount": "Channel messages",
+  "messageHistoryDatabaseReclaimable": "Reclaimable",
+  "messageHistoryDatabaseQuarantine": "Migration quarantine",
+  "messageHistoryDatabaseQuarantineCount": "Rejected entries: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "size": { "type": "String" }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "No rejected entries",
+  "messageHistoryDatabaseRetry": "Retry recovery",
+  "messageHistoryDatabaseRetryDescription": "Check quarantine with the current parser and return repaired messages to history.",
+  "messageHistoryDatabaseRetryResult": "Restored: {restored}, remaining: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": { "type": "int" },
+      "remaining": { "type": "int" }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Export diagnostics",
+  "messageHistoryDatabaseDiagnosticDescription": "Create a report without message text or contact keys.",
+  "messageHistoryDatabaseRecovery": "Export recovery data",
+  "messageHistoryDatabaseRecoveryDescription": "Create a file containing rejected entries only. It may contain private conversations.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Export private data",
+  "messageHistoryDatabaseRecoveryWarningDescription": "The recovery file contains original rejected message text and conversation identifiers. Review it before sharing it with anyone.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Delete quarantine after export?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "The recovery file has been saved. Delete the exported rejected data from the database?",
+  "messageHistoryDatabaseClearQuarantine": "Delete quarantine",
+  "messageHistoryDatabaseClearQuarantineDescription": "Delete rejected data without the possibility of recovery.",
+  "messageHistoryDatabaseClearWarningTitle": "Delete rejected data?",
+  "messageHistoryDatabaseClearWarningDescription": "After deletion, quarantined messages can no longer be retried or exported.",
+  "messageHistoryDatabaseMaintenance": "Maintenance",
+  "messageHistoryDatabaseIncrementalVacuum": "Release unused space",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Gradually return unused SQLite pages to the operating system.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (Fully rebuild database)",
+  "messageHistoryDatabaseFullVacuumDescription": "Fully rebuild the database file. This can take time and require additional free space.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Fully rebuild the database?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Do not close the application until the operation finishes. SQLite may need additional space comparable to the current database size.",
+  "messageHistoryDatabaseCopyPath": "Copy path",
+  "messageHistoryDatabasePathCopied": "Path copied",
+  "messageHistoryDatabaseExportSaved": "File saved: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "messageHistoryDatabaseDeleted": "Deleted entries: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "messageHistoryDatabaseOperationComplete": "Operation completed",
+  "messageHistoryDatabaseOperationFailed": "Operation failed: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": { "error": { "type": "String" } }
   }
 }

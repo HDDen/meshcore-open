@@ -10803,6 +10803,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some history could not be restored during migration: {histories} conversations and {messages} individual messages. The remaining history was preserved.'**
   String messageHistoryMigrationWarningDescription(int histories, int messages);
+
+  /// No description provided for @messageHistoryMigrationManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage storage'**
+  String get messageHistoryMigrationManage;
+
+  /// No description provided for @settings_modSettingsMessageStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message storage'**
+  String get settings_modSettingsMessageStorage;
+
+  /// No description provided for @messageHistoryDatabaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Database management'**
+  String get messageHistoryDatabaseTitle;
+
+  /// No description provided for @messageHistoryDatabaseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Message history statistics, recovery and maintenance'**
+  String get messageHistoryDatabaseSubtitle;
+
+  /// No description provided for @messageHistoryDatabaseOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Database status'**
+  String get messageHistoryDatabaseOverview;
+
+  /// No description provided for @messageHistoryDatabasePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Database path'**
+  String get messageHistoryDatabasePath;
+
+  /// No description provided for @messageHistoryDatabaseFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get messageHistoryDatabaseFileSize;
+
+  /// No description provided for @messageHistoryDatabaseDirectCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct messages'**
+  String get messageHistoryDatabaseDirectCount;
+
+  /// No description provided for @messageHistoryDatabaseChannelCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel messages'**
+  String get messageHistoryDatabaseChannelCount;
+
+  /// No description provided for @messageHistoryDatabaseReclaimable.
+  ///
+  /// In en, this message translates to:
+  /// **'Reclaimable'**
+  String get messageHistoryDatabaseReclaimable;
+
+  /// No description provided for @messageHistoryDatabaseQuarantine.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration quarantine'**
+  String get messageHistoryDatabaseQuarantine;
+
+  /// No description provided for @messageHistoryDatabaseQuarantineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected entries: {count} · {size}'**
+  String messageHistoryDatabaseQuarantineCount(int count, String size);
+
+  /// No description provided for @messageHistoryDatabaseQuarantineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rejected entries'**
+  String get messageHistoryDatabaseQuarantineEmpty;
+
+  /// No description provided for @messageHistoryDatabaseRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry recovery'**
+  String get messageHistoryDatabaseRetry;
+
+  /// No description provided for @messageHistoryDatabaseRetryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Check quarantine with the current parser and return repaired messages to history.'**
+  String get messageHistoryDatabaseRetryDescription;
+
+  /// No description provided for @messageHistoryDatabaseRetryResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored: {restored}, remaining: {remaining}'**
+  String messageHistoryDatabaseRetryResult(int restored, int remaining);
+
+  /// No description provided for @messageHistoryDatabaseDiagnostic.
+  ///
+  /// In en, this message translates to:
+  /// **'Export diagnostics'**
+  String get messageHistoryDatabaseDiagnostic;
+
+  /// No description provided for @messageHistoryDatabaseDiagnosticDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a report without message text or contact keys.'**
+  String get messageHistoryDatabaseDiagnosticDescription;
+
+  /// No description provided for @messageHistoryDatabaseRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Export recovery data'**
+  String get messageHistoryDatabaseRecovery;
+
+  /// No description provided for @messageHistoryDatabaseRecoveryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a file containing rejected entries only. It may contain private conversations.'**
+  String get messageHistoryDatabaseRecoveryDescription;
+
+  /// No description provided for @messageHistoryDatabaseRecoveryWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export private data'**
+  String get messageHistoryDatabaseRecoveryWarningTitle;
+
+  /// No description provided for @messageHistoryDatabaseRecoveryWarningDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery file contains original rejected message text and conversation identifiers. Review it before sharing it with anyone.'**
+  String get messageHistoryDatabaseRecoveryWarningDescription;
+
+  /// No description provided for @messageHistoryDatabaseDeleteAfterExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete quarantine after export?'**
+  String get messageHistoryDatabaseDeleteAfterExportTitle;
+
+  /// No description provided for @messageHistoryDatabaseDeleteAfterExportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The recovery file has been saved. Delete the exported rejected data from the database?'**
+  String get messageHistoryDatabaseDeleteAfterExportDescription;
+
+  /// No description provided for @messageHistoryDatabaseClearQuarantine.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete quarantine'**
+  String get messageHistoryDatabaseClearQuarantine;
+
+  /// No description provided for @messageHistoryDatabaseClearQuarantineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete rejected data without the possibility of recovery.'**
+  String get messageHistoryDatabaseClearQuarantineDescription;
+
+  /// No description provided for @messageHistoryDatabaseClearWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete rejected data?'**
+  String get messageHistoryDatabaseClearWarningTitle;
+
+  /// No description provided for @messageHistoryDatabaseClearWarningDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'After deletion, quarantined messages can no longer be retried or exported.'**
+  String get messageHistoryDatabaseClearWarningDescription;
+
+  /// No description provided for @messageHistoryDatabaseMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get messageHistoryDatabaseMaintenance;
+
+  /// No description provided for @messageHistoryDatabaseIncrementalVacuum.
+  ///
+  /// In en, this message translates to:
+  /// **'Release unused space'**
+  String get messageHistoryDatabaseIncrementalVacuum;
+
+  /// No description provided for @messageHistoryDatabaseIncrementalVacuumDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradually return unused SQLite pages to the operating system.'**
+  String get messageHistoryDatabaseIncrementalVacuumDescription;
+
+  /// No description provided for @messageHistoryDatabaseFullVacuum.
+  ///
+  /// In en, this message translates to:
+  /// **'VACUUM (Fully rebuild database)'**
+  String get messageHistoryDatabaseFullVacuum;
+
+  /// No description provided for @messageHistoryDatabaseFullVacuumDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully rebuild the database file. This can take time and require additional free space.'**
+  String get messageHistoryDatabaseFullVacuumDescription;
+
+  /// No description provided for @messageHistoryDatabaseFullVacuumWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully rebuild the database?'**
+  String get messageHistoryDatabaseFullVacuumWarningTitle;
+
+  /// No description provided for @messageHistoryDatabaseFullVacuumWarningDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not close the application until the operation finishes. SQLite may need additional space comparable to the current database size.'**
+  String get messageHistoryDatabaseFullVacuumWarningDescription;
+
+  /// No description provided for @messageHistoryDatabaseCopyPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy path'**
+  String get messageHistoryDatabaseCopyPath;
+
+  /// No description provided for @messageHistoryDatabasePathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied'**
+  String get messageHistoryDatabasePathCopied;
+
+  /// No description provided for @messageHistoryDatabaseExportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'File saved: {path}'**
+  String messageHistoryDatabaseExportSaved(String path);
+
+  /// No description provided for @messageHistoryDatabaseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted entries: {count}'**
+  String messageHistoryDatabaseDeleted(int count);
+
+  /// No description provided for @messageHistoryDatabaseOperationComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation completed'**
+  String get messageHistoryDatabaseOperationComplete;
+
+  /// No description provided for @messageHistoryDatabaseOperationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed: {error}'**
+  String messageHistoryDatabaseOperationFailed(String error);
 }
 
 class _AppLocalizationsDelegate

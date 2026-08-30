@@ -6033,4 +6033,149 @@ class AppLocalizationsJa extends AppLocalizations {
   ) {
     return '移行中に $histories 件の会話と $messages 件の個別メッセージを復元できませんでした。残りの履歴は保持されています。';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'ストレージを管理';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'メッセージの保存領域';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'データベース管理';
+
+  @override
+  String get messageHistoryDatabaseSubtitle => 'メッセージ履歴の統計・復旧・メンテナンス';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'データベースの状態';
+
+  @override
+  String get messageHistoryDatabasePath => 'データベースのパス';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'ファイルサイズ';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'ダイレクトメッセージ';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'チャンネルのメッセージ';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => '解放可能';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => '移行時の隔離領域';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return '拒否された項目: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => '拒否された項目はありません';
+
+  @override
+  String get messageHistoryDatabaseRetry => '復旧を再試行';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      '現在のパーサーで隔離領域を再確認し、復旧できたメッセージを履歴に戻します。';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return '復旧: $restored 件、残り: $remaining 件';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => '診断情報を書き出す';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'メッセージ本文と連絡先の鍵を含まないレポートを作成します。';
+
+  @override
+  String get messageHistoryDatabaseRecovery => '復旧用データを書き出す';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      '拒否された項目だけを含むファイルを作成します。個人的なやり取りが含まれる場合があります。';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle => '機密データの書き出し';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      '復旧用ファイルには拒否されたメッセージの元の本文と会話の識別子が含まれます。誰かに渡す前に内容を確認してください。';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      '書き出し後に隔離領域を削除しますか？';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      '復旧用ファイルは保存済みです。書き出した拒否データをデータベースから削除しますか？';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => '隔離領域を削除';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      '拒否されたデータを復旧できない形で削除します。';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle => '拒否されたデータを削除しますか？';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      '削除すると、隔離領域のメッセージは復旧も書き出しもできなくなります。';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'メンテナンス';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum => '未使用の領域を解放';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      '未使用の SQLite ページを段階的に OS へ返却します。';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum => 'VACUUM（データベースを完全に再構築）';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'データベースファイルを完全に再構築します。時間がかかり、追加の空き容量が必要になる場合があります。';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'データベースを完全に再構築しますか？';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      '処理が終わるまでアプリを終了しないでください。SQLite は現在のデータベースと同程度の追加容量を必要とする場合があります。';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'パスをコピー';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'パスをコピーしました';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'ファイルを保存しました: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return '削除した項目: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => '処理が完了しました';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return '処理に失敗しました: $error';
+  }
 }

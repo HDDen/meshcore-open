@@ -6345,4 +6345,157 @@ class AppLocalizationsHu extends AppLocalizations {
   ) {
     return 'Az átköltöztetés során $histories beszélgetést és $messages külön üzenetet nem sikerült helyreállítani. A többi előzmény megmaradt.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Tároló kezelése';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Üzenettároló';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Adatbázis kezelése';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Az üzenetelőzmények statisztikája, helyreállítása és karbantartása';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Az adatbázis állapota';
+
+  @override
+  String get messageHistoryDatabasePath => 'Az adatbázis elérési útja';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Fájlméret';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Közvetlen üzenetek';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Csatornaüzenetek';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Felszabadítható';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Átköltöztetési karantén';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Elutasított bejegyzések: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty =>
+      'Nincsenek elutasított bejegyzések';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Helyreállítás újrapróbálása';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'A karantén újbóli ellenőrzése a jelenlegi elemzővel, és a helyreállított üzenetek visszahelyezése az előzményekbe.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Helyreállítva: $restored, hátravan: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Diagnosztika exportálása';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Jelentés készítése az üzenetek szövege és a névjegykulcsok nélkül.';
+
+  @override
+  String get messageHistoryDatabaseRecovery =>
+      'Helyreállítási adatok exportálása';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Fájl készítése kizárólag az elutasított bejegyzésekkel. Magánbeszélgetéseket is tartalmazhat.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Bizalmas adatok exportálása';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'A helyreállítási fájl az elutasított üzenetek eredeti szövegét és a beszélgetések azonosítóit tartalmazza. Nézd át, mielőtt bárkinek továbbadod.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Törlöd a karantént az exportálás után?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'A helyreállítási fájl elmentve. Törölhetők az exportált elutasított adatok az adatbázisból?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Karantén törlése';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Az elutasított adatok törlése a helyreállítás lehetősége nélkül.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Törlöd az elutasított adatokat?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'A törlés után a karanténban lévő üzenetek sem helyreállítani, sem exportálni nem lesznek képesek.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Karbantartás';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Nem használt hely felszabadítása';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'A nem használt SQLite-lapok fokozatos visszaadása az operációs rendszernek.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (az adatbázis teljes újraépítése)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Az adatbázisfájl teljes újraépítése. A művelet eltarthat egy ideig, és további szabad helyet igényelhet.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Teljesen újraépíted az adatbázist?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Ne zárd be az alkalmazást a művelet befejezéséig. Az SQLite-nak a jelenlegi adatbázis méretével megegyező további helyre lehet szüksége.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Elérési út másolása';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Elérési út kimásolva';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Fájl elmentve: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Törölt bejegyzések: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete =>
+      'A művelet befejeződött';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'A művelet nem sikerült: $error';
+  }
 }

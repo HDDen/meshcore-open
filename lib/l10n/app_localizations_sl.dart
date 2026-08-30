@@ -6325,4 +6325,154 @@ class AppLocalizationsSl extends AppLocalizations {
   ) {
     return 'Med prenosom ni bilo mogoče obnoviti $histories pogovorov in $messages posameznih sporočil. Preostala zgodovina je ohranjena.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Upravljanje shrambe';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Shramba sporočil';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Upravljanje podatkovne baze';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Statistika, obnovitev in vzdrževanje zgodovine sporočil';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Stanje podatkovne baze';
+
+  @override
+  String get messageHistoryDatabasePath => 'Pot do podatkovne baze';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Velikost datoteke';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Neposredna sporočila';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Sporočila kanalov';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Mogoče sprostiti';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Karantena prenosa';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Zavrnjeni zapisi: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => 'Ni zavrnjenih zapisov';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Znova poskusi obnoviti';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'Znova preveri karanteno s trenutnim razčlenjevalnikom in vrni popravljena sporočila v zgodovino.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Obnovljeno: $restored, ostalo: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Izvozi diagnostiko';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Ustvari poročilo brez besedila sporočil in ključev stikov.';
+
+  @override
+  String get messageHistoryDatabaseRecovery => 'Izvozi podatke za obnovitev';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Ustvari datoteko samo z zavrnjenimi zapisi. Vsebuje lahko zasebne pogovore.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Izvoz zaupnih podatkov';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Datoteka za obnovitev vsebuje izvirno besedilo zavrnjenih sporočil in identifikatorje pogovorov. Preglej jo, preden jo komu posreduješ.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Izbrišem karanteno po izvozu?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Datoteka za obnovitev je shranjena. Ali naj se izvoženi zavrnjeni podatki izbrišejo iz baze?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Izbriši karanteno';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Izbriši zavrnjene podatke brez možnosti obnovitve.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Izbrišem zavrnjene podatke?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'Po izbrisu sporočil iz karantene ne bo več mogoče obnoviti ali izvoziti.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Vzdrževanje';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Sprosti neuporabljen prostor';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Postopoma vrni operacijskemu sistemu neuporabljene strani SQLite.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (popolnoma obnovi bazo)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Popolnoma obnovi datoteko podatkovne baze. Postopek lahko traja in zahteva dodaten prostor.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Popolnoma obnovim podatkovno bazo?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Ne zapiraj aplikacije, dokler se postopek ne konča. SQLite bo morda potreboval dodaten prostor v velikosti trenutne baze.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Kopiraj pot';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Pot kopirana';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Datoteka shranjena: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Izbrisani zapisi: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Postopek končan';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Postopek ni uspel: $error';
+  }
 }

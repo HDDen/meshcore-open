@@ -3232,5 +3232,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Opslag beheren",
+  "settings_modSettingsMessageStorage": "Berichtenopslag",
+  "messageHistoryDatabaseTitle": "Databasebeheer",
+  "messageHistoryDatabaseSubtitle": "Statistieken, herstel en onderhoud van de berichtgeschiedenis",
+  "messageHistoryDatabaseOverview": "Status van de database",
+  "messageHistoryDatabasePath": "Pad naar de database",
+  "messageHistoryDatabaseFileSize": "Bestandsgrootte",
+  "messageHistoryDatabaseDirectCount": "Directe berichten",
+  "messageHistoryDatabaseChannelCount": "Kanaalberichten",
+  "messageHistoryDatabaseReclaimable": "Vrij te maken",
+  "messageHistoryDatabaseQuarantine": "Migratiequarantaine",
+  "messageHistoryDatabaseQuarantineCount": "Afgewezen items: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Geen afgewezen items",
+  "messageHistoryDatabaseRetry": "Herstel opnieuw proberen",
+  "messageHistoryDatabaseRetryDescription": "De quarantaine opnieuw controleren met de huidige parser en herstelde berichten terugzetten in de geschiedenis.",
+  "messageHistoryDatabaseRetryResult": "Hersteld: {restored}, resterend: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Diagnostiek exporteren",
+  "messageHistoryDatabaseDiagnosticDescription": "Een rapport maken zonder berichtteksten en contactsleutels.",
+  "messageHistoryDatabaseRecovery": "Herstelgegevens exporteren",
+  "messageHistoryDatabaseRecoveryDescription": "Een bestand maken met alleen de afgewezen items. Het kan privégesprekken bevatten.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Export van vertrouwelijke gegevens",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Het herstelbestand bevat de oorspronkelijke tekst van de afgewezen berichten en de identificatoren van de gesprekken. Controleer het voordat je het met iemand deelt.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Quarantaine na de export verwijderen?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Het herstelbestand is opgeslagen. De geëxporteerde afgewezen gegevens uit de database verwijderen?",
+  "messageHistoryDatabaseClearQuarantine": "Quarantaine verwijderen",
+  "messageHistoryDatabaseClearQuarantineDescription": "De afgewezen gegevens verwijderen zonder mogelijkheid tot herstel.",
+  "messageHistoryDatabaseClearWarningTitle": "Afgewezen gegevens verwijderen?",
+  "messageHistoryDatabaseClearWarningDescription": "Na het verwijderen kunnen berichten uit de quarantaine niet meer worden hersteld of geëxporteerd.",
+  "messageHistoryDatabaseMaintenance": "Onderhoud",
+  "messageHistoryDatabaseIncrementalVacuum": "Ongebruikte ruimte vrijgeven",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Ongebruikte SQLite-pagina's geleidelijk teruggeven aan het besturingssysteem.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (database volledig opnieuw opbouwen)",
+  "messageHistoryDatabaseFullVacuumDescription": "Het databasebestand volledig opnieuw opbouwen. Dit kan tijd kosten en extra vrije ruimte vereisen.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "De database volledig opnieuw opbouwen?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Sluit de app niet af totdat de bewerking klaar is. SQLite heeft mogelijk extra ruimte nodig ter grootte van de huidige database.",
+  "messageHistoryDatabaseCopyPath": "Pad kopiëren",
+  "messageHistoryDatabasePathCopied": "Pad gekopieerd",
+  "messageHistoryDatabaseExportSaved": "Bestand opgeslagen: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Verwijderde items: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Bewerking voltooid",
+  "messageHistoryDatabaseOperationFailed": "Bewerking mislukt: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

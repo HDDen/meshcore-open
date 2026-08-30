@@ -10,6 +10,7 @@ import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
+import 'message_history_database_screen.dart';
 
 class ModSettingsScreen extends StatelessWidget {
   const ModSettingsScreen({super.key});
@@ -721,6 +722,27 @@ class ModSettingsScreen extends StatelessWidget {
                           .l10n
                           .settings_modSettingsAlwaysRequestMapLocation,
                     ),
+                  ),
+                ),
+                SectionHeader(
+                  context.l10n.settings_modSettingsMessageStorage,
+                ),
+                MeshCard(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MessageHistoryDatabaseScreen(),
+                    ),
+                  ),
+                  padding: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: const Icon(Icons.storage_outlined),
+                    title: Text(
+                      context.l10n.messageHistoryDatabaseTitle,
+                    ),
+                    subtitle: Text(
+                      context.l10n.messageHistoryDatabaseSubtitle,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
                   ),
                 ),
                 ...context.watch<SettingsSectionsService>().modSettingsSections(

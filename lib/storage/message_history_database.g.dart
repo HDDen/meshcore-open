@@ -1235,6 +1235,638 @@ class HistoryMetadataCompanion extends UpdateCompanion<HistoryMetadataData> {
   }
 }
 
+class $LegacyRejectedMessagesTable extends LegacyRejectedMessages
+    with TableInfo<$LegacyRejectedMessagesTable, LegacyRejectedMessage> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LegacyRejectedMessagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<int> kind = GeneratedColumn<int>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _storageKeyMeta = const VerificationMeta(
+    'storageKey',
+  );
+  @override
+  late final GeneratedColumn<String> storageKey = GeneratedColumn<String>(
+    'storage_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageIndexMeta = const VerificationMeta(
+    'messageIndex',
+  );
+  @override
+  late final GeneratedColumn<int> messageIndex = GeneratedColumn<int>(
+    'message_index',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedMessageIdMeta = const VerificationMeta(
+    'resolvedMessageId',
+  );
+  @override
+  late final GeneratedColumn<String> resolvedMessageId =
+      GeneratedColumn<String>(
+        'resolved_message_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _rawValueMeta = const VerificationMeta(
+    'rawValue',
+  );
+  @override
+  late final GeneratedColumn<String> rawValue = GeneratedColumn<String>(
+    'raw_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _errorTypeMeta = const VerificationMeta(
+    'errorType',
+  );
+  @override
+  late final GeneratedColumn<String> errorType = GeneratedColumn<String>(
+    'error_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _errorTextMeta = const VerificationMeta(
+    'errorText',
+  );
+  @override
+  late final GeneratedColumn<String> errorText = GeneratedColumn<String>(
+    'error_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
+    'createdAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMs = GeneratedColumn<int>(
+    'created_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAttemptAtMsMeta = const VerificationMeta(
+    'lastAttemptAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> lastAttemptAtMs = GeneratedColumn<int>(
+    'last_attempt_at_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    kind,
+    storageKey,
+    messageIndex,
+    resolvedMessageId,
+    rawValue,
+    errorType,
+    errorText,
+    createdAtMs,
+    lastAttemptAtMs,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'legacy_rejected_messages';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LegacyRejectedMessage> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('storage_key')) {
+      context.handle(
+        _storageKeyMeta,
+        storageKey.isAcceptableOrUnknown(data['storage_key']!, _storageKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_storageKeyMeta);
+    }
+    if (data.containsKey('message_index')) {
+      context.handle(
+        _messageIndexMeta,
+        messageIndex.isAcceptableOrUnknown(
+          data['message_index']!,
+          _messageIndexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resolved_message_id')) {
+      context.handle(
+        _resolvedMessageIdMeta,
+        resolvedMessageId.isAcceptableOrUnknown(
+          data['resolved_message_id']!,
+          _resolvedMessageIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('raw_value')) {
+      context.handle(
+        _rawValueMeta,
+        rawValue.isAcceptableOrUnknown(data['raw_value']!, _rawValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rawValueMeta);
+    }
+    if (data.containsKey('error_type')) {
+      context.handle(
+        _errorTypeMeta,
+        errorType.isAcceptableOrUnknown(data['error_type']!, _errorTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_errorTypeMeta);
+    }
+    if (data.containsKey('error_text')) {
+      context.handle(
+        _errorTextMeta,
+        errorText.isAcceptableOrUnknown(data['error_text']!, _errorTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_errorTextMeta);
+    }
+    if (data.containsKey('created_at_ms')) {
+      context.handle(
+        _createdAtMsMeta,
+        createdAtMs.isAcceptableOrUnknown(
+          data['created_at_ms']!,
+          _createdAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMsMeta);
+    }
+    if (data.containsKey('last_attempt_at_ms')) {
+      context.handle(
+        _lastAttemptAtMsMeta,
+        lastAttemptAtMs.isAcceptableOrUnknown(
+          data['last_attempt_at_ms']!,
+          _lastAttemptAtMsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LegacyRejectedMessage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LegacyRejectedMessage(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}kind'],
+      )!,
+      storageKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}storage_key'],
+      )!,
+      messageIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}message_index'],
+      ),
+      resolvedMessageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resolved_message_id'],
+      ),
+      rawValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}raw_value'],
+      )!,
+      errorType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_type'],
+      )!,
+      errorText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_text'],
+      )!,
+      createdAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_ms'],
+      )!,
+      lastAttemptAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_attempt_at_ms'],
+      ),
+    );
+  }
+
+  @override
+  $LegacyRejectedMessagesTable createAlias(String alias) {
+    return $LegacyRejectedMessagesTable(attachedDatabase, alias);
+  }
+}
+
+class LegacyRejectedMessage extends DataClass
+    implements Insertable<LegacyRejectedMessage> {
+  final int id;
+  final int kind;
+  final String storageKey;
+  final int? messageIndex;
+  final String? resolvedMessageId;
+  final String rawValue;
+  final String errorType;
+  final String errorText;
+  final int createdAtMs;
+  final int? lastAttemptAtMs;
+  const LegacyRejectedMessage({
+    required this.id,
+    required this.kind,
+    required this.storageKey,
+    this.messageIndex,
+    this.resolvedMessageId,
+    required this.rawValue,
+    required this.errorType,
+    required this.errorText,
+    required this.createdAtMs,
+    this.lastAttemptAtMs,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['kind'] = Variable<int>(kind);
+    map['storage_key'] = Variable<String>(storageKey);
+    if (!nullToAbsent || messageIndex != null) {
+      map['message_index'] = Variable<int>(messageIndex);
+    }
+    if (!nullToAbsent || resolvedMessageId != null) {
+      map['resolved_message_id'] = Variable<String>(resolvedMessageId);
+    }
+    map['raw_value'] = Variable<String>(rawValue);
+    map['error_type'] = Variable<String>(errorType);
+    map['error_text'] = Variable<String>(errorText);
+    map['created_at_ms'] = Variable<int>(createdAtMs);
+    if (!nullToAbsent || lastAttemptAtMs != null) {
+      map['last_attempt_at_ms'] = Variable<int>(lastAttemptAtMs);
+    }
+    return map;
+  }
+
+  LegacyRejectedMessagesCompanion toCompanion(bool nullToAbsent) {
+    return LegacyRejectedMessagesCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      storageKey: Value(storageKey),
+      messageIndex: messageIndex == null && nullToAbsent
+          ? const Value.absent()
+          : Value(messageIndex),
+      resolvedMessageId: resolvedMessageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedMessageId),
+      rawValue: Value(rawValue),
+      errorType: Value(errorType),
+      errorText: Value(errorText),
+      createdAtMs: Value(createdAtMs),
+      lastAttemptAtMs: lastAttemptAtMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAttemptAtMs),
+    );
+  }
+
+  factory LegacyRejectedMessage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LegacyRejectedMessage(
+      id: serializer.fromJson<int>(json['id']),
+      kind: serializer.fromJson<int>(json['kind']),
+      storageKey: serializer.fromJson<String>(json['storageKey']),
+      messageIndex: serializer.fromJson<int?>(json['messageIndex']),
+      resolvedMessageId: serializer.fromJson<String?>(
+        json['resolvedMessageId'],
+      ),
+      rawValue: serializer.fromJson<String>(json['rawValue']),
+      errorType: serializer.fromJson<String>(json['errorType']),
+      errorText: serializer.fromJson<String>(json['errorText']),
+      createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
+      lastAttemptAtMs: serializer.fromJson<int?>(json['lastAttemptAtMs']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'kind': serializer.toJson<int>(kind),
+      'storageKey': serializer.toJson<String>(storageKey),
+      'messageIndex': serializer.toJson<int?>(messageIndex),
+      'resolvedMessageId': serializer.toJson<String?>(resolvedMessageId),
+      'rawValue': serializer.toJson<String>(rawValue),
+      'errorType': serializer.toJson<String>(errorType),
+      'errorText': serializer.toJson<String>(errorText),
+      'createdAtMs': serializer.toJson<int>(createdAtMs),
+      'lastAttemptAtMs': serializer.toJson<int?>(lastAttemptAtMs),
+    };
+  }
+
+  LegacyRejectedMessage copyWith({
+    int? id,
+    int? kind,
+    String? storageKey,
+    Value<int?> messageIndex = const Value.absent(),
+    Value<String?> resolvedMessageId = const Value.absent(),
+    String? rawValue,
+    String? errorType,
+    String? errorText,
+    int? createdAtMs,
+    Value<int?> lastAttemptAtMs = const Value.absent(),
+  }) => LegacyRejectedMessage(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    storageKey: storageKey ?? this.storageKey,
+    messageIndex: messageIndex.present ? messageIndex.value : this.messageIndex,
+    resolvedMessageId: resolvedMessageId.present
+        ? resolvedMessageId.value
+        : this.resolvedMessageId,
+    rawValue: rawValue ?? this.rawValue,
+    errorType: errorType ?? this.errorType,
+    errorText: errorText ?? this.errorText,
+    createdAtMs: createdAtMs ?? this.createdAtMs,
+    lastAttemptAtMs: lastAttemptAtMs.present
+        ? lastAttemptAtMs.value
+        : this.lastAttemptAtMs,
+  );
+  LegacyRejectedMessage copyWithCompanion(
+    LegacyRejectedMessagesCompanion data,
+  ) {
+    return LegacyRejectedMessage(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      storageKey: data.storageKey.present
+          ? data.storageKey.value
+          : this.storageKey,
+      messageIndex: data.messageIndex.present
+          ? data.messageIndex.value
+          : this.messageIndex,
+      resolvedMessageId: data.resolvedMessageId.present
+          ? data.resolvedMessageId.value
+          : this.resolvedMessageId,
+      rawValue: data.rawValue.present ? data.rawValue.value : this.rawValue,
+      errorType: data.errorType.present ? data.errorType.value : this.errorType,
+      errorText: data.errorText.present ? data.errorText.value : this.errorText,
+      createdAtMs: data.createdAtMs.present
+          ? data.createdAtMs.value
+          : this.createdAtMs,
+      lastAttemptAtMs: data.lastAttemptAtMs.present
+          ? data.lastAttemptAtMs.value
+          : this.lastAttemptAtMs,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyRejectedMessage(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('storageKey: $storageKey, ')
+          ..write('messageIndex: $messageIndex, ')
+          ..write('resolvedMessageId: $resolvedMessageId, ')
+          ..write('rawValue: $rawValue, ')
+          ..write('errorType: $errorType, ')
+          ..write('errorText: $errorText, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('lastAttemptAtMs: $lastAttemptAtMs')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    kind,
+    storageKey,
+    messageIndex,
+    resolvedMessageId,
+    rawValue,
+    errorType,
+    errorText,
+    createdAtMs,
+    lastAttemptAtMs,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LegacyRejectedMessage &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.storageKey == this.storageKey &&
+          other.messageIndex == this.messageIndex &&
+          other.resolvedMessageId == this.resolvedMessageId &&
+          other.rawValue == this.rawValue &&
+          other.errorType == this.errorType &&
+          other.errorText == this.errorText &&
+          other.createdAtMs == this.createdAtMs &&
+          other.lastAttemptAtMs == this.lastAttemptAtMs);
+}
+
+class LegacyRejectedMessagesCompanion
+    extends UpdateCompanion<LegacyRejectedMessage> {
+  final Value<int> id;
+  final Value<int> kind;
+  final Value<String> storageKey;
+  final Value<int?> messageIndex;
+  final Value<String?> resolvedMessageId;
+  final Value<String> rawValue;
+  final Value<String> errorType;
+  final Value<String> errorText;
+  final Value<int> createdAtMs;
+  final Value<int?> lastAttemptAtMs;
+  const LegacyRejectedMessagesCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.storageKey = const Value.absent(),
+    this.messageIndex = const Value.absent(),
+    this.resolvedMessageId = const Value.absent(),
+    this.rawValue = const Value.absent(),
+    this.errorType = const Value.absent(),
+    this.errorText = const Value.absent(),
+    this.createdAtMs = const Value.absent(),
+    this.lastAttemptAtMs = const Value.absent(),
+  });
+  LegacyRejectedMessagesCompanion.insert({
+    this.id = const Value.absent(),
+    required int kind,
+    required String storageKey,
+    this.messageIndex = const Value.absent(),
+    this.resolvedMessageId = const Value.absent(),
+    required String rawValue,
+    required String errorType,
+    required String errorText,
+    required int createdAtMs,
+    this.lastAttemptAtMs = const Value.absent(),
+  }) : kind = Value(kind),
+       storageKey = Value(storageKey),
+       rawValue = Value(rawValue),
+       errorType = Value(errorType),
+       errorText = Value(errorText),
+       createdAtMs = Value(createdAtMs);
+  static Insertable<LegacyRejectedMessage> custom({
+    Expression<int>? id,
+    Expression<int>? kind,
+    Expression<String>? storageKey,
+    Expression<int>? messageIndex,
+    Expression<String>? resolvedMessageId,
+    Expression<String>? rawValue,
+    Expression<String>? errorType,
+    Expression<String>? errorText,
+    Expression<int>? createdAtMs,
+    Expression<int>? lastAttemptAtMs,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (storageKey != null) 'storage_key': storageKey,
+      if (messageIndex != null) 'message_index': messageIndex,
+      if (resolvedMessageId != null) 'resolved_message_id': resolvedMessageId,
+      if (rawValue != null) 'raw_value': rawValue,
+      if (errorType != null) 'error_type': errorType,
+      if (errorText != null) 'error_text': errorText,
+      if (createdAtMs != null) 'created_at_ms': createdAtMs,
+      if (lastAttemptAtMs != null) 'last_attempt_at_ms': lastAttemptAtMs,
+    });
+  }
+
+  LegacyRejectedMessagesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? kind,
+    Value<String>? storageKey,
+    Value<int?>? messageIndex,
+    Value<String?>? resolvedMessageId,
+    Value<String>? rawValue,
+    Value<String>? errorType,
+    Value<String>? errorText,
+    Value<int>? createdAtMs,
+    Value<int?>? lastAttemptAtMs,
+  }) {
+    return LegacyRejectedMessagesCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      storageKey: storageKey ?? this.storageKey,
+      messageIndex: messageIndex ?? this.messageIndex,
+      resolvedMessageId: resolvedMessageId ?? this.resolvedMessageId,
+      rawValue: rawValue ?? this.rawValue,
+      errorType: errorType ?? this.errorType,
+      errorText: errorText ?? this.errorText,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
+      lastAttemptAtMs: lastAttemptAtMs ?? this.lastAttemptAtMs,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<int>(kind.value);
+    }
+    if (storageKey.present) {
+      map['storage_key'] = Variable<String>(storageKey.value);
+    }
+    if (messageIndex.present) {
+      map['message_index'] = Variable<int>(messageIndex.value);
+    }
+    if (resolvedMessageId.present) {
+      map['resolved_message_id'] = Variable<String>(resolvedMessageId.value);
+    }
+    if (rawValue.present) {
+      map['raw_value'] = Variable<String>(rawValue.value);
+    }
+    if (errorType.present) {
+      map['error_type'] = Variable<String>(errorType.value);
+    }
+    if (errorText.present) {
+      map['error_text'] = Variable<String>(errorText.value);
+    }
+    if (createdAtMs.present) {
+      map['created_at_ms'] = Variable<int>(createdAtMs.value);
+    }
+    if (lastAttemptAtMs.present) {
+      map['last_attempt_at_ms'] = Variable<int>(lastAttemptAtMs.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LegacyRejectedMessagesCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('storageKey: $storageKey, ')
+          ..write('messageIndex: $messageIndex, ')
+          ..write('resolvedMessageId: $resolvedMessageId, ')
+          ..write('rawValue: $rawValue, ')
+          ..write('errorType: $errorType, ')
+          ..write('errorText: $errorText, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('lastAttemptAtMs: $lastAttemptAtMs')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MessageHistoryDatabase extends GeneratedDatabase {
   _$MessageHistoryDatabase(QueryExecutor e) : super(e);
   $MessageHistoryDatabaseManager get managers =>
@@ -1245,6 +1877,8 @@ abstract class _$MessageHistoryDatabase extends GeneratedDatabase {
   late final $HistoryMetadataTable historyMetadata = $HistoryMetadataTable(
     this,
   );
+  late final $LegacyRejectedMessagesTable legacyRejectedMessages =
+      $LegacyRejectedMessagesTable(this);
   late final Index historyMessageTimeline = Index(
     'history_message_timeline',
     'CREATE INDEX history_message_timeline ON history_messages (kind, storage_key, timeline_at_ms, message_id)',
@@ -1261,6 +1895,10 @@ abstract class _$MessageHistoryDatabase extends GeneratedDatabase {
     'history_message_marker',
     'CREATE INDEX history_message_marker ON history_messages (kind, storage_key, contains_marker)',
   );
+  late final Index legacyRejectedLocation = Index(
+    'legacy_rejected_location',
+    'CREATE INDEX legacy_rejected_location ON legacy_rejected_messages (kind, storage_key, message_index)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1268,10 +1906,12 @@ abstract class _$MessageHistoryDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     historyMessages,
     historyMetadata,
+    legacyRejectedMessages,
     historyMessageTimeline,
     historyMessageIdentity,
     historyMessageSummary,
     historyMessageMarker,
+    legacyRejectedLocation,
   ];
 }
 
@@ -1901,6 +2541,324 @@ typedef $$HistoryMetadataTableProcessedTableManager =
       HistoryMetadataData,
       PrefetchHooks Function()
     >;
+typedef $$LegacyRejectedMessagesTableCreateCompanionBuilder =
+    LegacyRejectedMessagesCompanion Function({
+      Value<int> id,
+      required int kind,
+      required String storageKey,
+      Value<int?> messageIndex,
+      Value<String?> resolvedMessageId,
+      required String rawValue,
+      required String errorType,
+      required String errorText,
+      required int createdAtMs,
+      Value<int?> lastAttemptAtMs,
+    });
+typedef $$LegacyRejectedMessagesTableUpdateCompanionBuilder =
+    LegacyRejectedMessagesCompanion Function({
+      Value<int> id,
+      Value<int> kind,
+      Value<String> storageKey,
+      Value<int?> messageIndex,
+      Value<String?> resolvedMessageId,
+      Value<String> rawValue,
+      Value<String> errorType,
+      Value<String> errorText,
+      Value<int> createdAtMs,
+      Value<int?> lastAttemptAtMs,
+    });
+
+class $$LegacyRejectedMessagesTableFilterComposer
+    extends Composer<_$MessageHistoryDatabase, $LegacyRejectedMessagesTable> {
+  $$LegacyRejectedMessagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storageKey => $composableBuilder(
+    column: $table.storageKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get messageIndex => $composableBuilder(
+    column: $table.messageIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resolvedMessageId => $composableBuilder(
+    column: $table.resolvedMessageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rawValue => $composableBuilder(
+    column: $table.rawValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get errorType => $composableBuilder(
+    column: $table.errorType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get errorText => $composableBuilder(
+    column: $table.errorText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastAttemptAtMs => $composableBuilder(
+    column: $table.lastAttemptAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LegacyRejectedMessagesTableOrderingComposer
+    extends Composer<_$MessageHistoryDatabase, $LegacyRejectedMessagesTable> {
+  $$LegacyRejectedMessagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get storageKey => $composableBuilder(
+    column: $table.storageKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get messageIndex => $composableBuilder(
+    column: $table.messageIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resolvedMessageId => $composableBuilder(
+    column: $table.resolvedMessageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rawValue => $composableBuilder(
+    column: $table.rawValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get errorType => $composableBuilder(
+    column: $table.errorType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get errorText => $composableBuilder(
+    column: $table.errorText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastAttemptAtMs => $composableBuilder(
+    column: $table.lastAttemptAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LegacyRejectedMessagesTableAnnotationComposer
+    extends Composer<_$MessageHistoryDatabase, $LegacyRejectedMessagesTable> {
+  $$LegacyRejectedMessagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get storageKey => $composableBuilder(
+    column: $table.storageKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get messageIndex => $composableBuilder(
+    column: $table.messageIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resolvedMessageId => $composableBuilder(
+    column: $table.resolvedMessageId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rawValue =>
+      $composableBuilder(column: $table.rawValue, builder: (column) => column);
+
+  GeneratedColumn<String> get errorType =>
+      $composableBuilder(column: $table.errorType, builder: (column) => column);
+
+  GeneratedColumn<String> get errorText =>
+      $composableBuilder(column: $table.errorText, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastAttemptAtMs => $composableBuilder(
+    column: $table.lastAttemptAtMs,
+    builder: (column) => column,
+  );
+}
+
+class $$LegacyRejectedMessagesTableTableManager
+    extends
+        RootTableManager<
+          _$MessageHistoryDatabase,
+          $LegacyRejectedMessagesTable,
+          LegacyRejectedMessage,
+          $$LegacyRejectedMessagesTableFilterComposer,
+          $$LegacyRejectedMessagesTableOrderingComposer,
+          $$LegacyRejectedMessagesTableAnnotationComposer,
+          $$LegacyRejectedMessagesTableCreateCompanionBuilder,
+          $$LegacyRejectedMessagesTableUpdateCompanionBuilder,
+          (
+            LegacyRejectedMessage,
+            BaseReferences<
+              _$MessageHistoryDatabase,
+              $LegacyRejectedMessagesTable,
+              LegacyRejectedMessage
+            >,
+          ),
+          LegacyRejectedMessage,
+          PrefetchHooks Function()
+        > {
+  $$LegacyRejectedMessagesTableTableManager(
+    _$MessageHistoryDatabase db,
+    $LegacyRejectedMessagesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LegacyRejectedMessagesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LegacyRejectedMessagesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LegacyRejectedMessagesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> kind = const Value.absent(),
+                Value<String> storageKey = const Value.absent(),
+                Value<int?> messageIndex = const Value.absent(),
+                Value<String?> resolvedMessageId = const Value.absent(),
+                Value<String> rawValue = const Value.absent(),
+                Value<String> errorType = const Value.absent(),
+                Value<String> errorText = const Value.absent(),
+                Value<int> createdAtMs = const Value.absent(),
+                Value<int?> lastAttemptAtMs = const Value.absent(),
+              }) => LegacyRejectedMessagesCompanion(
+                id: id,
+                kind: kind,
+                storageKey: storageKey,
+                messageIndex: messageIndex,
+                resolvedMessageId: resolvedMessageId,
+                rawValue: rawValue,
+                errorType: errorType,
+                errorText: errorText,
+                createdAtMs: createdAtMs,
+                lastAttemptAtMs: lastAttemptAtMs,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int kind,
+                required String storageKey,
+                Value<int?> messageIndex = const Value.absent(),
+                Value<String?> resolvedMessageId = const Value.absent(),
+                required String rawValue,
+                required String errorType,
+                required String errorText,
+                required int createdAtMs,
+                Value<int?> lastAttemptAtMs = const Value.absent(),
+              }) => LegacyRejectedMessagesCompanion.insert(
+                id: id,
+                kind: kind,
+                storageKey: storageKey,
+                messageIndex: messageIndex,
+                resolvedMessageId: resolvedMessageId,
+                rawValue: rawValue,
+                errorType: errorType,
+                errorText: errorText,
+                createdAtMs: createdAtMs,
+                lastAttemptAtMs: lastAttemptAtMs,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LegacyRejectedMessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MessageHistoryDatabase,
+      $LegacyRejectedMessagesTable,
+      LegacyRejectedMessage,
+      $$LegacyRejectedMessagesTableFilterComposer,
+      $$LegacyRejectedMessagesTableOrderingComposer,
+      $$LegacyRejectedMessagesTableAnnotationComposer,
+      $$LegacyRejectedMessagesTableCreateCompanionBuilder,
+      $$LegacyRejectedMessagesTableUpdateCompanionBuilder,
+      (
+        LegacyRejectedMessage,
+        BaseReferences<
+          _$MessageHistoryDatabase,
+          $LegacyRejectedMessagesTable,
+          LegacyRejectedMessage
+        >,
+      ),
+      LegacyRejectedMessage,
+      PrefetchHooks Function()
+    >;
 
 class $MessageHistoryDatabaseManager {
   final _$MessageHistoryDatabase _db;
@@ -1909,4 +2867,9 @@ class $MessageHistoryDatabaseManager {
       $$HistoryMessagesTableTableManager(_db, _db.historyMessages);
   $$HistoryMetadataTableTableManager get historyMetadata =>
       $$HistoryMetadataTableTableManager(_db, _db.historyMetadata);
+  $$LegacyRejectedMessagesTableTableManager get legacyRejectedMessages =>
+      $$LegacyRejectedMessagesTableTableManager(
+        _db,
+        _db.legacyRejectedMessages,
+      );
 }

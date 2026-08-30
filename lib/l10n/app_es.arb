@@ -3549,5 +3549,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Gestionar el almacenamiento",
+  "settings_modSettingsMessageStorage": "Almacenamiento de mensajes",
+  "messageHistoryDatabaseTitle": "Gestión de la base de datos",
+  "messageHistoryDatabaseSubtitle": "Estadísticas, recuperación y mantenimiento del historial de mensajes",
+  "messageHistoryDatabaseOverview": "Estado de la base de datos",
+  "messageHistoryDatabasePath": "Ruta de la base de datos",
+  "messageHistoryDatabaseFileSize": "Tamaño del archivo",
+  "messageHistoryDatabaseDirectCount": "Mensajes directos",
+  "messageHistoryDatabaseChannelCount": "Mensajes de canales",
+  "messageHistoryDatabaseReclaimable": "Espacio recuperable",
+  "messageHistoryDatabaseQuarantine": "Cuarentena de la migración",
+  "messageHistoryDatabaseQuarantineCount": "Entradas rechazadas: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "No hay entradas rechazadas",
+  "messageHistoryDatabaseRetry": "Reintentar la recuperación",
+  "messageHistoryDatabaseRetryDescription": "Volver a comprobar la cuarentena con el analizador actual y devolver al historial los mensajes reparados.",
+  "messageHistoryDatabaseRetryResult": "Recuperados: {restored}, restantes: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Exportar diagnóstico",
+  "messageHistoryDatabaseDiagnosticDescription": "Crear un informe sin el texto de los mensajes ni las claves de los contactos.",
+  "messageHistoryDatabaseRecovery": "Exportar datos de recuperación",
+  "messageHistoryDatabaseRecoveryDescription": "Crear un archivo solo con las entradas rechazadas. Puede contener conversaciones privadas.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Exportación de datos confidenciales",
+  "messageHistoryDatabaseRecoveryWarningDescription": "El archivo de recuperación contiene el texto original de los mensajes rechazados y los identificadores de las conversaciones. Revísalo antes de compartirlo con alguien.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "¿Eliminar la cuarentena tras la exportación?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "El archivo de recuperación ya se ha guardado. ¿Eliminar de la base de datos los datos rechazados que se han exportado?",
+  "messageHistoryDatabaseClearQuarantine": "Eliminar la cuarentena",
+  "messageHistoryDatabaseClearQuarantineDescription": "Eliminar los datos rechazados sin posibilidad de recuperarlos.",
+  "messageHistoryDatabaseClearWarningTitle": "¿Eliminar los datos rechazados?",
+  "messageHistoryDatabaseClearWarningDescription": "Tras la eliminación, los mensajes en cuarentena ya no se podrán recuperar ni exportar.",
+  "messageHistoryDatabaseMaintenance": "Mantenimiento",
+  "messageHistoryDatabaseIncrementalVacuum": "Liberar espacio no utilizado",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Devolver gradualmente al sistema operativo las páginas de SQLite que no se usan.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (reconstruir la base por completo)",
+  "messageHistoryDatabaseFullVacuumDescription": "Reconstruir por completo el archivo de la base de datos. Puede llevar tiempo y requerir espacio libre adicional.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "¿Reconstruir por completo la base de datos?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "No cierres la aplicación hasta que termine la operación. SQLite puede necesitar espacio adicional del tamaño de la base de datos actual.",
+  "messageHistoryDatabaseCopyPath": "Copiar la ruta",
+  "messageHistoryDatabasePathCopied": "Ruta copiada",
+  "messageHistoryDatabaseExportSaved": "Archivo guardado: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Entradas eliminadas: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Operación completada",
+  "messageHistoryDatabaseOperationFailed": "La operación no se completó: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

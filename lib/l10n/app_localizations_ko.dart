@@ -6040,4 +6040,149 @@ class AppLocalizationsKo extends AppLocalizations {
   ) {
     return '이전 중에 대화 $histories개와 개별 메시지 $messages개를 복원하지 못했습니다. 나머지 기록은 유지되었습니다.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => '저장소 관리';
+
+  @override
+  String get settings_modSettingsMessageStorage => '메시지 저장소';
+
+  @override
+  String get messageHistoryDatabaseTitle => '데이터베이스 관리';
+
+  @override
+  String get messageHistoryDatabaseSubtitle => '메시지 기록의 통계, 복구 및 유지 관리';
+
+  @override
+  String get messageHistoryDatabaseOverview => '데이터베이스 상태';
+
+  @override
+  String get messageHistoryDatabasePath => '데이터베이스 경로';
+
+  @override
+  String get messageHistoryDatabaseFileSize => '파일 크기';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => '직접 메시지';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => '채널 메시지';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => '확보 가능';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => '이전 격리 영역';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return '거부된 항목: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => '거부된 항목이 없습니다';
+
+  @override
+  String get messageHistoryDatabaseRetry => '복구 다시 시도';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      '현재 파서로 격리 영역을 다시 검사하고 복구된 메시지를 기록으로 되돌립니다.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return '복구됨: $restored개, 남음: $remaining개';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => '진단 정보 내보내기';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      '메시지 본문과 연락처 키가 없는 보고서를 만듭니다.';
+
+  @override
+  String get messageHistoryDatabaseRecovery => '복구 데이터 내보내기';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      '거부된 항목만 담은 파일을 만듭니다. 개인적인 대화가 포함될 수 있습니다.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle => '민감한 데이터 내보내기';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      '복구 파일에는 거부된 메시지의 원본 내용과 대화 식별자가 들어 있습니다. 누군가에게 전달하기 전에 내용을 확인하세요.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      '내보낸 뒤 격리 영역을 삭제할까요?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      '복구 파일이 저장되었습니다. 내보낸 거부 데이터를 데이터베이스에서 삭제할까요?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => '격리 영역 삭제';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      '거부된 데이터를 복구할 수 없는 방식으로 삭제합니다.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle => '거부된 데이터를 삭제할까요?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      '삭제한 뒤에는 격리된 메시지를 복구하거나 내보낼 수 없습니다.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => '유지 관리';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum => '사용하지 않는 공간 확보';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      '사용하지 않는 SQLite 페이지를 운영체제에 점진적으로 반환합니다.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum => 'VACUUM (데이터베이스 완전 재구성)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      '데이터베이스 파일을 완전히 재구성합니다. 시간이 걸리고 추가 여유 공간이 필요할 수 있습니다.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      '데이터베이스를 완전히 재구성할까요?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      '작업이 끝날 때까지 앱을 닫지 마세요. SQLite에는 현재 데이터베이스 크기만큼의 추가 공간이 필요할 수 있습니다.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => '경로 복사';
+
+  @override
+  String get messageHistoryDatabasePathCopied => '경로를 복사했습니다';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return '파일을 저장했습니다: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return '삭제된 항목: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => '작업이 완료되었습니다';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return '작업에 실패했습니다: $error';
+  }
 }

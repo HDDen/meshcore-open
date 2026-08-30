@@ -2727,5 +2727,67 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Управление хранилищем",
+  "settings_modSettingsMessageStorage": "Хранилище сообщений",
+  "messageHistoryDatabaseTitle": "Управление базой данных",
+  "messageHistoryDatabaseSubtitle": "Статистика, восстановление и обслуживание истории сообщений",
+  "messageHistoryDatabaseOverview": "Состояние базы данных",
+  "messageHistoryDatabasePath": "Путь к базе данных",
+  "messageHistoryDatabaseFileSize": "Размер файла",
+  "messageHistoryDatabaseDirectCount": "Личные сообщения",
+  "messageHistoryDatabaseChannelCount": "Сообщения каналов",
+  "messageHistoryDatabaseReclaimable": "Можно освободить",
+  "messageHistoryDatabaseQuarantine": "Карантин миграции",
+  "messageHistoryDatabaseQuarantineCount": "Отклонено записей: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "size": { "type": "String" }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Отклонённых записей нет",
+  "messageHistoryDatabaseRetry": "Повторить восстановление",
+  "messageHistoryDatabaseRetryDescription": "Повторно проверить карантин актуальным парсером и вернуть исправленные сообщения в историю.",
+  "messageHistoryDatabaseRetryResult": "Восстановлено: {restored}, осталось: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": { "type": "int" },
+      "remaining": { "type": "int" }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Экспортировать диагностику",
+  "messageHistoryDatabaseDiagnosticDescription": "Создать отчёт без текста сообщений и ключей контактов.",
+  "messageHistoryDatabaseRecovery": "Экспортировать данные восстановления",
+  "messageHistoryDatabaseRecoveryDescription": "Создать файл только с отклонёнными записями. Он может содержать личную переписку.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Экспорт конфиденциальных данных",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Файл восстановления содержит исходный текст отклонённых сообщений и идентификаторы диалогов. Не отправляйте его посторонним без проверки содержимого.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Удалить карантин после экспорта?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Файл восстановления уже сохранён. Удалить экспортированные отклонённые данные из базы?",
+  "messageHistoryDatabaseClearQuarantine": "Удалить карантин",
+  "messageHistoryDatabaseClearQuarantineDescription": "Удалить отклонённые данные без возможности восстановления.",
+  "messageHistoryDatabaseClearWarningTitle": "Удалить отклонённые данные?",
+  "messageHistoryDatabaseClearWarningDescription": "После удаления сообщения из карантина нельзя будет повторно восстановить или экспортировать.",
+  "messageHistoryDatabaseMaintenance": "Обслуживание",
+  "messageHistoryDatabaseIncrementalVacuum": "Освободить неиспользуемое место",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Постепенно вернуть операционной системе свободные страницы SQLite.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (Полностью перестроить БД)",
+  "messageHistoryDatabaseFullVacuumDescription": "Полностью перестроить файл базы. Операция может занять время и потребовать дополнительное свободное место.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Полностью перестроить базу данных?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Не закрывайте приложение до завершения. SQLite может потребоваться дополнительное место размером с текущую базу данных.",
+  "messageHistoryDatabaseCopyPath": "Копировать путь",
+  "messageHistoryDatabasePathCopied": "Путь скопирован",
+  "messageHistoryDatabaseExportSaved": "Файл сохранён: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "messageHistoryDatabaseDeleted": "Удалено записей: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "messageHistoryDatabaseOperationComplete": "Операция завершена",
+  "messageHistoryDatabaseOperationFailed": "Операция не выполнена: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": { "error": { "type": "String" } }
   }
 }

@@ -5905,4 +5905,147 @@ class AppLocalizationsZh extends AppLocalizations {
   ) {
     return '迁移过程中有 $histories 个会话和 $messages 条单独消息无法恢复。其余历史已保留。';
   }
+
+  @override
+  String get messageHistoryMigrationManage => '管理存储';
+
+  @override
+  String get settings_modSettingsMessageStorage => '消息存储';
+
+  @override
+  String get messageHistoryDatabaseTitle => '数据库管理';
+
+  @override
+  String get messageHistoryDatabaseSubtitle => '消息历史的统计、恢复与维护';
+
+  @override
+  String get messageHistoryDatabaseOverview => '数据库状态';
+
+  @override
+  String get messageHistoryDatabasePath => '数据库路径';
+
+  @override
+  String get messageHistoryDatabaseFileSize => '文件大小';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => '私聊消息';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => '频道消息';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => '可释放空间';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => '迁移隔离区';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return '被拒记录：$count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => '没有被拒记录';
+
+  @override
+  String get messageHistoryDatabaseRetry => '重新尝试恢复';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      '用当前解析器重新检查隔离区，并把修复成功的消息放回历史。';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return '已恢复 $restored 条，剩余 $remaining 条';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => '导出诊断信息';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      '生成不含消息正文和联系人密钥的报告。';
+
+  @override
+  String get messageHistoryDatabaseRecovery => '导出恢复数据';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      '生成仅包含被拒记录的文件。其中可能含有私人对话。';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle => '导出机密数据';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      '恢复文件包含被拒消息的原始内容和会话标识符。在提供给他人之前请先检查其内容。';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle => '导出后删除隔离区？';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      '恢复文件已保存。是否从数据库中删除已导出的被拒数据？';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => '删除隔离区';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      '删除被拒数据，且无法恢复。';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle => '删除被拒数据？';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      '删除后，隔离区中的消息将无法再恢复或导出。';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => '维护';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum => '释放未使用的空间';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      '逐步将未使用的 SQLite 页面归还给操作系统。';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum => 'VACUUM（完全重建数据库）';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      '完全重建数据库文件。该操作可能耗时，并需要额外的可用空间。';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle => '完全重建数据库？';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      '操作完成前请勿关闭应用。SQLite 可能需要与当前数据库大小相当的额外空间。';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => '复制路径';
+
+  @override
+  String get messageHistoryDatabasePathCopied => '已复制路径';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return '文件已保存：$path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return '已删除记录：$count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => '操作已完成';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return '操作失败：$error';
+  }
 }

@@ -3577,5 +3577,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Speicher verwalten",
+  "settings_modSettingsMessageStorage": "Nachrichtenspeicher",
+  "messageHistoryDatabaseTitle": "Datenbankverwaltung",
+  "messageHistoryDatabaseSubtitle": "Statistik, Wiederherstellung und Wartung des Nachrichtenverlaufs",
+  "messageHistoryDatabaseOverview": "Zustand der Datenbank",
+  "messageHistoryDatabasePath": "Pfad zur Datenbank",
+  "messageHistoryDatabaseFileSize": "Dateigröße",
+  "messageHistoryDatabaseDirectCount": "Direktnachrichten",
+  "messageHistoryDatabaseChannelCount": "Kanalnachrichten",
+  "messageHistoryDatabaseReclaimable": "Freigebbar",
+  "messageHistoryDatabaseQuarantine": "Migrationsquarantäne",
+  "messageHistoryDatabaseQuarantineCount": "Abgewiesene Einträge: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Keine abgewiesenen Einträge",
+  "messageHistoryDatabaseRetry": "Wiederherstellung erneut versuchen",
+  "messageHistoryDatabaseRetryDescription": "Die Quarantäne mit dem aktuellen Parser erneut prüfen und wiederhergestellte Nachrichten in den Verlauf zurückgeben.",
+  "messageHistoryDatabaseRetryResult": "Wiederhergestellt: {restored}, verbleibend: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Diagnose exportieren",
+  "messageHistoryDatabaseDiagnosticDescription": "Einen Bericht ohne Nachrichtentexte und Kontaktschlüssel erstellen.",
+  "messageHistoryDatabaseRecovery": "Wiederherstellungsdaten exportieren",
+  "messageHistoryDatabaseRecoveryDescription": "Eine Datei nur mit den abgewiesenen Einträgen erstellen. Sie kann private Unterhaltungen enthalten.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Export vertraulicher Daten",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Die Wiederherstellungsdatei enthält den ursprünglichen Text der abgewiesenen Nachrichten und Kennungen der Unterhaltungen. Prüfe sie, bevor du sie jemandem weitergibst.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Quarantäne nach dem Export löschen?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Die Wiederherstellungsdatei wurde gespeichert. Sollen die exportierten abgewiesenen Daten aus der Datenbank gelöscht werden?",
+  "messageHistoryDatabaseClearQuarantine": "Quarantäne löschen",
+  "messageHistoryDatabaseClearQuarantineDescription": "Abgewiesene Daten ohne Möglichkeit zur Wiederherstellung löschen.",
+  "messageHistoryDatabaseClearWarningTitle": "Abgewiesene Daten löschen?",
+  "messageHistoryDatabaseClearWarningDescription": "Nach dem Löschen können Nachrichten aus der Quarantäne weder erneut wiederhergestellt noch exportiert werden.",
+  "messageHistoryDatabaseMaintenance": "Wartung",
+  "messageHistoryDatabaseIncrementalVacuum": "Ungenutzten Speicher freigeben",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Ungenutzte SQLite-Seiten schrittweise an das Betriebssystem zurückgeben.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (Datenbank vollständig neu aufbauen)",
+  "messageHistoryDatabaseFullVacuumDescription": "Die Datenbankdatei vollständig neu aufbauen. Das kann dauern und zusätzlichen freien Speicher erfordern.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Datenbank vollständig neu aufbauen?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Schließe die Anwendung nicht, bis der Vorgang abgeschlossen ist. SQLite benötigt möglicherweise zusätzlichen Speicher in der Größe der aktuellen Datenbank.",
+  "messageHistoryDatabaseCopyPath": "Pfad kopieren",
+  "messageHistoryDatabasePathCopied": "Pfad kopiert",
+  "messageHistoryDatabaseExportSaved": "Datei gespeichert: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Gelöschte Einträge: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Vorgang abgeschlossen",
+  "messageHistoryDatabaseOperationFailed": "Vorgang fehlgeschlagen: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

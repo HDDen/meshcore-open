@@ -3453,5 +3453,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Tároló kezelése",
+  "settings_modSettingsMessageStorage": "Üzenettároló",
+  "messageHistoryDatabaseTitle": "Adatbázis kezelése",
+  "messageHistoryDatabaseSubtitle": "Az üzenetelőzmények statisztikája, helyreállítása és karbantartása",
+  "messageHistoryDatabaseOverview": "Az adatbázis állapota",
+  "messageHistoryDatabasePath": "Az adatbázis elérési útja",
+  "messageHistoryDatabaseFileSize": "Fájlméret",
+  "messageHistoryDatabaseDirectCount": "Közvetlen üzenetek",
+  "messageHistoryDatabaseChannelCount": "Csatornaüzenetek",
+  "messageHistoryDatabaseReclaimable": "Felszabadítható",
+  "messageHistoryDatabaseQuarantine": "Átköltöztetési karantén",
+  "messageHistoryDatabaseQuarantineCount": "Elutasított bejegyzések: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Nincsenek elutasított bejegyzések",
+  "messageHistoryDatabaseRetry": "Helyreállítás újrapróbálása",
+  "messageHistoryDatabaseRetryDescription": "A karantén újbóli ellenőrzése a jelenlegi elemzővel, és a helyreállított üzenetek visszahelyezése az előzményekbe.",
+  "messageHistoryDatabaseRetryResult": "Helyreállítva: {restored}, hátravan: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Diagnosztika exportálása",
+  "messageHistoryDatabaseDiagnosticDescription": "Jelentés készítése az üzenetek szövege és a névjegykulcsok nélkül.",
+  "messageHistoryDatabaseRecovery": "Helyreállítási adatok exportálása",
+  "messageHistoryDatabaseRecoveryDescription": "Fájl készítése kizárólag az elutasított bejegyzésekkel. Magánbeszélgetéseket is tartalmazhat.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Bizalmas adatok exportálása",
+  "messageHistoryDatabaseRecoveryWarningDescription": "A helyreállítási fájl az elutasított üzenetek eredeti szövegét és a beszélgetések azonosítóit tartalmazza. Nézd át, mielőtt bárkinek továbbadod.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Törlöd a karantént az exportálás után?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "A helyreállítási fájl elmentve. Törölhetők az exportált elutasított adatok az adatbázisból?",
+  "messageHistoryDatabaseClearQuarantine": "Karantén törlése",
+  "messageHistoryDatabaseClearQuarantineDescription": "Az elutasított adatok törlése a helyreállítás lehetősége nélkül.",
+  "messageHistoryDatabaseClearWarningTitle": "Törlöd az elutasított adatokat?",
+  "messageHistoryDatabaseClearWarningDescription": "A törlés után a karanténban lévő üzenetek sem helyreállítani, sem exportálni nem lesznek képesek.",
+  "messageHistoryDatabaseMaintenance": "Karbantartás",
+  "messageHistoryDatabaseIncrementalVacuum": "Nem használt hely felszabadítása",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "A nem használt SQLite-lapok fokozatos visszaadása az operációs rendszernek.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (az adatbázis teljes újraépítése)",
+  "messageHistoryDatabaseFullVacuumDescription": "Az adatbázisfájl teljes újraépítése. A művelet eltarthat egy ideig, és további szabad helyet igényelhet.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Teljesen újraépíted az adatbázist?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Ne zárd be az alkalmazást a művelet befejezéséig. Az SQLite-nak a jelenlegi adatbázis méretével megegyező további helyre lehet szüksége.",
+  "messageHistoryDatabaseCopyPath": "Elérési út másolása",
+  "messageHistoryDatabasePathCopied": "Elérési út kimásolva",
+  "messageHistoryDatabaseExportSaved": "Fájl elmentve: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Törölt bejegyzések: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "A művelet befejeződött",
+  "messageHistoryDatabaseOperationFailed": "A művelet nem sikerült: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

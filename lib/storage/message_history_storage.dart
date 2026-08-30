@@ -29,6 +29,7 @@ class MessageHistoryStorage {
     for (final kind in MessageHistoryKind.values) kind: <String>{},
   };
   final Set<String> _directMarkerKeys = {};
+  LegacyMessageValidator? _legacyMessageValidator;
   final ValueNotifier<LegacyMessageHistoryProgress> migrationProgress =
       ValueNotifier(
         const LegacyMessageHistoryProgress(
@@ -43,6 +44,7 @@ class MessageHistoryStorage {
     Future<void> Function()? onMigrationStarted,
     LegacyMessageValidator? validateMessage,
   }) async {
+    _legacyMessageValidator = validateMessage;
     if (_initialized) return false;
 
     if (kIsWeb) {
@@ -137,6 +139,9 @@ class MessageHistoryStorage {
             kind: kind.index,
             storageKey: key,
             jsonValue: value,
+            rawValue: storedValue is String
+                ? storedValue
+                : jsonEncode(storedValue),
           ),
         );
       }
@@ -182,6 +187,48 @@ class MessageHistoryStorage {
     _requireInitialized();
     if (kIsWeb) return;
     await _database!.acknowledgeLegacyMigrationWarning();
+  }
+
+  Future<List<LegacyRejectedRecord>> legacyRejectedRecords() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.legacyRejectedRecords();
+  }
+
+  Future<LegacyQuarantineRetryResult> retryLegacyRejected() async {
+    _requireInitialized();
+    if (kIsWeb) {
+      return const LegacyQuarantineRetryResult(restored: 0, remaining: 0);
+    }
+    final result = await _database!.retryLegacyRejected(
+      validateMessage: _legacyMessageValidator,
+    );
+    await _refreshCaches();
+    return result;
+  }
+
+  Future<int> clearLegacyRejected() async {
+    _requireInitialized();
+    if (kIsWeb) return 0;
+    return _database!.clearLegacyRejected();
+  }
+
+  Future<MessageHistoryDatabaseStats?> maintenanceStats() async {
+    _requireInitialized();
+    if (kIsWeb) return null;
+    return _database!.maintenanceStats();
+  }
+
+  Future<void> incrementalVacuum({int pages = 512}) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.incrementalVacuum(pages: pages);
+  }
+
+  Future<void> fullVacuum() async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.fullVacuum();
   }
 
   Future<String?> getString(MessageHistoryKind kind, String key) async {

@@ -3450,5 +3450,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Upravljanje shrambe",
+  "settings_modSettingsMessageStorage": "Shramba sporočil",
+  "messageHistoryDatabaseTitle": "Upravljanje podatkovne baze",
+  "messageHistoryDatabaseSubtitle": "Statistika, obnovitev in vzdrževanje zgodovine sporočil",
+  "messageHistoryDatabaseOverview": "Stanje podatkovne baze",
+  "messageHistoryDatabasePath": "Pot do podatkovne baze",
+  "messageHistoryDatabaseFileSize": "Velikost datoteke",
+  "messageHistoryDatabaseDirectCount": "Neposredna sporočila",
+  "messageHistoryDatabaseChannelCount": "Sporočila kanalov",
+  "messageHistoryDatabaseReclaimable": "Mogoče sprostiti",
+  "messageHistoryDatabaseQuarantine": "Karantena prenosa",
+  "messageHistoryDatabaseQuarantineCount": "Zavrnjeni zapisi: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Ni zavrnjenih zapisov",
+  "messageHistoryDatabaseRetry": "Znova poskusi obnoviti",
+  "messageHistoryDatabaseRetryDescription": "Znova preveri karanteno s trenutnim razčlenjevalnikom in vrni popravljena sporočila v zgodovino.",
+  "messageHistoryDatabaseRetryResult": "Obnovljeno: {restored}, ostalo: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Izvozi diagnostiko",
+  "messageHistoryDatabaseDiagnosticDescription": "Ustvari poročilo brez besedila sporočil in ključev stikov.",
+  "messageHistoryDatabaseRecovery": "Izvozi podatke za obnovitev",
+  "messageHistoryDatabaseRecoveryDescription": "Ustvari datoteko samo z zavrnjenimi zapisi. Vsebuje lahko zasebne pogovore.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Izvoz zaupnih podatkov",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Datoteka za obnovitev vsebuje izvirno besedilo zavrnjenih sporočil in identifikatorje pogovorov. Preglej jo, preden jo komu posreduješ.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Izbrišem karanteno po izvozu?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Datoteka za obnovitev je shranjena. Ali naj se izvoženi zavrnjeni podatki izbrišejo iz baze?",
+  "messageHistoryDatabaseClearQuarantine": "Izbriši karanteno",
+  "messageHistoryDatabaseClearQuarantineDescription": "Izbriši zavrnjene podatke brez možnosti obnovitve.",
+  "messageHistoryDatabaseClearWarningTitle": "Izbrišem zavrnjene podatke?",
+  "messageHistoryDatabaseClearWarningDescription": "Po izbrisu sporočil iz karantene ne bo več mogoče obnoviti ali izvoziti.",
+  "messageHistoryDatabaseMaintenance": "Vzdrževanje",
+  "messageHistoryDatabaseIncrementalVacuum": "Sprosti neuporabljen prostor",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Postopoma vrni operacijskemu sistemu neuporabljene strani SQLite.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (popolnoma obnovi bazo)",
+  "messageHistoryDatabaseFullVacuumDescription": "Popolnoma obnovi datoteko podatkovne baze. Postopek lahko traja in zahteva dodaten prostor.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Popolnoma obnovim podatkovno bazo?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Ne zapiraj aplikacije, dokler se postopek ne konča. SQLite bo morda potreboval dodaten prostor v velikosti trenutne baze.",
+  "messageHistoryDatabaseCopyPath": "Kopiraj pot",
+  "messageHistoryDatabasePathCopied": "Pot kopirana",
+  "messageHistoryDatabaseExportSaved": "Datoteka shranjena: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Izbrisani zapisi: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Postopek končan",
+  "messageHistoryDatabaseOperationFailed": "Postopek ni uspel: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

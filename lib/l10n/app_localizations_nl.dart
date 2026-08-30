@@ -6332,4 +6332,154 @@ class AppLocalizationsNl extends AppLocalizations {
   ) {
     return 'Bij het overzetten konden $histories gesprekken en $messages losse berichten niet worden hersteld. De overige geschiedenis is bewaard gebleven.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Opslag beheren';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Berichtenopslag';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Databasebeheer';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Statistieken, herstel en onderhoud van de berichtgeschiedenis';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Status van de database';
+
+  @override
+  String get messageHistoryDatabasePath => 'Pad naar de database';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Bestandsgrootte';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Directe berichten';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Kanaalberichten';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Vrij te maken';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Migratiequarantaine';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Afgewezen items: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => 'Geen afgewezen items';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Herstel opnieuw proberen';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'De quarantaine opnieuw controleren met de huidige parser en herstelde berichten terugzetten in de geschiedenis.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Hersteld: $restored, resterend: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Diagnostiek exporteren';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Een rapport maken zonder berichtteksten en contactsleutels.';
+
+  @override
+  String get messageHistoryDatabaseRecovery => 'Herstelgegevens exporteren';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Een bestand maken met alleen de afgewezen items. Het kan privégesprekken bevatten.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Export van vertrouwelijke gegevens';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Het herstelbestand bevat de oorspronkelijke tekst van de afgewezen berichten en de identificatoren van de gesprekken. Controleer het voordat je het met iemand deelt.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Quarantaine na de export verwijderen?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Het herstelbestand is opgeslagen. De geëxporteerde afgewezen gegevens uit de database verwijderen?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Quarantaine verwijderen';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'De afgewezen gegevens verwijderen zonder mogelijkheid tot herstel.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Afgewezen gegevens verwijderen?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'Na het verwijderen kunnen berichten uit de quarantaine niet meer worden hersteld of geëxporteerd.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Onderhoud';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Ongebruikte ruimte vrijgeven';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Ongebruikte SQLite-pagina\'s geleidelijk teruggeven aan het besturingssysteem.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (database volledig opnieuw opbouwen)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Het databasebestand volledig opnieuw opbouwen. Dit kan tijd kosten en extra vrije ruimte vereisen.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'De database volledig opnieuw opbouwen?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Sluit de app niet af totdat de bewerking klaar is. SQLite heeft mogelijk extra ruimte nodig ter grootte van de huidige database.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Pad kopiëren';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Pad gekopieerd';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Bestand opgeslagen: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Verwijderde items: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Bewerking voltooid';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Bewerking mislukt: $error';
+  }
 }

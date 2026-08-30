@@ -75,6 +75,32 @@ class HistoryMetadata extends Table {
   Set<Column<Object>> get primaryKey => {key};
 }
 
+@TableIndex(
+  name: 'legacy_rejected_location',
+  columns: {#kind, #storageKey, #messageIndex},
+)
+class LegacyRejectedMessages extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get kind => integer()();
+
+  TextColumn get storageKey => text()();
+
+  IntColumn get messageIndex => integer().nullable()();
+
+  TextColumn get resolvedMessageId => text().nullable()();
+
+  TextColumn get rawValue => text()();
+
+  TextColumn get errorType => text()();
+
+  TextColumn get errorText => text()();
+
+  IntColumn get createdAtMs => integer()();
+
+  IntColumn get lastAttemptAtMs => integer().nullable()();
+}
+
 class MessageHistoryCursor {
   const MessageHistoryCursor({
     required this.timelineAtMs,
@@ -102,11 +128,13 @@ class LegacyMessageHistoryEntry {
     required this.kind,
     required this.storageKey,
     required this.jsonValue,
+    required this.rawValue,
   });
 
   final int kind;
   final String storageKey;
   final String? jsonValue;
+  final String rawValue;
 }
 
 typedef LegacyMessageValidator =
@@ -138,6 +166,66 @@ class LegacyMessageMigrationWarning {
   final int skippedMessages;
 }
 
+class LegacyRejectedRecord {
+  const LegacyRejectedRecord({
+    required this.id,
+    required this.kind,
+    required this.storageKey,
+    required this.messageIndex,
+    required this.resolvedMessageId,
+    required this.rawValue,
+    required this.errorType,
+    required this.errorText,
+    required this.createdAtMs,
+    required this.lastAttemptAtMs,
+  });
+
+  final int id;
+  final int kind;
+  final String storageKey;
+  final int? messageIndex;
+  final String? resolvedMessageId;
+  final String rawValue;
+  final String errorType;
+  final String errorText;
+  final int createdAtMs;
+  final int? lastAttemptAtMs;
+}
+
+class LegacyQuarantineRetryResult {
+  const LegacyQuarantineRetryResult({
+    required this.restored,
+    required this.remaining,
+  });
+
+  final int restored;
+  final int remaining;
+}
+
+class MessageHistoryDatabaseStats {
+  const MessageHistoryDatabaseStats({
+    required this.directMessages,
+    required this.channelMessages,
+    required this.rejectedEntries,
+    required this.rejectedBytes,
+    required this.pageCount,
+    required this.freePageCount,
+    required this.pageSize,
+    required this.autoVacuumMode,
+  });
+
+  final int directMessages;
+  final int channelMessages;
+  final int rejectedEntries;
+  final int rejectedBytes;
+  final int pageCount;
+  final int freePageCount;
+  final int pageSize;
+  final int autoVacuumMode;
+
+  int get reclaimableBytes => freePageCount * pageSize;
+}
+
 class MessageHistoryState {
   const MessageHistoryState({
     required this.hasMessages,
@@ -148,8 +236,11 @@ class MessageHistoryState {
   final bool containsMarker;
 }
 
-@DriftDatabase(tables: [HistoryMessages, HistoryMetadata])
+@DriftDatabase(
+  tables: [HistoryMessages, HistoryMetadata, LegacyRejectedMessages],
+)
 class MessageHistoryDatabase extends _$MessageHistoryDatabase {
+  static const int currentSchemaVersion = 1;
   static const String _legacyMigrationKey = 'legacy_migration_complete';
   static const String _legacySkippedHistoriesKey =
       'legacy_migration_skipped_histories';
@@ -173,7 +264,15 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
       );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => currentSchemaVersion;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (migrator) async {
+      await customStatement('PRAGMA auto_vacuum = INCREMENTAL');
+      await migrator.createAll();
+    },
+  );
 
   Future<bool> isLegacyMigrationComplete() async {
     final row = await (select(
@@ -482,6 +581,15 @@ WHERE kind = ? AND storage_key = ?
         } catch (error, stackTrace) {
           if (_isFatalLegacyDataError(error)) rethrow;
           skippedHistories++;
+          await into(legacyRejectedMessages).insert(
+            _rejectedCompanion(
+              history: history,
+              messageIndex: null,
+              resolvedMessageId: null,
+              rawValue: history.rawValue,
+              error: error,
+            ),
+          );
           _logSkippedLegacyData(history.storageKey, null, error, stackTrace);
           onProgress?.call(
             LegacyMessageHistoryProgress(
@@ -500,28 +608,41 @@ WHERE kind = ? AND storage_key = ?
           final end = offset + chunkSize < decoded.length
               ? offset + chunkSize
               : decoded.length;
-          final messages = <Map<String, dynamic>>[];
           final companions = <HistoryMessagesCompanion>[];
+          final rejected = <LegacyRejectedMessagesCompanion>[];
           for (var index = offset; index < end; index++) {
             final entry = decoded[index];
+            String? resolvedMessageId;
             try {
               if (entry is! Map<String, dynamic>) {
                 throw const FormatException('History message is not an object');
               }
               final message = Map<String, dynamic>.from(entry);
+              resolvedMessageId = _messageIdFor(
+                message,
+                fallbackOccurrences,
+              );
               validateMessage?.call(history.kind, message);
-              companions.addAll(
-                _companionsFor(
+              companions.add(
+                _companionFor(
                   history.kind,
                   history.storageKey,
-                  [message],
-                  fallbackOccurrences: fallbackOccurrences,
+                  message,
+                  messageId: resolvedMessageId,
                 ),
               );
-              messages.add(message);
             } catch (error, stackTrace) {
               if (_isFatalLegacyDataError(error)) rethrow;
               skippedMessages++;
+              rejected.add(
+                _rejectedCompanion(
+                  history: history,
+                  messageIndex: index,
+                  resolvedMessageId: resolvedMessageId,
+                  rawValue: _safeRawLegacyValue(entry),
+                  error: error,
+                ),
+              );
               _logSkippedLegacyData(
                 history.storageKey,
                 index,
@@ -530,12 +651,17 @@ WHERE kind = ? AND storage_key = ?
               );
             }
           }
-          if (companions.isNotEmpty) {
+          if (companions.isNotEmpty || rejected.isNotEmpty) {
             await batch((batch) {
-              batch.insertAll(historyMessages, companions);
+              if (companions.isNotEmpty) {
+                batch.insertAll(historyMessages, companions);
+              }
+              if (rejected.isNotEmpty) {
+                batch.insertAll(legacyRejectedMessages, rejected);
+              }
             });
           }
-          processedMessages += messages.length;
+          processedMessages += end - offset;
           onProgress?.call(
             LegacyMessageHistoryProgress(
               completedHistories: historyIndex,
@@ -593,6 +719,44 @@ WHERE kind = ? AND storage_key = ?
     return error is OutOfMemoryError || error is StackOverflowError;
   }
 
+  LegacyRejectedMessagesCompanion _rejectedCompanion({
+    required LegacyMessageHistoryEntry history,
+    required int? messageIndex,
+    required String? resolvedMessageId,
+    required String rawValue,
+    required Object error,
+  }) {
+    return LegacyRejectedMessagesCompanion.insert(
+      kind: history.kind,
+      storageKey: history.storageKey,
+      messageIndex: Value(messageIndex),
+      resolvedMessageId: Value(resolvedMessageId),
+      rawValue: rawValue,
+      errorType: error.runtimeType.toString(),
+      errorText: _safeErrorText(error),
+      createdAtMs: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  String _safeRawLegacyValue(Object? value) {
+    try {
+      return jsonEncode(value);
+    } catch (_) {
+      return '$value';
+    }
+  }
+
+  String _safeErrorText(Object error) {
+    const maxLength = 1000;
+    String text;
+    try {
+      text = '$error';
+    } catch (_) {
+      text = error.runtimeType.toString();
+    }
+    return text.length <= maxLength ? text : text.substring(0, maxLength);
+  }
+
   void _logSkippedLegacyData(
     String storageKey,
     int? messageIndex,
@@ -611,6 +775,284 @@ WHERE kind = ? AND storage_key = ?
     );
   }
 
+  Future<List<LegacyRejectedRecord>> legacyRejectedRecords() async {
+    final rows = await (select(legacyRejectedMessages)
+          ..orderBy([
+            (row) => OrderingTerm.asc(row.storageKey),
+            (row) => OrderingTerm.asc(row.messageIndex),
+            (row) => OrderingTerm.asc(row.id),
+          ]))
+        .get();
+    return rows
+        .map(
+          (row) => LegacyRejectedRecord(
+            id: row.id,
+            kind: row.kind,
+            storageKey: row.storageKey,
+            messageIndex: row.messageIndex,
+            resolvedMessageId: row.resolvedMessageId,
+            rawValue: row.rawValue,
+            errorType: row.errorType,
+            errorText: row.errorText,
+            createdAtMs: row.createdAtMs,
+            lastAttemptAtMs: row.lastAttemptAtMs,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<LegacyQuarantineRetryResult> retryLegacyRejected({
+    LegacyMessageValidator? validateMessage,
+  }) async {
+    var restored = 0;
+    await transaction(() async {
+      final rows = await (select(legacyRejectedMessages)
+            ..orderBy([(row) => OrderingTerm.asc(row.id)]))
+          .get();
+      for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        final row = rows[rowIndex];
+        if (row.messageIndex == null) {
+          restored += await _retryRejectedContainer(
+            row,
+            validateMessage: validateMessage,
+          );
+        } else {
+          restored += await _retryRejectedMessage(
+            row,
+            validateMessage: validateMessage,
+          );
+        }
+        if ((rowIndex + 1) % 100 == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+      }
+      await _refreshLegacyMigrationCounts(clearWarningWhenEmpty: true);
+    });
+    final remaining = await legacyRejectedCount();
+    return LegacyQuarantineRetryResult(
+      restored: restored,
+      remaining: remaining,
+    );
+  }
+
+  Future<int> _retryRejectedMessage(
+    LegacyRejectedMessage row, {
+    LegacyMessageValidator? validateMessage,
+  }) async {
+    late final HistoryMessagesCompanion companion;
+    try {
+      final decoded = jsonDecode(row.rawValue);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('History message is not an object');
+      }
+      final message = Map<String, dynamic>.from(decoded);
+      validateMessage?.call(row.kind, message);
+      final messageId = row.resolvedMessageId ??
+          _messageIdFor(message, <String, int>{});
+      companion = _companionFor(
+        row.kind,
+        row.storageKey,
+        message,
+        messageId: messageId,
+      );
+    } catch (error) {
+      if (_isFatalLegacyDataError(error)) rethrow;
+      await _updateRejectedFailure(row.id, error);
+      return 0;
+    }
+    await into(historyMessages).insertOnConflictUpdate(companion);
+    await (delete(
+      legacyRejectedMessages,
+    )..where((entry) => entry.id.equals(row.id))).go();
+    return 1;
+  }
+
+  Future<int> _retryRejectedContainer(
+    LegacyRejectedMessage row, {
+    LegacyMessageValidator? validateMessage,
+  }) async {
+    late final List<dynamic> decoded;
+    try {
+      final parsed = jsonDecode(row.rawValue);
+      if (parsed is! List<dynamic>) {
+        throw const FormatException('History entry is not a JSON array');
+      }
+      decoded = parsed;
+    } catch (error) {
+      if (_isFatalLegacyDataError(error)) rethrow;
+      await _updateRejectedFailure(row.id, error);
+      return 0;
+    }
+    final fallbackOccurrences = <String, int>{};
+    final restored = <HistoryMessagesCompanion>[];
+    final stillRejected = <LegacyRejectedMessagesCompanion>[];
+    for (var index = 0; index < decoded.length; index++) {
+      final entry = decoded[index];
+      String? resolvedMessageId;
+      try {
+        if (entry is! Map<String, dynamic>) {
+          throw const FormatException('History message is not an object');
+        }
+        final message = Map<String, dynamic>.from(entry);
+        resolvedMessageId = _messageIdFor(message, fallbackOccurrences);
+        validateMessage?.call(row.kind, message);
+        restored.add(
+          _companionFor(
+            row.kind,
+            row.storageKey,
+            message,
+            messageId: resolvedMessageId,
+          ),
+        );
+      } catch (error) {
+        if (_isFatalLegacyDataError(error)) rethrow;
+        stillRejected.add(
+          LegacyRejectedMessagesCompanion.insert(
+            kind: row.kind,
+            storageKey: row.storageKey,
+            messageIndex: Value(index),
+            resolvedMessageId: Value(resolvedMessageId),
+            rawValue: _safeRawLegacyValue(entry),
+            errorType: error.runtimeType.toString(),
+            errorText: _safeErrorText(error),
+            createdAtMs: row.createdAtMs,
+            lastAttemptAtMs: Value(DateTime.now().millisecondsSinceEpoch),
+          ),
+        );
+      }
+      if ((index + 1) % 200 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+    await batch((batch) {
+      if (restored.isNotEmpty) {
+        batch.insertAllOnConflictUpdate(historyMessages, restored);
+      }
+      if (stillRejected.isNotEmpty) {
+        batch.insertAll(legacyRejectedMessages, stillRejected);
+      }
+    });
+    await (delete(
+      legacyRejectedMessages,
+    )..where((entry) => entry.id.equals(row.id))).go();
+    return restored.length;
+  }
+
+  Future<void> _updateRejectedFailure(int id, Object error) async {
+    await (update(
+      legacyRejectedMessages,
+    )..where((row) => row.id.equals(id))).write(
+      LegacyRejectedMessagesCompanion(
+        errorType: Value(error.runtimeType.toString()),
+        errorText: Value(_safeErrorText(error)),
+        lastAttemptAtMs: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  Future<int> legacyRejectedCount() async {
+    final count = legacyRejectedMessages.id.count();
+    final query = selectOnly(legacyRejectedMessages)..addColumns([count]);
+    return (await query.getSingle()).read(count) ?? 0;
+  }
+
+  Future<int> clearLegacyRejected() async {
+    var deleted = 0;
+    await transaction(() async {
+      deleted = await delete(legacyRejectedMessages).go();
+      await _storeLegacyMigrationOutcome(
+        skippedHistories: 0,
+        skippedMessages: 0,
+      );
+    });
+    return deleted;
+  }
+
+  Future<void> _refreshLegacyMigrationCounts({
+    required bool clearWarningWhenEmpty,
+  }) async {
+    final rows = await customSelect(
+      '''
+SELECT SUM(CASE WHEN message_index IS NULL THEN 1 ELSE 0 END)
+         AS skipped_histories,
+       SUM(CASE WHEN message_index IS NOT NULL THEN 1 ELSE 0 END)
+         AS skipped_messages
+FROM legacy_rejected_messages
+''',
+      readsFrom: {legacyRejectedMessages},
+    ).getSingle();
+    final histories = rows.readNullable<int>('skipped_histories') ?? 0;
+    final messages = rows.readNullable<int>('skipped_messages') ?? 0;
+    await batch((batch) {
+      batch.insertAllOnConflictUpdate(historyMetadata, [
+        HistoryMetadataCompanion.insert(
+          key: _legacySkippedHistoriesKey,
+          value: '$histories',
+        ),
+        HistoryMetadataCompanion.insert(
+          key: _legacySkippedMessagesKey,
+          value: '$messages',
+        ),
+        if (clearWarningWhenEmpty && histories == 0 && messages == 0)
+          HistoryMetadataCompanion.insert(
+            key: _legacyWarningPendingKey,
+            value: '0',
+          ),
+      ]);
+    });
+  }
+
+  Future<MessageHistoryDatabaseStats> maintenanceStats() async {
+    final counts = await customSelect(
+      '''
+SELECT SUM(CASE WHEN kind = 0 THEN 1 ELSE 0 END) AS direct_messages,
+       SUM(CASE WHEN kind = 1 THEN 1 ELSE 0 END) AS channel_messages
+FROM history_messages
+''',
+      readsFrom: {historyMessages},
+    ).getSingle();
+    final rejected = await customSelect(
+      '''
+SELECT COUNT(*) AS rejected_entries,
+       COALESCE(SUM(LENGTH(CAST(raw_value AS BLOB))), 0) AS rejected_bytes
+FROM legacy_rejected_messages
+''',
+      readsFrom: {legacyRejectedMessages},
+    ).getSingle();
+    final pageCount = await _pragmaInt('page_count');
+    final freePageCount = await _pragmaInt('freelist_count');
+    final pageSize = await _pragmaInt('page_size');
+    final autoVacuumMode = await _pragmaInt('auto_vacuum');
+    return MessageHistoryDatabaseStats(
+      directMessages: counts.readNullable<int>('direct_messages') ?? 0,
+      channelMessages: counts.readNullable<int>('channel_messages') ?? 0,
+      rejectedEntries: rejected.read<int>('rejected_entries'),
+      rejectedBytes: rejected.read<int>('rejected_bytes'),
+      pageCount: pageCount,
+      freePageCount: freePageCount,
+      pageSize: pageSize,
+      autoVacuumMode: autoVacuumMode,
+    );
+  }
+
+  Future<int> _pragmaInt(String name) async {
+    final row = await customSelect('PRAGMA $name').getSingle();
+    if (row.data.isEmpty) return 0;
+    final value = row.data.values.first;
+    return value is int ? value : 0;
+  }
+
+  Future<void> incrementalVacuum({int pages = 512}) async {
+    if (pages <= 0) throw ArgumentError.value(pages, 'pages');
+    await customStatement('PRAGMA incremental_vacuum($pages)');
+  }
+
+  Future<void> fullVacuum() async {
+    await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    await customStatement('PRAGMA auto_vacuum = INCREMENTAL');
+    await customStatement('VACUUM');
+  }
+
   Future<void> removeHistory(int kind, String storageKey) async {
     await (delete(historyMessages)..where(
           (row) => row.kind.equals(kind) & row.storageKey.equals(storageKey),
@@ -627,42 +1069,56 @@ WHERE kind = ? AND storage_key = ?
     final occurrences = fallbackOccurrences ?? <String, int>{};
     return messages.map((message) {
       final messageId = _messageIdFor(message, occurrences);
-      final timestamp = message['timestamp'] as int? ?? 0;
-      final receivedAt = message['receivedAt'] as int?;
-      final displayText = message['text'] as String? ?? '';
-      final rawText = message['rawText'] as String? ?? displayText;
-      final decodedText = message['rawText'] != null
-          ? displayText
-          : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
-      final senderName = message['senderName'] as String?;
-      final timelineAt = kind == 1 || _hasRoomAuthorKey(message)
-          ? receivedAt ?? timestamp
-          : timestamp;
-      final storedMessage = Map<String, dynamic>.from(message)
-        ..['messageId'] = messageId;
-
-      return HistoryMessagesCompanion.insert(
-        kind: kind,
-        storageKey: storageKey,
+      return _companionFor(
+        kind,
+        storageKey,
+        message,
         messageId: messageId,
-        packetHash: Value(message['packetHash'] as String?),
-        timelineAtMs: timelineAt,
-        timestampMs: timestamp,
-        receivedAtMs: Value(receivedAt),
-        senderKey: Value(message['senderKey'] as String?),
-        senderName: Value(senderName),
-        isOutgoing: message['isOutgoing'] as bool? ?? false,
-        isCli: Value(message['isCli'] as bool? ?? false),
-        status: message['status'] as int? ?? 0,
-        rawText: rawText,
-        rawPayload: Value(_decodePayload(message['rawPayload'])),
-        searchText: '${senderName ?? ''} $decodedText'.trim().toLowerCase(),
-        containsMarker: Value(
-          rawText.contains('m:') || decodedText.contains('m:'),
-        ),
-        messageJson: jsonEncode(storedMessage),
       );
     }).toList();
+  }
+
+  HistoryMessagesCompanion _companionFor(
+    int kind,
+    String storageKey,
+    Map<String, dynamic> message, {
+    required String messageId,
+  }) {
+    final timestamp = message['timestamp'] as int? ?? 0;
+    final receivedAt = message['receivedAt'] as int?;
+    final displayText = message['text'] as String? ?? '';
+    final rawText = message['rawText'] as String? ?? displayText;
+    final decodedText = message['rawText'] != null
+        ? displayText
+        : (MessageTextCodec.tryDecodeKnownCompression(rawText) ?? rawText);
+    final senderName = message['senderName'] as String?;
+    final timelineAt = kind == 1 || _hasRoomAuthorKey(message)
+        ? receivedAt ?? timestamp
+        : timestamp;
+    final storedMessage = Map<String, dynamic>.from(message)
+      ..['messageId'] = messageId;
+
+    return HistoryMessagesCompanion.insert(
+      kind: kind,
+      storageKey: storageKey,
+      messageId: messageId,
+      packetHash: Value(message['packetHash'] as String?),
+      timelineAtMs: timelineAt,
+      timestampMs: timestamp,
+      receivedAtMs: Value(receivedAt),
+      senderKey: Value(message['senderKey'] as String?),
+      senderName: Value(senderName),
+      isOutgoing: message['isOutgoing'] as bool? ?? false,
+      isCli: Value(message['isCli'] as bool? ?? false),
+      status: message['status'] as int? ?? 0,
+      rawText: rawText,
+      rawPayload: Value(_decodePayload(message['rawPayload'])),
+      searchText: '${senderName ?? ''} $decodedText'.trim().toLowerCase(),
+      containsMarker: Value(
+        rawText.contains('m:') || decodedText.contains('m:'),
+      ),
+      messageJson: jsonEncode(storedMessage),
+    );
   }
 
   bool _hasRoomAuthorKey(Map<String, dynamic> message) {

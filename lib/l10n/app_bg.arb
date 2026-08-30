@@ -3450,5 +3450,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Управление на хранилището",
+  "settings_modSettingsMessageStorage": "Хранилище на съобщенията",
+  "messageHistoryDatabaseTitle": "Управление на базата данни",
+  "messageHistoryDatabaseSubtitle": "Статистика, възстановяване и поддръжка на историята на съобщенията",
+  "messageHistoryDatabaseOverview": "Състояние на базата данни",
+  "messageHistoryDatabasePath": "Път до базата данни",
+  "messageHistoryDatabaseFileSize": "Размер на файла",
+  "messageHistoryDatabaseDirectCount": "Лични съобщения",
+  "messageHistoryDatabaseChannelCount": "Съобщения от канали",
+  "messageHistoryDatabaseReclaimable": "Може да се освободи",
+  "messageHistoryDatabaseQuarantine": "Карантина на преноса",
+  "messageHistoryDatabaseQuarantineCount": "Отхвърлени записи: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Няма отхвърлени записи",
+  "messageHistoryDatabaseRetry": "Повтори възстановяването",
+  "messageHistoryDatabaseRetryDescription": "Повторно да се провери карантината с текущия анализатор и поправените съобщения да се върнат в историята.",
+  "messageHistoryDatabaseRetryResult": "Възстановени: {restored}, остават: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Експортиране на диагностика",
+  "messageHistoryDatabaseDiagnosticDescription": "Създаване на отчет без текста на съобщенията и без ключовете на контактите.",
+  "messageHistoryDatabaseRecovery": "Експортиране на данни за възстановяване",
+  "messageHistoryDatabaseRecoveryDescription": "Създаване на файл само с отхвърлените записи. Той може да съдържа лична кореспонденция.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Експорт на поверителни данни",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Файлът за възстановяване съдържа оригиналния текст на отхвърлените съобщения и идентификаторите на разговорите. Прегледайте го, преди да го предоставите на някого.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Да се изтрие ли карантината след експорта?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Файлът за възстановяване вече е записан. Да се изтрият ли от базата експортираните отхвърлени данни?",
+  "messageHistoryDatabaseClearQuarantine": "Изтриване на карантината",
+  "messageHistoryDatabaseClearQuarantineDescription": "Изтриване на отхвърлените данни без възможност за възстановяване.",
+  "messageHistoryDatabaseClearWarningTitle": "Да се изтрият ли отхвърлените данни?",
+  "messageHistoryDatabaseClearWarningDescription": "След изтриването съобщенията от карантината няма да могат да бъдат нито възстановени, нито експортирани.",
+  "messageHistoryDatabaseMaintenance": "Поддръжка",
+  "messageHistoryDatabaseIncrementalVacuum": "Освобождаване на неизползваното място",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Постепенно връщане на неизползваните страници на SQLite към операционната система.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (пълно преизграждане на базата)",
+  "messageHistoryDatabaseFullVacuumDescription": "Пълно преизграждане на файла с базата данни. Операцията може да отнеме време и да изисква допълнително свободно място.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Пълно преизграждане на базата данни?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Не затваряйте приложението до края на операцията. На SQLite може да е необходимо допълнително място, колкото е текущата база данни.",
+  "messageHistoryDatabaseCopyPath": "Копирай пътя",
+  "messageHistoryDatabasePathCopied": "Пътят е копиран",
+  "messageHistoryDatabaseExportSaved": "Файлът е записан: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Изтрити записи: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Операцията е завършена",
+  "messageHistoryDatabaseOperationFailed": "Операцията не бе изпълнена: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -3430,5 +3430,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Керування сховищем",
+  "settings_modSettingsMessageStorage": "Сховище повідомлень",
+  "messageHistoryDatabaseTitle": "Керування базою даних",
+  "messageHistoryDatabaseSubtitle": "Статистика, відновлення та обслуговування історії повідомлень",
+  "messageHistoryDatabaseOverview": "Стан бази даних",
+  "messageHistoryDatabasePath": "Шлях до бази даних",
+  "messageHistoryDatabaseFileSize": "Розмір файлу",
+  "messageHistoryDatabaseDirectCount": "Особисті повідомлення",
+  "messageHistoryDatabaseChannelCount": "Повідомлення каналів",
+  "messageHistoryDatabaseReclaimable": "Можна звільнити",
+  "messageHistoryDatabaseQuarantine": "Карантин перенесення",
+  "messageHistoryDatabaseQuarantineCount": "Відхилено записів: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Відхилених записів немає",
+  "messageHistoryDatabaseRetry": "Повторити відновлення",
+  "messageHistoryDatabaseRetryDescription": "Повторно перевірити карантин актуальним парсером і повернути виправлені повідомлення до історії.",
+  "messageHistoryDatabaseRetryResult": "Відновлено: {restored}, залишилось: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Експортувати діагностику",
+  "messageHistoryDatabaseDiagnosticDescription": "Створити звіт без тексту повідомлень і ключів контактів.",
+  "messageHistoryDatabaseRecovery": "Експортувати дані відновлення",
+  "messageHistoryDatabaseRecoveryDescription": "Створити файл лише з відхиленими записами. Він може містити особисте листування.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Експорт конфіденційних даних",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Файл відновлення містить початковий текст відхилених повідомлень та ідентифікатори діалогів. Перевірте його, перш ніж комусь передавати.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Видалити карантин після експорту?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Файл відновлення вже збережено. Видалити з бази експортовані відхилені дані?",
+  "messageHistoryDatabaseClearQuarantine": "Видалити карантин",
+  "messageHistoryDatabaseClearQuarantineDescription": "Видалити відхилені дані без можливості відновлення.",
+  "messageHistoryDatabaseClearWarningTitle": "Видалити відхилені дані?",
+  "messageHistoryDatabaseClearWarningDescription": "Після видалення повідомлення з карантину не можна буде ні відновити, ні експортувати.",
+  "messageHistoryDatabaseMaintenance": "Обслуговування",
+  "messageHistoryDatabaseIncrementalVacuum": "Звільнити невикористане місце",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Поступово повернути операційній системі невикористані сторінки SQLite.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (повністю перебудувати БД)",
+  "messageHistoryDatabaseFullVacuumDescription": "Повністю перебудувати файл бази даних. Операція може зайняти час і потребувати додаткового вільного місця.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Повністю перебудувати базу даних?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Не закривайте застосунок до завершення операції. SQLite може знадобитися додаткове місце розміром із поточну базу даних.",
+  "messageHistoryDatabaseCopyPath": "Копіювати шлях",
+  "messageHistoryDatabasePathCopied": "Шлях скопійовано",
+  "messageHistoryDatabaseExportSaved": "Файл збережено: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Видалено записів: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Операцію завершено",
+  "messageHistoryDatabaseOperationFailed": "Операцію не виконано: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -3232,5 +3232,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Hantera lagringen",
+  "settings_modSettingsMessageStorage": "Meddelandelagring",
+  "messageHistoryDatabaseTitle": "Databashantering",
+  "messageHistoryDatabaseSubtitle": "Statistik, återställning och underhåll av meddelandehistoriken",
+  "messageHistoryDatabaseOverview": "Databasens status",
+  "messageHistoryDatabasePath": "Sökväg till databasen",
+  "messageHistoryDatabaseFileSize": "Filstorlek",
+  "messageHistoryDatabaseDirectCount": "Direktmeddelanden",
+  "messageHistoryDatabaseChannelCount": "Kanalmeddelanden",
+  "messageHistoryDatabaseReclaimable": "Kan frigöras",
+  "messageHistoryDatabaseQuarantine": "Migreringskarantän",
+  "messageHistoryDatabaseQuarantineCount": "Avvisade poster: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Inga avvisade poster",
+  "messageHistoryDatabaseRetry": "Försök återställa igen",
+  "messageHistoryDatabaseRetryDescription": "Kontrollera karantänen på nytt med den aktuella tolken och lägg tillbaka reparerade meddelanden i historiken.",
+  "messageHistoryDatabaseRetryResult": "Återställda: {restored}, kvar: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Exportera diagnostik",
+  "messageHistoryDatabaseDiagnosticDescription": "Skapa en rapport utan meddelandetext och kontaktnycklar.",
+  "messageHistoryDatabaseRecovery": "Exportera återställningsdata",
+  "messageHistoryDatabaseRecoveryDescription": "Skapa en fil med enbart de avvisade posterna. Den kan innehålla privata konversationer.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Export av känsliga data",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Återställningsfilen innehåller den ursprungliga texten i de avvisade meddelandena och identifierare för konversationerna. Granska den innan du delar den med någon.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Ta bort karantänen efter exporten?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Återställningsfilen har sparats. Vill du ta bort de exporterade avvisade posterna ur databasen?",
+  "messageHistoryDatabaseClearQuarantine": "Ta bort karantänen",
+  "messageHistoryDatabaseClearQuarantineDescription": "Ta bort de avvisade posterna utan möjlighet till återställning.",
+  "messageHistoryDatabaseClearWarningTitle": "Ta bort de avvisade posterna?",
+  "messageHistoryDatabaseClearWarningDescription": "Efter borttagningen går meddelanden i karantän varken att återställa eller exportera.",
+  "messageHistoryDatabaseMaintenance": "Underhåll",
+  "messageHistoryDatabaseIncrementalVacuum": "Frigör oanvänt utrymme",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Lämna successivt tillbaka oanvända SQLite-sidor till operativsystemet.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (bygg om databasen helt)",
+  "messageHistoryDatabaseFullVacuumDescription": "Bygg om databasfilen helt. Det kan ta tid och kräva extra ledigt utrymme.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Bygga om databasen helt?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Stäng inte appen förrän åtgärden är klar. SQLite kan behöva extra utrymme motsvarande databasens nuvarande storlek.",
+  "messageHistoryDatabaseCopyPath": "Kopiera sökvägen",
+  "messageHistoryDatabasePathCopied": "Sökvägen kopierad",
+  "messageHistoryDatabaseExportSaved": "Filen sparad: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Borttagna poster: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Åtgärden slutförd",
+  "messageHistoryDatabaseOperationFailed": "Åtgärden misslyckades: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -6386,4 +6386,156 @@ class AppLocalizationsFr extends AppLocalizations {
   ) {
     return 'Lors de la migration, $histories conversations et $messages messages isolés n\'ont pas pu être restaurés. Le reste de l\'historique a été conservé.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Gérer le stockage';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Stockage des messages';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Gestion de la base de données';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Statistiques, récupération et maintenance de l\'historique des messages';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'État de la base de données';
+
+  @override
+  String get messageHistoryDatabasePath => 'Chemin de la base de données';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Taille du fichier';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Messages directs';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Messages de canaux';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Récupérable';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Quarantaine de migration';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Entrées rejetées : $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => 'Aucune entrée rejetée';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Relancer la récupération';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'Revérifier la quarantaine avec l\'analyseur actuel et remettre dans l\'historique les messages réparés.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Récupérés : $restored, restants : $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Exporter le diagnostic';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Créer un rapport sans le texte des messages ni les clés des contacts.';
+
+  @override
+  String get messageHistoryDatabaseRecovery =>
+      'Exporter les données de récupération';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Créer un fichier contenant uniquement les entrées rejetées. Il peut contenir des conversations privées.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Export de données confidentielles';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Le fichier de récupération contient le texte d\'origine des messages rejetés et les identifiants des conversations. Vérifiez-le avant de le transmettre à qui que ce soit.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Supprimer la quarantaine après l\'export ?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Le fichier de récupération a été enregistré. Supprimer de la base les données rejetées qui ont été exportées ?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine =>
+      'Supprimer la quarantaine';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Supprimer les données rejetées sans possibilité de récupération.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Supprimer les données rejetées ?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'Après la suppression, les messages en quarantaine ne pourront plus être récupérés ni exportés.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Maintenance';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Libérer l\'espace inutilisé';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Rendre progressivement au système d\'exploitation les pages SQLite inutilisées.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (reconstruire entièrement la base)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Reconstruire entièrement le fichier de la base. L\'opération peut être longue et nécessiter de l\'espace libre supplémentaire.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Reconstruire entièrement la base de données ?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Ne fermez pas l\'application avant la fin de l\'opération. SQLite peut avoir besoin d\'un espace supplémentaire équivalent à la taille actuelle de la base.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Copier le chemin';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Chemin copié';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Fichier enregistré : $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Entrées supprimées : $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Opération terminée';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Échec de l\'opération : $error';
+  }
 }

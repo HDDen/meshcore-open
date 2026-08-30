@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +17,7 @@ import 'connector/meshcore_connector.dart';
 import 'models/image_codec_support.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/startup_error_screen.dart';
+import 'screens/message_history_database_screen.dart';
 import 'services/image_chunk_transport.dart';
 import 'services/image_codec_backend.dart' show kImageCodecFeatureAvailable;
 import 'services/image_codec_service.dart';
@@ -40,6 +42,7 @@ import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'storage/message_history_storage.dart';
+import 'storage/message_history_maintenance.dart';
 import 'storage/message_store.dart';
 import 'storage/channel_message_store.dart';
 import 'storage/mco_image_gallery_store.dart';
@@ -59,6 +62,13 @@ Future<void> main() async {
   try {
     await _startApplication();
   } catch (error, stackTrace) {
+    String? dataPath;
+    try {
+      dataPath = (await getApplicationSupportDirectory()).path;
+    } catch (_) {
+      // The startup report remains useful even when the platform path lookup
+      // was part of the failure.
+    }
     runApp(
       StartupErrorApp(
         report: StartupFailureReport(
@@ -66,6 +76,7 @@ Future<void> main() async {
           stage: _startupStage,
           error: error,
           stackTrace: stackTrace,
+          dataPath: dataPath,
         ),
       ),
     );
@@ -531,7 +542,18 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           .pendingMigrationWarning();
       if (warning == null || !mounted) return;
       final l10n = AppLocalizations.of(context);
-      await showDialog<void>(
+      final maintenance = MessageHistoryMaintenance();
+      final databasePath = await maintenance.databasePath();
+      final diagnosticSummary = await maintenance.diagnosticLogSummary();
+      appLogger.warn(
+        'Legacy message history migration left '
+        '${warning.skippedHistories} conversations and '
+        '${warning.skippedMessages} messages in quarantine.\n'
+        'Database: $databasePath\n$diagnosticSummary',
+        tag: 'MessageHistory',
+      );
+      if (!mounted) return;
+      final manage = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
@@ -544,13 +566,24 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text(l10n.common_ok),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.messageHistoryMigrationManage),
             ),
           ],
         ),
       );
       await MessageHistoryStorage.instance.acknowledgeMigrationWarning();
+      if (manage == true && mounted) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const MessageHistoryDatabaseScreen(),
+          ),
+        );
+      }
     } catch (error, stackTrace) {
       appLogger.warn(
         'Could not show message history migration warning: '

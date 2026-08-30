@@ -6300,4 +6300,154 @@ class AppLocalizationsSv extends AppLocalizations {
   ) {
     return 'Vid flytten gick det inte att återställa $histories konversationer och $messages enskilda meddelanden. Resten av historiken bevarades.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Hantera lagringen';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Meddelandelagring';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Databashantering';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Statistik, återställning och underhåll av meddelandehistoriken';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Databasens status';
+
+  @override
+  String get messageHistoryDatabasePath => 'Sökväg till databasen';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Filstorlek';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Direktmeddelanden';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Kanalmeddelanden';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Kan frigöras';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Migreringskarantän';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Avvisade poster: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => 'Inga avvisade poster';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Försök återställa igen';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'Kontrollera karantänen på nytt med den aktuella tolken och lägg tillbaka reparerade meddelanden i historiken.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Återställda: $restored, kvar: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Exportera diagnostik';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Skapa en rapport utan meddelandetext och kontaktnycklar.';
+
+  @override
+  String get messageHistoryDatabaseRecovery => 'Exportera återställningsdata';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Skapa en fil med enbart de avvisade posterna. Den kan innehålla privata konversationer.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Export av känsliga data';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Återställningsfilen innehåller den ursprungliga texten i de avvisade meddelandena och identifierare för konversationerna. Granska den innan du delar den med någon.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Ta bort karantänen efter exporten?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Återställningsfilen har sparats. Vill du ta bort de exporterade avvisade posterna ur databasen?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Ta bort karantänen';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Ta bort de avvisade posterna utan möjlighet till återställning.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Ta bort de avvisade posterna?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'Efter borttagningen går meddelanden i karantän varken att återställa eller exportera.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Underhåll';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Frigör oanvänt utrymme';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Lämna successivt tillbaka oanvända SQLite-sidor till operativsystemet.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (bygg om databasen helt)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Bygg om databasfilen helt. Det kan ta tid och kräva extra ledigt utrymme.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Bygga om databasen helt?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Stäng inte appen förrän åtgärden är klar. SQLite kan behöva extra utrymme motsvarande databasens nuvarande storlek.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Kopiera sökvägen';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Sökvägen kopierad';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Filen sparad: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Borttagna poster: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Åtgärden slutförd';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Åtgärden misslyckades: $error';
+  }
 }

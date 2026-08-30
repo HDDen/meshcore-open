@@ -3413,5 +3413,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Gestisci l'archivio",
+  "settings_modSettingsMessageStorage": "Archivio dei messaggi",
+  "messageHistoryDatabaseTitle": "Gestione del database",
+  "messageHistoryDatabaseSubtitle": "Statistiche, recupero e manutenzione della cronologia dei messaggi",
+  "messageHistoryDatabaseOverview": "Stato del database",
+  "messageHistoryDatabasePath": "Percorso del database",
+  "messageHistoryDatabaseFileSize": "Dimensione del file",
+  "messageHistoryDatabaseDirectCount": "Messaggi diretti",
+  "messageHistoryDatabaseChannelCount": "Messaggi dei canali",
+  "messageHistoryDatabaseReclaimable": "Spazio recuperabile",
+  "messageHistoryDatabaseQuarantine": "Quarantena della migrazione",
+  "messageHistoryDatabaseQuarantineCount": "Voci scartate: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Nessuna voce scartata",
+  "messageHistoryDatabaseRetry": "Riprova il recupero",
+  "messageHistoryDatabaseRetryDescription": "Ricontrollare la quarantena con il parser attuale e riportare nella cronologia i messaggi recuperati.",
+  "messageHistoryDatabaseRetryResult": "Recuperati: {restored}, rimanenti: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Esporta la diagnostica",
+  "messageHistoryDatabaseDiagnosticDescription": "Creare un rapporto senza il testo dei messaggi né le chiavi dei contatti.",
+  "messageHistoryDatabaseRecovery": "Esporta i dati di recupero",
+  "messageHistoryDatabaseRecoveryDescription": "Creare un file con le sole voci scartate. Può contenere conversazioni private.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Esportazione di dati riservati",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Il file di recupero contiene il testo originale dei messaggi scartati e gli identificatori delle conversazioni. Controllalo prima di condividerlo con qualcuno.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Eliminare la quarantena dopo l'esportazione?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Il file di recupero è stato salvato. Eliminare dal database i dati scartati che sono stati esportati?",
+  "messageHistoryDatabaseClearQuarantine": "Elimina la quarantena",
+  "messageHistoryDatabaseClearQuarantineDescription": "Eliminare i dati scartati senza possibilità di recupero.",
+  "messageHistoryDatabaseClearWarningTitle": "Eliminare i dati scartati?",
+  "messageHistoryDatabaseClearWarningDescription": "Dopo l'eliminazione i messaggi in quarantena non potranno più essere recuperati né esportati.",
+  "messageHistoryDatabaseMaintenance": "Manutenzione",
+  "messageHistoryDatabaseIncrementalVacuum": "Libera lo spazio inutilizzato",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Restituire gradualmente al sistema operativo le pagine SQLite non utilizzate.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (ricostruire completamente il database)",
+  "messageHistoryDatabaseFullVacuumDescription": "Ricostruire completamente il file del database. L'operazione può richiedere tempo e spazio libero aggiuntivo.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Ricostruire completamente il database?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Non chiudere l'applicazione fino al termine dell'operazione. SQLite potrebbe richiedere spazio aggiuntivo pari alla dimensione attuale del database.",
+  "messageHistoryDatabaseCopyPath": "Copia il percorso",
+  "messageHistoryDatabasePathCopied": "Percorso copiato",
+  "messageHistoryDatabaseExportSaved": "File salvato: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Voci eliminate: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Operazione completata",
+  "messageHistoryDatabaseOperationFailed": "Operazione non riuscita: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

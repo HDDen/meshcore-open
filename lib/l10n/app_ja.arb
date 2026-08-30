@@ -3555,5 +3555,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "ストレージを管理",
+  "settings_modSettingsMessageStorage": "メッセージの保存領域",
+  "messageHistoryDatabaseTitle": "データベース管理",
+  "messageHistoryDatabaseSubtitle": "メッセージ履歴の統計・復旧・メンテナンス",
+  "messageHistoryDatabaseOverview": "データベースの状態",
+  "messageHistoryDatabasePath": "データベースのパス",
+  "messageHistoryDatabaseFileSize": "ファイルサイズ",
+  "messageHistoryDatabaseDirectCount": "ダイレクトメッセージ",
+  "messageHistoryDatabaseChannelCount": "チャンネルのメッセージ",
+  "messageHistoryDatabaseReclaimable": "解放可能",
+  "messageHistoryDatabaseQuarantine": "移行時の隔離領域",
+  "messageHistoryDatabaseQuarantineCount": "拒否された項目: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "拒否された項目はありません",
+  "messageHistoryDatabaseRetry": "復旧を再試行",
+  "messageHistoryDatabaseRetryDescription": "現在のパーサーで隔離領域を再確認し、復旧できたメッセージを履歴に戻します。",
+  "messageHistoryDatabaseRetryResult": "復旧: {restored} 件、残り: {remaining} 件",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "診断情報を書き出す",
+  "messageHistoryDatabaseDiagnosticDescription": "メッセージ本文と連絡先の鍵を含まないレポートを作成します。",
+  "messageHistoryDatabaseRecovery": "復旧用データを書き出す",
+  "messageHistoryDatabaseRecoveryDescription": "拒否された項目だけを含むファイルを作成します。個人的なやり取りが含まれる場合があります。",
+  "messageHistoryDatabaseRecoveryWarningTitle": "機密データの書き出し",
+  "messageHistoryDatabaseRecoveryWarningDescription": "復旧用ファイルには拒否されたメッセージの元の本文と会話の識別子が含まれます。誰かに渡す前に内容を確認してください。",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "書き出し後に隔離領域を削除しますか？",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "復旧用ファイルは保存済みです。書き出した拒否データをデータベースから削除しますか？",
+  "messageHistoryDatabaseClearQuarantine": "隔離領域を削除",
+  "messageHistoryDatabaseClearQuarantineDescription": "拒否されたデータを復旧できない形で削除します。",
+  "messageHistoryDatabaseClearWarningTitle": "拒否されたデータを削除しますか？",
+  "messageHistoryDatabaseClearWarningDescription": "削除すると、隔離領域のメッセージは復旧も書き出しもできなくなります。",
+  "messageHistoryDatabaseMaintenance": "メンテナンス",
+  "messageHistoryDatabaseIncrementalVacuum": "未使用の領域を解放",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "未使用の SQLite ページを段階的に OS へ返却します。",
+  "messageHistoryDatabaseFullVacuum": "VACUUM（データベースを完全に再構築）",
+  "messageHistoryDatabaseFullVacuumDescription": "データベースファイルを完全に再構築します。時間がかかり、追加の空き容量が必要になる場合があります。",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "データベースを完全に再構築しますか？",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "処理が終わるまでアプリを終了しないでください。SQLite は現在のデータベースと同程度の追加容量を必要とする場合があります。",
+  "messageHistoryDatabaseCopyPath": "パスをコピー",
+  "messageHistoryDatabasePathCopied": "パスをコピーしました",
+  "messageHistoryDatabaseExportSaved": "ファイルを保存しました: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "削除した項目: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "処理が完了しました",
+  "messageHistoryDatabaseOperationFailed": "処理に失敗しました: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

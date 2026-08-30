@@ -3450,5 +3450,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Spravovať úložisko",
+  "settings_modSettingsMessageStorage": "Úložisko správ",
+  "messageHistoryDatabaseTitle": "Správa databázy",
+  "messageHistoryDatabaseSubtitle": "Štatistiky, obnova a údržba histórie správ",
+  "messageHistoryDatabaseOverview": "Stav databázy",
+  "messageHistoryDatabasePath": "Cesta k databáze",
+  "messageHistoryDatabaseFileSize": "Veľkosť súboru",
+  "messageHistoryDatabaseDirectCount": "Súkromné správy",
+  "messageHistoryDatabaseChannelCount": "Správy z kanálov",
+  "messageHistoryDatabaseReclaimable": "Možno uvoľniť",
+  "messageHistoryDatabaseQuarantine": "Karanténa migrácie",
+  "messageHistoryDatabaseQuarantineCount": "Odmietnuté záznamy: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Žiadne odmietnuté záznamy",
+  "messageHistoryDatabaseRetry": "Zopakovať obnovu",
+  "messageHistoryDatabaseRetryDescription": "Znova skontrolovať karanténu aktuálnym parserom a vrátiť opravené správy do histórie.",
+  "messageHistoryDatabaseRetryResult": "Obnovené: {restored}, zostáva: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Exportovať diagnostiku",
+  "messageHistoryDatabaseDiagnosticDescription": "Vytvoriť správu bez textu správ a bez kľúčov kontaktov.",
+  "messageHistoryDatabaseRecovery": "Exportovať údaje na obnovu",
+  "messageHistoryDatabaseRecoveryDescription": "Vytvoriť súbor len s odmietnutými záznamami. Môže obsahovať súkromnú komunikáciu.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Export dôverných údajov",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Súbor na obnovu obsahuje pôvodný text odmietnutých správ a identifikátory konverzácií. Pred odovzdaním komukoľvek si ho skontroluj.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Odstrániť karanténu po exporte?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Súbor na obnovu je uložený. Odstrániť exportované odmietnuté údaje z databázy?",
+  "messageHistoryDatabaseClearQuarantine": "Odstrániť karanténu",
+  "messageHistoryDatabaseClearQuarantineDescription": "Odstrániť odmietnuté údaje bez možnosti obnovy.",
+  "messageHistoryDatabaseClearWarningTitle": "Odstrániť odmietnuté údaje?",
+  "messageHistoryDatabaseClearWarningDescription": "Po odstránení sa správy z karantény už nebudú dať obnoviť ani exportovať.",
+  "messageHistoryDatabaseMaintenance": "Údržba",
+  "messageHistoryDatabaseIncrementalVacuum": "Uvoľniť nevyužité miesto",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Postupne vrátiť operačnému systému nevyužité stránky SQLite.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (úplne prestavať databázu)",
+  "messageHistoryDatabaseFullVacuumDescription": "Úplne prestavať súbor databázy. Operácia môže trvať a vyžadovať ďalšie voľné miesto.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Úplne prestavať databázu?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Nezatváraj aplikáciu, kým sa operácia nedokončí. SQLite môže potrebovať ďalšie miesto vo veľkosti súčasnej databázy.",
+  "messageHistoryDatabaseCopyPath": "Kopírovať cestu",
+  "messageHistoryDatabasePathCopied": "Cesta skopírovaná",
+  "messageHistoryDatabaseExportSaved": "Súbor uložený: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Odstránené záznamy: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Operácia dokončená",
+  "messageHistoryDatabaseOperationFailed": "Operácia zlyhala: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

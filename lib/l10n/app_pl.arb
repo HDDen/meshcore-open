@@ -3488,5 +3488,87 @@
         "type": "int"
       }
     }
+  },
+  "messageHistoryMigrationManage": "Zarządzaj magazynem",
+  "settings_modSettingsMessageStorage": "Magazyn wiadomości",
+  "messageHistoryDatabaseTitle": "Zarządzanie bazą danych",
+  "messageHistoryDatabaseSubtitle": "Statystyki, odzyskiwanie i konserwacja historii wiadomości",
+  "messageHistoryDatabaseOverview": "Stan bazy danych",
+  "messageHistoryDatabasePath": "Ścieżka do bazy danych",
+  "messageHistoryDatabaseFileSize": "Rozmiar pliku",
+  "messageHistoryDatabaseDirectCount": "Wiadomości prywatne",
+  "messageHistoryDatabaseChannelCount": "Wiadomości z kanałów",
+  "messageHistoryDatabaseReclaimable": "Do odzyskania",
+  "messageHistoryDatabaseQuarantine": "Kwarantanna migracji",
+  "messageHistoryDatabaseQuarantineCount": "Odrzucone wpisy: {count} · {size}",
+  "@messageHistoryDatabaseQuarantineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseQuarantineEmpty": "Brak odrzuconych wpisów",
+  "messageHistoryDatabaseRetry": "Ponów odzyskiwanie",
+  "messageHistoryDatabaseRetryDescription": "Ponownie sprawdzić kwarantannę aktualnym parserem i przywrócić naprawione wiadomości do historii.",
+  "messageHistoryDatabaseRetryResult": "Odzyskano: {restored}, pozostało: {remaining}",
+  "@messageHistoryDatabaseRetryResult": {
+    "placeholders": {
+      "restored": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseDiagnostic": "Eksportuj diagnostykę",
+  "messageHistoryDatabaseDiagnosticDescription": "Utworzyć raport bez treści wiadomości i kluczy kontaktów.",
+  "messageHistoryDatabaseRecovery": "Eksportuj dane do odzyskania",
+  "messageHistoryDatabaseRecoveryDescription": "Utworzyć plik zawierający wyłącznie odrzucone wpisy. Może zawierać prywatne rozmowy.",
+  "messageHistoryDatabaseRecoveryWarningTitle": "Eksport danych poufnych",
+  "messageHistoryDatabaseRecoveryWarningDescription": "Plik odzyskiwania zawiera oryginalną treść odrzuconych wiadomości oraz identyfikatory rozmów. Sprawdź go, zanim komukolwiek go przekażesz.",
+  "messageHistoryDatabaseDeleteAfterExportTitle": "Usunąć kwarantannę po eksporcie?",
+  "messageHistoryDatabaseDeleteAfterExportDescription": "Plik odzyskiwania został zapisany. Usunąć z bazy wyeksportowane odrzucone dane?",
+  "messageHistoryDatabaseClearQuarantine": "Usuń kwarantannę",
+  "messageHistoryDatabaseClearQuarantineDescription": "Usunąć odrzucone dane bez możliwości ich odzyskania.",
+  "messageHistoryDatabaseClearWarningTitle": "Usunąć odrzucone dane?",
+  "messageHistoryDatabaseClearWarningDescription": "Po usunięciu wiadomości z kwarantanny nie będzie już można odzyskać ani wyeksportować.",
+  "messageHistoryDatabaseMaintenance": "Konserwacja",
+  "messageHistoryDatabaseIncrementalVacuum": "Zwolnij nieużywane miejsce",
+  "messageHistoryDatabaseIncrementalVacuumDescription": "Stopniowo zwracać systemowi operacyjnemu nieużywane strony SQLite.",
+  "messageHistoryDatabaseFullVacuum": "VACUUM (pełna przebudowa bazy)",
+  "messageHistoryDatabaseFullVacuumDescription": "Całkowicie przebudować plik bazy danych. Operacja może potrwać i wymagać dodatkowego wolnego miejsca.",
+  "messageHistoryDatabaseFullVacuumWarningTitle": "Całkowicie przebudować bazę danych?",
+  "messageHistoryDatabaseFullVacuumWarningDescription": "Nie zamykaj aplikacji do zakończenia operacji. SQLite może potrzebować dodatkowego miejsca wielkości obecnej bazy danych.",
+  "messageHistoryDatabaseCopyPath": "Kopiuj ścieżkę",
+  "messageHistoryDatabasePathCopied": "Skopiowano ścieżkę",
+  "messageHistoryDatabaseExportSaved": "Zapisano plik: {path}",
+  "@messageHistoryDatabaseExportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messageHistoryDatabaseDeleted": "Usunięte wpisy: {count}",
+  "@messageHistoryDatabaseDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryDatabaseOperationComplete": "Operacja zakończona",
+  "messageHistoryDatabaseOperationFailed": "Operacja nie powiodła się: {error}",
+  "@messageHistoryDatabaseOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

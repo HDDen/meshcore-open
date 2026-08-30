@@ -6350,4 +6350,155 @@ class AppLocalizationsRu extends AppLocalizations {
   ) {
     return 'При переносе истории не удалось восстановить диалогов: $histories, отдельных сообщений: $messages. Остальная история сохранена.';
   }
+
+  @override
+  String get messageHistoryMigrationManage => 'Управление хранилищем';
+
+  @override
+  String get settings_modSettingsMessageStorage => 'Хранилище сообщений';
+
+  @override
+  String get messageHistoryDatabaseTitle => 'Управление базой данных';
+
+  @override
+  String get messageHistoryDatabaseSubtitle =>
+      'Статистика, восстановление и обслуживание истории сообщений';
+
+  @override
+  String get messageHistoryDatabaseOverview => 'Состояние базы данных';
+
+  @override
+  String get messageHistoryDatabasePath => 'Путь к базе данных';
+
+  @override
+  String get messageHistoryDatabaseFileSize => 'Размер файла';
+
+  @override
+  String get messageHistoryDatabaseDirectCount => 'Личные сообщения';
+
+  @override
+  String get messageHistoryDatabaseChannelCount => 'Сообщения каналов';
+
+  @override
+  String get messageHistoryDatabaseReclaimable => 'Можно освободить';
+
+  @override
+  String get messageHistoryDatabaseQuarantine => 'Карантин миграции';
+
+  @override
+  String messageHistoryDatabaseQuarantineCount(int count, String size) {
+    return 'Отклонено записей: $count · $size';
+  }
+
+  @override
+  String get messageHistoryDatabaseQuarantineEmpty => 'Отклонённых записей нет';
+
+  @override
+  String get messageHistoryDatabaseRetry => 'Повторить восстановление';
+
+  @override
+  String get messageHistoryDatabaseRetryDescription =>
+      'Повторно проверить карантин актуальным парсером и вернуть исправленные сообщения в историю.';
+
+  @override
+  String messageHistoryDatabaseRetryResult(int restored, int remaining) {
+    return 'Восстановлено: $restored, осталось: $remaining';
+  }
+
+  @override
+  String get messageHistoryDatabaseDiagnostic => 'Экспортировать диагностику';
+
+  @override
+  String get messageHistoryDatabaseDiagnosticDescription =>
+      'Создать отчёт без текста сообщений и ключей контактов.';
+
+  @override
+  String get messageHistoryDatabaseRecovery =>
+      'Экспортировать данные восстановления';
+
+  @override
+  String get messageHistoryDatabaseRecoveryDescription =>
+      'Создать файл только с отклонёнными записями. Он может содержать личную переписку.';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningTitle =>
+      'Экспорт конфиденциальных данных';
+
+  @override
+  String get messageHistoryDatabaseRecoveryWarningDescription =>
+      'Файл восстановления содержит исходный текст отклонённых сообщений и идентификаторы диалогов. Не отправляйте его посторонним без проверки содержимого.';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportTitle =>
+      'Удалить карантин после экспорта?';
+
+  @override
+  String get messageHistoryDatabaseDeleteAfterExportDescription =>
+      'Файл восстановления уже сохранён. Удалить экспортированные отклонённые данные из базы?';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantine => 'Удалить карантин';
+
+  @override
+  String get messageHistoryDatabaseClearQuarantineDescription =>
+      'Удалить отклонённые данные без возможности восстановления.';
+
+  @override
+  String get messageHistoryDatabaseClearWarningTitle =>
+      'Удалить отклонённые данные?';
+
+  @override
+  String get messageHistoryDatabaseClearWarningDescription =>
+      'После удаления сообщения из карантина нельзя будет повторно восстановить или экспортировать.';
+
+  @override
+  String get messageHistoryDatabaseMaintenance => 'Обслуживание';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuum =>
+      'Освободить неиспользуемое место';
+
+  @override
+  String get messageHistoryDatabaseIncrementalVacuumDescription =>
+      'Постепенно вернуть операционной системе свободные страницы SQLite.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuum =>
+      'VACUUM (Полностью перестроить БД)';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumDescription =>
+      'Полностью перестроить файл базы. Операция может занять время и потребовать дополнительное свободное место.';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningTitle =>
+      'Полностью перестроить базу данных?';
+
+  @override
+  String get messageHistoryDatabaseFullVacuumWarningDescription =>
+      'Не закрывайте приложение до завершения. SQLite может потребоваться дополнительное место размером с текущую базу данных.';
+
+  @override
+  String get messageHistoryDatabaseCopyPath => 'Копировать путь';
+
+  @override
+  String get messageHistoryDatabasePathCopied => 'Путь скопирован';
+
+  @override
+  String messageHistoryDatabaseExportSaved(String path) {
+    return 'Файл сохранён: $path';
+  }
+
+  @override
+  String messageHistoryDatabaseDeleted(int count) {
+    return 'Удалено записей: $count';
+  }
+
+  @override
+  String get messageHistoryDatabaseOperationComplete => 'Операция завершена';
+
+  @override
+  String messageHistoryDatabaseOperationFailed(String error) {
+    return 'Операция не выполнена: $error';
+  }
 }
