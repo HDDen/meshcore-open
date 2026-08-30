@@ -272,7 +272,31 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
       await customStatement('PRAGMA auto_vacuum = INCREMENTAL');
       await migrator.createAll();
     },
+    beforeOpen: (_) => _ensurePreReleaseAuxiliaryTables(),
   );
+
+  Future<void> _ensurePreReleaseAuxiliaryTables() async {
+    // Pre-release builds already used schema version 1 before quarantine was
+    // added. Keep that version, but repair those local databases in place.
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS legacy_rejected_messages (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  kind INTEGER NOT NULL,
+  storage_key TEXT NOT NULL,
+  message_index INTEGER NULL,
+  resolved_message_id TEXT NULL,
+  raw_value TEXT NOT NULL,
+  error_type TEXT NOT NULL,
+  error_text TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  last_attempt_at_ms INTEGER NULL
+)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS legacy_rejected_location
+ON legacy_rejected_messages (kind, storage_key, message_index)
+''');
+  }
 
   Future<bool> isLegacyMigrationComplete() async {
     final row = await (select(
