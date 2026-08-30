@@ -44,7 +44,7 @@ lib/
 │   └── meshcore_uuids.dart           # Nordic UART UUIDs + scan name prefixes
 ├── models/          # Plain data classes (Contact, Channel, Message, Community, …)
 ├── services/        # ChangeNotifier services + IO services (retry, wardrive, ML, …)
-├── storage/         # SharedPreferences-backed stores, scoped per device key
+├── storage/         # Per-device-key stores (SharedPreferences; message history in SQLite)
 ├── helpers/         # Pure utilities (MCMP/Smaz/cyr2lat compression, MCO image codec, GIF parsing, path hop resolution)
 ├── utils/           # Platform / IO / UX utilities (logger, GPX export, dialogs)
 ├── theme/           # MeshTheme — warm-dark MeshPalette, wired in main.dart
@@ -105,6 +105,7 @@ All screens are fully implemented (no remaining placeholders).
 | `app_settings_screen.dart` | App preferences: theme, units, map source, notifications |
 | `mod_settings_screen.dart` | Advanced-mod preferences: compression, reactions, wardrive, images |
 | `region_management_screen.dart` | Manage named regions / flood scopes for channel routing |
+| `message_history_database_screen.dart` | Message-history database: statistics, migration quarantine, exports, vacuum |
 | `app_debug_log_screen.dart` | In-app log viewer (app-layer messages) |
 | `ble_debug_log_screen.dart` | In-app log viewer (raw BLE frame traffic) |
 | `companion_radio_stats_screen.dart` | RF stats (RSSI, SNR, packet counts) for paired radio |
@@ -147,11 +148,11 @@ Screens consume these via `Consumer<T>` (or `context.watch<T>()` / `context.read
 
 ### Storage / Persistence
 
-All stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton initialized in `main()`). Most stores **scope keys by the first 10 hex chars of the connected device's public key**, so per-radio data is isolated.
+Most stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleton initialized in `main()`) and **scope keys by the first 10 hex chars of the connected device's public key**, so per-radio data is isolated. **Message history is the exception**: it lives in SQLite (see the next section) while keeping the very same key strings, so the stores above it did not change shape.
 
 | Store | Persists |
 |---|---|
-| `message_store`, `channel_message_store` | Direct + channel messages |
+| `message_store`, `channel_message_store` | Direct + channel messages (SQLite-backed, see below) |
 | `contact_store`, `contact_discovery_store` | Known + discovered contacts |
 | `channel_store`, `channel_order_store`, `channel_settings_store`, `channel_group_store` | Channels, display order, per-channel compression/sign toggles, channel groups |
 | `channel_region_store`, `region_store` | Per-channel region tag + known regions / flood scopes (Advanced mod) |
@@ -166,6 +167,65 @@ Wardrive data (samples, sessions, per-endpoint uploaded IDs, ignore list) is per
 
 A few states are deliberately **unscoped by node** because they describe this phone rather than any radio's data. The blocked-sender table is managed through `BlockedSenderStore`, the map's node-filter chip row writes its collapsed or expanded state directly under `map_node_filters_expanded_v1`, and whether the battery-optimization exemption has ever been asked for is recorded under `background_battery_exemption_asked_v1` (see the Android section). Anything holding per-radio data belongs in a scoped store instead.
 
+### Message history database
+
+Message history moved out of `SharedPreferences` into SQLite via **drift** (`message_history.sqlite` in `getApplicationSupportDirectory()`). Three decisions shape everything else, and all three exist to keep the change to a storage backend rather than a rewrite:
+
+- **One table for both kinds.** `HistoryMessages` carries a `kind` discriminator (`0` = direct, `1` = channel) instead of two parallel tables, which would have doubled every query for nothing.
+- **The key space is unchanged.** `storageKey` *is* the former preferences key (`messages_<10hex><contactKey>`, `channel_messages_<10hex>name_<…>`), so `MessageStore` / `ChannelMessageStore` still speak the same strings and all the legacy-key handling — scoped vs unscoped, name-keyed channels — keeps working untouched.
+- **The message stays JSON.** `messageJson` holds the whole serialized message; the other columns are denormalized projections of it, added only for the queries that actually run. `MessageHistoryStorage` hands callers back a JSON array string, so `_messageToJson` / `decodeStoredMessage` never had to change.
+
+`MessageHistoryStorage` is the only door to the database. Every method has a `kIsWeb` branch that falls back to `SharedPreferences`, because the web build never creates the database at all — `initializeAndMigrate` returns before constructing it, which is why `web/` carries no `sqlite3.wasm` or `drift_worker.js` despite the `DriftWebOptions` in the constructor.
+
+**Indexes** (`schemaVersion = 1`, `auto_vacuum = INCREMENTAL` set in `onCreate` *before* `createAll()` — the only moment that pragma takes effect):
+
+| Index | Serves |
+|---|---|
+| `history_message_timeline` (kind, storageKey, timelineAtMs, messageId) | cursor pagination |
+| `history_message_identity` (kind, storageKey, messageId) UNIQUE | upsert by message id |
+| `history_message_summary` (kind, storageKey, isCli, timelineAtMs, messageId) | contact-list previews, covers the `ORDER BY` too |
+| `history_message_marker` (kind, storageKey, containsMarker) | the map's marker sweep |
+| `legacy_rejected_location` (kind, storageKey, messageIndex) | quarantine listing |
+
+**`timelineAtMs` repeats the domain rules rather than inventing its own.** It is `receivedAt ?? timestamp` for channel rows and for room messages (detected by a non-empty `fourByteRoomContactKey`), and plain `timestamp` for ordinary direct messages — so SQL order matches `ChannelMessageTimelineHelper.compare` / `RoomMessageTimelineHelper.compare` instead of drifting from them. Contact-list summaries sort by the same column, which is why a room contact's `lastMessageAt` is its local receive time and not the timestamp the room server stamped.
+
+**Reads are windowed and cursor-paginated.** Opening a conversation asks for `_initialContactHistorySize` / `_initialChannelHistorySize` (300 each); offline shared mode merges up to `_offlineSharedHistoryWindowSize` (1000) per scope. Older pages come from `loadMessagesBefore` / `loadChannelMessagesBefore`, anchored on the pair `(timelineAtMs, messageId)` — the second half of the key is what keeps ordering stable when several messages share a millisecond. `loadNewerMessages` / `loadNewerChannelMessages` are the forward half of the same cursor and are implemented but not yet called by any screen.
+
+**Writes are per row.** Receiving a message upserts one row (`saveMessage` / `saveChannelMessage`); before, every incoming message re-serialized the whole conversation and rewrote the entire preferences file. `saveMessages` / `saveChannelMessages` still exist but their meaning changed from *replace* to *upsert*, so the four remaining call sites are all blocked-sender sweeps that genuinely touch several rows. Deleting is `deleteMessage`, clearing a conversation is `clearMessages` / `clearChannelMessages` — passing a shortened list no longer removes anything.
+
+**Two in-memory caches** are filled by one `SELECT DISTINCT` each at startup and maintained on write: the set of known `storageKey`s per kind, and the keys whose history contains a marker. The marker cache is deliberately **add-only** on point upserts — a stale positive costs one wasted history read, while `replaceString` and `deleteMessage` recompute it exactly. That asymmetry is intentional and commented in place; it keeps `mayContainMarker` synchronous, which the map's sweep over every contact depends on.
+
+**Corrupt records never take the whole read down.** `_messagesFromJson` / `_channelMessagesFromJson` decode element by element and skip a bad one with a log line instead of returning an empty list, so one unreadable message costs one message rather than the entire conversation.
+
+### Migrating the legacy history
+
+The move from preferences is **one-way, one-time and irreversible**, and it will meet years of accumulated real data on every device exactly once. Everything below exists because of that.
+
+`MessageHistoryStorage.initializeAndMigrate()` runs from `main()` before any service exists. It finds legacy keys with strict regexes, imports them, and only then removes them from preferences. The import, the skip counters and the `legacy_migration_complete` flag all commit **in one transaction, before cleanup**, so an interrupted cleanup resumes on the next launch without importing anything twice.
+
+The import walks one `storageKey` at a time in chunks of 200, yielding to the event loop between chunks, and reports through `migrationProgress` — a `ValueListenable` the `MessageHistoryMigrationApp` screen renders as "conversation N of M". Without the chunking the indicator would freeze, because `_companionsFor` runs `MessageTextCodec.tryDecodeKnownCompression` on legacy rows that predate `rawText`, and that is the MCMP arithmetic decoder. On desktop the app restarts itself afterwards (`restartAfterMigration`).
+
+**Damage is skipped at two levels.** A container that will not `jsonDecode` costs that conversation; a single element that is not an object, or whose field has the wrong type, costs that message. The `catch` deliberately takes everything except `OutOfMemoryError` and `StackOverflowError` — a `TypeError` from `as int?` on a JSON double is the common case and is not an `Exception` — but it is drawn tightly around the pure conversion, with `batch()` outside it, so a database failure can never be mistaken for bad data.
+
+**Validation runs the real parser.** `main()` passes `MessageStore.decodeStoredMessage` / `ChannelMessageStore.decodeStoredMessage` as `validateMessage`, so a message is only imported if the code that will later read it can read it. Checking only the ten fields `_companionsFor` touches would let a broken value ride along inside `messageJson` and fail at display time instead.
+
+### Migration quarantine
+
+Whatever the import skips is written to `LegacyRejectedMessages` **in the same transaction** — which is what makes it safe to wipe the preferences afterwards. A rejected element is stored as itself; a rejected container is stored whole, since there is nothing smaller to keep. Rows carry `rawValue`, `errorType`, `errorText` (capped at 1000 chars) and `messageIndex`; the write is kept deliberately primitive so the safety net cannot itself fail the migration.
+
+`retryLegacyRejected` re-runs the quarantine through the current parser. A container is re-split, and whatever still fails comes back as *per-element* rows with an index — so every attempt makes the quarantine finer rather than repeating itself. `resolvedMessageId` is preserved so a recovered message lands under the id it would have had originally. This is the path that matters when the defect was in *our* parser rather than in the data: a later build simply recovers what an earlier one rejected.
+
+Two exports, deliberately separate:
+
+- **diagnostic** — schema version, error *types*, indexes and SHA-256 hashes of `storageKey`. No message text: `errorText` is excluded because `FormatException` from `jsonDecode` quotes the source around the failure, which would put conversation text into a file meant to be safe to send.
+- **recovery** — the rejected entries with their original content, behind a confirmation that says so.
+
+Both go through `file_selector.getSaveLocation` on desktop and `SharePlus` on mobile (falling back to share if the save dialog fails), because `getApplicationSupportDirectory()` is unreachable for a user on Android and iOS. The three outcomes are distinguished: a path means saved, an empty string means handed to the share sheet, `null` means the user cancelled — and a cancelled export must not be followed by the "delete the quarantine now?" prompt.
+
+Counters live in `HistoryMetadata` (`legacy_migration_skipped_histories`, `…_skipped_messages`, `…_warning_pending`) and drive a one-time dialog shown from a post-frame callback after normal startup, with a button into the management screen. Migration logging uses `developer.log` rather than `appLogger` on purpose: `appLogger.initialize` happens far later in `main()` than the migration does.
+
+`message_history_database_screen.dart` (UI) and `message_history_maintenance.dart` (statistics, exports, quarantine, vacuum) hold all of this, keeping `mod_settings_screen.dart` down to one section and a route. `PRAGMA incremental_vacuum` only works when `auto_vacuum = 2`, so the screen disables that action and swaps its description when `autoVacuumMode` says otherwise — databases created before the pragma was added need a full `VACUUM` first, which also switches the mode over.
+
 ### Offline history mode
 
 The BLE, USB and TCP connection screens expose the same `OfflineHistoryButton`. A user can open one saved node scope or choose the shared mode, which merges every known node scope without connecting to a radio. `MeshCoreConnector.enterOfflineHistory()` binds stores to the selected synthetic scope and uses read-only loading paths with legacy migration disabled; `exitOfflineHistory()` clears the offline state before a real connection begins. Shared offline mode builds a merged contact/channel/message view up front, while single-node mode keeps that node's settings, order and unread data.
@@ -178,7 +238,7 @@ Offline mode is deliberately read-only for radio/device state: chat composers an
 
 ### Deleting a shared-history message
 
-Shared history is read out of the *other* node scopes in the same SharedPreferences and merged into the open chat on the fly (`_sharedChannelSecondaryMessages` / `_sharedContactSecondaryMessages`), so deleting one of those messages has to reach the store it actually lives in. `deleteChannelMessage` / `deleteMessage` drop it from the merged-in list and then `SharedMessageHistoryHelper.deleteSecondary*Message` rewrites the other scope without it; dropping it in memory alone would bring it back on the next merge. Matching is by `messageId` (persisted in both stores), which also removes the copy the merge hid when the same message exists in two scopes — otherwise deleting the local one just uncovers the shared duplicate. `deleteChannelMessage` takes the `Channel` rather than reading `message.channelIndex`, because a shared message carries the *other* node's channel index.
+Shared history is read out of the *other* node scopes in the same database and merged into the open chat on the fly (`_sharedChannelSecondaryMessages` / `_sharedContactSecondaryMessages`), so deleting one of those messages has to reach the store it actually lives in. `deleteChannelMessage` / `deleteMessage` drop it from the merged-in list and then `SharedMessageHistoryHelper.deleteSecondary*Message` rewrites the other scope without it; dropping it in memory alone would bring it back on the next merge. Matching is by `messageId` (persisted in both stores), which also removes the copy the merge hid when the same message exists in two scopes — otherwise deleting the local one just uncovers the shared duplicate. `deleteChannelMessage` takes the `Channel` rather than reading `message.channelIndex`, because a shared message carries the *other* node's channel index.
 
 Clearing a whole conversation deliberately works the other way: `clearMessagesForContact` / `clearMessagesForChannel` only hide the shared scope for the session (`_hiddenSharedContactKeys` / `_hiddenSharedChannelIdentityKeys`) and leave the other node's data alone.
 
@@ -580,6 +640,58 @@ routes shows what each one measured, and a variant with no observation simply sh
 is gated on `AppSettings.showLastHopSignal` (default on, in mod settings) on top of the existing
 tracing and `showHops` gates.
 
+### Overhearing our own packets
+
+Two features read the same thing out of `PUSH_CODE_LOG_RX_DATA` (0x88): a repeater within our
+radio range retransmits a packet we sent, our radio logs that retransmission, and the packet
+itself says how far it has already travelled. Both are **passive** — nothing extra is
+transmitted, and neither delays the send it is watching. Both live in their own helper, because
+the parsing is fiddly and the matching rules are what break first.
+
+**Live path tracing** (`helpers/path_trace_progress_helper.dart`, driven from
+`path_trace_map.dart`). `PathTraceProgressTracker.parse` accepts a frame only after proving it
+belongs to *this* request: the four-byte trace tag matches, the flags encode the same hash width
+we asked for, and the route bytes are byte-for-byte ours. Everything else — a TRACE from another
+app, our own earlier trace, a packet on a different route — is rejected. It also insists the path
+entry width is 1, because TRACE stores exactly one signed SNR byte per completed stage, and that
+is what the accumulated readings are read from.
+
+A `PathTraceObservation` deliberately carries **two unrelated measurements**, and the UI must
+keep them apart: `routeSnr` is what the relay recorded when it received the packet from the
+previous hop — the number the trace exists to collect — while `localSnr`/`localRssi` describe a
+different link entirely, namely how *our* radio heard that relay's retransmission. Collapsing
+them into one number would describe a hop nobody measured.
+
+Observations are appended as they arrive, so the hop list fills in before any reply comes back.
+`_failTrace` does not clear them, and the observation list renders on `completed > 0` rather than
+on the success flag — which is what makes a timed-out trace still show how far the packet got.
+They are cleared only when a new trace starts. A stage with no observation is drawn with a hollow
+check and the `pathTrace_hopConfirmedNoDirectEchoTooltip`: confirmed by the reply, never heard
+directly, because that hop is out of our range.
+
+**Direct-message delivery progress** (`helpers/direct_message_progress_helper.dart`, driven from
+`MessageRetryService.handleRxLogFrame`). The echo of a `TXTMSG` carries the *remaining* route, so
+completed hops follow from `hopCount - remainingHopCount`, and the progress bar under an outgoing
+bubble advances as the message moves away.
+
+Matching here is stricter than it looks, and the strictness is the feature: the packet only
+carries **one-byte** source and destination hashes, so several conversations collide on them
+routinely. A candidate has to agree on both hashes, on the hash width and on the exact remaining
+route suffix — and if more than one pending message still matches, the echo is **discarded**
+rather than credited to a guess (`if (matches.length != 1) return;`). Once an echo is accepted the
+tracker binds to that packet's exact payload, and a retry's tracker is armed with the previous
+attempt's payload in `rejectedPayloads`, so the echo of an older attempt can never be counted as
+progress of the current one. Any new call site must go through `matchingStage` rather than
+comparing hashes itself, or it loses all of this.
+
+`deliveryProgressTotalSteps` is `pathLength + 1` — the hops plus the final leg to the recipient —
+and is reset together with `deliveryProgressCompletedSteps` on every attempt, so a retry starts
+the bar over instead of continuing a stale one. A flood-routed message carries `-1` as its path
+length, so it gets `0` total steps and shows no bar at all — there is no known route to measure
+against, and `_armProgressTracker` refuses to arm for it on the same test.
+Delivery fills the bar to `totalSteps`, and `chat_screen.dart` hides it once the status reaches
+`delivered`. Both fields are persisted by `message_store` and default to `0` for older records.
+
 ### Map raster sources
 
 Sources live in `MapRasterSourceCatalog` (`services/map_tile_cache_service.dart`) and are picked in app settings. Two carry an API key: Stadia (`mapTileApiKey`, with a shared demo key as fallback) and **Yandex** (`mapYandexApiKey`, no demo — the map silently falls back to OpenStreetMap until the user pastes their own key from the Yandex developer dashboard).
@@ -953,6 +1065,8 @@ App version: `9.5.1-mcoa.1.8.6+43` — Dart SDK constraint: `^3.9.2`
 |---------|---------|---------|
 | provider | ^6.1.5+1 | ChangeNotifier-based state management across screens |
 | shared_preferences | ^2.2.2 | Persistent key-value storage for user settings |
+| drift | ^2.34.3 | SQLite layer for the message-history database |
+| drift_flutter | ^0.3.1 | Platform wiring for drift (native background isolate, file location) |
 | path_provider | ^2.1.5 | Locates platform-appropriate directories for file I/O |
 
 **Crypto**
@@ -1096,7 +1210,12 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/helpers/message_markup.dart` | Inline `**bold**` / `__italic__` / `~~strike~~` / mono markup parser |
 | `lib/helpers/mention_autocomplete.dart` | `@[name]` parsing for the composer and for message rendering |
 | `lib/helpers/mcoimg_v3_codec.dart` | MCO image-over-LoRa codec (v3 binary container) |
+| `lib/helpers/path_trace_progress_helper.dart` | Matches overheard TRACE retransmissions to the running trace |
+| `lib/helpers/direct_message_progress_helper.dart` | Matches overheard message retransmissions to a pending direct message |
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
+| `lib/storage/message_history_database.dart` | drift schema, queries, legacy import and quarantine (`.g.dart` is committed, see `.gitignore`) |
+| `lib/storage/message_history_storage.dart` | The only door to that database; holds the web fallback and the key caches |
+| `lib/storage/message_history_maintenance.dart` | Statistics, diagnostic/recovery export, quarantine retry, vacuum |
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |
 | `lib/screens/mod_settings_screen.dart` | Advanced-mod feature toggles |
 | `pubspec.yaml` | Dependencies and project metadata; the `## Dependencies` section above quotes the same version |

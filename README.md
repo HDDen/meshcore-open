@@ -31,6 +31,9 @@ but also for Windows and iOS (as .ipa files)
    without connecting to a radio.
 9. **Message search** — search decoded text across channels, contacts and room servers, including
    configured shared-history scopes.
+10. **Live path tracing and delivery progress** — the app listens to repeater retransmissions of
+    its own packets, so a path trace fills in hop by hop while it is still running, and an
+    outgoing direct message shows how far it has travelled.
 
 - **Repository:** <https://github.com/HDDen/meshcore-open>
 - **Telegram group:** <https://t.me/mcoadvanced>
@@ -312,6 +315,52 @@ somebody adopts your callsign and you block it.
 to and the channels it covers, with a delete button per entry and an **Add** button for blocking
 a name typed by hand (that one carries no key and applies to every channel) — sits in two menus:
 inside a channel, and on the channels list itself.
+
+### Live path tracing — watching the packet travel
+
+A path trace normally tells you only how it ended: the reply comes back, and the route appears
+at once. MCOa also listens to the mesh while the trace is still in flight.
+
+Your own radio hears the TRACE packet again every time a repeater in range retransmits it, and
+each of those retransmissions already carries the SNR every previous hop measured. The app
+matches those echoes to the request it just sent — by the trace tag, the route bytes and the
+hash width — and fills the hop list in as they arrive, before any answer comes back. If the
+trace never completes, whatever was heard on the way stays on screen: you see how far the packet
+actually got instead of a bare "path trace failed".
+
+Every hop the trace confirms carries two different measurements, and they are shown apart
+because they describe different links:
+
+- **the route SNR** the repeater itself recorded when it received the packet from the previous
+  hop — this is the number the trace was sent to collect;
+- **the local SNR and RSSI** your own radio measured while overhearing that same
+  retransmission — a second, independent link between you and that repeater.
+
+Hops outside your radio range never produce an echo, so they arrive only with the final reply
+and are marked with a hollow check: confirmed, but not heard directly. Each observed hop also
+shows the time since the trace started and since the previous echo, which makes a slow repeater
+visible as a gap rather than as a guess.
+
+### Delivery progress of direct messages
+
+The same idea drives the thin progress bar under an outgoing direct message. A message sent
+along a known route is also retransmitted by each repeater on it, and your radio overhears those
+retransmissions while they are still in range. Every packet carries the part of the route that
+remains, so the number of hops already completed follows directly from what is left.
+
+The bar advances hop by hop as the message moves away from you and disappears when the delivery
+receipt arrives. On a route where the first repeaters are within earshot, this is the difference
+between "sent, waiting" and seeing the message actually leave.
+
+Matching is deliberately strict, because a mesh packet carries only one-byte source and
+destination hashes and several conversations can collide on them. A candidate must agree on both
+hashes, on the hash width and on the exact remaining route; an echo that matches more than one
+pending message is discarded rather than credited to the wrong chat. Once an echo is matched, the
+tracker binds to that packet's exact payload, so a retry of the same message cannot be mistaken
+for progress of the earlier attempt.
+
+Both features are passive: nothing extra is transmitted, and neither delays a message or a trace.
+They only interpret packets the radio was already reporting.
 
 ### Signal of the last hop in channels
 
