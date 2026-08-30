@@ -55,12 +55,14 @@ class _MessageHistoryDatabaseScreenState
   Future<bool> _run(
     Future<String?> Function() operation, {
     bool refresh = true,
+    bool nullIsCancellation = false,
   }) async {
     if (_busy) return false;
     setState(() => _busy = true);
     try {
       final message = await operation();
       if (!mounted) return false;
+      if (message == null && nullIsCancellation) return false;
       if (refresh) await _refresh();
       if (!mounted) return false;
       showDismissibleSnackBar(
@@ -142,8 +144,10 @@ class _MessageHistoryDatabaseScreenState
     final l10n = context.l10n;
     return _run(() async {
       final path = await _maintenance.exportDiagnosticReport();
+      if (path == null) return null;
+      if (path.isEmpty) return l10n.messageHistoryDatabaseExportShared;
       return l10n.messageHistoryDatabaseExportSaved(path);
-    }, refresh: false);
+    }, refresh: false, nullIsCancellation: true);
   }
 
   Future<void> _exportRecovery() async {
@@ -156,8 +160,10 @@ class _MessageHistoryDatabaseScreenState
     if (!confirmed) return;
     final exported = await _run(() async {
       final path = await _maintenance.exportRecoveryData();
+      if (path == null) return null;
+      if (path.isEmpty) return l10n.messageHistoryDatabaseExportShared;
       return l10n.messageHistoryDatabaseExportSaved(path);
-    }, refresh: false);
+    }, refresh: false, nullIsCancellation: true);
     if (!exported || !mounted) return;
     final deleteAfterExport = await _confirm(
       title: l10n.messageHistoryDatabaseDeleteAfterExportTitle,
@@ -212,6 +218,7 @@ class _MessageHistoryDatabaseScreenState
     final snapshot = _snapshot;
     final stats = snapshot?.stats;
     final hasQuarantine = (stats?.rejectedEntries ?? 0) > 0;
+    final supportsIncrementalVacuum = stats?.autoVacuumMode == 2;
     return Scaffold(
       appBar: AppBar(
         title: AdaptiveAppBarTitle(
@@ -367,10 +374,16 @@ class _MessageHistoryDatabaseScreenState
                     title: context
                         .l10n
                         .messageHistoryDatabaseIncrementalVacuum,
-                    description: context
-                        .l10n
-                        .messageHistoryDatabaseIncrementalVacuumDescription,
-                    onTap: _busy ? null : _incrementalVacuum,
+                    description: supportsIncrementalVacuum
+                        ? context
+                              .l10n
+                              .messageHistoryDatabaseIncrementalVacuumDescription
+                        : context
+                              .l10n
+                              .messageHistoryDatabaseIncrementalVacuumUnavailableDescription,
+                    onTap: _busy || !supportsIncrementalVacuum
+                        ? null
+                        : _incrementalVacuum,
                   ),
                   _ActionCard(
                     icon: Icons.build_outlined,

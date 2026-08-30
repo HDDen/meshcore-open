@@ -6444,6 +6444,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Ongebruikte SQLite-pagina\'s geleidelijk teruggeven aan het besturingssysteem.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Voor deze database is eerst een volledige VACUUM nodig.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (database volledig opnieuw opbouwen)';
 
@@ -6469,6 +6473,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Bestand opgeslagen: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'Bestand doorgegeven aan het deelmenu van het systeem';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

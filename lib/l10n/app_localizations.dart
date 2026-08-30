@@ -10990,6 +10990,12 @@ abstract class AppLocalizations {
   /// **'Gradually return unused SQLite pages to the operating system.'**
   String get messageHistoryDatabaseIncrementalVacuumDescription;
 
+  /// No description provided for @messageHistoryDatabaseIncrementalVacuumUnavailableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This database requires a full VACUUM first.'**
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription;
+
   /// No description provided for @messageHistoryDatabaseFullVacuum.
   ///
   /// In en, this message translates to:
@@ -11031,6 +11037,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File saved: {path}'**
   String messageHistoryDatabaseExportSaved(String path);
+
+  /// No description provided for @messageHistoryDatabaseExportShared.
+  ///
+  /// In en, this message translates to:
+  /// **'File passed to the system share menu'**
+  String get messageHistoryDatabaseExportShared;
 
   /// No description provided for @messageHistoryDatabaseDeleted.
   ///

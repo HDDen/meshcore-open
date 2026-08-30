@@ -6426,6 +6426,10 @@ class AppLocalizationsSk extends AppLocalizations {
       'Postupne vrátiť operačnému systému nevyužité stránky SQLite.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Táto databáza najprv vyžaduje úplný VACUUM.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (úplne prestavať databázu)';
 
@@ -6451,6 +6455,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Súbor uložený: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'Súbor odovzdaný systémovej ponuke zdieľania';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

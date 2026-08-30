@@ -3532,5 +3532,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Ta podatkovna baza najprej zahteva popolni VACUUM.",
+  "messageHistoryDatabaseExportShared": "Datoteka posredovana sistemskemu meniju za deljenje"
 }

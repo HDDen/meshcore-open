@@ -2771,6 +2771,7 @@
   "messageHistoryDatabaseMaintenance": "Обслуживание",
   "messageHistoryDatabaseIncrementalVacuum": "Освободить неиспользуемое место",
   "messageHistoryDatabaseIncrementalVacuumDescription": "Постепенно вернуть операционной системе свободные страницы SQLite.",
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Для этой базы сначала требуется выполнить полный VACUUM.",
   "messageHistoryDatabaseFullVacuum": "VACUUM (Полностью перестроить БД)",
   "messageHistoryDatabaseFullVacuumDescription": "Полностью перестроить файл базы. Операция может занять время и потребовать дополнительное свободное место.",
   "messageHistoryDatabaseFullVacuumWarningTitle": "Полностью перестроить базу данных?",
@@ -2781,6 +2782,7 @@
   "@messageHistoryDatabaseExportSaved": {
     "placeholders": { "path": { "type": "String" } }
   },
+  "messageHistoryDatabaseExportShared": "Файл передан в системное меню отправки",
   "messageHistoryDatabaseDeleted": "Удалено записей: {count}",
   "@messageHistoryDatabaseDeleted": {
     "placeholders": { "count": { "type": "int" } }

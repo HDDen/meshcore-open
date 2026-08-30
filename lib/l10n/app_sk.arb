@@ -3532,5 +3532,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Táto databáza najprv vyžaduje úplný VACUUM.",
+  "messageHistoryDatabaseExportShared": "Súbor odovzdaný systémovej ponuke zdieľania"
 }

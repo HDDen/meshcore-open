@@ -6141,6 +6141,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '未使用の SQLite ページを段階的に OS へ返却します。';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'このデータベースには、まず完全な VACUUM が必要です。';
+
+  @override
   String get messageHistoryDatabaseFullVacuum => 'VACUUM（データベースを完全に再構築）';
 
   @override
@@ -6165,6 +6169,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'ファイルを保存しました: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared => 'ファイルをシステムの共有メニューに渡しました';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

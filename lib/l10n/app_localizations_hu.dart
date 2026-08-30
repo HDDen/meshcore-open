@@ -6459,6 +6459,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'A nem használt SQLite-lapok fokozatos visszaadása az operációs rendszernek.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Ehhez az adatbázishoz először teljes VACUUM szükséges.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (az adatbázis teljes újraépítése)';
 
@@ -6484,6 +6488,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Fájl elmentve: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'A fájl átadva a rendszer megosztási menüjének';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

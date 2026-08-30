@@ -3314,5 +3314,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Este banco de dados requer primeiro um VACUUM completo.",
+  "messageHistoryDatabaseExportShared": "Arquivo enviado ao menu de compartilhamento do sistema"
 }

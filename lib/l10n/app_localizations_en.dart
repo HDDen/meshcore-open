@@ -6358,6 +6358,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Gradually return unused SQLite pages to the operating system.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'This database requires a full VACUUM first.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (Fully rebuild database)';
 
@@ -6383,6 +6387,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'File saved: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'File passed to the system share menu';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

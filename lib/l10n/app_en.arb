@@ -3603,6 +3603,7 @@
   "messageHistoryDatabaseMaintenance": "Maintenance",
   "messageHistoryDatabaseIncrementalVacuum": "Release unused space",
   "messageHistoryDatabaseIncrementalVacuumDescription": "Gradually return unused SQLite pages to the operating system.",
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "This database requires a full VACUUM first.",
   "messageHistoryDatabaseFullVacuum": "VACUUM (Fully rebuild database)",
   "messageHistoryDatabaseFullVacuumDescription": "Fully rebuild the database file. This can take time and require additional free space.",
   "messageHistoryDatabaseFullVacuumWarningTitle": "Fully rebuild the database?",
@@ -3613,6 +3614,7 @@
   "@messageHistoryDatabaseExportSaved": {
     "placeholders": { "path": { "type": "String" } }
   },
+  "messageHistoryDatabaseExportShared": "File passed to the system share menu",
   "messageHistoryDatabaseDeleted": "Deleted entries: {count}",
   "@messageHistoryDatabaseDeleted": {
     "placeholders": { "count": { "type": "int" } }

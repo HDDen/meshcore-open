@@ -6463,6 +6463,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Постепенно вернуть операционной системе свободные страницы SQLite.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Для этой базы сначала требуется выполнить полный VACUUM.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (Полностью перестроить БД)';
 
@@ -6488,6 +6492,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Файл сохранён: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'Файл передан в системное меню отправки';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

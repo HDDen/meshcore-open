@@ -6148,6 +6148,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '사용하지 않는 SQLite 페이지를 운영체제에 점진적으로 반환합니다.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      '이 데이터베이스에는 먼저 전체 VACUUM이 필요합니다.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum => 'VACUUM (데이터베이스 완전 재구성)';
 
   @override
@@ -6172,6 +6176,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return '파일을 저장했습니다: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared => '파일을 시스템 공유 메뉴로 전달했습니다';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

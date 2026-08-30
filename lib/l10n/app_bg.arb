@@ -3532,5 +3532,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "За тази база първо е необходим пълен VACUUM.",
+  "messageHistoryDatabaseExportShared": "Файлът е предаден в системното меню за споделяне"
 }

@@ -3535,5 +3535,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Ehhez az adatbázishoz először teljes VACUUM szükséges.",
+  "messageHistoryDatabaseExportShared": "A fájl átadva a rendszer megosztási menüjének"
 }

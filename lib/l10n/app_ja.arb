@@ -3637,5 +3637,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "このデータベースには、まず完全な VACUUM が必要です。",
+  "messageHistoryDatabaseExportShared": "ファイルをシステムの共有メニューに渡しました"
 }

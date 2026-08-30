@@ -3314,5 +3314,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Den här databasen kräver först en fullständig VACUUM.",
+  "messageHistoryDatabaseExportShared": "Filen skickades till systemets delningsmeny"
 }

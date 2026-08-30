@@ -3314,5 +3314,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Voor deze database is eerst een volledige VACUUM nodig.",
+  "messageHistoryDatabaseExportShared": "Bestand doorgegeven aan het deelmenu van het systeem"
 }

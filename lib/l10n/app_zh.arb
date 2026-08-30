@@ -3537,5 +3537,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "此数据库需要先执行完整的 VACUUM。",
+  "messageHistoryDatabaseExportShared": "文件已传递到系统分享菜单"
 }

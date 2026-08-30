@@ -6412,6 +6412,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Lämna successivt tillbaka oanvända SQLite-sidor till operativsystemet.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Den här databasen kräver först en fullständig VACUUM.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (bygg om databasen helt)';
 
@@ -6437,6 +6441,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Filen sparad: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'Filen skickades till systemets delningsmeny';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

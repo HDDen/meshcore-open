@@ -6437,6 +6437,10 @@ class AppLocalizationsSl extends AppLocalizations {
       'Postopoma vrni operacijskemu sistemu neuporabljene strani SQLite.';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      'Ta podatkovna baza najprej zahteva popolni VACUUM.';
+
+  @override
   String get messageHistoryDatabaseFullVacuum =>
       'VACUUM (popolnoma obnovi bazo)';
 
@@ -6462,6 +6466,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return 'Datoteka shranjena: $path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared =>
+      'Datoteka posredovana sistemskemu meniju za deljenje';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

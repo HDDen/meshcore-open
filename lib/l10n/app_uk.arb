@@ -3512,5 +3512,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Для цієї бази спочатку потрібен повний VACUUM.",
+  "messageHistoryDatabaseExportShared": "Файл передано в системне меню надсилання"
 }

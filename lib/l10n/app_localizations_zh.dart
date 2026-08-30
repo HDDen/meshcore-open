@@ -6012,6 +6012,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '逐步将未使用的 SQLite 页面归还给操作系统。';
 
   @override
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
+      '此数据库需要先执行完整的 VACUUM。';
+
+  @override
   String get messageHistoryDatabaseFullVacuum => 'VACUUM（完全重建数据库）';
 
   @override
@@ -6035,6 +6039,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String messageHistoryDatabaseExportSaved(String path) {
     return '文件已保存：$path';
   }
+
+  @override
+  String get messageHistoryDatabaseExportShared => '文件已传递到系统分享菜单';
 
   @override
   String messageHistoryDatabaseDeleted(int count) {

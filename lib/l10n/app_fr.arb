@@ -3631,5 +3631,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Cette base nécessite d'abord un VACUUM complet.",
+  "messageHistoryDatabaseExportShared": "Fichier transmis au menu de partage du système"
 }

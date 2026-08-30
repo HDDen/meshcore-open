@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'message_history_database.dart';
 import 'message_history_storage.dart';
@@ -106,12 +109,12 @@ class MessageHistoryMaintenance {
     return buffer.toString();
   }
 
-  Future<String> exportDiagnosticReport() async {
+  Future<String?> exportDiagnosticReport() async {
     final report = await diagnosticReport();
-    return _writeExport('diagnostic', report);
+    return _deliverExport('diagnostic', report);
   }
 
-  Future<String> exportRecoveryData() async {
+  Future<String?> exportRecoveryData() async {
     final records = await _storage.legacyRejectedRecords();
     final payload = <String, Object?>{
       'format': 'mco-message-history-recovery',
@@ -135,21 +138,76 @@ class MessageHistoryMaintenance {
           .toList(growable: false),
     };
     final contents = const JsonEncoder.withIndent('  ').convert(payload);
-    return _writeExport('recovery', contents);
+    return _deliverExport('recovery', contents);
   }
 
-  Future<String> _writeExport(String suffix, String contents) async {
-    final directory = await getApplicationSupportDirectory();
+  Future<String?> _deliverExport(String suffix, String contents) async {
     final timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final file = File(
-      '${directory.path}${Platform.pathSeparator}'
-      'message_history_${suffix}_$timestamp.json',
+    final fileName = 'message_history_${suffix}_$timestamp.json';
+    final bytes = Uint8List.fromList(utf8.encode(contents));
+    if (Platform.isAndroid || Platform.isIOS) {
+      return _shareExport(bytes, fileName);
+    }
+    try {
+      final location = await file_selector.getSaveLocation(
+        suggestedName: fileName,
+        acceptedTypeGroups: const [
+          file_selector.XTypeGroup(
+            label: 'JSON document',
+            extensions: ['json'],
+            mimeTypes: ['application/json'],
+            uniformTypeIdentifiers: ['public.json'],
+          ),
+        ],
+      );
+      if (location == null) return null;
+      await XFile.fromData(
+        bytes,
+        mimeType: 'application/json',
+        name: fileName,
+      ).saveTo(location.path);
+      return location.path;
+    } catch (saveError) {
+      return _shareExport(bytes, fileName, saveError: saveError);
+    }
+  }
+
+  Future<String?> _shareExport(
+    Uint8List bytes,
+    String fileName, {
+    Object? saveError,
+  }) async {
+    final result = await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile.fromData(
+            bytes,
+            mimeType: 'application/json',
+            name: fileName,
+          ),
+        ],
+        fileNameOverrides: [fileName],
+      ),
     );
-    await file.writeAsString(contents, flush: true);
-    return file.path;
+    return switch (result.status) {
+      ShareResultStatus.success => '',
+      ShareResultStatus.dismissed => null,
+      ShareResultStatus.unavailable => throw StateError(
+        saveError == null
+            ? 'Sharing is unavailable on this platform'
+            : 'Saving and sharing are unavailable: $saveError',
+      ),
+    };
   }
 
   Future<void> incrementalVacuum({int pagesPerStep = 512}) async {
+    final initialStats = await _storage.maintenanceStats();
+    if (initialStats == null) return;
+    if (initialStats.autoVacuumMode != 2) {
+      throw UnsupportedError(
+        'Incremental vacuum requires auto_vacuum = INCREMENTAL',
+      );
+    }
     var previousFreePages = -1;
     while (true) {
       final stats = await _storage.maintenanceStats();

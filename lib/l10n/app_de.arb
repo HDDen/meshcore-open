@@ -3659,5 +3659,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Für diese Datenbank ist zuerst ein vollständiges VACUUM nötig.",
+  "messageHistoryDatabaseExportShared": "Datei an das Teilen-Menü des Systems übergeben"
 }
