@@ -28,9 +28,24 @@ class MCOImageV4Codec {
   static const int _opRepeatLast = 12;
   static const int _opEllipseAxisAligned = 13;
   static const int _opRepeatShort = 14;
+  static const int _opExtended = 15;
   static const int _opBits = 4;
 
   static const List<int> _deltaWidths = <int>[3, 4, 5, 6];
+  static const int _extLineDelta = 0;
+  static const int _extLineAxisDelta = 1;
+  static const int _extAreaDelta = 2;
+  static const int _extWaveDelta = 3;
+  static const int _extPathOrthogonal = 4;
+  static const int _extPathBounds = 5;
+  static const int _extPathBoundsDelta = 6;
+  static const int _extLineAxisAbsolute = 7;
+  static const int _extEllipseDepth = 8;
+  static const int _extRepeatBack = 9;
+  static const int _extDotRun = 10;
+  static const int _extSetStyle = 11;
+  static const int _extBits = 4;
+  static const int _repeatBackWindow = 8;
   static const int _dimensionModeSquare64 = 0;
   static const int _dimensionModeSmall32 = 1;
   static const int _dimensionModeMedium64 = 2;
@@ -211,8 +226,10 @@ class MCOImageV4Codec {
       );
     }
     var currentStyle = _defaultStyleForDocument(document);
-    MCOImageV4Figure? lastFigure;
-    for (final figure in document.figures.where((figure) => figure.visible)) {
+    final history = <MCOImageV4Figure>[];
+    final figures = document.figures.where((figure) => figure.visible).toList();
+    for (var index = 0; index < figures.length;) {
+      final figure = figures[index];
       currentStyle = _writeStyleChanges(
         writer,
         currentStyle,
@@ -221,30 +238,48 @@ class MCOImageV4Codec {
         profileColorBits,
         scalarBits,
       );
-      final repeat = lastFigure == null
-          ? null
-          : _translationFrom(lastFigure, figure);
-      final full = _encodeFigureCommand(
-        figure,
-        xBits: xBits,
-        yBits: yBits,
-        scalarBits: scalarBits,
-      );
-      final repeated = repeat == null
-          ? null
-          : _encodeBestRepeatCommand(
-              repeat,
-              width: document.width,
-              height: document.height,
-              xBits: xBits,
-              yBits: yBits,
-            );
-      if (repeated != null && repeated.bitLength < full.bitLength) {
-        writer.writeWriter(repeated);
-      } else {
-        writer.writeWriter(full);
+
+      final dotRun = figure is MCOImageV4Dot
+          ? _collectDotRun(figures, index)
+          : const <MCOImageV4Dot>[];
+      if (dotRun.length >= 2) {
+        final dotRunEncoded = _encodeBestDotRun(
+          dotRun,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        final fallback = _encodeDotRunAsFigures(
+          dotRun,
+          history,
+          width: document.width,
+          height: document.height,
+          xBits: xBits,
+          yBits: yBits,
+          scalarBits: scalarBits,
+        );
+        writer.writeWriter(
+          dotRunEncoded.bitLength < fallback.bitLength
+              ? dotRunEncoded
+              : fallback,
+        );
+        history.addAll(dotRun);
+        index += dotRun.length;
+        continue;
       }
-      lastFigure = figure;
+
+      writer.writeWriter(
+        _encodeBestFigureCommand(
+          figure,
+          history,
+          width: document.width,
+          height: document.height,
+          xBits: xBits,
+          yBits: yBits,
+          scalarBits: scalarBits,
+        ),
+      );
+      history.add(figure);
+      index++;
     }
     writer.writeBits(_opEnd, _opBits);
     return writer.toBytes();
@@ -312,7 +347,13 @@ class MCOImageV4Codec {
     );
     final initialStyle = currentStyle;
     final figures = <MCOImageV4Figure>[];
-    MCOImageV4Figure? lastFigure;
+    final history = <MCOImageV4Figure>[];
+
+    void addFigure(MCOImageV4Figure figure) {
+      _validateFigure(figure, width, height, palette.length);
+      figures.add(figure);
+      history.add(figure);
+    }
 
     while (true) {
       final opcode = reader.readBits(_opBits);
@@ -331,19 +372,19 @@ class MCOImageV4Codec {
             strokeWidth: reader.readBits(scalarBits) + 1,
           );
         case _opRepeatLast:
-          if (lastFigure == null) {
+          if (history.isEmpty) {
             throw const MCOImageInvalidPayloadException(
               'MCOimg v4 repeat has no previous figure',
             );
           }
           final dx = _zigZagDecode(reader.readBits(xBits + 1));
           final dy = _zigZagDecode(reader.readBits(yBits + 1));
-          final repeated = lastFigure.translated(dx, dy).withStyle(currentStyle);
-          _validateFigure(repeated, width, height, palette.length);
-          figures.add(repeated);
-          lastFigure = repeated;
+          final repeated = history.last
+              .translated(dx, dy)
+              .withStyle(currentStyle);
+          addFigure(repeated);
         case _opRepeatShort:
-          if (lastFigure == null) {
+          if (history.isEmpty) {
             throw const MCOImageInvalidPayloadException(
               'MCOimg v4 repeat has no previous figure',
             );
@@ -351,10 +392,26 @@ class MCOImageV4Codec {
           final shortBits = _deltaWidths[reader.readBits(2)];
           final dx = _zigZagDecode(reader.readBits(shortBits));
           final dy = _zigZagDecode(reader.readBits(shortBits));
-          final repeated = lastFigure.translated(dx, dy).withStyle(currentStyle);
-          _validateFigure(repeated, width, height, palette.length);
-          figures.add(repeated);
-          lastFigure = repeated;
+          final repeated = history.last
+              .translated(dx, dy)
+              .withStyle(currentStyle);
+          addFigure(repeated);
+        case _opExtended:
+          final result = _readExtendedCommand(
+            reader,
+            currentStyle,
+            history: history,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+            scalarBits: scalarBits,
+            localColorFromProfileRef: optionalLocalColorFromProfileRef,
+          );
+          currentStyle = result.style;
+          for (final figure in result.figures) {
+            addFigure(figure);
+          }
         default:
           final figure = _readFigure(
             opcode,
@@ -366,9 +423,7 @@ class MCOImageV4Codec {
             yBits: yBits,
             scalarBits: scalarBits,
           );
-          _validateFigure(figure, width, height, palette.length);
-          figures.add(figure);
-          lastFigure = figure;
+          addFigure(figure);
       }
     }
     return MCOImageV4Document(
@@ -390,6 +445,36 @@ class MCOImageV4Codec {
     int profileColorBits,
     int scalarBits,
   ) {
+    if (current == next) return current;
+    final candidates = <_V4BitWriter>[
+      _encodeSeparateStyleChanges(
+        current,
+        next,
+        document,
+        profileColorBits,
+        scalarBits,
+      ),
+      _encodeCombinedStyleChange(
+        current,
+        next,
+        document,
+        profileColorBits,
+        scalarBits,
+      ),
+    ];
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    writer.writeWriter(candidates.first);
+    return next;
+  }
+
+  _V4BitWriter _encodeSeparateStyleChanges(
+    MCOImageV4Style current,
+    MCOImageV4Style next,
+    MCOImageV4Document document,
+    int profileColorBits,
+    int scalarBits,
+  ) {
+    final writer = _V4BitWriter();
     if (current.fillColor != next.fillColor) {
       writer.writeBits(_opSetFill, _opBits);
       _writeOptionalColor(writer, document, next.fillColor, profileColorBits);
@@ -403,7 +488,96 @@ class MCOImageV4Codec {
         ..writeBits(_opSetStrokeWidth, _opBits)
         ..writeBits(next.strokeWidth - 1, scalarBits);
     }
-    return next;
+    return writer;
+  }
+
+  _V4BitWriter _encodeCombinedStyleChange(
+    MCOImageV4Style current,
+    MCOImageV4Style next,
+    MCOImageV4Document document,
+    int profileColorBits,
+    int scalarBits,
+  ) {
+    final fillChanged = current.fillColor != next.fillColor;
+    final strokeChanged = current.strokeColor != next.strokeColor;
+    final widthChanged = current.strokeWidth != next.strokeWidth;
+    final mask =
+        (fillChanged ? 0x01 : 0) |
+        (strokeChanged ? 0x02 : 0) |
+        (widthChanged ? 0x04 : 0);
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extSetStyle, _extBits)
+      ..writeBits(mask, 3);
+    if (fillChanged) {
+      _writeOptionalColor(writer, document, next.fillColor, profileColorBits);
+    }
+    if (strokeChanged) {
+      _writeOptionalColor(writer, document, next.strokeColor, profileColorBits);
+    }
+    if (widthChanged) {
+      writer.writeBits(next.strokeWidth - 1, scalarBits);
+    }
+    return writer;
+  }
+
+  _V4BitWriter _encodeBestFigureCommand(
+    MCOImageV4Figure figure,
+    List<MCOImageV4Figure> history, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final candidates = <_V4BitWriter>[
+      _encodeFigureCommand(
+        figure,
+        xBits: xBits,
+        yBits: yBits,
+        scalarBits: scalarBits,
+      ),
+    ];
+    final maxDistance = math.min(history.length, _repeatBackWindow);
+    for (var distance = 1; distance <= maxDistance; distance++) {
+      final previous = history[history.length - distance];
+      final repeat = _translationFrom(previous, figure);
+      if (repeat == null) continue;
+      final encoded = distance == 1
+          ? _encodeBestRepeatCommand(
+              repeat,
+              width: width,
+              height: height,
+              xBits: xBits,
+              yBits: yBits,
+            )
+          : _encodeBestRepeatBackCommand(
+              distance,
+              repeat,
+              width: width,
+              height: height,
+              xBits: xBits,
+              yBits: yBits,
+            );
+      if (encoded != null) candidates.add(encoded);
+    }
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  List<MCOImageV4Dot> _collectDotRun(
+    List<MCOImageV4Figure> figures,
+    int start,
+  ) {
+    final first = figures[start];
+    if (first is! MCOImageV4Dot) return const <MCOImageV4Dot>[];
+    final result = <MCOImageV4Dot>[first];
+    for (var index = start + 1; index < figures.length; index++) {
+      final next = figures[index];
+      if (next is! MCOImageV4Dot || next.style != first.style) break;
+      result.add(next);
+    }
+    return result;
   }
 
   _V4BitWriter _encodeFigureCommand(
@@ -415,6 +589,92 @@ class MCOImageV4Codec {
     if (figure is MCOImageV4Path) {
       return _encodeBestPath(figure, xBits: xBits, yBits: yBits);
     }
+    final candidates = <_V4BitWriter>[
+      _encodeFullFigureCommand(
+        figure,
+        xBits: xBits,
+        yBits: yBits,
+        scalarBits: scalarBits,
+      ),
+    ];
+    switch (figure) {
+      case MCOImageV4Line(:final start, :final end):
+        if (start.x == end.x || start.y == end.y) {
+          candidates.addAll(
+            _encodeAxisLineCandidates(
+              figure,
+              xBits: xBits,
+              yBits: yBits,
+            ),
+          );
+        }
+        candidates.addAll(
+          _encodePointDeltaFigureCandidates(
+            _extLineDelta,
+            <MCOImageV4Point>[start, end],
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+      case MCOImageV4AreaFigure(
+        :final first,
+        :final second,
+        :final third,
+      ):
+        candidates.addAll(
+          _encodePointDeltaFigureCandidates(
+            _extAreaDelta,
+            <MCOImageV4Point>[first, second, third],
+            xBits: xBits,
+            yBits: yBits,
+            extraHeader: figure is MCOImageV4Ellipse ? 1 : 0,
+            extraHeaderBits: 1,
+          ),
+        );
+        if (figure is MCOImageV4Ellipse) {
+          final depth = _ellipseDepthEncoding(figure);
+          if (depth != null) {
+            candidates.add(
+              _encodeEllipseDepth(
+                figure,
+                negative: depth.negative,
+                magnitude: depth.magnitude,
+                xBits: xBits,
+                yBits: yBits,
+                scalarBits: scalarBits,
+              ),
+            );
+          }
+        }
+      case MCOImageV4Wave(:final start, :final end, :final depth, :final closed):
+        candidates.addAll(
+          _encodePointDeltaFigureCandidates(
+            _extWaveDelta,
+            <MCOImageV4Point>[start, end],
+            xBits: xBits,
+            yBits: yBits,
+            extraHeader:
+                (closed ? 1 : 0) |
+                ((depth < 0 ? 1 : 0) << 1) |
+                ((depth.abs() - 1) << 2),
+            extraHeaderBits: 2 + scalarBits,
+          ),
+        );
+      case MCOImageV4Dot():
+        break;
+      case MCOImageV4Path():
+        throw const MCOImageInvalidInputException('Unexpected v4 path');
+    }
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  _V4BitWriter _encodeFullFigureCommand(
+    MCOImageV4Figure figure, {
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
     final writer = _V4BitWriter();
     switch (figure) {
       case MCOImageV4Dot(:final point):
@@ -480,6 +740,199 @@ class MCOImageV4Codec {
     return writer;
   }
 
+  List<_V4BitWriter> _encodeAxisLineCandidates(
+    MCOImageV4Line line, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final vertical = line.start.x == line.end.x;
+    final delta = vertical
+        ? line.end.y - line.start.y
+        : line.end.x - line.start.x;
+    final result = <_V4BitWriter>[
+      _encodeAxisLineAbsolute(
+        line,
+        vertical: vertical,
+        xBits: xBits,
+        yBits: yBits,
+      ),
+    ];
+    for (var selector = 0; selector < _deltaWidths.length; selector++) {
+      final shortBits = _deltaWidths[selector];
+      if (!_canEncodeSignedShort(delta, shortBits)) continue;
+      final writer = _V4BitWriter()
+        ..writeBits(_opExtended, _opBits)
+        ..writeBits(_extLineAxisDelta, _extBits)
+        ..writeBit(vertical)
+        ..writeBits(selector, 2);
+      _writePoint(writer, line.start, xBits, yBits);
+      writer.writeBits(_zigZagEncode(delta), shortBits);
+      result.add(writer);
+    }
+    return result;
+  }
+
+  _V4BitWriter _encodeAxisLineAbsolute(
+    MCOImageV4Line line, {
+    required bool vertical,
+    required int xBits,
+    required int yBits,
+  }) {
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extLineAxisAbsolute, _extBits)
+      ..writeBit(vertical);
+    if (vertical) {
+      writer
+        ..writeBits(line.start.x, xBits)
+        ..writeBits(line.start.y, yBits)
+        ..writeBits(line.end.y, yBits);
+    } else {
+      writer
+        ..writeBits(line.start.y, yBits)
+        ..writeBits(line.start.x, xBits)
+        ..writeBits(line.end.x, xBits);
+    }
+    return writer;
+  }
+
+  _V4BitWriter _encodeEllipseDepth(
+    MCOImageV4Ellipse ellipse, {
+    required bool negative,
+    required int magnitude,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extEllipseDepth, _extBits);
+    _writePoint(writer, ellipse.first, xBits, yBits);
+    _writePoint(writer, ellipse.second, xBits, yBits);
+    writer
+      ..writeBit(negative)
+      ..writeBits(magnitude - 1, scalarBits);
+    return writer;
+  }
+
+  _V4BitWriter _encodeBestDotRun(
+    List<MCOImageV4Dot> dots, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final points = dots.map((dot) => dot.point).toList();
+    final candidates = <_V4BitWriter>[
+      _encodeAbsoluteDotRun(points, xBits: xBits, yBits: yBits),
+      for (var selector = 0; selector < _deltaWidths.length; selector++)
+        if (_canEncodePointDeltas(points, _deltaWidths[selector]))
+          _encodeDeltaDotRun(
+            points,
+            selector: selector,
+            shortBits: _deltaWidths[selector],
+            xBits: xBits,
+            yBits: yBits,
+          ),
+    ];
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  _V4BitWriter _encodeDotRunAsFigures(
+    List<MCOImageV4Dot> dots,
+    List<MCOImageV4Figure> history, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final writer = _V4BitWriter();
+    final localHistory = <MCOImageV4Figure>[...history];
+    for (final dot in dots) {
+      writer.writeWriter(
+        _encodeBestFigureCommand(
+          dot,
+          localHistory,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+          scalarBits: scalarBits,
+        ),
+      );
+      localHistory.add(dot);
+    }
+    return writer;
+  }
+
+  _V4BitWriter _encodeAbsoluteDotRun(
+    List<MCOImageV4Point> points, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extDotRun, _extBits)
+      ..writeBit(false)
+      ..writeCompactUint(points.length - 2);
+    for (final point in points) {
+      _writePoint(writer, point, xBits, yBits);
+    }
+    return writer;
+  }
+
+  _V4BitWriter _encodeDeltaDotRun(
+    List<MCOImageV4Point> points, {
+    required int selector,
+    required int shortBits,
+    required int xBits,
+    required int yBits,
+  }) {
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extDotRun, _extBits)
+      ..writeBit(true)
+      ..writeBits(selector, 2)
+      ..writeCompactUint(points.length - 2);
+    _writePoint(writer, points.first, xBits, yBits);
+    for (var i = 1; i < points.length; i++) {
+      writer
+        ..writeBits(_zigZagEncode(points[i].x - points[i - 1].x), shortBits)
+        ..writeBits(_zigZagEncode(points[i].y - points[i - 1].y), shortBits);
+    }
+    return writer;
+  }
+
+  List<_V4BitWriter> _encodePointDeltaFigureCandidates(
+    int subop,
+    List<MCOImageV4Point> points, {
+    required int xBits,
+    required int yBits,
+    int extraHeader = 0,
+    int extraHeaderBits = 0,
+  }) {
+    final result = <_V4BitWriter>[];
+    for (var selector = 0; selector < _deltaWidths.length; selector++) {
+      final shortBits = _deltaWidths[selector];
+      if (!_canEncodePointDeltas(points, shortBits)) continue;
+      final writer = _V4BitWriter()
+        ..writeBits(_opExtended, _opBits)
+        ..writeBits(subop, _extBits);
+      if (extraHeaderBits > 0) {
+        writer.writeBits(extraHeader, extraHeaderBits);
+      }
+      writer.writeBits(selector, 2);
+      _writePoint(writer, points.first, xBits, yBits);
+      for (var i = 1; i < points.length; i++) {
+        writer
+          ..writeBits(_zigZagEncode(points[i].x - points[i - 1].x), shortBits)
+          ..writeBits(_zigZagEncode(points[i].y - points[i - 1].y), shortBits);
+      }
+      result.add(writer);
+    }
+    return result;
+  }
+
   _V4BitWriter _encodeBestPath(
     MCOImageV4Path path, {
     required int xBits,
@@ -487,6 +940,9 @@ class MCOImageV4Codec {
   }) {
     final candidates = <_V4BitWriter>[
       _encodeAbsolutePath(path, xBits: xBits, yBits: yBits),
+      ..._encodeOrthogonalPathCandidates(path, xBits: xBits, yBits: yBits),
+      _encodeBoundsPath(path, xBits: xBits, yBits: yBits),
+      ..._encodeBoundsDeltaPathCandidates(path, xBits: xBits, yBits: yBits),
       for (var selector = 0; selector < _deltaWidths.length; selector++)
         _encodeDeltaPath(
           path,
@@ -537,6 +993,120 @@ class MCOImageV4Codec {
       _writePathComponent(writer, current.y, previous.y, shortBits, yBits);
     }
     return writer;
+  }
+
+  List<_V4BitWriter> _encodeOrthogonalPathCandidates(
+    MCOImageV4Path path, {
+    required int xBits,
+    required int yBits,
+  }) {
+    if (path.points.length < 2) return const <_V4BitWriter>[];
+    final deltas = <int>[];
+    final vertical = <bool>[];
+    for (var i = 1; i < path.points.length; i++) {
+      final previous = path.points[i - 1];
+      final current = path.points[i];
+      final dx = current.x - previous.x;
+      final dy = current.y - previous.y;
+      if (dx != 0 && dy != 0) return const <_V4BitWriter>[];
+      vertical.add(dx == 0);
+      deltas.add(dx == 0 ? dy : dx);
+    }
+
+    final minimum = path.closed ? 3 : 2;
+    final result = <_V4BitWriter>[];
+    for (var selector = 0; selector < _deltaWidths.length; selector++) {
+      final shortBits = _deltaWidths[selector];
+      if (deltas.any((delta) => !_canEncodeSignedShort(delta, shortBits))) {
+        continue;
+      }
+      final writer = _V4BitWriter()
+        ..writeBits(_opExtended, _opBits)
+        ..writeBits(_extPathOrthogonal, _extBits)
+        ..writeBit(path.closed)
+        ..writeBits(selector, 2)
+        ..writeCompactUint(path.points.length - minimum);
+      _writePoint(writer, path.points.first, xBits, yBits);
+      for (var i = 0; i < deltas.length; i++) {
+        writer
+          ..writeBit(vertical[i])
+          ..writeBits(_zigZagEncode(deltas[i]), shortBits);
+      }
+      result.add(writer);
+    }
+    return result;
+  }
+
+  _V4BitWriter _encodeBoundsPath(
+    MCOImageV4Path path, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final bounds = _pathBounds(path.points);
+    final boundsWidth = bounds.width;
+    final boundsHeight = bounds.height;
+    final localXBits = _coordinateBits(boundsWidth);
+    final localYBits = _coordinateBits(boundsHeight);
+    final minimum = path.closed ? 3 : 2;
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extPathBounds, _extBits)
+      ..writeBit(path.closed)
+      ..writeCompactUint(path.points.length - minimum);
+    _writePoint(writer, MCOImageV4Point(bounds.x, bounds.y), xBits, yBits);
+    writer
+      ..writeBits(boundsWidth - 1, xBits)
+      ..writeBits(boundsHeight - 1, yBits);
+    for (final point in path.points) {
+      writer
+        ..writeBits(point.x - bounds.x, localXBits)
+        ..writeBits(point.y - bounds.y, localYBits);
+    }
+    return writer;
+  }
+
+  List<_V4BitWriter> _encodeBoundsDeltaPathCandidates(
+    MCOImageV4Path path, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final bounds = _pathBounds(path.points);
+    final localPoints = path.points
+        .map((point) => MCOImageV4Point(point.x - bounds.x, point.y - bounds.y))
+        .toList();
+    final localXBits = _coordinateBits(bounds.width);
+    final localYBits = _coordinateBits(bounds.height);
+    final minimum = path.closed ? 3 : 2;
+    final result = <_V4BitWriter>[];
+    for (var selector = 0; selector < _deltaWidths.length; selector++) {
+      final shortBits = _deltaWidths[selector];
+      if (!_canEncodePointDeltas(localPoints, shortBits)) continue;
+      final writer = _V4BitWriter()
+        ..writeBits(_opExtended, _opBits)
+        ..writeBits(_extPathBoundsDelta, _extBits)
+        ..writeBit(path.closed)
+        ..writeBits(selector, 2)
+        ..writeCompactUint(path.points.length - minimum);
+      _writePoint(writer, MCOImageV4Point(bounds.x, bounds.y), xBits, yBits);
+      writer
+        ..writeBits(bounds.width - 1, xBits)
+        ..writeBits(bounds.height - 1, yBits)
+        ..writeBits(localPoints.first.x, localXBits)
+        ..writeBits(localPoints.first.y, localYBits);
+      for (var i = 1; i < localPoints.length; i++) {
+        writer
+          ..writeBits(
+            _zigZagEncode(localPoints[i].x - localPoints[i - 1].x),
+            shortBits,
+          )
+          ..writeBits(
+            _zigZagEncode(localPoints[i].y - localPoints[i - 1].y),
+            shortBits,
+          );
+      }
+      result.add(writer);
+    }
+    return result;
   }
 
   void _writePathComponent(
@@ -593,9 +1163,80 @@ class MCOImageV4Codec {
       ..writeBits(_zigZagEncode(delta.y), yBits + 1);
   }
 
+  _V4BitWriter? _encodeBestRepeatBackCommand(
+    int distance,
+    MCOImageV4Point delta, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    if (distance < 2 || distance > _repeatBackWindow) return null;
+    if (delta.x.abs() > width - 1 || delta.y.abs() > height - 1) {
+      return null;
+    }
+    final candidates = <_V4BitWriter>[
+      _encodeFullRepeatBackCommand(distance, delta, xBits: xBits, yBits: yBits),
+      for (var selector = 0; selector < _deltaWidths.length; selector++)
+        if (_canEncodeShortRepeat(delta, _deltaWidths[selector]))
+          _encodeShortRepeatBackCommand(
+            distance,
+            delta,
+            selector: selector,
+            shortBits: _deltaWidths[selector],
+          ),
+    ];
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  _V4BitWriter _encodeFullRepeatBackCommand(
+    int distance,
+    MCOImageV4Point delta, {
+    required int xBits,
+    required int yBits,
+  }) {
+    return _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extRepeatBack, _extBits)
+      ..writeBits(distance - 1, 3)
+      ..writeBit(false)
+      ..writeBits(_zigZagEncode(delta.x), xBits + 1)
+      ..writeBits(_zigZagEncode(delta.y), yBits + 1);
+  }
+
+  _V4BitWriter _encodeShortRepeatBackCommand(
+    int distance,
+    MCOImageV4Point delta, {
+    required int selector,
+    required int shortBits,
+  }) {
+    return _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extRepeatBack, _extBits)
+      ..writeBits(distance - 1, 3)
+      ..writeBit(true)
+      ..writeBits(selector, 2)
+      ..writeBits(_zigZagEncode(delta.x), shortBits)
+      ..writeBits(_zigZagEncode(delta.y), shortBits);
+  }
+
   bool _canEncodeShortRepeat(MCOImageV4Point delta, int shortBits) =>
       _zigZagEncode(delta.x) < (1 << shortBits) &&
       _zigZagEncode(delta.y) < (1 << shortBits);
+
+  bool _canEncodePointDeltas(List<MCOImageV4Point> points, int shortBits) {
+    for (var i = 1; i < points.length; i++) {
+      if (!_canEncodeSignedShort(points[i].x - points[i - 1].x, shortBits) ||
+          !_canEncodeSignedShort(points[i].y - points[i - 1].y, shortBits)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _canEncodeSignedShort(int value, int shortBits) =>
+      _zigZagEncode(value) < (1 << shortBits);
 
   _V4BitWriter _encodeShortRepeatCommand(
     MCOImageV4Point delta, {
@@ -701,6 +1342,374 @@ class MCOImageV4Codec {
     }
   }
 
+  _V4ExtendedReadResult _readExtendedCommand(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required List<MCOImageV4Figure> history,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+    required int? Function() localColorFromProfileRef,
+  }) {
+    _V4ExtendedReadResult one(MCOImageV4Figure figure) =>
+        _V4ExtendedReadResult(
+          style: style,
+          figures: <MCOImageV4Figure>[figure],
+        );
+
+    final subop = reader.readBits(_extBits);
+    switch (subop) {
+      case _extSetStyle:
+        final mask = reader.readBits(3);
+        if (mask == 0) {
+          throw const MCOImageInvalidPayloadException(
+            'Empty MCOimg v4 style change',
+          );
+        }
+        var next = style;
+        if ((mask & 0x01) != 0) {
+          next = next.copyWith(fillColor: localColorFromProfileRef());
+        }
+        if ((mask & 0x02) != 0) {
+          next = next.copyWith(strokeColor: localColorFromProfileRef());
+        }
+        if ((mask & 0x04) != 0) {
+          next = next.copyWith(strokeWidth: reader.readBits(scalarBits) + 1);
+        }
+        return _V4ExtendedReadResult(
+          style: next,
+          figures: const <MCOImageV4Figure>[],
+        );
+      case _extLineDelta:
+        final points = _readPointDeltaSequence(
+          reader,
+          count: 2,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        return one(
+          MCOImageV4Line(
+            start: points[0],
+            end: points[1],
+            style: style,
+          ),
+        );
+      case _extLineAxisDelta:
+        final vertical = reader.readBit();
+        final shortBits = _deltaWidths[reader.readBits(2)];
+        final start = _readPoint(reader, width, height, xBits, yBits);
+        final delta = _zigZagDecode(reader.readBits(shortBits));
+        final end = vertical
+            ? MCOImageV4Point(start.x, start.y + delta)
+            : MCOImageV4Point(start.x + delta, start.y);
+        _validatePointInPayload(end, width, height);
+        return one(MCOImageV4Line(start: start, end: end, style: style));
+      case _extLineAxisAbsolute:
+        final vertical = reader.readBit();
+        if (vertical) {
+          final x = _readCoordinate(reader, xBits, width);
+          final startY = _readCoordinate(reader, yBits, height);
+          final endY = _readCoordinate(reader, yBits, height);
+          return one(
+            MCOImageV4Line(
+              start: MCOImageV4Point(x, startY),
+              end: MCOImageV4Point(x, endY),
+              style: style,
+            ),
+          );
+        }
+        final y = _readCoordinate(reader, yBits, height);
+        final startX = _readCoordinate(reader, xBits, width);
+        final endX = _readCoordinate(reader, xBits, width);
+        return one(
+          MCOImageV4Line(
+            start: MCOImageV4Point(startX, y),
+            end: MCOImageV4Point(endX, y),
+            style: style,
+          ),
+        );
+      case _extAreaDelta:
+        final isEllipse = reader.readBit();
+        final points = _readPointDeltaSequence(
+          reader,
+          count: 3,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        return one(
+          isEllipse
+              ? MCOImageV4Ellipse(
+                first: points[0],
+                second: points[1],
+                third: points[2],
+                style: style,
+              )
+              : MCOImageV4Rect(
+                first: points[0],
+                second: points[1],
+                third: points[2],
+                style: style,
+              ),
+        );
+      case _extWaveDelta:
+        final closed = reader.readBit();
+        final negative = reader.readBit();
+        final magnitude = reader.readBits(scalarBits) + 1;
+        final points = _readPointDeltaSequence(
+          reader,
+          count: 2,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        return one(
+          MCOImageV4Wave(
+            start: points[0],
+            end: points[1],
+            depth: negative ? -magnitude : magnitude,
+            closed: closed,
+            style: style,
+          ),
+        );
+      case _extEllipseDepth:
+        final first = _readPoint(reader, width, height, xBits, yBits);
+        final second = _readPoint(reader, width, height, xBits, yBits);
+        final negative = reader.readBit();
+        final magnitude = reader.readBits(scalarBits) + 1;
+        final third = _ellipseThirdFromDepth(
+          first,
+          second,
+          negative ? -magnitude : magnitude,
+        );
+        if (third == null) {
+          throw const MCOImageInvalidPayloadException(
+            'Invalid MCOimg v4 ellipse depth',
+          );
+        }
+        return one(
+          MCOImageV4Ellipse(
+            first: first,
+            second: second,
+            third: third,
+            style: style,
+          ),
+        );
+      case _extRepeatBack:
+        final distance = reader.readBits(3) + 1;
+        if (distance < 2 || distance > history.length) {
+          throw const MCOImageInvalidPayloadException(
+            'MCOimg v4 repeat back has no matching figure',
+          );
+        }
+        final short = reader.readBit();
+        late final int dx;
+        late final int dy;
+        if (short) {
+          final shortBits = _deltaWidths[reader.readBits(2)];
+          dx = _zigZagDecode(reader.readBits(shortBits));
+          dy = _zigZagDecode(reader.readBits(shortBits));
+        } else {
+          dx = _zigZagDecode(reader.readBits(xBits + 1));
+          dy = _zigZagDecode(reader.readBits(yBits + 1));
+        }
+        return one(
+          history[history.length - distance]
+              .translated(dx, dy)
+              .withStyle(style),
+        );
+      case _extDotRun:
+        return _V4ExtendedReadResult(
+          style: style,
+          figures: _readDotRun(
+            reader,
+            style,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+      case _extPathOrthogonal:
+        return one(
+          _readOrthogonalPath(
+            reader,
+            style,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+      case _extPathBounds:
+        return one(
+          _readBoundsPath(
+            reader,
+            style,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+      case _extPathBoundsDelta:
+        return one(
+          _readBoundsDeltaPath(
+            reader,
+            style,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+      default:
+        throw MCOImageInvalidPayloadException(
+          'Unknown MCOimg v4 extended opcode: $subop',
+        );
+    }
+  }
+
+  MCOImageV4Path _readOrthogonalPath(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final closed = reader.readBit();
+    final shortBits = _deltaWidths[reader.readBits(2)];
+    final minimum = closed ? 3 : 2;
+    final pointCount = reader.readCompactUint() + minimum;
+    final points = <MCOImageV4Point>[
+      _readPoint(reader, width, height, xBits, yBits),
+    ];
+    while (points.length < pointCount) {
+      final previous = points.last;
+      final vertical = reader.readBit();
+      final delta = _zigZagDecode(reader.readBits(shortBits));
+      final point = vertical
+          ? MCOImageV4Point(previous.x, previous.y + delta)
+          : MCOImageV4Point(previous.x + delta, previous.y);
+      _validatePointInPayload(point, width, height);
+      points.add(point);
+    }
+    return MCOImageV4Path(points: points, closed: closed, style: style);
+  }
+
+  List<MCOImageV4Dot> _readDotRun(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final deltaEncoded = reader.readBit();
+    final shortBits = deltaEncoded ? _deltaWidths[reader.readBits(2)] : null;
+    final pointCount = reader.readCompactUint() + 2;
+    final points = <MCOImageV4Point>[
+      _readPoint(reader, width, height, xBits, yBits),
+    ];
+    while (points.length < pointCount) {
+      if (shortBits == null) {
+        points.add(_readPoint(reader, width, height, xBits, yBits));
+        continue;
+      }
+      final previous = points.last;
+      final point = MCOImageV4Point(
+        previous.x + _zigZagDecode(reader.readBits(shortBits)),
+        previous.y + _zigZagDecode(reader.readBits(shortBits)),
+      );
+      _validatePointInPayload(point, width, height);
+      points.add(point);
+    }
+    return points
+        .map((point) => MCOImageV4Dot(point: point, style: style))
+        .toList();
+  }
+
+  MCOImageV4Path _readBoundsPath(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final closed = reader.readBit();
+    final minimum = closed ? 3 : 2;
+    final pointCount = reader.readCompactUint() + minimum;
+    final origin = _readPoint(reader, width, height, xBits, yBits);
+    final boundsWidth = reader.readBits(xBits) + 1;
+    final boundsHeight = reader.readBits(yBits) + 1;
+    if (origin.x + boundsWidth > width || origin.y + boundsHeight > height) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 path bounds are outside the canvas',
+      );
+    }
+    final localXBits = _coordinateBits(boundsWidth);
+    final localYBits = _coordinateBits(boundsHeight);
+    final points = <MCOImageV4Point>[];
+    while (points.length < pointCount) {
+      final point = MCOImageV4Point(
+        origin.x + _readCoordinate(reader, localXBits, boundsWidth),
+        origin.y + _readCoordinate(reader, localYBits, boundsHeight),
+      );
+      points.add(point);
+    }
+    return MCOImageV4Path(points: points, closed: closed, style: style);
+  }
+
+  MCOImageV4Path _readBoundsDeltaPath(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final closed = reader.readBit();
+    final shortBits = _deltaWidths[reader.readBits(2)];
+    final minimum = closed ? 3 : 2;
+    final pointCount = reader.readCompactUint() + minimum;
+    final origin = _readPoint(reader, width, height, xBits, yBits);
+    final boundsWidth = reader.readBits(xBits) + 1;
+    final boundsHeight = reader.readBits(yBits) + 1;
+    if (origin.x + boundsWidth > width || origin.y + boundsHeight > height) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 path bounds are outside the canvas',
+      );
+    }
+    final localXBits = _coordinateBits(boundsWidth);
+    final localYBits = _coordinateBits(boundsHeight);
+    final first = MCOImageV4Point(
+      _readCoordinate(reader, localXBits, boundsWidth),
+      _readCoordinate(reader, localYBits, boundsHeight),
+    );
+    final localPoints = <MCOImageV4Point>[first];
+    while (localPoints.length < pointCount) {
+      final previous = localPoints.last;
+      final point = MCOImageV4Point(
+        previous.x + _zigZagDecode(reader.readBits(shortBits)),
+        previous.y + _zigZagDecode(reader.readBits(shortBits)),
+      );
+      _validatePointInPayload(point, boundsWidth, boundsHeight);
+      localPoints.add(point);
+    }
+    final points = localPoints
+        .map((point) => MCOImageV4Point(origin.x + point.x, origin.y + point.y))
+        .toList();
+    return MCOImageV4Path(points: points, closed: closed, style: style);
+  }
+
   MCOImageV4Path _readPath(
     int opcode,
     _V4BitReader reader,
@@ -751,6 +1760,30 @@ class MCOImageV4Codec {
       }
     }
     return MCOImageV4Path(points: points, closed: closed, style: style);
+  }
+
+  List<MCOImageV4Point> _readPointDeltaSequence(
+    _V4BitReader reader, {
+    required int count,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final shortBits = _deltaWidths[reader.readBits(2)];
+    final points = <MCOImageV4Point>[
+      _readPoint(reader, width, height, xBits, yBits),
+    ];
+    while (points.length < count) {
+      final previous = points.last;
+      final point = MCOImageV4Point(
+        previous.x + _zigZagDecode(reader.readBits(shortBits)),
+        previous.y + _zigZagDecode(reader.readBits(shortBits)),
+      );
+      _validatePointInPayload(point, width, height);
+      points.add(point);
+    }
+    return points;
   }
 
   int _readPathComponent(
@@ -979,6 +2012,95 @@ class MCOImageV4Codec {
     return null;
   }
 
+  static ({bool negative, int magnitude})? _ellipseDepthEncoding(
+    MCOImageV4Ellipse ellipse,
+  ) {
+    final dx = ellipse.second.x - ellipse.first.x;
+    final dy = ellipse.second.y - ellipse.first.y;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return null;
+    final centerX = (ellipse.first.x + ellipse.second.x) / 2;
+    final centerY = (ellipse.first.y + ellipse.second.y) / 2;
+    final relX = ellipse.third.x - centerX;
+    final relY = ellipse.third.y - centerY;
+    final projection = (relX * -dy + relY * dx) / length;
+    final magnitude = projection.abs().round();
+    if (magnitude <= 0) return null;
+    if ((projection.abs() - magnitude).abs() > 1e-9) return null;
+    final reconstructed = _ellipseThirdFromDepth(
+      ellipse.first,
+      ellipse.second,
+      projection < 0 ? -magnitude : magnitude,
+    );
+    if (reconstructed == null) return null;
+    if (reconstructed != ellipse.third) return null;
+    if ((_ellipseProjectedDepth(ellipse.first, ellipse.second, reconstructed) -
+                projection.abs())
+            .abs() >
+        1e-9) {
+      return null;
+    }
+    return (negative: projection < 0, magnitude: magnitude);
+  }
+
+  static MCOImageV4Point? _ellipseThirdFromDepth(
+    MCOImageV4Point first,
+    MCOImageV4Point second,
+    int depth,
+  ) {
+    final dx = second.x - first.x;
+    final dy = second.y - first.y;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return null;
+    final centerX = (first.x + second.x) / 2;
+    final centerY = (first.y + second.y) / 2;
+    final x = centerX + (-dy / length) * depth;
+    final y = centerY + (dx / length) * depth;
+    final roundedX = x.round();
+    final roundedY = y.round();
+    if ((x - roundedX).abs() > 1e-9 || (y - roundedY).abs() > 1e-9) {
+      return null;
+    }
+    return MCOImageV4Point(roundedX, roundedY);
+  }
+
+  static double _ellipseProjectedDepth(
+    MCOImageV4Point first,
+    MCOImageV4Point second,
+    MCOImageV4Point third,
+  ) {
+    final dx = second.x - first.x;
+    final dy = second.y - first.y;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return 0;
+    final centerX = (first.x + second.x) / 2;
+    final centerY = (first.y + second.y) / 2;
+    final relX = third.x - centerX;
+    final relY = third.y - centerY;
+    return ((relX * -dy + relY * dx) / length).abs();
+  }
+
+  static ({int x, int y, int width, int height}) _pathBounds(
+    List<MCOImageV4Point> points,
+  ) {
+    var minX = points.first.x;
+    var maxX = minX;
+    var minY = points.first.y;
+    var maxY = minY;
+    for (final point in points.skip(1)) {
+      minX = math.min(minX, point.x);
+      maxX = math.max(maxX, point.x);
+      minY = math.min(minY, point.y);
+      maxY = math.max(maxY, point.y);
+    }
+    return (
+      x: minX,
+      y: minY,
+      width: maxX - minX + 1,
+      height: maxY - minY + 1,
+    );
+  }
+
   static void _writePoint(
     _V4BitWriter writer,
     MCOImageV4Point point,
@@ -1096,6 +2218,18 @@ class MCOImageV4Codec {
       );
     }
     return value;
+  }
+
+  static void _validatePointInPayload(
+    MCOImageV4Point point,
+    int width,
+    int height,
+  ) {
+    if (point.x < 0 || point.x >= width || point.y < 0 || point.y >= height) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 coordinate is out of range',
+      );
+    }
   }
 
   static void _writeOptionalColor(
@@ -1239,6 +2373,16 @@ class _DecodedV4CanonicalDocument {
   const _DecodedV4CanonicalDocument({
     required this.document,
     required this.canonicalDocument,
+  });
+}
+
+class _V4ExtendedReadResult {
+  final MCOImageV4Style style;
+  final List<MCOImageV4Figure> figures;
+
+  const _V4ExtendedReadResult({
+    required this.style,
+    required this.figures,
   });
 }
 

@@ -75,7 +75,7 @@ class MCOImageV4EditorScreen extends StatefulWidget {
 
 class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   static const _historyLimit = 30;
-  static const _defaultSize = 32;
+  static const _defaultSize = 128;
   static const _maxCanvasSize = 256;
   static const _prefsShowGridKey = 'canvas_editor_show_grid';
   static const double _pencilSimplifyBaseGridSize = 128;
