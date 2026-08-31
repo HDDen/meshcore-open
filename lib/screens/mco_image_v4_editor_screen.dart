@@ -88,6 +88,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   final _undo = <MCOImageV4Document>[];
   final _redo = <MCOImageV4Document>[];
   final _shapePoints = <MCOImageV4Point>[];
+  final _shapeRedoPoints = <MCOImageV4Point>[];
 
   late MCOImageV4Document _document;
   EncodedMCOImageV4? _encoded;
@@ -102,6 +103,9 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   int _strokeWidth = 1;
   MCOImageV4Document? _styleDragBefore;
   int? _selectedFigureIndex;
+  int? _editingFigureIndex;
+  MCOImageV4Document? _editingFigureBefore;
+  bool _editingFigureVisible = true;
   MCOImageV4Figure? _draftFigure;
   List<MCOImageV4Point>? _pencilPoints;
   MCOImageV4Point? _gestureStart;
@@ -170,14 +174,19 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
           actions: [
             IconButton(
               tooltip: context.l10n.common_undo,
-              onPressed: _shapePoints.isNotEmpty || _undo.isNotEmpty
+              onPressed: _shapePoints.isNotEmpty ||
+                      _editingFigureBefore != null ||
+                      _undo.isNotEmpty
                   ? _undoChange
                   : null,
               icon: const Icon(Icons.undo),
             ),
             IconButton(
               tooltip: context.l10n.chat_canvasV4Redo,
-              onPressed: _shapePoints.isEmpty && _redo.isNotEmpty
+              onPressed: _shapeRedoPoints.isNotEmpty ||
+                      (_editingFigureBefore == null &&
+                          _shapePoints.isEmpty &&
+                          _redo.isNotEmpty)
                   ? _redoChange
                   : null,
               icon: const Icon(Icons.redo),
@@ -287,6 +296,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
                                 guidePoints: List<MCOImageV4Point>.of(
                                   _shapePoints,
                                 ),
+                                guideStyle: _currentStyle(),
                                 showGrid: _showGrid,
                               ),
                             ),
@@ -762,6 +772,8 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         children: [
           _toolButton(_V4Tool.select, Icons.near_me_outlined,
               context.l10n.chat_canvasV4ToolSelect),
+          _cloneToolButton(),
+          _editToolButton(),
           _toolButton(_V4Tool.dot, Icons.fiber_manual_record,
               context.l10n.chat_canvasV4ToolDot),
           _toolButton(_V4Tool.pencil, Icons.edit,
@@ -777,6 +789,32 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
           _toolButton(_V4Tool.wave, Icons.gesture,
               context.l10n.chat_canvasV4ToolWave),
         ],
+      ),
+    );
+  }
+
+  Widget _cloneToolButton() {
+    final canClone = _selectedFigureIndex != null &&
+        _selectedFigureIndex! < _document.figures.length;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: IconButton(
+        tooltip: context.l10n.common_copy,
+        onPressed: canClone ? _cloneSelectedFigure : null,
+        icon: const Icon(Icons.content_copy),
+      ),
+    );
+  }
+
+  Widget _editToolButton() {
+    final canEdit = _selectedFigureIndex != null &&
+        _selectedFigureIndex! < _document.figures.length;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: IconButton(
+        tooltip: context.l10n.common_edit,
+        onPressed: canEdit ? _editSelectedFigure : null,
+        icon: const Icon(Icons.account_tree_outlined),
       ),
     );
   }
@@ -1207,7 +1245,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
           return;
         }
         if (_shapePoints.isNotEmpty && _shapePoints.last == point) return;
-        setState(() => _shapePoints.add(point));
+        setState(() => _addShapePoint(point));
       case _V4Tool.rect:
       case _V4Tool.ellipse:
         final points = _acceptShapePoint(point, requiredCount: 3);
@@ -1249,7 +1287,11 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   }
 
   void _handlePanStart(Offset position, Size size) {
-    final point = _gridPoint(position, size);
+    final point = _gridPoint(
+      position,
+      size,
+      clampToCanvas: _tool != _V4Tool.select,
+    );
     switch (_tool) {
       case _V4Tool.pencil:
         _gestureStart = point;
@@ -1257,8 +1299,9 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       case _V4Tool.select:
         _gestureStart = point;
         final index = _hitTest(point);
-        if (index != null) {
-          _selectFigure(index);
+        final selectedIndex = index ?? _selectedFigureIndexOutsideCanvas();
+        if (selectedIndex != null && selectedIndex < _document.figures.length) {
+          if (index != null) _selectFigure(index);
           _moveBefore = _document;
           _lastMovePoint = point;
         }
@@ -1268,7 +1311,11 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   }
 
   void _handlePanUpdate(Offset position, Size size) {
-    final point = _gridPoint(position, size);
+    final point = _gridPoint(
+      position,
+      size,
+      clampToCanvas: _tool != _V4Tool.select,
+    );
     final start = _gestureStart;
     if (start == null) return;
     switch (_tool) {
@@ -1331,16 +1378,21 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     required int requiredCount,
   }) {
     if (_shapePoints.contains(point)) {
-      setState(_shapePoints.clear);
+      if (_editingFigureBefore != null) {
+        _restoreEditedFigure();
+      } else {
+        setState(_clearDraftState);
+      }
       return null;
     }
-    _shapePoints.add(point);
+    _addShapePoint(point);
     if (_shapePoints.length < requiredCount) {
       setState(() {});
       return null;
     }
     final result = List<MCOImageV4Point>.of(_shapePoints);
     _shapePoints.clear();
+    _shapeRedoPoints.clear();
     return result;
   }
 
@@ -1349,6 +1401,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     if (_shapePoints.length < minimum) return;
     final points = List<MCOImageV4Point>.of(_shapePoints);
     _shapePoints.clear();
+    _shapeRedoPoints.clear();
     _addFigure(
       MCOImageV4Path(
         points: points,
@@ -1390,22 +1443,104 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     final dy = point.y - previous.y;
     final figures = [..._document.figures];
     figures[index] = figures[index].translated(dx, dy);
-    final next = _document.copyWith(figures: figures);
-    try {
-      _codec.encode(next, nonce: 0);
-    } on Object {
-      return;
-    }
     setState(() {
-      _document = next;
+      _document = _document.copyWith(figures: figures);
       _lastMovePoint = point;
     });
   }
 
   void _addFigure(MCOImageV4Figure figure) {
+    final editingIndex = _editingFigureIndex;
+    final editingBefore = _editingFigureBefore;
+    if (editingIndex != null && editingBefore != null) {
+      final figures = [..._document.figures];
+      final insertIndex = math.min(editingIndex, figures.length);
+      figures.insert(insertIndex, figure.withVisibility(_editingFigureVisible));
+      _undo.add(editingBefore);
+      if (_undo.length > _historyLimit) _undo.removeAt(0);
+      _redo.clear();
+      setState(() {
+        _document = _document.copyWith(figures: figures);
+        _selectedFigureIndex = insertIndex;
+        _clearDraftState();
+        _clearEditingState();
+      });
+      _calculatePayload();
+      return;
+    }
     _commit(_document.copyWith(figures: [..._document.figures, figure]));
     setState(() => _selectedFigureIndex = _document.figures.length - 1);
   }
+
+  void _cloneSelectedFigure() {
+    final index = _selectedFigureIndex;
+    if (index == null || index >= _document.figures.length) return;
+
+    final figures = [..._document.figures];
+    final cloneIndex = index + 1;
+    figures.insert(cloneIndex, figures[index].withVisibility(true));
+    _commit(_document.copyWith(figures: figures));
+    setState(() {
+      _tool = _V4Tool.select;
+      _selectedFigureIndex = cloneIndex;
+      _clearDraftState();
+    });
+  }
+
+  void _editSelectedFigure() {
+    final index = _selectedFigureIndex;
+    if (index == null || index >= _document.figures.length) return;
+
+    final before = _document;
+    final figure = before.figures[index];
+    final figures = [...before.figures]..removeAt(index);
+    setState(() {
+      _document = before.copyWith(figures: figures);
+      _editingFigureIndex = index;
+      _editingFigureBefore = before;
+      _editingFigureVisible = figure.visible;
+      _tool = _toolForEditedFigure(figure);
+      _selectedFigureIndex = null;
+      _fillEnabled = figure.style.fillColor != null;
+      _strokeEnabled = figure.style.strokeColor != null;
+      _fillColor = figure.style.fillColor ?? _fillColor;
+      _strokeColor = figure.style.strokeColor ?? _strokeColor;
+      _strokeWidth = figure.style.strokeWidth;
+      _clearDraftState();
+      _shapePoints.addAll(_controlPointsForEditedFigure(figure));
+    });
+    _calculatePayload();
+  }
+
+  _V4Tool _toolForEditedFigure(MCOImageV4Figure figure) => switch (figure) {
+        MCOImageV4Dot() => _V4Tool.dot,
+        MCOImageV4Line() => _V4Tool.line,
+        MCOImageV4Rect() => _V4Tool.rect,
+        MCOImageV4Ellipse() => _V4Tool.ellipse,
+        MCOImageV4Path() => _V4Tool.polyline,
+        MCOImageV4Wave() => _V4Tool.wave,
+      };
+
+  List<MCOImageV4Point> _controlPointsForEditedFigure(
+    MCOImageV4Figure figure,
+  ) =>
+      switch (figure) {
+        MCOImageV4Dot() => const <MCOImageV4Point>[],
+        MCOImageV4Line(:final start) => <MCOImageV4Point>[start],
+        MCOImageV4Rect(:final first, :final second) => <MCOImageV4Point>[
+            first,
+            second,
+          ],
+        MCOImageV4Ellipse(:final first, :final second) => <MCOImageV4Point>[
+            first,
+            second,
+          ],
+        MCOImageV4Path(:final points) => List<MCOImageV4Point>.of(points),
+        MCOImageV4Wave(:final start, :final end) => <MCOImageV4Point>[
+            start,
+            end,
+          ],
+      };
 
   void _selectFigure(int index) {
     final figure = _document.figures[index];
@@ -1458,10 +1593,13 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
               _tool == _V4Tool.rect ||
               _tool == _V4Tool.ellipse ||
               _tool == _V4Tool.wave)) {
-        setState(() {
-          _draftFigure = null;
-          _shapePoints.clear();
-        });
+        if (_editingFigureBefore != null) {
+          _restoreEditedFigure();
+        } else {
+          setState(_clearDraftState);
+        }
+      } else if (_editingFigureBefore != null) {
+        _restoreEditedFigure();
       } else if (tool != _V4Tool.select && _selectedFigureIndex != null) {
         setState(() => _selectedFigureIndex = null);
       }
@@ -1469,15 +1607,50 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     }
     if (_tool == _V4Tool.polyline && _shapePoints.length >= 2) {
       _finishPolyline(closed: false);
+    } else if (_editingFigureBefore != null) {
+      _restoreEditedFigure();
     }
     setState(() {
       _tool = tool;
       if (tool != _V4Tool.select) {
         _selectedFigureIndex = null;
       }
-      _draftFigure = null;
-      _shapePoints.clear();
+      _clearDraftState();
     });
+  }
+
+  void _addShapePoint(MCOImageV4Point point) {
+    _shapePoints.add(point);
+    _shapeRedoPoints.clear();
+  }
+
+  void _clearDraftState() {
+    _shapePoints.clear();
+    _shapeRedoPoints.clear();
+    _draftFigure = null;
+    _pencilPoints = null;
+    _gestureStart = null;
+    _moveBefore = null;
+    _lastMovePoint = null;
+  }
+
+  void _clearEditingState() {
+    _editingFigureIndex = null;
+    _editingFigureBefore = null;
+    _editingFigureVisible = true;
+  }
+
+  void _restoreEditedFigure() {
+    final before = _editingFigureBefore;
+    final index = _editingFigureIndex;
+    if (before == null) return;
+    setState(() {
+      _document = before;
+      _selectedFigureIndex = index;
+      _clearDraftState();
+      _clearEditingState();
+    });
+    _calculatePayload();
   }
 
   void _updateStyle(
@@ -1627,15 +1800,19 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     _redo.clear();
     setState(() {
       _document = next;
-      _shapePoints.clear();
-      _draftFigure = null;
+      _clearDraftState();
+      _clearEditingState();
     });
     _calculatePayload();
   }
 
   void _undoChange() {
     if (_shapePoints.isNotEmpty) {
-      setState(() => _shapePoints.removeLast());
+      setState(() => _shapeRedoPoints.add(_shapePoints.removeLast()));
+      return;
+    }
+    if (_editingFigureBefore != null) {
+      _restoreEditedFigure();
       return;
     }
     if (_undo.isEmpty) return;
@@ -1643,20 +1820,25 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     setState(() {
       _document = _undo.removeLast();
       _selectedFigureIndex = null;
-      _shapePoints.clear();
-      _draftFigure = null;
+      _clearDraftState();
+      _clearEditingState();
     });
     _calculatePayload();
   }
 
   void _redoChange() {
+    if (_shapeRedoPoints.isNotEmpty) {
+      setState(() => _shapePoints.add(_shapeRedoPoints.removeLast()));
+      return;
+    }
+    if (_editingFigureBefore != null) return;
     if (_redo.isEmpty) return;
     _undo.add(_document);
     setState(() {
       _document = _redo.removeLast();
       _selectedFigureIndex = null;
-      _shapePoints.clear();
-      _draftFigure = null;
+      _clearDraftState();
+      _clearEditingState();
     });
     _calculatePayload();
   }
@@ -1792,15 +1974,19 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         strokeWidth: _strokeWidth,
       );
 
-  MCOImageV4Point _gridPoint(Offset position, Size size) {
-    final x = (position.dx / size.width * _document.width)
-        .floor()
-        .clamp(0, _document.width - 1)
-        .toInt();
-    final y = (position.dy / size.height * _document.height)
-        .floor()
-        .clamp(0, _document.height - 1)
-        .toInt();
+  MCOImageV4Point _gridPoint(
+    Offset position,
+    Size size, {
+    bool clampToCanvas = true,
+  }) {
+    final rawX = (position.dx / size.width * _document.width).floor();
+    final rawY = (position.dy / size.height * _document.height).floor();
+    final x = clampToCanvas
+        ? rawX.clamp(0, _document.width - 1).toInt()
+        : rawX;
+    final y = clampToCanvas
+        ? rawY.clamp(0, _document.height - 1).toInt()
+        : rawY;
     return MCOImageV4Point(x, y);
   }
 
@@ -1816,6 +2002,23 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       }
     }
     return null;
+  }
+
+  int? _selectedFigureIndexOutsideCanvas() {
+    final index = _selectedFigureIndex;
+    if (index == null || index >= _document.figures.length) return null;
+    final figure = _document.figures[index];
+    if (!figure.visible) return null;
+    final canvasBounds = Rect.fromLTWH(
+      0,
+      0,
+      _document.width.toDouble(),
+      _document.height.toDouble(),
+    );
+    return MCOImageV4Painter.figureLogicalBounds(figure)
+            .overlaps(canvasBounds)
+        ? null
+        : index;
   }
 
   List<MCOImageV4Point> _simplifyPoints(List<MCOImageV4Point> input) {

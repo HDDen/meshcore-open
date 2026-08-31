@@ -37,6 +37,7 @@ class MCOImageV4Painter extends CustomPainter {
   final MCOImageV4Figure? selectedFigure;
   final Color? selectionColor;
   final List<MCOImageV4Point> guidePoints;
+  final MCOImageV4Style? guideStyle;
   final bool paintBackground;
   final bool showGrid;
   final Rect? logicalViewport;
@@ -46,6 +47,7 @@ class MCOImageV4Painter extends CustomPainter {
     this.selectedFigure,
     this.selectionColor,
     this.guidePoints = const [],
+    this.guideStyle,
     this.paintBackground = true,
     this.showGrid = false,
     this.logicalViewport,
@@ -129,19 +131,31 @@ class MCOImageV4Painter extends CustomPainter {
   void _drawGuidePoints(Canvas canvas, double scale) {
     if (guidePoints.isEmpty) return;
     final color = selectionColor ?? const Color(0xff00aaff);
-    final linePaint = Paint()
-      ..isAntiAlias = true
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5 / scale
-      ..color = color;
+    final style = guideStyle;
+    final linePaint = style == null
+        ? (Paint()
+          ..isAntiAlias = true
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5 / scale
+          ..strokeCap = StrokeCap.square
+          ..strokeJoin = StrokeJoin.miter
+          ..color = color)
+        : (_strokePaint(style) ??
+            (Paint()
+              ..isAntiAlias = true
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = style.strokeWidth.toDouble()
+              ..strokeCap = StrokeCap.square
+              ..strokeJoin = StrokeJoin.miter
+              ..color = color));
     if (guidePoints.length >= 2) {
+      final first = _point(guidePoints.first);
+      final path = Path()..moveTo(first.dx, first.dy);
       for (var i = 1; i < guidePoints.length; i++) {
-        canvas.drawLine(
-          _point(guidePoints[i - 1]),
-          _point(guidePoints[i]),
-          linePaint,
-        );
+        final point = _point(guidePoints[i]);
+        path.lineTo(point.dx, point.dy);
       }
+      canvas.drawPath(path, linePaint);
     }
     final fillPaint = Paint()
       ..isAntiAlias = true
@@ -452,6 +466,7 @@ class MCOImageV4Painter extends CustomPainter {
         oldDelegate.selectedFigure != selectedFigure ||
         oldDelegate.selectionColor != selectionColor ||
         oldDelegate.guidePoints != guidePoints ||
+        oldDelegate.guideStyle != guideStyle ||
         oldDelegate.paintBackground != paintBackground ||
         oldDelegate.showGrid != showGrid ||
         oldDelegate.logicalViewport != logicalViewport;
