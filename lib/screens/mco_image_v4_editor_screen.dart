@@ -378,20 +378,70 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       );
 
   Widget _buildGridSummary() {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      onTap: _showSetup,
-      leading: const Icon(Icons.grid_4x4),
-      title: Text(
-        '${context.l10n.chat_canvasV4Grid}: '
-        '${_document.width}×${_document.height}',
-      ),
-      subtitle: Text(context.l10n.chat_canvasV4GridDescription),
-      trailing: OutlinedButton.icon(
-        onPressed: _showSetup,
-        icon: const Icon(Icons.tune),
-        label: Text(context.l10n.chat_canvasV4CanvasSettings),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: _showSetup,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Icon(Icons.grid_4x4),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${context.l10n.chat_canvasV4Grid}: '
+                        '${_document.width}×${_document.height}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(context.l10n.chat_canvasV4GridDescription),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _showSetup,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                icon: const Icon(Icons.tune),
+                label: _actionButtonLabel(
+                  context.l10n.chat_canvasV4CanvasSettings,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _trimCanvas,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                icon: const Icon(Icons.content_cut),
+                label: _actionButtonLabel(context.l10n.chat_canvasTrim),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1527,6 +1577,50 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     _commit(_document.copyWith(backgroundColor: color));
   }
 
+  void _trimCanvas() {
+    Rect? bounds;
+    for (final figure in _document.figures.where((figure) => figure.visible)) {
+      final figureBounds = MCOImageV4Painter.figureLogicalBounds(figure)
+          .intersect(
+            Rect.fromLTWH(
+              0,
+              0,
+              _document.width.toDouble(),
+              _document.height.toDouble(),
+            ),
+          );
+      if (figureBounds.isEmpty) continue;
+      bounds = bounds == null
+          ? figureBounds
+          : bounds.expandToInclude(figureBounds);
+    }
+    final trimBounds = bounds;
+    if (trimBounds == null) return;
+
+    final minX = trimBounds.left.floor().clamp(0, _document.width - 1).toInt();
+    final minY = trimBounds.top.floor().clamp(0, _document.height - 1).toInt();
+    final maxX = (trimBounds.right.ceil() - 1)
+        .clamp(minX, _document.width - 1)
+        .toInt();
+    final maxY = (trimBounds.bottom.ceil() - 1)
+        .clamp(minY, _document.height - 1)
+        .toInt();
+    final width = maxX - minX + 1;
+    final height = maxY - minY + 1;
+    if (width == _document.width && height == _document.height) return;
+
+    _selectedFigureIndex = null;
+    _commit(
+      _document.copyWith(
+        width: width,
+        height: height,
+        figures: _document.figures
+            .map((figure) => figure.translated(-minX, -minY))
+            .toList(),
+      ),
+    );
+  }
+
   void _commit(MCOImageV4Document next) {
     _undo.add(_document);
     if (_undo.length > _historyLimit) _undo.removeAt(0);
@@ -2162,10 +2256,8 @@ class _V4FigurePreview extends StatelessWidget {
         child: CustomPaint(
           painter: MCOImageV4Painter(
             document.copyWith(
-              backgroundColor: null,
               figures: [previewFigure],
             ),
-            paintBackground: false,
             logicalViewport: viewport,
           ),
         ),
@@ -2243,6 +2335,7 @@ class _V4CanvasSetupDialog extends StatefulWidget {
 }
 
 class _V4CanvasSetupDialogState extends State<_V4CanvasSetupDialog> {
+  static const _maxCanvasSize = 256;
   static const _profiles = <PaletteProfile>[
     PaletteProfile.mono,
     PaletteProfile.master4,
@@ -2355,18 +2448,24 @@ class _V4CanvasSetupDialogState extends State<_V4CanvasSetupDialog> {
   }
 
   void _apply() {
-    final width = int.tryParse(_widthController.text.trim());
-    final height = int.tryParse(_heightController.text.trim());
+    final widthText = _widthController.text.trim();
+    final heightText = _heightController.text.trim();
+    var width = int.tryParse(widthText);
+    var height = int.tryParse(heightText);
+    if (widthText.isEmpty && height != null) {
+      width = math.max(1, (height * widget.width / widget.height).round());
+    } else if (heightText.isEmpty && width != null) {
+      height = math.max(1, (width * widget.height / widget.width).round());
+    }
     if (width == null ||
         height == null ||
         width < 1 ||
         height < 1 ||
-        width > 256 ||
-        height > 256) {
+        width > _maxCanvasSize ||
+        height > _maxCanvasSize) {
       setState(() => _invalidSize = true);
       return;
     }
     Navigator.pop(context, (width, height, _profile));
   }
-
 }
