@@ -188,25 +188,33 @@ class MCOImageV4Codec {
     final xBits = _coordinateBits(document.width);
     final yBits = _coordinateBits(document.height);
     final scalarBits = _scalarBits(document.width, document.height);
-    final paletteBits = _paletteBits(document.palette.length);
     final profileColorBits = _profileColorBits(document.paletteProfile);
 
     writer
       ..writeBits(document.mode.index, 1)
       ..writeBits(document.width - 1, 8)
       ..writeBits(document.height - 1, 8)
-      ..writeBits(document.paletteProfile.index, 4)
-      ..writeBits(document.palette.length - 1, 6);
-    for (final color in document.palette) {
-      writer.writeBits(color, profileColorBits);
-    }
+      ..writeBits(document.paletteProfile.index, 4);
 
     writer.writeBit(document.backgroundColor != null);
     if (document.backgroundColor case final background?) {
-      writer.writeBits(background, paletteBits);
+      writer.writeBits(
+        _profileColorRefForDocumentColor(document, background),
+        profileColorBits,
+      );
     }
-    _writeOptionalColor(writer, document.initialStyle.fillColor, paletteBits);
-    _writeOptionalColor(writer, document.initialStyle.strokeColor, paletteBits);
+    _writeOptionalColor(
+      writer,
+      document,
+      document.initialStyle.fillColor,
+      profileColorBits,
+    );
+    _writeOptionalColor(
+      writer,
+      document,
+      document.initialStyle.strokeColor,
+      profileColorBits,
+    );
     writer.writeBits(document.initialStyle.strokeWidth - 1, scalarBits);
 
     var currentStyle = document.initialStyle;
@@ -216,7 +224,8 @@ class MCOImageV4Codec {
         writer,
         currentStyle,
         figure.style,
-        paletteBits,
+        document,
+        profileColorBits,
         scalarBits,
       );
       final repeat = lastFigure == null
@@ -266,41 +275,32 @@ class MCOImageV4Codec {
     }
     final paletteProfile = PaletteProfile.values[profileIndex];
     final profileColorBits = _profileColorBits(paletteProfile);
-    final paletteLength = reader.readBits(6) + 1;
     final palette = <int>[];
-    for (var i = 0; i < paletteLength; i++) {
-      final color = reader.readBits(profileColorBits);
-      final valid = paletteProfile.isDynamic
-          ? MCOImageDynamicPalette.profileColorIdForGlobalIndex(
-                  paletteProfile,
-                  color,
-                ) !=
-                null
-          : color >= 0 &&
-                color < MCOImagePalette.colorsFor(paletteProfile).length;
-      if (!valid) {
-        throw const MCOImageInvalidPayloadException(
-          'Invalid v4 palette color',
-        );
-      }
-      if (palette.contains(color)) {
-        throw const MCOImageInvalidPayloadException(
-          'Duplicate v4 palette color',
-        );
-      }
+    final paletteIndexByColor = <int, int>{};
+    int localColorFromProfileRef() {
+      final ref = reader.readBits(profileColorBits);
+      final color = _colorFromProfileRef(paletteProfile, ref, payload: true);
+      final existing = paletteIndexByColor[color];
+      if (existing != null) return existing;
+      final index = palette.length;
       palette.add(color);
+      paletteIndexByColor[color] = index;
+      return index;
     }
-    final paletteBits = _paletteBits(paletteLength);
+
+    int? optionalLocalColorFromProfileRef() =>
+        reader.readBit() ? localColorFromProfileRef() : null;
+
     final xBits = _coordinateBits(width);
     final yBits = _coordinateBits(height);
     final scalarBits = _scalarBits(width, height);
 
     final backgroundColor = reader.readBit()
-        ? _readPaletteRef(reader, paletteLength, paletteBits)
+        ? localColorFromProfileRef()
         : null;
     var currentStyle = MCOImageV4Style(
-      fillColor: _readOptionalColor(reader, paletteLength, paletteBits),
-      strokeColor: _readOptionalColor(reader, paletteLength, paletteBits),
+      fillColor: optionalLocalColorFromProfileRef(),
+      strokeColor: optionalLocalColorFromProfileRef(),
       strokeWidth: reader.readBits(scalarBits) + 1,
     );
     final initialStyle = currentStyle;
@@ -313,15 +313,11 @@ class MCOImageV4Codec {
       switch (opcode) {
         case _opSetFill:
           currentStyle = currentStyle.copyWith(
-            fillColor: _readOptionalColor(reader, paletteLength, paletteBits),
+            fillColor: optionalLocalColorFromProfileRef(),
           );
         case _opSetStroke:
           currentStyle = currentStyle.copyWith(
-            strokeColor: _readOptionalColor(
-              reader,
-              paletteLength,
-              paletteBits,
-            ),
+            strokeColor: optionalLocalColorFromProfileRef(),
           );
         case _opSetStrokeWidth:
           currentStyle = currentStyle.copyWith(
@@ -336,7 +332,7 @@ class MCOImageV4Codec {
           final dx = _zigZagDecode(reader.readBits(xBits + 1));
           final dy = _zigZagDecode(reader.readBits(yBits + 1));
           final repeated = lastFigure.translated(dx, dy).withStyle(currentStyle);
-          _validateFigure(repeated, width, height, paletteLength);
+          _validateFigure(repeated, width, height, palette.length);
           figures.add(repeated);
           lastFigure = repeated;
         default:
@@ -350,7 +346,7 @@ class MCOImageV4Codec {
             yBits: yBits,
             scalarBits: scalarBits,
           );
-          _validateFigure(figure, width, height, paletteLength);
+          _validateFigure(figure, width, height, palette.length);
           figures.add(figure);
           lastFigure = figure;
       }
@@ -371,16 +367,17 @@ class MCOImageV4Codec {
     _V4BitWriter writer,
     MCOImageV4Style current,
     MCOImageV4Style next,
-    int paletteBits,
+    MCOImageV4Document document,
+    int profileColorBits,
     int scalarBits,
   ) {
     if (current.fillColor != next.fillColor) {
       writer.writeBits(_opSetFill, _opBits);
-      _writeOptionalColor(writer, next.fillColor, paletteBits);
+      _writeOptionalColor(writer, document, next.fillColor, profileColorBits);
     }
     if (current.strokeColor != next.strokeColor) {
       writer.writeBits(_opSetStroke, _opBits);
-      _writeOptionalColor(writer, next.strokeColor, paletteBits);
+      _writeOptionalColor(writer, document, next.strokeColor, profileColorBits);
     }
     if (current.strokeWidth != next.strokeWidth) {
       writer
@@ -893,35 +890,32 @@ class MCOImageV4Codec {
 
   static void _writeOptionalColor(
     _V4BitWriter writer,
+    MCOImageV4Document document,
     int? color,
-    int paletteBits,
+    int profileColorBits,
   ) {
     writer.writeBit(color != null);
-    if (color != null) writer.writeBits(color, paletteBits);
+    if (color != null) {
+      writer.writeBits(
+        _profileColorRefForDocumentColor(document, color),
+        profileColorBits,
+      );
+    }
   }
 
-  static int? _readOptionalColor(
-    _V4BitReader reader,
-    int paletteLength,
-    int paletteBits,
+  static int _profileColorRefForDocumentColor(
+    MCOImageV4Document document,
+    int color,
   ) {
-    return reader.readBit()
-        ? _readPaletteRef(reader, paletteLength, paletteBits)
-        : null;
-  }
-
-  static int _readPaletteRef(
-    _V4BitReader reader,
-    int paletteLength,
-    int paletteBits,
-  ) {
-    final value = reader.readBits(paletteBits);
-    if (value >= paletteLength) {
-      throw const MCOImageInvalidPayloadException(
+    if (color < 0 || color >= document.palette.length) {
+      throw const MCOImageInvalidInputException(
         'MCOimg v4 palette reference is out of range',
       );
     }
-    return value;
+    return _colorRefForProfile(
+      document.paletteProfile,
+      document.palette[color],
+    );
   }
 
   static int _coordinateBits(int size) => math.max(1, (size - 1).bitLength);
@@ -929,11 +923,49 @@ class MCOImageV4Codec {
   static int _scalarBits(int width, int height) =>
       math.max(1, (math.max(width, height) - 1).bitLength);
 
-  static int _paletteBits(int length) => math.max(1, (length - 1).bitLength);
+  static int _profileColorBits(PaletteProfile profile) =>
+      math.max(1, (_profilePaletteSize(profile) - 1).bitLength);
 
-  static int _profileColorBits(PaletteProfile profile) => profile.isDynamic
-      ? 9
-      : math.max(1, (MCOImagePalette.colorsFor(profile).length - 1).bitLength);
+  static int _profilePaletteSize(PaletteProfile profile) => profile.isDynamic
+      ? MCOImageDynamicPalette.indicesFor(profile).length
+      : MCOImagePalette.colorsFor(profile).length;
+
+  static int _colorRefForProfile(PaletteProfile profile, int color) {
+    if (!profile.isDynamic) {
+      if (color < 0 || color >= MCOImagePalette.colorsFor(profile).length) {
+        throw MCOImageInvalidInputException(
+          'Color $color is outside fixed profile $profile',
+        );
+      }
+      return color;
+    }
+    final ref = MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+      profile,
+      color,
+    );
+    if (ref == null) {
+      throw MCOImageInvalidInputException(
+        'Color $color is outside dynamic profile $profile',
+      );
+    }
+    return ref;
+  }
+
+  static int _colorFromProfileRef(
+    PaletteProfile profile,
+    int ref, {
+    required bool payload,
+  }) {
+    final size = _profilePaletteSize(profile);
+    if (ref < 0 || ref >= size) {
+      final message = 'Color reference $ref is outside ${profile.name}';
+      if (payload) throw MCOImageInvalidPayloadException(message);
+      throw MCOImageInvalidInputException(message);
+    }
+    return profile.isDynamic
+        ? MCOImageDynamicPalette.globalIndexForProfileColorId(profile, ref)
+        : ref;
+  }
 
   static int _zigZagEncode(int value) =>
       value >= 0 ? value << 1 : ((-value) << 1) - 1;
