@@ -18,19 +18,35 @@ import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mcoimg_v4_model.dart';
-import 'mco_image_v4_editor_screen.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
+import '../widgets/mco_image_v4_view.dart';
 import '../models/canvas_editor_result.dart';
+import 'mco_image_v4_editor_screen.dart';
 
 export '../models/canvas_editor_result.dart';
 
-enum _CanvasTool { pencil, fill, eyedropper, line, oval, rectangle }
+enum _CanvasTool {
+  select,
+  dot,
+  pencil,
+  fill,
+  eyedropper,
+  line,
+  polyline,
+  oval,
+  rectangle,
+  wave,
+}
 
 enum _PaletteSelectorValue { dynamic }
+
+enum _EncodingSelectorAction { separateV4 }
+
+enum _V4ColorTarget { fill, stroke }
 
 class _CanvasSnapshot {
   final int width;
@@ -41,6 +57,7 @@ class _CanvasSnapshot {
   final int selectedColor;
   final int? transparentColor;
   final List<int> pixels;
+  final MCOImageV4Document? vectorDocument;
 
   _CanvasSnapshot({
     required this.width,
@@ -51,6 +68,7 @@ class _CanvasSnapshot {
     required this.selectedColor,
     required this.transparentColor,
     required List<int> pixels,
+    this.vectorDocument,
   }) : pixels = List<int>.unmodifiable(pixels);
 }
 
@@ -303,6 +321,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _maxCanvasSizeV1 = 85;
   static const int _maxCanvasSizeV2 = 256;
   static const int _defaultSize = 11;
+  static const int _defaultVectorSize = 128;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
@@ -352,6 +371,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   final _toolsScrollController = ScrollController();
   final _sizeActionsScrollController = ScrollController();
   final _codec = MCOImageCodec();
+  final _v4Codec = const MCOImageV4Codec();
 
   int _width = _defaultSize;
   int _height = _defaultSize;
@@ -359,6 +379,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   PaletteProfile _dynamicPaletteProfile = PaletteProfile.dynamicGlobal512;
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   int? _transparentColor;
+  int _encodingSelectorReset = 0;
   bool _isPickingTransparentColor = false;
   bool _paletteExpanded = true;
   _CanvasTool _selectedTool = _CanvasTool.pencil;
@@ -389,7 +410,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _rectangleSecondIndex;
   int _currentPayloadChars = 0;
   EncodedMCOImage? _currentEncodedCandidate;
+  EncodedMCOImageV4? _currentEncodedV4;
+  Object? _v4EncodeError;
   _MCOImageEncodeCacheKey? _currentEncodedCacheKey;
+  MCOImageV4Document? _v4Document;
+  MCOImageV4Figure? _v4DraftFigure;
+  List<MCOImageV4Point>? _v4PencilPoints;
+  final List<MCOImageV4Point> _v4ShapePoints = <MCOImageV4Point>[];
+  MCOImageV4Point? _v4GestureStart;
+  MCOImageV4Point? _v4LastMovePoint;
+  MCOImageV4Document? _v4MoveBefore;
+  int? _selectedV4FigureIndex;
+  int? _editingV4FigureIndex;
+  MCOImageV4Document? _editingV4FigureBefore;
+  bool _editingV4FigureVisible = true;
+  _V4ColorTarget _v4ColorTarget = _V4ColorTarget.stroke;
+  int? _v4FillColor;
+  int? _v4StrokeColor;
+  int _v4StrokeWidth = 1;
+  MCOImageV4Document? _v4StyleDragBefore;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
@@ -400,11 +439,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final initialImage = widget.initialImage;
     if (initialImage is MCOImageV4Preview) {
       _loadSavedCanvasSettings();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          unawaited(_openV4Editor(initialDocument: initialImage.document));
-        }
-      });
+      _loadInitialVectorDocument(initialImage.document);
     } else if (initialImage != null) {
       _loadInitialImage(initialImage);
     } else if (widget.initialImageBytes != null) {
@@ -513,8 +548,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   onChanged: _setCanvasRulerShown,
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<MCOImageEncodingVersion>(
-                  key: ValueKey(_encodingVersion),
+                DropdownButtonFormField<Object>(
+                  key: ValueKey((_encodingVersion, _encodingSelectorReset)),
                   initialValue: _encodingVersion,
                   decoration: InputDecoration(
                     labelText: context.l10n.chat_canvasFormatVer,
@@ -522,14 +557,26 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   ),
                   items: [
                     for (final version in _availableEncodingVersions)
-                      DropdownMenuItem(
+                      DropdownMenuItem<Object>(
                         value: version,
                         child: Text(_encodingVersionLabel(version)),
                       ),
+                    if (_canOpenSeparateV4Editor)
+                      const DropdownMenuItem<Object>(
+                        value: _EncodingSelectorAction.separateV4,
+                        child: Text('v4 Vector (separate screen)'),
+                      ),
                   ],
-                  onChanged: (version) {
-                    if (version == null) return;
-                    _changeEncodingVersion(version);
+                  onChanged: (value) {
+                    if (value == null) return;
+                    if (value == _EncodingSelectorAction.separateV4) {
+                      setState(() => _encodingSelectorReset++);
+                      unawaited(_openSeparateV4Editor());
+                      return;
+                    }
+                    if (value is MCOImageEncodingVersion) {
+                      _changeEncodingVersion(value);
+                    }
                   },
                 ),
                 if (_supportsCompressionLevelSelection) ...[
@@ -602,7 +649,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                if (_paletteProfile.isDynamic)
+                if (_isVectorV4) ...[
+                  _buildVectorStyleControls(),
+                  if (_paletteProfile.isDynamic) ...[
+                    const SizedBox(height: 12),
+                    _buildDynamicPaletteControls(),
+                  ],
+                ] else if (_paletteProfile.isDynamic)
                   _buildDynamicPaletteControls()
                 else
                   _buildPalette(palette),
@@ -623,6 +676,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 _buildCanvas(palette, showLockButton: showLockButton),
                 const SizedBox(height: 8),
                 _buildPayloadInfo(context, showLockButton: showLockButton),
+                if (_isVectorV4) ...[
+                  const SizedBox(height: 16),
+                  _buildVectorObjects(),
+                ],
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -638,6 +695,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    if (_isVectorV4) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _openVectorAsRasterV3,
+                          icon: const Icon(Icons.grid_on_outlined),
+                          label: const Text(
+                            'v3',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _saveCanvasToPng,
@@ -914,6 +985,206 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+  Widget _buildVectorStyleControls() {
+    final document = _v4Document;
+    if (document == null) return const SizedBox.shrink();
+    final selectedColor = _v4ColorTarget == _V4ColorTarget.fill
+        ? _v4FillColor
+        : _v4StrokeColor;
+    final maxStrokeWidth = math.max(document.width, document.height);
+    final selectedFigure = _selectedV4Figure;
+    final canClose =
+        selectedFigure == null ||
+        selectedFigure is! MCOImageV4Path ||
+        selectedFigure.points.length >= 3;
+
+    Widget colorSwatch({
+      required int? localIndex,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      final color = localIndex == null
+          ? null
+          : _colorForVectorLocalIndex(document, localIndex);
+      return Tooltip(
+        message: localIndex == null
+            ? context.l10n.chat_canvasV4Transparent
+            : '#${localIndex + 1}',
+        child: _AlphaSwatch(color: color, selected: selected, onTap: onTap),
+      );
+    }
+
+    Widget colorWrap({
+      required int? selected,
+      required void Function(int? localIndex) onSelected,
+    }) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          colorSwatch(
+            localIndex: null,
+            selected: selected == null,
+            onTap: () => onSelected(null),
+          ),
+          for (var i = 0; i < document.palette.length; i++)
+            colorSwatch(
+              localIndex: i,
+              selected: selected == i,
+              onTap: () => onSelected(i),
+            ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 12),
+          leading: const Icon(Icons.format_color_fill_outlined),
+          title: Text(context.l10n.chat_canvasV4Background),
+          subtitle: Text(
+            document.backgroundColor == null
+                ? context.l10n.chat_canvasV4Transparent
+                : '#${document.backgroundColor! + 1}',
+          ),
+          children: [
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: colorWrap(
+                selected: document.backgroundColor,
+                onSelected: _setVectorBackground,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<_V4ColorTarget>(
+          segments: [
+            ButtonSegment(
+              value: _V4ColorTarget.fill,
+              label: Text(context.l10n.chat_canvasV4Fill),
+            ),
+            ButtonSegment(
+              value: _V4ColorTarget.stroke,
+              label: Text(context.l10n.chat_canvasV4Stroke),
+            ),
+          ],
+          selected: {_v4ColorTarget},
+          onSelectionChanged: (selection) {
+            setState(() => _v4ColorTarget = selection.first);
+          },
+        ),
+        const SizedBox(height: 8),
+        colorWrap(selected: selectedColor, onSelected: _setVectorStyleColor),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: Text(context.l10n.chat_canvasV4StrokeWidth)),
+            Text('$_v4StrokeWidth'),
+          ],
+        ),
+        Slider(
+          value: _v4StrokeWidth
+              .toDouble()
+              .clamp(1, maxStrokeWidth.toDouble())
+              .toDouble(),
+          min: 1,
+          max: maxStrokeWidth.toDouble(),
+          divisions: maxStrokeWidth > 1 ? maxStrokeWidth - 1 : null,
+          onChangeStart: (_) => _beginVectorStyleDrag(),
+          onChanged: (value) {
+            final width = value.round();
+            if (width == _v4StrokeWidth) return;
+            _setVectorStrokeWidth(width, recordUndo: false);
+          },
+          onChangeEnd: (_) => _endVectorStyleDrag(),
+        ),
+        if (selectedFigure is MCOImageV4Path || selectedFigure is MCOImageV4Wave)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.l10n.chat_canvasV4Closed),
+            value: selectedFigure is MCOImageV4Path
+                ? selectedFigure.closed
+                : (selectedFigure as MCOImageV4Wave).closed,
+            onChanged: canClose ? _setSelectedVectorClosed : null,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildVectorObjects() {
+    final document = _v4Document;
+    if (document == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.l10n.chat_canvasV4Objects,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        if (document.figures.isEmpty)
+          Text(context.l10n.chat_canvasV4NoObjects)
+        else
+          for (var i = document.figures.length - 1; i >= 0; i--)
+            ListTile(
+              selected: i == _selectedV4FigureIndex,
+              contentPadding: EdgeInsets.zero,
+              leading: IconButton(
+                tooltip: document.figures[i].visible
+                    ? context.l10n.chat_canvasV4HideFigure
+                    : context.l10n.chat_canvasV4ShowFigure,
+                onPressed: () => _toggleVectorFigureVisibility(i),
+                icon: Icon(
+                  document.figures[i].visible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+              title: Row(
+                children: [
+                  _V4FigurePreview(
+                    document: document,
+                    figure: document.figures[i],
+                    selected: i == _selectedV4FigureIndex,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(_vectorFigureLabel(document.figures[i]))),
+                ],
+              ),
+              onTap: () => _selectVectorFigure(i),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: context.l10n.chat_canvasV4MoveUp,
+                    onPressed: i == document.figures.length - 1
+                        ? null
+                        : () => _reorderVectorFigure(i, i + 1),
+                    icon: const Icon(Icons.arrow_upward),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.chat_canvasV4MoveDown,
+                    onPressed: i == 0 ? null : () => _reorderVectorFigure(i, i - 1),
+                    icon: const Icon(Icons.arrow_downward),
+                  ),
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(context)
+                        .deleteButtonTooltip,
+                    onPressed: () => _deleteVectorFigure(i),
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+
   void _handlePaletteColorTap(int colorValue) {
     if (_isPickingTransparentColor) {
       if (_transparentColor == colorValue) {
@@ -927,7 +1198,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _markPayloadDirty();
       return;
     }
-    setState(() => _selectedColor = colorValue);
+    if (_isVectorV4) {
+      _setVectorStyleProfileColor(colorValue);
+      return;
+    }
+    setState(() {
+      _selectedColor = colorValue;
+    });
   }
 
   Widget _buildDynamicPaletteControls() {
@@ -1031,24 +1308,42 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
-    final toolsRow = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton.outlined(
-          onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
-          tooltip: 'Undo',
-          icon: const Icon(Icons.undo),
-        ),
-        const SizedBox(width: 4),
-        IconButton.outlined(
-          onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
-          tooltip: 'Redo',
-          icon: const Icon(Icons.redo),
-        ),
-        const SizedBox(width: 12),
-        SegmentedButton<_CanvasTool>(
-          showSelectedIcon: false,
-          segments: const [
+    final toolSegments = _isVectorV4
+        ? const <ButtonSegment<_CanvasTool>>[
+            ButtonSegment(
+              value: _CanvasTool.select,
+              icon: Icon(Icons.near_me_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.dot,
+              icon: Icon(Icons.fiber_manual_record),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.pencil,
+              icon: Icon(Icons.edit_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.line,
+              icon: Icon(Icons.horizontal_rule),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.polyline,
+              icon: Icon(Icons.polyline),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.rectangle,
+              icon: Icon(Icons.crop_square),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.oval,
+              icon: Icon(Icons.circle_outlined),
+            ),
+            ButtonSegment(
+              value: _CanvasTool.wave,
+              icon: Icon(Icons.gesture),
+            ),
+          ]
+        : const <ButtonSegment<_CanvasTool>>[
             ButtonSegment(
               value: _CanvasTool.pencil,
               icon: Icon(Icons.edit_outlined),
@@ -1073,30 +1368,54 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               value: _CanvasTool.rectangle,
               icon: Icon(Icons.crop_square),
             ),
-          ],
-          selected: {_selectedTool},
-          onSelectionChanged: (selection) {
-            final nextTool = selection.first;
-            setState(() {
-              if (nextTool != _selectedTool) {
-                _lineStartIndex = null;
-                _ovalFirstIndex = null;
-                _ovalSecondIndex = null;
-                _rectangleFirstIndex = null;
-                _rectangleSecondIndex = null;
-              }
-              _selectedTool = nextTool;
-            });
-          },
+          ];
+    final toolsRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton.outlined(
+          onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
+          tooltip: 'Undo',
+          icon: const Icon(Icons.undo),
+        ),
+        const SizedBox(width: 4),
+        IconButton.outlined(
+          onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
+          tooltip: 'Redo',
+          icon: const Icon(Icons.redo),
         ),
         const SizedBox(width: 12),
-        moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
-        const SizedBox(width: 4),
-        moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
-        const SizedBox(width: 4),
-        moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
-        const SizedBox(width: 4),
-        moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
+        if (_isVectorV4) ...[
+          IconButton.outlined(
+            onPressed: _canCloneSelectedV4Figure ? _cloneSelectedV4Figure : null,
+            tooltip: context.l10n.common_copy,
+            icon: const Icon(Icons.content_copy),
+          ),
+          const SizedBox(width: 4),
+          IconButton.outlined(
+            onPressed: _canEditSelectedV4Figure ? _editSelectedV4Figure : null,
+            tooltip: context.l10n.common_edit,
+            icon: const Icon(Icons.account_tree_outlined),
+          ),
+          const SizedBox(width: 12),
+        ],
+        SegmentedButton<_CanvasTool>(
+          showSelectedIcon: false,
+          segments: toolSegments,
+          selected: {_selectedTool},
+          onSelectionChanged: (selection) {
+            _selectCanvasTool(selection.first);
+          },
+        ),
+        if (!_isVectorV4) ...[
+          const SizedBox(width: 12),
+          moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
+          const SizedBox(width: 4),
+          moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
+        ],
       ],
     );
 
@@ -1144,31 +1463,43 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               children: [
                 CustomPaint(
                   size: totalSize,
-                  painter: _PixelCanvasPainter(
-                    width: _width,
-                    height: _height,
-                    pixels: _pixels,
-                    profile: _paletteProfile,
-                    palette: palette,
-                    transparentColor: _supportsAlphaTransparency
-                        ? _transparentColor
-                        : null,
-                    showGrid: _showGrid,
-                    showRuler: _showRuler,
-                    canvasOffset: canvasOffset,
-                    canvasSize: canvasSize,
-                    rulerExtent: _canvasRulerExtent,
-                    lineStartIndex: _selectedTool == _CanvasTool.line
-                        ? _lineStartIndex
-                        : null,
-                    ovalPointIndices: _selectedTool == _CanvasTool.oval
-                        ? <int>[?_ovalFirstIndex, ?_ovalSecondIndex]
-                        : const <int>[],
-                    rectanglePointIndices:
-                        _selectedTool == _CanvasTool.rectangle
-                        ? <int>[?_rectangleFirstIndex, ?_rectangleSecondIndex]
-                        : const <int>[],
-                  ),
+                  painter: _isVectorV4
+                      ? _VectorCanvasPainter(
+                          document: _activeVectorDocument,
+                          selectedFigure: _selectedV4Figure,
+                          guidePoints: List<MCOImageV4Point>.of(
+                            _v4ShapePoints,
+                          ),
+                          guideStyle: _currentVectorStyle(),
+                          showGrid: _showGrid,
+                          canvasOffset: canvasOffset,
+                          canvasSize: canvasSize,
+                        )
+                      : _PixelCanvasPainter(
+                          width: _width,
+                          height: _height,
+                          pixels: _pixels,
+                          profile: _paletteProfile,
+                          palette: palette,
+                          transparentColor: _supportsAlphaTransparency
+                              ? _transparentColor
+                              : null,
+                          showGrid: _showGrid,
+                          showRuler: _showRuler,
+                          canvasOffset: canvasOffset,
+                          canvasSize: canvasSize,
+                          rulerExtent: _canvasRulerExtent,
+                          lineStartIndex: _selectedTool == _CanvasTool.line
+                              ? _lineStartIndex
+                              : null,
+                          ovalPointIndices: _selectedTool == _CanvasTool.oval
+                              ? <int>[?_ovalFirstIndex, ?_ovalSecondIndex]
+                              : const <int>[],
+                          rectanglePointIndices:
+                              _selectedTool == _CanvasTool.rectangle
+                              ? <int>[?_rectangleFirstIndex, ?_rectangleSecondIndex]
+                              : const <int>[],
+                        ),
                 ),
                 Positioned(
                   left: 0,
@@ -1199,7 +1530,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   height: canvasSize.height,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onPanDown: canDraw
+                    onTapUp: canDraw && _isVectorV4
+                        ? (details) =>
+                              _handleVectorTap(details.localPosition, canvasSize)
+                        : null,
+                    onPanStart: canDraw && _isVectorV4
+                        ? (details) => _handleVectorPanStart(
+                            details.localPosition,
+                            canvasSize,
+                          )
+                        : null,
+                    onPanDown: canDraw && !_isVectorV4
                         ? (details) {
                             _isDrawing = true;
                             _applyToolAt(details.localPosition, canvasSize);
@@ -1207,13 +1548,34 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                         : null,
                     onPanUpdate: canDraw
                         ? (details) {
-                            if (_selectedTool == _CanvasTool.pencil) {
+                            if (_isVectorV4) {
+                              _handleVectorPanUpdate(
+                                details.localPosition,
+                                canvasSize,
+                              );
+                            } else if (_selectedTool == _CanvasTool.pencil) {
                               _applyToolAt(details.localPosition, canvasSize);
                             }
                           }
                         : null,
-                    onPanEnd: canDraw ? (_) => _finishDrawing() : null,
-                    onPanCancel: canDraw ? _finishDrawing : null,
+                    onPanEnd: canDraw
+                        ? (_) {
+                            if (_isVectorV4) {
+                              _handleVectorPanEnd();
+                            } else {
+                              _finishDrawing();
+                            }
+                          }
+                        : null,
+                    onPanCancel: canDraw
+                        ? () {
+                            if (_isVectorV4) {
+                              _handleVectorPanEnd();
+                            } else {
+                              _finishDrawing();
+                            }
+                          }
+                        : null,
                     child: const SizedBox.expand(),
                   ),
                 ),
@@ -1235,7 +1597,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _currentPayloadChars > _effectiveDisplayedPayloadLimit;
     final mediaHeight = MediaQuery.of(context).size.height;
     final colorScheme = Theme.of(context).colorScheme;
-    final currentEncodedCandidate = _currentEncodedCandidate;
+    final currentEncodedCandidate = _isVectorV4 ? null : _currentEncodedCandidate;
+    final v4EncodeError = _isVectorV4 ? _v4EncodeError : null;
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -1248,6 +1611,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (v4EncodeError != null) ...[
+                  Text(
+                    v4EncodeError.toString(),
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
                 if (currentEncodedCandidate != null) ...[
                   Text(
                     _encodingCandidateLabel(currentEncodedCandidate),
@@ -1334,6 +1707,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     int? selectedColor,
     Object? transparentColor = _transparentColorUnchanged,
     List<int>? pixels,
+    MCOImageV4Document? vectorDocument,
   }) {
     return _CanvasSnapshot(
       width: width ?? _width,
@@ -1346,6 +1720,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           ? _transparentColor
           : transparentColor as int?,
       pixels: pixels ?? _pixels,
+      vectorDocument: vectorDocument ?? _v4Document,
     );
   }
 
@@ -1357,6 +1732,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         a.encodingVersion == b.encodingVersion &&
         a.selectedColor == b.selectedColor &&
         a.transparentColor == b.transparentColor &&
+        identical(a.vectorDocument, b.vectorDocument) &&
         _pixelsEqual(a.pixels, b.pixels);
   }
 
@@ -1371,13 +1747,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _transparentColor = snapshot.transparentColor;
       _isPickingTransparentColor = false;
       _pixels = List<int>.of(snapshot.pixels);
+      _v4Document = snapshot.vectorDocument;
+      if (_v4Document == null) {
+        _selectedV4FigureIndex = null;
+        _clearVectorEditingState();
+      } else {
+        _selectedV4FigureIndex = null;
+        _adoptVectorStyle(_v4Document!.initialStyle);
+      }
       _setControllerValue(_widthController, _width);
       _setControllerValue(_heightController, _height);
-      _lineStartIndex = null;
-      _ovalFirstIndex = null;
-      _ovalSecondIndex = null;
-      _rectangleFirstIndex = null;
-      _rectangleSecondIndex = null;
+      _clearRasterDraftState();
+      _clearVectorDraftState();
     });
   }
 
@@ -1424,10 +1805,134 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _redoStack.clear();
   }
 
+  void _resizeVectorCanvas(
+    int width,
+    int height, {
+    required bool rescaleFigures,
+  }) {
+    final document = _v4Document;
+    if (document == null) return;
+    _cancelPayloadCalculationBeforeCanvasReplacement();
+    final nextDocument = rescaleFigures
+        ? _rescaleVectorDocument(document, width, height)
+        : document.copyWith(width: width, height: height);
+    _commitVectorDocument(nextDocument);
+    unawaited(_saveCanvasSize(width, height));
+  }
+
+  MCOImageV4Document _rescaleVectorDocument(
+    MCOImageV4Document source,
+    int width,
+    int height,
+  ) {
+    if (source.width == width && source.height == height) return source;
+
+    int x(int value) => (value * width / source.width)
+        .round()
+        .clamp(0, width - 1)
+        .toInt();
+    int y(int value) => (value * height / source.height)
+        .round()
+        .clamp(0, height - 1)
+        .toInt();
+    final scalarScale =
+        math.max(width, height) / math.max(source.width, source.height);
+
+    MCOImageV4Point mapPoint(MCOImageV4Point value) =>
+        MCOImageV4Point(x(value.x), y(value.y));
+
+    MCOImageV4Figure convert(MCOImageV4Figure figure) {
+      return switch (figure) {
+        MCOImageV4Dot(:final point, :final style, :final visible) =>
+          MCOImageV4Dot(
+            point: mapPoint(point),
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Line(
+          :final start,
+          :final end,
+          :final style,
+          :final visible,
+        ) =>
+          MCOImageV4Line(
+            start: mapPoint(start),
+            end: mapPoint(end),
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Rect(
+          :final first,
+          :final second,
+          :final third,
+          :final style,
+          :final visible,
+        ) =>
+          MCOImageV4Rect(
+            first: mapPoint(first),
+            second: mapPoint(second),
+            third: mapPoint(third),
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Ellipse(
+          :final first,
+          :final second,
+          :final third,
+          :final style,
+          :final visible,
+        ) =>
+          MCOImageV4Ellipse(
+            first: mapPoint(first),
+            second: mapPoint(second),
+            third: mapPoint(third),
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Path(:final points, :final closed, :final style, :final visible) =>
+          MCOImageV4Path(
+            points: points.map(mapPoint).toList(growable: false),
+            closed: closed,
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Wave(
+          :final start,
+          :final end,
+          :final depth,
+          :final closed,
+          :final style,
+          :final visible,
+        ) =>
+          MCOImageV4Wave(
+            start: mapPoint(start),
+            end: mapPoint(end),
+            depth: (depth * scalarScale).round().clamp(
+              -math.max(width, height),
+              math.max(width, height),
+            ).toInt(),
+            closed: closed,
+            style: style,
+            visible: visible,
+          ),
+      };
+    }
+
+    return source.copyWith(
+      width: width,
+      height: height,
+      figures: source.figures.map(convert).toList(growable: false),
+    );
+  }
+
   void _resize({int? width, int? height}) {
     final newWidth = width ?? _width;
     final newHeight = height ?? _height;
     if (newWidth == _width && newHeight == _height) return;
+    if (_isVectorV4) {
+      _resizeVectorCanvas(newWidth, newHeight, rescaleFigures: true);
+      return;
+    }
     _cancelPayloadCalculationBeforeCanvasReplacement();
     final oldWidth = _width;
     final oldHeight = _height;
@@ -1451,6 +1956,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _width = newWidth;
       _height = newHeight;
       _pixels = nextPixels;
+      if (!_isRasterTool(_selectedTool)) {
+        _selectedTool = _CanvasTool.pencil;
+      }
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
@@ -1462,6 +1970,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _resizeByCropping({required int width, required int height}) {
     if (width == _width && height == _height) return;
+    if (_isVectorV4) {
+      _resizeVectorCanvas(width, height, rescaleFigures: false);
+      return;
+    }
     _cancelPayloadCalculationBeforeCanvasReplacement();
     final nextPixels = _cropOrPadPixels(
       sourcePixels: _pixels,
@@ -1594,12 +2106,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       (value) => value.name == profileName,
       orElse: () => PaletteProfile.master64,
     );
-    final requestedWidth = prefs.getInt(_prefsWidthKey) ?? _defaultSize;
-    final requestedHeight = prefs.getInt(_prefsHeightKey) ?? _defaultSize;
     final unlockCanvasSize = prefs.getBool(_prefsUnlockSizeKey) ?? false;
     final showGrid = prefs.getBool(_prefsShowGridKey) ?? true;
     final showRuler = prefs.getBool(_prefsShowRulerKey) ?? false;
     final encodingVersion = _loadSavedEncodingVersion();
+    final defaultSize = encodingVersion == MCOImageEncodingVersion.v4
+        ? _defaultVectorSize
+        : _defaultSize;
+    final requestedWidth = prefs.getInt(_prefsWidthKey) ?? defaultSize;
+    final requestedHeight = prefs.getInt(_prefsHeightKey) ?? defaultSize;
     final compressionLevel = _loadSavedCompressionLevel();
     final bounded = _boundedCanvasSizeForProfile(
       requestedWidth,
@@ -1620,12 +2135,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (profile.isDynamic) {
       _dynamicPaletteProfile = profile;
     }
-    _selectedColor = MCOImagePalette.blackIndexFor(profile);
+    _selectedColor =
+        encodingVersion == MCOImageEncodingVersion.v4 && profile.isDynamic
+        ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
+        : MCOImagePalette.blackIndexFor(profile);
     _width = width;
     _height = height;
     _setControllerValue(_widthController, width);
     _setControllerValue(_heightController, height);
     _pixels = List.filled(width * height, _whiteIndex);
+    if (encodingVersion == MCOImageEncodingVersion.v4) {
+      _v4Document = _newVectorDocument(width, height, profile);
+      _adoptVectorStyle(_v4Document!.initialStyle);
+    }
   }
 
   void _loadInitialImage(MCOImage image) {
@@ -1648,6 +2170,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_widthController, _width);
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.of(image.pixels);
+    _v4Document = null;
+    _currentEncodedV4 = null;
+    _v4EncodeError = null;
+    _selectedV4FigureIndex = null;
   }
 
   Future<void> _loadInitialImageBytes(
@@ -1660,7 +2186,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         PrefsManager.instance.getBool(_prefsUnlockSizeKey) ?? false;
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
     _showRuler = PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
-    _encodingVersion = _loadSavedEncodingVersion();
+    final savedEncodingVersion = _loadSavedEncodingVersion();
+    _encodingVersion = savedEncodingVersion == MCOImageEncodingVersion.v4
+        ? MCOImageEncodingVersion.v3
+        : savedEncodingVersion;
     _compressionLevel = _loadSavedCompressionLevel();
     if (paletteProfile != null) {
       _paletteProfile = paletteProfile;
@@ -1725,6 +2254,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       'v1Legacy' => MCOImageEncodingVersion.v1Legacy,
       'v2' => MCOImageEncodingVersion.v2,
       'v3' => MCOImageEncodingVersion.v3,
+      'v4' when widget.maxBinaryPayloadBytes != null &&
+              widget.binarySenderName != null =>
+        MCOImageEncodingVersion.v4,
       _ => MCOImageEncodingVersion.v3,
     };
   }
@@ -1772,22 +2304,28 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool get _supportsDynamicPalettes =>
       _encodingVersion == MCOImageEncodingVersion.v2 ||
-      _encodingVersion == MCOImageEncodingVersion.v3;
+      _encodingVersion == MCOImageEncodingVersion.v3 ||
+      _encodingVersion == MCOImageEncodingVersion.v4;
 
   bool get _supportsAlphaTransparency =>
       _encodingVersion == MCOImageEncodingVersion.v2 ||
       _encodingVersion == MCOImageEncodingVersion.v3;
 
   bool get _supportsCompressionLevelSelection =>
-      _encodingVersion != MCOImageEncodingVersion.v1Legacy;
+      _encodingVersion != MCOImageEncodingVersion.v1Legacy &&
+      _encodingVersion != MCOImageEncodingVersion.v4;
+
+  bool get _canOpenSeparateV4Editor =>
+      widget.maxBinaryPayloadBytes != null && widget.binarySenderName != null;
 
   List<MCOImageEncodingVersion> get _availableEncodingVersions {
     return [
       MCOImageEncodingVersion.v1Legacy,
       MCOImageEncodingVersion.v2,
       MCOImageEncodingVersion.v3,
-      if (widget.maxBinaryPayloadBytes != null &&
-          widget.binarySenderName != null)
+      if (_isVectorV4 ||
+          (widget.maxBinaryPayloadBytes != null &&
+              widget.binarySenderName != null))
         MCOImageEncodingVersion.v4,
     ];
   }
@@ -1810,11 +2348,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _changeEncodingVersion(MCOImageEncodingVersion version) {
+    if (version == _encodingVersion) return;
+
     if (version == MCOImageEncodingVersion.v4) {
-      unawaited(_openV4Editor());
+      _enterVectorV4Mode();
       return;
     }
-    if (version == _encodingVersion) return;
+    if (_isVectorV4) {
+      unawaited(_switchVectorToRasterVersion(version));
+      return;
+    }
 
     final before = _captureCanvasSnapshot();
     var nextProfile = _paletteProfile;
@@ -1901,6 +2444,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _ovalSecondIndex = null;
       _rectangleFirstIndex = null;
       _rectangleSecondIndex = null;
+      _clearVectorDraftState();
     });
     _markPayloadDirty();
     unawaited(_saveEncodingVersion(version));
@@ -1908,35 +2452,251 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     unawaited(_saveCanvasPalette(nextProfile));
   }
 
-  Future<void> _openV4Editor({MCOImageV4Document? initialDocument}) async {
-    final maxBytes = widget.maxBinaryPayloadBytes;
-    final senderName = widget.binarySenderName;
-    if (maxBytes == null || senderName == null) return;
+  bool _isRasterTool(_CanvasTool tool) {
+    return switch (tool) {
+      _CanvasTool.pencil ||
+      _CanvasTool.fill ||
+      _CanvasTool.eyedropper ||
+      _CanvasTool.line ||
+      _CanvasTool.oval ||
+      _CanvasTool.rectangle => true,
+      _CanvasTool.select ||
+      _CanvasTool.dot ||
+      _CanvasTool.polyline ||
+      _CanvasTool.wave => false,
+    };
+  }
+
+  bool get _isVectorV4 => _encodingVersion == MCOImageEncodingVersion.v4;
+
+  void _enterVectorV4Mode({
+    MCOImageV4Document? document,
+    bool recordHistory = true,
+  }) {
+    _cancelPayloadCalculationBeforeCanvasReplacement();
+    final before = _captureCanvasSnapshot();
+    final nextDocument = document ??
+        _v4Document ??
+        _newVectorDocument(
+          _defaultVectorSize,
+          _defaultVectorSize,
+          _paletteProfile,
+        );
+    final nextProfile = nextDocument.paletteProfile;
+    final nextDynamicProfile = nextProfile.isDynamic
+        ? nextProfile
+        : _dynamicPaletteProfile;
+    final nextSelectedColor = nextProfile.isDynamic
+        ? MCOImageDynamicPalette.blackGlobalIndexFor(nextProfile)
+        : MCOImagePalette.blackIndexFor(nextProfile);
+    final nextPixels = List<int>.filled(
+      nextDocument.width * nextDocument.height,
+      MCOImagePalette.whiteIndexFor(nextProfile),
+    );
+    final after = _captureCanvasSnapshot(
+      width: nextDocument.width,
+      height: nextDocument.height,
+      paletteProfile: nextProfile,
+      dynamicPaletteProfile: nextDynamicProfile,
+      encodingVersion: MCOImageEncodingVersion.v4,
+      selectedColor: nextSelectedColor,
+      transparentColor: null,
+      pixels: nextPixels,
+      vectorDocument: nextDocument,
+    );
+    if (recordHistory) {
+      _rememberCanvasAction(before, after);
+    }
+    setState(() {
+      _encodingVersion = MCOImageEncodingVersion.v4;
+      _paletteProfile = nextProfile;
+      _dynamicPaletteProfile = nextDynamicProfile;
+      _selectedColor = nextSelectedColor;
+      _transparentColor = null;
+      _isPickingTransparentColor = false;
+      _width = nextDocument.width;
+      _height = nextDocument.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = nextPixels;
+      _v4Document = nextDocument;
+      _selectedTool = _CanvasTool.pencil;
+      _selectedV4FigureIndex = null;
+      _adoptVectorStyle(nextDocument.initialStyle);
+      _clearRasterDraftState();
+      _clearVectorDraftState();
+      _clearVectorEditingState();
+    });
+    _markPayloadDirty();
+    unawaited(_saveEncodingVersion(MCOImageEncodingVersion.v4));
+    unawaited(_saveCanvasSize(nextDocument.width, nextDocument.height));
+    unawaited(_saveCanvasPalette(nextProfile));
+  }
+
+  void _loadInitialVectorDocument(MCOImageV4Document document) {
+    final profile = document.paletteProfile;
+    final dynamicProfile = profile.isDynamic ? profile : _dynamicPaletteProfile;
+    final selectedColor = profile.isDynamic
+        ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
+        : MCOImagePalette.blackIndexFor(profile);
+    _encodingVersion = MCOImageEncodingVersion.v4;
+    _paletteProfile = profile;
+    _dynamicPaletteProfile = dynamicProfile;
+    _selectedColor = selectedColor;
+    _transparentColor = null;
+    _width = document.width;
+    _height = document.height;
+    _setControllerValue(_widthController, _width);
+    _setControllerValue(_heightController, _height);
+    _pixels = List<int>.filled(_width * _height, _whiteIndex);
+    _v4Document = document;
+    _selectedTool = _CanvasTool.pencil;
+    _selectedV4FigureIndex = null;
+    _adoptVectorStyle(document.initialStyle);
+  }
+
+  Future<void> _openVectorAsRasterV3() async {
+    try {
+      final image = await _rasterizeVectorForV3();
+      if (!mounted) return;
+      _applyV4RasterTransfer(image);
+    } on Object catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<void> _openSeparateV4Editor() async {
+    final maxBinaryPayloadBytes = widget.maxBinaryPayloadBytes;
+    final binarySenderName = widget.binarySenderName;
+    if (maxBinaryPayloadBytes == null || binarySenderName == null) return;
+
     final result = await Navigator.push<CanvasEditorResult>(
       context,
       MaterialPageRoute(
         builder: (context) => MCOImageV4EditorScreen(
-          maxBinaryPayloadBytes: maxBytes,
-          binarySenderName: senderName,
+          maxBinaryPayloadBytes: maxBinaryPayloadBytes,
+          binarySenderName: binarySenderName,
+          initialPaletteProfile: _paletteProfile,
           initialShowGrid: _showGrid,
-          initialDocument: initialDocument,
+          initialDocument: _v4Document,
           replyTargetName: widget.replyTargetName,
           replyTimestamp: widget.replyTimestamp,
         ),
       ),
     );
-    if (!mounted) return;
-    final showGrid =
-        PrefsManager.instance.getBool(_prefsShowGridKey) ?? _showGrid;
-    if (showGrid != _showGrid) {
-      setState(() => _showGrid = showGrid);
-    }
-    if (result?.rasterImage case final rasterImage?) {
+    if (result == null || !mounted) return;
+
+    final rasterImage = result.rasterImage;
+    if (rasterImage != null) {
       _applyV4RasterTransfer(rasterImage);
-    } else if (result != null) {
+      return;
+    }
+    if (result.text.isNotEmpty) {
       Navigator.pop(context, result);
-    } else if (initialDocument != null) {
-      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _switchVectorToRasterVersion(
+    MCOImageEncodingVersion version,
+  ) async {
+    try {
+      final image = await _rasterizeVectorForV3();
+      if (!mounted) return;
+      _applyV4RasterTransfer(image);
+      if (version != MCOImageEncodingVersion.v3) {
+        _changeEncodingVersion(version);
+      }
+    } on Object catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<MCOImage> _rasterizeVectorForV3() async {
+    final document = _v4Document;
+    if (document == null) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 vector document is not initialized',
+      );
+    }
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    MCOImageV4Painter(document, antiAlias: false).paint(
+      canvas,
+      Size(document.width.toDouble(), document.height.toDouble()),
+    );
+    final rendered = await recorder.endRecording().toImage(
+      document.width,
+      document.height,
+    );
+    try {
+      final data = await rendered.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (data == null) {
+        throw const MCOImageInvalidInputException('Cannot render MCOimg v4');
+      }
+      final rgba = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final paletteValues = _rasterPaletteValues(document.paletteProfile);
+      final white = MCOImagePalette.whiteIndexFor(document.paletteProfile);
+      final pixels = List<int>.filled(document.width * document.height, white);
+      final transparentPixels = <int>[];
+      final used = <int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        final alpha = rgba[offset + 3];
+        if (alpha < 128) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final color = _nearestRasterColorValue(
+          rgba[offset],
+          rgba[offset + 1],
+          rgba[offset + 2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = color;
+        used.add(color);
+      }
+
+      int? transparentColor;
+      if (transparentPixels.isNotEmpty) {
+        for (final color in paletteValues) {
+          if (!used.contains(color)) {
+            transparentColor = color;
+            break;
+          }
+        }
+        if (transparentColor != null) {
+          for (final index in transparentPixels) {
+            pixels[index] = transparentColor;
+          }
+        }
+      }
+
+      return MCOImage(
+        width: document.width,
+        height: document.height,
+        paletteProfile: document.paletteProfile,
+        pixels: pixels,
+        transparentColor: transparentColor,
+        encodingVersion: MCOImageEncodingVersion.v3,
+      );
+    } finally {
+      rendered.dispose();
     }
   }
 
@@ -1968,6 +2728,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_widthController, _width);
       _setControllerValue(_heightController, _height);
       _pixels = List<int>.of(image.pixels);
+      _selectedTool = _CanvasTool.pencil;
+      _selectedV4FigureIndex = null;
+      _v4Document = null;
+      _currentEncodedV4 = null;
+      _v4EncodeError = null;
       _lineStartIndex = null;
       _ovalFirstIndex = null;
       _ovalSecondIndex = null;
@@ -2139,6 +2904,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _markPayloadDirty() {
+    if (_isVectorV4) {
+      _payloadRefreshRequestId++;
+      _currentEncodedCacheKey = null;
+      _currentEncodedCandidate = null;
+      _payloadRefreshTimer?.cancel();
+      _payloadRefreshTimer = null;
+      unawaited(_cancelCurrentEncoding());
+      _calculateVectorPayload();
+      return;
+    }
     _payloadRefreshRequestId++;
     _currentEncodedCacheKey = null;
 
@@ -2165,6 +2940,47 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _schedulePayloadRefresh();
   }
 
+  void _calculateVectorPayload() {
+    final document = _v4Document;
+    if (document == null) return;
+    try {
+      final encoded = _v4Codec.encode(
+        document,
+        nonce: 0,
+        targetName: widget.replyTargetName,
+        replyTimestamp: widget.replyTimestamp,
+      );
+      final payloadSize = _payloadSizeForEncodedV4(encoded);
+      if (!mounted) {
+        _currentEncodedV4 = encoded;
+        _currentPayloadChars = payloadSize;
+        _v4EncodeError = null;
+        return;
+      }
+      setState(() {
+        _currentEncodedV4 = encoded;
+        _currentPayloadChars = payloadSize;
+        _v4EncodeError = null;
+        _payloadRefreshPending = false;
+        _payloadRefreshInProgress = false;
+        _payloadRefreshProgressPercent = null;
+      });
+    } on Object catch (error) {
+      if (!mounted) {
+        _currentEncodedV4 = null;
+        _v4EncodeError = error;
+        return;
+      }
+      setState(() {
+        _currentEncodedV4 = null;
+        _v4EncodeError = error;
+        _payloadRefreshPending = false;
+        _payloadRefreshInProgress = false;
+        _payloadRefreshProgressPercent = null;
+      });
+    }
+  }
+
   bool _cancelPayloadCalculationBeforeCanvasReplacement() {
     final hadPendingRefresh = _payloadRefreshPending;
     _currentEncodedCacheKey = null;
@@ -2179,6 +2995,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _queueInitialPayloadRefresh() {
+    if (_isVectorV4) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _calculateVectorPayload();
+      });
+      return;
+    }
     _payloadRefreshPending = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -2587,6 +3410,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return encoded.charLength;
   }
 
+  int _payloadSizeForEncodedV4(EncodedMCOImageV4 encoded) {
+    final binaryLimit = widget.maxBinaryPayloadBytes;
+    if (binaryLimit != null) {
+      return ChannelBinaryDataHelper.appBinaryEnvelopeLength(
+        bodyLength: encoded.body.length,
+        senderName: widget.binarySenderName ?? 'Me',
+      );
+    }
+    return _v4Codec.textFromBody(encoded.body).length;
+  }
+
   int _displayPayloadSizeForEncoded(EncodedMCOImage encoded) {
     return _payloadSizeForEncoded(encoded);
   }
@@ -2644,6 +3478,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void _changePaletteProfile(PaletteProfile profile) {
     if (!_supportsDynamicPalettes && profile.isDynamic) return;
     if (profile == _paletteProfile) return;
+    if (_isVectorV4) {
+      _changeVectorPaletteProfile(profile);
+      return;
+    }
     final oldProfile = _paletteProfile;
     final newPalette = _paletteFor(profile);
 
@@ -2718,7 +3556,101 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     unawaited(_saveCanvasPalette(profile));
   }
 
+  void _changeVectorPaletteProfile(PaletteProfile profile) {
+    final document = _v4Document;
+    if (document == null) return;
+    final newPaletteColors = _paletteFor(profile);
+    final newDocumentPalette = _vectorDocumentPaletteFor(profile);
+
+    int mapColorValue(int colorValue) {
+      final argb = _profileColor(document.paletteProfile, colorValue).toARGB32();
+      return _nearestPaletteColorValue(
+        (argb >> 16) & 0xff,
+        (argb >> 8) & 0xff,
+        argb & 0xff,
+        (argb >> 24) & 0xff,
+        profile,
+        newPaletteColors,
+        whiteIndex: MCOImagePalette.whiteIndexFor(profile),
+      );
+    }
+
+    int? mapLocalColor(int? localIndex) {
+      if (localIndex == null) return null;
+      if (localIndex < 0 || localIndex >= document.palette.length) return null;
+      final mappedValue = mapColorValue(document.palette[localIndex]);
+      var nextIndex = newDocumentPalette.indexOf(mappedValue);
+      if (nextIndex < 0) {
+        newDocumentPalette.add(mappedValue);
+        nextIndex = newDocumentPalette.length - 1;
+      }
+      return nextIndex;
+    }
+
+    MCOImageV4Figure mapFigure(MCOImageV4Figure figure) {
+      final style = figure.style;
+      return figure.withStyle(
+        style.copyWith(
+          fillColor: mapLocalColor(style.fillColor),
+          strokeColor: mapLocalColor(style.strokeColor),
+        ),
+      );
+    }
+
+    final nextDocument = document.copyWith(
+      paletteProfile: profile,
+      palette: newDocumentPalette,
+      backgroundColor: mapLocalColor(document.backgroundColor),
+      initialStyle: document.initialStyle.copyWith(
+        fillColor: mapLocalColor(document.initialStyle.fillColor),
+        strokeColor: mapLocalColor(document.initialStyle.strokeColor),
+      ),
+      figures: document.figures.map(mapFigure).toList(growable: false),
+    );
+    final nextDynamicProfile = profile.isDynamic
+        ? profile
+        : _dynamicPaletteProfile;
+    final nextSelectedColor = mapColorValue(_selectedColor);
+    final nextFillColor = mapLocalColor(_v4FillColor);
+    final nextStrokeColor = mapLocalColor(_v4StrokeColor);
+    final before = _captureCanvasSnapshot();
+    final nextPixels = List<int>.filled(
+      nextDocument.width * nextDocument.height,
+      MCOImagePalette.whiteIndexFor(profile),
+    );
+    final after = _captureCanvasSnapshot(
+      paletteProfile: profile,
+      dynamicPaletteProfile: nextDynamicProfile,
+      selectedColor: nextSelectedColor,
+      pixels: nextPixels,
+      vectorDocument: nextDocument,
+    );
+    _rememberCanvasAction(before, after);
+    setState(() {
+      _paletteProfile = profile;
+      _dynamicPaletteProfile = nextDynamicProfile;
+      _selectedColor = nextSelectedColor;
+      _v4FillColor = nextFillColor;
+      _v4StrokeColor = nextStrokeColor;
+      _transparentColor = null;
+      _pixels = nextPixels;
+      _v4Document = nextDocument;
+      _clearVectorDraftState();
+    });
+    _markPayloadDirty();
+    unawaited(_saveCanvasPalette(profile));
+  }
+
   void _cancelPendingShape() {
+    if (_isVectorV4) {
+      if (_v4ShapePoints.isEmpty &&
+          _v4DraftFigure == null &&
+          _v4PencilPoints == null) {
+        return;
+      }
+      setState(_clearVectorDraftState);
+      return;
+    }
     if (_lineStartIndex == null &&
         _ovalFirstIndex == null &&
         _ovalSecondIndex == null &&
@@ -2733,6 +3665,813 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _rectangleFirstIndex = null;
       _rectangleSecondIndex = null;
     });
+  }
+
+  void _clearRasterDraftState() {
+    _lineStartIndex = null;
+    _ovalFirstIndex = null;
+    _ovalSecondIndex = null;
+    _rectangleFirstIndex = null;
+    _rectangleSecondIndex = null;
+  }
+
+  void _clearVectorDraftState() {
+    _v4ShapePoints.clear();
+    _v4DraftFigure = null;
+    _v4PencilPoints = null;
+    _v4GestureStart = null;
+    _v4LastMovePoint = null;
+    _v4MoveBefore = null;
+  }
+
+  void _clearVectorEditingState() {
+    _editingV4FigureIndex = null;
+    _editingV4FigureBefore = null;
+    _editingV4FigureVisible = true;
+  }
+
+  Color _colorForVectorLocalIndex(MCOImageV4Document document, int localIndex) {
+    final colorValue = localIndex >= 0 && localIndex < document.palette.length
+        ? document.palette[localIndex]
+        : MCOImagePalette.blackIndexFor(document.paletteProfile);
+    return _profileColor(document.paletteProfile, colorValue);
+  }
+
+  void _adoptVectorStyle(MCOImageV4Style style) {
+    _v4FillColor = style.fillColor;
+    _v4StrokeColor = style.strokeColor;
+    _v4StrokeWidth = math.max(1, style.strokeWidth);
+    _v4ColorTarget = style.strokeColor == null && style.fillColor != null
+        ? _V4ColorTarget.fill
+        : _V4ColorTarget.stroke;
+    final document = _v4Document;
+    final localIndex = style.strokeColor ?? style.fillColor;
+    if (document != null &&
+        localIndex != null &&
+        localIndex >= 0 &&
+        localIndex < document.palette.length) {
+      _selectedColor = document.palette[localIndex];
+    }
+  }
+
+  void _recordVectorDocumentChange(
+    MCOImageV4Document before,
+    MCOImageV4Document after,
+  ) {
+    _rememberCanvasAction(
+      _captureCanvasSnapshot(vectorDocument: before),
+      _captureCanvasSnapshot(
+        width: after.width,
+        height: after.height,
+        pixels: List<int>.filled(after.width * after.height, _whiteIndex),
+        vectorDocument: after,
+      ),
+    );
+  }
+
+  void _updateVectorStyle(
+    VoidCallback update, {
+    bool recordUndo = true,
+    MCOImageV4Document? undoBefore,
+  }) {
+    final before = undoBefore ?? _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (before == null || index == null || index >= before.figures.length) {
+      setState(update);
+      return;
+    }
+    MCOImageV4Document? after;
+    setState(() {
+      update();
+      final current = _v4Document ?? before;
+      final figures = [...current.figures];
+      if (index < figures.length) {
+        figures[index] = figures[index].withStyle(_currentVectorStyle());
+        after = current.copyWith(figures: figures);
+        _v4Document = after;
+      }
+    });
+    final next = after;
+    if (next == null) return;
+    if (recordUndo) _recordVectorDocumentChange(before, next);
+    _markPayloadDirty();
+  }
+
+  void _beginVectorStyleDrag() {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    _v4StyleDragBefore =
+        document != null && index != null && index < document.figures.length
+        ? document
+        : null;
+  }
+
+  void _endVectorStyleDrag() {
+    final before = _v4StyleDragBefore;
+    final after = _v4Document;
+    _v4StyleDragBefore = null;
+    if (before == null || after == null || identical(before, after)) return;
+    _recordVectorDocumentChange(before, after);
+  }
+
+  void _setVectorBackground(int? localIndex) {
+    final document = _v4Document;
+    if (document == null || document.backgroundColor == localIndex) return;
+    _commitVectorDocument(document.copyWith(backgroundColor: localIndex));
+  }
+
+  void _setVectorStyleColor(int? localIndex, {MCOImageV4Document? undoBefore}) {
+    final document = _v4Document;
+    if (document == null) return;
+    _updateVectorStyle(
+      () {
+        if (_v4ColorTarget == _V4ColorTarget.fill) {
+          _v4FillColor = localIndex;
+        } else {
+          _v4StrokeColor = localIndex;
+        }
+        if (localIndex != null && localIndex < document.palette.length) {
+          _selectedColor = document.palette[localIndex];
+        }
+      },
+      undoBefore: undoBefore ?? document,
+    );
+  }
+
+  void _setVectorStyleProfileColor(int colorValue) {
+    final before = _v4Document;
+    final localIndex = _vectorLocalColorIndex(colorValue, mutate: true);
+    _setVectorStyleColor(localIndex, undoBefore: before);
+    if (before != null && _selectedV4FigureIndex == null) {
+      _markPayloadDirty();
+    }
+  }
+
+  void _setVectorStrokeWidth(int width, {bool recordUndo = true}) {
+    _updateVectorStyle(
+      () => _v4StrokeWidth = math.max(1, width),
+      recordUndo: recordUndo,
+    );
+  }
+
+  void _setSelectedVectorClosed(bool closed) {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (document == null || index == null || index >= document.figures.length) {
+      return;
+    }
+    final figures = [...document.figures];
+    final figure = figures[index];
+    figures[index] = switch (figure) {
+      MCOImageV4Path(:final points, :final style, :final visible) =>
+        MCOImageV4Path(
+          points: points,
+          closed: closed,
+          style: style,
+          visible: visible,
+        ),
+      MCOImageV4Wave(
+        :final start,
+        :final end,
+        :final depth,
+        :final style,
+        :final visible,
+      ) => MCOImageV4Wave(
+          start: start,
+          end: end,
+          depth: depth,
+          closed: closed,
+          style: style,
+          visible: visible,
+        ),
+      _ => figure,
+    };
+    _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  void _selectVectorFigure(int? index) {
+    final document = _v4Document;
+    if (document == null ||
+        index == null ||
+        index < 0 ||
+        index >= document.figures.length) {
+      setState(() => _selectedV4FigureIndex = null);
+      return;
+    }
+    setState(() {
+      _selectedV4FigureIndex = index;
+      _adoptVectorStyle(document.figures[index].style);
+    });
+  }
+
+  void _toggleVectorFigureVisibility(int index) {
+    final document = _v4Document;
+    if (document == null || index < 0 || index >= document.figures.length) {
+      return;
+    }
+    final figures = [...document.figures];
+    figures[index] = figures[index].withVisibility(!figures[index].visible);
+    _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  void _deleteVectorFigure(int index) {
+    final document = _v4Document;
+    if (document == null || index < 0 || index >= document.figures.length) {
+      return;
+    }
+    final figures = [...document.figures]..removeAt(index);
+    _selectedV4FigureIndex = null;
+    _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  void _reorderVectorFigure(int from, int to) {
+    final document = _v4Document;
+    if (document == null ||
+        from < 0 ||
+        from >= document.figures.length ||
+        to < 0 ||
+        to >= document.figures.length) {
+      return;
+    }
+    final figures = [...document.figures];
+    final figure = figures.removeAt(from);
+    figures.insert(to, figure);
+    _selectedV4FigureIndex = to;
+    _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  MCOImageV4Document get _activeVectorDocument {
+    final document = _v4Document;
+    if (document == null) {
+      throw StateError('MCOimg v4 vector document is not initialized');
+    }
+    final draft = _v4DraftFigure;
+    if (draft == null) return document;
+    return document.copyWith(figures: [...document.figures, draft]);
+  }
+
+  MCOImageV4Figure? get _selectedV4Figure {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (document == null || index == null || index >= document.figures.length) {
+      return null;
+    }
+    return document.figures[index];
+  }
+
+  bool get _canCloneSelectedV4Figure => _selectedV4Figure != null;
+
+  bool get _canEditSelectedV4Figure => _selectedV4Figure != null;
+
+  void _selectCanvasTool(_CanvasTool nextTool) {
+    if (_isVectorV4) {
+      _selectVectorTool(nextTool);
+      return;
+    }
+    setState(() {
+      if (nextTool != _selectedTool) {
+        _clearRasterDraftState();
+      }
+      _selectedTool = nextTool;
+    });
+  }
+
+  void _selectVectorTool(_CanvasTool nextTool) {
+    if (nextTool == _selectedTool &&
+        _selectedTool == _CanvasTool.polyline &&
+        _v4ShapePoints.length >= 2) {
+      _finishVectorPolyline(closed: false);
+      return;
+    }
+    if (nextTool != _selectedTool &&
+        _selectedTool == _CanvasTool.polyline &&
+        _v4ShapePoints.length >= 2) {
+      _finishVectorPolyline(closed: false);
+      setState(() {
+        if (nextTool != _CanvasTool.select) {
+          _selectedV4FigureIndex = null;
+        }
+        _selectedTool = nextTool;
+      });
+      return;
+    }
+    setState(() {
+      if (nextTool == _selectedTool) {
+        if (_selectedTool == _CanvasTool.line ||
+            _selectedTool == _CanvasTool.rectangle ||
+            _selectedTool == _CanvasTool.oval ||
+            _selectedTool == _CanvasTool.wave) {
+          _clearVectorDraftState();
+        }
+        return;
+      }
+      _clearVectorDraftState();
+      if (nextTool != _CanvasTool.select) {
+        _selectedV4FigureIndex = null;
+      }
+      _selectedTool = nextTool;
+    });
+  }
+
+  void _handleVectorTap(Offset position, Size size) {
+    final point = _vectorGridPoint(
+      position,
+      size,
+      clampToCanvas: _selectedTool != _CanvasTool.select,
+    );
+    switch (_selectedTool) {
+      case _CanvasTool.dot:
+      case _CanvasTool.pencil:
+        _addVectorFigure(
+          MCOImageV4Dot(point: point, style: _currentVectorStyle()),
+        );
+      case _CanvasTool.line:
+        final points = _acceptVectorShapePoint(point, requiredCount: 2);
+        if (points == null) return;
+        _addVectorFigure(
+          MCOImageV4Line(
+            start: points[0],
+            end: points[1],
+            style: _currentVectorStyle(),
+          ),
+        );
+      case _CanvasTool.polyline:
+        if (_v4ShapePoints.length >= 3 && _v4ShapePoints.first == point) {
+          _finishVectorPolyline(closed: true);
+          return;
+        }
+        if (_v4ShapePoints.isNotEmpty && _v4ShapePoints.last == point) return;
+        setState(() => _addVectorShapePoint(point));
+      case _CanvasTool.rectangle:
+      case _CanvasTool.oval:
+        final points = _acceptVectorShapePoint(point, requiredCount: 3);
+        if (points == null) return;
+        _addVectorFigure(
+          _vectorAreaDraft(points[0], points[1], points[2], _selectedTool),
+        );
+      case _CanvasTool.wave:
+        final points = _acceptVectorShapePoint(point, requiredCount: 3);
+        if (points == null) return;
+        _addVectorFigure(_vectorWave(points[0], points[1], points[2]));
+      case _CanvasTool.select:
+        final index = _hitTestVectorFigure(point);
+        _selectVectorFigure(index);
+      case _CanvasTool.fill:
+      case _CanvasTool.eyedropper:
+        break;
+    }
+  }
+
+  void _handleVectorPanStart(Offset position, Size size) {
+    final point = _vectorGridPoint(
+      position,
+      size,
+      clampToCanvas: _selectedTool != _CanvasTool.select,
+    );
+    switch (_selectedTool) {
+      case _CanvasTool.pencil:
+        _v4GestureStart = point;
+        _v4PencilPoints = <MCOImageV4Point>[point];
+      case _CanvasTool.select:
+        _v4GestureStart = point;
+        final index = _hitTestVectorFigure(point);
+        final selectedIndex = index ?? _selectedV4FigureIndex;
+        final document = _v4Document;
+        if (document != null &&
+            selectedIndex != null &&
+            selectedIndex < document.figures.length) {
+          if (index != null) {
+            _selectedV4FigureIndex = index;
+            _adoptVectorStyle(document.figures[index].style);
+          }
+          _v4MoveBefore = document;
+          _v4LastMovePoint = point;
+        }
+      default:
+        break;
+    }
+  }
+
+  void _handleVectorPanUpdate(Offset position, Size size) {
+    final point = _vectorGridPoint(
+      position,
+      size,
+      clampToCanvas: _selectedTool != _CanvasTool.select,
+    );
+    if (_v4GestureStart == null) return;
+    switch (_selectedTool) {
+      case _CanvasTool.pencil:
+        final points = _v4PencilPoints;
+        if (points != null && points.last != point) {
+          points.add(point);
+          setState(() {
+            _v4DraftFigure = points.length < 2
+                ? null
+                : MCOImageV4Path(
+                    points: points,
+                    closed: false,
+                    style: _currentVectorStyle(),
+                  );
+          });
+        }
+      case _CanvasTool.select:
+        _moveSelectedVectorFigure(point);
+      default:
+        break;
+    }
+  }
+
+  void _handleVectorPanEnd() {
+    if (_selectedTool == _CanvasTool.select) {
+      final before = _v4MoveBefore;
+      final document = _v4Document;
+      if (before != null && document != null && !identical(before, document)) {
+        _rememberCanvasAction(
+          _captureCanvasSnapshot(vectorDocument: before),
+          _captureCanvasSnapshot(vectorDocument: document),
+        );
+        _markPayloadDirty();
+      }
+      _v4MoveBefore = null;
+      _v4LastMovePoint = null;
+      _v4GestureStart = null;
+      return;
+    }
+
+    MCOImageV4Figure? figure = _v4DraftFigure;
+    if (_selectedTool == _CanvasTool.pencil) {
+      final points = _simplifyVectorPoints(_v4PencilPoints ?? const []);
+      if (points.length == 1) {
+        figure = MCOImageV4Dot(
+          point: points.first,
+          style: _currentVectorStyle(),
+        );
+      } else if (points.length >= 2) {
+        figure = MCOImageV4Path(
+          points: points,
+          closed: false,
+          style: _currentVectorStyle(),
+        );
+      }
+    }
+    _v4GestureStart = null;
+    _v4PencilPoints = null;
+    _v4DraftFigure = null;
+    if (figure != null) _addVectorFigure(figure);
+  }
+
+  List<MCOImageV4Point>? _acceptVectorShapePoint(
+    MCOImageV4Point point, {
+    required int requiredCount,
+  }) {
+    if (_v4ShapePoints.contains(point)) {
+      setState(_clearVectorDraftState);
+      return null;
+    }
+    _addVectorShapePoint(point);
+    if (_v4ShapePoints.length < requiredCount) {
+      setState(() {});
+      return null;
+    }
+    final result = List<MCOImageV4Point>.of(_v4ShapePoints);
+    _v4ShapePoints.clear();
+    return result;
+  }
+
+  void _addVectorShapePoint(MCOImageV4Point point) {
+    _v4ShapePoints.add(point);
+    if (_selectedTool == _CanvasTool.rectangle ||
+        _selectedTool == _CanvasTool.oval) {
+      if (_v4ShapePoints.length == 3) {
+        _v4DraftFigure = _vectorAreaDraft(
+          _v4ShapePoints[0],
+          _v4ShapePoints[1],
+          _v4ShapePoints[2],
+          _selectedTool,
+        );
+      }
+    } else if (_selectedTool == _CanvasTool.wave &&
+        _v4ShapePoints.length == 3) {
+      _v4DraftFigure = _vectorWave(
+        _v4ShapePoints[0],
+        _v4ShapePoints[1],
+        _v4ShapePoints[2],
+      );
+    }
+  }
+
+  void _finishVectorPolyline({required bool closed}) {
+    final minimum = closed ? 3 : 2;
+    if (_v4ShapePoints.length < minimum) return;
+    final points = List<MCOImageV4Point>.of(_v4ShapePoints);
+    _v4ShapePoints.clear();
+    _addVectorFigure(
+      MCOImageV4Path(
+        points: points,
+        closed: closed,
+        style: _currentVectorStyle(),
+      ),
+    );
+  }
+
+  MCOImageV4Figure _vectorAreaDraft(
+    MCOImageV4Point first,
+    MCOImageV4Point second,
+    MCOImageV4Point third,
+    _CanvasTool tool,
+  ) {
+    final style = _currentVectorStyle();
+    return switch (tool) {
+      _CanvasTool.rectangle => MCOImageV4Rect(
+          first: first,
+          second: second,
+          third: third,
+          style: style,
+        ),
+      _CanvasTool.oval => MCOImageV4Ellipse(
+          first: first,
+          second: second,
+          third: third,
+          style: style,
+        ),
+      _ => throw StateError('Not a v4 area tool'),
+    };
+  }
+
+  MCOImageV4Wave _vectorWave(
+    MCOImageV4Point start,
+    MCOImageV4Point end,
+    MCOImageV4Point handle,
+  ) {
+    final dx = end.x - start.x;
+    final dy = end.y - start.y;
+    final length = math.sqrt(dx * dx + dy * dy);
+    var depth = 1;
+    if (length > 0) {
+      final midpointX = (start.x + end.x) / 2;
+      final midpointY = (start.y + end.y) / 2;
+      depth = (((handle.x - midpointX) * -dy +
+                  (handle.y - midpointY) * dx) /
+              length)
+          .round();
+      if (depth == 0) depth = 1;
+    }
+    final maxDepth = math.max(_width, _height);
+    return MCOImageV4Wave(
+      start: start,
+      end: end,
+      depth: depth.clamp(-maxDepth, maxDepth).toInt(),
+      closed: false,
+      style: _currentVectorStyle(),
+    );
+  }
+
+  void _addVectorFigure(MCOImageV4Figure figure) {
+    final document = _v4Document;
+    if (document == null) return;
+    final editingIndex = _editingV4FigureIndex;
+    final editingBefore = _editingV4FigureBefore;
+    if (editingIndex != null && editingBefore != null) {
+      final figures = [...document.figures];
+      final insertIndex = math.min(editingIndex, figures.length);
+      figures.insert(insertIndex, figure.withVisibility(_editingV4FigureVisible));
+      _commitVectorDocument(document.copyWith(figures: figures));
+      setState(() {
+        _selectedV4FigureIndex = insertIndex;
+        _adoptVectorStyle(figure.style);
+        _clearVectorEditingState();
+      });
+      return;
+    }
+    _commitVectorDocument(document.copyWith(figures: [...document.figures, figure]));
+    setState(() {
+      _selectedV4FigureIndex = document.figures.length;
+      _adoptVectorStyle(figure.style);
+    });
+  }
+
+  void _commitVectorDocument(MCOImageV4Document next) {
+    final before = _v4Document;
+    if (before == null || identical(before, next)) return;
+    _rememberCanvasAction(
+      _captureCanvasSnapshot(vectorDocument: before),
+      _captureCanvasSnapshot(
+        width: next.width,
+        height: next.height,
+        pixels: List<int>.filled(next.width * next.height, _whiteIndex),
+        vectorDocument: next,
+      ),
+    );
+    setState(() {
+      _v4Document = next;
+      _width = next.width;
+      _height = next.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List<int>.filled(_width * _height, _whiteIndex);
+      _clearVectorDraftState();
+    });
+    _markPayloadDirty();
+  }
+
+  void _moveSelectedVectorFigure(MCOImageV4Point point) {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    final previous = _v4LastMovePoint;
+    if (document == null ||
+        index == null ||
+        previous == null ||
+        previous == point ||
+        index >= document.figures.length) {
+      return;
+    }
+    final figures = [...document.figures];
+    figures[index] = figures[index].translated(
+      point.x - previous.x,
+      point.y - previous.y,
+    );
+    setState(() {
+      _v4Document = document.copyWith(figures: figures);
+      _v4LastMovePoint = point;
+    });
+  }
+
+  void _cloneSelectedV4Figure() {
+    final document = _v4Document;
+    final selected = _selectedV4Figure;
+    if (document == null || selected == null) return;
+    final clone = selected.translated(1, 1);
+    _commitVectorDocument(document.copyWith(figures: [...document.figures, clone]));
+    setState(() {
+      _selectedV4FigureIndex = document.figures.length;
+      _selectedTool = _CanvasTool.select;
+      _adoptVectorStyle(clone.style);
+    });
+  }
+
+  void _editSelectedV4Figure() {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (document == null || index == null || index >= document.figures.length) {
+      return;
+    }
+    final figure = document.figures[index];
+    final figures = [...document.figures]..removeAt(index);
+    setState(() {
+      _editingV4FigureIndex = index;
+      _editingV4FigureBefore = document;
+      _editingV4FigureVisible = figure.visible;
+      _v4Document = document.copyWith(figures: figures);
+      _selectedV4FigureIndex = null;
+      _selectedTool = _toolForVectorFigure(figure);
+      _adoptVectorStyle(figure.style);
+      _v4ShapePoints
+        ..clear()
+        ..addAll(_controlPointsForVectorFigure(figure));
+      _v4DraftFigure = null;
+    });
+    _markPayloadDirty();
+  }
+
+  _CanvasTool _toolForVectorFigure(MCOImageV4Figure figure) => switch (figure) {
+        MCOImageV4Dot() => _CanvasTool.dot,
+        MCOImageV4Line() => _CanvasTool.line,
+        MCOImageV4Rect() => _CanvasTool.rectangle,
+        MCOImageV4Ellipse() => _CanvasTool.oval,
+        MCOImageV4Path() => _CanvasTool.polyline,
+        MCOImageV4Wave() => _CanvasTool.wave,
+      };
+
+  List<MCOImageV4Point> _controlPointsForVectorFigure(
+    MCOImageV4Figure figure,
+  ) =>
+      switch (figure) {
+        MCOImageV4Dot() => const <MCOImageV4Point>[],
+        MCOImageV4Line(:final start) => <MCOImageV4Point>[start],
+        MCOImageV4Rect(:final first, :final second) => <MCOImageV4Point>[
+            first,
+            second,
+          ],
+        MCOImageV4Ellipse(:final first, :final second) => <MCOImageV4Point>[
+            first,
+            second,
+          ],
+        MCOImageV4Path(:final points) => List<MCOImageV4Point>.of(points),
+        MCOImageV4Wave(:final start, :final end) => <MCOImageV4Point>[
+            start,
+            end,
+          ],
+      };
+
+  MCOImageV4Point _vectorGridPoint(
+    Offset position,
+    Size size, {
+    bool clampToCanvas = true,
+  }) {
+    final rawX = (position.dx / size.width * _width).floor();
+    final rawY = (position.dy / size.height * _height).floor();
+    final x = clampToCanvas ? rawX.clamp(0, _width - 1).toInt() : rawX;
+    final y = clampToCanvas ? rawY.clamp(0, _height - 1).toInt() : rawY;
+    return MCOImageV4Point(x, y);
+  }
+
+  int? _hitTestVectorFigure(MCOImageV4Point point) {
+    final document = _v4Document;
+    if (document == null) return null;
+    for (var i = document.figures.length - 1; i >= 0; i--) {
+      final figure = document.figures[i];
+      if (!figure.visible) continue;
+      if (MCOImageV4Painter.figureLogicalBounds(figure)
+          .inflate(2)
+          .contains(Offset(point.x + 0.5, point.y + 0.5))) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  MCOImageV4Style _currentVectorStyle() {
+    return MCOImageV4Style(
+      fillColor: _v4FillColor,
+      strokeColor: _v4StrokeColor,
+      strokeWidth: _v4StrokeWidth,
+    );
+  }
+
+  int _vectorLocalColorIndex(int colorValue, {required bool mutate}) {
+    final document = _v4Document;
+    if (document == null) return 0;
+    final existing = document.palette.indexOf(colorValue);
+    if (existing >= 0) return existing;
+    if (!mutate || document.palette.length >= 64) {
+      final black = document.paletteProfile.isDynamic
+          ? MCOImageDynamicPalette.blackGlobalIndexFor(document.paletteProfile)
+          : MCOImagePalette.blackIndexFor(document.paletteProfile);
+      return math.max(0, document.palette.indexOf(black));
+    }
+    _v4Document = document.copyWith(palette: [...document.palette, colorValue]);
+    return document.palette.length;
+  }
+
+  List<MCOImageV4Point> _simplifyVectorPoints(List<MCOImageV4Point> input) {
+    final unique = <MCOImageV4Point>[];
+    for (final point in input) {
+      if (unique.isEmpty || unique.last != point) unique.add(point);
+    }
+    final gridSize = math.max(_width, _height);
+    final epsilon = switch (gridSize) {
+      < 32 => 0.0,
+      < 64 => 0.25,
+      < 128 => 0.5,
+      < 256 => 1.0,
+      _ => 2.0,
+    };
+    if (epsilon <= 0 || unique.length <= 2) return unique;
+    return _rdpVectorPoints(unique, epsilon);
+  }
+
+  List<MCOImageV4Point> _rdpVectorPoints(
+    List<MCOImageV4Point> points,
+    double epsilon,
+  ) {
+    if (points.length <= 2) return points;
+    var maxDistance = 0.0;
+    var index = 0;
+    for (var i = 1; i < points.length - 1; i++) {
+      final distance = _perpendicularVectorDistance(
+        points[i],
+        points.first,
+        points.last,
+      );
+      if (distance > maxDistance) {
+        index = i;
+        maxDistance = distance;
+      }
+    }
+    if (maxDistance <= epsilon) return [points.first, points.last];
+    final left = _rdpVectorPoints(points.sublist(0, index + 1), epsilon);
+    final right = _rdpVectorPoints(points.sublist(index), epsilon);
+    return [...left.take(left.length - 1), ...right];
+  }
+
+  double _perpendicularVectorDistance(
+    MCOImageV4Point point,
+    MCOImageV4Point start,
+    MCOImageV4Point end,
+  ) {
+    final dx = end.x - start.x;
+    final dy = end.y - start.y;
+    if (dx == 0 && dy == 0) {
+      final px = point.x - start.x;
+      final py = point.y - start.y;
+      return math.sqrt(px * px + py * py);
+    }
+    return ((dy * point.x -
+                dx * point.y +
+                end.x * start.y -
+                end.y * start.x)
+            .abs()) /
+        math.sqrt(dx * dx + dy * dy);
   }
 
   void _applyToolAt(Offset position, Size size) {
@@ -2752,6 +4491,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .toInt();
     final index = y * _width + x;
     switch (_selectedTool) {
+      case _CanvasTool.select:
+      case _CanvasTool.dot:
+      case _CanvasTool.polyline:
+      case _CanvasTool.wave:
+        break;
       case _CanvasTool.pencil:
         _paintPixel(index);
         break;
@@ -3159,6 +4903,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _clearCanvas() {
+    if (_isVectorV4) {
+      final document = _v4Document;
+      if (document == null) return;
+      _commitVectorDocument(document.copyWith(figures: const []));
+      setState(() => _selectedV4FigureIndex = null);
+      return;
+    }
     _cancelPayloadCalculationBeforeCanvasReplacement();
     _clearCanvasHistory();
     setState(() {
@@ -3211,7 +4962,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           await _cancelCurrentEncoding();
           if (!mounted) return;
           shouldRestorePendingRefreshOnError = false;
-          await _openV4Editor(initialDocument: decoded.document);
+          _clearCanvasHistory();
+          _enterVectorV4Mode(
+            document: decoded.document,
+            recordHistory: false,
+          );
           return;
         }
         final imported = _decodeMcoImageBinaryForImport(bytes);
@@ -3256,6 +5011,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_widthController, importedImage.width);
       _setControllerValue(_heightController, importedImage.height);
       setState(() {
+        if (_isVectorV4) {
+          _encodingVersion = MCOImageEncodingVersion.v3;
+          _v4Document = null;
+          _currentEncodedV4 = null;
+          _v4EncodeError = null;
+          _selectedTool = _CanvasTool.pencil;
+        }
         _width = importedImage.width;
         _height = importedImage.height;
         _pixels = importedImage.pixels;
@@ -3266,6 +5028,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _rectangleSecondIndex = null;
       });
       _markPayloadDirty();
+      unawaited(_saveEncodingVersion(_encodingVersion));
       unawaited(_saveCanvasSize(importedImage.width, importedImage.height));
     } catch (error) {
       if (shouldRestorePendingRefreshOnError && mounted) {
@@ -3588,8 +5351,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     try {
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
+      if (_isVectorV4) {
+        final payload = ChannelAppDataHelper.appPayloadWithoutSender(
+          subtypeId: ChannelAppDataHelper.mcoImageSubtype,
+          version: ChannelAppDataHelper.mcoImageV4Version,
+          body: _encodedVectorForCurrentState().body,
+        );
+        await MCOImageFileSaver.saveBinaryPayload(payload);
+        return;
+      }
       final encoded = await _encodedCanvasForCurrentState();
-      final payload =
+      final rasterPayload =
           encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
           ? ChannelAppDataHelper.appPayloadWithoutSender(
               subtypeId: ChannelAppDataHelper.mcoImageSubtype,
@@ -3597,7 +5369,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               body: encoded.payload,
             )
           : encoded.payload;
-      await MCOImageFileSaver.saveBinaryPayload(payload);
+      await MCOImageFileSaver.saveBinaryPayload(rasterPayload);
     } catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -3625,6 +5397,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<Uint8List> _renderCanvasPngBytes() async {
+    if (_isVectorV4) {
+      final document = _activeVectorDocument;
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      MCOImageV4Painter(document, antiAlias: true).paint(
+        canvas,
+        Size(document.width.toDouble(), document.height.toDouble()),
+      );
+      final rendered = await recorder.endRecording().toImage(
+        document.width,
+        document.height,
+      );
+      final png = await rendered.toByteData(format: ui.ImageByteFormat.png);
+      rendered.dispose();
+      if (png == null) {
+        throw const MCOImageInvalidInputException('Cannot render PNG');
+      }
+      return png.buffer.asUint8List();
+    }
     final rgba = Uint8List(_width * _height * 4);
     for (var i = 0; i < _pixels.length; i++) {
       final color = _colorForPixelValue(_paletteProfile, _pixels[i]);
@@ -3659,6 +5450,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _sendCanvas() async {
     try {
+      if (_isVectorV4) {
+        final encoded = _encodedVectorForCurrentState(refreshNonce: true);
+        if (!mounted) return;
+        final payloadSize = _payloadSizeForEncodedV4(encoded);
+        _currentEncodedV4 = encoded;
+        _currentPayloadChars = payloadSize;
+        final overflow = payloadSize - _effectivePayloadLimit;
+        if (overflow > 0) {
+          showDismissibleSnackBar(
+            context,
+            content: Text(context.l10n.chat_canvasSendPayloadExceed(overflow)),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          );
+          setState(() {});
+          return;
+        }
+        final text = _v4Codec.textFromBody(encoded.body);
+        Navigator.pop(
+          context,
+          CanvasEditorResult.fromV4(text: text, encoded: encoded),
+        );
+        return;
+      }
       final encoded = await _encodedCanvasForCurrentState();
       if (!mounted) return;
       _currentEncodedCandidate = encoded;
@@ -3690,6 +5504,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         backgroundColor: Theme.of(context).colorScheme.error,
       );
     }
+  }
+
+  EncodedMCOImageV4 _encodedVectorForCurrentState({
+    bool refreshNonce = false,
+  }) {
+    final document = _v4Document;
+    if (document == null) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 vector document is not initialized',
+      );
+    }
+    if (!refreshNonce) {
+      final cached = _currentEncodedV4;
+      if (cached != null && identical(cached.document, document)) {
+        return cached;
+      }
+    }
+    return _v4Codec.encode(
+      document,
+      nonce: refreshNonce ? null : 0,
+      targetName: widget.replyTargetName,
+      replyTimestamp: widget.replyTimestamp,
+    );
   }
 
   Future<EncodedMCOImage> _encodedCanvasForCurrentState() async {
@@ -4153,6 +5990,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     };
   }
 
+  String _vectorFigureLabel(MCOImageV4Figure figure) {
+    return switch (figure) {
+      MCOImageV4Dot() => context.l10n.chat_canvasV4ToolDot,
+      MCOImageV4Line() => context.l10n.chat_canvasV4ToolLine,
+      MCOImageV4Rect() => context.l10n.chat_canvasV4ToolRect,
+      MCOImageV4Ellipse() => context.l10n.chat_canvasV4ToolEllipse,
+      MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
+      MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
+    };
+  }
+
   int _paletteBitsPerCell(PaletteProfile profile) {
     return switch (profile) {
       PaletteProfile.mono => 1,
@@ -4176,6 +6024,85 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   List<Color> _paletteFor(PaletteProfile profile) {
     return MCOImagePalette.colorsFor(profile);
+  }
+
+  MCOImageV4Document _newVectorDocument(
+    int width,
+    int height,
+    PaletteProfile profile,
+  ) {
+    final palette = _vectorDocumentPaletteFor(profile);
+    final blackValue = profile.isDynamic
+        ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
+        : MCOImagePalette.blackIndexFor(profile);
+    final black = palette.indexOf(blackValue);
+    return MCOImageV4Document(
+      width: width,
+      height: height,
+      paletteProfile: profile,
+      palette: palette,
+      initialStyle: MCOImageV4Style(
+        strokeColor: black >= 0 ? black : palette.length - 1,
+      ),
+      figures: const [],
+    );
+  }
+
+  List<int> _vectorDocumentPaletteFor(PaletteProfile profile) {
+    if (!profile.isDynamic) {
+      return List<int>.generate(
+        MCOImagePalette.colorsFor(profile).length,
+        (index) => index,
+        growable: true,
+      );
+    }
+    final colors = MCOImageDynamicPalette.indicesFor(profile);
+    if (colors.length <= 64) return List<int>.of(colors, growable: true);
+    return <int>[
+      MCOImageDynamicPalette.whiteGlobalIndexFor(profile),
+      MCOImageDynamicPalette.blackGlobalIndexFor(profile),
+    ];
+  }
+
+  Color _profileColor(PaletteProfile profile, int colorValue) {
+    return profile.isDynamic
+        ? MCOImageDynamicPalette.global512[colorValue]
+        : MCOImagePalette.colorsFor(profile)[colorValue];
+  }
+
+  List<int> _rasterPaletteValues(PaletteProfile profile) {
+    if (profile.isDynamic) {
+      return List<int>.of(MCOImageDynamicPalette.indicesFor(profile));
+    }
+    return List<int>.generate(
+      MCOImagePalette.colorsFor(profile).length,
+      (index) => index,
+      growable: false,
+    );
+  }
+
+  int _nearestRasterColorValue(
+    int red,
+    int green,
+    int blue,
+    PaletteProfile profile,
+    List<int> paletteValues,
+  ) {
+    var best = paletteValues.first;
+    var bestDistance = 1 << 62;
+    for (final value in paletteValues) {
+      final color = _profileColor(profile, value);
+      final argb = color.toARGB32();
+      final dr = red - ((argb >> 16) & 0xff);
+      final dg = green - ((argb >> 8) & 0xff);
+      final db = blue - (argb & 0xff);
+      final distance = dr * dr + dg * dg + db * db;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = value;
+      }
+    }
+    return best;
   }
 
   int get _whiteIndex => MCOImagePalette.whiteIndexFor(_paletteProfile);
@@ -4222,6 +6149,33 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   List<int> _usedColorValuesForProfile(PaletteProfile profile) {
+    final vectorDocument = _v4Document;
+    if (_isVectorV4 && vectorDocument != null) {
+      final values = <int>{};
+      void addLocal(int? localIndex) {
+        if (localIndex == null ||
+            localIndex < 0 ||
+            localIndex >= vectorDocument.palette.length) {
+          return;
+        }
+        values.add(vectorDocument.palette[localIndex]);
+      }
+
+      addLocal(vectorDocument.backgroundColor);
+      addLocal(vectorDocument.initialStyle.fillColor);
+      addLocal(vectorDocument.initialStyle.strokeColor);
+      for (final figure in vectorDocument.figures) {
+        addLocal(figure.style.fillColor);
+        addLocal(figure.style.strokeColor);
+      }
+      final sorted = values.toList()
+        ..sort((a, b) {
+          final aIndex = _paletteIndexForColorValue(profile, a) ?? 0;
+          final bIndex = _paletteIndexForColorValue(profile, b) ?? 0;
+          return aIndex.compareTo(bIndex);
+        });
+      return sorted;
+    }
     final values = <int>{};
     for (final colorValue in _pixels) {
       if (_paletteIndexForColorValue(profile, colorValue) != null) {
@@ -4311,6 +6265,49 @@ class _AlphaSwatch extends StatelessWidget {
   }
 }
 
+class _V4FigurePreview extends StatelessWidget {
+  final MCOImageV4Document document;
+  final MCOImageV4Figure figure;
+  final bool selected;
+
+  const _V4FigurePreview({
+    required this.document,
+    required this.figure,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final previewFigure = figure.withVisibility(true);
+    final bounds = MCOImageV4Painter.figureLogicalBounds(previewFigure);
+    final longestSide = math.max(bounds.width, bounds.height);
+    final padding = math.max(1.0, longestSide * 0.18);
+    final viewport = bounds.inflate(padding);
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: selected ? colorScheme.primary : colorScheme.outlineVariant,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: CustomPaint(
+          painter: MCOImageV4Painter(
+            document.copyWith(figures: [previewFigure]),
+            logicalViewport: viewport,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AlphaSwatchPainter extends CustomPainter {
   final Color? color;
   final Color borderColor;
@@ -4363,6 +6360,52 @@ class _AlphaSwatchPainter extends CustomPainter {
     return oldDelegate.color != color ||
         oldDelegate.borderColor != borderColor ||
         oldDelegate.selected != selected;
+  }
+}
+
+class _VectorCanvasPainter extends CustomPainter {
+  final MCOImageV4Document document;
+  final MCOImageV4Figure? selectedFigure;
+  final List<MCOImageV4Point> guidePoints;
+  final MCOImageV4Style guideStyle;
+  final bool showGrid;
+  final Offset canvasOffset;
+  final Size canvasSize;
+
+  const _VectorCanvasPainter({
+    required this.document,
+    required this.selectedFigure,
+    required this.guidePoints,
+    required this.guideStyle,
+    required this.showGrid,
+    required this.canvasOffset,
+    required this.canvasSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.translate(canvasOffset.dx, canvasOffset.dy);
+    MCOImageV4Painter(
+      document,
+      selectedFigure: selectedFigure,
+      selectionColor: const Color(0xff00aaff),
+      guidePoints: guidePoints,
+      guideStyle: guideStyle,
+      showGrid: showGrid,
+    ).paint(canvas, canvasSize);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _VectorCanvasPainter oldDelegate) {
+    return oldDelegate.document != document ||
+        oldDelegate.selectedFigure != selectedFigure ||
+        oldDelegate.guidePoints != guidePoints ||
+        oldDelegate.guideStyle != guideStyle ||
+        oldDelegate.showGrid != showGrid ||
+        oldDelegate.canvasOffset != canvasOffset ||
+        oldDelegate.canvasSize != canvasSize;
   }
 }
 
