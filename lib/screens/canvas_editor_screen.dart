@@ -58,6 +58,10 @@ class _CanvasSnapshot {
   final int? transparentColor;
   final List<int> pixels;
   final MCOImageV4Document? vectorDocument;
+  final List<int>? vectorReferencePixels;
+  final PaletteProfile? vectorReferencePaletteProfile;
+  final int? vectorReferenceTransparentColor;
+  final bool vectorReferenceVisible;
 
   _CanvasSnapshot({
     required this.width,
@@ -69,7 +73,14 @@ class _CanvasSnapshot {
     required this.transparentColor,
     required List<int> pixels,
     this.vectorDocument,
-  }) : pixels = List<int>.unmodifiable(pixels);
+    List<int>? vectorReferencePixels,
+    this.vectorReferencePaletteProfile,
+    this.vectorReferenceTransparentColor,
+    required this.vectorReferenceVisible,
+  }) : pixels = List<int>.unmodifiable(pixels),
+       vectorReferencePixels = vectorReferencePixels == null
+           ? null
+           : List<int>.unmodifiable(vectorReferencePixels);
 }
 
 class _CanvasHistoryEntry {
@@ -429,6 +440,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   int? _v4StrokeColor;
   int _v4StrokeWidth = 1;
   MCOImageV4Document? _v4StyleDragBefore;
+  List<int>? _v4ReferencePixels;
+  PaletteProfile? _v4ReferencePaletteProfile;
+  int? _v4ReferenceTransparentColor;
+  bool _v4ReferenceVisible = true;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
@@ -672,6 +687,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 ],
                 const SizedBox(height: 16),
                 _buildTools(),
+                if (_isVectorV4 && _v4ReferencePixels != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: OutlinedButton.icon(
+                      onPressed: _toggleVectorReferenceVisibility,
+                      icon: Icon(
+                        _v4ReferenceVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      label: Text(
+                        _v4ReferenceVisible
+                            ? context.l10n.chat_canvasV4HideReference
+                            : context.l10n.chat_canvasV4ShowReference,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 _buildCanvas(palette, showLockButton: showLockButton),
                 const SizedBox(height: 8),
@@ -1467,6 +1501,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                       ? _VectorCanvasPainter(
                           document: _activeVectorDocument,
                           selectedFigure: _selectedV4Figure,
+                          referencePixels:
+                              _v4ReferenceVisible ? _v4ReferencePixels : null,
+                          referenceProfile: _v4ReferencePaletteProfile,
+                          referenceTransparentColor:
+                              _v4ReferenceTransparentColor,
                           guidePoints: List<MCOImageV4Point>.of(
                             _v4ShapePoints,
                           ),
@@ -1708,6 +1747,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     Object? transparentColor = _transparentColorUnchanged,
     List<int>? pixels,
     MCOImageV4Document? vectorDocument,
+    Object? vectorReferencePixels = _transparentColorUnchanged,
+    Object? vectorReferencePaletteProfile = _transparentColorUnchanged,
+    Object? vectorReferenceTransparentColor = _transparentColorUnchanged,
+    bool? vectorReferenceVisible,
   }) {
     return _CanvasSnapshot(
       width: width ?? _width,
@@ -1721,6 +1764,26 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           : transparentColor as int?,
       pixels: pixels ?? _pixels,
       vectorDocument: vectorDocument ?? _v4Document,
+      vectorReferencePixels: identical(
+        vectorReferencePixels,
+        _transparentColorUnchanged,
+      )
+          ? _v4ReferencePixels
+          : vectorReferencePixels as List<int>?,
+      vectorReferencePaletteProfile: identical(
+        vectorReferencePaletteProfile,
+        _transparentColorUnchanged,
+      )
+          ? _v4ReferencePaletteProfile
+          : vectorReferencePaletteProfile as PaletteProfile?,
+      vectorReferenceTransparentColor: identical(
+        vectorReferenceTransparentColor,
+        _transparentColorUnchanged,
+      )
+          ? _v4ReferenceTransparentColor
+          : vectorReferenceTransparentColor as int?,
+      vectorReferenceVisible:
+          vectorReferenceVisible ?? _v4ReferenceVisible,
     );
   }
 
@@ -1733,7 +1796,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         a.selectedColor == b.selectedColor &&
         a.transparentColor == b.transparentColor &&
         identical(a.vectorDocument, b.vectorDocument) &&
+        a.vectorReferencePaletteProfile == b.vectorReferencePaletteProfile &&
+        a.vectorReferenceTransparentColor ==
+            b.vectorReferenceTransparentColor &&
+        a.vectorReferenceVisible == b.vectorReferenceVisible &&
+        _nullablePixelsEqual(
+          a.vectorReferencePixels,
+          b.vectorReferencePixels,
+        ) &&
         _pixelsEqual(a.pixels, b.pixels);
+  }
+
+  bool _nullablePixelsEqual(List<int>? a, List<int>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return false;
+    return _pixelsEqual(a, b);
   }
 
   void _applyCanvasSnapshot(_CanvasSnapshot snapshot) {
@@ -1748,6 +1825,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _isPickingTransparentColor = false;
       _pixels = List<int>.of(snapshot.pixels);
       _v4Document = snapshot.vectorDocument;
+      _v4ReferencePixels = snapshot.vectorReferencePixels == null
+          ? null
+          : List<int>.of(snapshot.vectorReferencePixels!);
+      _v4ReferencePaletteProfile = snapshot.vectorReferencePaletteProfile;
+      _v4ReferenceTransparentColor = snapshot.vectorReferenceTransparentColor;
+      _v4ReferenceVisible = snapshot.vectorReferenceVisible;
       if (_v4Document == null) {
         _selectedV4FigureIndex = null;
         _clearVectorEditingState();
@@ -1816,7 +1899,58 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final nextDocument = rescaleFigures
         ? _rescaleVectorDocument(document, width, height)
         : document.copyWith(width: width, height: height);
-    _commitVectorDocument(nextDocument);
+    final referencePixels = _v4ReferencePixels;
+    final nextReferencePixels =
+        referencePixels != null &&
+            referencePixels.length == document.width * document.height
+        ? rescaleFigures
+              ? _resizePixels(
+                  sourcePixels: referencePixels,
+                  sourceWidth: document.width,
+                  sourceHeight: document.height,
+                  targetWidth: width,
+                  targetHeight: height,
+                  fillColor: MCOImagePalette.whiteIndexFor(
+                    _v4ReferencePaletteProfile ?? _paletteProfile,
+                  ),
+                )
+              : _cropOrPadPixels(
+                  sourcePixels: referencePixels,
+                  sourceWidth: document.width,
+                  sourceHeight: document.height,
+                  targetWidth: width,
+                  targetHeight: height,
+                  fillColor: MCOImagePalette.whiteIndexFor(
+                    _v4ReferencePaletteProfile ?? _paletteProfile,
+                  ),
+                )
+        : null;
+    final nextPixels = List<int>.filled(width * height, _whiteIndex);
+    final before = _captureCanvasSnapshot();
+    final after = _captureCanvasSnapshot(
+      width: width,
+      height: height,
+      pixels: nextPixels,
+      vectorDocument: nextDocument,
+      vectorReferencePixels: nextReferencePixels,
+      vectorReferencePaletteProfile:
+          nextReferencePixels == null ? null : _v4ReferencePaletteProfile,
+      vectorReferenceTransparentColor: nextReferencePixels == null
+          ? null
+          : _v4ReferenceTransparentColor,
+    );
+    _rememberCanvasAction(before, after);
+    setState(() {
+      _v4Document = nextDocument;
+      _width = width;
+      _height = height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = nextPixels;
+      _v4ReferencePixels = nextReferencePixels;
+      _clearVectorDraftState();
+    });
+    _markPayloadDirty();
     unawaited(_saveCanvasSize(width, height));
   }
 
@@ -2045,6 +2179,30 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return nextPixels;
   }
 
+  List<int> _cropPixelsFromOrigin({
+    required List<int> sourcePixels,
+    required int sourceWidth,
+    required int sourceHeight,
+    required int sourceStartX,
+    required int sourceStartY,
+    required int targetWidth,
+    required int targetHeight,
+    required int fillColor,
+  }) {
+    final nextPixels = List<int>.filled(targetWidth * targetHeight, fillColor);
+    for (var y = 0; y < targetHeight; y++) {
+      final sourceY = sourceStartY + y;
+      if (sourceY < 0 || sourceY >= sourceHeight) continue;
+      for (var x = 0; x < targetWidth; x++) {
+        final sourceX = sourceStartX + x;
+        if (sourceX < 0 || sourceX >= sourceWidth) continue;
+        nextPixels[y * targetWidth + x] =
+            sourcePixels[sourceY * sourceWidth + sourceX];
+      }
+    }
+    return nextPixels;
+  }
+
   List<int> _scalePixels({
     required List<int> sourcePixels,
     required int sourceWidth,
@@ -2174,6 +2332,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _currentEncodedV4 = null;
     _v4EncodeError = null;
     _selectedV4FigureIndex = null;
+    _v4ReferencePixels = null;
+    _v4ReferencePaletteProfile = null;
+    _v4ReferenceTransparentColor = null;
+    _v4ReferenceVisible = true;
   }
 
   Future<void> _loadInitialImageBytes(
@@ -2475,11 +2637,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }) {
     _cancelPayloadCalculationBeforeCanvasReplacement();
     final before = _captureCanvasSnapshot();
+    final enteringFromRaster = !_isVectorV4 && document == null;
+    final referencePixels = enteringFromRaster
+        ? List<int>.of(_pixels)
+        : _v4ReferencePixels;
+    final referenceProfile = enteringFromRaster
+        ? _paletteProfile
+        : _v4ReferencePaletteProfile;
+    final referenceTransparentColor = enteringFromRaster
+        ? (_supportsAlphaTransparency ? _transparentColor : null)
+        : _v4ReferenceTransparentColor;
+    final referenceVisible = enteringFromRaster ? true : _v4ReferenceVisible;
     final nextDocument = document ??
         _v4Document ??
         _newVectorDocument(
-          _defaultVectorSize,
-          _defaultVectorSize,
+          enteringFromRaster ? _width : _defaultVectorSize,
+          enteringFromRaster ? _height : _defaultVectorSize,
           _paletteProfile,
         );
     final nextProfile = nextDocument.paletteProfile;
@@ -2503,6 +2676,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       transparentColor: null,
       pixels: nextPixels,
       vectorDocument: nextDocument,
+      vectorReferencePixels: referencePixels,
+      vectorReferencePaletteProfile: referenceProfile,
+      vectorReferenceTransparentColor: referenceTransparentColor,
+      vectorReferenceVisible: referenceVisible,
     );
     if (recordHistory) {
       _rememberCanvasAction(before, after);
@@ -2520,6 +2697,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_heightController, _height);
       _pixels = nextPixels;
       _v4Document = nextDocument;
+      _v4ReferencePixels = referencePixels;
+      _v4ReferencePaletteProfile = referenceProfile;
+      _v4ReferenceTransparentColor = referenceTransparentColor;
+      _v4ReferenceVisible = referenceVisible;
       _selectedTool = _CanvasTool.pencil;
       _selectedV4FigureIndex = null;
       _adoptVectorStyle(nextDocument.initialStyle);
@@ -2550,6 +2731,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.filled(_width * _height, _whiteIndex);
     _v4Document = document;
+    _v4ReferencePixels = null;
+    _v4ReferencePaletteProfile = null;
+    _v4ReferenceTransparentColor = null;
+    _v4ReferenceVisible = true;
     _selectedTool = _CanvasTool.pencil;
     _selectedV4FigureIndex = null;
     _adoptVectorStyle(document.initialStyle);
@@ -2714,6 +2899,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       selectedColor: selectedColor,
       transparentColor: image.transparentColor,
       pixels: image.pixels,
+      vectorDocument: null,
+      vectorReferencePixels: null,
+      vectorReferencePaletteProfile: null,
+      vectorReferenceTransparentColor: null,
+      vectorReferenceVisible: true,
     );
     _rememberCanvasAction(before, after);
     setState(() {
@@ -2731,6 +2921,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _selectedTool = _CanvasTool.pencil;
       _selectedV4FigureIndex = null;
       _v4Document = null;
+      _v4ReferencePixels = null;
+      _v4ReferencePaletteProfile = null;
+      _v4ReferenceTransparentColor = null;
+      _v4ReferenceVisible = true;
       _currentEncodedV4 = null;
       _v4EncodeError = null;
       _lineStartIndex = null;
@@ -2766,6 +2960,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _trimEmptyCanvas() {
+    if (_isVectorV4) {
+      _trimVectorCanvas();
+      return;
+    }
+
     final emptyColor = _whiteIndex;
 
     var minX = _width;
@@ -2826,6 +3025,105 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _ovalSecondIndex = null;
       _rectangleFirstIndex = null;
       _rectangleSecondIndex = null;
+    });
+    _markPayloadDirty();
+    unawaited(_saveCanvasSize(targetWidth, targetHeight));
+  }
+
+  void _trimVectorCanvas() {
+    final document = _v4Document;
+    if (document == null) return;
+
+    Rect? bounds;
+    final canvasBounds = Rect.fromLTWH(
+      0,
+      0,
+      document.width.toDouble(),
+      document.height.toDouble(),
+    );
+    for (final figure in document.figures.where((figure) => figure.visible)) {
+      final figureBounds =
+          MCOImageV4Painter.figureLogicalBounds(figure).intersect(canvasBounds);
+      if (figureBounds.isEmpty) continue;
+      bounds = bounds == null
+          ? figureBounds
+          : bounds.expandToInclude(figureBounds);
+    }
+
+    final trimBounds = bounds;
+    if (trimBounds == null) return;
+
+    final minX = trimBounds.left.floor().clamp(0, document.width - 1).toInt();
+    final minY = trimBounds.top.floor().clamp(0, document.height - 1).toInt();
+    final maxX = (trimBounds.right.ceil() - 1)
+        .clamp(minX, document.width - 1)
+        .toInt();
+    final maxY = (trimBounds.bottom.ceil() - 1)
+        .clamp(minY, document.height - 1)
+        .toInt();
+    final targetWidth = math.max(_minCanvasSize, maxX - minX + 1);
+    final targetHeight = math.max(_minCanvasSize, maxY - minY + 1);
+    if (targetWidth == document.width && targetHeight == document.height) {
+      return;
+    }
+
+    _cancelPayloadCalculationBeforeCanvasReplacement();
+    final nextDocument = document.copyWith(
+      width: targetWidth,
+      height: targetHeight,
+      figures: document.figures
+          .map((figure) => figure.translated(-minX, -minY))
+          .toList(),
+    );
+    final referencePixels = _v4ReferencePixels;
+    final nextReferencePixels =
+        referencePixels != null &&
+            referencePixels.length == document.width * document.height
+        ? _cropPixelsFromOrigin(
+            sourcePixels: referencePixels,
+            sourceWidth: document.width,
+            sourceHeight: document.height,
+            sourceStartX: minX,
+            sourceStartY: minY,
+            targetWidth: targetWidth,
+            targetHeight: targetHeight,
+            fillColor: MCOImagePalette.whiteIndexFor(
+              _v4ReferencePaletteProfile ?? _paletteProfile,
+            ),
+          )
+        : null;
+    final nextPixels = List<int>.filled(targetWidth * targetHeight, _whiteIndex);
+    final before = _captureCanvasSnapshot();
+    final after = _captureCanvasSnapshot(
+      width: targetWidth,
+      height: targetHeight,
+      pixels: nextPixels,
+      vectorDocument: nextDocument,
+      vectorReferencePixels: nextReferencePixels,
+      vectorReferencePaletteProfile:
+          nextReferencePixels == null ? null : _v4ReferencePaletteProfile,
+      vectorReferenceTransparentColor: nextReferencePixels == null
+          ? null
+          : _v4ReferenceTransparentColor,
+    );
+    _rememberCanvasAction(before, after);
+    if (_snapshotsEqual(before, after)) return;
+
+    setState(() {
+      _width = targetWidth;
+      _height = targetHeight;
+      _setControllerValue(_widthController, targetWidth);
+      _setControllerValue(_heightController, targetHeight);
+      _pixels = nextPixels;
+      _v4Document = nextDocument;
+      _v4ReferencePixels = nextReferencePixels;
+      if (nextReferencePixels == null) {
+        _v4ReferencePaletteProfile = null;
+        _v4ReferenceTransparentColor = null;
+      }
+      _selectedV4FigureIndex = null;
+      _clearVectorDraftState();
+      _clearVectorEditingState();
     });
     _markPayloadDirty();
     unawaited(_saveCanvasSize(targetWidth, targetHeight));
@@ -3438,7 +3736,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     var width = requestedWidth.clamp(_minCanvasSize, maxCanvasSize).toInt();
     var height = requestedHeight.clamp(_minCanvasSize, maxCanvasSize).toInt();
 
-    if (unlockAdaptiveLimit) {
+    if (unlockAdaptiveLimit ||
+        !_usesRasterAdaptiveCanvasLimit(
+          encodingVersion ?? _encodingVersion,
+        )) {
       return [width, height];
     }
 
@@ -3466,6 +3767,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     }
     return [width, height];
+  }
+
+  bool _usesRasterAdaptiveCanvasLimit(MCOImageEncodingVersion version) {
+    return version != MCOImageEncodingVersion.v4;
   }
 
   void _setControllerValue(TextEditingController controller, int value) {
@@ -3778,6 +4083,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final document = _v4Document;
     if (document == null || document.backgroundColor == localIndex) return;
     _commitVectorDocument(document.copyWith(backgroundColor: localIndex));
+  }
+
+  void _toggleVectorReferenceVisibility() {
+    if (_v4ReferencePixels == null) return;
+    setState(() => _v4ReferenceVisible = !_v4ReferenceVisible);
   }
 
   void _setVectorStyleColor(int? localIndex, {MCOImageV4Document? undoBefore}) {
@@ -5014,6 +5324,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         if (_isVectorV4) {
           _encodingVersion = MCOImageEncodingVersion.v3;
           _v4Document = null;
+          _v4ReferencePixels = null;
+          _v4ReferencePaletteProfile = null;
+          _v4ReferenceTransparentColor = null;
+          _v4ReferenceVisible = true;
           _currentEncodedV4 = null;
           _v4EncodeError = null;
           _selectedTool = _CanvasTool.pencil;
@@ -6035,12 +6349,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final blackValue = profile.isDynamic
         ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
         : MCOImagePalette.blackIndexFor(profile);
+    final whiteValue = profile.isDynamic
+        ? MCOImageDynamicPalette.whiteGlobalIndexFor(profile)
+        : MCOImagePalette.whiteIndexFor(profile);
     final black = palette.indexOf(blackValue);
+    final white = palette.indexOf(whiteValue);
     return MCOImageV4Document(
       width: width,
       height: height,
       paletteProfile: profile,
       palette: palette,
+      backgroundColor: white >= 0 ? white : null,
       initialStyle: MCOImageV4Style(
         strokeColor: black >= 0 ? black : palette.length - 1,
       ),
@@ -6162,9 +6481,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
 
       addLocal(vectorDocument.backgroundColor);
-      addLocal(vectorDocument.initialStyle.fillColor);
-      addLocal(vectorDocument.initialStyle.strokeColor);
-      for (final figure in vectorDocument.figures) {
+      for (final figure in vectorDocument.figures.where(
+        (figure) => figure.visible,
+      )) {
         addLocal(figure.style.fillColor);
         addLocal(figure.style.strokeColor);
       }
@@ -6366,6 +6685,9 @@ class _AlphaSwatchPainter extends CustomPainter {
 class _VectorCanvasPainter extends CustomPainter {
   final MCOImageV4Document document;
   final MCOImageV4Figure? selectedFigure;
+  final List<int>? referencePixels;
+  final PaletteProfile? referenceProfile;
+  final int? referenceTransparentColor;
   final List<MCOImageV4Point> guidePoints;
   final MCOImageV4Style guideStyle;
   final bool showGrid;
@@ -6375,6 +6697,9 @@ class _VectorCanvasPainter extends CustomPainter {
   const _VectorCanvasPainter({
     required this.document,
     required this.selectedFigure,
+    required this.referencePixels,
+    required this.referenceProfile,
+    required this.referenceTransparentColor,
     required this.guidePoints,
     required this.guideStyle,
     required this.showGrid,
@@ -6386,21 +6711,80 @@ class _VectorCanvasPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.translate(canvasOffset.dx, canvasOffset.dy);
+    final hasReference =
+        referencePixels != null &&
+        referencePixels!.length == document.width * document.height &&
+        referenceProfile != null;
+    if (hasReference) {
+      _paintReference(canvas, referencePixels!, referenceProfile!);
+    }
     MCOImageV4Painter(
       document,
       selectedFigure: selectedFigure,
       selectionColor: const Color(0xff00aaff),
       guidePoints: guidePoints,
       guideStyle: guideStyle,
+      paintBackground: !hasReference,
       showGrid: showGrid,
     ).paint(canvas, canvasSize);
     canvas.restore();
+  }
+
+  void _paintReference(
+    Canvas canvas,
+    List<int> pixels,
+    PaletteProfile profile,
+  ) {
+    final cellWidth = canvasSize.width / document.width;
+    final cellHeight = canvasSize.height / document.height;
+    final paint = Paint()..isAntiAlias = false;
+    for (var y = 0; y < document.height; y++) {
+      for (var x = 0; x < document.width; x++) {
+        final colorValue = pixels[y * document.width + x];
+        if (referenceTransparentColor != null &&
+            colorValue == referenceTransparentColor) {
+          continue;
+        }
+        paint.color = _referenceColor(profile, colorValue);
+        canvas.drawRect(
+          Rect.fromLTWH(
+            x * cellWidth,
+            y * cellHeight,
+            cellWidth,
+            cellHeight,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+
+  Color _referenceColor(PaletteProfile profile, int colorValue) {
+    if (profile.isDynamic) {
+      final safeColorValue =
+          colorValue >= 0 &&
+              colorValue < MCOImageDynamicPalette.global512.length &&
+              MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                    profile,
+                    colorValue,
+                  ) !=
+                  null
+          ? colorValue
+          : MCOImagePalette.whiteIndexFor(profile);
+      return MCOImageDynamicPalette.global512[safeColorValue];
+    }
+    final colors = MCOImagePalette.colorsFor(profile);
+    final colorIndex = colorValue.clamp(0, colors.length - 1).toInt();
+    return colors[colorIndex];
   }
 
   @override
   bool shouldRepaint(covariant _VectorCanvasPainter oldDelegate) {
     return oldDelegate.document != document ||
         oldDelegate.selectedFigure != selectedFigure ||
+        oldDelegate.referencePixels != referencePixels ||
+        oldDelegate.referenceProfile != referenceProfile ||
+        oldDelegate.referenceTransparentColor != referenceTransparentColor ||
         oldDelegate.guidePoints != guidePoints ||
         oldDelegate.guideStyle != guideStyle ||
         oldDelegate.showGrid != showGrid ||

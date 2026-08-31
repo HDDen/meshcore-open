@@ -14,9 +14,9 @@ class MCOImagePalette {
     return switch (profile) {
       PaletteProfile.mono => 1,
       PaletteProfile.master4 => 3,
-      PaletteProfile.master8 => 1,
+      PaletteProfile.master8 => 2,
       PaletteProfile.grayscale8 => 7,
-      PaletteProfile.master16 => 3,
+      PaletteProfile.master16 => 2,
       PaletteProfile.grayscale16 => 15,
       PaletteProfile.master32 => 3,
       PaletteProfile.grayscale32 => 31,
