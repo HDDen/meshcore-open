@@ -8,6 +8,9 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
+import '../helpers/mcoimg_v4_model.dart';
+import 'mco_image_v4_view.dart';
 
 class MCOImageDecodeMetadata {
   final MCOImage? image;
@@ -33,21 +36,72 @@ class MCOImageMessage extends StatelessWidget {
   const MCOImageMessage({super.key, required this.image, this.maxSize = 200});
 
   static MCOImageDecodeMetadata decodeMetadata(String text) {
-    final current = MCOImageCodec.maxSupportedVersion;
+    const current = 4;
+    final trimmed = text.trimLeft();
+    if (trimmed.startsWith(ChannelBinaryDataHelper.unsupportedMcoImagePrefix)) {
+      final version = int.tryParse(
+        trimmed.substring(
+          ChannelBinaryDataHelper.unsupportedMcoImagePrefix.length,
+        ),
+      );
+      if (version != null) {
+        return MCOImageDecodeMetadata(
+          image: null,
+          unsupportedVersion: version,
+          currentMaxSupportedVersion: current,
+          payloadInfo: null,
+        );
+      }
+    }
+    if (MCOImageV4Codec.isTextPayload(text)) {
+      try {
+        final body = const MCOImageV4Codec().bodyFromText(text);
+        final decoded = const MCOImageV4Codec().decodeBody(body);
+        final document = decoded.document;
+        final background = document.backgroundColor == null
+            ? -1
+            : document.palette[document.backgroundColor!];
+        return MCOImageDecodeMetadata(
+          image: MCOImageV4Preview(
+            document: document,
+            paletteProfile: document.paletteProfile,
+            pixels: List<int>.filled(
+              document.width * document.height,
+              background,
+            ),
+            transparentColor: background < 0 ? background : null,
+          ),
+          unsupportedVersion: null,
+          currentMaxSupportedVersion: current,
+          payloadInfo: MCOImagePayloadInfo(
+            version: 4,
+            algorithm: 'vector',
+            binaryLength: body.length,
+          ),
+        );
+      } on MCOImageCodecException {
+        return const MCOImageDecodeMetadata(
+          image: null,
+          unsupportedVersion: null,
+          currentMaxSupportedVersion: current,
+          payloadInfo: null,
+        );
+      }
+    }
     if (MCOImageV3Codec.isTextPayload(text)) {
       final payloadInfo = MCOImageV3Codec.inspectText(text);
       try {
         return MCOImageDecodeMetadata(
           image: MCOImageV3Codec().decodeText(text),
           unsupportedVersion: null,
-          currentMaxSupportedVersion: 3,
+          currentMaxSupportedVersion: current,
           payloadInfo: payloadInfo,
         );
       } on MCOImageCodecException {
         return MCOImageDecodeMetadata(
           image: null,
           unsupportedVersion: null,
-          currentMaxSupportedVersion: 3,
+          currentMaxSupportedVersion: current,
           payloadInfo: payloadInfo,
         );
       }
@@ -110,6 +164,9 @@ class MCOImageMessage extends StatelessWidget {
     } else if (showFormat &&
         image.encodingVersion == MCOImageEncodingVersion.v3) {
       parts.add('v3');
+    } else if (showFormat &&
+        image.encodingVersion == MCOImageEncodingVersion.v4) {
+      parts.add('v4');
     }
     if (showAlgorithm && payloadInfo != null) {
       parts.add(payloadInfo.algorithm);
@@ -117,7 +174,7 @@ class MCOImageMessage extends StatelessWidget {
     if (showBytes) {
       final byteLength = isBinary
           ? payloadInfo != null && senderName != null
-                ? payloadInfo.version == 3
+                ? payloadInfo.version == 3 || payloadInfo.version == 4
                       ? ChannelBinaryDataHelper.appBinaryEnvelopeLength(
                           bodyLength: payloadInfo.binaryLength,
                           senderName: senderName,
@@ -141,6 +198,9 @@ class MCOImageMessage extends StatelessWidget {
     MCOImage image, {
     int cellSize = 16,
   }) async {
+    if (image is MCOImageV4Preview) {
+      return renderMCOImageV4Png(image.document, scale: cellSize);
+    }
     final palette = MCOImagePalette.colorsFor(image.paletteProfile);
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
@@ -204,6 +264,12 @@ class MCOImageMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (image is MCOImageV4Preview) {
+      return MCOImageV4View(
+        document: (image as MCOImageV4Preview).document,
+        maxSize: maxSize,
+      );
+    }
     final aspectRatio = image.width / image.height;
     final displayWidth = aspectRatio >= 1 ? maxSize : maxSize * aspectRatio;
     final displayHeight = aspectRatio >= 1 ? maxSize / aspectRatio : maxSize;

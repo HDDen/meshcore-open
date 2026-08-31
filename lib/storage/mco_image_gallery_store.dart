@@ -10,6 +10,8 @@ import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mco_image_identity.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
+import '../helpers/mcoimg_v4_model.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../models/mco_image_pack.dart';
 import '../services/mco_image_pack_originals.dart';
@@ -354,16 +356,30 @@ class MCOImageGalleryStore {
 
   Future<MCOImageGalleryItem> createFromText(String text) async {
     final trimmed = text.trimLeft();
+    final isV4 = MCOImageV4Codec.isTextPayload(trimmed);
     final isV3 = MCOImageV3Codec.isTextPayload(trimmed);
-    final binaryPayload = isV3
-        ? MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed)
-        : MCOImageCodec.binaryPayloadFromText(trimmed);
-    final image = isV3
-        ? MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload)
-        : MCOImageCodec().decode(
-            MCOImageCodec.textFromBinaryPayload(binaryPayload),
-          );
-    final payloadInfo = isV3
+    final MCOImage image;
+    final Uint8List binaryPayload;
+    if (isV4) {
+      final codec = const MCOImageV4Codec();
+      final body = codec.stripTransportTail(codec.bodyFromText(trimmed));
+      final decoded = codec.decodeBody(body);
+      binaryPayload = ChannelAppDataHelper.appPayloadWithoutSender(
+        subtypeId: ChannelAppDataHelper.mcoImageSubtype,
+        version: ChannelAppDataHelper.mcoImageV4Version,
+        body: body,
+      );
+      image = _v4Preview(decoded);
+    } else if (isV3) {
+      binaryPayload = MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed);
+      image = MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload);
+    } else {
+      binaryPayload = MCOImageCodec.binaryPayloadFromText(trimmed);
+      image = MCOImageCodec().decode(
+        MCOImageCodec.textFromBinaryPayload(binaryPayload),
+      );
+    }
+    final payloadInfo = isV3 || isV4
         ? null
         : MCOImageCodec.inspectPayload(
             MCOImageCodec.textFromBinaryPayload(binaryPayload),
@@ -379,8 +395,12 @@ class MCOImageGalleryStore {
       width: image.width,
       height: image.height,
       byteLength: binaryPayload.length,
-      usedColorCount: image.pixels.toSet().length,
-      codecVersion: isV3
+      usedColorCount: isV4
+          ? (image as MCOImageV4Preview).document.palette.length
+          : image.pixels.toSet().length,
+      codecVersion: isV4
+          ? ChannelAppDataHelper.mcoImageV4Version
+          : isV3
           ? ChannelAppDataHelper.mcoImageV3Version
           : payloadInfo?.version ?? _codecVersionForImage(image),
       paletteProfile: image.paletteProfile,
@@ -442,7 +462,7 @@ class MCOImageGalleryStore {
       );
       final codecVersion =
           json['codecVersion'] as int? ??
-          _v3CodecVersionForPayload(binaryPayload) ??
+          _appCodecVersionForPayload(binaryPayload) ??
           MCOImageCodec.inspectPayload(
             MCOImageCodec.textFromBinaryPayload(binaryPayload),
           )?.version ??
@@ -560,7 +580,12 @@ class MCOImageGalleryStore {
               width: decoded.image.width,
               height: decoded.image.height,
               byteLength: binaryPayload.length,
-              usedColorCount: decoded.image.pixels.toSet().length,
+              usedColorCount: decoded.image is MCOImageV4Preview
+                  ? (decoded.image as MCOImageV4Preview)
+                        .document
+                        .palette
+                        .length
+                  : decoded.image.pixels.toSet().length,
               codecVersion: decoded.codecVersion,
               paletteProfile: decoded.image.paletteProfile,
             ),
@@ -577,6 +602,14 @@ class MCOImageGalleryStore {
     final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
       binaryPayload,
     );
+    if (appPayload?.subtypeVersion ==
+        ChannelAppDataHelper.mcoImageV4SubtypeVersion) {
+      final decoded = const MCOImageV4Codec().decodeBody(appPayload!.body);
+      return _DecodedGalleryPayload(
+        image: _v4Preview(decoded),
+        codecVersion: ChannelAppDataHelper.mcoImageV4Version,
+      );
+    }
     if (appPayload?.subtypeVersion ==
         ChannelAppDataHelper.mcoImageV3SubtypeVersion) {
       return _DecodedGalleryPayload(
@@ -773,18 +806,35 @@ class MCOImageGalleryStore {
       MCOImageEncodingVersion.v1Legacy => 1,
       MCOImageEncodingVersion.v2 => 2,
       MCOImageEncodingVersion.v3 => ChannelAppDataHelper.mcoImageV3Version,
+      MCOImageEncodingVersion.v4 => ChannelAppDataHelper.mcoImageV4Version,
     };
   }
 
-  int? _v3CodecVersionForPayload(Uint8List payload) {
+  int? _appCodecVersionForPayload(Uint8List payload) {
     final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
       payload,
     );
-    if (appPayload?.subtypeVersion !=
-        ChannelAppDataHelper.mcoImageV3SubtypeVersion) {
-      return null;
+    switch (appPayload?.subtypeVersion) {
+      case ChannelAppDataHelper.mcoImageV3SubtypeVersion:
+        return ChannelAppDataHelper.mcoImageV3Version;
+      case ChannelAppDataHelper.mcoImageV4SubtypeVersion:
+        return ChannelAppDataHelper.mcoImageV4Version;
+      default:
+        return null;
     }
-    return ChannelAppDataHelper.mcoImageV3Version;
+  }
+
+  MCOImageV4Preview _v4Preview(DecodedMCOImageV4 decoded) {
+    final document = decoded.document;
+    final background = document.backgroundColor == null
+        ? -1
+        : document.palette[document.backgroundColor!];
+    return MCOImageV4Preview(
+      document: document,
+      paletteProfile: document.paletteProfile,
+      pixels: List<int>.filled(document.width * document.height, background),
+      transparentColor: background < 0 ? background : null,
+    );
   }
 }
 

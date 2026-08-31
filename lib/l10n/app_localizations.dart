@@ -9160,6 +9160,258 @@ abstract class AppLocalizations {
   /// **'MCOimg canvas'**
   String get chat_canvas;
 
+  /// No description provided for @chat_canvasV4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOimg v4 vector canvas'**
+  String get chat_canvasV4Title;
+
+  /// No description provided for @chat_canvasV4SetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New vector canvas'**
+  String get chat_canvasV4SetupTitle;
+
+  /// No description provided for @chat_canvasV4Grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinate grid'**
+  String get chat_canvasV4Grid;
+
+  /// No description provided for @chat_canvasV4GridDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A smaller grid reduces payload size; a larger grid improves figure placement precision.'**
+  String get chat_canvasV4GridDescription;
+
+  /// No description provided for @chat_canvasV4Background.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get chat_canvasV4Background;
+
+  /// No description provided for @chat_canvasV4Transparent.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparent'**
+  String get chat_canvasV4Transparent;
+
+  /// No description provided for @chat_canvasV4Fill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get chat_canvasV4Fill;
+
+  /// No description provided for @chat_canvasV4Stroke.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke'**
+  String get chat_canvasV4Stroke;
+
+  /// No description provided for @chat_canvasV4StrokeWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke width'**
+  String get chat_canvasV4StrokeWidth;
+
+  /// No description provided for @chat_canvasV4Closed.
+  ///
+  /// In en, this message translates to:
+  /// **'Close figure'**
+  String get chat_canvasV4Closed;
+
+  /// No description provided for @chat_canvasV4HideFigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide figure'**
+  String get chat_canvasV4HideFigure;
+
+  /// No description provided for @chat_canvasV4ShowFigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Show figure'**
+  String get chat_canvasV4ShowFigure;
+
+  /// No description provided for @chat_canvasV4MoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get chat_canvasV4MoveUp;
+
+  /// No description provided for @chat_canvasV4MoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get chat_canvasV4MoveDown;
+
+  /// No description provided for @chat_canvasV4Objects.
+  ///
+  /// In en, this message translates to:
+  /// **'Figures'**
+  String get chat_canvasV4Objects;
+
+  /// No description provided for @chat_canvasV4NoObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no figures on the canvas yet'**
+  String get chat_canvasV4NoObjects;
+
+  /// No description provided for @chat_canvasV4Calculate.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculate final image'**
+  String get chat_canvasV4Calculate;
+
+  /// No description provided for @chat_canvasV4Redo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get chat_canvasV4Redo;
+
+  /// No description provided for @chat_canvasV4CanvasSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas settings'**
+  String get chat_canvasV4CanvasSettings;
+
+  /// No description provided for @chat_canvasV4InvalidSize.
+  ///
+  /// In en, this message translates to:
+  /// **'From 1 to 256'**
+  String get chat_canvasV4InvalidSize;
+
+  /// No description provided for @chat_canvasV4LoadReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Load reference image'**
+  String get chat_canvasV4LoadReference;
+
+  /// No description provided for @chat_canvasV4HideReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide reference image'**
+  String get chat_canvasV4HideReference;
+
+  /// No description provided for @chat_canvasV4ShowReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Show reference image'**
+  String get chat_canvasV4ShowReference;
+
+  /// No description provided for @chat_canvasV4RemoveReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove reference image'**
+  String get chat_canvasV4RemoveReference;
+
+  /// No description provided for @chat_canvasV4ReferenceNotEncoded.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference image is not included in payload'**
+  String get chat_canvasV4ReferenceNotEncoded;
+
+  /// No description provided for @chat_canvasV4PaletteFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The document already uses 64 colors'**
+  String get chat_canvasV4PaletteFull;
+
+  /// No description provided for @chat_canvasV4Payload.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload: {bytes} bytes'**
+  String chat_canvasV4Payload(int bytes);
+
+  /// No description provided for @chat_canvasV4PayloadTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload exceeds the available size by {bytes} bytes'**
+  String chat_canvasV4PayloadTooLarge(int bytes);
+
+  /// No description provided for @chat_canvasV4ApplyStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply style'**
+  String get chat_canvasV4ApplyStyle;
+
+  /// No description provided for @chat_canvasV4WaveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the wave start, end, and depth'**
+  String get chat_canvasV4WaveHint;
+
+  /// No description provided for @chat_canvasV4ToolSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select and move'**
+  String get chat_canvasV4ToolSelect;
+
+  /// No description provided for @chat_canvasV4ToolDot.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot'**
+  String get chat_canvasV4ToolDot;
+
+  /// No description provided for @chat_canvasV4ToolPencil.
+  ///
+  /// In en, this message translates to:
+  /// **'Pencil'**
+  String get chat_canvasV4ToolPencil;
+
+  /// No description provided for @chat_canvasV4ToolLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get chat_canvasV4ToolLine;
+
+  /// No description provided for @chat_canvasV4ToolPolyline.
+  ///
+  /// In en, this message translates to:
+  /// **'Polyline'**
+  String get chat_canvasV4ToolPolyline;
+
+  /// No description provided for @chat_canvasV4PolylineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Place contour vertices. Tap the first vertex or choose how to finish.'**
+  String get chat_canvasV4PolylineHint;
+
+  /// No description provided for @chat_canvasV4FinishOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish open'**
+  String get chat_canvasV4FinishOpen;
+
+  /// No description provided for @chat_canvasV4FinishClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Close shape'**
+  String get chat_canvasV4FinishClosed;
+
+  /// No description provided for @chat_canvasV4ToolRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get chat_canvasV4ToolRect;
+
+  /// No description provided for @chat_canvasV4ToolEllipse.
+  ///
+  /// In en, this message translates to:
+  /// **'Ellipse'**
+  String get chat_canvasV4ToolEllipse;
+
+  /// No description provided for @chat_canvasV4ToolCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle'**
+  String get chat_canvasV4ToolCircle;
+
+  /// No description provided for @chat_canvasV4ToolWave.
+  ///
+  /// In en, this message translates to:
+  /// **'Wave'**
+  String get chat_canvasV4ToolWave;
+
   /// No description provided for @chat_canvasCrop.
   ///
   /// In en, this message translates to:

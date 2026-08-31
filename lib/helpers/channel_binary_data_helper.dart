@@ -6,11 +6,13 @@ import 'channel_app_data_helper.dart';
 import 'contact_share_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
+import 'mcoimg_v4_codec.dart';
+import 'mcoimg_v4_model.dart';
 import 'mcmp_app_codec.dart';
 import 'mesh_compressor.dart';
 import 'shared_marker_deletions.dart';
 
-enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }
+enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcoImageV4, mcmp }
 
 class ChannelBinaryDataOutbound {
   final int dataType;
@@ -63,6 +65,7 @@ class ChannelAppDataInbound {
   final Uint8List body;
   final int payloadLength;
   final MCOImage? mcoImage;
+  final DecodedMCOImageV4? mcoImageV4;
   final DecodedMcmpAppMessage? mcmpMessage;
   final String? text;
   final bool wasMcmpCompressed;
@@ -76,6 +79,7 @@ class ChannelAppDataInbound {
     required this.body,
     required this.payloadLength,
     this.mcoImage,
+    this.mcoImageV4,
     this.mcmpMessage,
     this.text,
     this.wasMcmpCompressed = false,
@@ -91,6 +95,8 @@ class ChannelAppDataInbound {
 class ChannelBinaryDataHelper {
   ChannelBinaryDataHelper._();
 
+  static const String unsupportedMcoImagePrefix = 'mcoimg-unsupported:';
+
   // Legacy developer namespace from MeshCore's TxtDataHelpers.h. The official
   // app data_type path lives under [appDataType] and carries its own subtype
   // byte inside ChannelAppDataHelper's envelope.
@@ -102,6 +108,7 @@ class ChannelBinaryDataHelper {
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
   static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
+  static const int mcoImageV4Version = ChannelAppDataHelper.mcoImageV4Version;
   static const int mcmpV3WireVersion = ChannelAppDataHelper.mcmpV3WireVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
@@ -126,6 +133,19 @@ class ChannelBinaryDataHelper {
 
     try {
       final trimmedLeft = text.trimLeft();
+      if (MCOImageV4Codec.isTextPayload(trimmedLeft)) {
+        final body = const MCOImageV4Codec().refreshPacketNonce(
+          const MCOImageV4Codec().bodyFromText(trimmedLeft),
+        );
+        return _encodeAppEnvelope(
+          subtypeId: mcoImageSubtype,
+          version: mcoImageV4Version,
+          body: body,
+          senderName: senderName,
+          kind: ChannelBinaryDataKind.mcoImageV4,
+          canonicalText: const MCOImageV4Codec().textFromBody(body),
+        );
+      }
       if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
         final body = MCOImageV3Codec.refreshPacketNonce(
           MCOImageV3Codec.bodyFromText(trimmedLeft),
@@ -206,6 +226,26 @@ class ChannelBinaryDataHelper {
     );
   }
 
+  static ChannelBinaryDataOutbound? tryEncodeMcoImageV4Outbound({
+    required EncodedMCOImageV4 image,
+    required String senderName,
+  }) {
+    if (!canSend) return null;
+    try {
+      final body = const MCOImageV4Codec().refreshPacketNonce(image.body);
+      return _encodeAppEnvelope(
+        subtypeId: mcoImageSubtype,
+        version: mcoImageV4Version,
+        body: body,
+        senderName: senderName,
+        kind: ChannelBinaryDataKind.mcoImageV4,
+        canonicalText: const MCOImageV4Codec().textFromBody(body),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   static ChannelBinaryDataOutbound? tryEncodeMcmpV3AppOutbound({
     required String text,
     required String senderName,
@@ -244,6 +284,14 @@ class ChannelBinaryDataHelper {
     if (!canSend) return null;
     try {
       final trimmedLeft = text.trimLeft();
+      if (MCOImageV4Codec.isTextPayload(trimmedLeft)) {
+        return ChannelAppDataHelper.envelopeLength(
+          bodyLength: const MCOImageV4Codec()
+              .bodyFromText(trimmedLeft)
+              .length,
+          senderName: senderName,
+        );
+      }
       if (MCOImageV3Codec.isTextPayload(trimmedLeft)) {
         return ChannelAppDataHelper.envelopeLength(
           bodyLength: MCOImageV3Codec.bodyFromText(trimmedLeft).length,
@@ -443,7 +491,34 @@ class ChannelBinaryDataHelper {
 
     switch (envelope.subtype) {
       case ChannelAppDataSubtype.mcoImage:
-        if (envelope.version != mcoImageV3Version) return null;
+        if (envelope.version == mcoImageV4Version) {
+          final DecodedMCOImageV4 decoded;
+          try {
+            decoded = const MCOImageV4Codec().decodeBody(envelope.body);
+          } catch (_) {
+            return null;
+          }
+          return ChannelAppDataInbound(
+            senderName: envelope.senderName,
+            subtypeId: envelope.subtypeId,
+            version: envelope.version,
+            subtype: ChannelAppDataSubtype.mcoImage,
+            body: envelope.body,
+            payloadLength: payload.length,
+            mcoImageV4: decoded,
+          );
+        }
+        if (envelope.version != mcoImageV3Version) {
+          return ChannelAppDataInbound(
+            senderName: envelope.senderName,
+            subtypeId: envelope.subtypeId,
+            version: envelope.version,
+            subtype: ChannelAppDataSubtype.mcoImage,
+            body: envelope.body,
+            payloadLength: payload.length,
+            text: '$unsupportedMcoImagePrefix${envelope.version}',
+          );
+        }
         final MCOImage image;
         try {
           image = MCOImageV3Codec().decodeBody(envelope.body);

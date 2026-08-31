@@ -26,6 +26,7 @@ import '../helpers/reaction_helper.dart';
 import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/cyr2lat.dart';
@@ -34,6 +35,7 @@ import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcmp_signature_verifier.dart';
 import '../helpers/south_frame_fragment_reassembler.dart';
@@ -6615,11 +6617,12 @@ class MeshCoreConnector extends ChangeNotifier {
               ));
     if (hasExplicitMcoImageV3 && binaryOutbound == null) return;
 
-    final isMcoImageV3Binary =
-        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3;
+    final isMcoImageBinary =
+        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
+        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV4;
     final messageText = binaryOutbound?.canonicalText ?? text;
     final String outboundText;
-    if (isMcoImageV3Binary) {
+    if (isMcoImageBinary) {
       outboundText = messageText;
     } else if (mcmpV3Sent && binaryOutbound == null) {
       // Text transport carries the signed body in the mcmp3: Base91 wrapper;
@@ -6655,7 +6658,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final isBinaryTransport = binaryFrame != null;
     final isBinaryMcmpTransport =
         binaryOutbound?.kind == ChannelBinaryDataKind.mcmp;
-    final compression = isMcoImageV3Binary
+    final compression = isMcoImageBinary
         ? null
         : _channelCompressionMetadata(
             channel.index,
@@ -6686,7 +6689,7 @@ class MeshCoreConnector extends ChangeNotifier {
       timestamp: pendingTimestamp,
       receivedAt: pendingReceivedAt,
       wasMcmpCompressed:
-          (!isMcoImageV3Binary && _isMcmpEncodedText(outboundText)) ||
+          (!isMcoImageBinary && _isMcmpEncodedText(outboundText)) ||
           isBinaryMcmpTransport,
       compressionType: compression?.type,
       compressionSavingsPercent: compression?.savingsPercent,
@@ -6739,7 +6742,7 @@ class MeshCoreConnector extends ChangeNotifier {
         message.messageId,
         messageText,
         binaryOutbound: binaryOutbound,
-        preparedOutboundText: isMcoImageV3Binary ? null : outboundText,
+        preparedOutboundText: isMcoImageBinary ? null : outboundText,
         uncompressedText: uncompressedText,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -6794,7 +6797,7 @@ class MeshCoreConnector extends ChangeNotifier {
           messageId: message.messageId,
           text: messageText,
           binaryOutbound: binaryOutbound,
-          preparedOutboundText: isMcoImageV3Binary ? null : outboundText,
+          preparedOutboundText: isMcoImageBinary ? null : outboundText,
           uncompressedText: uncompressedText,
           originalText: originalText,
           translatedLanguageCode: translatedLanguageCode,
@@ -6940,9 +6943,10 @@ class MeshCoreConnector extends ChangeNotifier {
     // outgoing message. In particular, do not refresh the MCOimg v3 nonce a
     // second time while a send is deferred for channel/contact sync.
     final binaryOutbound = pending.binaryOutbound;
-    final isMcoImageV3Binary =
-        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3;
-    final outboundText = isMcoImageV3Binary
+    final isMcoImageBinary =
+        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
+        binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV4;
+    final outboundText = isMcoImageBinary
         ? pending.text
         : pending.preparedOutboundText ??
               prepareChannelOutboundText(
@@ -7664,7 +7668,8 @@ class MeshCoreConnector extends ChangeNotifier {
       text: messageText,
       mcoImageV3: mcoImageV3,
       mcoImageV3Outbound:
-          binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3
+          binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
+              binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV4
           ? binaryOutbound
           : null,
       inputText: inputText,
@@ -10282,7 +10287,8 @@ class MeshCoreConnector extends ChangeNotifier {
     if (text.isEmpty) return false;
     final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
-    return !MCOImageV3Codec.isTextPayload(trimmedLeft) &&
+    return !MCOImageV4Codec.isTextPayload(trimmedLeft) &&
+        !MCOImageV3Codec.isTextPayload(trimmedLeft) &&
         !trimmedLeft.startsWith(MCOImageCodec.prefix) &&
         !trimmed.startsWith('g:') &&
         (allowMarkerPayload ||
@@ -10437,6 +10443,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final trimmed = text.trim();
     final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(trimmed);
     final isStructuredPayload =
+        MCOImageV4Codec.isTextPayload(trimmedLeft) ||
         MCOImageV3Codec.isTextPayload(trimmedLeft) ||
         trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
@@ -10516,6 +10523,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final trimmed = text.trim();
     final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(trimmed);
     final isStructuredPayload =
+        MCOImageV4Codec.isTextPayload(trimmedLeft) ||
         MCOImageV3Codec.isTextPayload(trimmedLeft) ||
         trimmedLeft.startsWith(MCOImageCodec.prefix) ||
         trimmed.startsWith('g:') ||
@@ -10620,6 +10628,24 @@ class MeshCoreConnector extends ChangeNotifier {
       channelIndex,
       mcmpMessage.replyAuthorName,
       mcmpMessage.replyTimestamp,
+    );
+  }
+
+  _McmpReplyReference? _resolveAppDataReplyReference(
+    int channelIndex,
+    ChannelAppDataInbound? appData,
+  ) {
+    final mcmpReference = _resolveMcmpReplyReference(
+      channelIndex,
+      appData?.mcmpMessage,
+    );
+    if (mcmpReference != null) return mcmpReference;
+    final image = appData?.mcoImageV4;
+    if (image == null) return null;
+    return _resolveChannelReplyAnchor(
+      channelIndex,
+      image.targetName,
+      image.replyTimestamp,
     );
   }
 
@@ -11027,7 +11053,11 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   String _appDataMessageText(ChannelAppDataInbound decoded) {
-    return decoded.text ?? MCOImageV3Codec.textFromBody(decoded.body);
+    if (decoded.text != null) return decoded.text!;
+    if (decoded.version == ChannelAppDataHelper.mcoImageV4Version) {
+      return const MCOImageV4Codec().textFromBody(decoded.body);
+    }
+    return MCOImageV3Codec.textFromBody(decoded.body);
   }
 
   /// The name blocking rules are matched against — see
@@ -11233,9 +11263,9 @@ class MeshCoreConnector extends ChangeNotifier {
     final messageText = decoded != null
         ? decoded.text
         : _appDataMessageText(appData!);
-    final replyReference = _resolveMcmpReplyReference(
+    final replyReference = _resolveAppDataReplyReference(
       dataFrame.channelIndex,
-      appData?.mcmpMessage,
+      appData,
     );
     final mcmpMessage = appData?.mcmpMessage;
     final packetTimestamp = mcmpMessage == null
@@ -11572,9 +11602,9 @@ class MeshCoreConnector extends ChangeNotifier {
     final messageText = decoded != null
         ? decoded.text
         : _appDataMessageText(appData!);
-    final replyReference = _resolveMcmpReplyReference(
+    final replyReference = _resolveAppDataReplyReference(
       channelIndex,
-      appData?.mcmpMessage,
+      appData,
     );
     final mcmpMessage = appData?.mcmpMessage;
     final timestamp = mcmpMessage == null

@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
+import '../helpers/mcoimg_v4_model.dart';
 
 class MCOImageGalleryItem {
   static const String commonGroupId = 'common';
@@ -98,12 +100,53 @@ class MCOImageGalleryItem {
         ChannelAppDataHelper.mcoImageV3SubtypeVersion;
   }
 
-  String get textPayload => isV3
-      ? MCOImageV3Codec.textFromAppPayloadWithoutSender(binaryPayload)
-      : MCOImageCodec.textFromBinaryPayload(binaryPayload);
+  bool get isV4 {
+    if (codecVersion == ChannelAppDataHelper.mcoImageV4Version) return true;
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      binaryPayload,
+    );
+    return appPayload?.subtypeVersion ==
+        ChannelAppDataHelper.mcoImageV4SubtypeVersion;
+  }
+
+  String get textPayload {
+    if (isV4) {
+      final payload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+        binaryPayload,
+      );
+      if (payload == null) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid MCOimg v4 gallery payload',
+        );
+      }
+      return const MCOImageV4Codec().textFromBody(payload.body);
+    }
+    return isV3
+        ? MCOImageV3Codec.textFromAppPayloadWithoutSender(binaryPayload)
+        : MCOImageCodec.textFromBinaryPayload(binaryPayload);
+  }
 
   MCOImage? tryDecodeImage() {
     try {
+      if (isV4) {
+        final payload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+          binaryPayload,
+        );
+        if (payload == null) return null;
+        final decoded = const MCOImageV4Codec().decodeBody(payload.body);
+        final background = decoded.document.backgroundColor == null
+            ? -1
+            : decoded.document.palette[decoded.document.backgroundColor!];
+        return MCOImageV4Preview(
+          document: decoded.document,
+          paletteProfile: decoded.document.paletteProfile,
+          pixels: List<int>.filled(
+            decoded.document.width * decoded.document.height,
+            background,
+          ),
+          transparentColor: background < 0 ? background : null,
+        );
+      }
       return isV3
           ? MCOImageV3Codec().decodeAppPayloadWithoutSender(binaryPayload)
           : MCOImageCodec().decode(textPayload);

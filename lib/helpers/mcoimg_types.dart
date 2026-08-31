@@ -53,7 +53,7 @@ enum DynamicPaletteReferenceEncoding {
   bankBitmaps,
 }
 
-enum MCOImageEncodingVersion { v1Legacy, v2, v3 }
+enum MCOImageEncodingVersion { v1Legacy, v2, v3, v4 }
 
 enum MCOImageOutputTarget { text, binary }
 

@@ -5,16 +5,16 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'channel_app_data_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
+import 'mcoimg_v4_codec.dart';
 
 /// Canonical identity hash for MCOimg payloads, used to match a received
 /// LoRa image against the original file shipped in a *.mcoimg.pack.
 ///
 /// Formula (the external contract for pack tooling / *.md5 files):
-/// lowercase hex MD5 of the `.mcoimg.bin` bytes, where for v3 payloads the
-/// one-byte transport nonce is zeroed before hashing. The bin file is the
-/// app payload without sender (`[subtypeVersion 0x13][body]`), and the v3
-/// nonce is `body[0]`, i.e. the byte at index 1 of the file. Legacy v1/v2
-/// payloads have no nonce and are hashed as-is.
+/// Lowercase hex MD5 of the canonical `.mcoimg.bin` identity. V3 zeroes its
+/// one-byte nonce. V4 also excludes its transport tail and hashes
+/// `[0x14][zero nonce][document length][canonical document]`. Legacy v1/v2
+/// payloads have no transport metadata and are hashed as-is.
 class MCOImageIdentity {
   MCOImageIdentity._();
 
@@ -27,6 +27,16 @@ class MCOImageIdentity {
       if (MCOImageV3Codec.isTextPayload(trimmed)) {
         return hashFromBinaryPayload(
           MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed),
+        );
+      }
+      if (MCOImageV4Codec.isTextPayload(trimmed)) {
+        final body = const MCOImageV4Codec().bodyFromText(trimmed);
+        return hashFromBinaryPayload(
+          ChannelAppDataHelper.appPayloadWithoutSender(
+            subtypeId: ChannelAppDataHelper.mcoImageSubtype,
+            version: ChannelAppDataHelper.mcoImageV4Version,
+            body: body,
+          ),
         );
       }
       if (trimmed.startsWith(MCOImageCodec.prefix)) {
@@ -46,6 +56,12 @@ class MCOImageIdentity {
     final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
       normalized,
     );
+    if (appPayload?.subtypeVersion ==
+        ChannelAppDataHelper.mcoImageV4SubtypeVersion) {
+      final canonical = const MCOImageV4Codec()
+          .canonicalAppPayloadWithoutSender(appPayload!.body);
+      return crypto.md5.convert(canonical).toString();
+    }
     if (appPayload?.subtypeVersion ==
             ChannelAppDataHelper.mcoImageV3SubtypeVersion &&
         normalized.length >= 2) {

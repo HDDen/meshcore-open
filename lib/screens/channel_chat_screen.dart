@@ -32,6 +32,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -3368,6 +3369,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           initialImageWidth: initialImageWidth,
           initialImageHeight: initialImageHeight,
           initialPaletteProfile: initialPaletteProfile,
+          replyTargetName: _replyingToMessage?.senderName,
+          replyTimestamp: _replyingToMessage == null
+              ? null
+              : _replyingToMessage!.mcmpTimestamp ??
+                    _replyingToMessage!.timestamp.millisecondsSinceEpoch ~/
+                        1000,
         ),
       ),
     );
@@ -3381,6 +3388,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     await _sendMessage(
       skipTranslation: true,
       skipReplyContext: true,
+      embeddedReplyTarget: result.encodedImageV4 == null
+          ? null
+          : _replyingToMessage,
       mcoImageV3: result.mcoImageV3,
     );
   }
@@ -3965,6 +3975,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     String? quickAnswerText,
     bool skipTranslation = false,
     bool skipReplyContext = false,
+    ChannelMessage? embeddedReplyTarget,
     EncodedMCOImageV3? mcoImageV3,
   }) async {
     final rawText = quickAnswerText ??
@@ -4062,7 +4073,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // store last sended msg to resend mechanism
     _lastChannelSentText = messageText;
 
-    final replyTarget = skipReplyContext ? null : _replyingToMessage;
+    final replyTarget = skipReplyContext
+        ? embeddedReplyTarget
+        : _replyingToMessage;
     if (quickAnswerText == null) {
       _textController.clear();
       _textFieldFocusNode.requestFocus();
@@ -4738,7 +4751,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     connector.cancelPendingChannelSend(message.messageId);
     _lastChannelSendAt = DateTime.now();
     final mcoImageV3 = _mcoImageV3ForResend(message.text);
-    final resendText = mcoImageV3 == null
+    final isMcoImageV4 = MCOImageV4Codec.isTextPayload(
+      message.text.trimLeft(),
+    );
+    final resendText = mcoImageV3 == null && !isMcoImageV4
         ? _restoreReplyMentionForResend(message)
         : message.text;
     _lastChannelSentText = resendText;

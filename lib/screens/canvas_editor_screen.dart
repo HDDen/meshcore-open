@@ -16,11 +16,17 @@ import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
+import '../helpers/mcoimg_v4_model.dart';
+import 'mco_image_v4_editor_screen.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
+import '../models/canvas_editor_result.dart';
+
+export '../models/canvas_editor_result.dart';
 
 enum _CanvasTool { pencil, fill, eyedropper, line, oval, rectangle }
 
@@ -65,34 +71,6 @@ class _ImportedCanvasImage {
     required this.height,
     required this.pixels,
   });
-}
-
-class CanvasEditorResult {
-  final String text;
-  final EncodedMCOImage encodedImage;
-
-  CanvasEditorResult._({required this.text, required this.encodedImage});
-
-  factory CanvasEditorResult.fromEncoded(EncodedMCOImage encoded) {
-    return CanvasEditorResult._(
-      text: encoded.actualEncodingVersion == MCOImageEncodingVersion.v3
-          ? MCOImageV3Codec.textFromBody(encoded.payload)
-          : encoded.text,
-      encodedImage: encoded,
-    );
-  }
-
-  bool get isMcoImageV3 =>
-      encodedImage.actualEncodingVersion == MCOImageEncodingVersion.v3;
-
-  EncodedMCOImageV3? get mcoImageV3 {
-    if (!isMcoImageV3) return null;
-    return EncodedMCOImageV3(
-      body: encodedImage.payload,
-      byteLength: encodedImage.payload.length,
-      encodedCandidate: encodedImage,
-    );
-  }
 }
 
 class _MCOImageEncodeRequest {
@@ -299,6 +277,8 @@ class CanvasEditorScreen extends StatefulWidget {
   final int? initialImageWidth;
   final int? initialImageHeight;
   final PaletteProfile? initialPaletteProfile;
+  final String? replyTargetName;
+  final int? replyTimestamp;
 
   const CanvasEditorScreen({
     super.key,
@@ -310,6 +290,8 @@ class CanvasEditorScreen extends StatefulWidget {
     this.initialImageWidth,
     this.initialImageHeight,
     this.initialPaletteProfile,
+    this.replyTargetName,
+    this.replyTimestamp,
   });
 
   @override
@@ -416,7 +398,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     super.initState();
     _pixels = List.filled(_width * _height, _whiteIndex);
     final initialImage = widget.initialImage;
-    if (initialImage != null) {
+    if (initialImage is MCOImageV4Preview) {
+      _loadSavedCanvasSettings();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(_openV4Editor(initialDocument: initialImage.document));
+        }
+      });
+    } else if (initialImage != null) {
       _loadInitialImage(initialImage);
     } else if (widget.initialImageBytes != null) {
       _loadInitialImageBytes(
@@ -1793,10 +1782,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
   List<MCOImageEncodingVersion> get _availableEncodingVersions {
-    return const [
+    return [
       MCOImageEncodingVersion.v1Legacy,
       MCOImageEncodingVersion.v2,
       MCOImageEncodingVersion.v3,
+      if (widget.maxBinaryPayloadBytes != null &&
+          widget.binarySenderName != null)
+        MCOImageEncodingVersion.v4,
     ];
   }
 
@@ -1813,10 +1805,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       MCOImageEncodingVersion.v1Legacy => 'v1',
       MCOImageEncodingVersion.v2 => 'v2',
       MCOImageEncodingVersion.v3 => 'v3',
+      MCOImageEncodingVersion.v4 => 'v4 Vector',
     };
   }
 
   void _changeEncodingVersion(MCOImageEncodingVersion version) {
+    if (version == MCOImageEncodingVersion.v4) {
+      unawaited(_openV4Editor());
+      return;
+    }
     if (version == _encodingVersion) return;
 
     final before = _captureCanvasSnapshot();
@@ -1909,6 +1906,80 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     unawaited(_saveEncodingVersion(version));
     unawaited(_saveCanvasSize(nextWidth, nextHeight));
     unawaited(_saveCanvasPalette(nextProfile));
+  }
+
+  Future<void> _openV4Editor({MCOImageV4Document? initialDocument}) async {
+    final maxBytes = widget.maxBinaryPayloadBytes;
+    final senderName = widget.binarySenderName;
+    if (maxBytes == null || senderName == null) return;
+    final result = await Navigator.push<CanvasEditorResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MCOImageV4EditorScreen(
+          maxBinaryPayloadBytes: maxBytes,
+          binarySenderName: senderName,
+          initialShowGrid: _showGrid,
+          initialDocument: initialDocument,
+          replyTargetName: widget.replyTargetName,
+          replyTimestamp: widget.replyTimestamp,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    final showGrid =
+        PrefsManager.instance.getBool(_prefsShowGridKey) ?? _showGrid;
+    if (showGrid != _showGrid) {
+      setState(() => _showGrid = showGrid);
+    }
+    if (result?.rasterImage case final rasterImage?) {
+      _applyV4RasterTransfer(rasterImage);
+    } else if (result != null) {
+      Navigator.pop(context, result);
+    } else if (initialDocument != null) {
+      Navigator.pop(context);
+    }
+  }
+
+  void _applyV4RasterTransfer(MCOImage image) {
+    final before = _captureCanvasSnapshot();
+    final profile = image.paletteProfile;
+    final dynamicProfile = profile.isDynamic ? profile : _dynamicPaletteProfile;
+    final selectedColor = MCOImagePalette.blackIndexFor(profile);
+    final after = _captureCanvasSnapshot(
+      width: image.width,
+      height: image.height,
+      paletteProfile: profile,
+      dynamicPaletteProfile: dynamicProfile,
+      encodingVersion: MCOImageEncodingVersion.v3,
+      selectedColor: selectedColor,
+      transparentColor: image.transparentColor,
+      pixels: image.pixels,
+    );
+    _rememberCanvasAction(before, after);
+    setState(() {
+      _encodingVersion = MCOImageEncodingVersion.v3;
+      _paletteProfile = profile;
+      _dynamicPaletteProfile = dynamicProfile;
+      _selectedColor = selectedColor;
+      _transparentColor = image.transparentColor;
+      _isPickingTransparentColor = false;
+      _width = image.width;
+      _height = image.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List<int>.of(image.pixels);
+      _lineStartIndex = null;
+      _ovalFirstIndex = null;
+      _ovalSecondIndex = null;
+      _rectangleFirstIndex = null;
+      _rectangleSecondIndex = null;
+      _currentEncodedCandidate = null;
+      _currentEncodedCacheKey = null;
+    });
+    _markPayloadDirty();
+    unawaited(_saveEncodingVersion(MCOImageEncodingVersion.v3));
+    unawaited(_saveCanvasSize(image.width, image.height));
+    unawaited(_saveCanvasPalette(profile));
   }
 
   void _setCanvasSizeUnlocked(bool? value) {
@@ -3132,6 +3203,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           _cancelPayloadCalculationBeforeCanvasReplacement();
       final bytes = await file.readAsBytes();
       if (file.name.toLowerCase().endsWith('.bin')) {
+        final appPayload =
+            ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(bytes);
+        if (appPayload?.subtypeVersion ==
+            ChannelAppDataHelper.mcoImageV4SubtypeVersion) {
+          final decoded = const MCOImageV4Codec().decodeBody(appPayload!.body);
+          await _cancelCurrentEncoding();
+          if (!mounted) return;
+          shouldRestorePendingRefreshOnError = false;
+          await _openV4Editor(initialDocument: decoded.document);
+          return;
+        }
         final imported = _decodeMcoImageBinaryForImport(bytes);
 
         // The imported payload is already the winning encoded candidate. Wait
@@ -3274,10 +3356,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final sourceHeight = source.height;
     source.dispose();
 
-    final canvasWidth = _unlockCanvasSize
+    final adoptImageSize =
+        _encodingVersion == MCOImageEncodingVersion.v2 ||
+        _encodingVersion == MCOImageEncodingVersion.v3 ||
+        _unlockCanvasSize;
+    final canvasWidth = adoptImageSize
         ? math.max(_minCanvasSize, math.min(_maxCanvasSize, sourceWidth))
         : _width;
-    final canvasHeight = _unlockCanvasSize
+    final canvasHeight = adoptImageSize
         ? math.max(_minCanvasSize, math.min(_maxCanvasSize, sourceHeight))
         : _height;
     final scale = math.min(

@@ -5,9 +5,13 @@ import 'dart:ui' as ui;
 import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:share_plus/share_plus.dart';
 
+import 'channel_app_data_helper.dart';
 import 'mcoimg_codec.dart';
 import 'mcoimg_v3_codec.dart';
+import 'mcoimg_v4_codec.dart';
+import 'mcoimg_v4_model.dart';
 import 'mcoimg_palette.dart';
+import '../widgets/mco_image_v4_view.dart';
 
 class MCOImageFileSaver {
   static Future<bool> savePng(MCOImage image) async {
@@ -102,9 +106,20 @@ class MCOImageFileSaver {
 
   static Future<bool> saveBinaryPayloadFromText(String text) async {
     final trimmed = text.trimLeft();
-    final payload = MCOImageV3Codec.isTextPayload(trimmed)
-        ? MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed)
-        : MCOImageCodec.binaryPayloadFromText(trimmed);
+    final Uint8List payload;
+    if (MCOImageV4Codec.isTextPayload(trimmed)) {
+      final codec = const MCOImageV4Codec();
+      final body = codec.stripTransportTail(codec.bodyFromText(trimmed));
+      payload = ChannelAppDataHelper.appPayloadWithoutSender(
+        subtypeId: ChannelAppDataHelper.mcoImageSubtype,
+        version: ChannelAppDataHelper.mcoImageV4Version,
+        body: body,
+      );
+    } else if (MCOImageV3Codec.isTextPayload(trimmed)) {
+      payload = MCOImageV3Codec.appPayloadWithoutSenderFromText(trimmed);
+    } else {
+      payload = MCOImageCodec.binaryPayloadFromText(trimmed);
+    }
     return saveBinaryPayload(payload);
   }
 
@@ -157,6 +172,9 @@ class MCOImageFileSaver {
   }
 
   static Future<Uint8List> _renderOriginalPngBytes(MCOImage image) async {
+    if (image is MCOImageV4Preview) {
+      return renderMCOImageV4Png(image.document);
+    }
     final rgba = Uint8List(image.width * image.height * 4);
     final palette = image.paletteProfile.isDynamic
         ? MCOImageDynamicPalette.global512

@@ -5372,6 +5372,139 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_canvas => 'Холст MCOimg';
 
   @override
+  String get chat_canvasV4Title => 'Векторный холст MCOimg v4';
+
+  @override
+  String get chat_canvasV4SetupTitle => 'Новый векторный холст';
+
+  @override
+  String get chat_canvasV4Grid => 'Координатная сетка';
+
+  @override
+  String get chat_canvasV4GridDescription =>
+      'Меньшая сетка уменьшает payload, большая повышает точность расположения фигур.';
+
+  @override
+  String get chat_canvasV4Background => 'Фон';
+
+  @override
+  String get chat_canvasV4Transparent => 'Прозрачный';
+
+  @override
+  String get chat_canvasV4Fill => 'Заливка';
+
+  @override
+  String get chat_canvasV4Stroke => 'Контур';
+
+  @override
+  String get chat_canvasV4StrokeWidth => 'Толщина контура';
+
+  @override
+  String get chat_canvasV4Closed => 'Замкнуть фигуру';
+
+  @override
+  String get chat_canvasV4HideFigure => 'Скрыть фигуру';
+
+  @override
+  String get chat_canvasV4ShowFigure => 'Показать фигуру';
+
+  @override
+  String get chat_canvasV4MoveUp => 'Поднять выше';
+
+  @override
+  String get chat_canvasV4MoveDown => 'Опустить ниже';
+
+  @override
+  String get chat_canvasV4Objects => 'Фигуры';
+
+  @override
+  String get chat_canvasV4NoObjects => 'На холсте пока нет фигур';
+
+  @override
+  String get chat_canvasV4Calculate => 'Рассчитать итоговую картинку';
+
+  @override
+  String get chat_canvasV4Redo => 'Повторить';
+
+  @override
+  String get chat_canvasV4CanvasSettings => 'Настройки холста';
+
+  @override
+  String get chat_canvasV4InvalidSize => 'От 1 до 256';
+
+  @override
+  String get chat_canvasV4LoadReference => 'Загрузить подложку';
+
+  @override
+  String get chat_canvasV4HideReference => 'Скрыть подложку';
+
+  @override
+  String get chat_canvasV4ShowReference => 'Показать подложку';
+
+  @override
+  String get chat_canvasV4RemoveReference => 'Удалить подложку';
+
+  @override
+  String get chat_canvasV4ReferenceNotEncoded => 'Подложка не входит в payload';
+
+  @override
+  String get chat_canvasV4PaletteFull =>
+      'В документе уже используются 64 цвета';
+
+  @override
+  String chat_canvasV4Payload(int bytes) {
+    return 'Payload: $bytes байт';
+  }
+
+  @override
+  String chat_canvasV4PayloadTooLarge(int bytes) {
+    return 'Payload превышает доступный размер на $bytes байт';
+  }
+
+  @override
+  String get chat_canvasV4ApplyStyle => 'Применить стиль';
+
+  @override
+  String get chat_canvasV4WaveHint => 'Укажите начало, конец и глубину волны';
+
+  @override
+  String get chat_canvasV4ToolSelect => 'Выбор и перемещение';
+
+  @override
+  String get chat_canvasV4ToolDot => 'Точка';
+
+  @override
+  String get chat_canvasV4ToolPencil => 'Карандаш';
+
+  @override
+  String get chat_canvasV4ToolLine => 'Линия';
+
+  @override
+  String get chat_canvasV4ToolPolyline => 'Ломаная';
+
+  @override
+  String get chat_canvasV4PolylineHint =>
+      'Ставьте вершины контура. Нажмите первую вершину или выберите способ завершения.';
+
+  @override
+  String get chat_canvasV4FinishOpen => 'Завершить открытой';
+
+  @override
+  String get chat_canvasV4FinishClosed => 'Замкнуть';
+
+  @override
+  String get chat_canvasV4ToolRect => 'Прямоугольник';
+
+  @override
+  String get chat_canvasV4ToolEllipse => 'Овал';
+
+  @override
+  String get chat_canvasV4ToolCircle => 'Круг';
+
+  @override
+  String get chat_canvasV4ToolWave => 'Волна';
+
+  @override
   String get chat_canvasCrop => 'Обрезать/расширить';
 
   @override

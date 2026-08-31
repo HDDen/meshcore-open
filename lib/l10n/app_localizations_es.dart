@@ -5372,6 +5372,139 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chat_canvas => 'Lienzo MCOimg';
 
   @override
+  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+
+  @override
+  String get chat_canvasV4SetupTitle => 'New vector canvas';
+
+  @override
+  String get chat_canvasV4Grid => 'Coordinate grid';
+
+  @override
+  String get chat_canvasV4GridDescription =>
+      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+
+  @override
+  String get chat_canvasV4Background => 'Background';
+
+  @override
+  String get chat_canvasV4Transparent => 'Transparent';
+
+  @override
+  String get chat_canvasV4Fill => 'Fill';
+
+  @override
+  String get chat_canvasV4Stroke => 'Stroke';
+
+  @override
+  String get chat_canvasV4StrokeWidth => 'Stroke width';
+
+  @override
+  String get chat_canvasV4Closed => 'Close figure';
+
+  @override
+  String get chat_canvasV4HideFigure => 'Hide figure';
+
+  @override
+  String get chat_canvasV4ShowFigure => 'Show figure';
+
+  @override
+  String get chat_canvasV4MoveUp => 'Move up';
+
+  @override
+  String get chat_canvasV4MoveDown => 'Move down';
+
+  @override
+  String get chat_canvasV4Objects => 'Figures';
+
+  @override
+  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+
+  @override
+  String get chat_canvasV4Calculate => 'Calculate final image';
+
+  @override
+  String get chat_canvasV4Redo => 'Redo';
+
+  @override
+  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+
+  @override
+  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+
+  @override
+  String get chat_canvasV4LoadReference => 'Load reference image';
+
+  @override
+  String get chat_canvasV4HideReference => 'Hide reference image';
+
+  @override
+  String get chat_canvasV4ShowReference => 'Show reference image';
+
+  @override
+  String get chat_canvasV4RemoveReference => 'Remove reference image';
+
+  @override
+  String get chat_canvasV4ReferenceNotEncoded =>
+      'Reference image is not included in payload';
+
+  @override
+  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+
+  @override
+  String chat_canvasV4Payload(int bytes) {
+    return 'Payload: $bytes bytes';
+  }
+
+  @override
+  String chat_canvasV4PayloadTooLarge(int bytes) {
+    return 'Payload exceeds the available size by $bytes bytes';
+  }
+
+  @override
+  String get chat_canvasV4ApplyStyle => 'Apply style';
+
+  @override
+  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+
+  @override
+  String get chat_canvasV4ToolSelect => 'Select and move';
+
+  @override
+  String get chat_canvasV4ToolDot => 'Dot';
+
+  @override
+  String get chat_canvasV4ToolPencil => 'Pencil';
+
+  @override
+  String get chat_canvasV4ToolLine => 'Line';
+
+  @override
+  String get chat_canvasV4ToolPolyline => 'Polyline';
+
+  @override
+  String get chat_canvasV4PolylineHint =>
+      'Place contour vertices. Tap the first vertex or choose how to finish.';
+
+  @override
+  String get chat_canvasV4FinishOpen => 'Finish open';
+
+  @override
+  String get chat_canvasV4FinishClosed => 'Close shape';
+
+  @override
+  String get chat_canvasV4ToolRect => 'Rectangle';
+
+  @override
+  String get chat_canvasV4ToolEllipse => 'Ellipse';
+
+  @override
+  String get chat_canvasV4ToolCircle => 'Circle';
+
+  @override
+  String get chat_canvasV4ToolWave => 'Wave';
+
+  @override
   String get chat_canvasCrop => 'Recortar/ampliar';
 
   @override
