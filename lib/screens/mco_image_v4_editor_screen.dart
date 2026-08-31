@@ -1901,7 +1901,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     final height = _document.height;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    MCOImageV4Painter(_document).paint(
+    MCOImageV4Painter(_document, antiAlias: false).paint(
       canvas,
       Size(width.toDouble(), height.toDouble()),
     );

@@ -41,6 +41,7 @@ class MCOImageV4Painter extends CustomPainter {
   final bool paintBackground;
   final bool showGrid;
   final Rect? logicalViewport;
+  final bool antiAlias;
 
   const MCOImageV4Painter(
     this.document, {
@@ -51,6 +52,7 @@ class MCOImageV4Painter extends CustomPainter {
     this.paintBackground = true,
     this.showGrid = false,
     this.logicalViewport,
+    this.antiAlias = true,
   });
 
   @override
@@ -134,7 +136,7 @@ class MCOImageV4Painter extends CustomPainter {
     final style = guideStyle;
     final linePaint = style == null
         ? (Paint()
-          ..isAntiAlias = true
+          ..isAntiAlias = antiAlias
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5 / scale
           ..strokeCap = StrokeCap.square
@@ -142,7 +144,7 @@ class MCOImageV4Painter extends CustomPainter {
           ..color = color)
         : (_strokePaint(style) ??
             (Paint()
-              ..isAntiAlias = true
+              ..isAntiAlias = antiAlias
               ..style = PaintingStyle.stroke
               ..strokeWidth = style.strokeWidth.toDouble()
               ..strokeCap = StrokeCap.square
@@ -158,11 +160,11 @@ class MCOImageV4Painter extends CustomPainter {
       canvas.drawPath(path, linePaint);
     }
     final fillPaint = Paint()
-      ..isAntiAlias = true
+      ..isAntiAlias = antiAlias
       ..style = PaintingStyle.fill
       ..color = color;
     final outlinePaint = Paint()
-      ..isAntiAlias = true
+      ..isAntiAlias = antiAlias
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1 / scale
       ..color = const Color(0xffffffff);
@@ -183,7 +185,7 @@ class MCOImageV4Painter extends CustomPainter {
           _point(point),
           style.strokeWidth / 2,
           Paint()
-            ..isAntiAlias = true
+            ..isAntiAlias = antiAlias
             ..style = PaintingStyle.fill
             ..color = _color(stroke),
         );
@@ -288,7 +290,7 @@ class MCOImageV4Painter extends CustomPainter {
       canvas.drawPath(
         fillPath,
         Paint()
-          ..isAntiAlias = true
+          ..isAntiAlias = antiAlias
           ..style = PaintingStyle.fill
           ..color = _color(fill),
       );
@@ -304,7 +306,7 @@ class MCOImageV4Painter extends CustomPainter {
     final stroke = style.strokeColor;
     if (stroke == null) return null;
     return Paint()
-      ..isAntiAlias = true
+      ..isAntiAlias = antiAlias
       ..style = PaintingStyle.stroke
       ..strokeWidth = style.strokeWidth.toDouble()
       ..strokeCap = StrokeCap.square
@@ -469,7 +471,8 @@ class MCOImageV4Painter extends CustomPainter {
         oldDelegate.guideStyle != guideStyle ||
         oldDelegate.paintBackground != paintBackground ||
         oldDelegate.showGrid != showGrid ||
-        oldDelegate.logicalViewport != logicalViewport;
+        oldDelegate.logicalViewport != logicalViewport ||
+        oldDelegate.antiAlias != antiAlias;
   }
 }
 
