@@ -13,7 +13,7 @@ import 'mcoimg_v4_codec.dart';
 /// Formula (the external contract for pack tooling / *.md5 files):
 /// Lowercase hex MD5 of the canonical `.mcoimg.bin` identity. V3 zeroes its
 /// one-byte nonce. V4 also excludes its transport tail and hashes
-/// `[0x14][zero nonce][document length][canonical document]`. Legacy v1/v2
+/// `[0x14][zero nonce][canonical document]`. Legacy v1/v2
 /// payloads have no transport metadata and are hashed as-is.
 class MCOImageIdentity {
   MCOImageIdentity._();

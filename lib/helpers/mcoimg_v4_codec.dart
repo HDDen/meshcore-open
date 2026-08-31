@@ -21,13 +21,20 @@ class MCOImageV4Codec {
   static const int _opLine = 5;
   static const int _opRect = 6;
   static const int _opEllipse = 7;
+  static const int _opRectAxisAligned = 8;
   static const int _opPathAbsolute = 9;
   static const int _opPathDelta = 10;
   static const int _opWave = 11;
   static const int _opRepeatLast = 12;
+  static const int _opEllipseAxisAligned = 13;
+  static const int _opRepeatShort = 14;
   static const int _opBits = 4;
 
   static const List<int> _deltaWidths = <int>[3, 4, 5, 6];
+  static const int _dimensionModeSquare64 = 0;
+  static const int _dimensionModeSmall32 = 1;
+  static const int _dimensionModeMedium64 = 2;
+  static const int _dimensionModeExtended = 3;
 
   const MCOImageV4Codec();
 
@@ -49,7 +56,6 @@ class MCOImageV4Codec {
     );
     final body = Uint8List.fromList(<int>[
       packetNonce,
-      ..._byteVarUint7(canonicalDocument.length),
       ...canonicalDocument,
       ...tail,
     ]);
@@ -65,16 +71,20 @@ class MCOImageV4Codec {
 
   DecodedMCOImageV4 decodeBody(Uint8List body) {
     try {
-      final reader = _V4ByteReader(body);
-      final nonce = reader.readByte();
-      final documentLength = reader.readCanonicalVarUint7();
-      if (documentLength <= 0 || documentLength > reader.remaining) {
+      if (body.isEmpty) {
         throw const MCOImageInvalidPayloadException(
-          'Invalid v4 document length',
+          'MCOimg v4 payload too short',
         );
       }
-      final canonicalDocument = reader.readBytes(documentLength);
-      final document = _decodeCanonicalDocument(canonicalDocument);
+      final nonce = body[0];
+      final decoded = _decodeCanonicalDocumentPrefix(
+        Uint8List.sublistView(body, 1),
+      );
+      final document = decoded.document;
+      final canonicalDocument = decoded.canonicalDocument;
+      final reader = _V4ByteReader(
+        Uint8List.sublistView(body, 1 + canonicalDocument.length),
+      );
 
       String? targetName;
       int? replyTimestamp;
@@ -133,7 +143,6 @@ class MCOImageV4Codec {
     return Uint8List.fromList(<int>[
       subtypeVersion,
       0,
-      ..._byteVarUint7(decoded.canonicalDocument.length),
       ...decoded.canonicalDocument,
     ]);
   }
@@ -142,7 +151,6 @@ class MCOImageV4Codec {
     final decoded = decodeBody(body);
     return Uint8List.fromList(<int>[
       zeroNonce ? 0 : decoded.nonce,
-      ..._byteVarUint7(decoded.canonicalDocument.length),
       ...decoded.canonicalDocument,
     ]);
   }
@@ -192,9 +200,8 @@ class MCOImageV4Codec {
 
     writer
       ..writeBits(document.mode.index, 1)
-      ..writeBits(document.width - 1, 8)
-      ..writeBits(document.height - 1, 8)
       ..writeBits(document.paletteProfile.index, 4);
+    _writeDimensions(writer, document.width, document.height);
 
     writer.writeBit(document.backgroundColor != null);
     if (document.backgroundColor case final background?) {
@@ -203,21 +210,7 @@ class MCOImageV4Codec {
         profileColorBits,
       );
     }
-    _writeOptionalColor(
-      writer,
-      document,
-      document.initialStyle.fillColor,
-      profileColorBits,
-    );
-    _writeOptionalColor(
-      writer,
-      document,
-      document.initialStyle.strokeColor,
-      profileColorBits,
-    );
-    writer.writeBits(document.initialStyle.strokeWidth - 1, scalarBits);
-
-    var currentStyle = document.initialStyle;
+    var currentStyle = _defaultStyleForDocument(document);
     MCOImageV4Figure? lastFigure;
     for (final figure in document.figures.where((figure) => figure.visible)) {
       currentStyle = _writeStyleChanges(
@@ -239,7 +232,7 @@ class MCOImageV4Codec {
       );
       final repeated = repeat == null
           ? null
-          : _encodeRepeatCommand(
+          : _encodeBestRepeatCommand(
               repeat,
               width: document.width,
               height: document.height,
@@ -257,16 +250,23 @@ class MCOImageV4Codec {
     return writer.toBytes();
   }
 
-  MCOImageV4Document _decodeCanonicalDocument(Uint8List bytes) {
+  _DecodedV4CanonicalDocument _decodeCanonicalDocumentPrefix(Uint8List bytes) {
     final reader = _V4BitReader(bytes);
+    final document = _readCanonicalDocument(reader);
+    reader.finishByte();
+    return _DecodedV4CanonicalDocument(
+      document: document,
+      canonicalDocument: Uint8List.sublistView(bytes, 0, reader.byteOffset),
+    );
+  }
+
+  MCOImageV4Document _readCanonicalDocument(_V4BitReader reader) {
     final modeIndex = reader.readBits(1);
     if (modeIndex != MCOImageV4Mode.vector.index) {
       throw const MCOImageInvalidPayloadException(
         'Unsupported MCOimg v4 mode',
       );
     }
-    final width = reader.readBits(8) + 1;
-    final height = reader.readBits(8) + 1;
     final profileIndex = reader.readBits(4);
     if (profileIndex >= PaletteProfile.values.length) {
       throw const MCOImageInvalidPayloadException(
@@ -274,18 +274,25 @@ class MCOImageV4Codec {
       );
     }
     final paletteProfile = PaletteProfile.values[profileIndex];
+    final dimensions = _readDimensions(reader);
+    final width = dimensions.width;
+    final height = dimensions.height;
     final profileColorBits = _profileColorBits(paletteProfile);
     final palette = <int>[];
     final paletteIndexByColor = <int, int>{};
-    int localColorFromProfileRef() {
-      final ref = reader.readBits(profileColorBits);
-      final color = _colorFromProfileRef(paletteProfile, ref, payload: true);
+    int localColorFromProfileColor(int color) {
       final existing = paletteIndexByColor[color];
       if (existing != null) return existing;
       final index = palette.length;
       palette.add(color);
       paletteIndexByColor[color] = index;
       return index;
+    }
+
+    int localColorFromProfileRef() {
+      final ref = reader.readBits(profileColorBits);
+      final color = _colorFromProfileRef(paletteProfile, ref, payload: true);
+      return localColorFromProfileColor(color);
     }
 
     int? optionalLocalColorFromProfileRef() =>
@@ -299,9 +306,9 @@ class MCOImageV4Codec {
         ? localColorFromProfileRef()
         : null;
     var currentStyle = MCOImageV4Style(
-      fillColor: optionalLocalColorFromProfileRef(),
-      strokeColor: optionalLocalColorFromProfileRef(),
-      strokeWidth: reader.readBits(scalarBits) + 1,
+      strokeColor: localColorFromProfileColor(
+        MCOImagePalette.blackIndexFor(paletteProfile),
+      ),
     );
     final initialStyle = currentStyle;
     final figures = <MCOImageV4Figure>[];
@@ -335,6 +342,19 @@ class MCOImageV4Codec {
           _validateFigure(repeated, width, height, palette.length);
           figures.add(repeated);
           lastFigure = repeated;
+        case _opRepeatShort:
+          if (lastFigure == null) {
+            throw const MCOImageInvalidPayloadException(
+              'MCOimg v4 repeat has no previous figure',
+            );
+          }
+          final shortBits = _deltaWidths[reader.readBits(2)];
+          final dx = _zigZagDecode(reader.readBits(shortBits));
+          final dy = _zigZagDecode(reader.readBits(shortBits));
+          final repeated = lastFigure.translated(dx, dy).withStyle(currentStyle);
+          _validateFigure(repeated, width, height, palette.length);
+          figures.add(repeated);
+          lastFigure = repeated;
         default:
           final figure = _readFigure(
             opcode,
@@ -351,7 +371,6 @@ class MCOImageV4Codec {
           lastFigure = figure;
       }
     }
-    reader.finish();
     return MCOImageV4Document(
       width: width,
       height: height,
@@ -410,19 +429,37 @@ class MCOImageV4Codec {
         :final second,
         :final third,
       ):
-        writer.writeBits(_opRect, _opBits);
-        _writePoint(writer, first, xBits, yBits);
-        _writePoint(writer, second, xBits, yBits);
-        _writePoint(writer, third, xBits, yBits);
+        final compact = _axisAlignedArea(figure);
+        if (compact == null) {
+          writer.writeBits(_opRect, _opBits);
+          _writePoint(writer, first, xBits, yBits);
+          _writePoint(writer, second, xBits, yBits);
+          _writePoint(writer, third, xBits, yBits);
+        } else {
+          writer
+            ..writeBits(_opRectAxisAligned, _opBits)
+            ..writeBit(compact.swapped);
+          _writePoint(writer, compact.first, xBits, yBits);
+          _writePoint(writer, compact.second, xBits, yBits);
+        }
       case MCOImageV4Ellipse(
         :final first,
         :final second,
         :final third,
       ):
-        writer.writeBits(_opEllipse, _opBits);
-        _writePoint(writer, first, xBits, yBits);
-        _writePoint(writer, second, xBits, yBits);
-        _writePoint(writer, third, xBits, yBits);
+        final compact = _axisAlignedArea(figure);
+        if (compact == null) {
+          writer.writeBits(_opEllipse, _opBits);
+          _writePoint(writer, first, xBits, yBits);
+          _writePoint(writer, second, xBits, yBits);
+          _writePoint(writer, third, xBits, yBits);
+        } else {
+          writer
+            ..writeBits(_opEllipseAxisAligned, _opBits)
+            ..writeBit(compact.swapped);
+          _writePoint(writer, compact.first, xBits, yBits);
+          _writePoint(writer, compact.second, xBits, yBits);
+        }
       case MCOImageV4Wave(
         :final start,
         :final end,
@@ -521,7 +558,7 @@ class MCOImageV4Codec {
     }
   }
 
-  _V4BitWriter? _encodeRepeatCommand(
+  _V4BitWriter? _encodeBestRepeatCommand(
     MCOImageV4Point delta, {
     required int width,
     required int height,
@@ -531,10 +568,45 @@ class MCOImageV4Codec {
     if (delta.x.abs() > width - 1 || delta.y.abs() > height - 1) {
       return null;
     }
+    final candidates = <_V4BitWriter>[
+      _encodeFullRepeatCommand(delta, xBits: xBits, yBits: yBits),
+      for (var selector = 0; selector < _deltaWidths.length; selector++)
+        if (_canEncodeShortRepeat(delta, _deltaWidths[selector]))
+          _encodeShortRepeatCommand(
+            delta,
+            selector: selector,
+            shortBits: _deltaWidths[selector],
+          ),
+    ];
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  _V4BitWriter _encodeFullRepeatCommand(
+    MCOImageV4Point delta, {
+    required int xBits,
+    required int yBits,
+  }) {
     return _V4BitWriter()
       ..writeBits(_opRepeatLast, _opBits)
       ..writeBits(_zigZagEncode(delta.x), xBits + 1)
       ..writeBits(_zigZagEncode(delta.y), yBits + 1);
+  }
+
+  bool _canEncodeShortRepeat(MCOImageV4Point delta, int shortBits) =>
+      _zigZagEncode(delta.x) < (1 << shortBits) &&
+      _zigZagEncode(delta.y) < (1 << shortBits);
+
+  _V4BitWriter _encodeShortRepeatCommand(
+    MCOImageV4Point delta, {
+    required int selector,
+    required int shortBits,
+  }) {
+    return _V4BitWriter()
+      ..writeBits(_opRepeatShort, _opBits)
+      ..writeBits(selector, 2)
+      ..writeBits(_zigZagEncode(delta.x), shortBits)
+      ..writeBits(_zigZagEncode(delta.y), shortBits);
   }
 
   MCOImageV4Figure _readFigure(
@@ -565,6 +637,27 @@ class MCOImageV4Codec {
         final second = _readPoint(reader, width, height, xBits, yBits);
         final third = _readPoint(reader, width, height, xBits, yBits);
         return opcode == _opRect
+            ? MCOImageV4Rect(
+                first: first,
+                second: second,
+                third: third,
+                style: style,
+              )
+            : MCOImageV4Ellipse(
+                first: first,
+                second: second,
+                third: third,
+                style: style,
+              );
+      case _opRectAxisAligned:
+      case _opEllipseAxisAligned:
+        final swapped = reader.readBit();
+        final first = _readPoint(reader, width, height, xBits, yBits);
+        final second = _readPoint(reader, width, height, xBits, yBits);
+        final third = swapped
+            ? MCOImageV4Point(second.x, first.y)
+            : MCOImageV4Point(first.x, second.y);
+        return opcode == _opRectAxisAligned
             ? MCOImageV4Rect(
                 first: first,
                 second: second,
@@ -808,6 +901,14 @@ class MCOImageV4Codec {
     }
   }
 
+  static MCOImageV4Style _defaultStyleForDocument(
+    MCOImageV4Document document,
+  ) {
+    final black = MCOImagePalette.blackIndexFor(document.paletteProfile);
+    final localBlack = document.palette.indexOf(black);
+    return MCOImageV4Style(strokeColor: localBlack);
+  }
+
   static MCOImageV4Point? _translationFrom(
     MCOImageV4Figure previous,
     MCOImageV4Figure current,
@@ -854,6 +955,30 @@ class MCOImageV4Codec {
     }
   }
 
+  static ({
+    MCOImageV4Point first,
+    MCOImageV4Point second,
+    bool swapped,
+  })? _axisAlignedArea(MCOImageV4AreaFigure figure) {
+    final thirdA = MCOImageV4Point(figure.first.x, figure.second.y);
+    if (figure.third == thirdA) {
+      return (
+        first: figure.first,
+        second: figure.second,
+        swapped: false,
+      );
+    }
+    final thirdB = MCOImageV4Point(figure.second.x, figure.first.y);
+    if (figure.third == thirdB) {
+      return (
+        first: figure.first,
+        second: figure.second,
+        swapped: true,
+      );
+    }
+    return null;
+  }
+
   static void _writePoint(
     _V4BitWriter writer,
     MCOImageV4Point point,
@@ -863,6 +988,91 @@ class MCOImageV4Codec {
     writer
       ..writeBits(point.x, xBits)
       ..writeBits(point.y, yBits);
+  }
+
+  static void _writeDimensions(_V4BitWriter writer, int width, int height) {
+    if (width == height && width <= 64) {
+      writer
+        ..writeBits(_dimensionModeSquare64, 2)
+        ..writeBits(width - 1, 6);
+      return;
+    }
+
+    if (width <= 32 && height <= 32) {
+      writer
+        ..writeBits(_dimensionModeSmall32, 2)
+        ..writeBits(width - 1, 5)
+        ..writeBits(height - 1, 5);
+      return;
+    }
+
+    if (width <= 64 && height <= 64) {
+      writer
+        ..writeBits(_dimensionModeMedium64, 2)
+        ..writeBits(width - 1, 6)
+        ..writeBits(height - 1, 6);
+      return;
+    }
+
+    writer.writeBits(_dimensionModeExtended, 2);
+    if (width == height) {
+      writer
+        ..writeBit(false)
+        ..writeBits(width - 1, 8);
+      return;
+    }
+
+    writer
+      ..writeBit(true)
+      ..writeBits(width - 1, 8)
+      ..writeBits(height - 1, 8);
+  }
+
+  static ({int width, int height}) _readDimensions(_V4BitReader reader) {
+    final mode = reader.readBits(2);
+    late final int width;
+    late final int height;
+    switch (mode) {
+      case _dimensionModeSquare64:
+        width = reader.readBits(6) + 1;
+        height = width;
+      case _dimensionModeSmall32:
+        width = reader.readBits(5) + 1;
+        height = reader.readBits(5) + 1;
+        if (width == height) {
+          throw const MCOImageInvalidPayloadException(
+            'Non-canonical v4 small square dimensions',
+          );
+        }
+      case _dimensionModeMedium64:
+        width = reader.readBits(6) + 1;
+        height = reader.readBits(6) + 1;
+        if (width == height || width <= 32 && height <= 32) {
+          throw const MCOImageInvalidPayloadException(
+            'Non-canonical v4 medium dimensions',
+          );
+        }
+      case _dimensionModeExtended:
+        final generalRectangle = reader.readBit();
+        if (!generalRectangle) {
+          width = reader.readBits(8) + 1;
+          height = width;
+          if (width <= 64) {
+            throw const MCOImageInvalidPayloadException(
+              'Non-canonical v4 extended square dimensions',
+            );
+          }
+        } else {
+          width = reader.readBits(8) + 1;
+          height = reader.readBits(8) + 1;
+          if (width == height || width <= 64 && height <= 64) {
+            throw const MCOImageInvalidPayloadException(
+              'Non-canonical v4 extended dimensions',
+            );
+          }
+        }
+    }
+    return (width: width, height: height);
   }
 
   static MCOImageV4Point _readPoint(
@@ -1022,6 +1232,16 @@ class MCOImageV4Codec {
   }
 }
 
+class _DecodedV4CanonicalDocument {
+  final MCOImageV4Document document;
+  final Uint8List canonicalDocument;
+
+  const _DecodedV4CanonicalDocument({
+    required this.document,
+    required this.canonicalDocument,
+  });
+}
+
 class _V4BitWriter {
   final List<int> _bytes = <int>[];
   int _current = 0;
@@ -1111,6 +1331,8 @@ class _V4BitReader {
 
   int get remainingBits => _bitLimit - _bitIndex;
 
+  int get byteOffset => (_bitIndex + 7) >> 3;
+
   bool readBit() => readBits(1) != 0;
 
   int readBits(int bits) {
@@ -1165,6 +1387,17 @@ class _V4BitReader {
           'Non-zero MCOimg v4 padding',
         );
       }
+    }
+  }
+
+  void finishByte() {
+    final padding = _bitIndex & 7;
+    if (padding == 0) return;
+    final remaining = 8 - padding;
+    if (readBits(remaining) != 0) {
+      throw const MCOImageInvalidPayloadException(
+        'Non-zero MCOimg v4 padding',
+      );
     }
   }
 }
