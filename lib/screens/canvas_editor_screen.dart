@@ -1028,6 +1028,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final selectedColor = _v4ColorTarget == _V4ColorTarget.fill
         ? _v4FillColor
         : _v4StrokeColor;
+    final stylePaletteValues = _vectorStylePaletteValues(document);
     final maxStrokeWidth = math.max(document.width, document.height);
     final selectedFigure = _selectedV4Figure;
     final canClose =
@@ -1036,40 +1037,47 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         selectedFigure.points.length >= 3;
 
     Widget colorSwatch({
-      required int? localIndex,
+      required int? colorValue,
       required bool selected,
       required VoidCallback onTap,
     }) {
-      final color = localIndex == null
+      final color = colorValue == null
           ? null
-          : _colorForVectorLocalIndex(document, localIndex);
+          : _profileColor(document.paletteProfile, colorValue);
+      final profileIndex = colorValue == null
+          ? null
+          : _paletteIndexForColorValue(document.paletteProfile, colorValue);
       return Tooltip(
-        message: localIndex == null
+        message: colorValue == null
             ? context.l10n.chat_canvasV4Transparent
-            : '#${localIndex + 1}',
+            : '#${(profileIndex ?? colorValue) + 1}',
         child: _AlphaSwatch(color: color, selected: selected, onTap: onTap),
       );
     }
 
     Widget colorWrap({
-      required int? selected,
-      required void Function(int? localIndex) onSelected,
+      required int? selectedLocalIndex,
+      required void Function(int? colorValue) onSelected,
     }) {
+      final selectedColorValue = _vectorColorValueForLocalIndex(
+        document,
+        selectedLocalIndex,
+      );
       return Wrap(
         spacing: 6,
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           colorSwatch(
-            localIndex: null,
-            selected: selected == null,
+            colorValue: null,
+            selected: selectedLocalIndex == null,
             onTap: () => onSelected(null),
           ),
-          for (var i = 0; i < document.palette.length; i++)
+          for (final colorValue in stylePaletteValues)
             colorSwatch(
-              localIndex: i,
-              selected: selected == i,
-              onTap: () => onSelected(i),
+              colorValue: colorValue,
+              selected: selectedColorValue == colorValue,
+              onTap: () => onSelected(colorValue),
             ),
         ],
       );
@@ -1092,8 +1100,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: colorWrap(
-                selected: document.backgroundColor,
-                onSelected: _setVectorBackground,
+                selectedLocalIndex: document.backgroundColor,
+                onSelected: _setVectorBackgroundProfileColor,
               ),
             ),
           ],
@@ -1116,7 +1124,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           },
         ),
         const SizedBox(height: 8),
-        colorWrap(selected: selectedColor, onSelected: _setVectorStyleColor),
+        colorWrap(
+          selectedLocalIndex: selectedColor,
+          onSelected: _setVectorStyleProfileColor,
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -4227,11 +4238,40 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _editingV4FigureVisible = true;
   }
 
-  Color _colorForVectorLocalIndex(MCOImageV4Document document, int localIndex) {
-    final colorValue = localIndex >= 0 && localIndex < document.palette.length
-        ? document.palette[localIndex]
-        : MCOImagePalette.blackIndexFor(document.paletteProfile);
-    return _profileColor(document.paletteProfile, colorValue);
+  int? _vectorColorValueForLocalIndex(
+    MCOImageV4Document document,
+    int? localIndex,
+  ) {
+    if (localIndex == null ||
+        localIndex < 0 ||
+        localIndex >= document.palette.length) {
+      return null;
+    }
+    return document.palette[localIndex];
+  }
+
+  List<int> _vectorStylePaletteValues(MCOImageV4Document document) {
+    final profile = document.paletteProfile;
+    if (!profile.isDynamic) {
+      return List<int>.generate(
+        MCOImagePalette.colorsFor(profile).length,
+        (index) => index,
+        growable: false,
+      );
+    }
+    final profileColors = MCOImageDynamicPalette.indicesFor(profile);
+    if (profileColors.length <= _inlineDynamicPaletteMaxColors) {
+      return List<int>.of(profileColors, growable: false);
+    }
+    final colors = document.palette.where((colorValue) {
+      return _paletteIndexForColorValue(profile, colorValue) != null;
+    }).toSet().toList();
+    colors.sort((a, b) {
+      final aIndex = _paletteIndexForColorValue(profile, a) ?? 0;
+      final bIndex = _paletteIndexForColorValue(profile, b) ?? 0;
+      return aIndex.compareTo(bIndex);
+    });
+    return colors;
   }
 
   void _adoptVectorStyle(MCOImageV4Style style) {
@@ -4317,6 +4357,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _commitVectorDocument(document.copyWith(backgroundColor: localIndex));
   }
 
+  void _setVectorBackgroundProfileColor(int? colorValue) {
+    final localIndex = colorValue == null
+        ? null
+        : _vectorLocalColorIndex(colorValue, mutate: true);
+    _setVectorBackground(localIndex);
+  }
+
   void _toggleVectorReferenceVisibility() {
     if (_v4ReferencePixels == null) return;
     setState(() => _v4ReferenceVisible = !_v4ReferenceVisible);
@@ -4340,9 +4387,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
-  void _setVectorStyleProfileColor(int colorValue) {
+  void _setVectorStyleProfileColor(int? colorValue) {
     final before = _v4Document;
-    final localIndex = _vectorLocalColorIndex(colorValue, mutate: true);
+    final localIndex = colorValue == null
+        ? null
+        : _vectorLocalColorIndex(colorValue, mutate: true);
     _setVectorStyleColor(localIndex, undoBefore: before);
     if (before != null && _selectedV4FigureIndex == null) {
       _markPayloadDirty();
