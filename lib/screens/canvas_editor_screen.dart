@@ -1137,6 +1137,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           },
           onChangeEnd: (_) => _endVectorStyleDrag(),
         ),
+        if (_showsCurrentVectorFinishButtons) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                onPressed: _canFinishCurrentVectorToolOpen
+                    ? () => _finishCurrentVectorToolOpen()
+                    : null,
+                child: Text(context.l10n.chat_canvasV4FinishOpen),
+              ),
+              OutlinedButton(
+                onPressed: _canFinishCurrentVectorPolylineClosed
+                    ? () => _finishVectorPolyline(closed: true)
+                    : null,
+                child: Text(context.l10n.chat_canvasV4FinishClosed),
+              ),
+            ],
+          ),
+        ],
         if (selectedFigure is MCOImageV4Path || selectedFigure is MCOImageV4Wave)
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -1433,10 +1454,15 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           const SizedBox(width: 12),
         ],
         SegmentedButton<_CanvasTool>(
+          emptySelectionAllowed: _isVectorV4,
           showSelectedIcon: false,
           segments: toolSegments,
           selected: {_selectedTool},
           onSelectionChanged: (selection) {
+            if (selection.isEmpty) {
+              _selectCanvasTool(_selectedTool);
+              return;
+            }
             _selectCanvasTool(selection.first);
           },
         ),
@@ -4233,6 +4259,25 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool get _canEditSelectedV4Figure => _selectedV4Figure != null;
 
+  bool get _showsCurrentVectorFinishButtons =>
+      _v4ShapePoints.isNotEmpty &&
+      (_selectedTool == _CanvasTool.polyline ||
+          _isCurrentVectorAreaTool);
+
+  bool get _isCurrentVectorAreaTool =>
+      _selectedTool == _CanvasTool.rectangle ||
+      _selectedTool == _CanvasTool.oval;
+
+  bool get _canFinishCurrentVectorToolOpen =>
+      _canFinishCurrentVectorPolylineOpen ||
+      (_isCurrentVectorAreaTool && _v4ShapePoints.length >= 2);
+
+  bool get _canFinishCurrentVectorPolylineOpen =>
+      _selectedTool == _CanvasTool.polyline && _v4ShapePoints.length >= 2;
+
+  bool get _canFinishCurrentVectorPolylineClosed =>
+      _selectedTool == _CanvasTool.polyline && _v4ShapePoints.length >= 3;
+
   void _selectCanvasTool(_CanvasTool nextTool) {
     if (_isVectorV4) {
       _selectVectorTool(nextTool);
@@ -4247,16 +4292,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _selectVectorTool(_CanvasTool nextTool) {
-    if (nextTool == _selectedTool &&
-        _selectedTool == _CanvasTool.polyline &&
-        _v4ShapePoints.length >= 2) {
-      _finishVectorPolyline(closed: false);
+    final isSameTool = nextTool == _selectedTool;
+    final finishedDraft = _finishCurrentVectorToolOpen();
+    if (isSameTool && finishedDraft) {
       return;
     }
-    if (nextTool != _selectedTool &&
-        _selectedTool == _CanvasTool.polyline &&
-        _v4ShapePoints.length >= 2) {
-      _finishVectorPolyline(closed: false);
+    if (!isSameTool && finishedDraft) {
       setState(() {
         if (nextTool != _CanvasTool.select) {
           _selectedV4FigureIndex = null;
@@ -4281,6 +4322,36 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
       _selectedTool = nextTool;
     });
+  }
+
+  bool _finishCurrentVectorToolOpen() {
+    switch (_selectedTool) {
+      case _CanvasTool.polyline:
+        if (_canFinishCurrentVectorPolylineOpen) {
+          _finishVectorPolyline(closed: false);
+          return true;
+        }
+        return false;
+      case _CanvasTool.rectangle:
+      case _CanvasTool.oval:
+        if (_v4ShapePoints.length >= 2) {
+          return _finishVectorArea(_selectedTool);
+        }
+        return false;
+      case _CanvasTool.line:
+      case _CanvasTool.wave:
+        if (_v4ShapePoints.isNotEmpty) {
+          setState(_clearVectorDraftState);
+          return true;
+        }
+        return false;
+      case _CanvasTool.select:
+      case _CanvasTool.dot:
+      case _CanvasTool.pencil:
+      case _CanvasTool.fill:
+      case _CanvasTool.eyedropper:
+        return false;
+    }
   }
 
   void _handleVectorTap(Offset position, Size size) {
@@ -4408,7 +4479,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
 
-    MCOImageV4Figure? figure = _v4DraftFigure;
+    MCOImageV4Figure? figure;
     if (_selectedTool == _CanvasTool.pencil) {
       final points = _simplifyVectorPoints(_v4PencilPoints ?? const []);
       if (points.length == 1) {
@@ -4452,7 +4523,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _v4ShapePoints.add(point);
     if (_selectedTool == _CanvasTool.rectangle ||
         _selectedTool == _CanvasTool.oval) {
-      if (_v4ShapePoints.length == 3) {
+      if (_v4ShapePoints.length >= 3) {
         _v4DraftFigure = _vectorAreaDraft(
           _v4ShapePoints[0],
           _v4ShapePoints[1],
@@ -4482,6 +4553,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         style: _currentVectorStyle(),
       ),
     );
+  }
+
+  bool _finishVectorArea(_CanvasTool tool) {
+    if (_v4ShapePoints.length < 2) return false;
+    final first = _v4ShapePoints[0];
+    final second = _v4ShapePoints[1];
+    if (first.x == second.x || first.y == second.y) return false;
+    final third = _v4ShapePoints.length >= 3
+        ? _v4ShapePoints[2]
+        : _axisAlignedVectorAreaThirdPoint(first, second);
+    _v4ShapePoints.clear();
+    _v4DraftFigure = null;
+    _addVectorFigure(_vectorAreaDraft(first, second, third, tool));
+    return true;
+  }
+
+  MCOImageV4Point _axisAlignedVectorAreaThirdPoint(
+    MCOImageV4Point first,
+    MCOImageV4Point second,
+  ) {
+    return MCOImageV4Point(first.x, second.y);
   }
 
   MCOImageV4Figure _vectorAreaDraft(
@@ -4638,7 +4730,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _v4ShapePoints
         ..clear()
         ..addAll(_controlPointsForVectorFigure(figure));
-      _v4DraftFigure = null;
+      _v4DraftFigure = figure is MCOImageV4Rect || figure is MCOImageV4Ellipse
+          ? figure.withVisibility(true)
+          : null;
     });
     _markPayloadDirty();
   }
@@ -4658,13 +4752,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       switch (figure) {
         MCOImageV4Dot() => const <MCOImageV4Point>[],
         MCOImageV4Line(:final start) => <MCOImageV4Point>[start],
-        MCOImageV4Rect(:final first, :final second) => <MCOImageV4Point>[
+        MCOImageV4Rect(:final first, :final second, :final third) =>
+          <MCOImageV4Point>[
             first,
             second,
+            third,
           ],
-        MCOImageV4Ellipse(:final first, :final second) => <MCOImageV4Point>[
+        MCOImageV4Ellipse(:final first, :final second, :final third) =>
+          <MCOImageV4Point>[
             first,
             second,
+            third,
           ],
         MCOImageV4Path(:final points) => List<MCOImageV4Point>.of(points),
         MCOImageV4Wave(:final start, :final end) => <MCOImageV4Point>[
