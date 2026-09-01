@@ -78,6 +78,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   static const _defaultSize = 128;
   static const _maxCanvasSize = 256;
   static const _prefsShowGridKey = 'canvas_editor_show_grid';
+  static const _prefsCompressionLevelKey = 'canvas_editor_compression_level';
   static const double _pencilSimplifyBaseGridSize = 128;
   static const double _pencilSimplifyMinGridSize = 32;
   static const double _pencilSimplifyMidGridSize = 64;
@@ -94,6 +95,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   EncodedMCOImageV4? _encoded;
   Object? _encodeError;
   _V4Tool _tool = _V4Tool.pencil;
+  int _compressionLevel = mcoImageDefaultCompressionLevel;
   int _fillColor = 0;
   int _strokeColor = 0;
   _V4ColorTarget _colorTarget = _V4ColorTarget.stroke;
@@ -125,6 +127,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   void initState() {
     super.initState();
     _showGrid = widget.initialShowGrid;
+    _compressionLevel = _loadCompressionLevel();
     _document = widget.initialDocument ?? _newDocument(
       _defaultSize,
       _defaultSize,
@@ -307,6 +310,29 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
                     ),
                   );
                 },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: _compressionLevel,
+                decoration: InputDecoration(
+                  labelText: context.l10n.chat_canvasCompressionLevel,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem<int>(
+                    value: mcoImageCompressionLevelExtreme,
+                    child: Text(context.l10n.chat_canvasCompressionLevelExtreme),
+                  ),
+                  DropdownMenuItem<int>(
+                    value: mcoImageCompressionLevelHigh,
+                    child: Text(context.l10n.chat_canvasCompressionLevelHigh),
+                  ),
+                  DropdownMenuItem<int>(
+                    value: mcoImageCompressionLevelNormal,
+                    child: Text(context.l10n.chat_canvasCompressionLevelNormal),
+                  ),
+                ],
+                onChanged: _setCompressionLevel,
               ),
               const SizedBox(height: 12),
               _buildPayloadInfo(envelopeBytes, overBy),
@@ -2171,6 +2197,29 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     _calculatePayload();
   }
 
+  int _loadCompressionLevel() {
+    final saved = PrefsManager.instance.getInt(_prefsCompressionLevelKey);
+    return switch (saved) {
+      mcoImageCompressionLevelNormal => mcoImageCompressionLevelNormal,
+      mcoImageCompressionLevelExtreme => mcoImageCompressionLevelExtreme,
+      _ => mcoImageCompressionLevelHigh,
+    };
+  }
+
+  void _setCompressionLevel(int? value) {
+    final nextLevel = switch (value) {
+      mcoImageCompressionLevelNormal => mcoImageCompressionLevelNormal,
+      mcoImageCompressionLevelExtreme => mcoImageCompressionLevelExtreme,
+      _ => mcoImageCompressionLevelHigh,
+    };
+    if (nextLevel == _compressionLevel) return;
+    setState(() => _compressionLevel = nextLevel);
+    unawaited(
+      PrefsManager.instance.setInt(_prefsCompressionLevelKey, nextLevel),
+    );
+    _calculatePayload();
+  }
+
   void _calculatePayload() {
     try {
       final encoded = _codec.encode(
@@ -2178,6 +2227,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         nonce: 0,
         targetName: widget.replyTargetName,
         replyTimestamp: widget.replyTimestamp,
+        compressionLevel: _compressionLevel,
       );
       if (!mounted) return;
       setState(() {
@@ -2198,6 +2248,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _document,
       targetName: widget.replyTargetName,
       replyTimestamp: widget.replyTimestamp,
+      compressionLevel: _compressionLevel,
     );
     final text = _codec.textFromBody(encoded.body);
     Navigator.pop(

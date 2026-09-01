@@ -67,9 +67,13 @@ class MCOImageV4Codec {
     int? nonce,
     String? targetName,
     int? replyTimestamp,
+    int compressionLevel = mcoImageDefaultCompressionLevel,
   }) {
     _validateDocument(document);
-    final canonicalDocument = _encodeCanonicalDocument(document);
+    final canonicalDocument = _encodeCanonicalDocument(
+      document,
+      compressionLevel: compressionLevel,
+    );
     final packetNonce = nonce ?? math.Random.secure().nextInt(256);
     if (packetNonce < 0 || packetNonce > 0xff) {
       throw const MCOImageInvalidInputException('Invalid v4 nonce');
@@ -182,13 +186,10 @@ class MCOImageV4Codec {
   }
 
   Uint8List refreshPacketNonce(Uint8List body) {
-    final decoded = decodeBody(body);
-    final refreshed = encode(
-      decoded.document,
-      targetName: decoded.targetName,
-      replyTimestamp: decoded.replyTimestamp,
-    );
-    return refreshed.body;
+    decodeBody(body);
+    final refreshed = Uint8List.fromList(body);
+    refreshed[0] = math.Random.secure().nextInt(256);
+    return refreshed;
   }
 
   String textFromBody(Uint8List body) {
@@ -212,7 +213,10 @@ class MCOImageV4Codec {
     textPrefix,
   );
 
-  Uint8List _encodeCanonicalDocument(MCOImageV4Document document) {
+  Uint8List _encodeCanonicalDocument(
+    MCOImageV4Document document, {
+    required int compressionLevel,
+  }) {
     if (!_isObjectMode(document.mode)) {
       throw const MCOImageInvalidInputException(
         'MCOimg v4 raster encoding is not implemented yet',
@@ -255,6 +259,7 @@ class MCOImageV4Codec {
             document,
             xBits: xBits,
             yBits: yBits,
+            compressionLevel: compressionLevel,
           ),
         );
         index++;
@@ -968,6 +973,7 @@ class MCOImageV4Codec {
     MCOImageV4Document document, {
     required int xBits,
     required int yBits,
+    required int compressionLevel,
   }) {
     final image = MCOImage(
       width: layer.width,
@@ -979,7 +985,7 @@ class MCOImageV4Codec {
     );
     final encoded = MCOImageV3Codec().encode(
       image,
-      compressionLevel: mcoImageCompressionLevelExtreme,
+      compressionLevel: compressionLevel,
       includePacketNonce: false,
     );
     final payload = Uint8List.sublistView(

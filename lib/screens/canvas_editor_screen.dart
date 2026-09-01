@@ -2753,8 +2753,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _encodingVersion == MCOImageEncodingVersion.v3;
 
   bool get _supportsCompressionLevelSelection =>
-      _encodingVersion != MCOImageEncodingVersion.v1Legacy &&
-      _encodingVersion != MCOImageEncodingVersion.v4;
+      _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
   bool get _canOpenSeparateV4Editor =>
       widget.maxBinaryPayloadBytes != null && widget.binarySenderName != null;
@@ -3679,6 +3678,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         nonce: 0,
         targetName: widget.replyTargetName,
         replyTimestamp: widget.replyTimestamp,
+        compressionLevel: _compressionLevel,
       );
       final payloadSize = _payloadSizeForEncodedV4(encoded);
       if (!mounted) {
@@ -6663,6 +6663,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       nonce: refreshNonce ? null : 0,
       targetName: widget.replyTargetName,
       replyTimestamp: widget.replyTimestamp,
+      compressionLevel: _compressionLevel,
     );
   }
 
