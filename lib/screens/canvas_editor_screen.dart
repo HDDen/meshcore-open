@@ -1400,6 +1400,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Widget _buildTools() {
+    if (_isVectorV4) {
+      return _buildVectorV4Tools();
+    }
+
     Widget moveButton({
       required IconData icon,
       required int dx,
@@ -1411,67 +1415,32 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
-    final toolSegments = _isVectorV4
-        ? const <ButtonSegment<_CanvasTool>>[
-            ButtonSegment(
-              value: _CanvasTool.select,
-              icon: Icon(Icons.near_me_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.dot,
-              icon: Icon(Icons.fiber_manual_record),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.pencil,
-              icon: Icon(Icons.edit_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.line,
-              icon: Icon(Icons.horizontal_rule),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.polyline,
-              icon: Icon(Icons.polyline),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.rectangle,
-              icon: Icon(Icons.crop_square),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.oval,
-              icon: Icon(Icons.circle_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.wave,
-              icon: Icon(Icons.gesture),
-            ),
-          ]
-        : const <ButtonSegment<_CanvasTool>>[
-            ButtonSegment(
-              value: _CanvasTool.pencil,
-              icon: Icon(Icons.edit_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.fill,
-              icon: Icon(Icons.format_color_fill_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.eyedropper,
-              icon: Icon(Icons.colorize_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.line,
-              icon: Icon(Icons.show_chart_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.oval,
-              icon: Icon(Icons.circle_outlined),
-            ),
-            ButtonSegment(
-              value: _CanvasTool.rectangle,
-              icon: Icon(Icons.crop_square),
-            ),
-          ];
+    const toolSegments = <ButtonSegment<_CanvasTool>>[
+      ButtonSegment(
+        value: _CanvasTool.pencil,
+        icon: Icon(Icons.edit_outlined),
+      ),
+      ButtonSegment(
+        value: _CanvasTool.fill,
+        icon: Icon(Icons.format_color_fill_outlined),
+      ),
+      ButtonSegment(
+        value: _CanvasTool.eyedropper,
+        icon: Icon(Icons.colorize_outlined),
+      ),
+      ButtonSegment(
+        value: _CanvasTool.line,
+        icon: Icon(Icons.show_chart_outlined),
+      ),
+      ButtonSegment(
+        value: _CanvasTool.oval,
+        icon: Icon(Icons.circle_outlined),
+      ),
+      ButtonSegment(
+        value: _CanvasTool.rectangle,
+        icon: Icon(Icons.crop_square),
+      ),
+    ];
     final toolsRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1487,56 +1456,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           icon: const Icon(Icons.redo),
         ),
         const SizedBox(width: 12),
-        if (_isVectorV4) ...[
-          IconButton.outlined(
-            onPressed: _canCloneSelectedV4Figure ? _cloneSelectedV4Figure : null,
-            tooltip: context.l10n.common_copy,
-            icon: const Icon(Icons.content_copy),
-          ),
-          const SizedBox(width: 4),
-          IconButton.outlined(
-            onPressed: _toggleV4GroupSelectionMode,
-            tooltip: 'Выбрать фигуры для объединения',
-            icon: const Icon(Icons.lock_outline),
-            style: _v4GroupSelectionMode
-                ? IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                  )
-                : null,
-          ),
-          const SizedBox(width: 4),
-          IconButton.outlined(
-            onPressed: _canAppendToSelectedV4Group
-                ? _toggleV4AppendToSelectedGroup
-                : null,
-            tooltip: 'Добавлять новые фигуры в выбранную группу',
-            icon: const Icon(Icons.lock),
-            style: _isAppendingToSelectedV4Group
-                ? IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                  )
-                : null,
-          ),
-          const SizedBox(width: 4),
-          IconButton.outlined(
-            onPressed: _canUngroupSelectedV4Figure
-                ? _ungroupSelectedV4Figure
-                : null,
-            tooltip: 'Разгруппировать',
-            icon: const Icon(Icons.lock_open_outlined),
-          ),
-          const SizedBox(width: 4),
-          IconButton.outlined(
-            onPressed: _canEditSelectedV4Figure ? _editSelectedV4Figure : null,
-            tooltip: context.l10n.common_edit,
-            icon: const Icon(Icons.account_tree_outlined),
-          ),
-          const SizedBox(width: 12),
-        ],
         SegmentedButton<_CanvasTool>(
-          emptySelectionAllowed: _isVectorV4,
           showSelectedIcon: false,
           segments: toolSegments,
           selected: {_selectedTool},
@@ -1548,22 +1468,194 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             _selectCanvasTool(selection.first);
           },
         ),
-        if (!_isVectorV4) ...[
-          const SizedBox(width: 12),
-          moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
-          const SizedBox(width: 4),
-          moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
-        ],
+        const SizedBox(width: 12),
+        moveButton(icon: Icons.keyboard_arrow_left, dx: -1, dy: 0),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_right, dx: 1, dy: 0),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_up, dx: 0, dy: -1),
+        const SizedBox(width: 4),
+        moveButton(icon: Icons.keyboard_arrow_down, dx: 0, dy: 1),
       ],
     );
 
     return _buildHorizontalScrollableButtonRow(
       controller: _toolsScrollController,
       child: toolsRow,
+    );
+  }
+
+  Widget _buildVectorV4Tools() {
+    const buttonSize = 48.0;
+    const gap = SizedBox(width: 4);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    ButtonStyle? selectedStyle(bool selected) => selected
+        ? IconButton.styleFrom(
+            backgroundColor: colorScheme.primaryContainer,
+            foregroundColor: colorScheme.onPrimaryContainer,
+          )
+        : null;
+
+    Widget fixedButton({
+      required Widget child,
+    }) {
+      return SizedBox.square(
+        dimension: buttonSize,
+        child: Center(child: child),
+      );
+    }
+
+    Widget actionButton({
+      required VoidCallback? onPressed,
+      required String tooltip,
+      required IconData icon,
+      bool selected = false,
+    }) {
+      return fixedButton(
+        child: IconButton.outlined(
+          onPressed: onPressed,
+          tooltip: tooltip,
+          icon: Icon(icon),
+          style: selectedStyle(selected),
+        ),
+      );
+    }
+
+    Widget toolButton({
+      required _CanvasTool tool,
+      required String tooltip,
+      required IconData icon,
+    }) {
+      return actionButton(
+        onPressed: () => _selectCanvasTool(tool),
+        tooltip: tooltip,
+        icon: icon,
+        selected: _selectedTool == tool,
+      );
+    }
+
+    Widget emptyCell() => fixedButton(child: const SizedBox.shrink());
+
+    final topRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        actionButton(
+          onPressed: _undoStack.isEmpty ? null : _undoCanvasAction,
+          tooltip: context.l10n.common_undo,
+          icon: Icons.undo,
+        ),
+        gap,
+        actionButton(
+          onPressed: _canCloneSelectedV4Figure ? _cloneSelectedV4Figure : null,
+          tooltip: context.l10n.common_copy,
+          icon: Icons.content_copy,
+        ),
+        gap,
+        actionButton(
+          onPressed: _canEditSelectedV4Figure ? _editSelectedV4Figure : null,
+          tooltip: context.l10n.common_edit,
+          icon: Icons.account_tree_outlined,
+        ),
+        gap,
+        actionButton(
+          onPressed: _canAppendToSelectedV4Group
+              ? _toggleV4AppendToSelectedGroup
+              : null,
+          tooltip: 'Добавлять новые фигуры в выбранную группу',
+          icon: Icons.lock,
+          selected: _isAppendingToSelectedV4Group,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.select,
+          tooltip: context.l10n.chat_canvasV4ToolSelect,
+          icon: Icons.near_me_outlined,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.pencil,
+          tooltip: context.l10n.chat_canvasV4ToolPencil,
+          icon: Icons.edit_outlined,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.polyline,
+          tooltip: context.l10n.chat_canvasV4ToolPolyline,
+          icon: Icons.polyline,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.rectangle,
+          tooltip: context.l10n.chat_canvasV4ToolRect,
+          icon: Icons.crop_square,
+        ),
+      ],
+    );
+
+    final bottomRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        actionButton(
+          onPressed: _redoStack.isEmpty ? null : _redoCanvasAction,
+          tooltip: context.l10n.chat_canvasV4Redo,
+          icon: Icons.redo,
+        ),
+        gap,
+        actionButton(
+          onPressed: _toggleV4GroupSelectionMode,
+          tooltip: 'Выбрать фигуры для объединения',
+          icon: Icons.lock_outline,
+          selected: _v4GroupSelectionMode,
+        ),
+        gap,
+        actionButton(
+          onPressed: _canUngroupSelectedV4Figure
+              ? _ungroupSelectedV4Figure
+              : null,
+          tooltip: 'Разгруппировать',
+          icon: Icons.lock_open_outlined,
+        ),
+        gap,
+        emptyCell(),
+        gap,
+        toolButton(
+          tool: _CanvasTool.dot,
+          tooltip: context.l10n.chat_canvasV4ToolDot,
+          icon: Icons.fiber_manual_record,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.line,
+          tooltip: context.l10n.chat_canvasV4ToolLine,
+          icon: Icons.horizontal_rule,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.wave,
+          tooltip: context.l10n.chat_canvasV4ToolWave,
+          icon: Icons.gesture,
+        ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.oval,
+          tooltip: context.l10n.chat_canvasV4ToolEllipse,
+          icon: Icons.circle_outlined,
+        ),
+      ],
+    );
+
+    return _buildHorizontalScrollableButtonRow(
+      controller: _toolsScrollController,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          topRow,
+          const SizedBox(height: 4),
+          bottomRow,
+        ],
+      ),
     );
   }
 
