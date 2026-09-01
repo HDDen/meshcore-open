@@ -50,8 +50,12 @@ class MCOImageV4Codec {
   static const int _dimensionModeSmall32 = 1;
   static const int _dimensionModeMedium64 = 2;
   static const int _dimensionModeExtended = 3;
+  static const int _coordinateOverscanMax = 16;
 
   const MCOImageV4Codec();
+
+  static int coordinateMarginForCanvasSize(int size) =>
+      math.min(_coordinateOverscanMax, math.max(1, (size + 7) ~/ 8));
 
   EncodedMCOImageV4 encode(
     MCOImageV4Document document, {
@@ -251,6 +255,8 @@ class MCOImageV4Codec {
       if (dotRun.length >= 2) {
         final dotRunEncoded = _encodeBestDotRun(
           dotRun,
+          width: document.width,
+          height: document.height,
           xBits: xBits,
           yBits: yBits,
         );
@@ -542,6 +548,8 @@ class MCOImageV4Codec {
     final candidates = <_V4BitWriter>[
       _encodeFigureCommand(
         figure,
+        width: width,
+        height: height,
         xBits: xBits,
         yBits: yBits,
         scalarBits: scalarBits,
@@ -591,16 +599,26 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeFigureCommand(
     MCOImageV4Figure figure, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
     required int scalarBits,
   }) {
     if (figure is MCOImageV4Path) {
-      return _encodeBestPath(figure, xBits: xBits, yBits: yBits);
+      return _encodeBestPath(
+        figure,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      );
     }
     final candidates = <_V4BitWriter>[
       _encodeFullFigureCommand(
         figure,
+        width: width,
+        height: height,
         xBits: xBits,
         yBits: yBits,
         scalarBits: scalarBits,
@@ -612,6 +630,8 @@ class MCOImageV4Codec {
           candidates.addAll(
             _encodeAxisLineCandidates(
               figure,
+              width: width,
+              height: height,
               xBits: xBits,
               yBits: yBits,
             ),
@@ -621,6 +641,8 @@ class MCOImageV4Codec {
           _encodePointDeltaFigureCandidates(
             _extLineDelta,
             <MCOImageV4Point>[start, end],
+            width: width,
+            height: height,
             xBits: xBits,
             yBits: yBits,
           ),
@@ -634,6 +656,8 @@ class MCOImageV4Codec {
           _encodePointDeltaFigureCandidates(
             _extAreaDelta,
             <MCOImageV4Point>[first, second, third],
+            width: width,
+            height: height,
             xBits: xBits,
             yBits: yBits,
             extraHeader: figure is MCOImageV4Ellipse ? 1 : 0,
@@ -648,6 +672,8 @@ class MCOImageV4Codec {
                 figure,
                 negative: depth.negative,
                 magnitude: depth.magnitude,
+                width: width,
+                height: height,
                 xBits: xBits,
                 yBits: yBits,
                 scalarBits: scalarBits,
@@ -660,6 +686,8 @@ class MCOImageV4Codec {
           _encodePointDeltaFigureCandidates(
             _extWaveDelta,
             <MCOImageV4Point>[start, end],
+            width: width,
+            height: height,
             xBits: xBits,
             yBits: yBits,
             extraHeader:
@@ -680,6 +708,8 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeFullFigureCommand(
     MCOImageV4Figure figure, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
     required int scalarBits,
@@ -688,11 +718,11 @@ class MCOImageV4Codec {
     switch (figure) {
       case MCOImageV4Dot(:final point):
         writer.writeBits(_opDot, _opBits);
-        _writePoint(writer, point, xBits, yBits);
+        _writePoint(writer, point, xBits, yBits, width: width, height: height);
       case MCOImageV4Line(:final start, :final end):
         writer.writeBits(_opLine, _opBits);
-        _writePoint(writer, start, xBits, yBits);
-        _writePoint(writer, end, xBits, yBits);
+        _writePoint(writer, start, xBits, yBits, width: width, height: height);
+        _writePoint(writer, end, xBits, yBits, width: width, height: height);
       case MCOImageV4Rect(
         :final first,
         :final second,
@@ -701,15 +731,29 @@ class MCOImageV4Codec {
         final compact = _axisAlignedArea(figure);
         if (compact == null) {
           writer.writeBits(_opRect, _opBits);
-          _writePoint(writer, first, xBits, yBits);
-          _writePoint(writer, second, xBits, yBits);
-          _writePoint(writer, third, xBits, yBits);
+          _writePoint(writer, first, xBits, yBits, width: width, height: height);
+          _writePoint(writer, second, xBits, yBits, width: width, height: height);
+          _writePoint(writer, third, xBits, yBits, width: width, height: height);
         } else {
           writer
             ..writeBits(_opRectAxisAligned, _opBits)
             ..writeBit(compact.swapped);
-          _writePoint(writer, compact.first, xBits, yBits);
-          _writePoint(writer, compact.second, xBits, yBits);
+          _writePoint(
+            writer,
+            compact.first,
+            xBits,
+            yBits,
+            width: width,
+            height: height,
+          );
+          _writePoint(
+            writer,
+            compact.second,
+            xBits,
+            yBits,
+            width: width,
+            height: height,
+          );
         }
       case MCOImageV4Ellipse(
         :final first,
@@ -719,15 +763,29 @@ class MCOImageV4Codec {
         final compact = _axisAlignedArea(figure);
         if (compact == null) {
           writer.writeBits(_opEllipse, _opBits);
-          _writePoint(writer, first, xBits, yBits);
-          _writePoint(writer, second, xBits, yBits);
-          _writePoint(writer, third, xBits, yBits);
+          _writePoint(writer, first, xBits, yBits, width: width, height: height);
+          _writePoint(writer, second, xBits, yBits, width: width, height: height);
+          _writePoint(writer, third, xBits, yBits, width: width, height: height);
         } else {
           writer
             ..writeBits(_opEllipseAxisAligned, _opBits)
             ..writeBit(compact.swapped);
-          _writePoint(writer, compact.first, xBits, yBits);
-          _writePoint(writer, compact.second, xBits, yBits);
+          _writePoint(
+            writer,
+            compact.first,
+            xBits,
+            yBits,
+            width: width,
+            height: height,
+          );
+          _writePoint(
+            writer,
+            compact.second,
+            xBits,
+            yBits,
+            width: width,
+            height: height,
+          );
         }
       case MCOImageV4Wave(
         :final start,
@@ -738,8 +796,8 @@ class MCOImageV4Codec {
         writer
           ..writeBits(_opWave, _opBits)
           ..writeBit(closed);
-        _writePoint(writer, start, xBits, yBits);
-        _writePoint(writer, end, xBits, yBits);
+        _writePoint(writer, start, xBits, yBits, width: width, height: height);
+        _writePoint(writer, end, xBits, yBits, width: width, height: height);
         writer
           ..writeBit(depth < 0)
           ..writeBits(depth.abs() - 1, scalarBits);
@@ -751,6 +809,8 @@ class MCOImageV4Codec {
 
   List<_V4BitWriter> _encodeAxisLineCandidates(
     MCOImageV4Line line, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -762,6 +822,8 @@ class MCOImageV4Codec {
       _encodeAxisLineAbsolute(
         line,
         vertical: vertical,
+        width: width,
+        height: height,
         xBits: xBits,
         yBits: yBits,
       ),
@@ -774,7 +836,14 @@ class MCOImageV4Codec {
         ..writeBits(_extLineAxisDelta, _extBits)
         ..writeBit(vertical)
         ..writeBits(selector, 2);
-      _writePoint(writer, line.start, xBits, yBits);
+      _writePoint(
+        writer,
+        line.start,
+        xBits,
+        yBits,
+        width: width,
+        height: height,
+      );
       writer.writeBits(_zigZagEncode(delta), shortBits);
       result.add(writer);
     }
@@ -784,6 +853,8 @@ class MCOImageV4Codec {
   _V4BitWriter _encodeAxisLineAbsolute(
     MCOImageV4Line line, {
     required bool vertical,
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -793,14 +864,14 @@ class MCOImageV4Codec {
       ..writeBit(vertical);
     if (vertical) {
       writer
-        ..writeBits(line.start.x, xBits)
-        ..writeBits(line.start.y, yBits)
-        ..writeBits(line.end.y, yBits);
+        ..writeBits(_encodeCoordinate(line.start.x, width), xBits)
+        ..writeBits(_encodeCoordinate(line.start.y, height), yBits)
+        ..writeBits(_encodeCoordinate(line.end.y, height), yBits);
     } else {
       writer
-        ..writeBits(line.start.y, yBits)
-        ..writeBits(line.start.x, xBits)
-        ..writeBits(line.end.x, xBits);
+        ..writeBits(_encodeCoordinate(line.start.y, height), yBits)
+        ..writeBits(_encodeCoordinate(line.start.x, width), xBits)
+        ..writeBits(_encodeCoordinate(line.end.x, width), xBits);
     }
     return writer;
   }
@@ -809,6 +880,8 @@ class MCOImageV4Codec {
     MCOImageV4Ellipse ellipse, {
     required bool negative,
     required int magnitude,
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
     required int scalarBits,
@@ -816,8 +889,22 @@ class MCOImageV4Codec {
     final writer = _V4BitWriter()
       ..writeBits(_opExtended, _opBits)
       ..writeBits(_extEllipseDepth, _extBits);
-    _writePoint(writer, ellipse.first, xBits, yBits);
-    _writePoint(writer, ellipse.second, xBits, yBits);
+    _writePoint(
+      writer,
+      ellipse.first,
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
+    _writePoint(
+      writer,
+      ellipse.second,
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
     writer
       ..writeBit(negative)
       ..writeBits(magnitude - 1, scalarBits);
@@ -826,18 +913,28 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeBestDotRun(
     List<MCOImageV4Dot> dots, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
     final points = dots.map((dot) => dot.point).toList();
     final candidates = <_V4BitWriter>[
-      _encodeAbsoluteDotRun(points, xBits: xBits, yBits: yBits),
+      _encodeAbsoluteDotRun(
+        points,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      ),
       for (var selector = 0; selector < _deltaWidths.length; selector++)
         if (_canEncodePointDeltas(points, _deltaWidths[selector]))
           _encodeDeltaDotRun(
             points,
             selector: selector,
             shortBits: _deltaWidths[selector],
+            width: width,
+            height: height,
             xBits: xBits,
             yBits: yBits,
           ),
@@ -876,6 +973,8 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeAbsoluteDotRun(
     List<MCOImageV4Point> points, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -885,7 +984,7 @@ class MCOImageV4Codec {
       ..writeBit(false)
       ..writeCompactUint(points.length - 2);
     for (final point in points) {
-      _writePoint(writer, point, xBits, yBits);
+      _writePoint(writer, point, xBits, yBits, width: width, height: height);
     }
     return writer;
   }
@@ -894,6 +993,8 @@ class MCOImageV4Codec {
     List<MCOImageV4Point> points, {
     required int selector,
     required int shortBits,
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -903,7 +1004,14 @@ class MCOImageV4Codec {
       ..writeBit(true)
       ..writeBits(selector, 2)
       ..writeCompactUint(points.length - 2);
-    _writePoint(writer, points.first, xBits, yBits);
+    _writePoint(
+      writer,
+      points.first,
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
     for (var i = 1; i < points.length; i++) {
       writer
         ..writeBits(_zigZagEncode(points[i].x - points[i - 1].x), shortBits)
@@ -915,6 +1023,8 @@ class MCOImageV4Codec {
   List<_V4BitWriter> _encodePointDeltaFigureCandidates(
     int subop,
     List<MCOImageV4Point> points, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
     int extraHeader = 0,
@@ -931,7 +1041,14 @@ class MCOImageV4Codec {
         writer.writeBits(extraHeader, extraHeaderBits);
       }
       writer.writeBits(selector, 2);
-      _writePoint(writer, points.first, xBits, yBits);
+      _writePoint(
+        writer,
+        points.first,
+        xBits,
+        yBits,
+        width: width,
+        height: height,
+      );
       for (var i = 1; i < points.length; i++) {
         writer
           ..writeBits(_zigZagEncode(points[i].x - points[i - 1].x), shortBits)
@@ -944,19 +1061,47 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeBestPath(
     MCOImageV4Path path, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
     final candidates = <_V4BitWriter>[
-      _encodeAbsolutePath(path, xBits: xBits, yBits: yBits),
-      ..._encodeOrthogonalPathCandidates(path, xBits: xBits, yBits: yBits),
-      _encodeBoundsPath(path, xBits: xBits, yBits: yBits),
-      ..._encodeBoundsDeltaPathCandidates(path, xBits: xBits, yBits: yBits),
+      _encodeAbsolutePath(
+        path,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      ),
+      ..._encodeOrthogonalPathCandidates(
+        path,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      ),
+      _encodeBoundsPath(
+        path,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      ),
+      ..._encodeBoundsDeltaPathCandidates(
+        path,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+      ),
       for (var selector = 0; selector < _deltaWidths.length; selector++)
         _encodeDeltaPath(
           path,
           selector: selector,
           shortBits: _deltaWidths[selector],
+          width: width,
+          height: height,
           xBits: xBits,
           yBits: yBits,
         ),
@@ -967,6 +1112,8 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeAbsolutePath(
     MCOImageV4Path path, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -976,7 +1123,7 @@ class MCOImageV4Codec {
       ..writeBit(path.closed)
       ..writeCompactUint(path.points.length - minimum);
     for (final point in path.points) {
-      _writePoint(writer, point, xBits, yBits);
+      _writePoint(writer, point, xBits, yBits, width: width, height: height);
     }
     return writer;
   }
@@ -985,6 +1132,8 @@ class MCOImageV4Codec {
     MCOImageV4Path path, {
     required int selector,
     required int shortBits,
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -994,18 +1143,41 @@ class MCOImageV4Codec {
       ..writeBit(path.closed)
       ..writeBits(selector, 2)
       ..writeCompactUint(path.points.length - minimum);
-    _writePoint(writer, path.points.first, xBits, yBits);
+    _writePoint(
+      writer,
+      path.points.first,
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
     for (var i = 1; i < path.points.length; i++) {
       final previous = path.points[i - 1];
       final current = path.points[i];
-      _writePathComponent(writer, current.x, previous.x, shortBits, xBits);
-      _writePathComponent(writer, current.y, previous.y, shortBits, yBits);
+      _writePathComponent(
+        writer,
+        current.x,
+        previous.x,
+        shortBits,
+        xBits,
+        width,
+      );
+      _writePathComponent(
+        writer,
+        current.y,
+        previous.y,
+        shortBits,
+        yBits,
+        height,
+      );
     }
     return writer;
   }
 
   List<_V4BitWriter> _encodeOrthogonalPathCandidates(
     MCOImageV4Path path, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -1035,7 +1207,14 @@ class MCOImageV4Codec {
         ..writeBit(path.closed)
         ..writeBits(selector, 2)
         ..writeCompactUint(path.points.length - minimum);
-      _writePoint(writer, path.points.first, xBits, yBits);
+      _writePoint(
+        writer,
+        path.points.first,
+        xBits,
+        yBits,
+        width: width,
+        height: height,
+      );
       for (var i = 0; i < deltas.length; i++) {
         writer
           ..writeBit(vertical[i])
@@ -1048,21 +1227,30 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeBoundsPath(
     MCOImageV4Path path, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
     final bounds = _pathBounds(path.points);
     final boundsWidth = bounds.width;
     final boundsHeight = bounds.height;
-    final localXBits = _coordinateBits(boundsWidth);
-    final localYBits = _coordinateBits(boundsHeight);
+    final localXBits = _localCoordinateBits(boundsWidth);
+    final localYBits = _localCoordinateBits(boundsHeight);
     final minimum = path.closed ? 3 : 2;
     final writer = _V4BitWriter()
       ..writeBits(_opExtended, _opBits)
       ..writeBits(_extPathBounds, _extBits)
       ..writeBit(path.closed)
       ..writeCompactUint(path.points.length - minimum);
-    _writePoint(writer, MCOImageV4Point(bounds.x, bounds.y), xBits, yBits);
+    _writePoint(
+      writer,
+      MCOImageV4Point(bounds.x, bounds.y),
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
     writer
       ..writeBits(boundsWidth - 1, xBits)
       ..writeBits(boundsHeight - 1, yBits);
@@ -1076,6 +1264,8 @@ class MCOImageV4Codec {
 
   List<_V4BitWriter> _encodeBoundsDeltaPathCandidates(
     MCOImageV4Path path, {
+    required int width,
+    required int height,
     required int xBits,
     required int yBits,
   }) {
@@ -1083,8 +1273,8 @@ class MCOImageV4Codec {
     final localPoints = path.points
         .map((point) => MCOImageV4Point(point.x - bounds.x, point.y - bounds.y))
         .toList();
-    final localXBits = _coordinateBits(bounds.width);
-    final localYBits = _coordinateBits(bounds.height);
+    final localXBits = _localCoordinateBits(bounds.width);
+    final localYBits = _localCoordinateBits(bounds.height);
     final minimum = path.closed ? 3 : 2;
     final result = <_V4BitWriter>[];
     for (var selector = 0; selector < _deltaWidths.length; selector++) {
@@ -1096,7 +1286,14 @@ class MCOImageV4Codec {
         ..writeBit(path.closed)
         ..writeBits(selector, 2)
         ..writeCompactUint(path.points.length - minimum);
-      _writePoint(writer, MCOImageV4Point(bounds.x, bounds.y), xBits, yBits);
+      _writePoint(
+        writer,
+        MCOImageV4Point(bounds.x, bounds.y),
+        xBits,
+        yBits,
+        width: width,
+        height: height,
+      );
       writer
         ..writeBits(bounds.width - 1, xBits)
         ..writeBits(bounds.height - 1, yBits)
@@ -1124,6 +1321,7 @@ class MCOImageV4Codec {
     int previous,
     int shortBits,
     int absoluteBits,
+    int axisSize,
   ) {
     final code = _zigZagEncode(current - previous);
     if (code < (1 << shortBits)) {
@@ -1133,7 +1331,7 @@ class MCOImageV4Codec {
     } else {
       writer
         ..writeBit(true)
-        ..writeBits(current, absoluteBits);
+        ..writeBits(_encodeCoordinate(current, axisSize), absoluteBits);
     }
   }
 
@@ -1144,7 +1342,8 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
   }) {
-    if (delta.x.abs() > width - 1 || delta.y.abs() > height - 1) {
+    if (delta.x.abs() > _coordinateValueCount(width) - 1 ||
+        delta.y.abs() > _coordinateValueCount(height) - 1) {
       return null;
     }
     final candidates = <_V4BitWriter>[
@@ -1181,7 +1380,8 @@ class MCOImageV4Codec {
     required int yBits,
   }) {
     if (distance < 2 || distance > _repeatBackWindow) return null;
-    if (delta.x.abs() > width - 1 || delta.y.abs() > height - 1) {
+    if (delta.x.abs() > _coordinateValueCount(width) - 1 ||
+        delta.y.abs() > _coordinateValueCount(height) - 1) {
       return null;
     }
     final candidates = <_V4BitWriter>[
@@ -1659,18 +1859,19 @@ class MCOImageV4Codec {
     final origin = _readPoint(reader, width, height, xBits, yBits);
     final boundsWidth = reader.readBits(xBits) + 1;
     final boundsHeight = reader.readBits(yBits) + 1;
-    if (origin.x + boundsWidth > width || origin.y + boundsHeight > height) {
+    if (!_isCoordinateInRange(origin.x + boundsWidth - 1, width) ||
+        !_isCoordinateInRange(origin.y + boundsHeight - 1, height)) {
       throw const MCOImageInvalidPayloadException(
-        'MCOimg v4 path bounds are outside the canvas',
+        'MCOimg v4 path bounds are outside the coordinate range',
       );
     }
-    final localXBits = _coordinateBits(boundsWidth);
-    final localYBits = _coordinateBits(boundsHeight);
+    final localXBits = _localCoordinateBits(boundsWidth);
+    final localYBits = _localCoordinateBits(boundsHeight);
     final points = <MCOImageV4Point>[];
     while (points.length < pointCount) {
       final point = MCOImageV4Point(
-        origin.x + _readCoordinate(reader, localXBits, boundsWidth),
-        origin.y + _readCoordinate(reader, localYBits, boundsHeight),
+        origin.x + _readLocalCoordinate(reader, localXBits, boundsWidth),
+        origin.y + _readLocalCoordinate(reader, localYBits, boundsHeight),
       );
       points.add(point);
     }
@@ -1692,16 +1893,17 @@ class MCOImageV4Codec {
     final origin = _readPoint(reader, width, height, xBits, yBits);
     final boundsWidth = reader.readBits(xBits) + 1;
     final boundsHeight = reader.readBits(yBits) + 1;
-    if (origin.x + boundsWidth > width || origin.y + boundsHeight > height) {
+    if (!_isCoordinateInRange(origin.x + boundsWidth - 1, width) ||
+        !_isCoordinateInRange(origin.y + boundsHeight - 1, height)) {
       throw const MCOImageInvalidPayloadException(
-        'MCOimg v4 path bounds are outside the canvas',
+        'MCOimg v4 path bounds are outside the coordinate range',
       );
     }
-    final localXBits = _coordinateBits(boundsWidth);
-    final localYBits = _coordinateBits(boundsHeight);
+    final localXBits = _localCoordinateBits(boundsWidth);
+    final localYBits = _localCoordinateBits(boundsHeight);
     final first = MCOImageV4Point(
-      _readCoordinate(reader, localXBits, boundsWidth),
-      _readCoordinate(reader, localYBits, boundsHeight),
+      _readLocalCoordinate(reader, localXBits, boundsWidth),
+      _readLocalCoordinate(reader, localYBits, boundsHeight),
     );
     final localPoints = <MCOImageV4Point>[first];
     while (localPoints.length < pointCount) {
@@ -1710,7 +1912,7 @@ class MCOImageV4Codec {
         previous.x + _zigZagDecode(reader.readBits(shortBits)),
         previous.y + _zigZagDecode(reader.readBits(shortBits)),
       );
-      _validatePointInPayload(point, boundsWidth, boundsHeight);
+      _validateLocalPointInPayload(point, boundsWidth, boundsHeight);
       localPoints.add(point);
     }
     final points = localPoints
@@ -1803,9 +2005,9 @@ class MCOImageV4Codec {
     int axisSize,
   ) {
     final value = reader.readBit()
-        ? reader.readBits(absoluteBits)
+        ? _readCoordinate(reader, absoluteBits, axisSize)
         : previous + _zigZagDecode(reader.readBits(shortBits));
-    if (value < 0 || value >= axisSize) {
+    if (!_isCoordinateInRange(value, axisSize)) {
       throw const MCOImageInvalidPayloadException(
         'MCOimg v4 path coordinate is out of range',
       );
@@ -1865,12 +2067,10 @@ class MCOImageV4Codec {
   ) {
     _validateStyle(figure.style, paletteLength, math.max(width, height));
     void point(MCOImageV4Point value) {
-      if (value.x < 0 ||
-          value.x >= width ||
-          value.y < 0 ||
-          value.y >= height) {
+      if (!_isCoordinateInRange(value.x, width) ||
+          !_isCoordinateInRange(value.y, height)) {
         throw const MCOImageInvalidInputException(
-          'MCOimg v4 point is outside the canvas',
+          'MCOimg v4 point is outside the coordinate range',
         );
       }
     }
@@ -2122,11 +2322,13 @@ class MCOImageV4Codec {
     _V4BitWriter writer,
     MCOImageV4Point point,
     int xBits,
-    int yBits,
-  ) {
+    int yBits, {
+    required int width,
+    required int height,
+  }) {
     writer
-      ..writeBits(point.x, xBits)
-      ..writeBits(point.y, yBits);
+      ..writeBits(_encodeCoordinate(point.x, width), xBits)
+      ..writeBits(_encodeCoordinate(point.y, height), yBits);
   }
 
   static void _writeDimensions(_V4BitWriter writer, int width, int height) {
@@ -2229,6 +2431,16 @@ class MCOImageV4Codec {
 
   static int _readCoordinate(_V4BitReader reader, int bits, int size) {
     final value = reader.readBits(bits);
+    if (value >= _coordinateValueCount(size)) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 coordinate is out of range',
+      );
+    }
+    return value - _coordinateMargin(size);
+  }
+
+  static int _readLocalCoordinate(_V4BitReader reader, int bits, int size) {
+    final value = reader.readBits(bits);
     if (value >= size) {
       throw const MCOImageInvalidPayloadException(
         'MCOimg v4 coordinate is out of range',
@@ -2238,6 +2450,19 @@ class MCOImageV4Codec {
   }
 
   static void _validatePointInPayload(
+    MCOImageV4Point point,
+    int width,
+    int height,
+  ) {
+    if (!_isCoordinateInRange(point.x, width) ||
+        !_isCoordinateInRange(point.y, height)) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 coordinate is out of range',
+      );
+    }
+  }
+
+  static void _validateLocalPointInPayload(
     MCOImageV4Point point,
     int width,
     int height,
@@ -2279,7 +2504,31 @@ class MCOImageV4Codec {
     );
   }
 
-  static int _coordinateBits(int size) => math.max(1, (size - 1).bitLength);
+  static int _coordinateBits(int size) =>
+      math.max(1, (_coordinateValueCount(size) - 1).bitLength);
+
+  static int _localCoordinateBits(int size) =>
+      math.max(1, (size - 1).bitLength);
+
+  static int _coordinateMargin(int size) =>
+      coordinateMarginForCanvasSize(size);
+
+  static int _coordinateValueCount(int size) =>
+      size + _coordinateMargin(size) * 2;
+
+  static bool _isCoordinateInRange(int value, int size) {
+    final margin = _coordinateMargin(size);
+    return value >= -margin && value < size + margin;
+  }
+
+  static int _encodeCoordinate(int value, int size) {
+    if (!_isCoordinateInRange(value, size)) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 point is outside the coordinate range',
+      );
+    }
+    return value + _coordinateMargin(size);
+  }
 
   static int _scalarBits(int width, int height) =>
       math.max(1, (math.max(width, height) - 1).bitLength);

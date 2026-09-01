@@ -1491,13 +1491,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = mediaHeight * 0.55;
+        final vectorXMargin = _isVectorV4
+            ? MCOImageV4Codec.coordinateMarginForCanvasSize(_width)
+            : 0;
+        final vectorYMargin = _isVectorV4
+            ? MCOImageV4Codec.coordinateMarginForCanvasSize(_height)
+            : 0;
+        final horizontalMarginFactor = 1 + vectorXMargin * 2 / _width;
+        final verticalMarginFactor = 1 + vectorYMargin * 2 / _height;
         final availableCanvasWidth = math.max(
           1.0,
-          maxWidth - _canvasRulerExtent,
+          (maxWidth - _canvasRulerExtent) / horizontalMarginFactor,
         );
         final availableCanvasHeight = math.max(
           1.0,
-          maxHeight - _canvasRulerExtent,
+          (maxHeight - _canvasRulerExtent) / verticalMarginFactor,
         );
         final canvasWidth = math.min(
           availableCanvasWidth,
@@ -1505,13 +1513,33 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         );
         final canvasHeight = canvasWidth * _height / _width;
         final canvasSize = Size(canvasWidth, canvasHeight);
+        final vectorXMarginSize = _isVectorV4
+            ? canvasWidth * vectorXMargin / _width
+            : 0.0;
+        final vectorYMarginSize = _isVectorV4
+            ? canvasHeight * vectorYMargin / _height
+            : 0.0;
         final totalSize = Size(
-          canvasWidth + _canvasRulerExtent,
-          canvasHeight + _canvasRulerExtent,
+          canvasWidth + _canvasRulerExtent + vectorXMarginSize * 2,
+          canvasHeight + _canvasRulerExtent + vectorYMarginSize * 2,
         );
-        final canvasOffset = const Offset(
+        final canvasOffset = Offset(
+          _canvasRulerExtent + vectorXMarginSize,
+          _canvasRulerExtent + vectorYMarginSize,
+        );
+        final drawingOffset = Offset(
           _canvasRulerExtent,
           _canvasRulerExtent,
+        );
+        final drawingSize = _isVectorV4
+            ? Size(
+                canvasWidth + vectorXMarginSize * 2,
+                canvasHeight + vectorYMarginSize * 2,
+              )
+            : canvasSize;
+        final drawingToCanvasOffset = Offset(
+          _isVectorV4 ? vectorXMarginSize : 0.0,
+          _isVectorV4 ? vectorYMarginSize : 0.0,
         );
         final canDraw = !showLockButton || _canvasInputLocked;
 
@@ -1589,19 +1617,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   ),
                 ),
                 Positioned(
-                  left: _canvasRulerExtent,
-                  top: _canvasRulerExtent,
-                  width: canvasSize.width,
-                  height: canvasSize.height,
+                  left: drawingOffset.dx,
+                  top: drawingOffset.dy,
+                  width: drawingSize.width,
+                  height: drawingSize.height,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTapUp: canDraw && _isVectorV4
-                        ? (details) =>
-                              _handleVectorTap(details.localPosition, canvasSize)
+                        ? (details) => _handleVectorTap(
+                            details.localPosition - drawingToCanvasOffset,
+                            canvasSize,
+                          )
                         : null,
                     onPanStart: canDraw && _isVectorV4
                         ? (details) => _handleVectorPanStart(
-                            details.localPosition,
+                            details.localPosition - drawingToCanvasOffset,
                             canvasSize,
                           )
                         : null,
@@ -1615,7 +1645,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                         ? (details) {
                             if (_isVectorV4) {
                               _handleVectorPanUpdate(
-                                details.localPosition,
+                                details.localPosition - drawingToCanvasOffset,
                                 canvasSize,
                               );
                             } else if (_selectedTool == _CanvasTool.pencil) {
@@ -4358,7 +4388,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final point = _vectorGridPoint(
       position,
       size,
-      clampToCanvas: _selectedTool != _CanvasTool.select,
+      clampToCanvas: false,
     );
     switch (_selectedTool) {
       case _CanvasTool.dot:
@@ -4407,7 +4437,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final point = _vectorGridPoint(
       position,
       size,
-      clampToCanvas: _selectedTool != _CanvasTool.select,
+      clampToCanvas: false,
     );
     switch (_selectedTool) {
       case _CanvasTool.pencil:
@@ -4437,7 +4467,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final point = _vectorGridPoint(
       position,
       size,
-      clampToCanvas: _selectedTool != _CanvasTool.select,
+      clampToCanvas: false,
     );
     if (_v4GestureStart == null) return;
     switch (_selectedTool) {
@@ -4778,8 +4808,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }) {
     final rawX = (position.dx / size.width * _width).floor();
     final rawY = (position.dy / size.height * _height).floor();
-    final x = clampToCanvas ? rawX.clamp(0, _width - 1).toInt() : rawX;
-    final y = clampToCanvas ? rawY.clamp(0, _height - 1).toInt() : rawY;
+    final xMargin = MCOImageV4Codec.coordinateMarginForCanvasSize(_width);
+    final yMargin = MCOImageV4Codec.coordinateMarginForCanvasSize(_height);
+    final x = clampToCanvas
+        ? rawX.clamp(0, _width - 1).toInt()
+        : rawX.clamp(-xMargin, _width + xMargin - 1).toInt();
+    final y = clampToCanvas
+        ? rawY.clamp(0, _height - 1).toInt()
+        : rawY.clamp(-yMargin, _height + yMargin - 1).toInt();
     return MCOImageV4Point(x, y);
   }
 
@@ -6820,12 +6856,41 @@ class _VectorCanvasPainter extends CustomPainter {
       document,
       selectedFigure: selectedFigure,
       selectionColor: const Color(0xff00aaff),
-      guidePoints: guidePoints,
+      guidePoints: const [],
       guideStyle: guideStyle,
       paintBackground: !hasReference,
       showGrid: showGrid,
     ).paint(canvas, canvasSize);
+    _paintGuidePoints(canvas);
     canvas.restore();
+  }
+
+  void _paintGuidePoints(Canvas canvas) {
+    if (guidePoints.isEmpty) return;
+    final cellWidth = canvasSize.width / document.width;
+    final cellHeight = canvasSize.height / document.height;
+    final radius = math.max(
+      3.0,
+      math.min(6.0, math.min(cellWidth, cellHeight)),
+    );
+    final fillPaint = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xff00aaff);
+    final outlinePaint = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = const Color(0xffffffff);
+    for (final point in guidePoints) {
+      final center = Offset(
+        (point.x + 0.5) * cellWidth,
+        (point.y + 0.5) * cellHeight,
+      );
+      canvas
+        ..drawCircle(center, radius, fillPaint)
+        ..drawCircle(center, radius, outlinePaint);
+    }
   }
 
   void _paintReference(
