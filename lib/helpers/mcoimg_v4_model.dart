@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'mcoimg_types.dart';
 
-enum MCOImageV4Mode { vector, raster }
+enum MCOImageV4Mode { vector, mixed, raster, reserved }
 
 class MCOImageV4Point {
   final int x;

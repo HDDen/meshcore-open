@@ -30,6 +30,7 @@ class MCOImageV4Codec {
   static const int _opRepeatShort = 14;
   static const int _opExtended = 15;
   static const int _opBits = 4;
+  static const int _modeBits = 2;
 
   static const List<int> _deltaWidths = <int>[3, 4, 5, 6];
   static const int _extLineDelta = 0;
@@ -208,7 +209,7 @@ class MCOImageV4Codec {
   );
 
   Uint8List _encodeCanonicalDocument(MCOImageV4Document document) {
-    if (document.mode != MCOImageV4Mode.vector) {
+    if (!_isObjectMode(document.mode)) {
       throw const MCOImageInvalidInputException(
         'MCOimg v4 raster encoding is not implemented yet',
       );
@@ -220,7 +221,7 @@ class MCOImageV4Codec {
     final profileColorBits = _profileColorBits(document.paletteProfile);
 
     writer
-      ..writeBits(document.mode.index, 1)
+      ..writeBits(document.mode.index, _modeBits)
       ..writeBits(document.paletteProfile.index, 4);
     _writeDimensions(writer, document.width, document.height);
 
@@ -373,8 +374,9 @@ class MCOImageV4Codec {
   }
 
   MCOImageV4Document _readCanonicalDocument(_V4BitReader reader) {
-    final modeIndex = reader.readBits(1);
-    if (modeIndex != MCOImageV4Mode.vector.index) {
+    final modeIndex = reader.readBits(_modeBits);
+    final mode = MCOImageV4Mode.values[modeIndex];
+    if (!_isObjectMode(mode)) {
       throw const MCOImageInvalidPayloadException(
         'Unsupported MCOimg v4 mode',
       );
@@ -507,6 +509,7 @@ class MCOImageV4Codec {
       }
     }
     return MCOImageV4Document(
+      mode: mode,
       width: width,
       height: height,
       paletteProfile: paletteProfile,
@@ -2468,6 +2471,9 @@ class MCOImageV4Codec {
   }
 
   void _validateDocument(MCOImageV4Document document) {
+    if (!_isObjectMode(document.mode)) {
+      throw const MCOImageInvalidInputException('Unsupported MCOimg v4 mode');
+    }
     if (document.width < 1 || document.width > 256) {
       throw const MCOImageInvalidInputException('Invalid v4 canvas width');
     }
@@ -2510,6 +2516,9 @@ class MCOImageV4Codec {
       );
     }
   }
+
+  static bool _isObjectMode(MCOImageV4Mode mode) =>
+      mode == MCOImageV4Mode.vector || mode == MCOImageV4Mode.mixed;
 
   static void _validateFigure(
     MCOImageV4Figure figure,
