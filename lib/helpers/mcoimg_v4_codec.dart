@@ -45,6 +45,7 @@ class MCOImageV4Codec {
   static const int _extDotRun = 10;
   static const int _extSetStyle = 11;
   static const int _extRepeatColorRun = 12;
+  static const int _extGroup = 13;
   static const int _extBits = 4;
   static const int _repeatBackWindow = 8;
   static const int _dimensionModeSquare64 = 0;
@@ -321,6 +322,9 @@ class MCOImageV4Codec {
         final fallback = _encodeDotRunAsFigures(
           dotRun,
           history,
+          currentStyle: currentStyle,
+          document: document,
+          profileColorBits: profileColorBits,
           width: document.width,
           height: document.height,
           xBits: xBits,
@@ -341,6 +345,9 @@ class MCOImageV4Codec {
         _encodeBestFigureCommand(
           figure,
           history,
+          currentStyle: currentStyle,
+          document: document,
+          profileColorBits: profileColorBits,
           width: document.width,
           height: document.height,
           xBits: xBits,
@@ -597,6 +604,9 @@ class MCOImageV4Codec {
   _V4BitWriter _encodeBestFigureCommand(
     MCOImageV4Figure figure,
     List<MCOImageV4Figure> history, {
+    required MCOImageV4Style currentStyle,
+    required MCOImageV4Document document,
+    required int profileColorBits,
     required int width,
     required int height,
     required int xBits,
@@ -606,6 +616,9 @@ class MCOImageV4Codec {
     final candidates = <_V4BitWriter>[
       _encodeFigureCommand(
         figure,
+        currentStyle: currentStyle,
+        document: document,
+        profileColorBits: profileColorBits,
         width: width,
         height: height,
         xBits: xBits,
@@ -734,6 +747,9 @@ class MCOImageV4Codec {
         _encodeBestFigureCommand(
           figure,
           localHistory,
+          currentStyle: style,
+          document: document,
+          profileColorBits: profileColorBits,
           width: width,
           height: height,
           xBits: xBits,
@@ -748,6 +764,9 @@ class MCOImageV4Codec {
 
   _V4BitWriter _encodeFigureCommand(
     MCOImageV4Figure figure, {
+    required MCOImageV4Style currentStyle,
+    required MCOImageV4Document document,
+    required int profileColorBits,
     required int width,
     required int height,
     required int xBits,
@@ -761,6 +780,19 @@ class MCOImageV4Codec {
         height: height,
         xBits: xBits,
         yBits: yBits,
+      );
+    }
+    if (figure is MCOImageV4Group) {
+      return _encodeGroupCommand(
+        figure,
+        currentStyle: currentStyle,
+        document: document,
+        profileColorBits: profileColorBits,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+        scalarBits: scalarBits,
       );
     }
     final candidates = <_V4BitWriter>[
@@ -850,9 +882,46 @@ class MCOImageV4Codec {
         break;
       case MCOImageV4Path():
         throw const MCOImageInvalidInputException('Unexpected v4 path');
+      case MCOImageV4Group():
+        throw const MCOImageInvalidInputException('Unexpected v4 group');
     }
     candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
     return candidates.first;
+  }
+
+  _V4BitWriter _encodeGroupCommand(
+    MCOImageV4Group group, {
+    required MCOImageV4Style currentStyle,
+    required MCOImageV4Document document,
+    required int profileColorBits,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final figures = group.figures.where((figure) => figure.visible).toList();
+    if (figures.isEmpty) {
+      throw const MCOImageInvalidInputException('MCOimg v4 group is empty');
+    }
+    return _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extGroup, _extBits)
+      ..writeCompactUint(figures.length - 1)
+      ..writeWriter(
+        _encodeFigureSequence(
+          figures,
+          const <MCOImageV4Figure>[],
+          currentStyle,
+          document,
+          profileColorBits,
+          scalarBits,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+        ),
+      );
   }
 
   _V4BitWriter _encodeFullFigureCommand(
@@ -952,6 +1021,8 @@ class MCOImageV4Codec {
           ..writeBits(depth.abs() - 1, scalarBits);
       case MCOImageV4Path():
         throw const MCOImageInvalidInputException('Unexpected v4 path');
+      case MCOImageV4Group():
+        throw const MCOImageInvalidInputException('Unexpected v4 group');
     }
     return writer;
   }
@@ -1095,6 +1166,9 @@ class MCOImageV4Codec {
   _V4BitWriter _encodeDotRunAsFigures(
     List<MCOImageV4Dot> dots,
     List<MCOImageV4Figure> history, {
+    required MCOImageV4Style currentStyle,
+    required MCOImageV4Document document,
+    required int profileColorBits,
     required int width,
     required int height,
     required int xBits,
@@ -1108,6 +1182,9 @@ class MCOImageV4Codec {
         _encodeBestFigureCommand(
           dot,
           localHistory,
+          currentStyle: currentStyle,
+          document: document,
+          profileColorBits: profileColorBits,
           width: width,
           height: height,
           xBits: xBits,
@@ -2054,6 +2131,105 @@ class MCOImageV4Codec {
             yBits: yBits,
           ),
         );
+      case _extGroup:
+        final count = reader.readCompactUint() + 1;
+        var nestedStyle = style;
+        final nestedHistory = <MCOImageV4Figure>[];
+        final figures = <MCOImageV4Figure>[];
+
+        void addNestedFigures(List<MCOImageV4Figure> nextFigures) {
+          if (figures.length + nextFigures.length > count) {
+            throw const MCOImageInvalidPayloadException(
+              'MCOimg v4 group contains too many figures',
+            );
+          }
+          figures.addAll(nextFigures);
+          nestedHistory.addAll(nextFigures);
+        }
+
+        while (figures.length < count) {
+          final nestedOpcode = reader.readBits(_opBits);
+          switch (nestedOpcode) {
+            case _opEnd:
+              throw const MCOImageInvalidPayloadException(
+                'Unexpected MCOimg v4 end inside group',
+              );
+            case _opSetFill:
+              nestedStyle = nestedStyle.copyWith(
+                fillColor: localColorFromProfileRef(),
+              );
+            case _opSetStroke:
+              nestedStyle = nestedStyle.copyWith(
+                strokeColor: localColorFromProfileRef(),
+              );
+            case _opSetStrokeWidth:
+              nestedStyle = nestedStyle.copyWith(
+                strokeWidth: reader.readBits(scalarBits) + 1,
+              );
+            case _opRepeatLast:
+              if (nestedHistory.isEmpty) {
+                throw const MCOImageInvalidPayloadException(
+                  'MCOimg v4 group repeat has no previous figure',
+                );
+              }
+              final dx = _zigZagDecode(reader.readBits(xBits + 1));
+              final dy = _zigZagDecode(reader.readBits(yBits + 1));
+              addNestedFigures(
+                <MCOImageV4Figure>[
+                  nestedHistory.last.translated(dx, dy).withStyle(nestedStyle),
+                ],
+              );
+            case _opRepeatShort:
+              if (nestedHistory.isEmpty) {
+                throw const MCOImageInvalidPayloadException(
+                  'MCOimg v4 group repeat has no previous figure',
+                );
+              }
+              final shortBits = _deltaWidths[reader.readBits(2)];
+              final dx = _zigZagDecode(reader.readBits(shortBits));
+              final dy = _zigZagDecode(reader.readBits(shortBits));
+              addNestedFigures(
+                <MCOImageV4Figure>[
+                  nestedHistory.last.translated(dx, dy).withStyle(nestedStyle),
+                ],
+              );
+            case _opExtended:
+              final result = _readExtendedCommand(
+                reader,
+                nestedStyle,
+                history: nestedHistory,
+                width: width,
+                height: height,
+                xBits: xBits,
+                yBits: yBits,
+                scalarBits: scalarBits,
+                localColorFromProfileRef: localColorFromProfileRef,
+              );
+              nestedStyle = result.style;
+              addNestedFigures(result.figures);
+            default:
+              addNestedFigures(
+                <MCOImageV4Figure>[
+                  _readFigure(
+                    nestedOpcode,
+                    reader,
+                    nestedStyle,
+                    width: width,
+                    height: height,
+                    xBits: xBits,
+                    yBits: yBits,
+                    scalarBits: scalarBits,
+                  ),
+                ],
+              );
+          }
+        }
+        return _V4ExtendedReadResult(
+          style: style,
+          figures: <MCOImageV4Figure>[
+            MCOImageV4Group(figures: figures, style: style),
+          ],
+        );
       default:
         throw MCOImageInvalidPayloadException(
           'Unknown MCOimg v4 extended opcode: $subop',
@@ -2392,6 +2568,13 @@ class MCOImageV4Codec {
             'Invalid MCOimg v4 wave depth',
           );
         }
+      case MCOImageV4Group(:final figures):
+        if (figures.isEmpty) {
+          throw const MCOImageInvalidInputException('MCOimg v4 group is empty');
+        }
+        for (final child in figures.where((figure) => figure.visible)) {
+          _validateFigure(child, width, height, paletteLength);
+        }
     }
   }
 
@@ -2476,6 +2659,19 @@ class MCOImageV4Codec {
         if (a.depth != b.depth || a.closed != b.closed) return null;
         final d = delta(a.start, b.start);
         return a.end.translated(d.x, d.y) == b.end ? d : null;
+      case (MCOImageV4Group() && final a, MCOImageV4Group() && final b):
+        final aFigures = a.figures.where((figure) => figure.visible).toList();
+        final bFigures = b.figures.where((figure) => figure.visible).toList();
+        if (aFigures.length != bFigures.length) return null;
+        MCOImageV4Point? groupDelta;
+        for (var i = 0; i < aFigures.length; i++) {
+          if (aFigures[i].style != bFigures[i].style) return null;
+          final childDelta = _translationFrom(aFigures[i], bFigures[i]);
+          if (childDelta == null) return null;
+          groupDelta ??= childDelta;
+          if (groupDelta != childDelta) return null;
+        }
+        return groupDelta;
       default:
         return null;
     }

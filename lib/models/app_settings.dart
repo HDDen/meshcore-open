@@ -322,7 +322,7 @@ class AppSettings {
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
-  static const int defaultExactQuoteLimit = 20;
+  static const int defaultExactQuoteLimit = 30;
   static const int minExactQuoteLimit = 3;
   static const int maxExactQuoteLimit = 100;
   static const int defaultNoRetransmissionWarningSeconds = 7;

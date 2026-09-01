@@ -6000,7 +6000,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Лимитът по подразбиране е 15. Освен лимита към цитата се добавят още 5 байта като оформление на цитата за клиенти, които не поддържат тази функция';
+      'Лимитът по подразбиране е 30. Освен лимита към цитата се добавят още 5 байта като оформление на цитата за клиенти, които не поддържат тази функция';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Собствена';

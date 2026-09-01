@@ -3129,7 +3129,7 @@
   "settings_modSettingsNoRetraDscr": "Attention ! En raison d'un mécanisme du firmware du nœud, les messages de canal de plus de ~133 octets ne peuvent physiquement pas recevoir de confirmations et seront toujours marqués comme échoués ! Utilisez cette option conjointement avec la limite de charge utile dans les paramètres de l'application !",
   "settings_modSettingsExactQuote": "Utiliser les citations précises pour les messages normaux",
   "settings_modSettingsExactQuoteLimit": "Limite d'octets pour construire la citation",
-  "settings_modSettingsExactQuoteLimitDscr": "La limite par défaut est 15. En plus de la limite, 5 octets sont ajoutés pour mettre en forme la citation à l'intention des clients qui ne prennent pas en charge cette fonction",
+  "settings_modSettingsExactQuoteLimitDscr": "La limite par défaut est 30. En plus de la limite, 5 octets sont ajoutés pour mettre en forme la citation à l'intention des clients qui ne prennent pas en charge cette fonction",
   "settings_selfTelemetryShow": "Consulter les capteurs",
   "settings_modSettingsVisualChannelsUnreadSorting": "Trier les canaux par messages non lus",
   "settings_modSettingsMessagingBackgroundTCP": "Maintenir la connexion TCP en arrière-plan",

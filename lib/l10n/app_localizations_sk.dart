@@ -5966,7 +5966,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Predvolený limit je 15. Okrem limitu sa k citácii pridáva ešte 5 bajtov, ktoré ju formátujú pre klientov bez podpory tejto funkcie';
+      'Predvolený limit je 30. Okrem limitu sa k citácii pridáva ešte 5 bajtov, ktoré ju formátujú pre klientov bez podpory tejto funkcie';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Vlastná';

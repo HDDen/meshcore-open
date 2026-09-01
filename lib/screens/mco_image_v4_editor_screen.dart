@@ -111,6 +111,9 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   MCOImageV4Point? _gestureStart;
   MCOImageV4Document? _moveBefore;
   MCOImageV4Point? _lastMovePoint;
+  bool _groupSelectionMode = false;
+  final Set<int> _groupSelectionIndexes = <int>{};
+  int? _appendGroupIndex;
   Future<void>? _showGridSave;
   Uint8List? _referenceImageBytes;
   ui.Image? _referenceImage;
@@ -148,9 +151,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final preview = _draftFigure == null
-        ? _document
-        : _document.copyWith(figures: [..._document.figures, _draftFigure!]);
+    final preview = _previewDocumentWithDraft();
     final selected = _selectedFigureIndex == null ||
             _selectedFigureIndex! >= preview.figures.length
         ? null
@@ -263,7 +264,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
                           if (_referenceImageVisible &&
                               _referenceImage != null)
                             Opacity(
-                              opacity: 0.65,
+                              opacity: 0.45,
                               child: RawImage(
                                 image: _referenceImage,
                                 fit: BoxFit.fill,
@@ -378,6 +379,26 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         ),
       ),
     );
+  }
+
+  MCOImageV4Document _previewDocumentWithDraft() {
+    final draft = _draftFigure;
+    if (draft == null) return _document;
+    final appendIndex = _appendGroupIndex;
+    if (appendIndex != null &&
+        appendIndex >= 0 &&
+        appendIndex < _document.figures.length &&
+        _document.figures[appendIndex] is MCOImageV4Group) {
+      final figures = [..._document.figures];
+      final group = figures[appendIndex] as MCOImageV4Group;
+      figures[appendIndex] = MCOImageV4Group(
+        figures: [...group.figures, draft],
+        style: group.style,
+        visible: group.visible,
+      );
+      return _document.copyWith(figures: figures);
+    }
+    return _document.copyWith(figures: [..._document.figures, draft]);
   }
 
   Widget _actionButtonLabel(String text) => Text(
@@ -773,6 +794,9 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
           _toolButton(_V4Tool.select, Icons.near_me_outlined,
               context.l10n.chat_canvasV4ToolSelect),
           _cloneToolButton(),
+          _mergeToolButton(),
+          _appendToGroupToolButton(),
+          _ungroupToolButton(),
           _editToolButton(),
           _toolButton(_V4Tool.dot, Icons.fiber_manual_record,
               context.l10n.chat_canvasV4ToolDot),
@@ -806,9 +830,65 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     );
   }
 
+  Widget _mergeToolButton() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: IconButton(
+        tooltip: 'Выбрать фигуры для объединения',
+        onPressed: _document.figures.isEmpty ? null : _toggleGroupSelectionMode,
+        icon: const Icon(Icons.lock_outline),
+        style: _groupSelectionMode
+            ? IconButton.styleFrom(
+                backgroundColor:
+                    Theme.of(context).colorScheme.primaryContainer,
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _appendToGroupToolButton() {
+    final index = _selectedFigureIndex;
+    final canAppend =
+        index != null &&
+        index < _document.figures.length &&
+        _document.figures[index] is MCOImageV4Group;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: IconButton(
+        tooltip: 'Добавлять новые фигуры в выбранную группу',
+        onPressed: canAppend ? _toggleAppendToSelectedGroup : null,
+        icon: const Icon(Icons.lock),
+        style: _appendGroupIndex == index
+            ? IconButton.styleFrom(
+                backgroundColor:
+                    Theme.of(context).colorScheme.primaryContainer,
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _ungroupToolButton() {
+    final index = _selectedFigureIndex;
+    final canUngroup =
+        index != null &&
+        index < _document.figures.length &&
+        _document.figures[index] is MCOImageV4Group;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: IconButton(
+        tooltip: 'Разгруппировать',
+        onPressed: canUngroup ? _ungroupSelectedFigure : null,
+        icon: const Icon(Icons.lock_open_outlined),
+      ),
+    );
+  }
+
   Widget _editToolButton() {
     final canEdit = _selectedFigureIndex != null &&
-        _selectedFigureIndex! < _document.figures.length;
+        _selectedFigureIndex! < _document.figures.length &&
+        _document.figures[_selectedFigureIndex!] is! MCOImageV4Group;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: IconButton(
@@ -861,59 +941,102 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
+        if (_groupSelectionMode) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Выбрано: ${_groupSelectionIndexes.length}'),
+              OutlinedButton.icon(
+                onPressed: _canMergeCheckedFigures
+                    ? _mergeCheckedFigures
+                    : null,
+                icon: const Icon(Icons.lock_outline),
+                label: const Text('Объединить выбранные'),
+              ),
+              TextButton(
+                onPressed: _cancelGroupSelection,
+                child: Text(context.l10n.common_cancel),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         if (_document.figures.isEmpty)
           Text(context.l10n.chat_canvasV4NoObjects)
         else
           for (var i = _document.figures.length - 1; i >= 0; i--)
             ListTile(
-              selected: i == _selectedFigureIndex,
+              selected:
+                  i == _selectedFigureIndex ||
+                  _groupSelectionIndexes.contains(i),
               contentPadding: EdgeInsets.zero,
-              leading: IconButton(
-                tooltip: _document.figures[i].visible
-                    ? context.l10n.chat_canvasV4HideFigure
-                    : context.l10n.chat_canvasV4ShowFigure,
-                onPressed: () => _toggleVisibility(i),
-                icon: Icon(
-                  _document.figures[i].visible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-              ),
+              leading: _groupSelectionMode
+                  ? Checkbox(
+                      value: _groupSelectionIndexes.contains(i),
+                      onChanged: (selected) =>
+                          _setFigureCheckedForGroup(i, selected ?? false),
+                    )
+                  : IconButton(
+                      tooltip: _document.figures[i].visible
+                          ? context.l10n.chat_canvasV4HideFigure
+                          : context.l10n.chat_canvasV4ShowFigure,
+                      onPressed: () => _toggleVisibility(i),
+                      icon: Icon(
+                        _document.figures[i].visible
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
               title: Row(
                 children: [
                   _V4FigurePreview(
                     document: _document,
                     figure: _document.figures[i],
-                    selected: i == _selectedFigureIndex,
+                    selected:
+                        i == _selectedFigureIndex ||
+                        i == _appendGroupIndex ||
+                        _groupSelectionIndexes.contains(i),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(_figureLabel(_document.figures[i]))),
-                ],
-              ),
-              onTap: () => _selectFigure(i),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: context.l10n.chat_canvasV4MoveUp,
-                    onPressed: i == _document.figures.length - 1
-                        ? null
-                        : () => _reorder(i, i + 1),
-                    icon: const Icon(Icons.arrow_upward),
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.chat_canvasV4MoveDown,
-                    onPressed: i == 0 ? null : () => _reorder(i, i - 1),
-                    icon: const Icon(Icons.arrow_downward),
-                  ),
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(context)
-                        .deleteButtonTooltip,
-                    onPressed: () => _deleteFigure(i),
-                    icon: const Icon(Icons.delete_outline),
+                  Expanded(
+                    child: Text(
+                      i == _appendGroupIndex
+                          ? '${_figureLabel(_document.figures[i])} +'
+                          : _figureLabel(_document.figures[i]),
+                    ),
                   ),
                 ],
               ),
+              onTap: () => _groupSelectionMode
+                  ? _toggleFigureCheckedForGroup(i)
+                  : _selectFigure(i),
+              trailing: _groupSelectionMode
+                  ? null
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: context.l10n.chat_canvasV4MoveUp,
+                          onPressed: i == _document.figures.length - 1
+                              ? null
+                              : () => _reorder(i, i + 1),
+                          icon: const Icon(Icons.arrow_upward),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.chat_canvasV4MoveDown,
+                          onPressed: i == 0 ? null : () => _reorder(i, i - 1),
+                          icon: const Icon(Icons.arrow_downward),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .deleteButtonTooltip,
+                          onPressed: () => _deleteFigure(i),
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
             ),
       ],
     );
@@ -1282,6 +1405,10 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         );
       case _V4Tool.select:
         final index = _hitTest(point);
+        if (_groupSelectionMode) {
+          if (index != null) _toggleFigureCheckedForGroup(index);
+          return;
+        }
         if (index != null) _selectFigure(index);
     }
   }
@@ -1297,6 +1424,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         _gestureStart = point;
         _pencilPoints = <MCOImageV4Point>[point];
       case _V4Tool.select:
+        if (_groupSelectionMode) return;
         _gestureStart = point;
         final index = _hitTest(point);
         final selectedIndex = index ?? _selectedFigureIndexOutsideCanvas();
@@ -1468,6 +1596,24 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _calculatePayload();
       return;
     }
+    final appendIndex = _appendGroupIndex;
+    if (appendIndex != null &&
+        appendIndex >= 0 &&
+        appendIndex < _document.figures.length &&
+        _document.figures[appendIndex] is MCOImageV4Group) {
+      final figures = [..._document.figures];
+      final group = figures[appendIndex] as MCOImageV4Group;
+      figures[appendIndex] = MCOImageV4Group(
+        figures: [...group.figures, figure],
+        style: group.style,
+        visible: group.visible,
+      );
+      _commit(_document.copyWith(figures: figures));
+      setState(() {
+        _selectedFigureIndex = _tool == _V4Tool.select ? appendIndex : null;
+      });
+      return;
+    }
     _commit(_document.copyWith(figures: [..._document.figures, figure]));
     setState(() => _selectedFigureIndex = _document.figures.length - 1);
   }
@@ -1483,6 +1629,31 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     setState(() {
       _tool = _V4Tool.select;
       _selectedFigureIndex = cloneIndex;
+      _clearDraftState();
+    });
+  }
+
+  void _ungroupSelectedFigure() {
+    final index = _selectedFigureIndex;
+    if (index == null || index >= _document.figures.length) return;
+    final selected = _document.figures[index];
+    if (selected is! MCOImageV4Group) return;
+    final childFigures = selected.visible
+        ? selected.figures
+        : selected.figures
+            .map((figure) => figure.withVisibility(false))
+            .toList(growable: false);
+    final figures = [..._document.figures]
+      ..removeAt(index)
+      ..insertAll(index, childFigures);
+    _appendGroupIndex = null;
+    _commit(_document.copyWith(figures: figures));
+    setState(() {
+      _tool = _V4Tool.select;
+      _selectedFigureIndex = math.min(
+        index + childFigures.length - 1,
+        figures.length - 1,
+      );
       _clearDraftState();
     });
   }
@@ -1519,6 +1690,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Ellipse() => _V4Tool.ellipse,
         MCOImageV4Path() => _V4Tool.polyline,
         MCOImageV4Wave() => _V4Tool.wave,
+        MCOImageV4Group() => _V4Tool.select,
       };
 
   List<MCOImageV4Point> _controlPointsForEditedFigure(
@@ -1540,12 +1712,16 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             start,
             end,
           ],
+        MCOImageV4Group() => const <MCOImageV4Point>[],
       };
 
   void _selectFigure(int index) {
     final figure = _document.figures[index];
     setState(() {
       _selectedFigureIndex = index;
+      if (_appendGroupIndex != index) {
+        _appendGroupIndex = null;
+      }
       _fillEnabled = figure.style.fillColor != null;
       _strokeEnabled = figure.style.strokeColor != null;
       _fillColor = figure.style.fillColor ?? _fillColor;
@@ -1601,7 +1777,11 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       } else if (_editingFigureBefore != null) {
         _restoreEditedFigure();
       } else if (tool != _V4Tool.select && _selectedFigureIndex != null) {
-        setState(() => _selectedFigureIndex = null);
+        setState(() {
+          _selectedFigureIndex = null;
+          _groupSelectionMode = false;
+          _groupSelectionIndexes.clear();
+        });
       }
       return;
     }
@@ -1614,6 +1794,8 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _tool = tool;
       if (tool != _V4Tool.select) {
         _selectedFigureIndex = null;
+        _groupSelectionMode = false;
+        _groupSelectionIndexes.clear();
       }
       _clearDraftState();
     });
@@ -1732,8 +1914,16 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   }
 
   void _deleteFigure(int index) {
+    final nextGroupSelectionIndexes = _groupSelectionIndexes
+        .where((value) => value != index)
+        .map((value) => value > index ? value - 1 : value)
+        .toSet();
     final figures = [..._document.figures]..removeAt(index);
     _selectedFigureIndex = null;
+    _appendGroupIndex = null;
+    _groupSelectionIndexes
+      ..clear()
+      ..addAll(nextGroupSelectionIndexes);
     _commit(_document.copyWith(figures: figures));
   }
 
@@ -1742,7 +1932,136 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     final figure = figures.removeAt(from);
     figures.insert(to, figure);
     _selectedFigureIndex = to;
+    _appendGroupIndex = null;
+    _groupSelectionIndexes.clear();
+    _groupSelectionMode = false;
     _commit(_document.copyWith(figures: figures));
+  }
+
+  void _normalizeGroupState() {
+    _groupSelectionIndexes.removeWhere(
+      (index) => index < 0 || index >= _document.figures.length,
+    );
+    final appendIndex = _appendGroupIndex;
+    if (appendIndex == null) return;
+    if (appendIndex < 0 ||
+        appendIndex >= _document.figures.length ||
+        _document.figures[appendIndex] is! MCOImageV4Group) {
+      _appendGroupIndex = null;
+    }
+  }
+
+  void _toggleGroupSelectionMode() {
+    setState(() {
+      _groupSelectionMode = !_groupSelectionMode;
+      if (_groupSelectionMode) {
+        _appendGroupIndex = null;
+        final selected = _selectedFigureIndex;
+        _groupSelectionIndexes
+          ..clear()
+          ..addAll(
+            selected != null &&
+                    selected >= 0 &&
+                    selected < _document.figures.length
+                ? <int>[selected]
+                : const <int>[],
+          );
+      } else {
+        _groupSelectionIndexes.clear();
+      }
+    });
+  }
+
+  void _cancelGroupSelection() {
+    setState(() {
+      _groupSelectionMode = false;
+      _groupSelectionIndexes.clear();
+    });
+  }
+
+  void _setFigureCheckedForGroup(int index, bool selected) {
+    setState(() {
+      if (selected) {
+        _groupSelectionIndexes.add(index);
+      } else {
+        _groupSelectionIndexes.remove(index);
+      }
+    });
+  }
+
+  void _toggleFigureCheckedForGroup(int index) {
+    _setFigureCheckedForGroup(
+      index,
+      !_groupSelectionIndexes.contains(index),
+    );
+  }
+
+  bool get _canMergeCheckedFigures =>
+      _validGroupSelectionIndexes().length >= 2;
+
+  List<int> _validGroupSelectionIndexes() {
+    final indexes = _groupSelectionIndexes
+        .where((index) => index >= 0 && index < _document.figures.length)
+        .toList();
+    indexes.sort();
+    return indexes;
+  }
+
+  void _mergeCheckedFigures() {
+    final selectedIndexes = _validGroupSelectionIndexes();
+    if (selectedIndexes.length < 2) return;
+    final selectedSet = selectedIndexes.toSet();
+    final insertIndex = selectedIndexes.first;
+    final groupFigures = <MCOImageV4Figure>[];
+    var groupVisible = false;
+    for (final index in selectedIndexes) {
+      final figure = _document.figures[index];
+      groupVisible = groupVisible || figure.visible;
+      if (figure is MCOImageV4Group) {
+        groupFigures.addAll(figure.figures);
+      } else {
+        groupFigures.add(figure);
+      }
+    }
+    final figures = <MCOImageV4Figure>[];
+    for (var index = 0; index < _document.figures.length; index++) {
+      if (index == insertIndex) {
+        figures.add(
+          MCOImageV4Group(
+            figures: groupFigures,
+            visible: groupVisible,
+          ),
+        );
+      }
+      if (!selectedSet.contains(index)) {
+        figures.add(_document.figures[index]);
+      }
+    }
+    _commit(_document.copyWith(figures: figures));
+    setState(() {
+      _tool = _V4Tool.select;
+      _selectedFigureIndex = insertIndex;
+      _groupSelectionMode = false;
+      _groupSelectionIndexes.clear();
+      _appendGroupIndex = null;
+      _clearDraftState();
+    });
+  }
+
+  void _toggleAppendToSelectedGroup() {
+    final index = _selectedFigureIndex;
+    if (index == null ||
+        index < 0 ||
+        index >= _document.figures.length ||
+        _document.figures[index] is! MCOImageV4Group) {
+      return;
+    }
+    setState(() {
+      _groupSelectionMode = false;
+      _groupSelectionIndexes.clear();
+      _appendGroupIndex = _appendGroupIndex == index ? null : index;
+      _tool = _V4Tool.select;
+    });
   }
 
   void _setBackground(int? color) {
@@ -1783,6 +2102,9 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     if (width == _document.width && height == _document.height) return;
 
     _selectedFigureIndex = null;
+    _appendGroupIndex = null;
+    _groupSelectionMode = false;
+    _groupSelectionIndexes.clear();
     _commit(
       _document.copyWith(
         width: width,
@@ -1802,6 +2124,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _document = next;
       _clearDraftState();
       _clearEditingState();
+      _normalizeGroupState();
     });
     _calculatePayload();
   }
@@ -1822,6 +2145,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _selectedFigureIndex = null;
       _clearDraftState();
       _clearEditingState();
+      _normalizeGroupState();
     });
     _calculatePayload();
   }
@@ -1839,6 +2163,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
       _selectedFigureIndex = null;
       _clearDraftState();
       _clearEditingState();
+      _normalizeGroupState();
     });
     _calculatePayload();
   }
@@ -2163,6 +2488,11 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             style: style,
             visible: figure.visible,
           ),
+        MCOImageV4Group(:final figures) => MCOImageV4Group(
+            figures: figures.map(convert).toList(growable: false),
+            style: style,
+            visible: figure.visible,
+          ),
         MCOImageV4Wave(
           :final start,
           :final end,
@@ -2408,6 +2738,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Ellipse() => context.l10n.chat_canvasV4ToolEllipse,
         MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
         MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
+        MCOImageV4Group() => 'Группа',
       };
 }
 

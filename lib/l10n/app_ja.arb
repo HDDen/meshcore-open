@@ -3135,7 +3135,7 @@
   "settings_modSettingsNoRetraDscr": "注意！ ノードのファームウェアの仕組みにより、約133バイトを超えるチャンネルメッセージは物理的に確認応答を受け取れず、常に失敗として表示されます。このオプションはアプリ設定のペイロード制限と併用してください。",
   "settings_modSettingsExactQuote": "通常のメッセージで正確な引用を使用する",
   "settings_modSettingsExactQuoteLimit": "引用を作るためのバイト上限",
-  "settings_modSettingsExactQuoteLimitDscr": "既定の上限は 15 です。上限のほかに、この機能に対応していないクライアント向けの引用表記として 5 バイトが追加されます",
+  "settings_modSettingsExactQuoteLimitDscr": "既定の上限は 30 です。上限のほかに、この機能に対応していないクライアント向けの引用表記として 5 バイトが追加されます",
   "settings_selfTelemetryShow": "センサーを表示",
   "settings_modSettingsVisualChannelsUnreadSorting": "未読メッセージでチャンネルを並べ替え",
   "settings_modSettingsMessagingBackgroundTCP": "バックグラウンドで TCP 接続を維持",

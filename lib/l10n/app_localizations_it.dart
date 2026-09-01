@@ -6013,7 +6013,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Il limite predefinito è 15. Oltre al limite vengono aggiunti 5 byte che formattano la citazione per i client che non supportano questa funzione';
+      'Il limite predefinito è 30. Oltre al limite vengono aggiunti 5 byte che formattano la citazione per i client che non supportano questa funzione';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Personalizzata';

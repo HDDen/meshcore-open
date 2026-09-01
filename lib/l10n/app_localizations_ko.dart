@@ -5710,7 +5710,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      '기본 한도는 15입니다. 한도 외에, 이 기능을 지원하지 않는 클라이언트를 위한 인용 표기로 5바이트가 더 추가됩니다';
+      '기본 한도는 30입니다. 한도 외에, 이 기능을 지원하지 않는 클라이언트를 위한 인용 표기로 5바이트가 더 추가됩니다';
 
   @override
   String get settings_appSettingsCustomChemistry => '사용자 지정';

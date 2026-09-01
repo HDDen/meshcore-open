@@ -5995,7 +5995,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Az alapértelmezett korlát 15. A korláton túl további 5 bájt kerül az idézethez, amely azt formázza az e funkciót nem támogató kliensek számára';
+      'Az alapértelmezett korlát 30. A korláton túl további 5 bájt kerül az idézethez, amely azt formázza az e funkciót nem támogató kliensek számára';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Egyéni';

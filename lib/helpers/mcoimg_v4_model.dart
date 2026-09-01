@@ -305,6 +305,55 @@ class MCOImageV4Wave extends MCOImageV4Figure {
   );
 }
 
+class MCOImageV4Group extends MCOImageV4Figure {
+  final List<MCOImageV4Figure> figures;
+
+  MCOImageV4Group({
+    required List<MCOImageV4Figure> figures,
+    MCOImageV4Style? style,
+    super.visible,
+  }) : figures = List<MCOImageV4Figure>.unmodifiable(figures),
+       super(style: style ?? _styleForFigures(figures));
+
+  static MCOImageV4Style _styleForFigures(List<MCOImageV4Figure> figures) {
+    if (figures.isEmpty) return const MCOImageV4Style(strokeColor: 0);
+    for (final figure in figures) {
+      if (figure.visible) return figure.style;
+    }
+    return figures.first.style;
+  }
+
+  @override
+  MCOImageV4Group translated(int dx, int dy) => MCOImageV4Group(
+    figures: figures.map((figure) => figure.translated(dx, dy)).toList(),
+    style: style,
+    visible: visible,
+  );
+
+  @override
+  MCOImageV4Group withStyle(MCOImageV4Style style) {
+    if (style == this.style) {
+      return MCOImageV4Group(
+        figures: figures,
+        style: style,
+        visible: visible,
+      );
+    }
+    return MCOImageV4Group(
+      figures: figures.map((figure) => figure.withStyle(style)).toList(),
+      style: style,
+      visible: visible,
+    );
+  }
+
+  @override
+  MCOImageV4Group withVisibility(bool visible) => MCOImageV4Group(
+    figures: figures,
+    style: style,
+    visible: visible,
+  );
+}
+
 class MCOImageV4Document {
   final MCOImageV4Mode mode;
   final int width;

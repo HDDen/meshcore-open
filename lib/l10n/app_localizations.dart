@@ -10279,7 +10279,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_modSettingsExactQuoteLimitDscr.
   ///
   /// In en, this message translates to:
-  /// **'Default limit is 15. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature'**
+  /// **'Default limit is 30. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature'**
   String get settings_modSettingsExactQuoteLimitDscr;
 
   /// No description provided for @settings_appSettingsCustomChemistry.

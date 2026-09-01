@@ -5901,7 +5901,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Default limit is 15. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature';
+      'Default limit is 30. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Custom';

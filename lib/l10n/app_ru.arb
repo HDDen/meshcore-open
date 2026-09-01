@@ -2436,7 +2436,7 @@
   "settings_modSettingsAlwaysRequestMapLocation": "Всегда в картах запрашивать местоположение",
   "settings_modSettingsExactQuote": "Использовать уточнённое цитирование для обычных сообщений",
   "settings_modSettingsExactQuoteLimit": "Лимит байт для построения цитаты",
-  "settings_modSettingsExactQuoteLimitDscr": "Лимит по умолчанию - 15. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов",
+  "settings_modSettingsExactQuoteLimitDscr": "Лимит по умолчанию - 30. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов",
   "settings_appSettingsCustomChemistry": "Своя",
   "map_clearDiscoveredContactsCache": "Очистить локальный кэш узлов",
   "map_clearDiscoveredContactsCacheDisclaimer": "Вы уверены, что хотите удалить кэш обнаруженных контактов? Это не затронет контакты на самой ноде.",

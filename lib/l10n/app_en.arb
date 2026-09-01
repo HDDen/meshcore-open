@@ -3324,7 +3324,7 @@
   "settings_modSettingsAlwaysRequestMapLocation": "Always request location when opening maps",
   "settings_modSettingsExactQuote": "Use precise quotes for regular messages",
   "settings_modSettingsExactQuoteLimit": "Bytes limit for precise quote",
-  "settings_modSettingsExactQuoteLimitDscr": "Default limit is 15. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature",
+  "settings_modSettingsExactQuoteLimitDscr": "Default limit is 30. In addition to limit, 5 bytes will be added to format quote for clients that do not support this feature",
   "settings_appSettingsCustomChemistry": "Custom",
   "map_clearDiscoveredContactsCache": "Clear nodes local cache",
   "map_clearDiscoveredContactsCacheDisclaimer": "Are you sure you want to clear the cache of discovered contacts? This will not affect the contacts on the node itself.",

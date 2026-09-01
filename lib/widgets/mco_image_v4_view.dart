@@ -273,6 +273,11 @@ class MCOImageV4Painter extends CustomPainter {
             endOffset.dy,
           );
         _drawPath(canvas, path, style, closedStroke: closed);
+      case MCOImageV4Group(:final figures):
+        for (final child in figures) {
+          if (!child.visible) continue;
+          _drawFigure(canvas, child);
+        }
     }
   }
 
@@ -390,6 +395,16 @@ class MCOImageV4Painter extends CustomPainter {
         return Rect.fromPoints(_point(start), _point(end)).inflate(
           depth.abs() + style.strokeWidth / 2,
         );
+      case MCOImageV4Group(:final figures):
+        Rect? bounds;
+        for (final child in figures) {
+          if (!child.visible) continue;
+          final childBounds = figureLogicalBounds(child);
+          bounds = bounds == null
+              ? childBounds
+              : bounds.expandToInclude(childBounds);
+        }
+        return bounds ?? Rect.zero;
     }
   }
 

@@ -5951,7 +5951,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Standardgränsen är 15. Utöver gränsen läggs 5 byte till som formaterar citatet för klienter som inte stöder den här funktionen';
+      'Standardgränsen är 30. Utöver gränsen läggs 5 byte till som formaterar citatet för klienter som inte stöder den här funktionen';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Egen';

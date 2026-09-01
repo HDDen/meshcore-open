@@ -6007,7 +6007,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Standardlimit ist 15. Zusätzlich zum Limit kommen 5 Bytes hinzu, die das Zitat für Clients ohne Unterstützung dieser Funktion kennzeichnen';
+      'Standardlimit ist 30. Zusätzlich zum Limit kommen 5 Bytes hinzu, die das Zitat für Clients ohne Unterstützung dieser Funktion kennzeichnen';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Benutzerdefiniert';

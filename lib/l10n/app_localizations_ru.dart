@@ -5997,7 +5997,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Лимит по умолчанию - 15. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов';
+      'Лимит по умолчанию - 30. Кроме лимита к цитате добавляется еще 5 байт, в качестве оформления цитаты для неподдерживающих клиентов';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Своя';

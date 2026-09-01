@@ -432,6 +432,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   MCOImageV4Point? _v4LastMovePoint;
   MCOImageV4Document? _v4MoveBefore;
   int? _selectedV4FigureIndex;
+  bool _v4GroupSelectionMode = false;
+  final Set<int> _v4GroupSelectionIndexes = <int>{};
+  int? _v4AppendGroupIndex;
   int? _editingV4FigureIndex;
   MCOImageV4Document? _editingV4FigureBefore;
   bool _editingV4FigureVisible = true;
@@ -1182,59 +1185,104 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
+        if (_v4GroupSelectionMode) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Выбрано: ${_v4GroupSelectionIndexes.length}'),
+              OutlinedButton.icon(
+                onPressed: _canMergeCheckedV4Figures
+                    ? _mergeCheckedV4Figures
+                    : null,
+                icon: const Icon(Icons.lock_outline),
+                label: const Text('Объединить выбранные'),
+              ),
+              TextButton(
+                onPressed: _cancelV4GroupSelection,
+                child: Text(context.l10n.common_cancel),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         if (document.figures.isEmpty)
           Text(context.l10n.chat_canvasV4NoObjects)
         else
           for (var i = document.figures.length - 1; i >= 0; i--)
             ListTile(
-              selected: i == _selectedV4FigureIndex,
+              selected:
+                  i == _selectedV4FigureIndex ||
+                  _v4GroupSelectionIndexes.contains(i),
               contentPadding: EdgeInsets.zero,
-              leading: IconButton(
-                tooltip: document.figures[i].visible
-                    ? context.l10n.chat_canvasV4HideFigure
-                    : context.l10n.chat_canvasV4ShowFigure,
-                onPressed: () => _toggleVectorFigureVisibility(i),
-                icon: Icon(
-                  document.figures[i].visible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-              ),
+              leading: _v4GroupSelectionMode
+                  ? Checkbox(
+                      value: _v4GroupSelectionIndexes.contains(i),
+                      onChanged: (selected) =>
+                          _setV4FigureCheckedForGroup(i, selected ?? false),
+                    )
+                  : IconButton(
+                      tooltip: document.figures[i].visible
+                          ? context.l10n.chat_canvasV4HideFigure
+                          : context.l10n.chat_canvasV4ShowFigure,
+                      onPressed: () => _toggleVectorFigureVisibility(i),
+                      icon: Icon(
+                        document.figures[i].visible
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
               title: Row(
                 children: [
                   _V4FigurePreview(
                     document: document,
                     figure: document.figures[i],
-                    selected: i == _selectedV4FigureIndex,
+                    selected:
+                        i == _selectedV4FigureIndex ||
+                        i == _v4AppendGroupIndex ||
+                        _v4GroupSelectionIndexes.contains(i),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(_vectorFigureLabel(document.figures[i]))),
-                ],
-              ),
-              onTap: () => _selectVectorFigure(i),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: context.l10n.chat_canvasV4MoveUp,
-                    onPressed: i == document.figures.length - 1
-                        ? null
-                        : () => _reorderVectorFigure(i, i + 1),
-                    icon: const Icon(Icons.arrow_upward),
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.chat_canvasV4MoveDown,
-                    onPressed: i == 0 ? null : () => _reorderVectorFigure(i, i - 1),
-                    icon: const Icon(Icons.arrow_downward),
-                  ),
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(context)
-                        .deleteButtonTooltip,
-                    onPressed: () => _deleteVectorFigure(i),
-                    icon: const Icon(Icons.delete_outline),
+                  Expanded(
+                    child: Text(
+                      i == _v4AppendGroupIndex
+                          ? '${_vectorFigureLabel(document.figures[i])} +'
+                          : _vectorFigureLabel(document.figures[i]),
+                    ),
                   ),
                 ],
               ),
+              onTap: () => _v4GroupSelectionMode
+                  ? _toggleV4FigureCheckedForGroup(i)
+                  : _selectVectorFigure(i),
+              trailing: _v4GroupSelectionMode
+                  ? null
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: context.l10n.chat_canvasV4MoveUp,
+                          onPressed: i == document.figures.length - 1
+                              ? null
+                              : () => _reorderVectorFigure(i, i + 1),
+                          icon: const Icon(Icons.arrow_upward),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.chat_canvasV4MoveDown,
+                          onPressed: i == 0
+                              ? null
+                              : () => _reorderVectorFigure(i, i - 1),
+                          icon: const Icon(Icons.arrow_downward),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .deleteButtonTooltip,
+                          onPressed: () => _deleteVectorFigure(i),
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
             ),
       ],
     );
@@ -1447,6 +1495,40 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           ),
           const SizedBox(width: 4),
           IconButton.outlined(
+            onPressed: _toggleV4GroupSelectionMode,
+            tooltip: 'Выбрать фигуры для объединения',
+            icon: const Icon(Icons.lock_outline),
+            style: _v4GroupSelectionMode
+                ? IconButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 4),
+          IconButton.outlined(
+            onPressed: _canAppendToSelectedV4Group
+                ? _toggleV4AppendToSelectedGroup
+                : null,
+            tooltip: 'Добавлять новые фигуры в выбранную группу',
+            icon: const Icon(Icons.lock),
+            style: _isAppendingToSelectedV4Group
+                ? IconButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 4),
+          IconButton.outlined(
+            onPressed: _canUngroupSelectedV4Figure
+                ? _ungroupSelectedV4Figure
+                : null,
+            tooltip: 'Разгруппировать',
+            icon: const Icon(Icons.lock_open_outlined),
+          ),
+          const SizedBox(width: 4),
+          IconButton.outlined(
             onPressed: _canEditSelectedV4Figure ? _editSelectedV4Figure : null,
             tooltip: context.l10n.common_edit,
             icon: const Icon(Icons.account_tree_outlined),
@@ -1565,8 +1647,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                           ),
                           guideStyle: _currentVectorStyle(),
                           showGrid: _showGrid,
+                          showRuler: _showRuler,
                           canvasOffset: canvasOffset,
                           canvasSize: canvasSize,
+                          rulerExtent: _canvasRulerExtent,
                         )
                       : _PixelCanvasPainter(
                           width: _width,
@@ -1894,6 +1978,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _selectedV4FigureIndex = null;
         _adoptVectorStyle(_v4Document!.initialStyle);
       }
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+      _v4AppendGroupIndex = null;
       _setControllerValue(_widthController, _width);
       _setControllerValue(_heightController, _height);
       _clearRasterDraftState();
@@ -2079,10 +2166,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             style: style,
             visible: visible,
           ),
-        MCOImageV4Path(:final points, :final closed, :final style, :final visible) =>
+        MCOImageV4Path(
+          :final points,
+          :final closed,
+          :final style,
+          :final visible,
+        ) =>
           MCOImageV4Path(
             points: points.map(mapPoint).toList(growable: false),
             closed: closed,
+            style: style,
+            visible: visible,
+          ),
+        MCOImageV4Group(:final figures, :final style, :final visible) =>
+          MCOImageV4Group(
+            figures: figures.map(convert).toList(growable: false),
             style: style,
             visible: visible,
           ),
@@ -3950,6 +4048,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     MCOImageV4Figure mapFigure(MCOImageV4Figure figure) {
       final style = figure.style;
+      if (figure is MCOImageV4Group) {
+        return MCOImageV4Group(
+          figures: figure.figures.map(mapFigure).toList(growable: false),
+          style: style.copyWith(
+            fillColor: mapLocalColor(style.fillColor),
+            strokeColor: mapLocalColor(style.strokeColor),
+          ),
+          visible: figure.visible,
+        );
+      }
       return figure.withStyle(
         style.copyWith(
           fillColor: mapLocalColor(style.fillColor),
@@ -4221,11 +4329,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         index == null ||
         index < 0 ||
         index >= document.figures.length) {
-      setState(() => _selectedV4FigureIndex = null);
+      setState(() {
+        _selectedV4FigureIndex = null;
+        _v4AppendGroupIndex = null;
+      });
       return;
     }
     setState(() {
       _selectedV4FigureIndex = index;
+      if (_v4AppendGroupIndex != index) {
+        _v4AppendGroupIndex = null;
+      }
       _adoptVectorStyle(document.figures[index].style);
     });
   }
@@ -4245,8 +4359,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (document == null || index < 0 || index >= document.figures.length) {
       return;
     }
+    final nextGroupSelectionIndexes = _v4GroupSelectionIndexes
+        .where((value) => value != index)
+        .map((value) => value > index ? value - 1 : value)
+        .toSet();
     final figures = [...document.figures]..removeAt(index);
     _selectedV4FigureIndex = null;
+    _v4AppendGroupIndex = null;
+    _v4GroupSelectionIndexes
+      ..clear()
+      ..addAll(nextGroupSelectionIndexes);
     _commitVectorDocument(document.copyWith(figures: figures));
   }
 
@@ -4263,7 +4385,126 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final figure = figures.removeAt(from);
     figures.insert(to, figure);
     _selectedV4FigureIndex = to;
+    _v4AppendGroupIndex = null;
+    _v4GroupSelectionIndexes.clear();
+    _v4GroupSelectionMode = false;
     _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  void _normalizeV4GroupState(MCOImageV4Document document) {
+    _v4GroupSelectionIndexes.removeWhere(
+      (index) => index < 0 || index >= document.figures.length,
+    );
+    final appendIndex = _v4AppendGroupIndex;
+    if (appendIndex == null) return;
+    if (appendIndex < 0 ||
+        appendIndex >= document.figures.length ||
+        document.figures[appendIndex] is! MCOImageV4Group) {
+      _v4AppendGroupIndex = null;
+    }
+  }
+
+  void _toggleV4GroupSelectionMode() {
+    final document = _v4Document;
+    if (document == null || document.figures.isEmpty) return;
+    setState(() {
+      _v4GroupSelectionMode = !_v4GroupSelectionMode;
+      if (_v4GroupSelectionMode) {
+        _v4AppendGroupIndex = null;
+        final selected = _selectedV4FigureIndex;
+        _v4GroupSelectionIndexes
+          ..clear()
+          ..addAll(
+            selected != null &&
+                    selected >= 0 &&
+                    selected < document.figures.length
+                ? <int>[selected]
+                : const <int>[],
+          );
+      } else {
+        _v4GroupSelectionIndexes.clear();
+      }
+    });
+  }
+
+  void _cancelV4GroupSelection() {
+    setState(() {
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+    });
+  }
+
+  void _setV4FigureCheckedForGroup(int index, bool selected) {
+    setState(() {
+      if (selected) {
+        _v4GroupSelectionIndexes.add(index);
+      } else {
+        _v4GroupSelectionIndexes.remove(index);
+      }
+    });
+  }
+
+  void _toggleV4FigureCheckedForGroup(int index) {
+    _setV4FigureCheckedForGroup(
+      index,
+      !_v4GroupSelectionIndexes.contains(index),
+    );
+  }
+
+  bool get _canMergeCheckedV4Figures {
+    final document = _v4Document;
+    if (document == null) return false;
+    return _validV4GroupSelectionIndexes(document).length >= 2;
+  }
+
+  List<int> _validV4GroupSelectionIndexes(MCOImageV4Document document) {
+    final indexes = _v4GroupSelectionIndexes
+        .where((index) => index >= 0 && index < document.figures.length)
+        .toList();
+    indexes.sort();
+    return indexes;
+  }
+
+  void _mergeCheckedV4Figures() {
+    final document = _v4Document;
+    if (document == null) return;
+    final selectedIndexes = _validV4GroupSelectionIndexes(document);
+    if (selectedIndexes.length < 2) return;
+    final selectedSet = selectedIndexes.toSet();
+    final insertIndex = selectedIndexes.first;
+    final groupFigures = <MCOImageV4Figure>[];
+    var groupVisible = false;
+    for (final index in selectedIndexes) {
+      final figure = document.figures[index];
+      groupVisible = groupVisible || figure.visible;
+      if (figure is MCOImageV4Group) {
+        groupFigures.addAll(figure.figures);
+      } else {
+        groupFigures.add(figure);
+      }
+    }
+    final figures = <MCOImageV4Figure>[];
+    for (var index = 0; index < document.figures.length; index++) {
+      if (index == insertIndex) {
+        figures.add(
+          MCOImageV4Group(
+            figures: groupFigures,
+            visible: groupVisible,
+          ),
+        );
+      }
+      if (!selectedSet.contains(index)) {
+        figures.add(document.figures[index]);
+      }
+    }
+    _commitVectorDocument(document.copyWith(figures: figures));
+    setState(() {
+      _selectedV4FigureIndex = insertIndex;
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+      _v4AppendGroupIndex = null;
+      _selectedTool = _CanvasTool.select;
+    });
   }
 
   MCOImageV4Document get _activeVectorDocument {
@@ -4273,6 +4514,20 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
     final draft = _v4DraftFigure;
     if (draft == null) return document;
+    final appendIndex = _v4AppendGroupIndex;
+    if (appendIndex != null &&
+        appendIndex >= 0 &&
+        appendIndex < document.figures.length &&
+        document.figures[appendIndex] is MCOImageV4Group) {
+      final figures = [...document.figures];
+      final group = figures[appendIndex] as MCOImageV4Group;
+      figures[appendIndex] = MCOImageV4Group(
+        figures: [...group.figures, draft],
+        style: group.style,
+        visible: group.visible,
+      );
+      return document.copyWith(figures: figures);
+    }
     return document.copyWith(figures: [...document.figures, draft]);
   }
 
@@ -4287,7 +4542,29 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool get _canCloneSelectedV4Figure => _selectedV4Figure != null;
 
-  bool get _canEditSelectedV4Figure => _selectedV4Figure != null;
+  bool get _canEditSelectedV4Figure =>
+      _selectedV4Figure != null && _selectedV4Figure is! MCOImageV4Group;
+
+  bool get _canUngroupSelectedV4Figure => _selectedV4Figure is MCOImageV4Group;
+
+  bool get _canAppendToSelectedV4Group =>
+      _selectedV4Figure is MCOImageV4Group;
+
+  bool get _isAppendingToSelectedV4Group =>
+      _selectedV4FigureIndex != null &&
+      _selectedV4FigureIndex == _v4AppendGroupIndex;
+
+  void _toggleV4AppendToSelectedGroup() {
+    final index = _selectedV4FigureIndex;
+    final selected = _selectedV4Figure;
+    if (index == null || selected is! MCOImageV4Group) return;
+    setState(() {
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+      _v4AppendGroupIndex = _v4AppendGroupIndex == index ? null : index;
+      _selectedTool = _CanvasTool.select;
+    });
+  }
 
   bool get _showsCurrentVectorFinishButtons =>
       _v4ShapePoints.isNotEmpty &&
@@ -4331,6 +4608,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(() {
         if (nextTool != _CanvasTool.select) {
           _selectedV4FigureIndex = null;
+          _v4GroupSelectionMode = false;
+          _v4GroupSelectionIndexes.clear();
         }
         _selectedTool = nextTool;
       });
@@ -4349,6 +4628,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _clearVectorDraftState();
       if (nextTool != _CanvasTool.select) {
         _selectedV4FigureIndex = null;
+        _v4GroupSelectionMode = false;
+        _v4GroupSelectionIndexes.clear();
       }
       _selectedTool = nextTool;
     });
@@ -4426,6 +4707,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _addVectorFigure(_vectorWave(points[0], points[1], points[2]));
       case _CanvasTool.select:
         final index = _hitTestVectorFigure(point);
+        if (_v4GroupSelectionMode) {
+          if (index != null) _toggleV4FigureCheckedForGroup(index);
+          return;
+        }
         _selectVectorFigure(index);
       case _CanvasTool.fill:
       case _CanvasTool.eyedropper:
@@ -4444,6 +4729,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _v4GestureStart = point;
         _v4PencilPoints = <MCOImageV4Point>[point];
       case _CanvasTool.select:
+        if (_v4GroupSelectionMode) return;
         _v4GestureStart = point;
         final index = _hitTestVectorFigure(point);
         final selectedIndex = index ?? _selectedV4FigureIndex;
@@ -4675,6 +4961,26 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       });
       return;
     }
+    final appendIndex = _v4AppendGroupIndex;
+    if (appendIndex != null &&
+        appendIndex >= 0 &&
+        appendIndex < document.figures.length &&
+        document.figures[appendIndex] is MCOImageV4Group) {
+      final figures = [...document.figures];
+      final group = figures[appendIndex] as MCOImageV4Group;
+      figures[appendIndex] = MCOImageV4Group(
+        figures: [...group.figures, figure],
+        style: group.style,
+        visible: group.visible,
+      );
+      _commitVectorDocument(document.copyWith(figures: figures));
+      setState(() {
+        _selectedV4FigureIndex =
+            _selectedTool == _CanvasTool.select ? appendIndex : null;
+        _adoptVectorStyle(figure.style);
+      });
+      return;
+    }
     _commitVectorDocument(document.copyWith(figures: [...document.figures, figure]));
     setState(() {
       _selectedV4FigureIndex = document.figures.length;
@@ -4702,6 +5008,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_heightController, _height);
       _pixels = List<int>.filled(_width * _height, _whiteIndex);
       _clearVectorDraftState();
+      _normalizeV4GroupState(next);
     });
     _markPayloadDirty();
   }
@@ -4730,14 +5037,47 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _cloneSelectedV4Figure() {
     final document = _v4Document;
+    final index = _selectedV4FigureIndex;
     final selected = _selectedV4Figure;
-    if (document == null || selected == null) return;
+    if (document == null ||
+        index == null ||
+        index < 0 ||
+        index >= document.figures.length ||
+        selected == null) {
+      return;
+    }
     final clone = selected.translated(1, 1);
-    _commitVectorDocument(document.copyWith(figures: [...document.figures, clone]));
+    final figures = [...document.figures]..insert(index + 1, clone);
+    _commitVectorDocument(document.copyWith(figures: figures));
     setState(() {
-      _selectedV4FigureIndex = document.figures.length;
+      _selectedV4FigureIndex = index + 1;
       _selectedTool = _CanvasTool.select;
       _adoptVectorStyle(clone.style);
+    });
+  }
+
+  void _ungroupSelectedV4Figure() {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    final selected = _selectedV4Figure;
+    if (document == null || index == null || selected is! MCOImageV4Group) {
+      return;
+    }
+    final childFigures = selected.visible
+        ? selected.figures
+        : selected.figures
+            .map((figure) => figure.withVisibility(false))
+            .toList(growable: false);
+    final figures = [...document.figures]
+      ..removeAt(index)
+      ..insertAll(index, childFigures);
+    _commitVectorDocument(document.copyWith(figures: figures));
+    setState(() {
+      _selectedV4FigureIndex = math.min(
+        index + childFigures.length - 1,
+        figures.length - 1,
+      );
+      _selectedTool = _CanvasTool.select;
     });
   }
 
@@ -4774,6 +5114,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         MCOImageV4Ellipse() => _CanvasTool.oval,
         MCOImageV4Path() => _CanvasTool.polyline,
         MCOImageV4Wave() => _CanvasTool.wave,
+        MCOImageV4Group() => _CanvasTool.select,
       };
 
   List<MCOImageV4Point> _controlPointsForVectorFigure(
@@ -4799,6 +5140,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             start,
             end,
           ],
+        MCOImageV4Group() => const <MCOImageV4Point>[],
       };
 
   MCOImageV4Point _vectorGridPoint(
@@ -6446,6 +6788,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       MCOImageV4Ellipse() => context.l10n.chat_canvasV4ToolEllipse,
       MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
       MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
+      MCOImageV4Group() => 'Группа',
     };
   }
 
@@ -6817,6 +7160,9 @@ class _AlphaSwatchPainter extends CustomPainter {
 }
 
 class _VectorCanvasPainter extends CustomPainter {
+  static const Color _rulerColor = Color(0xff808080);
+  static const double _referenceOpacity = 0.45;
+
   final MCOImageV4Document document;
   final MCOImageV4Figure? selectedFigure;
   final List<int>? referencePixels;
@@ -6825,8 +7171,10 @@ class _VectorCanvasPainter extends CustomPainter {
   final List<MCOImageV4Point> guidePoints;
   final MCOImageV4Style guideStyle;
   final bool showGrid;
+  final bool showRuler;
   final Offset canvasOffset;
   final Size canvasSize;
+  final double rulerExtent;
 
   const _VectorCanvasPainter({
     required this.document,
@@ -6837,12 +7185,18 @@ class _VectorCanvasPainter extends CustomPainter {
     required this.guidePoints,
     required this.guideStyle,
     required this.showGrid,
+    required this.showRuler,
     required this.canvasOffset,
     required this.canvasSize,
+    required this.rulerExtent,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (showRuler) {
+      _paintRulerLabels(canvas);
+    }
+
     canvas.save();
     canvas.translate(canvasOffset.dx, canvasOffset.dy);
     final hasReference =
@@ -6863,6 +7217,51 @@ class _VectorCanvasPainter extends CustomPainter {
     ).paint(canvas, canvasSize);
     _paintGuidePoints(canvas);
     canvas.restore();
+  }
+
+  List<int> _rulerCellNumbers(int cellCount) {
+    final values = <int>{
+      1,
+      (cellCount * 0.25).ceil().clamp(1, cellCount).toInt(),
+      (cellCount * 0.50).ceil().clamp(1, cellCount).toInt(),
+      (cellCount * 0.75).ceil().clamp(1, cellCount).toInt(),
+      cellCount,
+    }.toList()..sort();
+    return values;
+  }
+
+  void _paintRulerLabels(Canvas canvas) {
+    const style = TextStyle(color: _rulerColor, fontSize: 7, height: 1);
+    final cellWidth = canvasSize.width / document.width;
+    final cellHeight = canvasSize.height / document.height;
+
+    for (final cellNumber in _rulerCellNumbers(document.width)) {
+      final textPainter = TextPainter(
+        text: TextSpan(text: '$cellNumber', style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final x =
+          canvasOffset.dx +
+          (cellNumber - 0.5) * cellWidth -
+          textPainter.width / 2;
+      final y = math.max(0.0, rulerExtent - textPainter.height);
+      textPainter.paint(canvas, Offset(x, y));
+    }
+
+    for (final cellNumber in _rulerCellNumbers(document.height)) {
+      final textPainter = TextPainter(
+        text: TextSpan(text: '$cellNumber', style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final x = math.max(0.0, rulerExtent - textPainter.width - 1);
+      final y =
+          canvasOffset.dy +
+          (cellNumber - 0.5) * cellHeight -
+          textPainter.height / 2;
+      textPainter.paint(canvas, Offset(x, y));
+    }
   }
 
   void _paintGuidePoints(Canvas canvas) {
@@ -6908,7 +7307,10 @@ class _VectorCanvasPainter extends CustomPainter {
             colorValue == referenceTransparentColor) {
           continue;
         }
-        paint.color = _referenceColor(profile, colorValue);
+        paint.color = _referenceColor(
+          profile,
+          colorValue,
+        ).withValues(alpha: _referenceOpacity);
         canvas.drawRect(
           Rect.fromLTWH(
             x * cellWidth,
@@ -6951,8 +7353,10 @@ class _VectorCanvasPainter extends CustomPainter {
         oldDelegate.guidePoints != guidePoints ||
         oldDelegate.guideStyle != guideStyle ||
         oldDelegate.showGrid != showGrid ||
+        oldDelegate.showRuler != showRuler ||
         oldDelegate.canvasOffset != canvasOffset ||
-        oldDelegate.canvasSize != canvasSize;
+        oldDelegate.canvasSize != canvasSize ||
+        oldDelegate.rulerExtent != rulerExtent;
   }
 }
 

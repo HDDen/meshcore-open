@@ -5974,7 +5974,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Privzeta omejitev je 15. Poleg omejitve se citatu doda še 5 bajtov, ki ga oblikujejo za odjemalce brez podpore te funkcije';
+      'Privzeta omejitev je 30. Poleg omejitve se citatu doda še 5 bajtov, ki ga oblikujejo za odjemalce brez podpore te funkcije';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Po meri';

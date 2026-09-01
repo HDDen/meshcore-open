@@ -6033,7 +6033,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'La limite par défaut est 15. En plus de la limite, 5 octets sont ajoutés pour mettre en forme la citation à l\'intention des clients qui ne prennent pas en charge cette fonction';
+      'La limite par défaut est 30. En plus de la limite, 5 octets sont ajoutés pour mettre en forme la citation à l\'intention des clients qui ne prennent pas en charge cette fonction';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Personnalisée';

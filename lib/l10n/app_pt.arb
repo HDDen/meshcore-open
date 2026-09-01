@@ -2812,7 +2812,7 @@
   "settings_modSettingsNoRetraDscr": "Atenção! Devido a um mecanismo do firmware do nó, as mensagens de canal com mais de ~133 bytes não podem receber confirmações fisicamente e sempre serão marcadas como falhas! Use esta opção junto com o limite de payload nas configurações do aplicativo!",
   "settings_modSettingsExactQuote": "Usar citações precisas em mensagens normais",
   "settings_modSettingsExactQuoteLimit": "Limite de bytes para construir a citação",
-  "settings_modSettingsExactQuoteLimitDscr": "O limite padrão é 15. Além do limite, são adicionados 5 bytes que formatam a citação para clientes que não suportam esta função",
+  "settings_modSettingsExactQuoteLimitDscr": "O limite padrão é 30. Além do limite, são adicionados 5 bytes que formatam a citação para clientes que não suportam esta função",
   "settings_selfTelemetryShow": "Ver os sensores",
   "settings_modSettingsVisualChannelsUnreadSorting": "Ordenar os canais por mensagens não lidas",
   "settings_modSettingsMessagingBackgroundTCP": "Manter a conexão TCP em segundo plano",

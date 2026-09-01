@@ -6009,7 +6009,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      'Ліміт за замовчуванням — 15. Крім ліміту до цитати додається ще 5 байтів як оформлення цитати для клієнтів, які не підтримують цю функцію';
+      'Ліміт за замовчуванням — 30. Крім ліміту до цитати додається ще 5 байтів як оформлення цитати для клієнтів, які не підтримують цю функцію';
 
   @override
   String get settings_appSettingsCustomChemistry => 'Власна';

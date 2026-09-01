@@ -5584,7 +5584,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_modSettingsExactQuoteLimitDscr =>
-      '默认上限为 15。除上限之外，还会附加 5 个字节，用于为不支持该功能的客户端标记引用';
+      '默认上限为 30。除上限之外，还会附加 5 个字节，用于为不支持该功能的客户端标记引用';
 
   @override
   String get settings_appSettingsCustomChemistry => '自定义';

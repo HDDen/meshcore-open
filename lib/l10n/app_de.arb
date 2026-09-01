@@ -3173,7 +3173,7 @@
   "settings_modSettingsNoRetraDscr": "Achtung! Aufgrund eines Mechanismus in der Firmware des Knotens können Kanalnachrichten über ~133 Bytes physisch keine Selbstwiederholungen empfangen und werden immer als fehlgeschlagen markiert! Bitte verwenden Sie diese Option zusammen mit der Nutzlastbegrenzung in den App-Einstellungen!",
   "settings_modSettingsExactQuote": "Präzises Zitieren für normale Nachrichten verwenden",
   "settings_modSettingsExactQuoteLimit": "Byte-Limit für den Zitatausschnitt",
-  "settings_modSettingsExactQuoteLimitDscr": "Standardlimit ist 15. Zusätzlich zum Limit kommen 5 Bytes hinzu, die das Zitat für Clients ohne Unterstützung dieser Funktion kennzeichnen",
+  "settings_modSettingsExactQuoteLimitDscr": "Standardlimit ist 30. Zusätzlich zum Limit kommen 5 Bytes hinzu, die das Zitat für Clients ohne Unterstützung dieser Funktion kennzeichnen",
   "settings_selfTelemetryShow": "Sensoren anzeigen",
   "settings_modSettingsVisualChannelsUnreadSorting": "Kanäle nach ungelesenen Nachrichten sortieren",
   "settings_modSettingsMessagingBackgroundTCP": "TCP-Verbindung im Hintergrund aufrechterhalten",
