@@ -218,10 +218,16 @@ class MCOImageV4Codec {
       ..writeBits(document.paletteProfile.index, 4);
     _writeDimensions(writer, document.width, document.height);
 
-    writer.writeBit(document.backgroundColor != null);
-    if (document.backgroundColor case final background?) {
-      writer.writeBits(
-        _profileColorRefForDocumentColor(document, background),
+    final defaultBackgroundColor = _defaultBackgroundColorForDocument(document);
+    final hasBackgroundOverride =
+        defaultBackgroundColor == null ||
+        document.backgroundColor != defaultBackgroundColor;
+    writer.writeBit(hasBackgroundOverride);
+    if (hasBackgroundOverride) {
+      _writeOptionalColor(
+        writer,
+        document,
+        document.backgroundColor,
         profileColorBits,
       );
     }
@@ -337,9 +343,12 @@ class MCOImageV4Codec {
     final yBits = _coordinateBits(height);
     final scalarBits = _scalarBits(width, height);
 
+    final defaultBackgroundColor = localColorFromProfileColor(
+      MCOImagePalette.whiteIndexFor(paletteProfile),
+    );
     final backgroundColor = reader.readBit()
-        ? localColorFromProfileRef()
-        : null;
+        ? optionalLocalColorFromProfileRef()
+        : defaultBackgroundColor;
     var currentStyle = MCOImageV4Style(
       strokeColor: localColorFromProfileColor(
         MCOImagePalette.blackIndexFor(paletteProfile),
@@ -1940,6 +1949,14 @@ class MCOImageV4Codec {
     final black = MCOImagePalette.blackIndexFor(document.paletteProfile);
     final localBlack = document.palette.indexOf(black);
     return MCOImageV4Style(strokeColor: localBlack);
+  }
+
+  static int? _defaultBackgroundColorForDocument(
+    MCOImageV4Document document,
+  ) {
+    final white = MCOImagePalette.whiteIndexFor(document.paletteProfile);
+    final localWhite = document.palette.indexOf(white);
+    return localWhite < 0 ? null : localWhite;
   }
 
   static MCOImageV4Point? _translationFrom(

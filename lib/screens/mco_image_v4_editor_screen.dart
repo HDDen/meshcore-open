@@ -2286,12 +2286,17 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     final blackValue = profile.isDynamic
         ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
         : MCOImagePalette.blackIndexFor(profile);
+    final whiteValue = profile.isDynamic
+        ? MCOImageDynamicPalette.whiteGlobalIndexFor(profile)
+        : MCOImagePalette.whiteIndexFor(profile);
     final black = palette.indexOf(blackValue);
+    final white = palette.indexOf(whiteValue);
     return MCOImageV4Document(
       width: width,
       height: height,
       paletteProfile: profile,
       palette: palette,
+      backgroundColor: white >= 0 ? white : null,
       initialStyle: MCOImageV4Style(
         strokeColor: black >= 0 ? black : palette.length - 1,
       ),
