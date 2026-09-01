@@ -3402,7 +3402,11 @@ class _MessageBubble extends StatelessWidget {
     double textScale,
   ) {
     return Text(
-      context.l10n.chat_canvasFormatNotSupported(received, current),
+      MCOImageMessage.unsupportedFormatText(
+        context,
+        receivedVersion: received,
+        currentMaxSupportedVersion: current,
+      ),
       style: TextStyle(
         color: textColor.withValues(alpha: 0.78),
         fontSize: 12 * textScale,

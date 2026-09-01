@@ -143,6 +143,8 @@ class MCOImageV4Codec {
         targetName: targetName,
         replyTimestamp: replyTimestamp,
       );
+    } on MCOImageUnsupportedFormatException {
+      rethrow;
     } on MCOImageInvalidPayloadException {
       rethrow;
     } on MCOImageCodecException catch (error) {
@@ -377,8 +379,10 @@ class MCOImageV4Codec {
     final modeIndex = reader.readBits(_modeBits);
     final mode = MCOImageV4Mode.values[modeIndex];
     if (!_isObjectMode(mode)) {
-      throw const MCOImageInvalidPayloadException(
+      throw const MCOImageUnsupportedFormatException(
         'Unsupported MCOimg v4 mode',
+        receivedVersion: version,
+        currentMaxSupportedVersion: version,
       );
     }
     final profileIndex = reader.readBits(4);
@@ -2234,8 +2238,10 @@ class MCOImageV4Codec {
           ],
         );
       default:
-        throw MCOImageInvalidPayloadException(
+        throw MCOImageUnsupportedFormatException(
           'Unknown MCOimg v4 extended opcode: $subop',
+          receivedVersion: version,
+          currentMaxSupportedVersion: version,
         );
     }
   }

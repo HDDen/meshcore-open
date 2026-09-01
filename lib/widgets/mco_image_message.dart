@@ -10,6 +10,7 @@ import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mcoimg_v4_model.dart';
+import '../l10n/l10n.dart';
 import 'mco_image_v4_view.dart';
 
 class MCOImageDecodeMetadata {
@@ -53,6 +54,15 @@ class MCOImageMessage extends StatelessWidget {
         );
       }
     }
+    final textPayloadVersion = _versionedTextPayloadVersion(trimmed);
+    if (textPayloadVersion != null && textPayloadVersion > current) {
+      return MCOImageDecodeMetadata(
+        image: null,
+        unsupportedVersion: textPayloadVersion,
+        currentMaxSupportedVersion: current,
+        payloadInfo: null,
+      );
+    }
     if (MCOImageV4Codec.isTextPayload(text)) {
       try {
         final body = const MCOImageV4Codec().bodyFromText(text);
@@ -78,6 +88,13 @@ class MCOImageMessage extends StatelessWidget {
             algorithm: 'vector',
             binaryLength: body.length,
           ),
+        );
+      } on MCOImageUnsupportedFormatException catch (error) {
+        return MCOImageDecodeMetadata(
+          image: null,
+          unsupportedVersion: error.receivedVersion,
+          currentMaxSupportedVersion: error.currentMaxSupportedVersion,
+          payloadInfo: null,
         );
       } on MCOImageCodecException {
         return const MCOImageDecodeMetadata(
@@ -192,6 +209,34 @@ class MCOImageMessage extends StatelessWidget {
 
   static MCOImage? tryDecode(String text) {
     return decodeMetadata(text).image;
+  }
+
+  static int? _versionedTextPayloadVersion(String text) {
+    if (!text.startsWith('im')) return null;
+    final colon = text.indexOf(':');
+    if (colon <= 2) return null;
+    final version = int.tryParse(text.substring(2, colon));
+    return version;
+  }
+
+  static String unsupportedFormatText(
+    BuildContext context, {
+    required int receivedVersion,
+    required int currentMaxSupportedVersion,
+  }) {
+    if (receivedVersion > currentMaxSupportedVersion) {
+      return context.l10n.chat_canvasFormatNotSupported(
+        receivedVersion,
+        currentMaxSupportedVersion,
+      );
+    }
+    if (Localizations.localeOf(context).languageCode == 'ru') {
+      return 'MCOimg v$receivedVersion: этот режим изображения не '
+          'поддерживается текущей версией приложения. Обновите приложение, '
+          'чтобы открыть его.';
+    }
+    return 'MCOimg v$receivedVersion: this image mode is not supported by '
+        'the current app. Update the app to view it.';
   }
 
   static Future<Uint8List> renderPngBytes(

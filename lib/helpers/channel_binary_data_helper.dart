@@ -495,6 +495,16 @@ class ChannelBinaryDataHelper {
           final DecodedMCOImageV4 decoded;
           try {
             decoded = const MCOImageV4Codec().decodeBody(envelope.body);
+          } on MCOImageUnsupportedFormatException {
+            return ChannelAppDataInbound(
+              senderName: envelope.senderName,
+              subtypeId: envelope.subtypeId,
+              version: envelope.version,
+              subtype: ChannelAppDataSubtype.mcoImage,
+              body: envelope.body,
+              payloadLength: payload.length,
+              text: '$unsupportedMcoImagePrefix${envelope.version}',
+            );
           } catch (_) {
             return null;
           }

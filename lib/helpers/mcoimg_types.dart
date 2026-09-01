@@ -201,6 +201,17 @@ class MCOImageInvalidPayloadException extends MCOImageCodecException {
   const MCOImageInvalidPayloadException(super.message);
 }
 
+class MCOImageUnsupportedFormatException extends MCOImageCodecException {
+  final int receivedVersion;
+  final int currentMaxSupportedVersion;
+
+  const MCOImageUnsupportedFormatException(
+    super.message, {
+    required this.receivedVersion,
+    required this.currentMaxSupportedVersion,
+  });
+}
+
 class MCOImageTooLargeException extends MCOImageCodecException {
   const MCOImageTooLargeException(super.message);
 }

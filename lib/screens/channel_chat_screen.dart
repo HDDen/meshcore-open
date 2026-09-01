@@ -2306,7 +2306,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     double textScale,
   ) {
     return Text(
-      context.l10n.chat_canvasFormatNotSupported(received, current),
+      MCOImageMessage.unsupportedFormatText(
+        context,
+        receivedVersion: received,
+        currentMaxSupportedVersion: current,
+      ),
       style: TextStyle(
         fontSize: 12 * textScale,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
