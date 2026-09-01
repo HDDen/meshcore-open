@@ -44,6 +44,7 @@ class MCOImageV4Codec {
   static const int _extRepeatBack = 9;
   static const int _extDotRun = 10;
   static const int _extSetStyle = 11;
+  static const int _extRepeatColorRun = 12;
   static const int _extBits = 4;
   static const int _repeatBackWindow = 8;
   static const int _dimensionModeSquare64 = 0;
@@ -248,6 +249,63 @@ class MCOImageV4Codec {
         profileColorBits,
         scalarBits,
       );
+
+      ({
+        List<MCOImageV4Figure> figures,
+        _V4BitWriter writer,
+      })?
+      bestRepeatColorRun;
+      void considerRepeatColorRun(bool strokeColorRun) {
+        final run = _collectRepeatColorRun(
+          figures,
+          index,
+          history,
+          currentStyle,
+          strokeColorRun: strokeColorRun,
+        );
+        if (run.length < 2) return;
+        final encoded = _encodeBestRepeatColorRun(
+          run,
+          _translationFrom(history.last, run.first)!,
+          currentStyle,
+          document,
+          profileColorBits,
+          strokeColorRun: strokeColorRun,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        final fallback = _encodeFigureSequence(
+          run,
+          history,
+          currentStyle,
+          document,
+          profileColorBits,
+          scalarBits,
+          width: document.width,
+          height: document.height,
+          xBits: xBits,
+          yBits: yBits,
+        );
+        if (encoded.bitLength >= fallback.bitLength) return;
+        final previous = bestRepeatColorRun;
+        if (previous == null || encoded.bitLength < previous.writer.bitLength) {
+          bestRepeatColorRun = (
+            figures: run,
+            writer: encoded,
+          );
+        }
+      }
+
+      considerRepeatColorRun(false);
+      considerRepeatColorRun(true);
+      final repeatColorRun = bestRepeatColorRun;
+      if (repeatColorRun != null) {
+        writer.writeWriter(repeatColorRun.writer);
+        history.addAll(repeatColorRun.figures);
+        currentStyle = repeatColorRun.figures.last.style;
+        index += repeatColorRun.figures.length;
+        continue;
+      }
 
       final dotRun = figure is MCOImageV4Dot
           ? _collectDotRun(figures, index)
@@ -595,6 +653,97 @@ class MCOImageV4Codec {
       result.add(next);
     }
     return result;
+  }
+
+  List<MCOImageV4Figure> _collectRepeatColorRun(
+    List<MCOImageV4Figure> figures,
+    int start,
+    List<MCOImageV4Figure> history,
+    MCOImageV4Style baseStyle, {
+    required bool strokeColorRun,
+  }) {
+    if (history.isEmpty || start >= figures.length) {
+      return const <MCOImageV4Figure>[];
+    }
+    final first = figures[start];
+    if (!_canUseRepeatColorStyle(
+      first.style,
+      baseStyle,
+      strokeColorRun: strokeColorRun,
+    )) {
+      return const <MCOImageV4Figure>[];
+    }
+    final delta = _translationFrom(history.last, first);
+    if (delta == null) return const <MCOImageV4Figure>[];
+
+    final result = <MCOImageV4Figure>[first];
+    var previous = first;
+    for (var index = start + 1; index < figures.length; index++) {
+      final next = figures[index];
+      if (!_canUseRepeatColorStyle(
+        next.style,
+        baseStyle,
+        strokeColorRun: strokeColorRun,
+      )) {
+        break;
+      }
+      final nextDelta = _translationFrom(previous, next);
+      if (nextDelta != delta) break;
+      result.add(next);
+      previous = next;
+    }
+    return result;
+  }
+
+  bool _canUseRepeatColorStyle(
+    MCOImageV4Style style,
+    MCOImageV4Style baseStyle, {
+    required bool strokeColorRun,
+  }) {
+    if (style.strokeWidth != baseStyle.strokeWidth) return false;
+    return strokeColorRun
+        ? style.fillColor == baseStyle.fillColor
+        : style.strokeColor == baseStyle.strokeColor;
+  }
+
+  _V4BitWriter _encodeFigureSequence(
+    List<MCOImageV4Figure> figures,
+    List<MCOImageV4Figure> history,
+    MCOImageV4Style currentStyle,
+    MCOImageV4Document document,
+    int profileColorBits,
+    int scalarBits, {
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final writer = _V4BitWriter();
+    final localHistory = <MCOImageV4Figure>[...history];
+    var style = currentStyle;
+    for (final figure in figures) {
+      style = _writeStyleChanges(
+        writer,
+        style,
+        figure.style,
+        document,
+        profileColorBits,
+        scalarBits,
+      );
+      writer.writeWriter(
+        _encodeBestFigureCommand(
+          figure,
+          localHistory,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+          scalarBits: scalarBits,
+        ),
+      );
+      localHistory.add(figure);
+    }
+    return writer;
   }
 
   _V4BitWriter _encodeFigureCommand(
@@ -1447,6 +1596,95 @@ class MCOImageV4Codec {
   bool _canEncodeSignedShort(int value, int shortBits) =>
       _zigZagEncode(value) < (1 << shortBits);
 
+  _V4BitWriter _encodeBestRepeatColorRun(
+    List<MCOImageV4Figure> figures,
+    MCOImageV4Point delta,
+    MCOImageV4Style baseStyle,
+    MCOImageV4Document document,
+    int profileColorBits, {
+    required bool strokeColorRun,
+    required int xBits,
+    required int yBits,
+  }) {
+    final candidates = <_V4BitWriter>[
+      _encodeRepeatColorRun(
+        figures,
+        delta,
+        baseStyle,
+        document,
+        profileColorBits,
+        strokeColorRun: strokeColorRun,
+        shortSelector: null,
+        xBits: xBits,
+        yBits: yBits,
+      ),
+      for (var selector = 0; selector < _deltaWidths.length; selector++)
+        if (_canEncodeShortRepeat(delta, _deltaWidths[selector]))
+          _encodeRepeatColorRun(
+            figures,
+            delta,
+            baseStyle,
+            document,
+            profileColorBits,
+            strokeColorRun: strokeColorRun,
+            shortSelector: selector,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+    ];
+    candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
+    return candidates.first;
+  }
+
+  _V4BitWriter _encodeRepeatColorRun(
+    List<MCOImageV4Figure> figures,
+    MCOImageV4Point delta,
+    MCOImageV4Style baseStyle,
+    MCOImageV4Document document,
+    int profileColorBits, {
+    required bool strokeColorRun,
+    required int? shortSelector,
+    required int xBits,
+    required int yBits,
+  }) {
+    int? color(MCOImageV4Style style) =>
+        strokeColorRun ? style.strokeColor : style.fillColor;
+    final baseColor = color(baseStyle);
+    final hasColorChanges = figures
+        .skip(1)
+        .any((figure) => color(figure.style) != baseColor);
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extRepeatColorRun, _extBits)
+      ..writeBit(strokeColorRun)
+      ..writeBit(shortSelector != null);
+    if (shortSelector == null) {
+      writer
+        ..writeBits(_zigZagEncode(delta.x), xBits + 1)
+        ..writeBits(_zigZagEncode(delta.y), yBits + 1);
+    } else {
+      final shortBits = _deltaWidths[shortSelector];
+      writer
+        ..writeBits(shortSelector, 2)
+        ..writeBits(_zigZagEncode(delta.x), shortBits)
+        ..writeBits(_zigZagEncode(delta.y), shortBits);
+    }
+    writer
+      ..writeCompactUint(figures.length - 2)
+      ..writeBit(hasColorChanges);
+    if (hasColorChanges) {
+      for (final figure in figures.skip(1)) {
+        _writeOptionalColor(
+          writer,
+          document,
+          color(figure.style),
+          profileColorBits,
+        );
+      }
+    }
+    return writer;
+  }
+
   _V4BitWriter _encodeShortRepeatCommand(
     MCOImageV4Point delta, {
     required int selector,
@@ -1732,6 +1970,44 @@ class MCOImageV4Codec {
           history[history.length - distance]
               .translated(dx, dy)
               .withStyle(style),
+        );
+      case _extRepeatColorRun:
+        if (history.isEmpty) {
+          throw const MCOImageInvalidPayloadException(
+            'MCOimg v4 repeat color run has no previous figure',
+          );
+        }
+        final strokeColorRun = reader.readBit();
+        final short = reader.readBit();
+        late final int dx;
+        late final int dy;
+        if (short) {
+          final shortBits = _deltaWidths[reader.readBits(2)];
+          dx = _zigZagDecode(reader.readBits(shortBits));
+          dy = _zigZagDecode(reader.readBits(shortBits));
+        } else {
+          dx = _zigZagDecode(reader.readBits(xBits + 1));
+          dy = _zigZagDecode(reader.readBits(yBits + 1));
+        }
+        final count = reader.readCompactUint() + 2;
+        final hasColorChanges = reader.readBit();
+        final figures = <MCOImageV4Figure>[];
+        var previous = history.last;
+        var currentRunStyle = style;
+        for (var index = 0; index < count; index++) {
+          if (index > 0 && hasColorChanges) {
+            final color = localColorFromProfileRef();
+            currentRunStyle = strokeColorRun
+                ? style.copyWith(strokeColor: color)
+                : style.copyWith(fillColor: color);
+          }
+          final figure = previous.translated(dx, dy).withStyle(currentRunStyle);
+          figures.add(figure);
+          previous = figure;
+        }
+        return _V4ExtendedReadResult(
+          style: currentRunStyle,
+          figures: figures,
         );
       case _extDotRun:
         return _V4ExtendedReadResult(
