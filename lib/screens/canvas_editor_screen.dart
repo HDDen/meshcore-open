@@ -1573,21 +1573,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = mediaHeight * 0.55;
-        final vectorXMargin = _isVectorV4
-            ? MCOImageV4Codec.coordinateMarginForCanvasSize(_width)
-            : 0;
-        final vectorYMargin = _isVectorV4
-            ? MCOImageV4Codec.coordinateMarginForCanvasSize(_height)
-            : 0;
-        final horizontalMarginFactor = 1 + vectorXMargin * 2 / _width;
-        final verticalMarginFactor = 1 + vectorYMargin * 2 / _height;
         final availableCanvasWidth = math.max(
           1.0,
-          (maxWidth - _canvasRulerExtent) / horizontalMarginFactor,
+          maxWidth - _canvasRulerExtent,
         );
         final availableCanvasHeight = math.max(
           1.0,
-          (maxHeight - _canvasRulerExtent) / verticalMarginFactor,
+          maxHeight - _canvasRulerExtent,
         );
         final canvasWidth = math.min(
           availableCanvasWidth,
@@ -1595,33 +1587,17 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         );
         final canvasHeight = canvasWidth * _height / _width;
         final canvasSize = Size(canvasWidth, canvasHeight);
-        final vectorXMarginSize = _isVectorV4
-            ? canvasWidth * vectorXMargin / _width
-            : 0.0;
-        final vectorYMarginSize = _isVectorV4
-            ? canvasHeight * vectorYMargin / _height
-            : 0.0;
         final totalSize = Size(
-          canvasWidth + _canvasRulerExtent + vectorXMarginSize * 2,
-          canvasHeight + _canvasRulerExtent + vectorYMarginSize * 2,
+          canvasWidth + _canvasRulerExtent,
+          canvasHeight + _canvasRulerExtent,
         );
         final canvasOffset = Offset(
-          _canvasRulerExtent + vectorXMarginSize,
-          _canvasRulerExtent + vectorYMarginSize,
+          _canvasRulerExtent,
+          _canvasRulerExtent,
         );
         final drawingOffset = Offset(
           _canvasRulerExtent,
           _canvasRulerExtent,
-        );
-        final drawingSize = _isVectorV4
-            ? Size(
-                canvasWidth + vectorXMarginSize * 2,
-                canvasHeight + vectorYMarginSize * 2,
-              )
-            : canvasSize;
-        final drawingToCanvasOffset = Offset(
-          _isVectorV4 ? vectorXMarginSize : 0.0,
-          _isVectorV4 ? vectorYMarginSize : 0.0,
         );
         final canDraw = !showLockButton || _canvasInputLocked;
 
@@ -1703,19 +1679,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 Positioned(
                   left: drawingOffset.dx,
                   top: drawingOffset.dy,
-                  width: drawingSize.width,
-                  height: drawingSize.height,
+                  width: canvasSize.width,
+                  height: canvasSize.height,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTapUp: canDraw && _isVectorV4
                         ? (details) => _handleVectorTap(
-                            details.localPosition - drawingToCanvasOffset,
+                            details.localPosition,
                             canvasSize,
                           )
                         : null,
                     onPanStart: canDraw && _isVectorV4
                         ? (details) => _handleVectorPanStart(
-                            details.localPosition - drawingToCanvasOffset,
+                            details.localPosition,
                             canvasSize,
                           )
                         : null,
@@ -1729,7 +1705,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                         ? (details) {
                             if (_isVectorV4) {
                               _handleVectorPanUpdate(
-                                details.localPosition - drawingToCanvasOffset,
+                                details.localPosition,
                                 canvasSize,
                               );
                             } else if (_selectedTool == _CanvasTool.pencil) {
