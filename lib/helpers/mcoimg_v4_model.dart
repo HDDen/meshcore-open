@@ -305,6 +305,55 @@ class MCOImageV4Wave extends MCOImageV4Figure {
   );
 }
 
+class MCOImageV4RasterLayer extends MCOImageV4Figure {
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+
+  /// Profile color ids, not local document palette indexes.
+  final List<int> pixels;
+
+  /// Profile color id used as transparent in [pixels].
+  final int? transparentColor;
+
+  MCOImageV4RasterLayer({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required List<int> pixels,
+    this.transparentColor,
+    super.visible,
+  }) : pixels = List<int>.unmodifiable(pixels),
+       super(style: const MCOImageV4Style(strokeColor: null));
+
+  @override
+  MCOImageV4RasterLayer translated(int dx, int dy) => MCOImageV4RasterLayer(
+    x: x + dx,
+    y: y + dy,
+    width: width,
+    height: height,
+    pixels: pixels,
+    transparentColor: transparentColor,
+    visible: visible,
+  );
+
+  @override
+  MCOImageV4RasterLayer withStyle(MCOImageV4Style style) => this;
+
+  @override
+  MCOImageV4RasterLayer withVisibility(bool visible) => MCOImageV4RasterLayer(
+    x: x,
+    y: y,
+    width: width,
+    height: height,
+    pixels: pixels,
+    transparentColor: transparentColor,
+    visible: visible,
+  );
+}
+
 class MCOImageV4Group extends MCOImageV4Figure {
   final List<MCOImageV4Figure> figures;
 

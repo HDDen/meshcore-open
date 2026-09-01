@@ -278,6 +278,35 @@ class MCOImageV4Painter extends CustomPainter {
           if (!child.visible) continue;
           _drawFigure(canvas, child);
         }
+      case MCOImageV4RasterLayer(
+        :final x,
+        :final y,
+        :final width,
+        :final height,
+        :final pixels,
+        :final transparentColor,
+      ):
+        final paint = Paint()
+          ..isAntiAlias = false
+          ..style = PaintingStyle.fill;
+        for (var pixelY = 0; pixelY < height; pixelY++) {
+          for (var pixelX = 0; pixelX < width; pixelX++) {
+            final colorValue = pixels[pixelY * width + pixelX];
+            if (transparentColor != null && colorValue == transparentColor) {
+              continue;
+            }
+            paint.color = _profileColor(colorValue);
+            canvas.drawRect(
+              Rect.fromLTWH(
+                x + pixelX.toDouble(),
+                y + pixelY.toDouble(),
+                1,
+                1,
+              ),
+              paint,
+            );
+          }
+        }
     }
   }
 
@@ -332,6 +361,10 @@ class MCOImageV4Painter extends CustomPainter {
 
   Color _color(int localIndex) {
     final color = document.palette[localIndex];
+    return _profileColor(color);
+  }
+
+  Color _profileColor(int color) {
     return document.paletteProfile.isDynamic
         ? MCOImageDynamicPalette.global512[color]
         : MCOImagePalette.colorsFor(document.paletteProfile)[color];
@@ -405,6 +438,18 @@ class MCOImageV4Painter extends CustomPainter {
               : bounds.expandToInclude(childBounds);
         }
         return bounds ?? Rect.zero;
+      case MCOImageV4RasterLayer(
+        :final x,
+        :final y,
+        :final width,
+        :final height,
+      ):
+        return Rect.fromLTWH(
+          x.toDouble(),
+          y.toDouble(),
+          width.toDouble(),
+          height.toDouble(),
+        );
     }
   }
 

@@ -1546,8 +1546,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
-    Widget emptyCell() => fixedButton(child: const SizedBox.shrink());
-
     final topRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1628,7 +1626,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           icon: Icons.lock_open_outlined,
         ),
         gap,
-        emptyCell(),
+        actionButton(
+          onPressed: _canRasterizeSelectedV4Layer
+              ? () => unawaited(_rasterizeSelectedV4Layer())
+              : null,
+          tooltip: 'Растрировать слой',
+          icon: Icons.grid_on,
+        ),
         gap,
         toolButton(
           tool: _CanvasTool.dot,
@@ -2191,11 +2195,52 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .round()
         .clamp(0, height - 1)
         .toInt();
+    final scaleX = width / source.width;
+    final scaleY = height / source.height;
     final scalarScale =
         math.max(width, height) / math.max(source.width, source.height);
 
     MCOImageV4Point mapPoint(MCOImageV4Point value) =>
         MCOImageV4Point(x(value.x), y(value.y));
+
+    List<int> mapRasterPixels(
+      List<int> pixels,
+      int sourceWidth,
+      int sourceHeight,
+      int targetWidth,
+      int targetHeight,
+    ) {
+      if (sourceWidth == targetWidth && sourceHeight == targetHeight) {
+        return pixels;
+      }
+      return _scalePixels(
+        sourcePixels: pixels,
+        sourceWidth: sourceWidth,
+        sourceHeight: sourceHeight,
+        targetWidth: targetWidth,
+        targetHeight: targetHeight,
+      );
+    }
+
+    MCOImageV4RasterLayer mapRasterLayer(MCOImageV4RasterLayer layer) {
+      final nextWidth = math.max(1, (layer.width * scaleX).round());
+      final nextHeight = math.max(1, (layer.height * scaleY).round());
+      return MCOImageV4RasterLayer(
+        x: (layer.x * width / source.width).round(),
+        y: (layer.y * height / source.height).round(),
+        width: nextWidth,
+        height: nextHeight,
+        pixels: mapRasterPixels(
+          layer.pixels,
+          layer.width,
+          layer.height,
+          nextWidth,
+          nextHeight,
+        ),
+        transparentColor: layer.transparentColor,
+        visible: layer.visible,
+      );
+    }
 
     MCOImageV4Figure convert(MCOImageV4Figure figure) {
       return switch (figure) {
@@ -2282,6 +2327,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             style: style,
             visible: visible,
           ),
+        MCOImageV4RasterLayer() && final layer => mapRasterLayer(layer),
       };
     }
 
@@ -3112,6 +3158,159 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         pixels: pixels,
         transparentColor: transparentColor,
         encodingVersion: MCOImageEncodingVersion.v3,
+      );
+    } finally {
+      rendered.dispose();
+    }
+  }
+
+  Future<void> _rasterizeSelectedV4Layer() async {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    final selected = _selectedV4Figure;
+    if (document == null ||
+        index == null ||
+        index < 0 ||
+        index >= document.figures.length ||
+        selected == null ||
+        selected is MCOImageV4RasterLayer) {
+      return;
+    }
+    try {
+      final rasterLayer = await _rasterLayerFromV4Figure(document, selected);
+      if (!mounted) return;
+      final figures = [...document.figures];
+      figures[index] = rasterLayer;
+      _commitVectorDocument(
+        document.copyWith(mode: MCOImageV4Mode.mixed, figures: figures),
+      );
+      setState(() {
+        _selectedV4FigureIndex = index;
+        _selectedTool = _CanvasTool.select;
+        _clearVectorEditingState();
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<MCOImageV4RasterLayer> _rasterLayerFromV4Figure(
+    MCOImageV4Document document,
+    MCOImageV4Figure figure,
+  ) async {
+    final canvasBounds = Rect.fromLTWH(
+      0,
+      0,
+      document.width.toDouble(),
+      document.height.toDouble(),
+    );
+    final figureBounds = MCOImageV4Painter.figureLogicalBounds(
+      figure.withVisibility(true),
+    ).intersect(canvasBounds);
+    if (figureBounds.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Selected v4 layer is outside the canvas',
+      );
+    }
+    final left = figureBounds.left.floor().clamp(0, document.width - 1).toInt();
+    final top = figureBounds.top.floor().clamp(0, document.height - 1).toInt();
+    final right = figureBounds.right
+        .ceil()
+        .clamp(left + 1, document.width)
+        .toInt();
+    final bottom = figureBounds.bottom
+        .ceil()
+        .clamp(top + 1, document.height)
+        .toInt();
+    final layerWidth = right - left;
+    final layerHeight = bottom - top;
+    final viewport = Rect.fromLTWH(
+      left.toDouble(),
+      top.toDouble(),
+      layerWidth.toDouble(),
+      layerHeight.toDouble(),
+    );
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    MCOImageV4Painter(
+      document.copyWith(
+        backgroundColor: null,
+        figures: <MCOImageV4Figure>[figure.withVisibility(true)],
+      ),
+      paintBackground: false,
+      showGrid: false,
+      logicalViewport: viewport,
+      antiAlias: false,
+    ).paint(canvas, Size(layerWidth.toDouble(), layerHeight.toDouble()));
+    final rendered = await recorder.endRecording().toImage(
+      layerWidth,
+      layerHeight,
+    );
+    try {
+      final data = await rendered.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (data == null) {
+        throw const MCOImageInvalidInputException(
+          'Cannot render MCOimg v4 layer',
+        );
+      }
+      final rgba = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final paletteValues = _rasterPaletteValues(document.paletteProfile);
+      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
+      final transparentPixels = <int>[];
+      final used = <int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        final alpha = rgba[offset + 3];
+        if (alpha < 128) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final color = _nearestRasterColorValue(
+          rgba[offset],
+          rgba[offset + 1],
+          rgba[offset + 2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = color;
+        used.add(color);
+      }
+
+      int? transparentColor;
+      if (transparentPixels.isNotEmpty) {
+        for (final color in paletteValues) {
+          if (!used.contains(color)) {
+            transparentColor = color;
+            break;
+          }
+        }
+        if (transparentColor == null) {
+          throw const MCOImageInvalidInputException(
+            'No free palette color for v4 raster transparency',
+          );
+        }
+        for (final index in transparentPixels) {
+          pixels[index] = transparentColor;
+        }
+      }
+
+      return MCOImageV4RasterLayer(
+        x: left,
+        y: top,
+        width: layerWidth,
+        height: layerHeight,
+        pixels: pixels,
+        transparentColor: transparentColor,
       );
     } finally {
       rendered.dispose();
@@ -4127,6 +4326,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     MCOImageV4Figure mapFigure(MCOImageV4Figure figure) {
       final style = figure.style;
+      if (figure is MCOImageV4RasterLayer) {
+        return MCOImageV4RasterLayer(
+          x: figure.x,
+          y: figure.y,
+          width: figure.width,
+          height: figure.height,
+          pixels: figure.pixels
+              .map(mapColorValue)
+              .toList(growable: false),
+          transparentColor: figure.transparentColor == null
+              ? null
+              : mapColorValue(figure.transparentColor!),
+          visible: figure.visible,
+        );
+      }
       if (figure is MCOImageV4Group) {
         return MCOImageV4Group(
           figures: figure.figures.map(mapFigure).toList(growable: false),
@@ -4317,6 +4531,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       setState(update);
       return;
     }
+    if (before.figures[index] is MCOImageV4RasterLayer) {
+      setState(update);
+      return;
+    }
     MCOImageV4Document? after;
     setState(() {
       update();
@@ -4457,7 +4675,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       if (_v4AppendGroupIndex != index) {
         _v4AppendGroupIndex = null;
       }
-      _adoptVectorStyle(document.figures[index].style);
+      final figure = document.figures[index];
+      if (figure is! MCOImageV4RasterLayer) {
+        _adoptVectorStyle(figure.style);
+      }
     });
   }
 
@@ -4660,9 +4881,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool get _canCloneSelectedV4Figure => _selectedV4Figure != null;
 
   bool get _canEditSelectedV4Figure =>
-      _selectedV4Figure != null && _selectedV4Figure is! MCOImageV4Group;
+      _selectedV4Figure != null &&
+      _selectedV4Figure is! MCOImageV4Group &&
+      _selectedV4Figure is! MCOImageV4RasterLayer;
 
   bool get _canUngroupSelectedV4Figure => _selectedV4Figure is MCOImageV4Group;
+
+  bool get _canRasterizeSelectedV4Layer =>
+      _selectedV4Figure != null && _selectedV4Figure is! MCOImageV4RasterLayer;
 
   bool get _canAppendToSelectedV4Group =>
       _selectedV4Figure is MCOImageV4Group;
@@ -5169,7 +5395,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     setState(() {
       _selectedV4FigureIndex = index + 1;
       _selectedTool = _CanvasTool.select;
-      _adoptVectorStyle(clone.style);
+      if (clone is! MCOImageV4RasterLayer) {
+        _adoptVectorStyle(clone.style);
+      }
     });
   }
 
@@ -5232,6 +5460,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         MCOImageV4Path() => _CanvasTool.polyline,
         MCOImageV4Wave() => _CanvasTool.wave,
         MCOImageV4Group() => _CanvasTool.select,
+        MCOImageV4RasterLayer() => _CanvasTool.select,
       };
 
   List<MCOImageV4Point> _controlPointsForVectorFigure(
@@ -5258,6 +5487,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             end,
           ],
         MCOImageV4Group() => const <MCOImageV4Point>[],
+        MCOImageV4RasterLayer() => const <MCOImageV4Point>[],
       };
 
   MCOImageV4Point _vectorGridPoint(
@@ -6906,6 +7136,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
       MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
       MCOImageV4Group() => 'Группа',
+      MCOImageV4RasterLayer() => 'Растр',
     };
   }
 
@@ -7075,11 +7306,32 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
 
       addLocal(vectorDocument.backgroundColor);
-      for (final figure in vectorDocument.figures.where(
-        (figure) => figure.visible,
-      )) {
+      void addFigure(MCOImageV4Figure figure) {
+        if (!figure.visible) return;
+        if (figure is MCOImageV4RasterLayer) {
+          for (final colorValue in figure.pixels) {
+            if (figure.transparentColor != null &&
+                colorValue == figure.transparentColor) {
+              continue;
+            }
+            if (_paletteIndexForColorValue(profile, colorValue) != null) {
+              values.add(colorValue);
+            }
+          }
+          return;
+        }
+        if (figure is MCOImageV4Group) {
+          for (final child in figure.figures) {
+            addFigure(child);
+          }
+          return;
+        }
         addLocal(figure.style.fillColor);
         addLocal(figure.style.strokeColor);
+      }
+
+      for (final figure in vectorDocument.figures) {
+        addFigure(figure);
       }
       final sorted = values.toList()
         ..sort((a, b) {

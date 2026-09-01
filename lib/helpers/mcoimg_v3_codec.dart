@@ -659,10 +659,10 @@ class MCOImageV3Codec {
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
     int compressionLevel = mcoImageDefaultCompressionLevel,
+    bool includePacketNonce = true,
   }) {
-    // v3 optimizes one canonical compressed image body, then prefixes it with
-    // a one-byte packet nonce. Text output is an app-side im3: Base91 wrapper
-    // over the complete nonce-prefixed body.
+    // v3 optimizes one canonical compressed image body. Public v3 messages
+    // prefix it with a one-byte packet nonce; embedded callers may omit it.
     _validateImage(image);
     final result = _encodeNative(
       image,
@@ -671,6 +671,7 @@ class MCOImageV3Codec {
       scanModes: scanModes,
       includeNonScanCandidates: includeNonScanCandidates,
       compressionLevel: compressionLevel,
+      includePacketNonce: includePacketNonce,
     );
     return EncodedMCOImageV3(
       body: result.payload,
@@ -730,18 +731,31 @@ class MCOImageV3Codec {
   }
 
   MCOImage decodeBody(Uint8List body) {
-    if (body.length < 4) {
+    return _decodeBody(body, hasPacketNonce: true);
+  }
+
+  MCOImage decodeBodyWithoutPacketNonce(Uint8List body) {
+    return _decodeBody(body, hasPacketNonce: false);
+  }
+
+  MCOImage _decodeBody(
+    Uint8List body, {
+    required bool hasPacketNonce,
+  }) {
+    final headerOffset = hasPacketNonce ? packetNonceLength : 0;
+    final readerByteIndex = headerOffset + 1;
+    if (body.length < readerByteIndex + 2) {
       throw const MCOImageInvalidPayloadException(
         'MCOimg v3 payload too short',
       );
     }
-    final header = body[1];
+    final header = body[headerOffset];
     final scan = _scanFromHeader(header);
     final hasTransparentColor = (header & _transparentFlag) != 0;
     final implicitWhiteBackground =
         (header & _implicitWhiteBackgroundFlag) != 0;
     final profile = _profileFromId(header & _profileMask);
-    final reader = _V3BitReader(body, byteIndex: 2);
+    final reader = _V3BitReader(body, byteIndex: readerByteIndex);
     final dimensions = _readDimensions(reader);
     final width = dimensions.width;
     final height = dimensions.height;
@@ -893,6 +907,7 @@ class MCOImageV3Codec {
     List<ScanMode>? scanModes,
     bool includeNonScanCandidates = true,
     int compressionLevel = mcoImageDefaultCompressionLevel,
+    bool includePacketNonce = true,
   }) {
     return _runEncode(
       image,
@@ -903,6 +918,7 @@ class MCOImageV3Codec {
       compressionLevel: compressionLevel,
       collectDiagnostics: candidateDebugLoggingEnabled,
       emitDebugLog: candidateDebugLoggingEnabled,
+      includePacketNonce: includePacketNonce,
     ).result;
   }
 
@@ -923,6 +939,7 @@ class MCOImageV3Codec {
       compressionLevel: compressionLevel,
       collectDiagnostics: true,
       emitDebugLog: true,
+      includePacketNonce: true,
     );
   }
 
@@ -935,6 +952,7 @@ class MCOImageV3Codec {
     required int compressionLevel,
     required bool collectDiagnostics,
     required bool emitDebugLog,
+    required bool includePacketNonce,
   }) {
     final previousDebugLogState = _candidateDebugLogActive;
     _candidateDebugLogActive = emitDebugLog;
@@ -949,6 +967,7 @@ class MCOImageV3Codec {
         includeNonScanCandidates: includeNonScanCandidates,
         compressionLevel: compressionLevel,
         collectDiagnostics: collectDiagnostics,
+        includePacketNonce: includePacketNonce,
       );
     } finally {
       _candidateDebugLogActive = previousDebugLogState;
@@ -964,6 +983,7 @@ class MCOImageV3Codec {
     bool includeNonScanCandidates = true,
     int compressionLevel = mcoImageDefaultCompressionLevel,
     required bool collectDiagnostics,
+    required bool includePacketNonce,
   }) {
     _lzTokenCache = _V3LzTokenCache();
     _localPaletteVariantCache = {};
@@ -991,7 +1011,9 @@ class MCOImageV3Codec {
 
     void addCandidate(EncodedMCOImage? candidate) {
       if (candidate == null) return;
-      final packetCandidate = _withPacketNonce(candidate, packetNonce);
+      final packetCandidate = includePacketNonce
+          ? _withPacketNonce(candidate, packetNonce)
+          : candidate;
       if (bestCandidate == null ||
           compareCandidates(packetCandidate, bestCandidate!) < 0) {
         bestCandidate = packetCandidate;

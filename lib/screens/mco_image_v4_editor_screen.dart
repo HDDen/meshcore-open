@@ -888,7 +888,8 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
   Widget _editToolButton() {
     final canEdit = _selectedFigureIndex != null &&
         _selectedFigureIndex! < _document.figures.length &&
-        _document.figures[_selectedFigureIndex!] is! MCOImageV4Group;
+        _document.figures[_selectedFigureIndex!] is! MCOImageV4Group &&
+        _document.figures[_selectedFigureIndex!] is! MCOImageV4RasterLayer;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: IconButton(
@@ -1691,6 +1692,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Path() => _V4Tool.polyline,
         MCOImageV4Wave() => _V4Tool.wave,
         MCOImageV4Group() => _V4Tool.select,
+        MCOImageV4RasterLayer() => _V4Tool.select,
       };
 
   List<MCOImageV4Point> _controlPointsForEditedFigure(
@@ -1713,6 +1715,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             end,
           ],
         MCOImageV4Group() => const <MCOImageV4Point>[],
+        MCOImageV4RasterLayer() => const <MCOImageV4Point>[],
       };
 
   void _selectFigure(int index) {
@@ -2432,6 +2435,51 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
     final scale = math.min(width / source.width, height / source.height);
     int scalar(int value) => math.max(1, (value * scale).round());
 
+    List<int> scalePixels(
+      List<int> sourcePixels,
+      int sourceWidth,
+      int sourceHeight,
+      int targetWidth,
+      int targetHeight,
+    ) {
+      if (sourceWidth == targetWidth && sourceHeight == targetHeight) {
+        return sourcePixels;
+      }
+      return List<int>.generate(targetWidth * targetHeight, (index) {
+        final targetX = index % targetWidth;
+        final targetY = index ~/ targetWidth;
+        final sourceX = ((targetX + 0.5) * sourceWidth / targetWidth)
+            .floor()
+            .clamp(0, sourceWidth - 1)
+            .toInt();
+        final sourceY = ((targetY + 0.5) * sourceHeight / targetHeight)
+            .floor()
+            .clamp(0, sourceHeight - 1)
+            .toInt();
+        return sourcePixels[sourceY * sourceWidth + sourceX];
+      }, growable: false);
+    }
+
+    MCOImageV4RasterLayer rescaleRasterLayer(MCOImageV4RasterLayer layer) {
+      final nextWidth = math.max(1, (layer.width * scale).round());
+      final nextHeight = math.max(1, (layer.height * scale).round());
+      return MCOImageV4RasterLayer(
+        x: (layer.x * width / source.width).round(),
+        y: (layer.y * height / source.height).round(),
+        width: nextWidth,
+        height: nextHeight,
+        pixels: scalePixels(
+          layer.pixels,
+          layer.width,
+          layer.height,
+          nextWidth,
+          nextHeight,
+        ),
+        transparentColor: layer.transparentColor,
+        visible: layer.visible,
+      );
+    }
+
     MCOImageV4Figure convert(MCOImageV4Figure figure) {
       final style = figure.style.copyWith(
         fillColor: _remapColor(
@@ -2506,6 +2554,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             style: style,
             visible: figure.visible,
           ),
+        MCOImageV4RasterLayer() && final layer => rescaleRasterLayer(layer),
       };
     }
 
@@ -2739,6 +2788,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
         MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
         MCOImageV4Group() => 'Группа',
+        MCOImageV4RasterLayer() => 'Растр',
       };
 }
 

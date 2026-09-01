@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'channel_app_data_helper.dart';
 import 'mcoimg_palette.dart';
 import 'mcoimg_types.dart';
+import 'mcoimg_v3_codec.dart';
 import 'mcoimg_v4_model.dart';
 
 class MCOImageV4Codec {
@@ -47,6 +48,7 @@ class MCOImageV4Codec {
   static const int _extSetStyle = 11;
   static const int _extRepeatColorRun = 12;
   static const int _extGroup = 13;
+  static const int _extRasterLayer = 14;
   static const int _extBits = 4;
   static const int _repeatBackWindow = 8;
   static const int _dimensionModeSquare64 = 0;
@@ -221,9 +223,10 @@ class MCOImageV4Codec {
     final yBits = _coordinateBits(document.height);
     final scalarBits = _scalarBits(document.width, document.height);
     final profileColorBits = _profileColorBits(document.paletteProfile);
+    final mode = _effectiveObjectMode(document);
 
     writer
-      ..writeBits(document.mode.index, _modeBits)
+      ..writeBits(mode.index, _modeBits)
       ..writeBits(document.paletteProfile.index, 4);
     _writeDimensions(writer, document.width, document.height);
 
@@ -245,6 +248,18 @@ class MCOImageV4Codec {
     final figures = document.figures.where((figure) => figure.visible).toList();
     for (var index = 0; index < figures.length;) {
       final figure = figures[index];
+      if (figure is MCOImageV4RasterLayer) {
+        writer.writeWriter(
+          _encodeRasterLayerCommand(
+            figure,
+            document,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
+        index++;
+        continue;
+      }
       currentStyle = _writeStyleChanges(
         writer,
         currentStyle,
@@ -436,9 +451,17 @@ class MCOImageV4Codec {
     final history = <MCOImageV4Figure>[];
 
     void addFigure(MCOImageV4Figure figure) {
-      _validateFigure(figure, width, height, palette.length);
+      _validateFigure(
+        figure,
+        width,
+        height,
+        paletteProfile,
+        palette.length,
+      );
       figures.add(figure);
-      history.add(figure);
+      if (figure is! MCOImageV4RasterLayer) {
+        history.add(figure);
+      }
     }
 
     while (true) {
@@ -492,6 +515,8 @@ class MCOImageV4Codec {
             xBits: xBits,
             yBits: yBits,
             scalarBits: scalarBits,
+            paletteProfile: paletteProfile,
+            allowRasterLayer: mode == MCOImageV4Mode.mixed,
             localColorFromProfileRef: optionalLocalColorFromProfileRef,
           );
           currentStyle = result.style;
@@ -511,6 +536,11 @@ class MCOImageV4Codec {
           );
           addFigure(figure);
       }
+    }
+    if (mode == MCOImageV4Mode.mixed && !_containsRasterLayer(figures)) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 mixed document has no raster layers',
+      );
     }
     return MCOImageV4Document(
       mode: mode,
@@ -891,6 +921,8 @@ class MCOImageV4Codec {
         throw const MCOImageInvalidInputException('Unexpected v4 path');
       case MCOImageV4Group():
         throw const MCOImageInvalidInputException('Unexpected v4 group');
+      case MCOImageV4RasterLayer():
+        throw const MCOImageInvalidInputException('Unexpected v4 raster layer');
     }
     candidates.sort((a, b) => a.bitLength.compareTo(b.bitLength));
     return candidates.first;
@@ -929,6 +961,48 @@ class MCOImageV4Codec {
           yBits: yBits,
         ),
       );
+  }
+
+  _V4BitWriter _encodeRasterLayerCommand(
+    MCOImageV4RasterLayer layer,
+    MCOImageV4Document document, {
+    required int xBits,
+    required int yBits,
+  }) {
+    final image = MCOImage(
+      width: layer.width,
+      height: layer.height,
+      paletteProfile: document.paletteProfile,
+      pixels: layer.pixels,
+      transparentColor: layer.transparentColor,
+      encodingVersion: MCOImageEncodingVersion.v3,
+    );
+    final encoded = MCOImageV3Codec().encode(
+      image,
+      compressionLevel: mcoImageCompressionLevelExtreme,
+      includePacketNonce: false,
+    );
+    final payload = Uint8List.sublistView(
+      encoded.body,
+      1,
+    );
+    final v3HeaderHigh = encoded.body[0] >> 4;
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extRasterLayer, _extBits);
+    _writePoint(
+      writer,
+      MCOImageV4Point(layer.x, layer.y),
+      xBits,
+      yBits,
+      width: document.width,
+      height: document.height,
+    );
+    writer
+      ..writeBits(v3HeaderHigh, 4)
+      ..writeCompactUint(payload.length)
+      ..writeBytes(payload);
+    return writer;
   }
 
   _V4BitWriter _encodeFullFigureCommand(
@@ -1030,6 +1104,8 @@ class MCOImageV4Codec {
         throw const MCOImageInvalidInputException('Unexpected v4 path');
       case MCOImageV4Group():
         throw const MCOImageInvalidInputException('Unexpected v4 group');
+      case MCOImageV4RasterLayer():
+        throw const MCOImageInvalidInputException('Unexpected v4 raster layer');
     }
     return writer;
   }
@@ -1882,6 +1958,8 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
     required int scalarBits,
+    required PaletteProfile paletteProfile,
+    required bool allowRasterLayer,
     required int? Function() localColorFromProfileRef,
   }) {
     _V4ExtendedReadResult one(MCOImageV4Figure figure) =>
@@ -2138,6 +2216,22 @@ class MCOImageV4Codec {
             yBits: yBits,
           ),
         );
+      case _extRasterLayer:
+        if (!allowRasterLayer) {
+          throw const MCOImageInvalidPayloadException(
+            'MCOimg v4 raster layer is only valid in mixed mode',
+          );
+        }
+        return one(
+          _readRasterLayer(
+            reader,
+            paletteProfile: paletteProfile,
+            width: width,
+            height: height,
+            xBits: xBits,
+            yBits: yBits,
+          ),
+        );
       case _extGroup:
         final count = reader.readCompactUint() + 1;
         var nestedStyle = style;
@@ -2210,6 +2304,8 @@ class MCOImageV4Codec {
                 xBits: xBits,
                 yBits: yBits,
                 scalarBits: scalarBits,
+                paletteProfile: paletteProfile,
+                allowRasterLayer: false,
                 localColorFromProfileRef: localColorFromProfileRef,
               );
               nestedStyle = result.style;
@@ -2244,6 +2340,46 @@ class MCOImageV4Codec {
           currentMaxSupportedVersion: version,
         );
     }
+  }
+
+  MCOImageV4RasterLayer _readRasterLayer(
+    _V4BitReader reader, {
+    required PaletteProfile paletteProfile,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+  }) {
+    final origin = _readPoint(reader, width, height, xBits, yBits);
+    final v3HeaderHigh = reader.readBits(4);
+    final payloadLength = reader.readCompactUint();
+    if (payloadLength < 2) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 raster layer payload too short',
+      );
+    }
+    final payload = reader.readBytes(payloadLength);
+    final body = Uint8List(payload.length + 1)
+      ..[0] = (v3HeaderHigh << 4) | paletteProfile.index
+      ..setRange(
+        1,
+        1 + payload.length,
+        payload,
+      );
+    final image = MCOImageV3Codec().decodeBodyWithoutPacketNonce(body);
+    if (image.paletteProfile != paletteProfile) {
+      throw const MCOImageInvalidPayloadException(
+        'MCOimg v4 raster layer palette profile mismatch',
+      );
+    }
+    return MCOImageV4RasterLayer(
+      x: origin.x,
+      y: origin.y,
+      width: image.width,
+      height: image.height,
+      pixels: image.pixels,
+      transparentColor: image.transparentColor,
+    );
   }
 
   MCOImageV4Path _readOrthogonalPath(
@@ -2498,7 +2634,10 @@ class MCOImageV4Codec {
                 ) !=
                 null
           : color >= 0 &&
-                color < MCOImagePalette.colorsFor(document.paletteProfile).length;
+                color <
+                    MCOImagePalette.colorsFor(
+                      document.paletteProfile,
+                    ).length;
       if (!valid || !seen.add(color)) {
         throw const MCOImageInvalidInputException('Invalid v4 palette color');
       }
@@ -2518,6 +2657,7 @@ class MCOImageV4Codec {
         figure,
         document.width,
         document.height,
+        document.paletteProfile,
         document.palette.length,
       );
     }
@@ -2526,16 +2666,37 @@ class MCOImageV4Codec {
   static bool _isObjectMode(MCOImageV4Mode mode) =>
       mode == MCOImageV4Mode.vector || mode == MCOImageV4Mode.mixed;
 
+  static MCOImageV4Mode _effectiveObjectMode(MCOImageV4Document document) =>
+      _containsRasterLayer(document.figures)
+          ? MCOImageV4Mode.mixed
+          : MCOImageV4Mode.vector;
+
+  static bool _containsRasterLayer(Iterable<MCOImageV4Figure> figures) {
+    for (final figure in figures) {
+      if (!figure.visible) continue;
+      if (figure is MCOImageV4RasterLayer) return true;
+      if (figure is MCOImageV4Group && _containsRasterLayer(figure.figures)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static void _validateFigure(
     MCOImageV4Figure figure,
-    int width,
-    int height,
+    int canvasWidth,
+    int canvasHeight,
+    PaletteProfile paletteProfile,
     int paletteLength,
   ) {
-    _validateStyle(figure.style, paletteLength, math.max(width, height));
+    _validateStyle(
+      figure.style,
+      paletteLength,
+      math.max(canvasWidth, canvasHeight),
+    );
     void point(MCOImageV4Point value) {
-      if (!_isCoordinateInRange(value.x, width) ||
-          !_isCoordinateInRange(value.y, height)) {
+      if (!_isCoordinateInRange(value.x, canvasWidth) ||
+          !_isCoordinateInRange(value.y, canvasHeight)) {
         throw const MCOImageInvalidInputException(
           'MCOimg v4 point is outside the coordinate range',
         );
@@ -2578,17 +2739,53 @@ class MCOImageV4Codec {
       case MCOImageV4Wave(:final start, :final end, :final depth):
         point(start);
         point(end);
-        if (depth == 0 || depth.abs() > math.max(width, height)) {
+        if (depth == 0 || depth.abs() > math.max(canvasWidth, canvasHeight)) {
           throw const MCOImageInvalidInputException(
             'Invalid MCOimg v4 wave depth',
           );
+        }
+      case MCOImageV4RasterLayer(
+        :final x,
+        :final y,
+        :final width,
+        :final height,
+        :final pixels,
+        :final transparentColor,
+      ):
+        point(MCOImageV4Point(x, y));
+        if (width < 1 || width > 256 || height < 1 || height > 256) {
+          throw const MCOImageInvalidInputException(
+            'Invalid MCOimg v4 raster layer size',
+          );
+        }
+        if (pixels.length != width * height) {
+          throw const MCOImageInvalidInputException(
+            'Invalid MCOimg v4 raster layer pixels',
+          );
+        }
+        if (transparentColor != null) {
+          _colorRefForProfile(paletteProfile, transparentColor);
+        }
+        for (final color in pixels) {
+          _colorRefForProfile(paletteProfile, color);
         }
       case MCOImageV4Group(:final figures):
         if (figures.isEmpty) {
           throw const MCOImageInvalidInputException('MCOimg v4 group is empty');
         }
         for (final child in figures.where((figure) => figure.visible)) {
-          _validateFigure(child, width, height, paletteLength);
+          if (child is MCOImageV4RasterLayer) {
+            throw const MCOImageInvalidInputException(
+              'MCOimg v4 raster layer cannot be nested in a group',
+            );
+          }
+          _validateFigure(
+            child,
+            canvasWidth,
+            canvasHeight,
+            paletteProfile,
+            paletteLength,
+          );
         }
     }
   }
@@ -3202,6 +3399,12 @@ class _V4BitWriter {
     } while (remaining != 0);
   }
 
+  void writeBytes(Uint8List bytes) {
+    for (final byte in bytes) {
+      writeBits(byte, 8);
+    }
+  }
+
   void writeWriter(_V4BitWriter other) {
     final reader = _V4BitReader(other.toBytes(), bitLimit: other.bitLength);
     while (reader.remainingBits > 0) {
@@ -3275,6 +3478,15 @@ class _V4BitReader {
       shift += 7;
     }
     throw const MCOImageInvalidPayloadException('V4 bit varuint is too long');
+  }
+
+  Uint8List readBytes(int length) {
+    if (length < 0 || length > remainingBits ~/ 8) {
+      throw const MCOImageInvalidPayloadException('Unexpected end of v4 bits');
+    }
+    return Uint8List.fromList(
+      List<int>.generate(length, (_) => readBits(8), growable: false),
+    );
   }
 
   void finish() {
