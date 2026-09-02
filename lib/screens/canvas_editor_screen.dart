@@ -1185,6 +1185,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         selectedFigure == null ||
         selectedFigure is! MCOImageV4Path ||
         selectedFigure.points.length >= 3;
+    final backgroundColorValue = _vectorColorValueForLocalIndex(
+      document,
+      document.backgroundColor,
+    );
+    final backgroundSwatchColor = backgroundColorValue == null
+        ? null
+        : _profileColor(document.paletteProfile, backgroundColorValue);
 
     Widget colorSwatch({
       required int? colorValue,
@@ -1239,12 +1246,21 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(bottom: 12),
-          leading: const Icon(Icons.format_color_fill_outlined),
-          title: Text(context.l10n.chat_canvasV4Background),
-          subtitle: Text(
-            document.backgroundColor == null
-                ? context.l10n.chat_canvasV4Transparent
-                : '#${document.backgroundColor! + 1}',
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(context.l10n.chat_canvasV4Background),
+              const SizedBox(width: 16),
+              Tooltip(
+                message: document.backgroundColor == null
+                    ? context.l10n.chat_canvasV4Transparent
+                    : context.l10n.chat_canvasV4Background,
+                child: _AlphaSwatch(
+                  color: backgroundSwatchColor,
+                  selected: false,
+                ),
+              ),
+            ],
           ),
           children: [
             Align(
@@ -1650,8 +1666,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Widget _buildVectorV4Tools() {
     const buttonSize = 48.0;
+    const toolCellWidth = 74.0;
+    const toolCellHeight = 78.0;
     const gap = SizedBox(width: 4);
     final colorScheme = Theme.of(context).colorScheme;
+    final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+      fontSize: 11,
+      height: 1.15,
+    );
 
     ButtonStyle? selectedStyle(bool selected) => selected
         ? IconButton.styleFrom(
@@ -1662,10 +1684,36 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
     Widget fixedButton({
       required Widget child,
+      required String label,
+      required bool enabled,
+      bool selected = false,
     }) {
-      return SizedBox.square(
-        dimension: buttonSize,
-        child: Center(child: child),
+      return SizedBox(
+        width: toolCellWidth,
+        height: toolCellHeight,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: buttonSize,
+              child: Center(child: child),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: labelStyle?.copyWith(
+                color: !enabled
+                    ? colorScheme.onSurface.withValues(alpha: 0.38)
+                    : selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurface,
+              ),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       );
     }
 
@@ -1673,9 +1721,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       required VoidCallback? onPressed,
       required String tooltip,
       required IconData icon,
+      String? label,
       bool selected = false,
     }) {
       return fixedButton(
+        label: label ?? tooltip,
+        enabled: onPressed != null,
+        selected: selected,
         child: IconButton.outlined(
           onPressed: onPressed,
           tooltip: tooltip,
@@ -1689,11 +1741,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       required _CanvasTool tool,
       required String tooltip,
       required IconData icon,
+      String? label,
     }) {
       return actionButton(
         onPressed: () => _selectCanvasTool(tool),
         tooltip: tooltip,
         icon: icon,
+        label: label,
         selected: _selectedTool == tool,
       );
     }
@@ -1711,12 +1765,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           onPressed: _canCloneSelectedV4Figure ? _cloneSelectedV4Figure : null,
           tooltip: context.l10n.common_copy,
           icon: Icons.content_copy,
+          label: context.l10n.common_copy,
         ),
         gap,
         actionButton(
           onPressed: _canEditSelectedV4Figure ? _editSelectedV4Figure : null,
           tooltip: context.l10n.common_edit,
           icon: Icons.account_tree_outlined,
+          label: context.l10n.common_edit,
         ),
         gap,
         actionButton(
@@ -1725,6 +1781,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               : null,
           tooltip: 'Добавлять новые фигуры в выбранную группу',
           icon: Icons.lock,
+          label: 'В группу',
           selected: _isAppendingToSelectedV4Group,
         ),
         gap,
@@ -1732,6 +1789,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           tool: _CanvasTool.select,
           tooltip: context.l10n.chat_canvasV4ToolSelect,
           icon: Icons.near_me_outlined,
+          label: 'Выбор и сдвиг',
         ),
         gap,
         toolButton(
@@ -1750,6 +1808,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           tool: _CanvasTool.rectangle,
           tooltip: context.l10n.chat_canvasV4ToolRect,
           icon: Icons.crop_square,
+          label: 'Прямоуг.',
         ),
       ],
     );
@@ -1767,6 +1826,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           onPressed: _toggleV4GroupSelectionMode,
           tooltip: 'Выбрать фигуры для объединения',
           icon: Icons.lock_outline,
+          label: 'Объединить',
           selected: _v4GroupSelectionMode,
         ),
         gap,
@@ -1776,6 +1836,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               : null,
           tooltip: 'Разгруппировать',
           icon: Icons.lock_open_outlined,
+          label: 'Разгрупп.',
         ),
         gap,
         actionButton(
@@ -1784,6 +1845,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
               : null,
           tooltip: 'Растрировать слой',
           icon: Icons.grid_on,
+          label: 'Растр.',
         ),
         gap,
         toolButton(
@@ -8691,12 +8753,12 @@ class _PaletteSwatch extends StatelessWidget {
 class _AlphaSwatch extends StatelessWidget {
   final Color? color;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _AlphaSwatch({
     required this.color,
     required this.selected,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
