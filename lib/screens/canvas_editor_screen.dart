@@ -368,6 +368,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const String _prefsUnlockSizeKey = 'canvas_editor_unlock_size';
   static const String _prefsShowGridKey = 'canvas_editor_show_grid';
   static const String _prefsShowRulerKey = 'canvas_editor_show_ruler';
+  static const String _prefsV4ObjectsExpandedKey =
+      'canvas_editor_v4_objects_expanded';
   static const String _prefsEncodingVersionKey =
       'canvas_editor_encoding_version';
   static const String _prefsCompressionLevelKey =
@@ -401,6 +403,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   final _heightController = TextEditingController(text: '$_defaultSize');
   final _toolsScrollController = ScrollController();
   final _sizeActionsScrollController = ScrollController();
+  final _canvasShortcutFocusNode = FocusNode(
+    debugLabel: 'Canvas editor shortcuts',
+  );
   final _codec = MCOImageCodec();
   final _v4Codec = const MCOImageV4Codec();
 
@@ -479,6 +484,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   PaletteProfile? _v4ReferencePaletteProfile;
   int? _v4ReferenceTransparentColor;
   bool _v4ReferenceVisible = true;
+  bool _v4ObjectsExpanded = true;
   final List<_CanvasHistoryEntry> _undoStack = <_CanvasHistoryEntry>[];
   final List<_CanvasHistoryEntry> _redoStack = <_CanvasHistoryEntry>[];
 
@@ -486,6 +492,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   void initState() {
     super.initState();
     _pixels = List.filled(_width * _height, _whiteIndex);
+    _v4ObjectsExpanded =
+        PrefsManager.instance.getBool(_prefsV4ObjectsExpandedKey) ?? true;
     final initialImage = widget.initialImage;
     if (initialImage is MCOImageV4Preview) {
       _loadSavedCanvasSettings();
@@ -525,6 +533,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _heightController.dispose();
     _toolsScrollController.dispose();
     _sizeActionsScrollController.dispose();
+    _canvasShortcutFocusNode.dispose();
     super.dispose();
   }
 
@@ -545,7 +554,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           leading: BackButton(onPressed: _closeCanvasEditor),
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
+          child: Focus(
+            focusNode: _canvasShortcutFocusNode,
+            autofocus: true,
+            onKeyEvent: _handleCanvasShortcutKey,
+            child: SingleChildScrollView(
             physics: showLockButton && _canvasInputLocked
                 ? const NeverScrollableScrollPhysics()
                 : null,
@@ -840,6 +853,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                 ),
               ],
             ),
+            ),
           ),
         ),
       ),
@@ -852,6 +866,76 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
     Navigator.pop(context);
+  }
+
+  void _focusCanvasShortcuts() {
+    if (!_canvasShortcutFocusNode.hasPrimaryFocus) {
+      _canvasShortcutFocusNode.requestFocus();
+    }
+  }
+
+  KeyEventResult _handleCanvasShortcutKey(FocusNode node, KeyEvent event) {
+    if (!_isVectorV4 || _isEditingV4RasterLayer) {
+      return KeyEventResult.ignored;
+    }
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (!_canvasShortcutFocusNode.hasPrimaryFocus) {
+      return KeyEventResult.ignored;
+    }
+
+    final key = event.logicalKey;
+    if (event is KeyDownEvent && HardwareKeyboard.instance.isControlPressed) {
+      if (_isCanvasShortcutKey(
+        event,
+        LogicalKeyboardKey.keyZ,
+        PhysicalKeyboardKey.keyZ,
+      )) {
+        if (_undoStack.isEmpty) return KeyEventResult.ignored;
+        _undoCanvasAction();
+        return KeyEventResult.handled;
+      }
+      if (_isCanvasShortcutKey(
+        event,
+        LogicalKeyboardKey.keyY,
+        PhysicalKeyboardKey.keyY,
+      )) {
+        if (_redoStack.isEmpty) return KeyEventResult.ignored;
+        _redoCanvasAction();
+        return KeyEventResult.handled;
+      }
+    }
+
+    if (key == LogicalKeyboardKey.delete) {
+      return _deleteSelectedV4Figure()
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
+    }
+
+    if (_selectedTool != _CanvasTool.select) {
+      return KeyEventResult.ignored;
+    }
+
+    final delta = switch (key) {
+      LogicalKeyboardKey.arrowLeft => const (dx: -1, dy: 0),
+      LogicalKeyboardKey.arrowRight => const (dx: 1, dy: 0),
+      LogicalKeyboardKey.arrowUp => const (dx: 0, dy: -1),
+      LogicalKeyboardKey.arrowDown => const (dx: 0, dy: 1),
+      _ => null,
+    };
+    if (delta == null) return KeyEventResult.ignored;
+    return _translateSelectedV4Figure(delta.dx, delta.dy)
+        ? KeyEventResult.handled
+        : KeyEventResult.ignored;
+  }
+
+  bool _isCanvasShortcutKey(
+    KeyEvent event,
+    LogicalKeyboardKey logicalKey,
+    PhysicalKeyboardKey physicalKey,
+  ) {
+    return event.logicalKey == logicalKey || event.physicalKey == physicalKey;
   }
 
   Widget _buildVectorFinalPayloadSection(BuildContext context) {
@@ -1354,113 +1438,123 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Widget _buildVectorObjects() {
     final document = _v4Document;
     if (document == null) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: EdgeInsets.zero,
+      initiallyExpanded: _v4ObjectsExpanded,
+      onExpansionChanged: _setV4ObjectsExpanded,
+      title: Text(
+        context.l10n.chat_canvasV4Objects,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       children: [
-        Text(
-          context.l10n.chat_canvasV4Objects,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        if (_v4GroupSelectionMode) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+        SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Выбрано: ${_v4GroupSelectionIndexes.length}'),
-              OutlinedButton.icon(
-                onPressed: _canMergeCheckedV4Figures
-                    ? _mergeCheckedV4Figures
-                    : null,
-                icon: const Icon(Icons.lock_outline),
-                label: const Text('Объединить выбранные'),
-              ),
-              TextButton(
-                onPressed: _cancelV4GroupSelection,
-                child: Text(context.l10n.common_cancel),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (document.figures.isEmpty)
-          Text(context.l10n.chat_canvasV4NoObjects)
-        else
-          for (var i = document.figures.length - 1; i >= 0; i--)
-            ListTile(
-              selected:
-                  i == _selectedV4FigureIndex ||
-                  _v4GroupSelectionIndexes.contains(i),
-              contentPadding: EdgeInsets.zero,
-              leading: _v4GroupSelectionMode
-                  ? Checkbox(
-                      value: _v4GroupSelectionIndexes.contains(i),
-                      onChanged: (selected) =>
-                          _setV4FigureCheckedForGroup(i, selected ?? false),
-                    )
-                  : IconButton(
-                      tooltip: document.figures[i].visible
-                          ? context.l10n.chat_canvasV4HideFigure
-                          : context.l10n.chat_canvasV4ShowFigure,
-                      onPressed: () => _toggleVectorFigureVisibility(i),
-                      icon: Icon(
-                        document.figures[i].visible
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
+              if (_v4GroupSelectionMode) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('Выбрано: ${_v4GroupSelectionIndexes.length}'),
+                    OutlinedButton.icon(
+                      onPressed: _canMergeCheckedV4Figures
+                          ? _mergeCheckedV4Figures
+                          : null,
+                      icon: const Icon(Icons.lock_outline),
+                      label: const Text('Объединить выбранные'),
                     ),
-              title: Row(
-                children: [
-                  _V4FigurePreview(
-                    document: document,
-                    figure: document.figures[i],
+                    TextButton(
+                      onPressed: _cancelV4GroupSelection,
+                      child: Text(context.l10n.common_cancel),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (document.figures.isEmpty)
+                Text(context.l10n.chat_canvasV4NoObjects)
+              else
+                for (var i = document.figures.length - 1; i >= 0; i--)
+                  ListTile(
                     selected:
                         i == _selectedV4FigureIndex ||
-                        i == _v4AppendGroupIndex ||
                         _v4GroupSelectionIndexes.contains(i),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      i == _v4AppendGroupIndex
-                          ? '${_vectorFigureLabel(document.figures[i])} +'
-                          : _vectorFigureLabel(document.figures[i]),
-                    ),
-                  ),
-                ],
-              ),
-              onTap: () => _v4GroupSelectionMode
-                  ? _toggleV4FigureCheckedForGroup(i)
-                  : _selectVectorFigure(i),
-              trailing: _v4GroupSelectionMode
-                  ? null
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
+                    contentPadding: EdgeInsets.zero,
+                    leading: _v4GroupSelectionMode
+                        ? Checkbox(
+                            value: _v4GroupSelectionIndexes.contains(i),
+                            onChanged: (selected) =>
+                                _setV4FigureCheckedForGroup(i, selected ?? false),
+                          )
+                        : IconButton(
+                            tooltip: document.figures[i].visible
+                                ? context.l10n.chat_canvasV4HideFigure
+                                : context.l10n.chat_canvasV4ShowFigure,
+                            onPressed: () => _toggleVectorFigureVisibility(i),
+                            icon: Icon(
+                              document.figures[i].visible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                    title: Row(
                       children: [
-                        IconButton(
-                          tooltip: context.l10n.chat_canvasV4MoveUp,
-                          onPressed: i == document.figures.length - 1
-                              ? null
-                              : () => _reorderVectorFigure(i, i + 1),
-                          icon: const Icon(Icons.arrow_upward),
+                        _V4FigurePreview(
+                          document: document,
+                          figure: document.figures[i],
+                          selected:
+                              i == _selectedV4FigureIndex ||
+                              i == _v4AppendGroupIndex ||
+                              _v4GroupSelectionIndexes.contains(i),
                         ),
-                        IconButton(
-                          tooltip: context.l10n.chat_canvasV4MoveDown,
-                          onPressed: i == 0
-                              ? null
-                              : () => _reorderVectorFigure(i, i - 1),
-                          icon: const Icon(Icons.arrow_downward),
-                        ),
-                        IconButton(
-                          tooltip: MaterialLocalizations.of(context)
-                              .deleteButtonTooltip,
-                          onPressed: () => _deleteVectorFigure(i),
-                          icon: const Icon(Icons.delete_outline),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            i == _v4AppendGroupIndex
+                                ? '${_vectorFigureLabel(document.figures[i])} +'
+                                : _vectorFigureLabel(document.figures[i]),
+                          ),
                         ),
                       ],
                     ),
-            ),
+                    onTap: () => _v4GroupSelectionMode
+                        ? _toggleV4FigureCheckedForGroup(i)
+                        : _selectVectorFigure(i),
+                    trailing: _v4GroupSelectionMode
+                        ? null
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: context.l10n.chat_canvasV4MoveUp,
+                                onPressed: i == document.figures.length - 1
+                                    ? null
+                                    : () => _reorderVectorFigure(i, i + 1),
+                                icon: const Icon(Icons.arrow_upward),
+                              ),
+                              IconButton(
+                                tooltip: context.l10n.chat_canvasV4MoveDown,
+                                onPressed: i == 0
+                                    ? null
+                                    : () => _reorderVectorFigure(i, i - 1),
+                                icon: const Icon(Icons.arrow_downward),
+                              ),
+                              IconButton(
+                                tooltip: MaterialLocalizations.of(context)
+                                    .deleteButtonTooltip,
+                                onPressed: () => _deleteVectorFigure(i),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                  ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1729,7 +1823,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         enabled: onPressed != null,
         selected: selected,
         child: IconButton.outlined(
-          onPressed: onPressed,
+          onPressed: onPressed == null
+              ? null
+              : () {
+                  _focusCanvasShortcuts();
+                  onPressed();
+                },
           tooltip: tooltip,
           icon: Icon(icon),
           style: selectedStyle(selected),
@@ -2004,6 +2103,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   height: canvasSize.height,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
+                    onTapDown: (_) => _focusCanvasShortcuts(),
                     onTapUp: canDraw && _isVectorV4
                         ? (details) => _handleVectorTap(
                             details.localPosition,
@@ -2955,6 +3055,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (showRuler == _showRuler) return;
     setState(() => _showRuler = showRuler);
     unawaited(PrefsManager.instance.setBool(_prefsShowRulerKey, showRuler));
+  }
+
+  void _setV4ObjectsExpanded(bool expanded) {
+    if (expanded == _v4ObjectsExpanded) return;
+    setState(() => _v4ObjectsExpanded = expanded);
+    unawaited(
+      PrefsManager.instance.setBool(_prefsV4ObjectsExpandedKey, expanded),
+    );
   }
 
   bool get _supportsDynamicPalettes =>
@@ -5334,6 +5442,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _selectVectorFigure(int? index) {
+    _focusCanvasShortcuts();
     final document = _v4Document;
     if (document == null ||
         index == null ||
@@ -5383,6 +5492,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       ..clear()
       ..addAll(nextGroupSelectionIndexes);
     _commitVectorDocument(document.copyWith(figures: figures));
+  }
+
+  bool _deleteSelectedV4Figure() {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (document == null ||
+        index == null ||
+        index < 0 ||
+        index >= document.figures.length) {
+      return false;
+    }
+    _deleteVectorFigure(index);
+    return true;
   }
 
   void _reorderVectorFigure(int from, int to) {
@@ -6056,6 +6178,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _handleVectorTap(Offset position, Size size) {
+    _focusCanvasShortcuts();
     final point = _vectorGridPoint(
       position,
       size,
@@ -6109,6 +6232,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _handleVectorPanStart(Offset position, Size size) {
+    _focusCanvasShortcuts();
     final point = _vectorGridPoint(
       position,
       size,
@@ -6430,6 +6554,28 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _normalizeV4GroupState(next);
     });
     _markPayloadDirty();
+  }
+
+  bool _translateSelectedV4Figure(int dx, int dy) {
+    final document = _v4Document;
+    final index = _selectedV4FigureIndex;
+    if (document == null ||
+        index == null ||
+        index < 0 ||
+        index >= document.figures.length ||
+        (dx == 0 && dy == 0)) {
+      return false;
+    }
+    final figures = [...document.figures];
+    figures[index] = figures[index].translated(dx, dy);
+    _commitVectorDocument(document.copyWith(figures: figures));
+    setState(() {
+      _selectedV4FigureIndex = index;
+      if (_v4AppendGroupIndex != index) {
+        _v4AppendGroupIndex = null;
+      }
+    });
+    return true;
   }
 
   void _moveSelectedVectorFigure(MCOImageV4Point point) {
