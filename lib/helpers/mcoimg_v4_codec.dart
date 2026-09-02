@@ -66,6 +66,10 @@ class MCOImageV4Codec {
 
   const MCOImageV4Codec();
 
+  static void clearRasterLayerEncodeCache() {
+    _rasterLayerEncodeCache.clear();
+  }
+
   static int coordinateMarginForCanvasSize(int size) =>
       math.min(_coordinateOverscanMax, math.max(1, (size + 7) ~/ 8));
 

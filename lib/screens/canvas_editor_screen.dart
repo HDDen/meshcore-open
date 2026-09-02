@@ -115,6 +115,13 @@ class _V4RasterLayerEditSession {
   });
 }
 
+class _V4RasterLayerTrimResult {
+  final MCOImageV4RasterLayer? layer;
+
+  const _V4RasterLayerTrimResult.keep(this.layer);
+  const _V4RasterLayerTrimResult.remove() : layer = null;
+}
+
 class _MCOImageEncodeRequest {
   final int width;
   final int height;
@@ -437,6 +444,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   Object? _v4EncodeError;
   _MCOImageEncodeCacheKey? _currentEncodedCacheKey;
   MCOImageV4Document? _v4Document;
+  bool _v4FinalPayloadExpanded = false;
+  bool _v4FinalTrimRasterOverlaps = false;
+  bool _v4FinalRasterizeVectors = false;
+  bool _v4FinalPayloadInProgress = false;
+  int _v4FinalPayloadRequestId = 0;
+  Stopwatch? _v4FinalPayloadStopwatch;
+  Timer? _v4FinalPayloadElapsedTimer;
+  Duration? _v4FinalPayloadElapsed;
+  int? _v4FinalPayloadChars;
+  MCOImageV4Document? _v4FinalPayloadDocument;
+  EncodedMCOImageV4? _v4FinalPayloadEncoded;
+  Object? _v4FinalPayloadError;
   MCOImageV4Figure? _v4DraftFigure;
   List<MCOImageV4Point>? _v4PencilPoints;
   final List<MCOImageV4Point> _v4ShapePoints = <MCOImageV4Point>[];
@@ -494,6 +513,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _payloadRefreshTimer?.cancel();
     _payloadRefreshTimer = null;
     _stopPayloadRefreshElapsedTimer();
+    _v4FinalPayloadRequestId++;
+    _stopV4FinalPayloadElapsedTimer();
     _cancelActiveEncodeTasksNow();
     final refreshCompletion = _payloadRefreshCompletion;
     _payloadRefreshCompletion = null;
@@ -787,6 +808,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                   ),
                 ],
+                if (_isVectorV4 && !_isEditingV4RasterLayer) ...[
+                  const SizedBox(height: 12),
+                  _buildVectorFinalPayloadSection(context),
+                ],
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -827,6 +852,100 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
     Navigator.pop(context);
+  }
+
+  Widget _buildVectorFinalPayloadSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final elapsed = _v4FinalPayloadElapsed;
+    final payload = _v4FinalPayloadChars;
+    final error = _v4FinalPayloadError;
+    final resultText = _v4FinalPayloadInProgress
+        ? 'Расчёт...${elapsed == null ? '' : ' (${_formatPayloadRefreshElapsed(elapsed)})'}'
+        : payload == null
+        ? 'Итоговый payload: -'
+        : 'Итоговый payload: $payload${elapsed == null ? '' : ' (${_formatPayloadRefreshElapsed(elapsed)})'}';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: _v4FinalPayloadExpanded,
+        onExpansionChanged: (expanded) =>
+            setState(() => _v4FinalPayloadExpanded = expanded),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        title: const Text('Рассчитать финальный payload'),
+        children: [
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Разрешить обрезку перекрытия растровых слоёв'),
+            value: _v4FinalTrimRasterOverlaps,
+            onChanged: _v4FinalPayloadInProgress
+                ? null
+                : (value) => setState(() {
+                    _v4FinalTrimRasterOverlaps = value ?? false;
+                    _clearV4FinalPayloadResult(cancelCalculation: false);
+                  }),
+          ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Разрешить преобразование в растр'),
+            value: _v4FinalRasterizeVectors,
+            onChanged: _v4FinalPayloadInProgress
+                ? null
+                : (value) => setState(() {
+                    _v4FinalRasterizeVectors = value ?? false;
+                    _clearV4FinalPayloadResult(cancelCalculation: false);
+                  }),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              FilledButton.tonal(
+                onPressed: _toggleV4FinalPayloadCalculation,
+                child: Text(
+                  _v4FinalPayloadInProgress ? 'Остановить' : 'Рассчитать',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  resultText,
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          if (error != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                error.toString(),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: _v4FinalPayloadEncoded == null ||
+                      _v4FinalPayloadInProgress
+                  ? null
+                  : _sendV4FinalPayload,
+              child: const Text('Отправить перерасчитанный вариант'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildHorizontalScrollableButtonRow({
@@ -2621,6 +2740,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _loadInitialImage(MCOImage image) {
+    _clearV4FinalPayloadResult(cancelCalculation: true);
     // Reusing an existing message image should preserve its codec palette and
     // exact canvas dimensions instead of applying the user's last editor preset.
     _unlockCanvasSize =
@@ -2821,6 +2941,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _changeEncodingVersion(MCOImageEncodingVersion version) {
     if (version == _encodingVersion) return;
+    _clearV4FinalPayloadResult(cancelCalculation: true);
 
     if (version == MCOImageEncodingVersion.v4) {
       _enterVectorV4Mode();
@@ -3026,6 +3147,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _loadInitialVectorDocument(MCOImageV4Document document) {
+    _clearV4FinalPayloadResult(cancelCalculation: true);
     final profile = document.paletteProfile;
     final dynamicProfile = profile.isDynamic ? profile : _dynamicPaletteProfile;
     final selectedColor = profile.isDynamic
@@ -3935,6 +4057,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _markPayloadDirty() {
     if (_isVectorV4) {
+      _clearV4FinalPayloadResult(cancelCalculation: true);
       _payloadRefreshRequestId++;
       _currentEncodedCacheKey = null;
       _currentEncodedCandidate = null;
@@ -4251,6 +4374,175 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     return '${seconds.round()}s';
   }
 
+  void _toggleV4FinalPayloadCalculation() {
+    if (_v4FinalPayloadInProgress) {
+      _cancelV4FinalPayloadCalculation();
+      return;
+    }
+    unawaited(_calculateV4FinalPayload());
+  }
+
+  void _cancelV4FinalPayloadCalculation() {
+    _v4FinalPayloadRequestId++;
+    _stopV4FinalPayloadElapsedTimer();
+    if (!mounted) return;
+    setState(() {
+      _v4FinalPayloadInProgress = false;
+      _v4FinalPayloadStopwatch = null;
+      _v4FinalPayloadElapsed = null;
+    });
+  }
+
+  void _clearV4FinalPayloadResult({required bool cancelCalculation}) {
+    if (cancelCalculation) {
+      _v4FinalPayloadRequestId++;
+      _stopV4FinalPayloadElapsedTimer();
+      _v4FinalPayloadInProgress = false;
+      _v4FinalPayloadStopwatch = null;
+      _v4FinalPayloadElapsed = null;
+    }
+    _v4FinalPayloadChars = null;
+    _v4FinalPayloadDocument = null;
+    _v4FinalPayloadEncoded = null;
+    _v4FinalPayloadError = null;
+  }
+
+  Future<void> _calculateV4FinalPayload() async {
+    final document = _v4Document;
+    if (document == null || _v4FinalPayloadInProgress) return;
+
+    final requestId = ++_v4FinalPayloadRequestId;
+    setState(() {
+      _v4FinalPayloadInProgress = true;
+      _v4FinalPayloadStopwatch = Stopwatch()..start();
+      _v4FinalPayloadElapsed = Duration.zero;
+      _v4FinalPayloadChars = null;
+      _v4FinalPayloadDocument = null;
+      _v4FinalPayloadEncoded = null;
+      _v4FinalPayloadError = null;
+    });
+    _startV4FinalPayloadElapsedTimer(requestId);
+
+    try {
+      MCOImageV4Codec.clearRasterLayerEncodeCache();
+      var optimized = document;
+      _throwIfV4FinalPayloadCancelled(requestId);
+      if (_v4FinalTrimRasterOverlaps) {
+        optimized = await _optimizeV4RasterOverlaps(optimized, requestId);
+      }
+      _throwIfV4FinalPayloadCancelled(requestId);
+      if (_v4FinalRasterizeVectors) {
+        optimized = await _optimizeV4VectorRasterization(optimized, requestId);
+      }
+      if (_v4FinalTrimRasterOverlaps && _v4FinalRasterizeVectors) {
+        optimized = await _optimizeV4RasterOverlaps(optimized, requestId);
+      }
+      _throwIfV4FinalPayloadCancelled(requestId);
+
+      final encoded = _encodeVectorDocumentForPayload(optimized);
+      final payloadSize = _payloadSizeForEncodedV4(encoded);
+      final elapsed = _v4FinalPayloadStopwatch?.elapsed ?? Duration.zero;
+      _stopV4FinalPayloadElapsedTimer();
+      if (!mounted || requestId != _v4FinalPayloadRequestId) return;
+      setState(() {
+        _v4FinalPayloadInProgress = false;
+        _v4FinalPayloadStopwatch = null;
+        _v4FinalPayloadElapsed = elapsed;
+        _v4FinalPayloadDocument = optimized;
+        _v4FinalPayloadEncoded = encoded;
+        _v4FinalPayloadChars = payloadSize;
+      });
+    } on CancellableComputeCancelledException {
+      _stopV4FinalPayloadElapsedTimer();
+      if (!mounted || requestId != _v4FinalPayloadRequestId) return;
+      setState(() {
+        _v4FinalPayloadInProgress = false;
+        _v4FinalPayloadStopwatch = null;
+        _v4FinalPayloadElapsed = null;
+      });
+    } on Object catch (error) {
+      final elapsed = _v4FinalPayloadStopwatch?.elapsed ?? Duration.zero;
+      _stopV4FinalPayloadElapsedTimer();
+      if (!mounted || requestId != _v4FinalPayloadRequestId) return;
+      setState(() {
+        _v4FinalPayloadInProgress = false;
+        _v4FinalPayloadStopwatch = null;
+        _v4FinalPayloadElapsed = elapsed;
+        _v4FinalPayloadError = error;
+      });
+    }
+  }
+
+  void _startV4FinalPayloadElapsedTimer(int requestId) {
+    _v4FinalPayloadElapsedTimer?.cancel();
+    _v4FinalPayloadElapsedTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateV4FinalPayloadElapsed(requestId),
+    );
+  }
+
+  void _stopV4FinalPayloadElapsedTimer() {
+    _v4FinalPayloadElapsedTimer?.cancel();
+    _v4FinalPayloadElapsedTimer = null;
+  }
+
+  void _updateV4FinalPayloadElapsed(int requestId) {
+    if (!mounted ||
+        requestId != _v4FinalPayloadRequestId ||
+        !_v4FinalPayloadInProgress) {
+      _stopV4FinalPayloadElapsedTimer();
+      return;
+    }
+    final elapsed = _v4FinalPayloadStopwatch?.elapsed;
+    if (elapsed == null || elapsed == _v4FinalPayloadElapsed) return;
+    setState(() => _v4FinalPayloadElapsed = elapsed);
+  }
+
+  void _throwIfV4FinalPayloadCancelled(int requestId) {
+    if (!mounted || requestId != _v4FinalPayloadRequestId) {
+      throw const CancellableComputeCancelledException();
+    }
+  }
+
+  Future<void> _sendV4FinalPayload() async {
+    try {
+      if (!_finishV4RasterLayerEdit()) return;
+      final optimizedDocument = _v4FinalPayloadDocument;
+      if (optimizedDocument == null) return;
+      final encoded = _encodeVectorDocumentForPayload(
+        optimizedDocument,
+        nonce: null,
+      );
+      if (!mounted) return;
+      final payloadSize = _payloadSizeForEncodedV4(encoded);
+      final overflow = payloadSize - _effectivePayloadLimit;
+      if (overflow > 0) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(context.l10n.chat_canvasSendPayloadExceed(overflow)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        );
+        setState(() {
+          _v4FinalPayloadEncoded = encoded;
+          _v4FinalPayloadChars = payloadSize;
+        });
+        return;
+      }
+      final text = _v4Codec.textFromBody(encoded.body);
+      Navigator.pop(
+        context,
+        CanvasEditorResult.fromV4(text: text, encoded: encoded),
+      );
+    } on MCOImageCodecException catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
   String _encodingCandidateLabel(EncodedMCOImage candidate) {
     final parts = <String>[
       'v${candidate.codecVersion}',
@@ -4450,6 +4742,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
     return _v4Codec.textFromBody(encoded.body).length;
+  }
+
+  EncodedMCOImageV4 _encodeVectorDocumentForPayload(
+    MCOImageV4Document document, {
+    int? nonce = 0,
+  }) {
+    return _v4Codec.encode(
+      document,
+      nonce: nonce,
+      targetName: widget.replyTargetName,
+      replyTimestamp: widget.replyTimestamp,
+      compressionLevel: _compressionLevel,
+    );
   }
 
   int _displayPayloadSizeForEncoded(EncodedMCOImage encoded) {
@@ -5294,6 +5599,233 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     } finally {
       rendered.dispose();
     }
+  }
+
+  Future<MCOImageV4Document> _optimizeV4RasterOverlaps(
+    MCOImageV4Document source,
+    int requestId,
+  ) async {
+    var current = source;
+    for (var index = current.figures.length - 1; index >= 0; index--) {
+      _throwIfV4FinalPayloadCancelled(requestId);
+      final figure = current.figures[index];
+      if (figure is! MCOImageV4RasterLayer || !figure.visible) continue;
+      final aboveFigures = current.figures
+          .skip(index + 1)
+          .where((figure) => figure.visible)
+          .toList(growable: false);
+      if (aboveFigures.isEmpty) continue;
+
+      final trimmed = await _trimV4RasterLayerCoveredByFigures(
+        current,
+        figure,
+        aboveFigures,
+      );
+      _throwIfV4FinalPayloadCancelled(requestId);
+      if (trimmed == null) continue;
+
+      final figures = [...current.figures];
+      final trimmedLayer = trimmed.layer;
+      if (trimmedLayer == null) {
+        figures.removeAt(index);
+      } else {
+        figures[index] = trimmedLayer;
+      }
+      final candidate = current.copyWith(figures: figures);
+      if (_v4PayloadSizeForDocument(candidate) <
+          _v4PayloadSizeForDocument(current)) {
+        current = candidate;
+      }
+    }
+    return current;
+  }
+
+  Future<MCOImageV4Document> _optimizeV4VectorRasterization(
+    MCOImageV4Document source,
+    int requestId,
+  ) async {
+    var current = source;
+    for (var index = 0; index < current.figures.length; index++) {
+      _throwIfV4FinalPayloadCancelled(requestId);
+      final figure = current.figures[index];
+      if (!figure.visible || figure is MCOImageV4RasterLayer) continue;
+
+      MCOImageV4RasterLayer rasterLayer;
+      try {
+        rasterLayer = await _rasterLayerFromV4Figure(current, figure);
+      } on Object {
+        continue;
+      }
+      _throwIfV4FinalPayloadCancelled(requestId);
+
+      final figures = [...current.figures];
+      figures[index] = rasterLayer;
+      final candidate = current.copyWith(
+        mode: MCOImageV4Mode.mixed,
+        figures: figures,
+      );
+      if (_v4PayloadSizeForDocument(candidate) <
+          _v4PayloadSizeForDocument(current)) {
+        current = candidate;
+      }
+    }
+    return current;
+  }
+
+  int _v4PayloadSizeForDocument(MCOImageV4Document document) {
+    return _payloadSizeForEncodedV4(_encodeVectorDocumentForPayload(document));
+  }
+
+  Future<_V4RasterLayerTrimResult?> _trimV4RasterLayerCoveredByFigures(
+    MCOImageV4Document document,
+    MCOImageV4RasterLayer layer,
+    List<MCOImageV4Figure> aboveFigures,
+  ) async {
+    final coverage = await _v4CoverageMaskForFigures(
+      document,
+      layer,
+      aboveFigures,
+    );
+    if (!coverage.contains(true)) return null;
+
+    var transparentColor = layer.transparentColor;
+    var coveredVisiblePixels = 0;
+    final keptVisibleColors = <int>{};
+    for (var i = 0; i < layer.pixels.length; i++) {
+      final pixel = layer.pixels[i];
+      final isVisible =
+          transparentColor == null || pixel != transparentColor;
+      if (!isVisible) continue;
+      if (coverage[i]) {
+        coveredVisiblePixels++;
+      } else {
+        keptVisibleColors.add(pixel);
+      }
+    }
+    if (coveredVisiblePixels == 0) return null;
+    if (keptVisibleColors.isEmpty) {
+      return const _V4RasterLayerTrimResult.remove();
+    }
+
+    if (transparentColor == null) {
+      for (final color in _rasterPaletteValues(document.paletteProfile)) {
+        if (!keptVisibleColors.contains(color)) {
+          transparentColor = color;
+          break;
+        }
+      }
+      if (transparentColor == null) return null;
+    }
+
+    final pixels = [...layer.pixels];
+    for (var i = 0; i < pixels.length; i++) {
+      if (coverage[i]) {
+        pixels[i] = transparentColor;
+      }
+    }
+    final cropped = _cropV4RasterLayerToVisiblePixels(
+      layer,
+      pixels,
+      transparentColor,
+    );
+    if (cropped == null) {
+      return const _V4RasterLayerTrimResult.remove();
+    }
+    return _V4RasterLayerTrimResult.keep(cropped);
+  }
+
+  Future<List<bool>> _v4CoverageMaskForFigures(
+    MCOImageV4Document document,
+    MCOImageV4RasterLayer layer,
+    List<MCOImageV4Figure> figures,
+  ) async {
+    final viewport = Rect.fromLTWH(
+      layer.x.toDouble(),
+      layer.y.toDouble(),
+      layer.width.toDouble(),
+      layer.height.toDouble(),
+    );
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    MCOImageV4Painter(
+      document.copyWith(
+        backgroundColor: null,
+        figures: figures,
+      ),
+      paintBackground: false,
+      showGrid: false,
+      logicalViewport: viewport,
+      antiAlias: false,
+    ).paint(canvas, Size(layer.width.toDouble(), layer.height.toDouble()));
+    final rendered = await recorder.endRecording().toImage(
+      layer.width,
+      layer.height,
+    );
+    try {
+      final rgba = await rendered.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (rgba == null) {
+        throw const MCOImageInvalidInputException(
+          'Cannot render MCOimg v4 coverage mask',
+        );
+      }
+      final bytes = rgba.buffer.asUint8List(
+        rgba.offsetInBytes,
+        rgba.lengthInBytes,
+      );
+      return List<bool>.generate(
+        layer.width * layer.height,
+        (index) => bytes[index * 4 + 3] >= 128,
+        growable: false,
+      );
+    } finally {
+      rendered.dispose();
+    }
+  }
+
+  MCOImageV4RasterLayer? _cropV4RasterLayerToVisiblePixels(
+    MCOImageV4RasterLayer layer,
+    List<int> pixels,
+    int transparentColor,
+  ) {
+    var minX = layer.width;
+    var minY = layer.height;
+    var maxX = -1;
+    var maxY = -1;
+    for (var y = 0; y < layer.height; y++) {
+      for (var x = 0; x < layer.width; x++) {
+        final color = pixels[y * layer.width + x];
+        if (color == transparentColor) continue;
+        minX = math.min(minX, x);
+        minY = math.min(minY, y);
+        maxX = math.max(maxX, x);
+        maxY = math.max(maxY, y);
+      }
+    }
+    if (maxX < minX || maxY < minY) return null;
+
+    final width = maxX - minX + 1;
+    final height = maxY - minY + 1;
+    final croppedPixels = List<int>.filled(width * height, transparentColor);
+    for (var y = 0; y < height; y++) {
+      final sourceStart = (minY + y) * layer.width + minX;
+      final targetStart = y * width;
+      croppedPixels.setRange(
+        targetStart,
+        targetStart + width,
+        pixels.getRange(sourceStart, sourceStart + width),
+      );
+    }
+    return MCOImageV4RasterLayer(
+      x: layer.x + minX,
+      y: layer.y + minY,
+      width: width,
+      height: height,
+      pixels: croppedPixels,
+      transparentColor: transparentColor,
+      visible: layer.visible,
+    );
   }
 
   MCOImageV4Document get _activeVectorDocument {
