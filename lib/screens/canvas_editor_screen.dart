@@ -25,7 +25,6 @@ import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
 import '../widgets/mco_image_v4_view.dart';
 import '../models/canvas_editor_result.dart';
-import 'mco_image_v4_editor_screen.dart';
 
 export '../models/canvas_editor_result.dart';
 
@@ -43,8 +42,6 @@ enum _CanvasTool {
 }
 
 enum _PaletteSelectorValue { dynamic }
-
-enum _EncodingSelectorAction { separateV4 }
 
 enum _V4ColorTarget { fill, stroke }
 
@@ -99,6 +96,22 @@ class _ImportedCanvasImage {
     required this.width,
     required this.height,
     required this.pixels,
+  });
+}
+
+class _V4RasterLayerEditSession {
+  final MCOImageV4Document document;
+  final int layerIndex;
+  final int x;
+  final int y;
+  final bool visible;
+
+  const _V4RasterLayerEditSession({
+    required this.document,
+    required this.layerIndex,
+    required this.x,
+    required this.y,
+    required this.visible,
   });
 }
 
@@ -390,7 +403,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   PaletteProfile _dynamicPaletteProfile = PaletteProfile.dynamicGlobal512;
   int _selectedColor = MCOImagePalette.blackIndexFor(PaletteProfile.master64);
   int? _transparentColor;
-  int _encodingSelectorReset = 0;
   bool _isPickingTransparentColor = false;
   bool _paletteExpanded = true;
   _CanvasTool _selectedTool = _CanvasTool.pencil;
@@ -432,6 +444,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   MCOImageV4Point? _v4LastMovePoint;
   MCOImageV4Document? _v4MoveBefore;
   int? _selectedV4FigureIndex;
+  _V4RasterLayerEditSession? _v4RasterLayerEditSession;
   bool _v4GroupSelectionMode = false;
   final Set<int> _v4GroupSelectionIndexes = <int>{};
   int? _v4AppendGroupIndex;
@@ -508,7 +521,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.l10n.chat_canvas),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
+          leading: BackButton(onPressed: _closeCanvasEditor),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -565,39 +578,32 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   value: _showRuler,
                   onChanged: _setCanvasRulerShown,
                 ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<Object>(
-                  key: ValueKey((_encodingVersion, _encodingSelectorReset)),
-                  initialValue: _encodingVersion,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.chat_canvasFormatVer,
-                    border: const OutlineInputBorder(),
+                if (!_isEditingV4RasterLayer) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<Object>(
+                    key: ValueKey(_encodingVersion),
+                    initialValue: _encodingVersion,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.chat_canvasFormatVer,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final version in _availableEncodingVersions)
+                        DropdownMenuItem<Object>(
+                          value: version,
+                          child: Text(_encodingVersionLabel(version)),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      if (value is MCOImageEncodingVersion) {
+                        _changeEncodingVersion(value);
+                      }
+                    },
                   ),
-                  items: [
-                    for (final version in _availableEncodingVersions)
-                      DropdownMenuItem<Object>(
-                        value: version,
-                        child: Text(_encodingVersionLabel(version)),
-                      ),
-                    if (_canOpenSeparateV4Editor)
-                      const DropdownMenuItem<Object>(
-                        value: _EncodingSelectorAction.separateV4,
-                        child: Text('v4 Vector (separate screen)'),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    if (value == _EncodingSelectorAction.separateV4) {
-                      setState(() => _encodingSelectorReset++);
-                      unawaited(_openSeparateV4Editor());
-                      return;
-                    }
-                    if (value is MCOImageEncodingVersion) {
-                      _changeEncodingVersion(value);
-                    }
-                  },
-                ),
-                if (_supportsCompressionLevelSelection) ...[
+                ],
+                if (!_isEditingV4RasterLayer &&
+                    _supportsCompressionLevelSelection) ...[
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     key: ValueKey(_compressionLevel),
@@ -629,52 +635,58 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     onChanged: _setCompressionLevel,
                   ),
                 ],
-                const SizedBox(height: 16),
-                DropdownButtonFormField<Object>(
-                  key: ValueKey(
-                    _paletteProfile.isDynamic
+                if (!_isEditingV4RasterLayer) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<Object>(
+                    key: ValueKey(
+                      _paletteProfile.isDynamic
+                          ? _PaletteSelectorValue.dynamic
+                          : _paletteProfile,
+                    ),
+                    initialValue: _paletteProfile.isDynamic
                         ? _PaletteSelectorValue.dynamic
                         : _paletteProfile,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.chat_canvasPaletteMode,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      if (_supportsDynamicPalettes)
+                        DropdownMenuItem<Object>(
+                          value: _PaletteSelectorValue.dynamic,
+                          child: Text(context.l10n.chat_canvasPaletteDynamic),
+                        ),
+                      for (final profile in _paletteProfileOptions)
+                        DropdownMenuItem<Object>(
+                          value: profile,
+                          child: Text(_paletteLabel(profile)),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      if (value == _PaletteSelectorValue.dynamic) {
+                        _changePaletteProfile(_dynamicPaletteProfile);
+                        return;
+                      }
+                      if (value is PaletteProfile) {
+                        _changePaletteProfile(value);
+                      }
+                    },
                   ),
-                  initialValue: _paletteProfile.isDynamic
-                      ? _PaletteSelectorValue.dynamic
-                      : _paletteProfile,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.chat_canvasPaletteMode,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    if (_supportsDynamicPalettes)
-                      DropdownMenuItem<Object>(
-                        value: _PaletteSelectorValue.dynamic,
-                        child: Text(context.l10n.chat_canvasPaletteDynamic),
-                      ),
-                    for (final profile in _paletteProfileOptions)
-                      DropdownMenuItem<Object>(
-                        value: profile,
-                        child: Text(_paletteLabel(profile)),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    if (value == _PaletteSelectorValue.dynamic) {
-                      _changePaletteProfile(_dynamicPaletteProfile);
-                      return;
-                    }
-                    if (value is PaletteProfile) {
-                      _changePaletteProfile(value);
-                    }
-                  },
-                ),
+                ],
                 const SizedBox(height: 12),
                 if (_isVectorV4) ...[
                   _buildVectorStyleControls(),
                   if (_paletteProfile.isDynamic) ...[
                     const SizedBox(height: 12),
-                    _buildDynamicPaletteControls(),
+                    _buildDynamicPaletteControls(
+                      showProfileSelector: !_isEditingV4RasterLayer,
+                    ),
                   ],
                 ] else if (_paletteProfile.isDynamic)
-                  _buildDynamicPaletteControls()
+                  _buildDynamicPaletteControls(
+                    showProfileSelector: !_isEditingV4RasterLayer,
+                  )
                 else
                   _buildPalette(palette),
                 const SizedBox(height: 16),
@@ -717,49 +729,54 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                   const SizedBox(height: 16),
                   _buildVectorObjects(),
                 ],
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _loadCanvasFromFile,
-                        icon: const Icon(Icons.file_open_outlined),
-                        label: Text(
-                          _canvasLoadLabel(context),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (_isVectorV4) ...[
+                if (!_isEditingV4RasterLayer) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: _openVectorAsRasterV3,
-                          icon: const Icon(Icons.grid_on_outlined),
-                          label: const Text(
-                            'v3',
+                          onPressed: _loadCanvasFromFile,
+                          icon: const Icon(Icons.file_open_outlined),
+                          label: Text(
+                            _canvasLoadLabel(context),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _saveCanvasToPng,
-                        icon: const Icon(Icons.save_alt_outlined),
-                        label: Text(
-                          context.l10n.chat_canvasSave,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      if (_isVectorV4) ...[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _loadV4RasterLayerFromFile,
+                            icon: const Icon(
+                              Icons.add_photo_alternate_outlined,
+                            ),
+                            label: const Text(
+                              'Загрузить слой',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _saveCanvasToPng,
+                          icon: const Icon(Icons.save_alt_outlined),
+                          label: Text(
+                            context.l10n.chat_canvasSave,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                if (ChannelBinaryDataHelper.isAvailable) ...[
+                    ],
+                  ),
+                ],
+                if (!_isEditingV4RasterLayer &&
+                    ChannelBinaryDataHelper.isAvailable) ...[
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
@@ -780,13 +797,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                     const SizedBox(width: 8),
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: _closeCanvasEditor,
                       child: Text(context.l10n.common_cancel),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
-                      onPressed: _sendCanvas,
-                      child: Text(context.l10n.common_send),
+                      onPressed: _isEditingV4RasterLayer
+                          ? () => _finishV4RasterLayerEdit()
+                          : _sendCanvas,
+                      child: Text(
+                        _isEditingV4RasterLayer
+                            ? context.l10n.common_done
+                            : context.l10n.common_send,
+                      ),
                     ),
                   ],
                 ),
@@ -796,6 +819,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         ),
       ),
     );
+  }
+
+  void _closeCanvasEditor() {
+    if (_isEditingV4RasterLayer) {
+      _discardV4RasterLayerEdit();
+      return;
+    }
+    Navigator.pop(context);
   }
 
   Widget _buildHorizontalScrollableButtonRow({
@@ -1321,38 +1352,40 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     });
   }
 
-  Widget _buildDynamicPaletteControls() {
+  Widget _buildDynamicPaletteControls({bool showProfileSelector = true}) {
     final palette = _paletteFor(_paletteProfile);
     final shouldInlinePalette =
         palette.length <= _inlineDynamicPaletteMaxColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<PaletteProfile>(
-          key: ValueKey(_dynamicPaletteProfile),
-          initialValue: _dynamicPaletteProfile,
-          decoration: InputDecoration(
-            labelText: context.l10n.chat_canvasPaletteDynamicProfile,
-            border: const OutlineInputBorder(),
+        if (showProfileSelector) ...[
+          DropdownButtonFormField<PaletteProfile>(
+            key: ValueKey(_dynamicPaletteProfile),
+            initialValue: _dynamicPaletteProfile,
+            decoration: InputDecoration(
+              labelText: context.l10n.chat_canvasPaletteDynamicProfile,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final profile in _dynamicPaletteProfileOptions)
+                DropdownMenuItem(
+                  value: profile,
+                  child: Text(_paletteLabel(profile)),
+                ),
+            ],
+            onChanged: (profile) {
+              if (profile == null) return;
+              _changePaletteProfile(profile);
+            },
           ),
-          items: [
-            for (final profile in _dynamicPaletteProfileOptions)
-              DropdownMenuItem(
-                value: profile,
-                child: Text(_paletteLabel(profile)),
-              ),
-          ],
-          onChanged: (profile) {
-            if (profile == null) return;
-            _changePaletteProfile(profile);
-          },
-        ),
-        const SizedBox(height: 8),
-        Text(
-          context.l10n.chat_canvasPaletteDynamicDscr,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.chat_canvasPaletteDynamicDscr,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+        ],
         if (shouldInlinePalette)
           _buildPalette(palette)
         else
@@ -2608,6 +2641,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.of(image.pixels);
     _v4Document = null;
+    _v4RasterLayerEditSession = null;
     _currentEncodedV4 = null;
     _v4EncodeError = null;
     _selectedV4FigureIndex = null;
@@ -2692,8 +2726,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   MCOImageEncodingVersion _loadSavedEncodingVersion() {
     final saved = PrefsManager.instance.getString(_prefsEncodingVersionKey);
     return switch (saved) {
-      'v1Legacy' => MCOImageEncodingVersion.v1Legacy,
-      'v2' => MCOImageEncodingVersion.v2,
       'v3' => MCOImageEncodingVersion.v3,
       'v4' when widget.maxBinaryPayloadBytes != null &&
               widget.binarySenderName != null =>
@@ -2755,13 +2787,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool get _supportsCompressionLevelSelection =>
       _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
-  bool get _canOpenSeparateV4Editor =>
-      widget.maxBinaryPayloadBytes != null && widget.binarySenderName != null;
-
   List<MCOImageEncodingVersion> get _availableEncodingVersions {
+    if (_isEditingV4RasterLayer) {
+      return [MCOImageEncodingVersion.v3];
+    }
     return [
-      MCOImageEncodingVersion.v1Legacy,
-      MCOImageEncodingVersion.v2,
       MCOImageEncodingVersion.v3,
       if (_isVectorV4 ||
           (widget.maxBinaryPayloadBytes != null &&
@@ -2783,9 +2813,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       MCOImageEncodingVersion.v1Legacy => 'v1',
       MCOImageEncodingVersion.v2 => 'v2',
       MCOImageEncodingVersion.v3 => 'v3',
-      MCOImageEncodingVersion.v4 => 'v4 Vector',
+      MCOImageEncodingVersion.v4 => 'v4',
     };
   }
+
+  bool get _isEditingV4RasterLayer => _v4RasterLayerEditSession != null;
 
   void _changeEncodingVersion(MCOImageEncodingVersion version) {
     if (version == _encodingVersion) return;
@@ -2975,6 +3007,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _setControllerValue(_heightController, _height);
       _pixels = nextPixels;
       _v4Document = nextDocument;
+      _v4RasterLayerEditSession = null;
       _v4ReferencePixels = referencePixels;
       _v4ReferencePaletteProfile = referenceProfile;
       _v4ReferenceTransparentColor = referenceTransparentColor;
@@ -3009,6 +3042,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _setControllerValue(_heightController, _height);
     _pixels = List<int>.filled(_width * _height, _whiteIndex);
     _v4Document = document;
+    _v4RasterLayerEditSession = null;
     _v4ReferencePixels = null;
     _v4ReferencePaletteProfile = null;
     _v4ReferenceTransparentColor = null;
@@ -3018,11 +3052,50 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _adoptVectorStyle(document.initialStyle);
   }
 
-  Future<void> _openVectorAsRasterV3() async {
+  Future<void> _loadV4RasterLayerFromFile() async {
+    if (!_isVectorV4 || _v4Document == null) return;
     try {
-      final image = await _rasterizeVectorForV3();
+      final file = await file_selector.openFile(
+        acceptedTypeGroups: const [
+          file_selector.XTypeGroup(
+            label: 'Images',
+            extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
+            mimeTypes: [
+              'image/png',
+              'image/jpeg',
+              'image/webp',
+              'image/bmp',
+              'image/gif',
+            ],
+            uniformTypeIdentifiers: ['public.image'],
+          ),
+          file_selector.XTypeGroup(
+            label: 'MCO image binary',
+            extensions: ['bin'],
+            mimeTypes: ['application/octet-stream'],
+            uniformTypeIdentifiers: ['public.data'],
+          ),
+        ],
+      );
+      if (file == null) return;
+
+      final bytes = await file.readAsBytes();
+      final layer = file.name.toLowerCase().endsWith('.bin')
+          ? await _v4RasterLayerFromMcoBinary(bytes)
+          : await _imageBytesToV4RasterLayer(bytes);
       if (!mounted) return;
-      _applyV4RasterTransfer(image);
+      final document = _v4Document;
+      if (document == null) return;
+      final figures = [...document.figures, layer];
+      _commitVectorDocument(
+        document.copyWith(mode: MCOImageV4Mode.mixed, figures: figures),
+      );
+      setState(() {
+        _selectedV4FigureIndex = figures.length - 1;
+        _selectedTool = _CanvasTool.select;
+        _clearVectorDraftState();
+        _clearVectorEditingState();
+      });
     } on Object catch (error) {
       if (!mounted) return;
       showDismissibleSnackBar(
@@ -3033,35 +3106,262 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  Future<void> _openSeparateV4Editor() async {
-    final maxBinaryPayloadBytes = widget.maxBinaryPayloadBytes;
-    final binarySenderName = widget.binarySenderName;
-    if (maxBinaryPayloadBytes == null || binarySenderName == null) return;
-
-    final result = await Navigator.push<CanvasEditorResult>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MCOImageV4EditorScreen(
-          maxBinaryPayloadBytes: maxBinaryPayloadBytes,
-          binarySenderName: binarySenderName,
-          initialPaletteProfile: _paletteProfile,
-          initialShowGrid: _showGrid,
-          initialDocument: _v4Document,
-          replyTargetName: widget.replyTargetName,
-          replyTimestamp: widget.replyTimestamp,
-        ),
-      ),
+  Future<MCOImageV4RasterLayer> _v4RasterLayerFromMcoBinary(
+    Uint8List payload,
+  ) async {
+    final appPayload = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
+      payload,
     );
-    if (result == null || !mounted) return;
+    if (appPayload != null &&
+        appPayload.subtypeId == ChannelAppDataHelper.mcoImageSubtype) {
+      if (appPayload.version == ChannelAppDataHelper.mcoImageV4Version) {
+        final decoded = const MCOImageV4Codec().decodeBody(appPayload.body);
+        return _v4RasterLayerFromDocument(decoded.document);
+      }
+      if (appPayload.version == ChannelAppDataHelper.mcoImageV3Version) {
+        final image = MCOImageV3Codec().decodeBody(appPayload.body);
+        return _mcoImageToV4RasterLayer(image);
+      }
+    }
+    final imported = _decodeMcoImageBinaryForImport(payload);
+    return _mcoImageToV4RasterLayer(imported.image);
+  }
 
-    final rasterImage = result.rasterImage;
-    if (rasterImage != null) {
-      _applyV4RasterTransfer(rasterImage);
-      return;
+  Future<MCOImageV4RasterLayer> _v4RasterLayerFromDocument(
+    MCOImageV4Document sourceDocument,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    MCOImageV4Painter(sourceDocument, antiAlias: false).paint(
+      canvas,
+      Size(sourceDocument.width.toDouble(), sourceDocument.height.toDouble()),
+    );
+    final rendered = await recorder.endRecording().toImage(
+      sourceDocument.width,
+      sourceDocument.height,
+    );
+    try {
+      final rgba = await rendered.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (rgba == null) {
+        throw const MCOImageInvalidInputException('Cannot render MCOimg v4');
+      }
+      return _rgbaBytesToV4RasterLayer(
+        rgba,
+        width: sourceDocument.width,
+        height: sourceDocument.height,
+        x: 0,
+        y: 0,
+      );
+    } finally {
+      rendered.dispose();
     }
-    if (result.text.isNotEmpty) {
-      Navigator.pop(context, result);
+  }
+
+  Future<MCOImageV4RasterLayer> _imageBytesToV4RasterLayer(
+    Uint8List bytes,
+  ) async {
+    final source = await _decodeImage(bytes);
+    final sourceWidth = source.width;
+    final sourceHeight = source.height;
+    source.dispose();
+
+    const maxLayerSize = 256;
+    final scale = math.min(
+      1.0,
+      math.min(maxLayerSize / sourceWidth, maxLayerSize / sourceHeight),
+    );
+    final targetWidth = math.max(
+      1,
+      math.min(maxLayerSize, (sourceWidth * scale).floor()),
+    );
+    final targetHeight = math.max(
+      1,
+      math.min(maxLayerSize, (sourceHeight * scale).floor()),
+    );
+
+    final scaled = await _decodeImage(
+      bytes,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+    );
+    final rgba = await scaled.toByteData(format: ui.ImageByteFormat.rawRgba);
+    scaled.dispose();
+    if (rgba == null) {
+      throw const MCOImageInvalidInputException('Cannot read image pixels');
     }
+    return _rgbaBytesToV4RasterLayer(
+      rgba,
+      width: targetWidth,
+      height: targetHeight,
+      x: 0,
+      y: 0,
+    );
+  }
+
+  MCOImageV4RasterLayer _mcoImageToV4RasterLayer(
+    MCOImage image, {
+    int x = 0,
+    int y = 0,
+    bool visible = true,
+  }) {
+    final document = _v4Document;
+    if (document == null) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 vector document is not initialized',
+      );
+    }
+    final paletteValues = _rasterPaletteValues(document.paletteProfile);
+    final pixels = List<int>.filled(image.width * image.height, 0);
+    final transparentPixels = <int>[];
+    final opaqueIndexes = <int>[];
+    final colorCounts = <int, int>{};
+    for (var i = 0; i < pixels.length; i++) {
+      final sourceColorValue = image.pixels[i];
+      if (image.transparentColor != null &&
+          sourceColorValue == image.transparentColor) {
+        transparentPixels.add(i);
+        continue;
+      }
+      final sourceColor = _colorForPixelValue(
+        image.paletteProfile,
+        sourceColorValue,
+      );
+      final argb = sourceColor.toARGB32();
+      final colorValue = _nearestRasterColorValue(
+        (argb >> 16) & 0xff,
+        (argb >> 8) & 0xff,
+        argb & 0xff,
+        document.paletteProfile,
+        paletteValues,
+      );
+      pixels[i] = colorValue;
+      opaqueIndexes.add(i);
+      colorCounts[colorValue] = (colorCounts[colorValue] ?? 0) + 1;
+    }
+    return _v4RasterLayerFromProfilePixels(
+      width: image.width,
+      height: image.height,
+      pixels: pixels,
+      transparentPixels: transparentPixels,
+      opaqueIndexes: opaqueIndexes,
+      colorCounts: colorCounts,
+      x: x,
+      y: y,
+      visible: visible,
+    );
+  }
+
+  MCOImageV4RasterLayer _rgbaBytesToV4RasterLayer(
+    ByteData rgba, {
+    required int width,
+    required int height,
+    required int x,
+    required int y,
+  }) {
+    final document = _v4Document;
+    if (document == null) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 vector document is not initialized',
+      );
+    }
+    final paletteValues = _rasterPaletteValues(document.paletteProfile);
+    final pixels = List<int>.filled(width * height, 0);
+    final transparentPixels = <int>[];
+    final opaqueIndexes = <int>[];
+    final colorCounts = <int, int>{};
+    for (var i = 0; i < pixels.length; i++) {
+      final offset = i * 4;
+      final alpha = rgba.getUint8(offset + 3);
+      if (alpha < 128) {
+        transparentPixels.add(i);
+        continue;
+      }
+      final colorValue = _nearestRasterColorValue(
+        rgba.getUint8(offset),
+        rgba.getUint8(offset + 1),
+        rgba.getUint8(offset + 2),
+        document.paletteProfile,
+        paletteValues,
+      );
+      pixels[i] = colorValue;
+      opaqueIndexes.add(i);
+      colorCounts[colorValue] = (colorCounts[colorValue] ?? 0) + 1;
+    }
+    return _v4RasterLayerFromProfilePixels(
+      width: width,
+      height: height,
+      pixels: pixels,
+      transparentPixels: transparentPixels,
+      opaqueIndexes: opaqueIndexes,
+      colorCounts: colorCounts,
+      x: x,
+      y: y,
+    );
+  }
+
+  MCOImageV4RasterLayer _v4RasterLayerFromProfilePixels({
+    required int width,
+    required int height,
+    required int x,
+    required int y,
+    bool visible = true,
+    required List<int> pixels,
+    required List<int> transparentPixels,
+    required List<int> opaqueIndexes,
+    required Map<int, int> colorCounts,
+  }) {
+    final document = _v4Document;
+    if (document == null) {
+      throw const MCOImageInvalidInputException(
+        'MCOimg v4 vector document is not initialized',
+      );
+    }
+    if (document.paletteProfile.isDynamic &&
+        colorCounts.length > _inlineDynamicPaletteMaxColors &&
+        opaqueIndexes.isNotEmpty) {
+      final opaquePixels = opaqueIndexes
+          .map((index) => pixels[index])
+          .toList(growable: false);
+      final optimized = _limitDynamicImportedColors(
+        opaquePixels,
+        colorCounts,
+        document.paletteProfile,
+      );
+      for (var i = 0; i < opaqueIndexes.length; i++) {
+        pixels[opaqueIndexes[i]] = optimized[i];
+      }
+    }
+
+    int? transparentColor;
+    if (transparentPixels.isNotEmpty) {
+      final used = opaqueIndexes.map((index) => pixels[index]).toSet();
+      for (final color in _rasterPaletteValues(document.paletteProfile)) {
+        if (!used.contains(color)) {
+          transparentColor = color;
+          break;
+        }
+      }
+      if (transparentColor == null) {
+        throw const MCOImageInvalidInputException(
+          'No free palette color for v4 raster transparency',
+        );
+      }
+      for (final index in transparentPixels) {
+        pixels[index] = transparentColor;
+      }
+    }
+
+    return MCOImageV4RasterLayer(
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      pixels: pixels,
+      transparentColor: transparentColor,
+      visible: visible,
+    );
   }
 
   Future<void> _switchVectorToRasterVersion(
@@ -3352,6 +3652,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _selectedTool = _CanvasTool.pencil;
       _selectedV4FigureIndex = null;
       _v4Document = null;
+      _v4RasterLayerEditSession = null;
       _v4ReferencePixels = null;
       _v4ReferencePaletteProfile = null;
       _v4ReferenceTransparentColor = null;
@@ -4808,6 +5109,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (document == null) return;
     final selectedIndexes = _validV4GroupSelectionIndexes(document);
     if (selectedIndexes.length < 2) return;
+    if (selectedIndexes.any(
+      (index) => document.figures[index] is MCOImageV4RasterLayer,
+    )) {
+      unawaited(_mergeCheckedV4FiguresAsRaster(document, selectedIndexes));
+      return;
+    }
     final selectedSet = selectedIndexes.toSet();
     final insertIndex = selectedIndexes.first;
     final groupFigures = <MCOImageV4Figure>[];
@@ -4843,6 +5150,143 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _v4AppendGroupIndex = null;
       _selectedTool = _CanvasTool.select;
     });
+  }
+
+  Future<void> _mergeCheckedV4FiguresAsRaster(
+    MCOImageV4Document document,
+    List<int> selectedIndexes,
+  ) async {
+    try {
+      final rasterLayer = await _rasterLayerFromV4Figures(
+        document,
+        selectedIndexes.map((index) => document.figures[index]).toList(),
+      );
+      if (!mounted) return;
+
+      final selectedSet = selectedIndexes.toSet();
+      final insertIndex = selectedIndexes.firstWhere(
+        (index) => document.figures[index] is MCOImageV4RasterLayer,
+      );
+      final nextSelectedIndex =
+          insertIndex -
+          selectedIndexes.where((index) => index < insertIndex).length;
+      final figures = <MCOImageV4Figure>[];
+      for (var index = 0; index < document.figures.length; index++) {
+        if (index == insertIndex) {
+          figures.add(rasterLayer);
+        }
+        if (!selectedSet.contains(index)) {
+          figures.add(document.figures[index]);
+        }
+      }
+      _commitVectorDocument(
+        document.copyWith(mode: MCOImageV4Mode.mixed, figures: figures),
+      );
+      setState(() {
+        _selectedV4FigureIndex = nextSelectedIndex;
+        _v4GroupSelectionMode = false;
+        _v4GroupSelectionIndexes.clear();
+        _v4AppendGroupIndex = null;
+        _selectedTool = _CanvasTool.select;
+      });
+    } on Object catch (error) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(error.toString()),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+  }
+
+  Future<MCOImageV4RasterLayer> _rasterLayerFromV4Figures(
+    MCOImageV4Document document,
+    List<MCOImageV4Figure> figures,
+  ) async {
+    Rect? bounds;
+    var visible = false;
+    for (final figure in figures) {
+      if (!figure.visible) continue;
+      visible = true;
+      final figureBounds = MCOImageV4Painter.figureLogicalBounds(figure);
+      bounds = bounds == null
+          ? figureBounds
+          : bounds.expandToInclude(figureBounds);
+    }
+    final mergedBounds = bounds;
+    if (!visible || mergedBounds == null || mergedBounds.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Selected v4 layers have no visible content',
+      );
+    }
+
+    final left = mergedBounds.left.floor();
+    final top = mergedBounds.top.floor();
+    final right = mergedBounds.right.ceil();
+    final bottom = mergedBounds.bottom.ceil();
+    final layerWidth = math.max(1, right - left);
+    final layerHeight = math.max(1, bottom - top);
+    final marginX = MCOImageV4Codec.coordinateMarginForCanvasSize(
+      document.width,
+    );
+    final marginY = MCOImageV4Codec.coordinateMarginForCanvasSize(
+      document.height,
+    );
+    if (left < -marginX ||
+        left >= document.width + marginX ||
+        top < -marginY ||
+        top >= document.height + marginY) {
+      throw const MCOImageInvalidInputException(
+        'Merged v4 raster layer origin is outside the coordinate range',
+      );
+    }
+    if (layerWidth > 256 || layerHeight > 256) {
+      throw const MCOImageInvalidInputException(
+        'Merged v4 raster layer is too large',
+      );
+    }
+
+    final viewport = Rect.fromLTWH(
+      left.toDouble(),
+      top.toDouble(),
+      layerWidth.toDouble(),
+      layerHeight.toDouble(),
+    );
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    MCOImageV4Painter(
+      document.copyWith(
+        backgroundColor: null,
+        figures: figures,
+      ),
+      paintBackground: false,
+      showGrid: false,
+      logicalViewport: viewport,
+      antiAlias: false,
+    ).paint(canvas, Size(layerWidth.toDouble(), layerHeight.toDouble()));
+    final rendered = await recorder.endRecording().toImage(
+      layerWidth,
+      layerHeight,
+    );
+    try {
+      final rgba = await rendered.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (rgba == null) {
+        throw const MCOImageInvalidInputException(
+          'Cannot render MCOimg v4 layers',
+        );
+      }
+      return _rgbaBytesToV4RasterLayer(
+        rgba,
+        width: layerWidth,
+        height: layerHeight,
+        x: left,
+        y: top,
+      );
+    } finally {
+      rendered.dispose();
+    }
   }
 
   MCOImageV4Document get _activeVectorDocument {
@@ -4882,8 +5326,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   bool get _canEditSelectedV4Figure =>
       _selectedV4Figure != null &&
-      _selectedV4Figure is! MCOImageV4Group &&
-      _selectedV4Figure is! MCOImageV4RasterLayer;
+      _selectedV4Figure is! MCOImageV4Group;
 
   bool get _canUngroupSelectedV4Figure => _selectedV4Figure is MCOImageV4Group;
 
@@ -5433,6 +5876,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
     final figure = document.figures[index];
+    if (figure is MCOImageV4RasterLayer) {
+      _editSelectedV4RasterLayer(document, index, figure);
+      return;
+    }
     final figures = [...document.figures]..removeAt(index);
     setState(() {
       _editingV4FigureIndex = index;
@@ -5448,6 +5895,250 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _v4DraftFigure = figure is MCOImageV4Rect || figure is MCOImageV4Ellipse
           ? figure.withVisibility(true)
           : null;
+    });
+    _markPayloadDirty();
+  }
+
+  void _editSelectedV4RasterLayer(
+    MCOImageV4Document document,
+    int index,
+    MCOImageV4RasterLayer layer,
+  ) {
+    final profile = document.paletteProfile;
+    _cancelPayloadCalculationBeforeCanvasReplacement();
+    _clearCanvasHistory();
+    final selectedColor = _blackColorValueForProfile(profile);
+    setState(() {
+      _v4RasterLayerEditSession = _V4RasterLayerEditSession(
+        document: document,
+        layerIndex: index,
+        x: layer.x,
+        y: layer.y,
+        visible: layer.visible,
+      );
+      _encodingVersion = MCOImageEncodingVersion.v3;
+      _paletteProfile = profile;
+      _dynamicPaletteProfile = profile.isDynamic
+          ? profile
+          : _dynamicPaletteProfile;
+      _selectedColor = selectedColor;
+      _transparentColor = layer.transparentColor;
+      _isPickingTransparentColor = false;
+      _width = layer.width;
+      _height = layer.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List<int>.of(layer.pixels);
+      _selectedTool = _CanvasTool.pencil;
+      _selectedV4FigureIndex = null;
+      _currentEncodedV4 = null;
+      _v4EncodeError = null;
+      _currentEncodedCandidate = null;
+      _currentEncodedCacheKey = null;
+      _clearRasterDraftState();
+      _clearVectorDraftState();
+      _clearVectorEditingState();
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+      _v4AppendGroupIndex = null;
+    });
+    _markPayloadDirty();
+  }
+
+  bool _finishV4RasterLayerEdit() {
+    final session = _v4RasterLayerEditSession;
+    if (session == null) return true;
+    try {
+      _finishDrawing();
+      _cancelPayloadCalculationBeforeCanvasReplacement();
+
+      final document = session.document;
+      final image = MCOImage(
+        width: _width,
+        height: _height,
+        paletteProfile: _paletteProfile,
+        pixels: _pixels,
+        transparentColor: _transparentColor,
+        encodingVersion: MCOImageEncodingVersion.v3,
+      );
+      final layer = _mcoImageToV4RasterLayer(
+        image,
+        x: session.x,
+        y: session.y,
+        visible: session.visible,
+      );
+      final figures = [...document.figures];
+      final selectedIndex = session.layerIndex >= 0 &&
+              session.layerIndex < figures.length &&
+              figures[session.layerIndex] is MCOImageV4RasterLayer
+          ? session.layerIndex
+          : figures.length;
+      if (selectedIndex == figures.length) {
+        figures.add(layer);
+      } else {
+        figures[selectedIndex] = layer;
+      }
+      final nextDocument = document.copyWith(
+        mode: MCOImageV4Mode.mixed,
+        figures: figures,
+      );
+      final profile = nextDocument.paletteProfile;
+      final nextDynamicProfile = profile.isDynamic
+          ? profile
+          : _dynamicPaletteProfile;
+      final nextPixels = List<int>.filled(
+        nextDocument.width * nextDocument.height,
+        MCOImagePalette.whiteIndexFor(profile),
+      );
+      final selectedColor = _blackColorValueForProfile(profile);
+      final before = _captureCanvasSnapshot(
+        width: document.width,
+        height: document.height,
+        paletteProfile: profile,
+        dynamicPaletteProfile: nextDynamicProfile,
+        encodingVersion: MCOImageEncodingVersion.v4,
+        selectedColor: selectedColor,
+        transparentColor: null,
+        pixels: List<int>.filled(
+          document.width * document.height,
+          MCOImagePalette.whiteIndexFor(profile),
+        ),
+        vectorDocument: document,
+      );
+      final after = _captureCanvasSnapshot(
+        width: nextDocument.width,
+        height: nextDocument.height,
+        paletteProfile: profile,
+        dynamicPaletteProfile: nextDynamicProfile,
+        encodingVersion: MCOImageEncodingVersion.v4,
+        selectedColor: selectedColor,
+        transparentColor: null,
+        pixels: nextPixels,
+        vectorDocument: nextDocument,
+      );
+
+      _clearCanvasHistory();
+      _rememberCanvasAction(before, after);
+      setState(() {
+        _v4RasterLayerEditSession = null;
+        _encodingVersion = MCOImageEncodingVersion.v4;
+        _paletteProfile = profile;
+        _dynamicPaletteProfile = nextDynamicProfile;
+        _selectedColor = selectedColor;
+        _transparentColor = null;
+        _isPickingTransparentColor = false;
+        _width = nextDocument.width;
+        _height = nextDocument.height;
+        _setControllerValue(_widthController, _width);
+        _setControllerValue(_heightController, _height);
+        _pixels = nextPixels;
+        _v4Document = nextDocument;
+        _selectedV4FigureIndex = selectedIndex;
+        _selectedTool = _CanvasTool.select;
+        _adoptVectorStyle(nextDocument.initialStyle);
+        _clearRasterDraftState();
+        _clearVectorDraftState();
+        _clearVectorEditingState();
+        _v4GroupSelectionMode = false;
+        _v4GroupSelectionIndexes.clear();
+        _v4AppendGroupIndex = null;
+        _currentEncodedCandidate = null;
+        _currentEncodedCacheKey = null;
+      });
+      _markPayloadDirty();
+      unawaited(_saveEncodingVersion(MCOImageEncodingVersion.v4));
+      unawaited(_saveCanvasSize(nextDocument.width, nextDocument.height));
+      unawaited(_saveCanvasPalette(profile));
+      return true;
+    } on Object catch (error) {
+      if (mounted) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(error.toString()),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        );
+      }
+      return false;
+    }
+  }
+
+  void _discardV4RasterLayerEdit() {
+    final session = _v4RasterLayerEditSession;
+    if (session == null) return;
+    _finishDrawing();
+    _cancelPayloadCalculationBeforeCanvasReplacement();
+
+    final document = session.document;
+    final profile = document.paletteProfile;
+    final dynamicProfile = profile.isDynamic
+        ? profile
+        : _dynamicPaletteProfile;
+    final selectedColor = _blackColorValueForProfile(profile);
+    final selectedIndex = session.layerIndex >= 0 &&
+            session.layerIndex < document.figures.length
+        ? session.layerIndex
+        : null;
+    setState(() {
+      _v4RasterLayerEditSession = null;
+      _encodingVersion = MCOImageEncodingVersion.v4;
+      _paletteProfile = profile;
+      _dynamicPaletteProfile = dynamicProfile;
+      _selectedColor = selectedColor;
+      _transparentColor = null;
+      _isPickingTransparentColor = false;
+      _width = document.width;
+      _height = document.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List<int>.filled(
+        document.width * document.height,
+        MCOImagePalette.whiteIndexFor(profile),
+      );
+      _v4Document = document;
+      _selectedV4FigureIndex = selectedIndex;
+      _selectedTool = _CanvasTool.select;
+      _adoptVectorStyle(document.initialStyle);
+      _clearRasterDraftState();
+      _clearVectorDraftState();
+      _clearVectorEditingState();
+      _v4GroupSelectionMode = false;
+      _v4GroupSelectionIndexes.clear();
+      _v4AppendGroupIndex = null;
+      _currentEncodedCandidate = null;
+      _currentEncodedCacheKey = null;
+    });
+    _clearCanvasHistory();
+    _markPayloadDirty();
+  }
+
+  void _replaceV4RasterLayerEditCanvas(MCOImageV4RasterLayer layer) {
+    final session = _v4RasterLayerEditSession;
+    if (session == null) return;
+    final profile = session.document.paletteProfile;
+    _clearCanvasHistory();
+    setState(() {
+      _v4Document = session.document;
+      _encodingVersion = MCOImageEncodingVersion.v3;
+      _paletteProfile = profile;
+      _dynamicPaletteProfile = profile.isDynamic
+          ? profile
+          : _dynamicPaletteProfile;
+      _selectedColor = _blackColorValueForProfile(profile);
+      _transparentColor = layer.transparentColor;
+      _isPickingTransparentColor = false;
+      _width = layer.width;
+      _height = layer.height;
+      _setControllerValue(_widthController, _width);
+      _setControllerValue(_heightController, _height);
+      _pixels = List<int>.of(layer.pixels);
+      _selectedTool = _CanvasTool.pencil;
+      _currentEncodedV4 = null;
+      _v4EncodeError = null;
+      _currentEncodedCandidate = null;
+      _currentEncodedCacheKey = null;
+      _clearRasterDraftState();
+      _clearVectorDraftState();
+      _clearVectorEditingState();
     });
     _markPayloadDirty();
   }
@@ -6092,6 +6783,14 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         if (appPayload?.subtypeVersion ==
             ChannelAppDataHelper.mcoImageV4SubtypeVersion) {
           final decoded = const MCOImageV4Codec().decodeBody(appPayload!.body);
+          if (_isEditingV4RasterLayer) {
+            final layer = await _v4RasterLayerFromDocument(decoded.document);
+            await _cancelCurrentEncoding();
+            if (!mounted) return;
+            shouldRestorePendingRefreshOnError = false;
+            _replaceV4RasterLayerEditCanvas(layer);
+            return;
+          }
           await _cancelCurrentEncoding();
           if (!mounted) return;
           shouldRestorePendingRefreshOnError = false;
@@ -6111,6 +6810,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         // nonce; the compressed image bitstream remains byte-for-byte intact.
         await _cancelCurrentEncoding();
         if (!mounted) return;
+
+        if (_isEditingV4RasterLayer) {
+          final layer = _mcoImageToV4RasterLayer(imported.image);
+          shouldRestorePendingRefreshOnError = false;
+          _replaceV4RasterLayerEditCanvas(layer);
+          return;
+        }
 
         _clearCanvasHistory();
         shouldRestorePendingRefreshOnError = false;
@@ -6165,8 +6871,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _rectangleSecondIndex = null;
       });
       _markPayloadDirty();
-      unawaited(_saveEncodingVersion(_encodingVersion));
-      unawaited(_saveCanvasSize(importedImage.width, importedImage.height));
+      if (!_isEditingV4RasterLayer) {
+        unawaited(_saveEncodingVersion(_encodingVersion));
+        unawaited(_saveCanvasSize(importedImage.width, importedImage.height));
+      }
     } catch (error) {
       if (shouldRestorePendingRefreshOnError && mounted) {
         _schedulePayloadRefresh();
@@ -6454,6 +7162,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _saveCanvasToPng() async {
     try {
+      if (!_finishV4RasterLayerEdit()) return;
       final bytes = await _renderCanvasPngBytes();
       final fileName = MCOImageFileSaver.pngFileName();
       final location = await file_selector.getSaveLocation(
@@ -6486,6 +7195,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _saveCanvasToBinary() async {
     try {
+      if (!_finishV4RasterLayerEdit()) return;
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
       if (_isVectorV4) {
@@ -6587,6 +7297,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _sendCanvas() async {
     try {
+      if (!_finishV4RasterLayerEdit()) return;
       if (_isVectorV4) {
         final encoded = _encodedVectorForCurrentState(refreshNonce: true);
         if (!mounted) return;
@@ -7252,6 +7963,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   int get _whiteIndex => MCOImagePalette.whiteIndexFor(_paletteProfile);
 
+  int _blackColorValueForProfile(PaletteProfile profile) {
+    return profile.isDynamic
+        ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
+        : MCOImagePalette.blackIndexFor(profile);
+  }
+
   int _paletteColorValueAtIndex(PaletteProfile profile, int paletteIndex) {
     if (profile.isDynamic) {
       return MCOImageDynamicPalette.globalIndexForProfileColorId(
@@ -7530,6 +8247,7 @@ class _AlphaSwatchPainter extends CustomPainter {
 }
 
 class _VectorCanvasPainter extends CustomPainter {
+  static const Color _gridColor = Color(0xff00ff00);
   static const Color _rulerColor = Color(0xff808080);
   static const double _referenceOpacity = 0.45;
 
@@ -7583,10 +8301,38 @@ class _VectorCanvasPainter extends CustomPainter {
       guidePoints: const [],
       guideStyle: guideStyle,
       paintBackground: !hasReference,
-      showGrid: showGrid,
+      showGrid: false,
     ).paint(canvas, canvasSize);
+    if (showGrid) {
+      _paintGrid(canvas);
+    }
     _paintGuidePoints(canvas);
     canvas.restore();
+  }
+
+  void _paintGrid(Canvas canvas) {
+    final cellWidth = canvasSize.width / document.width;
+    final cellHeight = canvasSize.height / document.height;
+    final gridPaint = Paint()
+      ..color = _gridColor
+      ..strokeWidth = 0.6
+      ..isAntiAlias = false;
+    for (var x = 0; x <= document.width; x++) {
+      final dx = x * cellWidth;
+      canvas.drawLine(
+        Offset(dx, 0),
+        Offset(dx, canvasSize.height),
+        gridPaint,
+      );
+    }
+    for (var y = 0; y <= document.height; y++) {
+      final dy = y * cellHeight;
+      canvas.drawLine(
+        Offset(0, dy),
+        Offset(canvasSize.width, dy),
+        gridPaint,
+      );
+    }
   }
 
   List<int> _rulerCellNumbers(int cellCount) {

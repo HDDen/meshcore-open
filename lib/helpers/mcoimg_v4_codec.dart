@@ -13,6 +13,7 @@ class MCOImageV4Codec {
   static const int version = 4;
   static const int subtypeId = ChannelAppDataHelper.mcoImageSubtype;
   static const int subtypeVersion = (subtypeId << 4) | version;
+  static const int _rasterLayerEncodeCacheLimit = 32;
 
   static const int _opEnd = 0;
   static const int _opSetFill = 1;
@@ -34,6 +35,12 @@ class MCOImageV4Codec {
   static const int _modeBits = 2;
 
   static const List<int> _deltaWidths = <int>[3, 4, 5, 6];
+  static final Map<
+    _V4RasterLayerEncodeCacheKey,
+    _V4RasterLayerEncodeCacheValue
+  >
+  _rasterLayerEncodeCache =
+      <_V4RasterLayerEncodeCacheKey, _V4RasterLayerEncodeCacheValue>{};
   static const int _extLineDelta = 0;
   static const int _extLineAxisDelta = 1;
   static const int _extAreaDelta = 2;
@@ -975,6 +982,40 @@ class MCOImageV4Codec {
     required int yBits,
     required int compressionLevel,
   }) {
+    final cacheKey = _V4RasterLayerEncodeCacheKey(
+      paletteProfile: document.paletteProfile,
+      compressionLevel: compressionLevel,
+      width: layer.width,
+      height: layer.height,
+      transparentColor: layer.transparentColor,
+      pixels: layer.pixels,
+    );
+    final cached = _rasterLayerEncodeCache[cacheKey] ??
+        _encodeRasterLayerPayload(layer, document, compressionLevel, cacheKey);
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extRasterLayer, _extBits);
+    _writePoint(
+      writer,
+      MCOImageV4Point(layer.x, layer.y),
+      xBits,
+      yBits,
+      width: document.width,
+      height: document.height,
+    );
+    writer
+      ..writeBits(cached.v3HeaderHigh, 4)
+      ..writeCompactUint(cached.payload.length)
+      ..writeBytes(cached.payload);
+    return writer;
+  }
+
+  _V4RasterLayerEncodeCacheValue _encodeRasterLayerPayload(
+    MCOImageV4RasterLayer layer,
+    MCOImageV4Document document,
+    int compressionLevel,
+    _V4RasterLayerEncodeCacheKey cacheKey,
+  ) {
     final image = MCOImage(
       width: layer.width,
       height: layer.height,
@@ -988,27 +1029,22 @@ class MCOImageV4Codec {
       compressionLevel: compressionLevel,
       includePacketNonce: false,
     );
-    final payload = Uint8List.sublistView(
-      encoded.body,
-      1,
+    final value = _V4RasterLayerEncodeCacheValue(
+      v3HeaderHigh: encoded.body[0] >> 4,
+      payload: Uint8List.sublistView(encoded.body, 1),
     );
-    final v3HeaderHigh = encoded.body[0] >> 4;
-    final writer = _V4BitWriter()
-      ..writeBits(_opExtended, _opBits)
-      ..writeBits(_extRasterLayer, _extBits);
-    _writePoint(
-      writer,
-      MCOImageV4Point(layer.x, layer.y),
-      xBits,
-      yBits,
-      width: document.width,
-      height: document.height,
-    );
-    writer
-      ..writeBits(v3HeaderHigh, 4)
-      ..writeCompactUint(payload.length)
-      ..writeBytes(payload);
-    return writer;
+    _rememberRasterLayerEncoding(cacheKey, value);
+    return value;
+  }
+
+  static void _rememberRasterLayerEncoding(
+    _V4RasterLayerEncodeCacheKey key,
+    _V4RasterLayerEncodeCacheValue value,
+  ) {
+    _rasterLayerEncodeCache[key] = value;
+    while (_rasterLayerEncodeCache.length > _rasterLayerEncodeCacheLimit) {
+      _rasterLayerEncodeCache.remove(_rasterLayerEncodeCache.keys.first);
+    }
   }
 
   _V4BitWriter _encodeFullFigureCommand(
@@ -3567,6 +3603,90 @@ class _V4ByteReader {
     final b3 = readByte();
     return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
   }
+}
+
+class _V4RasterLayerEncodeCacheKey {
+  final PaletteProfile paletteProfile;
+  final int compressionLevel;
+  final int width;
+  final int height;
+  final int? transparentColor;
+  final List<int> pixels;
+  final int _hash;
+
+  _V4RasterLayerEncodeCacheKey({
+    required this.paletteProfile,
+    required this.compressionLevel,
+    required this.width,
+    required this.height,
+    required this.transparentColor,
+    required this.pixels,
+  }) : _hash = _hashValues(
+         paletteProfile,
+         compressionLevel,
+         width,
+         height,
+         transparentColor,
+         pixels,
+       );
+
+  static int _hashValues(
+    PaletteProfile paletteProfile,
+    int compressionLevel,
+    int width,
+    int height,
+    int? transparentColor,
+    List<int> pixels,
+  ) {
+    var hash = Object.hash(
+      paletteProfile,
+      compressionLevel,
+      width,
+      height,
+      transparentColor,
+      pixels.length,
+    );
+    for (final pixel in pixels) {
+      hash = 0x1fffffff & (hash + pixel);
+      hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+      hash ^= hash >> 6;
+    }
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    hash ^= hash >> 11;
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! _V4RasterLayerEncodeCacheKey ||
+        other._hash != _hash ||
+        other.paletteProfile != paletteProfile ||
+        other.compressionLevel != compressionLevel ||
+        other.width != width ||
+        other.height != height ||
+        other.transparentColor != transparentColor ||
+        other.pixels.length != pixels.length) {
+      return false;
+    }
+    for (var i = 0; i < pixels.length; i++) {
+      if (other.pixels[i] != pixels[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => _hash;
+}
+
+class _V4RasterLayerEncodeCacheValue {
+  final int v3HeaderHigh;
+  final Uint8List payload;
+
+  _V4RasterLayerEncodeCacheValue({
+    required this.v3HeaderHigh,
+    required Uint8List payload,
+  }) : payload = Uint8List.fromList(payload);
 }
 
 class _V4Base91 {
