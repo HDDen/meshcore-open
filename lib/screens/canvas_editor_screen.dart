@@ -5334,20 +5334,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _selectedV4Figure != null && _selectedV4Figure is! MCOImageV4RasterLayer;
 
   bool get _canAppendToSelectedV4Group =>
+      _v4AppendGroupIndex != null ||
       _selectedV4Figure is MCOImageV4Group;
 
-  bool get _isAppendingToSelectedV4Group =>
-      _selectedV4FigureIndex != null &&
-      _selectedV4FigureIndex == _v4AppendGroupIndex;
+  bool get _isAppendingToSelectedV4Group => _v4AppendGroupIndex != null;
 
   void _toggleV4AppendToSelectedGroup() {
+    if (_v4AppendGroupIndex != null) {
+      setState(() => _v4AppendGroupIndex = null);
+      return;
+    }
     final index = _selectedV4FigureIndex;
     final selected = _selectedV4Figure;
     if (index == null || selected is! MCOImageV4Group) return;
     setState(() {
       _v4GroupSelectionMode = false;
       _v4GroupSelectionIndexes.clear();
-      _v4AppendGroupIndex = _v4AppendGroupIndex == index ? null : index;
+      _v4AppendGroupIndex = index;
       _selectedTool = _CanvasTool.select;
     });
   }
