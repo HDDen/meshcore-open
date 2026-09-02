@@ -4829,16 +4829,23 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final before = undoBefore ?? _v4Document;
     final index = _selectedV4FigureIndex;
     if (before == null || index == null || index >= before.figures.length) {
-      setState(update);
+      setState(() {
+        update();
+        _refreshVectorDraftFigure();
+      });
       return;
     }
     if (before.figures[index] is MCOImageV4RasterLayer) {
-      setState(update);
+      setState(() {
+        update();
+        _refreshVectorDraftFigure();
+      });
       return;
     }
     MCOImageV4Document? after;
     setState(() {
       update();
+      _refreshVectorDraftFigure();
       final current = _v4Document ?? before;
       final figures = [...current.figures];
       if (index < figures.length) {
@@ -5626,24 +5633,53 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   void _addVectorShapePoint(MCOImageV4Point point) {
     _v4ShapePoints.add(point);
-    if (_selectedTool == _CanvasTool.rectangle ||
-        _selectedTool == _CanvasTool.oval) {
-      if (_v4ShapePoints.length >= 3) {
-        _v4DraftFigure = _vectorAreaDraft(
-          _v4ShapePoints[0],
-          _v4ShapePoints[1],
-          _v4ShapePoints[2],
-          _selectedTool,
-        );
-      }
-    } else if (_selectedTool == _CanvasTool.wave &&
-        _v4ShapePoints.length == 3) {
-      _v4DraftFigure = _vectorWave(
-        _v4ShapePoints[0],
-        _v4ShapePoints[1],
-        _v4ShapePoints[2],
+    _refreshVectorDraftFigure();
+  }
+
+  void _refreshVectorDraftFigure() {
+    final points = _v4ShapePoints;
+    if (_selectedTool == _CanvasTool.line && points.length >= 2) {
+      _v4DraftFigure = MCOImageV4Line(
+        start: points[0],
+        end: points[1],
+        style: _currentVectorStyle(),
       );
+      return;
     }
+    if (_selectedTool == _CanvasTool.polyline && points.length >= 2) {
+      _v4DraftFigure = MCOImageV4Path(
+        points: List<MCOImageV4Point>.of(points),
+        closed: false,
+        style: _currentVectorStyle(),
+      );
+      return;
+    }
+    if ((_selectedTool == _CanvasTool.rectangle ||
+            _selectedTool == _CanvasTool.oval) &&
+        points.length >= 2) {
+      _v4DraftFigure = _vectorAreaDraft(
+        points[0],
+        points[1],
+        points.length >= 3
+            ? points[2]
+            : _axisAlignedVectorAreaThirdPoint(points[0], points[1]),
+        _selectedTool,
+      );
+      return;
+    }
+    if (_selectedTool == _CanvasTool.wave && points.length >= 3) {
+      _v4DraftFigure = _vectorWave(points[0], points[1], points[2]);
+      return;
+    }
+    if (_selectedTool == _CanvasTool.wave && points.length >= 2) {
+      _v4DraftFigure = MCOImageV4Line(
+        start: points[0],
+        end: points[1],
+        style: _currentVectorStyle(),
+      );
+      return;
+    }
+    _v4DraftFigure = null;
   }
 
   void _finishVectorPolyline({required bool closed}) {
