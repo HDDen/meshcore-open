@@ -3316,5 +3316,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Voor deze database is eerst een volledige VACUUM nodig.",
-  "messageHistoryDatabaseExportShared": "Bestand doorgegeven aan het deelmenu van het systeem"
+  "messageHistoryDatabaseExportShared": "Bestand doorgegeven aan het deelmenu van het systeem",
+  "settings_supportDevelopment": "Ontwikkeling steunen",
+  "donate_intro": "Bedankt voor je bezoek!\nAls deze modificatie je bevalt, kun je de ontwikkeling ervan steunen met een donatie.",
+  "donate_tipLinkLabel": "Link voor fooien:",
+  "donate_upstreamAuthor": "De auteur van de originele meshcore_open — zjs81 — accepteert donaties hier:"
 }

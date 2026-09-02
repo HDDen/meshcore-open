@@ -3534,5 +3534,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Táto databáza najprv vyžaduje úplný VACUUM.",
-  "messageHistoryDatabaseExportShared": "Súbor odovzdaný systémovej ponuke zdieľania"
+  "messageHistoryDatabaseExportShared": "Súbor odovzdaný systémovej ponuke zdieľania",
+  "settings_supportDevelopment": "Podporiť vývoj",
+  "donate_intro": "Ďakujeme, že ste sa zastavili!\nAk sa vám táto modifikácia páči, môžete podporiť jej vývoj darom.",
+  "donate_tipLinkLabel": "Odkaz na prepitné:",
+  "donate_upstreamAuthor": "Autor pôvodného meshcore_open — zjs81 — prijíma dary tu:"
 }

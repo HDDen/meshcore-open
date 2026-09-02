@@ -3671,5 +3671,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "이 데이터베이스에는 먼저 전체 VACUUM이 필요합니다.",
-  "messageHistoryDatabaseExportShared": "파일을 시스템 공유 메뉴로 전달했습니다"
+  "messageHistoryDatabaseExportShared": "파일을 시스템 공유 메뉴로 전달했습니다",
+  "settings_supportDevelopment": "개발 후원하기",
+  "donate_intro": "방문해 주셔서 감사합니다!\n이 모드가 마음에 드셨다면 후원으로 개발을 지원하실 수 있습니다.",
+  "donate_tipLinkLabel": "후원 링크:",
+  "donate_upstreamAuthor": "원본 meshcore_open의 제작자 zjs81의 후원 링크는 여기입니다:"
 }

@@ -3514,5 +3514,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Для цієї бази спочатку потрібен повний VACUUM.",
-  "messageHistoryDatabaseExportShared": "Файл передано в системне меню надсилання"
+  "messageHistoryDatabaseExportShared": "Файл передано в системне меню надсилання",
+  "settings_supportDevelopment": "Підтримати розробку",
+  "donate_intro": "Дякуємо, що завітали!\nЯкщо вам сподобалася модифікація, ви можете підтримати її розробку донатом.",
+  "donate_tipLinkLabel": "Посилання для чайових:",
+  "donate_upstreamAuthor": "Автор оригінального meshcore_open — zjs81 — приймає донати тут:"
 }

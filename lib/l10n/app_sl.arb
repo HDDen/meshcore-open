@@ -3534,5 +3534,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Ta podatkovna baza najprej zahteva popolni VACUUM.",
-  "messageHistoryDatabaseExportShared": "Datoteka posredovana sistemskemu meniju za deljenje"
+  "messageHistoryDatabaseExportShared": "Datoteka posredovana sistemskemu meniju za deljenje",
+  "settings_supportDevelopment": "Podprite razvoj",
+  "donate_intro": "Hvala, da ste se oglasili!\nČe vam je ta modifikacija všeč, lahko z donacijo podprete njen razvoj.",
+  "donate_tipLinkLabel": "Povezava za napitnino:",
+  "donate_upstreamAuthor": "Avtor izvirnega meshcore_open — zjs81 — sprejema donacije tukaj:"
 }

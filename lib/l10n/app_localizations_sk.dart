@@ -6605,4 +6605,18 @@ class AppLocalizationsSk extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Operácia zlyhala: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Podporiť vývoj';
+
+  @override
+  String get donate_intro =>
+      'Ďakujeme, že ste sa zastavili!\nAk sa vám táto modifikácia páči, môžete podporiť jej vývoj darom.';
+
+  @override
+  String get donate_tipLinkLabel => 'Odkaz na prepitné:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Autor pôvodného meshcore_open — zjs81 — prijíma dary tu:';
 }

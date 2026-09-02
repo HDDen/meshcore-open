@@ -6188,4 +6188,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return '操作失败：$error';
   }
+
+  @override
+  String get settings_supportDevelopment => '支持开发';
+
+  @override
+  String get donate_intro => '感谢您的光临！\n如果您喜欢这个修改版，可以通过捐赠支持它的开发。';
+
+  @override
+  String get donate_tipLinkLabel => '打赏链接：';
+
+  @override
+  String get donate_upstreamAuthor => '原版 meshcore_open 的作者 zjs81 在这里接受捐赠：';
 }

@@ -2835,5 +2835,9 @@
   "messageHistoryDatabaseOperationFailed": "Операция не выполнена: {error}",
   "@messageHistoryDatabaseOperationFailed": {
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+  "settings_supportDevelopment": "Поддержать разработку",
+  "donate_intro": "Спасибо, что заглянули!\nЕсли Вам понравилась модификация, Вы можете поддержать её разработку, отправив донат.",
+  "donate_tipLinkLabel": "Ссылка для чаевых:",
+  "donate_upstreamAuthor": "Автор оригинального meshcore_open — zjs81 — принимает донаты здесь:"
 }

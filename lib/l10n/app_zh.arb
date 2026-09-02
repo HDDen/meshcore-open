@@ -3539,5 +3539,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "此数据库需要先执行完整的 VACUUM。",
-  "messageHistoryDatabaseExportShared": "文件已传递到系统分享菜单"
+  "messageHistoryDatabaseExportShared": "文件已传递到系统分享菜单",
+  "settings_supportDevelopment": "支持开发",
+  "donate_intro": "感谢您的光临！\n如果您喜欢这个修改版，可以通过捐赠支持它的开发。",
+  "donate_tipLinkLabel": "打赏链接：",
+  "donate_upstreamAuthor": "原版 meshcore_open 的作者 zjs81 在这里接受捐赠："
 }

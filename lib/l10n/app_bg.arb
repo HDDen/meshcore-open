@@ -3534,5 +3534,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "За тази база първо е необходим пълен VACUUM.",
-  "messageHistoryDatabaseExportShared": "Файлът е предаден в системното меню за споделяне"
+  "messageHistoryDatabaseExportShared": "Файлът е предаден в системното меню за споделяне",
+  "settings_supportDevelopment": "Подкрепете разработката",
+  "donate_intro": "Благодарим, че наминахте!\nАко харесвате модификацията, можете да подкрепите разработката ѝ с дарение.",
+  "donate_tipLinkLabel": "Връзка за бакшиш:",
+  "donate_upstreamAuthor": "Авторът на оригиналния meshcore_open — zjs81 — приема дарения тук:"
 }

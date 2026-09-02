@@ -6652,4 +6652,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Vorgang fehlgeschlagen: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Entwicklung unterstützen';
+
+  @override
+  String get donate_intro =>
+      'Danke fürs Vorbeischauen!\nWenn dir die Modifikation gefällt, kannst du ihre Entwicklung mit einer Spende unterstützen.';
+
+  @override
+  String get donate_tipLinkLabel => 'Link für Trinkgeld:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Der Autor des ursprünglichen meshcore_open — zjs81 — nimmt Spenden hier entgegen:';
 }

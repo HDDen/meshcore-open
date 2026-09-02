@@ -3316,5 +3316,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Den här databasen kräver först en fullständig VACUUM.",
-  "messageHistoryDatabaseExportShared": "Filen skickades till systemets delningsmeny"
+  "messageHistoryDatabaseExportShared": "Filen skickades till systemets delningsmeny",
+  "settings_supportDevelopment": "Stöd utvecklingen",
+  "donate_intro": "Tack för att du tittade förbi!\nOm du gillar den här modifieringen kan du stödja utvecklingen med en donation.",
+  "donate_tipLinkLabel": "Länk för dricks:",
+  "donate_upstreamAuthor": "Författaren till ursprungliga meshcore_open — zjs81 — tar emot donationer här:"
 }

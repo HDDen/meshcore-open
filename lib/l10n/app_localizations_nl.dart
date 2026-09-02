@@ -6623,4 +6623,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Bewerking mislukt: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Ontwikkeling steunen';
+
+  @override
+  String get donate_intro =>
+      'Bedankt voor je bezoek!\nAls deze modificatie je bevalt, kun je de ontwikkeling ervan steunen met een donatie.';
+
+  @override
+  String get donate_tipLinkLabel => 'Link voor fooien:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'De auteur van de originele meshcore_open — zjs81 — accepteert donaties hier:';
 }

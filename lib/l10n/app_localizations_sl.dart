@@ -6616,4 +6616,18 @@ class AppLocalizationsSl extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Postopek ni uspel: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Podprite razvoj';
+
+  @override
+  String get donate_intro =>
+      'Hvala, da ste se oglasili!\nČe vam je ta modifikacija všeč, lahko z donacijo podprete njen razvoj.';
+
+  @override
+  String get donate_tipLinkLabel => 'Povezava za napitnino:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Avtor izvirnega meshcore_open — zjs81 — sprejema donacije tukaj:';
 }

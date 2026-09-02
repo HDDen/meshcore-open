@@ -6318,4 +6318,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return '処理に失敗しました: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => '開発を支援する';
+
+  @override
+  String get donate_intro =>
+      'お立ち寄りいただきありがとうございます！\nこの改造版を気に入っていただけましたら、寄付で開発を支援できます。';
+
+  @override
+  String get donate_tipLinkLabel => '投げ銭リンク:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'オリジナルの meshcore_open の作者 zjs81 への寄付はこちらです:';
 }

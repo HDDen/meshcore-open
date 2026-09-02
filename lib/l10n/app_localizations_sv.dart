@@ -6591,4 +6591,18 @@ class AppLocalizationsSv extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Åtgärden misslyckades: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Stöd utvecklingen';
+
+  @override
+  String get donate_intro =>
+      'Tack för att du tittade förbi!\nOm du gillar den här modifieringen kan du stödja utvecklingen med en donation.';
+
+  @override
+  String get donate_tipLinkLabel => 'Länk för dricks:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Författaren till ursprungliga meshcore_open — zjs81 — tar emot donationer här:';
 }

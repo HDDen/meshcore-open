@@ -6665,4 +6665,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Operacja nie powiodła się: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Wesprzyj rozwój';
+
+  @override
+  String get donate_intro =>
+      'Dziękujemy za odwiedziny!\nJeśli podoba Ci się ta modyfikacja, możesz wesprzeć jej rozwój darowizną.';
+
+  @override
+  String get donate_tipLinkLabel => 'Link do napiwków:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Autor oryginalnego meshcore_open — zjs81 — przyjmuje darowizny tutaj:';
 }

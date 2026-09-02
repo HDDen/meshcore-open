@@ -6639,4 +6639,18 @@ class AppLocalizationsHu extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'A művelet nem sikerült: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Fejlesztés támogatása';
+
+  @override
+  String get donate_intro =>
+      'Köszönjük, hogy benézett!\nHa tetszik a módosítás, adománnyal támogathatja a fejlesztését.';
+
+  @override
+  String get donate_tipLinkLabel => 'Borravaló link:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Az eredeti meshcore_open szerzője — zjs81 — itt fogad adományokat:';
 }

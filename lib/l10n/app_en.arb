@@ -3667,5 +3667,9 @@
   "messageHistoryDatabaseOperationFailed": "Operation failed: {error}",
   "@messageHistoryDatabaseOperationFailed": {
     "placeholders": { "error": { "type": "String" } }
-  }
+  },
+  "settings_supportDevelopment": "Support development",
+  "donate_intro": "Thanks for stopping by!\nIf you like this mod, you can support its development with a donation.",
+  "donate_tipLinkLabel": "Tip link:",
+  "donate_upstreamAuthor": "The author of the original meshcore_open — zjs81 — accepts donations here:"
 }

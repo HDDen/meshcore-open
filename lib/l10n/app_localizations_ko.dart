@@ -6325,4 +6325,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return '작업에 실패했습니다: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => '개발 후원하기';
+
+  @override
+  String get donate_intro =>
+      '방문해 주셔서 감사합니다!\n이 모드가 마음에 드셨다면 후원으로 개발을 지원하실 수 있습니다.';
+
+  @override
+  String get donate_tipLinkLabel => '후원 링크:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      '원본 meshcore_open의 제작자 zjs81의 후원 링크는 여기입니다:';
 }

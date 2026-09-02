@@ -24,6 +24,7 @@ import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
+import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
 import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
@@ -179,6 +180,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showChevron: false,
                   ),
                 ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DonateScreen(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.monetization_on_outlined,
+                    title: l10n.settings_supportDevelopment,
+                    titleColor: MeshPalette.warn,
+                    iconColor: MeshPalette.warn,
+                  ),
+                ),
               ],
             );
           },
@@ -191,14 +207,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required String subtitle,
+    String? subtitle,
     bool showChevron = true,
+    Color? titleColor,
+    Color? iconColor,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Row(
       children: [
-        Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+        Icon(icon, size: 20, color: iconColor ?? scheme.onSurfaceVariant),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -208,15 +226,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title,
                 style: textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: titleColor,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: titleColor != null
+                        ? titleColor.withValues(alpha: 0.7)
+                        : scheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

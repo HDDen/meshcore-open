@@ -3633,5 +3633,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "Cette base nécessite d'abord un VACUUM complet.",
-  "messageHistoryDatabaseExportShared": "Fichier transmis au menu de partage du système"
+  "messageHistoryDatabaseExportShared": "Fichier transmis au menu de partage du système",
+  "settings_supportDevelopment": "Soutenir le développement",
+  "donate_intro": "Merci de votre visite !\nSi cette modification vous plaît, vous pouvez soutenir son développement par un don.",
+  "donate_tipLinkLabel": "Lien pour les pourboires :",
+  "donate_upstreamAuthor": "L'auteur du meshcore_open original — zjs81 — accepte les dons ici :"
 }

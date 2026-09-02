@@ -3639,5 +3639,9 @@
     }
   },
   "messageHistoryDatabaseIncrementalVacuumUnavailableDescription": "このデータベースには、まず完全な VACUUM が必要です。",
-  "messageHistoryDatabaseExportShared": "ファイルをシステムの共有メニューに渡しました"
+  "messageHistoryDatabaseExportShared": "ファイルをシステムの共有メニューに渡しました",
+  "settings_supportDevelopment": "開発を支援する",
+  "donate_intro": "お立ち寄りいただきありがとうございます！\nこの改造版を気に入っていただけましたら、寄付で開発を支援できます。",
+  "donate_tipLinkLabel": "投げ銭リンク:",
+  "donate_upstreamAuthor": "オリジナルの meshcore_open の作者 zjs81 への寄付はこちらです:"
 }

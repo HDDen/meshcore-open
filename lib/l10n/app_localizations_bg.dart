@@ -6651,4 +6651,18 @@ class AppLocalizationsBg extends AppLocalizations {
   String messageHistoryDatabaseOperationFailed(String error) {
     return 'Операцията не бе изпълнена: $error';
   }
+
+  @override
+  String get settings_supportDevelopment => 'Подкрепете разработката';
+
+  @override
+  String get donate_intro =>
+      'Благодарим, че наминахте!\nАко харесвате модификацията, можете да подкрепите разработката ѝ с дарение.';
+
+  @override
+  String get donate_tipLinkLabel => 'Връзка за бакшиш:';
+
+  @override
+  String get donate_upstreamAuthor =>
+      'Авторът на оригиналния meshcore_open — zjs81 — приема дарения тук:';
 }

@@ -11313,6 +11313,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operation failed: {error}'**
   String messageHistoryDatabaseOperationFailed(String error);
+
+  /// No description provided for @settings_supportDevelopment.
+  ///
+  /// In en, this message translates to:
+  /// **'Support development'**
+  String get settings_supportDevelopment;
+
+  /// No description provided for @donate_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for stopping by!\nIf you like this mod, you can support its development with a donation.'**
+  String get donate_intro;
+
+  /// No description provided for @donate_tipLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip link:'**
+  String get donate_tipLinkLabel;
+
+  /// No description provided for @donate_upstreamAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'The author of the original meshcore_open — zjs81 — accepts donations here:'**
+  String get donate_upstreamAuthor;
 }
 
 class _AppLocalizationsDelegate
