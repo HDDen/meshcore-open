@@ -42,6 +42,7 @@ class MCOImageV4Painter extends CustomPainter {
   final bool showGrid;
   final Rect? logicalViewport;
   final bool antiAlias;
+  final bool fitViewportToSize;
 
   const MCOImageV4Painter(
     this.document, {
@@ -53,6 +54,7 @@ class MCOImageV4Painter extends CustomPainter {
     this.showGrid = false,
     this.logicalViewport,
     this.antiAlias = true,
+    this.fitViewportToSize = true,
   });
 
   @override
@@ -64,14 +66,18 @@ class MCOImageV4Painter extends CustomPainter {
           document.width.toDouble(),
           document.height.toDouble(),
         );
-    final scale = math.min(
-      size.width / viewport.width,
-      size.height / viewport.height,
-    );
-    final offset = Offset(
-      (size.width - viewport.width * scale) / 2,
-      (size.height - viewport.height * scale) / 2,
-    );
+    final scale = fitViewportToSize
+        ? math.min(
+            size.width / viewport.width,
+            size.height / viewport.height,
+          )
+        : 1.0;
+    final offset = fitViewportToSize
+        ? Offset(
+            (size.width - viewport.width * scale) / 2,
+            (size.height - viewport.height * scale) / 2,
+          )
+        : Offset.zero;
 
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
@@ -532,7 +538,8 @@ class MCOImageV4Painter extends CustomPainter {
         oldDelegate.paintBackground != paintBackground ||
         oldDelegate.showGrid != showGrid ||
         oldDelegate.logicalViewport != logicalViewport ||
-        oldDelegate.antiAlias != antiAlias;
+        oldDelegate.antiAlias != antiAlias ||
+        oldDelegate.fitViewportToSize != fitViewportToSize;
   }
 }
 

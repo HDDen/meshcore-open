@@ -209,6 +209,22 @@ class _ImportedMcoBinary {
   const _ImportedMcoBinary({required this.image, required this.encoded});
 }
 
+class _MCOImageV4EncodeRequest {
+  final MCOImageV4Document document;
+  final int? nonce;
+  final String? targetName;
+  final int? replyTimestamp;
+  final int compressionLevel;
+
+  const _MCOImageV4EncodeRequest({
+    required this.document,
+    required this.nonce,
+    required this.targetName,
+    required this.replyTimestamp,
+    required this.compressionLevel,
+  });
+}
+
 class _ExtremeEncodeSlice {
   final _MCOImageEncodeRequest request;
   final String label;
@@ -292,6 +308,19 @@ MCOImage _imageFromEncodeRequest(_MCOImageEncodeRequest request) {
     pixels: request.pixels,
     transparentColor: request.transparentColor,
     encodingVersion: request.encodingVersion,
+  );
+}
+
+@pragma('vm:entry-point')
+EncodedMCOImageV4 _encodeMCOImageV4Request(
+  _MCOImageV4EncodeRequest request,
+) {
+  return const MCOImageV4Codec().encode(
+    request.document,
+    nonce: request.nonce,
+    targetName: request.targetName,
+    replyTimestamp: request.replyTimestamp,
+    compressionLevel: request.compressionLevel,
   );
 }
 
@@ -397,6 +426,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _inlineDynamicPaletteMaxColors = 64;
   static const int _historyLimit = 10;
   static const double _canvasRulerExtent = 12;
+  static const int _v4RasterizationMinRenderSide = 32;
   static const Object _transparentColorUnchanged = Object();
 
   final _widthController = TextEditingController(text: '$_defaultSize');
@@ -3610,6 +3640,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         'MCOimg v4 vector document is not initialized',
       );
     }
+    if (opaqueIndexes.isEmpty) {
+      throw const MCOImageInvalidInputException(
+        'Raster layer has no visible pixels',
+      );
+    }
     if (document.paletteProfile.isDynamic &&
         colorCounts.length > _inlineDynamicPaletteMaxColors &&
         opaqueIndexes.isNotEmpty) {
@@ -3712,7 +3747,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       for (var i = 0; i < pixels.length; i++) {
         final offset = i * 4;
         final alpha = rgba[offset + 3];
-        if (alpha < 128) {
+        if (alpha == 0) {
           transparentPixels.add(i);
           continue;
         }
@@ -3726,7 +3761,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         pixels[i] = color;
         used.add(color);
       }
-
       int? transparentColor;
       if (transparentPixels.isNotEmpty) {
         for (final color in paletteValues) {
@@ -3826,55 +3860,75 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       layerWidth.toDouble(),
       layerHeight.toDouble(),
     );
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    MCOImageV4Painter(
-      document.copyWith(
-        backgroundColor: null,
-        figures: <MCOImageV4Figure>[figure.withVisibility(true)],
-      ),
-      paintBackground: false,
-      showGrid: false,
-      logicalViewport: viewport,
-      antiAlias: false,
-    ).paint(canvas, Size(layerWidth.toDouble(), layerHeight.toDouble()));
-    final rendered = await recorder.endRecording().toImage(
-      layerWidth,
-      layerHeight,
-    );
-    try {
-      final data = await rendered.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      );
-      if (data == null) {
-        throw const MCOImageInvalidInputException(
-          'Cannot render MCOimg v4 layer',
+    final paletteValues = _rasterPaletteValues(document.paletteProfile);
+
+    Future<Uint8List> renderRgba({Color? background}) async {
+      await Future<void>.delayed(Duration.zero);
+      final renderWidth = math.max(layerWidth, _v4RasterizationMinRenderSide);
+      final renderHeight = math.max(layerHeight, _v4RasterizationMinRenderSide);
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      if (background != null) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, renderWidth.toDouble(), renderHeight.toDouble()),
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = background,
         );
       }
-      final rgba = data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
+      MCOImageV4Painter(
+        document.copyWith(
+          backgroundColor: null,
+          figures: <MCOImageV4Figure>[figure.withVisibility(true)],
+        ),
+        paintBackground: false,
+        showGrid: false,
+        logicalViewport: viewport,
+        antiAlias: false,
+        fitViewportToSize: false,
+      ).paint(canvas, Size(renderWidth.toDouble(), renderHeight.toDouble()));
+      final rendered = await recorder.endRecording().toImage(
+        renderWidth,
+        renderHeight,
       );
-      final paletteValues = _rasterPaletteValues(document.paletteProfile);
-      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
-      final transparentPixels = <int>[];
-      final used = <int>{};
-      for (var i = 0; i < pixels.length; i++) {
-        final offset = i * 4;
-        final alpha = rgba[offset + 3];
-        if (alpha < 128) {
-          transparentPixels.add(i);
-          continue;
-        }
-        final color = _nearestRasterColorValue(
-          rgba[offset],
-          rgba[offset + 1],
-          rgba[offset + 2],
-          document.paletteProfile,
-          paletteValues,
+      try {
+        final data = await rendered.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
         );
-        pixels[i] = color;
-        used.add(color);
+        if (data == null) {
+          throw const MCOImageInvalidInputException(
+            'Cannot render MCOimg v4 layer',
+          );
+        }
+        final bytes = data.buffer.asUint8List(
+          data.offsetInBytes,
+          data.lengthInBytes,
+        );
+        if (renderWidth == layerWidth && renderHeight == layerHeight) {
+          return Uint8List.fromList(bytes);
+        }
+        final cropped = Uint8List(layerWidth * layerHeight * 4);
+        final rowBytes = layerWidth * 4;
+        for (var y = 0; y < layerHeight; y++) {
+          final srcStart = y * renderWidth * 4;
+          final dstStart = y * rowBytes;
+          cropped.setRange(dstStart, dstStart + rowBytes, bytes, srcStart);
+        }
+        return cropped;
+      } finally {
+        rendered.dispose();
+      }
+    }
+
+    MCOImageV4RasterLayer buildLayer(
+      List<int> pixels,
+      List<int> transparentPixels,
+      Set<int> used,
+    ) {
+      if (used.isEmpty) {
+        throw const MCOImageInvalidInputException(
+          'Selected v4 layer has no visible pixels',
+        );
       }
 
       int? transparentColor;
@@ -3903,9 +3957,172 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         pixels: pixels,
         transparentColor: transparentColor,
       );
-    } finally {
-      rendered.dispose();
     }
+
+    MCOImageV4RasterLayer? layerFromAlpha(Uint8List rgba) {
+      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
+      final transparentPixels = <int>[];
+      final used = <int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        final alpha = rgba[offset + 3];
+        if (alpha == 0) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final color = _nearestRasterColorValue(
+          rgba[offset],
+          rgba[offset + 1],
+          rgba[offset + 2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = color;
+        used.add(color);
+      }
+      if (used.isEmpty) {
+        return null;
+      }
+      return buildLayer(pixels, transparentPixels, used);
+    }
+
+    bool matchesProbeBackground(
+      Uint8List rgba,
+      int offset,
+      Color background,
+    ) {
+      final argb = background.toARGB32();
+      return rgba[offset + 3] >= 128 &&
+          (rgba[offset] - ((argb >> 16) & 0xff)).abs() <= 1 &&
+          (rgba[offset + 1] - ((argb >> 8) & 0xff)).abs() <= 1 &&
+          (rgba[offset + 2] - (argb & 0xff)).abs() <= 1;
+    }
+
+    int colorChannel(Color color, int shift) =>
+        (color.toARGB32() >> shift) & 0xff;
+
+    int restoredProbeChannel(
+      int firstValue,
+      double alpha,
+      int firstBackgroundValue,
+    ) {
+      final restored = (firstValue - (1 - alpha) * firstBackgroundValue) / alpha;
+      return restored.round().clamp(0, 255).toInt();
+    }
+
+    List<int>? restoreProbeColor(
+      Uint8List first,
+      Uint8List second,
+      int offset,
+      Color firstBackground,
+      Color secondBackground,
+    ) {
+      final firstRedBackground = colorChannel(firstBackground, 16);
+      final firstGreenBackground = colorChannel(firstBackground, 8);
+      final firstBlueBackground = colorChannel(firstBackground, 0);
+      final secondRedBackground = colorChannel(secondBackground, 16);
+      final secondGreenBackground = colorChannel(secondBackground, 8);
+      final secondBlueBackground = colorChannel(secondBackground, 0);
+      final alphas = <double>[];
+
+      void addAlpha(int firstValue, int secondValue, int firstBg, int secondBg) {
+        final delta = firstBg - secondBg;
+        if (delta == 0) return;
+        final alpha = 1 - ((firstValue - secondValue) / delta);
+        alphas.add(alpha.clamp(0, 1).toDouble());
+      }
+
+      addAlpha(
+        first[offset],
+        second[offset],
+        firstRedBackground,
+        secondRedBackground,
+      );
+      addAlpha(
+        first[offset + 1],
+        second[offset + 1],
+        firstGreenBackground,
+        secondGreenBackground,
+      );
+      addAlpha(
+        first[offset + 2],
+        second[offset + 2],
+        firstBlueBackground,
+        secondBlueBackground,
+      );
+
+      if (alphas.isEmpty) return null;
+      final alpha = alphas.reduce((sum, value) => sum + value) / alphas.length;
+      if (alpha <= 0.02) return null;
+      return <int>[
+        restoredProbeChannel(first[offset], alpha, firstRedBackground),
+        restoredProbeChannel(first[offset + 1], alpha, firstGreenBackground),
+        restoredProbeChannel(first[offset + 2], alpha, firstBlueBackground),
+      ];
+    }
+
+    MCOImageV4RasterLayer layerFromProbe(
+      Uint8List first,
+      Uint8List second,
+      Color firstBackground,
+      Color secondBackground,
+    ) {
+      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
+      final transparentPixels = <int>[];
+      final used = <int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        final firstIsBackground = matchesProbeBackground(
+          first,
+          offset,
+          firstBackground,
+        );
+        final secondIsBackground = matchesProbeBackground(
+          second,
+          offset,
+          secondBackground,
+        );
+        if (firstIsBackground && secondIsBackground) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final restored = restoreProbeColor(
+          first,
+          second,
+          offset,
+          firstBackground,
+          secondBackground,
+        );
+        if (restored == null) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final color = _nearestRasterColorValue(
+          restored[0],
+          restored[1],
+          restored[2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = color;
+        used.add(color);
+      }
+      return buildLayer(pixels, transparentPixels, used);
+    }
+
+    final alphaLayer = PlatformInfo.isAndroid
+        ? null
+        : layerFromAlpha(await renderRgba());
+    if (alphaLayer != null) return alphaLayer;
+
+    const firstProbe = Color(0xffff00ff);
+    const secondProbe = Color(0xff00ff7f);
+    return layerFromProbe(
+      await renderRgba(background: firstProbe),
+      await renderRgba(background: secondProbe),
+      firstProbe,
+      secondProbe,
+    );
   }
 
   void _applyV4RasterTransfer(MCOImage image) {
@@ -4234,7 +4451,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _payloadRefreshTimer?.cancel();
       _payloadRefreshTimer = null;
       unawaited(_cancelCurrentEncoding());
-      _calculateVectorPayload();
+      unawaited(_calculateVectorPayload());
       return;
     }
     _payloadRefreshRequestId++;
@@ -4263,17 +4480,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _schedulePayloadRefresh();
   }
 
-  void _calculateVectorPayload() {
+  Future<void> _calculateVectorPayload() async {
     final document = _v4Document;
     if (document == null) return;
-    try {
-      final encoded = _v4Codec.encode(
-        document,
+    final requestId = _payloadRefreshRequestId;
+    final task = _startComputeTask<_MCOImageV4EncodeRequest, EncodedMCOImageV4>(
+      _encodeMCOImageV4Request,
+      _MCOImageV4EncodeRequest(
+        document: document,
         nonce: 0,
         targetName: widget.replyTargetName,
         replyTimestamp: widget.replyTimestamp,
         compressionLevel: _compressionLevel,
-      );
+      ),
+      debugLabel: 'MCOimg v4 encode',
+    );
+    try {
+      final encoded = await _awaitComputeTask(task);
+      if (requestId != _payloadRefreshRequestId ||
+          !identical(document, _v4Document)) {
+        return;
+      }
       final payloadSize = _payloadSizeForEncodedV4(encoded);
       if (!mounted) {
         _currentEncodedV4 = encoded;
@@ -4289,7 +4516,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         _payloadRefreshInProgress = false;
         _payloadRefreshProgressPercent = null;
       });
+    } on CancellableComputeCancelledException {
+      // Cancellation is expected when a newer v4 edit starts another encode.
     } on Object catch (error) {
+      if (requestId != _payloadRefreshRequestId ||
+          !identical(document, _v4Document)) {
+        return;
+      }
       if (!mounted) {
         _currentEncodedV4 = null;
         _v4EncodeError = error;
@@ -4322,7 +4555,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (_isVectorV4) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _calculateVectorPayload();
+        unawaited(_calculateVectorPayload());
       });
       return;
     }
@@ -5748,41 +5981,248 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       layerWidth.toDouble(),
       layerHeight.toDouble(),
     );
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    MCOImageV4Painter(
-      document.copyWith(
-        backgroundColor: null,
-        figures: figures,
-      ),
-      paintBackground: false,
-      showGrid: false,
-      logicalViewport: viewport,
-      antiAlias: false,
-    ).paint(canvas, Size(layerWidth.toDouble(), layerHeight.toDouble()));
-    final rendered = await recorder.endRecording().toImage(
-      layerWidth,
-      layerHeight,
-    );
-    try {
-      final rgba = await rendered.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      );
-      if (rgba == null) {
-        throw const MCOImageInvalidInputException(
-          'Cannot render MCOimg v4 layers',
+
+    Future<Uint8List> renderRgba({Color? background}) async {
+      await Future<void>.delayed(Duration.zero);
+      final renderWidth = math.max(layerWidth, _v4RasterizationMinRenderSide);
+      final renderHeight = math.max(layerHeight, _v4RasterizationMinRenderSide);
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      if (background != null) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, renderWidth.toDouble(), renderHeight.toDouble()),
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = background,
         );
       }
-      return _rgbaBytesToV4RasterLayer(
-        rgba,
+      MCOImageV4Painter(
+        document.copyWith(
+          backgroundColor: null,
+          figures: figures,
+        ),
+        paintBackground: false,
+        showGrid: false,
+        logicalViewport: viewport,
+        antiAlias: false,
+        fitViewportToSize: false,
+      ).paint(canvas, Size(renderWidth.toDouble(), renderHeight.toDouble()));
+      final rendered = await recorder.endRecording().toImage(
+        renderWidth,
+        renderHeight,
+      );
+      try {
+        final rgba = await rendered.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        if (rgba == null) {
+          throw const MCOImageInvalidInputException(
+            'Cannot render MCOimg v4 layers',
+          );
+        }
+        final bytes = rgba.buffer.asUint8List(
+          rgba.offsetInBytes,
+          rgba.lengthInBytes,
+        );
+        if (renderWidth == layerWidth && renderHeight == layerHeight) {
+          return Uint8List.fromList(bytes);
+        }
+        final cropped = Uint8List(layerWidth * layerHeight * 4);
+        final rowBytes = layerWidth * 4;
+        for (var y = 0; y < layerHeight; y++) {
+          final srcStart = y * renderWidth * 4;
+          final dstStart = y * rowBytes;
+          cropped.setRange(dstStart, dstStart + rowBytes, bytes, srcStart);
+        }
+        return cropped;
+      } finally {
+        rendered.dispose();
+      }
+    }
+
+    MCOImageV4RasterLayer? layerFromAlpha(Uint8List rgba) {
+      final paletteValues = _rasterPaletteValues(document.paletteProfile);
+      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
+      final transparentPixels = <int>[];
+      final opaqueIndexes = <int>[];
+      final colorCounts = <int, int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        if (rgba[offset + 3] == 0) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final colorValue = _nearestRasterColorValue(
+          rgba[offset],
+          rgba[offset + 1],
+          rgba[offset + 2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = colorValue;
+        opaqueIndexes.add(i);
+        colorCounts[colorValue] = (colorCounts[colorValue] ?? 0) + 1;
+      }
+      if (opaqueIndexes.isEmpty) return null;
+      return _v4RasterLayerFromProfilePixels(
         width: layerWidth,
         height: layerHeight,
+        pixels: pixels,
+        transparentPixels: transparentPixels,
+        opaqueIndexes: opaqueIndexes,
+        colorCounts: colorCounts,
         x: left,
         y: top,
       );
-    } finally {
-      rendered.dispose();
     }
+
+    bool matchesProbeBackground(
+      Uint8List rgba,
+      int offset,
+      Color background,
+    ) {
+      final argb = background.toARGB32();
+      return rgba[offset + 3] >= 128 &&
+          (rgba[offset] - ((argb >> 16) & 0xff)).abs() <= 1 &&
+          (rgba[offset + 1] - ((argb >> 8) & 0xff)).abs() <= 1 &&
+          (rgba[offset + 2] - (argb & 0xff)).abs() <= 1;
+    }
+
+    int colorChannel(Color color, int shift) =>
+        (color.toARGB32() >> shift) & 0xff;
+
+    int restoredProbeChannel(
+      int firstValue,
+      double alpha,
+      int firstBackgroundValue,
+    ) {
+      final restored = (firstValue - (1 - alpha) * firstBackgroundValue) / alpha;
+      return restored.round().clamp(0, 255).toInt();
+    }
+
+    List<int>? restoreProbeColor(
+      Uint8List first,
+      Uint8List second,
+      int offset,
+      Color firstBackground,
+      Color secondBackground,
+    ) {
+      final firstRedBackground = colorChannel(firstBackground, 16);
+      final firstGreenBackground = colorChannel(firstBackground, 8);
+      final firstBlueBackground = colorChannel(firstBackground, 0);
+      final secondRedBackground = colorChannel(secondBackground, 16);
+      final secondGreenBackground = colorChannel(secondBackground, 8);
+      final secondBlueBackground = colorChannel(secondBackground, 0);
+      final alphas = <double>[];
+
+      void addAlpha(int firstValue, int secondValue, int firstBg, int secondBg) {
+        final delta = firstBg - secondBg;
+        if (delta == 0) return;
+        final alpha = 1 - ((firstValue - secondValue) / delta);
+        alphas.add(alpha.clamp(0, 1).toDouble());
+      }
+
+      addAlpha(
+        first[offset],
+        second[offset],
+        firstRedBackground,
+        secondRedBackground,
+      );
+      addAlpha(
+        first[offset + 1],
+        second[offset + 1],
+        firstGreenBackground,
+        secondGreenBackground,
+      );
+      addAlpha(
+        first[offset + 2],
+        second[offset + 2],
+        firstBlueBackground,
+        secondBlueBackground,
+      );
+
+      if (alphas.isEmpty) return null;
+      final alpha = alphas.reduce((sum, value) => sum + value) / alphas.length;
+      if (alpha <= 0.02) return null;
+      return <int>[
+        restoredProbeChannel(first[offset], alpha, firstRedBackground),
+        restoredProbeChannel(first[offset + 1], alpha, firstGreenBackground),
+        restoredProbeChannel(first[offset + 2], alpha, firstBlueBackground),
+      ];
+    }
+
+    MCOImageV4RasterLayer layerFromProbe(
+      Uint8List first,
+      Uint8List second,
+      Color firstBackground,
+      Color secondBackground,
+    ) {
+      final paletteValues = _rasterPaletteValues(document.paletteProfile);
+      final pixels = List<int>.filled(layerWidth * layerHeight, 0);
+      final transparentPixels = <int>[];
+      final opaqueIndexes = <int>[];
+      final colorCounts = <int, int>{};
+      for (var i = 0; i < pixels.length; i++) {
+        final offset = i * 4;
+        final firstIsBackground = matchesProbeBackground(
+          first,
+          offset,
+          firstBackground,
+        );
+        final secondIsBackground = matchesProbeBackground(
+          second,
+          offset,
+          secondBackground,
+        );
+        if (firstIsBackground && secondIsBackground) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final restored = restoreProbeColor(
+          first,
+          second,
+          offset,
+          firstBackground,
+          secondBackground,
+        );
+        if (restored == null) {
+          transparentPixels.add(i);
+          continue;
+        }
+        final colorValue = _nearestRasterColorValue(
+          restored[0],
+          restored[1],
+          restored[2],
+          document.paletteProfile,
+          paletteValues,
+        );
+        pixels[i] = colorValue;
+        opaqueIndexes.add(i);
+        colorCounts[colorValue] = (colorCounts[colorValue] ?? 0) + 1;
+      }
+      return _v4RasterLayerFromProfilePixels(
+        width: layerWidth,
+        height: layerHeight,
+        pixels: pixels,
+        transparentPixels: transparentPixels,
+        opaqueIndexes: opaqueIndexes,
+        colorCounts: colorCounts,
+        x: left,
+        y: top,
+      );
+    }
+
+    final alphaLayer = PlatformInfo.isAndroid
+        ? null
+        : layerFromAlpha(await renderRgba());
+    if (alphaLayer != null) return alphaLayer;
+
+    return layerFromProbe(
+      await renderRgba(background: const Color(0xffff00ff)),
+      await renderRgba(background: const Color(0xff00ff7f)),
+      const Color(0xffff00ff),
+      const Color(0xff00ff7f),
+    );
   }
 
   Future<MCOImageV4Document> _optimizeV4RasterOverlaps(
@@ -7978,10 +8418,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
       if (_isVectorV4) {
+        final encoded = await _encodedVectorForCurrentState();
         final payload = ChannelAppDataHelper.appPayloadWithoutSender(
           subtypeId: ChannelAppDataHelper.mcoImageSubtype,
           version: ChannelAppDataHelper.mcoImageV4Version,
-          body: _encodedVectorForCurrentState().body,
+          body: encoded.body,
         );
         await MCOImageFileSaver.saveBinaryPayload(payload);
         return;
@@ -8078,7 +8519,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     try {
       if (!_finishV4RasterLayerEdit()) return;
       if (_isVectorV4) {
-        final encoded = _encodedVectorForCurrentState(refreshNonce: true);
+        final encoded = await _encodedVectorForCurrentState(refreshNonce: true);
         if (!mounted) return;
         final payloadSize = _payloadSizeForEncodedV4(encoded);
         _currentEncodedV4 = encoded;
@@ -8133,9 +8574,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     }
   }
 
-  EncodedMCOImageV4 _encodedVectorForCurrentState({
+  Future<EncodedMCOImageV4> _encodedVectorForCurrentState({
     bool refreshNonce = false,
-  }) {
+  }) async {
     final document = _v4Document;
     if (document == null) {
       throw const MCOImageInvalidInputException(
@@ -8148,13 +8589,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         return cached;
       }
     }
-    return _v4Codec.encode(
-      document,
-      nonce: refreshNonce ? null : 0,
-      targetName: widget.replyTargetName,
-      replyTimestamp: widget.replyTimestamp,
-      compressionLevel: _compressionLevel,
+    final task = _startComputeTask<_MCOImageV4EncodeRequest, EncodedMCOImageV4>(
+      _encodeMCOImageV4Request,
+      _MCOImageV4EncodeRequest(
+        document: document,
+        nonce: refreshNonce ? null : 0,
+        targetName: widget.replyTargetName,
+        replyTimestamp: widget.replyTimestamp,
+        compressionLevel: _compressionLevel,
+      ),
+      debugLabel: 'MCOimg v4 encode',
     );
+    return _awaitComputeTask(task);
   }
 
   Future<EncodedMCOImage> _encodedCanvasForCurrentState() async {
