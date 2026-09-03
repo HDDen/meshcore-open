@@ -109,4 +109,4 @@ pubspec_overrides.yaml
 # except
 !docs/mcoimg-js
 !docs/mcoimg-js/mcoimg-codec.global.js
-tools/MCOtxt/mcotxt-independent-benchmark.jsonl
+tools/MCOtxt/MCOtxt-independent-benchmark.jsonl
