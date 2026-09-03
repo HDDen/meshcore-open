@@ -11,7 +11,7 @@ It is useful for comparing trained tables/corpora independently of Flutter.
 
 Semantics:
 - 9-bit header/message.
-- TOP4 3 bits.
+- variable TOP4: rank0=2 bits, rank1=3 bits, rank2/rank3=4 bits.
 - PRIMARY literal 7 bits.
 - EXTENSION literal 9 bits.
 - SHIFT 5 bits + symbol token.
@@ -21,12 +21,12 @@ Semantics:
 - LF -> START.
 - ordinary punctuation -> AFTER_PUNCT.
 - language toggle -> START in new language.
-- unsupported Unicode is encoded as UTF8_RUN and resets context to START.
+- UTF8_RUN is fallback-only for unsupported A/B fragments, up to 32 UTF-8 bytes, and resets context to START.
+- persistent CAPS_MODE costs 9 bits to toggle; SHIFT (5 bits) inverts case for one caseable symbol; case controls are preplanned by a tiny 2-state DP.
 - RAW_UTF8 is a message-level candidate and is selected when its complete
   payload is smaller than the normal MCOtxt candidate.
 - NFC; CRLF/CR -> LF.
-- all characters supported by either A/B model are required to be encoded;
-  the DP does not intentionally discard a supported character to save bits.
+- all input is lossless after NFC/newline normalization; supported text is not diverted into UTF8_RUN.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 HEADER_BITS = 9
 RAW_UTF8_HEADER_BITS = 16
-TOP4_BITS = 3
+TOP4_BITS_BY_RANK = (2, 3, 4, 4)
 PRIMARY_BITS = 7
 PUNCT_BITS = 8
 EXT_BITS = 9
@@ -51,6 +51,13 @@ SHIFT_BITS = 5
 TOGGLE_BITS = 6
 UTF8_RUN_OVERHEAD_BITS = 14
 UTF8_RUN_MAX_BYTES = 32
+CASE_MODE_TOGGLE_BITS = 9
+
+def _top4_bits(rank: int) -> int:
+    if rank < 0 or rank >= len(TOP4_BITS_BY_RANK):
+        raise ValueError(f"invalid TOP4 rank: {rank}")
+    return TOP4_BITS_BY_RANK[rank]
+
 
 SPACE = 0x0020
 LF = 0x000A
@@ -106,6 +113,10 @@ class Model:
     @property
     def symbol_set(self):
         return set(self.primary) | set(self.extension)
+
+    @property
+    def lowercase_to_uppercase(self):
+        return {lower: upper for upper, lower in self.uppercase_to_lowercase.items()}
 
     def normalize_symbol(self, cp: int) -> Tuple[Optional[int], bool]:
         if cp in self.symbol_set:
@@ -220,12 +231,30 @@ def iter_messages(paths: Sequence[Path], fmt: str, jsonl_field: str) -> Iterator
             raise ValueError(actual_fmt)
 
 
+@dataclass(frozen=True)
+class _PathCost:
+    bits: int
+    tokens: int = 0
+    language_switches: int = 0
+    toggles: int = 0
+    case_toggles: int = 0
+    shifts: int = 0
+    utf8_runs: int = 0
+    utf8_codepoints: int = 0
+    utf8_bytes: int = 0
+    utf8_bits: int = 0
+    top4_hits: int = 0
+    top4_rank_hits: Tuple[int, int, int, int] = (0, 0, 0, 0)
+
+
 @dataclass
 class BenchResult:
     bits: int
     payload_bytes: int
     mode: str
     toggles: int
+    case_toggles: int
+    shifts: int
     output_chars: int
     output_utf8_bytes: int
     skipped_chars: int
@@ -233,16 +262,57 @@ class BenchResult:
     utf8_fallback_codepoints: int
     utf8_fallback_bytes: int
     utf8_fallback_bits: int
+    top4_rank_hits: Tuple[int, int, int, int]
     initial_language: str
     mixed: bool
     mcotxt_candidate_bits: int = 0
     mcotxt_candidate_bytes: int = 0
     raw_utf8_candidate_bits: int = 0
     raw_utf8_candidate_bytes: int = 0
+    mcotxt_case_toggles: int = 0
+    mcotxt_shifts: int = 0
+    mcotxt_utf8_runs: int = 0
+    mcotxt_top4_rank_hits: Tuple[int, int, int, int] = (0, 0, 0, 0)
 
 
-def _better(a: Tuple[int, int], b: Optional[Tuple[int, int]]) -> bool:
-    return b is None or a[0] < b[0] or (a[0] == b[0] and a[1] < b[1])
+def _add_cost(a: _PathCost, b: _PathCost) -> _PathCost:
+    return _PathCost(
+        bits=a.bits + b.bits,
+        tokens=a.tokens + b.tokens,
+        language_switches=a.language_switches + b.language_switches,
+        toggles=a.toggles + b.toggles,
+        case_toggles=a.case_toggles + b.case_toggles,
+        shifts=a.shifts + b.shifts,
+        utf8_runs=a.utf8_runs + b.utf8_runs,
+        utf8_codepoints=a.utf8_codepoints + b.utf8_codepoints,
+        utf8_bytes=a.utf8_bytes + b.utf8_bytes,
+        utf8_bits=a.utf8_bits + b.utf8_bits,
+        top4_hits=a.top4_hits + b.top4_hits,
+        top4_rank_hits=tuple(a.top4_rank_hits[i] + b.top4_rank_hits[i] for i in range(4)),
+    )
+
+
+def _better_path(a: _PathCost, b: Optional[_PathCost]) -> bool:
+    if b is None:
+        return True
+    # Mirrors the meaningful Dart _McotxtPlan.compare priorities.
+    return (
+        a.bits,
+        a.tokens,
+        a.language_switches,
+        -a.top4_hits,
+        a.case_toggles,
+        a.shifts,
+        a.utf8_runs,
+    ) < (
+        b.bits,
+        b.tokens,
+        b.language_switches,
+        -b.top4_hits,
+        b.case_toggles,
+        b.shifts,
+        b.utf8_runs,
+    )
 
 
 def _prefer_result(a: BenchResult, b: BenchResult) -> bool:
@@ -252,33 +322,137 @@ def _prefer_result(a: BenchResult, b: BenchResult) -> bool:
         return a.bits < b.bits
     if a.mode != b.mode:
         return a.mode == "mcotxt"
-    return a.toggles < b.toggles
+    if a.toggles != b.toggles:
+        return a.toggles < b.toggles
+    return a.case_toggles < b.case_toggles
 
 
-def _is_supported_anywhere(cp: int, models: Tuple[Model, Model]) -> bool:
+def _context_after_punctuation(cp: int, kind: str, previous: Optional[int]) -> Tuple[str, Optional[int]]:
+    if cp == SPACE:
+        if kind == "SYMBOL" and previous is not None:
+            return "SYMBOL", previous
+        return "START", None
+    if cp == LF:
+        return "START", None
+    return "PUNCT", None
+
+
+def _symbol_base_cost(model: Model, base_cp: int, ctx: Tuple[str, Optional[int]]) -> Tuple[int, Optional[int]]:
+    kind, previous = ctx
+    if kind == "START":
+        row = model.start_top4
+    elif kind == "PUNCT":
+        row = model.punct_start_top4
+    else:
+        row = model.top4[previous]
+    if base_cp in row:
+        rank = row.index(base_cp)
+        return _top4_bits(rank), rank
+    if base_cp in model.primary:
+        return PRIMARY_BITS, None
+    if base_cp in model.extension:
+        return EXT_BITS, None
+    raise ValueError(f"{model.code}: symbol U+{base_cp:04X} is not in model")
+
+
+def _message_mixed(text: str, models: Tuple[Model, Model]) -> bool:
+    seen = set()
+    for ch in text:
+        cp = ord(ch)
+        support = [model.normalize_symbol(cp)[0] is not None for model in models]
+        if support[0] and not support[1]:
+            seen.add(0)
+        elif support[1] and not support[0]:
+            seen.add(1)
+    return len(seen) > 1
+
+
+def _build_case_plan(text: str, models: Tuple[Model, Model]) -> Tuple[set[int], set[int]]:
+    """Optimize persistent CAPS_MODE independently with a tiny 2-state DP."""
+    positions: List[int] = []
+    wants_upper: List[bool] = []
+    for pos, ch in enumerate(text):
+        cp = ord(ch)
+        requirement: Optional[bool] = None
+        for model in models:
+            base, input_is_upper = model.normalize_symbol(cp)
+            if base is None or base not in model.lowercase_to_uppercase:
+                continue
+            requirement = input_is_upper
+            break
+        if requirement is None:
+            continue
+        positions.append(pos)
+        wants_upper.append(requirement)
+
+    if not positions:
+        return set(), set()
+
+    # state -> (bits, toggles, shifts)
+    previous: List[Optional[Tuple[int, int, int]]] = [(0, 0, 0), None]
+    backtrack: List[List[Optional[Tuple[int, bool, bool]]]] = []
+
+    def better(a: Tuple[int, int, int], b: Optional[Tuple[int, int, int]]) -> bool:
+        return b is None or a < b
+
+    for desired_upper in wants_upper:
+        nxt: List[Optional[Tuple[int, int, int]]] = [None, None]
+        decisions: List[Optional[Tuple[int, bool, bool]]] = [None, None]
+        for prev_state in (0, 1):
+            prev = previous[prev_state]
+            if prev is None:
+                continue
+            for next_state in (0, 1):
+                toggled = prev_state != next_state
+                shifted = desired_upper != bool(next_state)
+                cand = (
+                    prev[0] + (CASE_MODE_TOGGLE_BITS if toggled else 0) + (SHIFT_BITS if shifted else 0),
+                    prev[1] + int(toggled),
+                    prev[2] + int(shifted),
+                )
+                if better(cand, nxt[next_state]):
+                    nxt[next_state] = cand
+                    decisions[next_state] = (prev_state, toggled, shifted)
+        previous = nxt
+        backtrack.append(decisions)
+
+    state = 0 if better(previous[0], previous[1]) else 1
+    toggles: set[int] = set()
+    shifts: set[int] = set()
+    for i in range(len(positions) - 1, -1, -1):
+        decision = backtrack[i][state]
+        assert decision is not None
+        prev_state, toggled, shifted = decision
+        if toggled:
+            toggles.add(positions[i])
+        if shifted:
+            shifts.add(positions[i])
+        state = prev_state
+    return toggles, shifts
+
+
+def _is_supported_by_ab(cp: int, models: Tuple[Model, Model]) -> bool:
     if cp in PUNCT_SET:
         return True
     return any(model.normalize_symbol(cp)[0] is not None for model in models)
 
 
-def _utf8_fallback_run(chars: Sequence[str], start: int, models: Tuple[Model, Model]) -> Tuple[int, int]:
+def _fallback_run_at(chars: Sequence[str], position: int, models: Tuple[Model, Model]) -> Tuple[int, int]:
     data = bytearray()
     codepoints = 0
-    i = start
-    while i < len(chars):
+    for i in range(position, len(chars)):
         cp = ord(chars[i])
-        if _is_supported_anywhere(cp, models):
+        if _is_supported_by_ab(cp, models):
             break
         encoded = chars[i].encode("utf-8")
         if data and len(data) + len(encoded) > UTF8_RUN_MAX_BYTES:
             break
         data.extend(encoded)
         codepoints += 1
-        i += 1
         if len(data) == UTF8_RUN_MAX_BYTES:
             break
     if codepoints == 0:
-        encoded = chars[start].encode("utf-8")
+        encoded = chars[position].encode("utf-8")
         data.extend(encoded)
         codepoints = 1
     return codepoints, len(data)
@@ -286,128 +460,117 @@ def _utf8_fallback_run(chars: Sequence[str], start: int, models: Tuple[Model, Mo
 
 def benchmark_message(text: str, a: Model, b: Model, initial_index: int) -> BenchResult:
     text = unicodedata.normalize("NFC", text.replace("\r\n", "\n").replace("\r", "\n"))
-    models = (a, b)
-
-    # state: (active_model_index, context_kind, previous_cp_or_none)
-    # value: (bits excluding header, toggle count)
-    states: Dict[Tuple[int, str, Optional[int]], Tuple[int, int]] = {
-        (initial_index, "START", None): (0, 0)
-    }
-
-    output_chars = 0
-    output_utf8_bytes = 0
-    skipped_chars = 0
-    utf8_fallback_runs = 0
-    utf8_fallback_codepoints = 0
-    utf8_fallback_bytes = 0
-    utf8_fallback_bits = 0
-    seen_languages = set()
-
     chars = list(text)
-    i = 0
-    while i < len(chars):
-        ch = chars[i]
-        cp = ord(ch)
+    models = (a, b)
+    normalized_symbols = [
+        tuple(model.normalize_symbol(ord(ch)) for model in models)
+        for ch in chars
+    ]
+    case_toggle_positions, shift_positions = _build_case_plan(text, models)
 
-        # Is this a language symbol in either model?
-        norm = []
-        for model in models:
-            base, shifted = model.normalize_symbol(cp)
-            norm.append((base, shifted))
+    memo: Dict[Tuple[int, int, str, Optional[int]], _PathCost] = {}
 
-        supported_as_language = any(base is not None for base, _ in norm)
+    def best_from(
+        position: int,
+        active: int,
+        kind: str,
+        previous: Optional[int],
+    ) -> _PathCost:
+        if position >= len(chars):
+            return _PathCost(0)
+        key = (position, active, kind, previous)
+        cached = memo.get(key)
+        if cached is not None:
+            return cached
 
-        # SPACE is deliberately treated as a language symbol before punctuation.
-        if supported_as_language:
-            output_chars += 1
-            output_utf8_bytes += len(ch.encode("utf-8"))
-            next_states: Dict[Tuple[int, str, Optional[int]], Tuple[int, int]] = {}
-
-            for (active, kind, prev), (bits, toggles) in states.items():
-                for target in (0, 1):
-                    base, shifted = norm[target]
-                    if base is None:
-                        continue
-
-                    switch_cost = 0 if target == active else TOGGLE_BITS
-                    target_ctx = ("START", None) if target != active else (kind, prev)
-
-                    symbol_cost = models[target].symbol_cost(base, shifted, target_ctx)
-                    nb = bits + switch_cost + symbol_cost
-                    nt = toggles + (1 if target != active else 0)
-                    key = (target, "SYMBOL", base)
-                    candidate = (nb, nt)
-                    if _better(candidate, next_states.get(key)):
-                        next_states[key] = candidate
-
-            if not next_states:
-                raise RuntimeError(f"No DP transition for supported char {ch!r}")
-            states = next_states
-
-            # Count language-specific letters for the mixed/single label.
-            support = [norm[i][0] is not None for i in (0, 1)]
-            if support[0] and not support[1]:
-                seen_languages.add(0)
-            elif support[1] and not support[0]:
-                seen_languages.add(1)
-            i += 1
-            continue
+        cp = ord(chars[position])
+        best: Optional[_PathCost] = None
 
         if cp in PUNCT_SET:
-            output_chars += 1
-            output_utf8_bytes += len(ch.encode("utf-8"))
-            next_states = {}
-            for (active, kind, prev), val in states.items():
-                if cp == LF:
-                    key = (active, "START", None)
-                else:
-                    key = (active, "PUNCT", None)
-                candidate = (val[0] + PUNCT_BITS, val[1])
-                if _better(candidate, next_states.get(key)):
-                    next_states[key] = candidate
-            states = next_states
-            i += 1
-            continue
+            nkind, nprev = _context_after_punctuation(cp, kind, previous)
+            cand = _add_cost(
+                _PathCost(PUNCT_BITS, tokens=1),
+                best_from(position + 1, active, nkind, nprev),
+            )
+            if _better_path(cand, best):
+                best = cand
 
-        run_codepoints, run_bytes = _utf8_fallback_run(chars, i, models)
-        run_bits = UTF8_RUN_OVERHEAD_BITS + run_bytes * 8
-        utf8_fallback_runs += 1
-        utf8_fallback_codepoints += run_codepoints
-        utf8_fallback_bytes += run_bytes
-        utf8_fallback_bits += run_bits
-        output_chars += run_codepoints
-        output_utf8_bytes += run_bytes
-        next_states = {}
-        for (active, _kind, _prev), val in states.items():
-            key = (active, "START", None)
-            candidate = (val[0] + run_bits, val[1])
-            if _better(candidate, next_states.get(key)):
-                next_states[key] = candidate
-        states = next_states
-        i += run_codepoints
+        for target in (0, 1):
+            base, _input_is_upper = normalized_symbols[position][target]
+            if base is None:
+                continue
+            switched = target != active
+            target_ctx = ("START", None) if switched else (kind, previous)
+            base_bits, rank = _symbol_base_cost(models[target], base, target_ctx)
+            case_toggle = position in case_toggle_positions
+            shift = position in shift_positions
+            if shift and base not in models[target].lowercase_to_uppercase:
+                continue
 
-    best_state = None
-    best_val = None
-    for key, val in states.items():
-        if _better(val, best_val):
-            best_state, best_val = key, val
+            rank_hits = [0, 0, 0, 0]
+            if rank is not None:
+                rank_hits[rank] = 1
+            prefix = _PathCost(
+                bits=(TOGGLE_BITS if switched else 0)
+                + (CASE_MODE_TOGGLE_BITS if case_toggle else 0)
+                + (SHIFT_BITS if shift else 0)
+                + base_bits,
+                tokens=1 + int(switched) + int(case_toggle) + int(shift),
+                language_switches=int(switched),
+                toggles=int(switched),
+                case_toggles=int(case_toggle),
+                shifts=int(shift),
+                top4_hits=int(rank is not None),
+                top4_rank_hits=tuple(rank_hits),
+            )
+            cand = _add_cost(
+                prefix,
+                best_from(position + 1, target, "SYMBOL", base),
+            )
+            if _better_path(cand, best):
+                best = cand
 
-    bits, toggles = best_val
-    total_bits = bits + HEADER_BITS
+        # UTF8_RUN is fallback-only again. It is used only if neither A/B nor
+        # punctuation can represent the current codepoint.
+        if best is None:
+            codepoints, run_bytes = _fallback_run_at(chars, position, models)
+            run_bits = UTF8_RUN_OVERHEAD_BITS + run_bytes * 8
+            prefix = _PathCost(
+                bits=run_bits,
+                tokens=1,
+                utf8_runs=1,
+                utf8_codepoints=codepoints,
+                utf8_bytes=run_bytes,
+                utf8_bits=run_bits,
+            )
+            best = _add_cost(
+                prefix,
+                best_from(position + codepoints, active, "START", None),
+            )
+
+        memo[key] = best
+        return best
+
+    path = best_from(0, initial_index, "START", None)
+    total_bits = HEADER_BITS + path.bits
+    output_utf8_bytes = len(text.encode("utf-8"))
     return BenchResult(
         bits=total_bits,
         payload_bytes=math.ceil(total_bits / 8),
         mode="mcotxt",
-        toggles=toggles,
-        output_chars=output_chars,
+        toggles=path.toggles,
+        case_toggles=path.case_toggles,
+        shifts=path.shifts,
+        output_chars=len(text),
         output_utf8_bytes=output_utf8_bytes,
-        skipped_chars=skipped_chars,
-        utf8_fallback_runs=utf8_fallback_runs,
-        utf8_fallback_codepoints=utf8_fallback_codepoints,
-        utf8_fallback_bytes=utf8_fallback_bytes,
-        utf8_fallback_bits=utf8_fallback_bits,
+        skipped_chars=0,
+        utf8_fallback_runs=path.utf8_runs,
+        utf8_fallback_codepoints=path.utf8_codepoints,
+        utf8_fallback_bytes=path.utf8_bytes,
+        utf8_fallback_bits=path.utf8_bits,
+        top4_rank_hits=path.top4_rank_hits,
         initial_language=models[initial_index].code,
-        mixed=(len(seen_languages) > 1),
+        mixed=_message_mixed(text, models),
     )
 
 
@@ -418,12 +581,13 @@ def best_message(text: str, a: Model, b: Model) -> BenchResult:
     normalized = unicodedata.normalize("NFC", text.replace("\r\n", "\n").replace("\r", "\n"))
     raw_bytes = len(normalized.encode("utf-8"))
     raw_bits = RAW_UTF8_HEADER_BITS + raw_bytes * 8
-    raw_payload_bytes = math.ceil(raw_bits / 8)
     raw = BenchResult(
         bits=raw_bits,
-        payload_bytes=raw_payload_bytes,
+        payload_bytes=math.ceil(raw_bits / 8),
         mode="rawUtf8",
         toggles=0,
+        case_toggles=0,
+        shifts=0,
         output_chars=len(normalized),
         output_utf8_bytes=raw_bytes,
         skipped_chars=0,
@@ -431,8 +595,8 @@ def best_message(text: str, a: Model, b: Model) -> BenchResult:
         utf8_fallback_codepoints=0,
         utf8_fallback_bytes=0,
         utf8_fallback_bits=0,
+        top4_rank_hits=(0, 0, 0, 0),
         initial_language="RAW_UTF8",
-        # Message classification describes the INPUT, not the chosen wire mode.
         mixed=normal.mixed,
     )
 
@@ -441,6 +605,10 @@ def best_message(text: str, a: Model, b: Model) -> BenchResult:
     selected.mcotxt_candidate_bytes = normal.payload_bytes
     selected.raw_utf8_candidate_bits = raw.bits
     selected.raw_utf8_candidate_bytes = raw.payload_bytes
+    selected.mcotxt_case_toggles = normal.case_toggles
+    selected.mcotxt_shifts = normal.shifts
+    selected.mcotxt_utf8_runs = normal.utf8_fallback_runs
+    selected.mcotxt_top4_rank_hits = normal.top4_rank_hits
     return selected
 
 
@@ -487,6 +655,12 @@ def main() -> int:
     total_utf8_fallback_bytes = 0
     total_utf8_fallback_bits = 0
     total_toggles = 0
+    total_case_toggles = 0
+    total_shifts = 0
+    mcotxt_case_toggles = 0
+    mcotxt_shifts = 0
+    mcotxt_utf8_runs = 0
+    mcotxt_rank_hits = [0, 0, 0, 0]
     messages_with_toggle = 0
     mixed_messages = 0
     raw_messages = 0
@@ -518,14 +692,21 @@ def main() -> int:
         total_utf8_fallback_bytes += r.utf8_fallback_bytes
         total_utf8_fallback_bits += r.utf8_fallback_bits
         total_toggles += r.toggles
+        total_case_toggles += r.case_toggles
+        total_shifts += r.shifts
+        mcotxt_case_toggles += r.mcotxt_case_toggles
+        mcotxt_shifts += r.mcotxt_shifts
+        mcotxt_utf8_runs += r.mcotxt_utf8_runs
+        for rank in range(4):
+            mcotxt_rank_hits[rank] += r.mcotxt_top4_rank_hits[rank]
         messages_with_toggle += int(r.toggles > 0)
         mixed_messages += int(r.mixed)
         raw_messages += int(r.mode == "rawUtf8")
         if r.initial_language in initial_counts:
             initial_counts[r.initial_language] += 1
-        expensive.append((r.bits, r.payload_bytes, r.toggles, r.mode, text, source))
+        expensive.append((r.bits, r.payload_bytes, r.toggles, r.case_toggles, r.mode, text, source))
 
-    expensive.sort(reverse=True, key=lambda x: (x[1], x[0], x[2]))
+    expensive.sort(reverse=True, key=lambda x: (x[1], x[0], x[2], x[3]))
 
     scope = "validation hold-out" if args.validation_only else "all input messages"
     if args.mixed_only:
@@ -540,18 +721,30 @@ def main() -> int:
     print(f"  UTF-8 fallback bytes:     {total_utf8_fallback_bytes}")
     print(f"  UTF-8 fallback bits:      {total_utf8_fallback_bits}")
     print(f"  output UTF-8 bytes:       {total_utf8}")
-    print(f"  forced MCOtxt bits:       {forced_mcotxt_bits}")
-    print(f"  forced MCOtxt bytes:      {forced_mcotxt_bytes}")
+    print(f"  optimized MCOtxt bits:       {forced_mcotxt_bits}")
+    print(f"  optimized MCOtxt bytes:      {forced_mcotxt_bytes}")
     print(f"  forced RAW_UTF8 bits:     {forced_raw_utf8_bits}")
     print(f"  forced RAW_UTF8 bytes:    {forced_raw_utf8_bytes}")
     print(f"  selected bits:            {total_bits}")
     print(f"  selected bytes:           {total_payload_bytes}")
-    print(f"  saved vs forced MCOtxt:   {forced_mcotxt_bytes - total_payload_bytes} bytes")
+    print(f"  saved vs optimized MCOtxt:   {forced_mcotxt_bytes - total_payload_bytes} bytes")
     if total_chars:
         print(f"  bits/output char:         {total_bits / total_chars:.4f}")
     if total_utf8:
         print(f"  ratio vs UTF-8 bits:      {(total_utf8 * 8) / total_bits:.4f}x")
-    print(f"  toggles:                  {total_toggles}")
+    print(f"  language toggles:         {total_toggles}")
+    print(f"  selected CAPS toggles:    {total_case_toggles}")
+    print(f"  selected SHIFT tokens:    {total_shifts}")
+    print(f"  MCOtxt CAPS toggles:      {mcotxt_case_toggles}")
+    print(f"  MCOtxt SHIFT tokens:      {mcotxt_shifts}")
+    print(f"  MCOtxt fallback UTF8_RUNs:   {mcotxt_utf8_runs}")
+    rank_total = sum(mcotxt_rank_hits)
+    if rank_total:
+        rank_text = ", ".join(
+            f"r{rank}={mcotxt_rank_hits[rank]} ({mcotxt_rank_hits[rank] / rank_total * 100:.2f}%)"
+            for rank in range(4)
+        )
+        print(f"  MCOtxt TOP4 ranks:        {rank_text}")
     print(f"  messages with toggle:     {messages_with_toggle}")
     print(f"  mixed-language messages:  {mixed_messages}")
     print(f"  RAW_UTF8 messages:        {raw_messages}")
@@ -559,11 +752,11 @@ def main() -> int:
     print(f"  initial {b.code}:                {initial_counts[b.code]}")
     print("")
     print(f"Top {min(args.top, len(expensive))} messages by selected payload size:")
-    for bits, payload_bytes, toggles, mode, text, source in expensive[:args.top]:
+    for bits, payload_bytes, toggles, case_toggles, mode, text, source in expensive[:args.top]:
         preview = text.replace("\n", "\\n")
         if len(preview) > 140:
             preview = preview[:137] + "..."
-        print(f"  {payload_bytes:4d} bytes  {bits:5d} bits  {mode:7s}  toggles={toggles:2d}  {preview!r}")
+        print(f"  {payload_bytes:4d} bytes  {bits:5d} bits  {mode:7s}  lang={toggles:2d} caps={case_toggles:2d}  {preview!r}")
 
     return 0
 

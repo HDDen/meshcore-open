@@ -112,8 +112,8 @@ class McotxtLanguageModel {
          for (var i = 0; i < extensionSymbols.length; i++)
            extensionSymbols.elementAt(i): primarySymbols.length + i,
        } {
-    if (this.primarySymbols.length > 31) {
-      throw ArgumentError('MCOtxt primary table is limited to 31 symbols');
+    if (this.primarySymbols.length > 32) {
+      throw ArgumentError('MCOtxt primary table is limited to 32 symbols');
     }
     if (this.extensionSymbols.length > 32) {
       throw ArgumentError('MCOtxt extension table is limited to 32 symbols');

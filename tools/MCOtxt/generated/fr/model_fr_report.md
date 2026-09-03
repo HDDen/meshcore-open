@@ -6,8 +6,8 @@
 - Unicode database: `15.1.0`
 - Primary selection: `literal-savings`
 - Canonical language symbols: `53`
-- Primary: `31`
-- Extension: `22`
+- Primary: `32`
+- Extension: `21`
 - Total model symbols: `53`
 - Prediction contexts: `START`, `AFTER_PUNCT`, `SYMBOL(previous)`
 - Punctuation table: built-in MCOtxt v1 fallback; **not verified against punctuation.dart in this run**
@@ -22,7 +22,7 @@
 - Uppercase mapped: `1674`
 - Punctuation: `1521`
 - Unsupported: `54`
-- Training TOP-4 hit rate: `60.18%`
+- Training TOP-4 hit rate: `60.15%`
 
 ## Validation
 
@@ -31,23 +31,58 @@
 - Messages: `299`
 - Original UTF-8 bytes: `9666`
 - Normalized codepoints: `9429`
-- Output codepoints (supported + punctuation): `9413`
-- Skipped unsupported: `16`
+- Output codepoints: `9429`
+- Skipped unsupported: `0`
+- UTF-8 fallback runs: `16`
+- UTF-8 fallback codepoints: `16`
+- UTF-8 fallback bytes: `29`
+- UTF-8 fallback bits: `456`
 - Language symbols: `8971`
-- TOP-4 hits: `5365` (`59.80%`)
-- Primary literals: `3453`
-- Extension literals: `153`
+- TOP-4 hits: `5363` (`59.78%`)
+- Primary literals: `3473`
+- Extension literals: `135`
 - SHIFT tokens: `416`
 - Punctuation tokens: `442`
-- Token bits: `47259`
+- Token bits: `46957`
 - Header bits (9/message): `2691`
-- Total bits: `49950`
-- Bits/output-char, tokens only: `5.0206`
-- Bits/output-char, incl. per-message header: `5.3065`
-- UTF-8 bytes of the same decoded/supported text: `9637`
-- Compression ratio vs same decoded UTF-8: `1.5435x`
+- Total bits: `49648`
+- Bits/output-char, tokens only: `4.9801`
+- Bits/output-char, incl. per-message header: `5.2655`
+- UTF-8 bytes of the same decoded/supported text: `9666`
+- Compression ratio vs same decoded UTF-8: `1.5575x`
 
-> Validation here is single-language model evaluation. It includes real MCOtxt v1 TOP-4 / literal / SHIFT / punctuation costs and a 9-bit header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.
+> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 9-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.
+
+## TOP-4 rank diagnostics — validation
+
+| rank | hits | share of TOP-4 hits |
+|---:|---:|---:|
+| 0 | 2374 | 44.27% |
+| 1 | 1345 | 25.08% |
+| 2 | 909 | 16.95% |
+| 3 | 735 | 13.71% |
+
+> Variable TOP-4 is enabled in v1: rank 0 = 2 bits, rank 1 = 3 bits, ranks 2/3 = 4 bits. The table above shows the observed rank distribution.
+
+## Final encoder candidate simulation — validation
+
+This section simulates the final message-level selector between optimized normal MCOtxt (precomputed CAPS/SHIFT plan + fallback-only UTF8_RUN) and whole-message RAW_UTF8. It is intentionally separate from the model-only metrics above so TOP-4/model quality remains comparable between builds.
+
+- Optimized MCOtxt candidate bits: `49311`
+- Optimized MCOtxt candidate packed bytes: `6285`
+- RAW_UTF8 candidate bits: `82112`
+- RAW_UTF8 candidate packed bytes: `10264`
+- Selected MCOtxt messages: `298`
+- Selected RAW_UTF8 messages: `1`
+- Optimized CAPS_MODE toggles in MCOtxt candidates: `31`
+- Optimized one-symbol SHIFTs in MCOtxt candidates: `298`
+- Optimized fallback UTF8_RUNs in MCOtxt candidates: `16`
+- Final selected bits: `49296`
+- Final selected packed bytes: `6283`
+- Savings vs optimized MCOtxt: `2` bytes
+- Selected ratio vs normalized UTF-8: `1.5686x`
+
+> RAW_UTF8 simulation uses a `16`-bit byte-aligned message-mode header, matching the current Python A/B reference benchmark.
 
 ## Symbol index table
 
@@ -84,7 +119,7 @@
 | 28 | primary | `x` | U+0078 | 85 |
 | 29 | primary | `1` | U+0031 | 107 |
 | 30 | primary | `5` | U+0035 | 80 |
-| 31 | extension | `z` | U+007A | 79 |
+| 31 | primary | `z` | U+007A | 79 |
 | 32 | extension | `4` | U+0034 | 78 |
 | 33 | extension | `w` | U+0077 | 46 |
 | 34 | extension | `3` | U+0033 | 92 |
@@ -135,77 +170,78 @@
 
 | reason | transitions |
 |---|---:|
-| `message_start` | 1172 |
+| `message_start` | 1170 |
+| `utf8_fallback` | 31 |
 
 ### START target frequencies — training
 
 | rank | symbol | codepoint | count | share | in START TOP-4 | reason breakdown |
 |---:|---|---|---:|---:|---|---|
-| 1 | `b` | U+0062 | 169 | 14.42% | yes | message_start=169 |
-| 2 | `s` | U+0073 | 103 | 8.79% | yes | message_start=103 |
-| 3 | `t` | U+0074 | 94 | 8.02% | yes | message_start=94 |
-| 4 | `c` | U+0063 | 88 | 7.51% | yes | message_start=88 |
-| 5 | `h` | U+0068 | 79 | 6.74% |  | message_start=79 |
-| 6 | `o` | U+006F | 78 | 6.66% |  | message_start=78 |
-| 7 | `p` | U+0070 | 74 | 6.31% |  | message_start=74 |
-| 8 | `j` | U+006A | 72 | 6.14% |  | message_start=72 |
-| 9 | `m` | U+006D | 57 | 4.86% |  | message_start=57 |
-| 10 | `a` | U+0061 | 43 | 3.67% |  | message_start=43 |
-| 11 | `e` | U+0065 | 35 | 2.99% |  | message_start=35 |
-| 12 | `r` | U+0072 | 35 | 2.99% |  | message_start=35 |
-| 13 | `l` | U+006C | 31 | 2.65% |  | message_start=31 |
-| 14 | `i` | U+0069 | 27 | 2.30% |  | message_start=27 |
-| 15 | `d` | U+0064 | 24 | 2.05% |  | message_start=24 |
-| 16 | `n` | U+006E | 22 | 1.88% |  | message_start=22 |
-| 17 | `f` | U+0066 | 18 | 1.54% |  | message_start=18 |
-| 18 | `ç` | U+00E7 | 17 | 1.45% |  | message_start=17 |
-| 19 | `q` | U+0071 | 13 | 1.11% |  | message_start=13 |
-| 20 | `y` | U+0079 | 13 | 1.11% |  | message_start=13 |
-| 21 | `u` | U+0075 | 11 | 0.94% |  | message_start=11 |
-| 22 | `g` | U+0067 | 11 | 0.94% |  | message_start=11 |
-| 23 | `v` | U+0076 | 10 | 0.85% |  | message_start=10 |
-| 24 | `w` | U+0077 | 10 | 0.85% |  | message_start=10 |
-| 25 | `1` | U+0031 | 6 | 0.51% |  | message_start=6 |
-| 26 | `k` | U+006B | 5 | 0.43% |  | message_start=5 |
-| 27 | `7` | U+0037 | 4 | 0.34% |  | message_start=4 |
-| 28 | `6` | U+0036 | 4 | 0.34% |  | message_start=4 |
-| 29 | `4` | U+0034 | 4 | 0.34% |  | message_start=4 |
-| 30 | `5` | U+0035 | 4 | 0.34% |  | message_start=4 |
+| 1 | `b` | U+0062 | 169 | 14.07% | yes | message_start=168, utf8_fallback=1 |
+| 2 | `s` | U+0073 | 103 | 8.58% | yes | message_start=103 |
+| 3 | `t` | U+0074 | 94 | 7.83% | yes | message_start=94 |
+| 4 | `c` | U+0063 | 89 | 7.41% | yes | message_start=88, utf8_fallback=1 |
+| 5 | `h` | U+0068 | 79 | 6.58% |  | message_start=79 |
+| 6 | `o` | U+006F | 78 | 6.49% |  | message_start=78 |
+| 7 | `p` | U+0070 | 74 | 6.16% |  | message_start=74 |
+| 8 | `j` | U+006A | 72 | 6.00% |  | message_start=72 |
+| 9 | `m` | U+006D | 58 | 4.83% |  | message_start=56, utf8_fallback=2 |
+| 10 | `a` | U+0061 | 43 | 3.58% |  | message_start=43 |
+| 11 | `e` | U+0065 | 39 | 3.25% |  | message_start=35, utf8_fallback=4 |
+| 12 | `r` | U+0072 | 38 | 3.16% |  | message_start=35, utf8_fallback=3 |
+| 13 | `l` | U+006C | 32 | 2.66% |  | message_start=31, utf8_fallback=1 |
+| 14 | `i` | U+0069 | 27 | 2.25% |  | message_start=27 |
+| 15 | `d` | U+0064 | 24 | 2.00% |  | message_start=24 |
+| 16 | `n` | U+006E | 22 | 1.83% |  | message_start=22 |
+| 17 | `f` | U+0066 | 18 | 1.50% |  | message_start=18 |
+| 18 | `ç` | U+00E7 | 17 | 1.42% |  | message_start=17 |
+| 19 | `SPACE` | U+0020 | 16 | 1.33% |  | utf8_fallback=16 |
+| 20 | `q` | U+0071 | 13 | 1.08% |  | message_start=13 |
+| 21 | `y` | U+0079 | 13 | 1.08% |  | message_start=13 |
+| 22 | `u` | U+0075 | 12 | 1.00% |  | message_start=11, utf8_fallback=1 |
+| 23 | `g` | U+0067 | 11 | 0.92% |  | message_start=11 |
+| 24 | `v` | U+0076 | 11 | 0.92% |  | message_start=10, utf8_fallback=1 |
+| 25 | `w` | U+0077 | 10 | 0.83% |  | message_start=10 |
+| 26 | `1` | U+0031 | 6 | 0.50% |  | message_start=6 |
+| 27 | `k` | U+006B | 5 | 0.42% |  | message_start=5 |
+| 28 | `4` | U+0034 | 5 | 0.42% |  | message_start=4, utf8_fallback=1 |
+| 29 | `7` | U+0037 | 4 | 0.33% |  | message_start=4 |
+| 30 | `6` | U+0036 | 4 | 0.33% |  | message_start=4 |
 
 ### AFTER_PUNCT target frequencies — training
 
 | rank | symbol | codepoint | count | share | in AFTER_PUNCT TOP-4 |
 |---:|---|---|---:|---:|---|
-| 1 | `SPACE` | U+0020 | 435 | 44.52% | yes |
-| 2 | `a` | U+0061 | 120 | 12.28% | yes |
-| 3 | `e` | U+0065 | 112 | 11.46% | yes |
-| 4 | `n` | U+006E | 40 | 4.09% | yes |
-| 5 | `o` | U+006F | 24 | 2.46% |  |
-| 6 | `i` | U+0069 | 22 | 2.25% |  |
-| 7 | `u` | U+0075 | 18 | 1.84% |  |
-| 8 | `m` | U+006D | 17 | 1.74% |  |
-| 9 | `h` | U+0068 | 16 | 1.64% |  |
-| 10 | `é` | U+00E9 | 16 | 1.64% |  |
-| 11 | `b` | U+0062 | 14 | 1.43% |  |
-| 12 | `f` | U+0066 | 13 | 1.33% |  |
-| 13 | `c` | U+0063 | 11 | 1.13% |  |
-| 14 | `5` | U+0035 | 11 | 1.13% |  |
-| 15 | `s` | U+0073 | 10 | 1.02% |  |
-| 16 | `1` | U+0031 | 9 | 0.92% |  |
-| 17 | `2` | U+0032 | 9 | 0.92% |  |
-| 18 | `d` | U+0064 | 8 | 0.82% |  |
+| 1 | `SPACE` | U+0020 | 434 | 44.79% | yes |
+| 2 | `a` | U+0061 | 120 | 12.38% | yes |
+| 3 | `e` | U+0065 | 108 | 11.15% | yes |
+| 4 | `n` | U+006E | 40 | 4.13% | yes |
+| 5 | `o` | U+006F | 24 | 2.48% |  |
+| 6 | `i` | U+0069 | 22 | 2.27% |  |
+| 7 | `u` | U+0075 | 18 | 1.86% |  |
+| 8 | `h` | U+0068 | 16 | 1.65% |  |
+| 9 | `é` | U+00E9 | 16 | 1.65% |  |
+| 10 | `m` | U+006D | 16 | 1.65% |  |
+| 11 | `b` | U+0062 | 14 | 1.44% |  |
+| 12 | `f` | U+0066 | 13 | 1.34% |  |
+| 13 | `c` | U+0063 | 11 | 1.14% |  |
+| 14 | `5` | U+0035 | 11 | 1.14% |  |
+| 15 | `s` | U+0073 | 10 | 1.03% |  |
+| 16 | `1` | U+0031 | 9 | 0.93% |  |
+| 17 | `2` | U+0032 | 9 | 0.93% |  |
+| 18 | `d` | U+0064 | 8 | 0.83% |  |
 | 19 | `8` | U+0038 | 7 | 0.72% |  |
-| 20 | `v` | U+0076 | 5 | 0.51% |  |
-| 21 | `3` | U+0033 | 5 | 0.51% |  |
-| 22 | `r` | U+0072 | 5 | 0.51% |  |
-| 23 | `y` | U+0079 | 5 | 0.51% |  |
-| 24 | `j` | U+006A | 5 | 0.51% |  |
-| 25 | `0` | U+0030 | 5 | 0.51% |  |
-| 26 | `l` | U+006C | 4 | 0.41% |  |
+| 20 | `3` | U+0033 | 5 | 0.52% |  |
+| 21 | `r` | U+0072 | 5 | 0.52% |  |
+| 22 | `y` | U+0079 | 5 | 0.52% |  |
+| 23 | `j` | U+006A | 5 | 0.52% |  |
+| 24 | `0` | U+0030 | 5 | 0.52% |  |
+| 25 | `l` | U+006C | 4 | 0.41% |  |
+| 26 | `v` | U+0076 | 4 | 0.41% |  |
 | 27 | `t` | U+0074 | 4 | 0.41% |  |
 | 28 | `g` | U+0067 | 4 | 0.41% |  |
-| 29 | `4` | U+0034 | 4 | 0.41% |  |
-| 30 | `p` | U+0070 | 3 | 0.31% |  |
+| 29 | `p` | U+0070 | 3 | 0.31% |  |
+| 30 | `6` | U+0036 | 3 | 0.31% |  |
 
 ### Ordinary punctuation that led to AFTER_PUNCT — training
 
@@ -225,7 +261,6 @@
 | `[` | U+005B | 10 |
 | `]` | U+005D | 7 |
 | `#` | U+0023 | 7 |
-| `«` | U+00AB | 7 |
 | `"` | U+0022 | 6 |
 | `@` | U+0040 | 6 |
 | `»` | U+00BB | 6 |
@@ -233,43 +268,42 @@
 | `)` | U+0029 | 2 |
 | `_` | U+005F | 2 |
 | `;` | U+003B | 1 |
-| `—` | U+2014 | 1 |
 | `&` | U+0026 | 1 |
 
 ### START target frequencies — validation
 
 | rank | symbol | codepoint | count | share | predicted by START TOP-4 | reason breakdown |
 |---:|---|---|---:|---:|---|---|
-| 1 | `b` | U+0062 | 55 | 19.23% | yes | message_start=55 |
-| 2 | `c` | U+0063 | 22 | 7.69% | yes | message_start=22 |
-| 3 | `o` | U+006F | 20 | 6.99% |  | message_start=20 |
-| 4 | `r` | U+0072 | 18 | 6.29% |  | message_start=18 |
-| 5 | `h` | U+0068 | 18 | 6.29% |  | message_start=18 |
-| 6 | `s` | U+0073 | 15 | 5.24% | yes | message_start=15 |
-| 7 | `t` | U+0074 | 15 | 5.24% | yes | message_start=15 |
-| 8 | `p` | U+0070 | 15 | 5.24% |  | message_start=15 |
-| 9 | `j` | U+006A | 12 | 4.20% |  | message_start=12 |
-| 10 | `m` | U+006D | 11 | 3.85% |  | message_start=11 |
-| 11 | `a` | U+0061 | 10 | 3.50% |  | message_start=10 |
-| 12 | `l` | U+006C | 9 | 3.15% |  | message_start=9 |
-| 13 | `e` | U+0065 | 9 | 3.15% |  | message_start=9 |
-| 14 | `ç` | U+00E7 | 7 | 2.45% |  | message_start=7 |
-| 15 | `d` | U+0064 | 6 | 2.10% |  | message_start=6 |
-| 16 | `i` | U+0069 | 5 | 1.75% |  | message_start=5 |
-| 17 | `n` | U+006E | 5 | 1.75% |  | message_start=5 |
-| 18 | `u` | U+0075 | 4 | 1.40% |  | message_start=4 |
-| 19 | `y` | U+0079 | 4 | 1.40% |  | message_start=4 |
-| 20 | `v` | U+0076 | 4 | 1.40% |  | message_start=4 |
-| 21 | `3` | U+0033 | 4 | 1.40% |  | message_start=4 |
-| 22 | `7` | U+0037 | 3 | 1.05% |  | message_start=3 |
-| 23 | `8` | U+0038 | 3 | 1.05% |  | message_start=3 |
-| 24 | `f` | U+0066 | 3 | 1.05% |  | message_start=3 |
-| 25 | `1` | U+0031 | 2 | 0.70% |  | message_start=2 |
-| 26 | `2` | U+0032 | 1 | 0.35% |  | message_start=1 |
-| 27 | `w` | U+0077 | 1 | 0.35% |  | message_start=1 |
-| 28 | `à` | U+00E0 | 1 | 0.35% |  | message_start=1 |
-| 29 | `q` | U+0071 | 1 | 0.35% |  | message_start=1 |
-| 30 | `4` | U+0034 | 1 | 0.35% |  | message_start=1 |
+| 1 | `b` | U+0062 | 55 | 18.33% | yes | message_start=55 |
+| 2 | `c` | U+0063 | 22 | 7.33% | yes | message_start=22 |
+| 3 | `o` | U+006F | 20 | 6.67% |  | message_start=20 |
+| 4 | `r` | U+0072 | 19 | 6.33% |  | message_start=18, utf8_fallback=1 |
+| 5 | `h` | U+0068 | 18 | 6.00% |  | message_start=18 |
+| 6 | `s` | U+0073 | 15 | 5.00% | yes | message_start=15 |
+| 7 | `t` | U+0074 | 15 | 5.00% | yes | message_start=15 |
+| 8 | `p` | U+0070 | 15 | 5.00% |  | message_start=15 |
+| 9 | `j` | U+006A | 12 | 4.00% |  | message_start=12 |
+| 10 | `m` | U+006D | 11 | 3.67% |  | message_start=11 |
+| 11 | `SPACE` | U+0020 | 11 | 3.67% |  | utf8_fallback=11 |
+| 12 | `a` | U+0061 | 10 | 3.33% |  | message_start=10 |
+| 13 | `l` | U+006C | 9 | 3.00% |  | message_start=9 |
+| 14 | `e` | U+0065 | 9 | 3.00% |  | message_start=9 |
+| 15 | `ç` | U+00E7 | 7 | 2.33% |  | message_start=7 |
+| 16 | `d` | U+0064 | 6 | 2.00% |  | message_start=6 |
+| 17 | `n` | U+006E | 6 | 2.00% |  | message_start=5, utf8_fallback=1 |
+| 18 | `u` | U+0075 | 5 | 1.67% |  | message_start=4, utf8_fallback=1 |
+| 19 | `i` | U+0069 | 5 | 1.67% |  | message_start=5 |
+| 20 | `y` | U+0079 | 4 | 1.33% |  | message_start=4 |
+| 21 | `v` | U+0076 | 4 | 1.33% |  | message_start=4 |
+| 22 | `3` | U+0033 | 4 | 1.33% |  | message_start=4 |
+| 23 | `7` | U+0037 | 3 | 1.00% |  | message_start=3 |
+| 24 | `8` | U+0038 | 3 | 1.00% |  | message_start=3 |
+| 25 | `f` | U+0066 | 3 | 1.00% |  | message_start=3 |
+| 26 | `1` | U+0031 | 2 | 0.67% |  | message_start=2 |
+| 27 | `2` | U+0032 | 1 | 0.33% |  | message_start=1 |
+| 28 | `w` | U+0077 | 1 | 0.33% |  | message_start=1 |
+| 29 | `à` | U+00E0 | 1 | 0.33% |  | message_start=1 |
+| 30 | `q` | U+0071 | 1 | 0.33% |  | message_start=1 |
 
 ### AFTER_PUNCT target frequencies — validation
 
@@ -310,16 +344,32 @@
 
 | category | tokens | bits | share of total bits |
 |---|---:|---:|---:|
-| TOP-4 | 5365 | 16095 | 32.22% |
-| Primary literal | 3453 | 24171 | 48.39% |
-| Extension literal | 153 | 1377 | 2.76% |
-| SHIFT | 416 | 2080 | 4.16% |
-| Punctuation | 442 | 3536 | 7.08% |
-| Header | 299 | 2691 | 5.39% |
+| TOP-4 variable | 5363 | 15359 | 30.94% |
+| Primary literal | 3473 | 24311 | 48.97% |
+| Extension literal | 135 | 1215 | 2.45% |
+| SHIFT | 416 | 2080 | 4.19% |
+| Punctuation | 442 | 3536 | 7.12% |
+| UTF-8 fallback | 16 | 456 | 0.92% |
+| Header | 299 | 2691 | 5.42% |
+
+## UTF-8 fallback — validation
+
+- Runs: `16`
+- Unicode codepoints: `16`
+- UTF-8 bytes: `29`
+- Total fallback bits: `456`
+- Share of total encoded bits: `0.92%`
+
+| count | codepoint | symbol | Unicode name |
+|---:|---|---|---|
+| 8 | U+007C | `'|'` | VERTICAL LINE |
+| 5 | U+2026 | `…` | HORIZONTAL ELLIPSIS |
+| 2 | U+00E4 | `ä` | LATIN SMALL LETTER A WITH DIAERESIS |
+| 1 | U+00F6 | `ö` | LATIN SMALL LETTER O WITH DIAERESIS |
 
 ## Most expensive TOP-4 misses — validation
 
-Sorted by avoidable bit cost relative to a hypothetical TOP-4 hit for the same target. SHIFT cost is excluded because it is paid in both cases.
+Sorted by avoidable bit cost relative to a hypothetical 3-bit TOP-4 reference hit for the same target. SHIFT cost is excluded because it is paid in both cases.
 
 | previous | next | tier | misses | literal bits | extra vs TOP-4 |
 |---|---|---|---:|---:|---:|
@@ -366,6 +416,7 @@ Sorted by avoidable bit cost relative to a hypothetical TOP-4 hit for the same t
 
 ## Unsupported symbols in validation
 
+These symbols were encoded losslessly through UTF8_RUN during validation.
 | count | codepoint | symbol | Unicode name |
 |---:|---|---|---|
 | 8 | U+007C | `'|'` | VERTICAL LINE |

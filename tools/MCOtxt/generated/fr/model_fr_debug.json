@@ -35,10 +35,10 @@
     50,
     120,
     49,
-    53
+    53,
+    122
   ],
   "extensionSymbols": [
-    122,
     52,
     119,
     51,
@@ -510,65 +510,67 @@
       "unsupported": 2
     },
     "startReasonCounts": {
-      "message_start": 1172
+      "message_start": 1170,
+      "utf8_fallback": 31
     },
     "startCounts": {
-      "99": 88,
-      "109": 57,
+      "99": 89,
+      "109": 58,
       "97": 43,
       "111": 78,
       "105": 27,
       "104": 79,
       "98": 169,
       "115": 103,
-      "108": 31,
+      "108": 32,
       "110": 22,
       "106": 72,
-      "101": 35,
+      "101": 39,
       "49": 6,
       "116": 94,
-      "117": 11,
+      "117": 12,
       "233": 1,
       "103": 11,
       "100": 24,
       "112": 74,
       "113": 13,
-      "114": 35,
+      "114": 38,
       "55": 4,
       "121": 13,
       "231": 17,
-      "118": 10,
+      "118": 11,
       "51": 2,
       "224": 2,
       "54": 4,
       "119": 10,
+      "32": 16,
       "102": 18,
       "50": 3,
       "107": 5,
-      "52": 4,
+      "52": 5,
       "120": 1,
       "56": 2,
       "53": 4
     },
     "punctStartCounts": {
-      "32": 435,
+      "32": 434,
       "97": 120,
       "108": 4,
       "99": 11,
       "102": 13,
       "100": 8,
-      "101": 112,
+      "101": 108,
       "110": 40,
       "104": 16,
       "233": 16,
       "56": 7,
       "49": 9,
       "105": 22,
-      "118": 5,
+      "118": 4,
       "50": 9,
       "51": 5,
       "224": 2,
-      "109": 17,
+      "109": 16,
       "116": 4,
       "111": 24,
       "103": 4,
@@ -586,10 +588,10 @@
       "53": 11,
       "107": 2,
       "55": 1,
-      "52": 4,
       "238": 1,
       "57": 3,
-      "339": 1
+      "339": 1,
+      "52": 3
     },
     "punctStartTriggerCounts": {
       "46": 116,
@@ -609,23 +611,21 @@
       "93": 7,
       "35": 7,
       "64": 6,
-      "171": 7,
       "187": 6,
       "95": 2,
       "59": 1,
-      "8212": 1,
       "43": 5,
       "38": 1
     },
     "startTargetByReason": {
       "message_start": {
         "99": 88,
-        "109": 57,
+        "109": 56,
         "97": 43,
         "111": 78,
         "105": 27,
         "104": 79,
-        "98": 169,
+        "98": 168,
         "115": 103,
         "108": 31,
         "110": 22,
@@ -655,6 +655,18 @@
         "120": 1,
         "56": 2,
         "53": 4
+      },
+      "utf8_fallback": {
+        "32": 16,
+        "114": 3,
+        "108": 1,
+        "101": 4,
+        "109": 2,
+        "52": 1,
+        "98": 1,
+        "118": 1,
+        "99": 1,
+        "117": 1
       }
     }
   },
@@ -662,17 +674,40 @@
     "messages": 299,
     "original_utf8_bytes": 9666,
     "normalized_codepoints": 9429,
-    "output_codepoints": 9413,
+    "output_codepoints": 9429,
     "language_symbols": 8971,
-    "top4_hits": 5365,
-    "primary_literals": 3453,
-    "extension_literals": 153,
+    "top4_hits": 5363,
+    "top4_rank_hits": {
+      "0": 2374,
+      "1": 1345,
+      "2": 909,
+      "3": 735
+    },
+    "primary_literals": 3473,
+    "extension_literals": 135,
     "punctuation_symbols": 442,
     "shifts": 416,
-    "skipped": 16,
-    "token_bits": 47259,
+    "skipped": 0,
+    "utf8_fallback_runs": 16,
+    "utf8_fallback_codepoints": 16,
+    "utf8_fallback_bytes": 29,
+    "utf8_fallback_bits": 456,
+    "token_bits": 46957,
     "header_bits": 2691,
-    "decoded_utf8_bytes": 9637,
+    "decoded_utf8_bytes": 9666,
+    "mcotxt_candidate_bits": 49311,
+    "mcotxt_candidate_bytes": 6285,
+    "raw_utf8_candidate_bits": 82112,
+    "raw_utf8_candidate_bytes": 10264,
+    "selected_bits": 49296,
+    "selected_bytes": 6283,
+    "selected_mcotxt_messages": 298,
+    "selected_raw_utf8_messages": 1,
+    "optimized_case_mode_toggles": 31,
+    "optimized_shifts": 298,
+    "optimized_utf8_runs": 16,
+    "selector_savings_bytes_vs_mcotxt": 2,
+    "selected_ratio_vs_normalized_utf8": 1.5686465433300876,
     "unsupported_counts": {
       "124": 8,
       "228": 2,
@@ -682,12 +717,12 @@
     "start_counts": {
       "98": 55,
       "111": 20,
-      "117": 4,
+      "117": 5,
       "108": 9,
       "97": 10,
       "99": 22,
       "231": 7,
-      "114": 18,
+      "114": 19,
       "115": 15,
       "104": 18,
       "55": 3,
@@ -699,8 +734,9 @@
       "121": 4,
       "105": 5,
       "109": 11,
+      "32": 11,
       "112": 15,
-      "110": 5,
+      "110": 6,
       "119": 1,
       "56": 3,
       "102": 3,
@@ -768,7 +804,8 @@
       "61": 1
     },
     "start_reason_counts": {
-      "message_start": 286
+      "message_start": 286,
+      "utf8_fallback": 14
     },
     "start_target_by_reason": {
       "message_start": {
@@ -804,6 +841,12 @@
         "52": 1,
         "103": 1,
         "53": 1
+      },
+      "utf8_fallback": {
+        "32": 11,
+        "114": 1,
+        "117": 1,
+        "110": 1
       }
     },
     "message_begin_counts": {
@@ -1154,15 +1197,15 @@
         "count": 19
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 224,
-        "count": 18
-      },
-      {
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 114,
+        "count": 19
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 224,
         "count": 18
       },
       {
@@ -1388,6 +1431,12 @@
         "count": 11
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 32,
+        "count": 11
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 110,
         "targetCodepoint": 105,
@@ -1451,12 +1500,6 @@
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 101,
-        "count": 9
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 32,
         "count": 9
       },
       {
@@ -1790,6 +1833,12 @@
         "count": 6
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 110,
+        "count": 6
+      },
+      {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
         "targetCodepoint": 57,
@@ -1818,6 +1867,12 @@
         "previousCodepoint": 99,
         "targetCodepoint": 117,
         "count": 6
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 117,
+        "count": 5
       },
       {
         "context": "SYMBOL",
@@ -1886,12 +1941,6 @@
         "count": 5
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 110,
-        "count": 5
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 32,
         "targetCodepoint": 121,
@@ -1937,12 +1986,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 233,
         "targetCodepoint": 115,
-        "count": 4
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 117,
         "count": 4
       },
       {
@@ -2301,12 +2344,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 114,
-        "targetCodepoint": 117,
-        "count": 3
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 112,
         "targetCodepoint": 105,
         "count": 3
@@ -2445,12 +2482,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 104,
-        "targetCodepoint": 110,
-        "count": 2
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 121,
         "targetCodepoint": 114,
         "count": 2
@@ -2549,6 +2580,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 102,
         "targetCodepoint": 107,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 114,
+        "targetCodepoint": 117,
         "count": 2
       },
       {
@@ -2841,6 +2878,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 104,
+        "targetCodepoint": 110,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 110,
         "targetCodepoint": 121,
         "count": 1
@@ -2975,12 +3018,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 114,
         "targetCodepoint": 107,
-        "count": 1
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 119,
-        "targetCodepoint": 114,
         "count": 1
       },
       {
@@ -3674,10 +3711,10 @@
         "count": 1
       }
     ],
-    "total_bits": 49950,
-    "top4_hit_rate": 0.598038122840263,
-    "bits_per_output_char_tokens": 5.020609794964411,
-    "bits_per_output_char_total": 5.3064910230532245,
-    "ratio_vs_decoded_utf8": 1.5434634634634634
+    "total_bits": 49648,
+    "top4_hit_rate": 0.5978151822539294,
+    "bits_per_output_char_tokens": 4.980061512355499,
+    "bits_per_output_char_total": 5.2654576307137555,
+    "ratio_vs_decoded_utf8": 1.5575249758298422
   }
 }

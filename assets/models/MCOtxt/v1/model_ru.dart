@@ -7,17 +7,16 @@ import 'package:meshcore_open/mcotxt/models/mcotxt_model.dart';
 
 const List<int> mcotxtRuPrimarySymbols = <int>[
   0x0020, 0x0441, 0x043C, 0x0443, 0x0440, 0x043A, 0x0435, 0x043B, 0x043D, 0x0438, 0x044F, 0x0442,
-  0x0431, 0x0434, 0x0433, 0x0447, 0x0432, 0x0430, 0x0437, 0x043E, 0x044B, 0x043F, 0x0439, 0x0445,
-  0x0436, 0x0448, 0x044E, 0x044C, 0x044D, 0x0449, 0x0446,
+  0x0431, 0x0434, 0x0432, 0x0433, 0x0447, 0x0430, 0x0437, 0x043E, 0x044B, 0x043F, 0x0439, 0x0445,
+  0x0436, 0x0448, 0x044E, 0x044C, 0x044D, 0x0449, 0x0446, 0x0444,
 ];
 
 const List<int> mcotxtRuExtensionSymbols = <int>[
-  0x0444, 0x0031, 0x0032, 0x0033, 0x0451, 0x0034, 0x0035, 0x0038, 0x0037, 0x0036, 0x0039, 0x0030,
-  0x044A,
+  0x0031, 0x0032, 0x0033, 0x0451, 0x0034, 0x0035, 0x0038, 0x0037, 0x0036, 0x0039, 0x0030, 0x044A,
 ];
 
 const List<int> mcotxtRuStartTop4Indexes = <int>[
-  21, 8, 13, 16,
+  21, 8, 0, 13,
 ];
 
 const List<int> mcotxtRuPunctStartTop4Indexes = <int>[
@@ -25,17 +24,17 @@ const List<int> mcotxtRuPunctStartTop4Indexes = <int>[
 ];
 
 const List<int> mcotxtRuTop4Indexes = <int>[
-  8, 21, 1, 16, 11, 6, 0, 19, 0, 6, 19, 17, 0, 11, 13, 24, 19, 17, 6, 9, 19, 17, 0, 9, 0, 11, 8, 4,
+  8, 21, 1, 14, 11, 6, 0, 19, 0, 6, 19, 17, 0, 11, 13, 24, 19, 17, 6, 9, 19, 17, 0, 9, 0, 11, 8, 4,
   9, 27, 19, 6, 17, 19, 6, 9, 0, 11, 8, 7, 0, 11, 18, 7, 19, 17, 0, 27, 19, 4, 20, 6, 17, 19, 6, 9,
-  19, 13, 17, 9, 6, 11, 17, 9, 0, 6, 17, 19, 0, 7, 5, 11, 17, 0, 8, 9, 0, 11, 13, 16, 0, 22, 25, 7,
-  19, 4, 9, 17, 0, 11, 15, 5, 19, 0, 17, 3, 6, 8, 13, 9, 6, 9, 17, 5, 0, 11, 15, 1, 0, 8, 5, 1, 11,
+  0, 6, 17, 19, 19, 13, 17, 9, 6, 11, 17, 9, 0, 7, 5, 11, 17, 0, 8, 9, 0, 11, 13, 14, 0, 22, 25, 7,
+  19, 4, 9, 17, 0, 11, 16, 5, 19, 0, 17, 3, 6, 8, 13, 9, 6, 9, 17, 5, 0, 11, 16, 1, 0, 8, 5, 1, 11,
   5, 8, 7, 6, 17, 35, 9, 9, 6, 17, 0, 9, 19, 7, 6, 0, 42, 32, 36, 0, 42, 37, 33, 0, 42, 34, 33, 0,
-  11, 2, 7, 0, 42, 34, 37, 0, 42, 40, 37, 0, 40, 42, 33, 0, 39, 42, 37, 0, 37, 38, 42, 0, 41, 42,
-  33, 0, 42, 2, 5, 6, 10, 35, 9,
+  11, 2, 7, 0, 42, 34, 37, 0, 42, 37, 40, 0, 40, 42, 33, 0, 39, 42, 37, 0, 37, 38, 42, 0, 41, 42,
+  37, 0, 42, 2, 5, 6, 10, 35, 9,
 ];
 
 const List<int> mcotxtRuStartTop4 = <int>[
-  0x043F, 0x043D, 0x0434, 0x0432,
+  0x043F, 0x043D, 0x0020, 0x0434,
 ];
 
 const List<int> mcotxtRuPunctStartTop4 = <int>[
@@ -57,9 +56,9 @@ const List<List<int>> mcotxtRuTop4 = <List<int>>[
   <int>[0x043E, 0x0430, 0x0020, 0x044C], // #11: U+0442 'т' CYRILLIC SMALL LETTER TE
   <int>[0x043E, 0x0440, 0x044B, 0x0435], // #12: U+0431 'б' CYRILLIC SMALL LETTER BE
   <int>[0x0430, 0x043E, 0x0435, 0x0438], // #13: U+0434 'д' CYRILLIC SMALL LETTER DE
-  <int>[0x043E, 0x0434, 0x0430, 0x0438], // #14: U+0433 'г' CYRILLIC SMALL LETTER GHE
-  <int>[0x0435, 0x0442, 0x0430, 0x0438], // #15: U+0447 'ч' CYRILLIC SMALL LETTER CHE
-  <int>[0x0020, 0x0435, 0x0430, 0x043E], // #16: U+0432 'в' CYRILLIC SMALL LETTER VE
+  <int>[0x0020, 0x0435, 0x0430, 0x043E], // #14: U+0432 'в' CYRILLIC SMALL LETTER VE
+  <int>[0x043E, 0x0434, 0x0430, 0x0438], // #15: U+0433 'г' CYRILLIC SMALL LETTER GHE
+  <int>[0x0435, 0x0442, 0x0430, 0x0438], // #16: U+0447 'ч' CYRILLIC SMALL LETTER CHE
   <int>[0x0020, 0x043B, 0x043A, 0x0442], // #17: U+0430 'а' CYRILLIC SMALL LETTER A
   <int>[0x0430, 0x0020, 0x043D, 0x0438], // #18: U+0437 'з' CYRILLIC SMALL LETTER ZE
   <int>[0x0020, 0x0442, 0x0434, 0x0432], // #19: U+043E 'о' CYRILLIC SMALL LETTER O
@@ -80,11 +79,11 @@ const List<List<int>> mcotxtRuTop4 = <List<int>>[
   <int>[0x0020, 0x0030, 0x0033, 0x0032], // #34: U+0033 '3' DIGIT THREE
   <int>[0x0020, 0x0442, 0x043C, 0x043B], // #35: U+0451 'ё' CYRILLIC SMALL LETTER IO
   <int>[0x0020, 0x0030, 0x0033, 0x0035], // #36: U+0034 '4' DIGIT FOUR
-  <int>[0x0020, 0x0030, 0x0036, 0x0035], // #37: U+0035 '5' DIGIT FIVE
+  <int>[0x0020, 0x0030, 0x0035, 0x0036], // #37: U+0035 '5' DIGIT FIVE
   <int>[0x0020, 0x0036, 0x0030, 0x0032], // #38: U+0038 '8' DIGIT EIGHT
   <int>[0x0020, 0x0037, 0x0030, 0x0035], // #39: U+0037 '7' DIGIT SEVEN
   <int>[0x0020, 0x0035, 0x0038, 0x0030], // #40: U+0036 '6' DIGIT SIX
-  <int>[0x0020, 0x0039, 0x0030, 0x0032], // #41: U+0039 '9' DIGIT NINE
+  <int>[0x0020, 0x0039, 0x0030, 0x0035], // #41: U+0039 '9' DIGIT NINE
   <int>[0x0020, 0x0030, 0x043C, 0x043A], // #42: U+0030 '0' DIGIT ZERO
   <int>[0x0435, 0x044F, 0x0451, 0x0438], // #43: U+044A 'ъ' CYRILLIC SMALL LETTER HARD SIGN
 ];

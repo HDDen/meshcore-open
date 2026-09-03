@@ -35,10 +35,10 @@
     50,
     56,
     52,
-    122
+    122,
+    53
   ],
   "extensionSymbols": [
-    53,
     113,
     54,
     55,
@@ -350,7 +350,8 @@
       "unsupported": 6
     },
     "startReasonCounts": {
-      "message_start": 2211
+      "message_start": 2206,
+      "utf8_fallback": 38
     },
     "startCounts": {
       "110": 72,
@@ -358,41 +359,41 @@
       "97": 147,
       "105": 215,
       "103": 174,
-      "119": 120,
+      "119": 121,
       "109": 225,
       "114": 87,
       "102": 34,
-      "99": 44,
+      "99": 45,
       "49": 43,
       "116": 217,
       "112": 28,
-      "53": 9,
+      "53": 10,
       "111": 49,
       "115": 74,
       "106": 14,
+      "50": 31,
       "121": 106,
-      "52": 7,
-      "50": 28,
+      "52": 8,
       "51": 12,
       "100": 37,
-      "54": 6,
+      "54": 7,
       "57": 7,
       "56": 9,
       "101": 94,
-      "108": 40,
+      "32": 24,
+      "108": 41,
       "55": 7,
       "113": 4,
       "98": 42,
       "117": 7,
       "118": 8,
       "107": 11,
-      "32": 1,
-      "48": 2,
+      "48": 3,
       "120": 1,
       "122": 1
     },
     "punctStartCounts": {
-      "32": 871,
+      "32": 869,
       "115": 164,
       "100": 21,
       "109": 73,
@@ -409,7 +410,7 @@
       "118": 29,
       "112": 13,
       "120": 2,
-      "50": 11,
+      "50": 10,
       "98": 10,
       "108": 24,
       "105": 15,
@@ -431,11 +432,11 @@
     "punctStartTriggerCounts": {
       "44": 445,
       "63": 49,
-      "46": 334,
+      "46": 333,
       "39": 361,
       "45": 53,
       "33": 48,
-      "58": 36,
+      "58": 35,
       "47": 57,
       "95": 4,
       "64": 17,
@@ -443,7 +444,7 @@
       "92": 15,
       "40": 17,
       "41": 8,
-      "43": 7,
+      "43": 6,
       "59": 3,
       "34": 11,
       "35": 15,
@@ -460,8 +461,8 @@
         "104": 229,
         "97": 147,
         "105": 215,
-        "103": 174,
-        "119": 120,
+        "103": 173,
+        "119": 119,
         "109": 225,
         "114": 87,
         "102": 34,
@@ -480,19 +481,31 @@
         "100": 37,
         "54": 6,
         "57": 7,
-        "56": 9,
         "101": 94,
         "108": 40,
         "55": 7,
         "113": 4,
         "98": 42,
+        "56": 7,
         "117": 7,
         "118": 8,
         "107": 11,
-        "32": 1,
         "48": 2,
         "120": 1,
         "122": 1
+      },
+      "utf8_fallback": {
+        "50": 3,
+        "56": 2,
+        "119": 2,
+        "32": 24,
+        "108": 1,
+        "48": 1,
+        "53": 1,
+        "52": 1,
+        "54": 1,
+        "99": 1,
+        "103": 1
       }
     }
   },
@@ -500,17 +513,40 @@
     "messages": 548,
     "original_utf8_bytes": 19151,
     "normalized_codepoints": 19132,
-    "output_codepoints": 19128,
+    "output_codepoints": 19132,
     "language_symbols": 18518,
-    "top4_hits": 11089,
-    "primary_literals": 7364,
-    "extension_literals": 65,
+    "top4_hits": 11088,
+    "top4_rank_hits": {
+      "0": 4625,
+      "1": 2766,
+      "2": 2050,
+      "3": 1647
+    },
+    "primary_literals": 7380,
+    "extension_literals": 50,
     "punctuation_symbols": 610,
     "shifts": 808,
-    "skipped": 4,
-    "token_bits": 94320,
+    "skipped": 0,
+    "utf8_fallback_runs": 4,
+    "utf8_fallback_codepoints": 4,
+    "utf8_fallback_bytes": 9,
+    "utf8_fallback_bits": 128,
+    "token_bits": 93494,
     "header_bits": 4932,
-    "decoded_utf8_bytes": 19142,
+    "decoded_utf8_bytes": 19151,
+    "mcotxt_candidate_bits": 98202,
+    "mcotxt_candidate_bytes": 12505,
+    "raw_utf8_candidate_bits": 161976,
+    "raw_utf8_candidate_bytes": 20247,
+    "selected_bits": 98202,
+    "selected_bytes": 12505,
+    "selected_mcotxt_messages": 548,
+    "selected_raw_utf8_messages": 0,
+    "optimized_case_mode_toggles": 29,
+    "optimized_shifts": 719,
+    "optimized_utf8_runs": 4,
+    "selector_savings_bytes_vs_mcotxt": 0,
+    "selected_ratio_vs_normalized_utf8": 1.5601311582248834,
     "unsupported_counts": {
       "42": 1,
       "8230": 2,
@@ -520,7 +556,7 @@
       "115": 16,
       "100": 10,
       "109": 59,
-      "99": 19,
+      "99": 20,
       "97": 35,
       "111": 8,
       "104": 59,
@@ -544,6 +580,7 @@
       "107": 1,
       "117": 1,
       "118": 1,
+      "32": 2,
       "57": 1,
       "55": 3,
       "51": 3,
@@ -606,7 +643,8 @@
       "37": 1
     },
     "start_reason_counts": {
-      "message_start": 540
+      "message_start": 540,
+      "utf8_fallback": 3
     },
     "start_target_by_reason": {
       "message_start": {
@@ -642,6 +680,10 @@
         "51": 3,
         "53": 1,
         "54": 1
+      },
+      "utf8_fallback": {
+        "32": 2,
+        "99": 1
       }
     },
     "message_begin_counts": {
@@ -1316,6 +1358,12 @@
         "count": 21
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 99,
+        "count": 20
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 115,
         "targetCodepoint": 99,
@@ -1338,12 +1386,6 @@
         "previousCodepoint": null,
         "targetCodepoint": 119,
         "count": 20
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 99,
-        "count": 19
       },
       {
         "context": "SYMBOL",
@@ -2609,6 +2651,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 100,
         "targetCodepoint": 103,
+        "count": 2
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 32,
         "count": 2
       },
       {
@@ -3207,12 +3255,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 52,
-        "targetCodepoint": 99,
-        "count": 1
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 103,
         "targetCodepoint": 121,
         "count": 1
@@ -3316,12 +3358,6 @@
       {
         "context": "SYMBOL",
         "previousCodepoint": 32,
-        "targetCodepoint": 32,
-        "count": 1
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
         "targetCodepoint": 57,
         "count": 1
       },
@@ -3416,10 +3452,10 @@
         "count": 1
       }
     ],
-    "total_bits": 99252,
-    "top4_hit_rate": 0.598822767037477,
-    "bits_per_output_char_tokens": 4.93099121706399,
-    "bits_per_output_char_total": 5.188833124215809,
-    "ratio_vs_decoded_utf8": 1.542900898722444
+    "total_bits": 98426,
+    "top4_hit_rate": 0.5987687655254347,
+    "bits_per_output_char_tokens": 4.886786535647083,
+    "bits_per_output_char_total": 5.144574534810788,
+    "ratio_vs_decoded_utf8": 1.556580578302481
   }
 }

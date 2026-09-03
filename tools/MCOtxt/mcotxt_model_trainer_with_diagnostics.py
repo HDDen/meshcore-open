@@ -83,7 +83,7 @@ PUNCTUATION_V1: Tuple[int, ...] = (
 )
 
 # Token costs from MCOtxt v1.
-BITS_TOP4 = 3
+TOP4_BITS_BY_RANK = (2, 3, 4, 4)
 BITS_SHIFT = 5
 BITS_TOGGLE = 6
 BITS_PRIMARY_LITERAL = 7
@@ -91,11 +91,18 @@ BITS_PUNCTUATION = 8
 BITS_EXTENSION_LITERAL = 9
 BITS_HEADER = 9  # VVV AAA BBB. Single-language validation uses B=NONE.
 BITS_RAW_UTF8_HEADER = 16  # RAW_UTF8 mode header padded/aligned to 2 bytes.
+BITS_CASE_MODE_TOGGLE = 9  # EXTENDED_CONTROL + TOGGLE_CASE_MODE subopcode.
 BITS_UTF8_RUN_OVERHEAD = 14  # EXTENDED_CONTROL + subtype + lengthMinus1.
 UTF8_RUN_MAX_BYTES = 32
 
 # Diagnostics-only sentinel; Unicode codepoints are non-negative.
 AFTER_PUNCT_SENTINEL = -1
+
+def _top4_bits(rank: int) -> int:
+    if rank < 0 or rank >= len(TOP4_BITS_BY_RANK):
+        raise ValueError(f"invalid TOP4 rank: {rank}")
+    return TOP4_BITS_BY_RANK[rank]
+
 
 LANGUAGE_IDS: Mapping[str, int] = {
     "en": 0,
@@ -184,7 +191,7 @@ LANGUAGES: Mapping[str, LanguageDefinition] = {
     "it": _lang(
         "it",
         # Includes the normal grave/acute accented vowels encountered in modern
-        # Italian text. All still fit comfortably within 63 language symbols.
+        # Italian text. All still fit comfortably within 64 language symbols.
         "abcdefghijklmnopqrstuvwxyzàèéìíòóùú",
         "ABCDEFGHIJKLMNOPQRSTUVWXYZÀÈÉÌÍÒÓÙÚ",
     ),
@@ -276,6 +283,7 @@ class EvalStats:
     output_codepoints: int = 0
     language_symbols: int = 0
     top4_hits: int = 0
+    top4_rank_hits: collections.Counter[int] = dataclasses.field(default_factory=collections.Counter)
     primary_literals: int = 0
     extension_literals: int = 0
     punctuation_symbols: int = 0
@@ -300,6 +308,9 @@ class EvalStats:
     selected_bytes: int = 0
     selected_mcotxt_messages: int = 0
     selected_raw_utf8_messages: int = 0
+    optimized_case_mode_toggles: int = 0
+    optimized_shifts: int = 0
+    optimized_utf8_runs: int = 0
     unsupported_counts: collections.Counter[int] = dataclasses.field(default_factory=collections.Counter)
 
     # Diagnostics only.
@@ -645,10 +656,10 @@ def build_model(
     primary_selection: str,
 ) -> Model:
     canonical = lang.canonical_symbols
-    if len(canonical) > 63:
+    if len(canonical) > 64:
         raise ValueError(
             f"Language {lang.code} has {len(canonical)} canonical symbols; "
-            "MCOtxt v1 supports at most 31 primary + 32 extension = 63"
+            "MCOtxt v1 supports at most 32 primary + 32 extension = 64"
         )
     if SPACE not in canonical:
         raise ValueError("SPACE must be part of the canonical language alphabet")
@@ -669,8 +680,8 @@ def build_model(
 
     remaining = [cp for cp in canonical if cp != SPACE]
     ranked = sorted(remaining, key=primary_key)
-    primary = tuple([SPACE] + ranked[:30])
-    extension = tuple(ranked[30:])
+    primary = tuple([SPACE] + ranked[:31])
+    extension = tuple(ranked[31:])
 
     symbols = primary + extension
     symbol_to_index = {cp: idx for idx, cp in enumerate(symbols)}
@@ -707,8 +718,8 @@ def build_model(
 
 def validate_model(model: Model) -> None:
     errors: List[str] = []
-    if not (1 <= len(model.primary) <= 31):
-        errors.append(f"primary count must be 1..31, got {len(model.primary)}")
+    if not (1 <= len(model.primary) <= 32):
+        errors.append(f"primary count must be 1..32, got {len(model.primary)}")
     if len(model.extension) > 32:
         errors.append(f"extension count must be <=32, got {len(model.extension)}")
     if SPACE not in model.primary:
@@ -721,8 +732,8 @@ def validate_model(model: Model) -> None:
         errors.append("primary and extension overlap")
     if model.symbol_count != len(model.primary) + len(model.extension):
         errors.append("symbol count mismatch")
-    if model.symbol_count > 63:
-        errors.append("symbol count exceeds 63")
+    if model.symbol_count > 64:
+        errors.append("symbol count exceeds 64")
     if model.symbol_count < 4:
         errors.append("symbol count is below 4")
     if len(model.start_top4_indexes) != 4:
@@ -809,6 +820,187 @@ def _utf8_fallback_run(
     return codepoints, len(data), "".join(chars[start:start + codepoints])
 
 
+@dataclasses.dataclass(frozen=True)
+class _OptimizedCost:
+    bits: int
+    tokens: int = 0
+    case_toggles: int = 0
+    shifts: int = 0
+    utf8_runs: int = 0
+    top4_hits: int = 0
+
+
+def _better_optimized_cost(a: _OptimizedCost, b: Optional[_OptimizedCost]) -> bool:
+    if b is None:
+        return True
+    return (a.bits, a.tokens, -a.top4_hits, a.case_toggles, a.shifts, a.utf8_runs) < (
+        b.bits, b.tokens, -b.top4_hits, b.case_toggles, b.shifts, b.utf8_runs
+    )
+
+
+def _build_single_language_case_plan(text: str, model: Model) -> Tuple[set[int], set[int]]:
+    """Return (toggle_before_positions, shift_positions) using a tiny 2-state DP.
+
+    Case control is independent of TOP4/literal/context costs because both
+    CAPS_MODE and SHIFT only change reconstructed case, never the normalized
+    lowercase symbol that drives prediction. Unsupported characters are ignored
+    here because they are carried by UTF8_RUN fallback.
+    """
+    allowed = set(model.symbols)
+    positions: List[int] = []
+    wants_upper: List[bool] = []
+    for pos, ch in enumerate(text):
+        symbol, was_upper = _language_symbol(ord(ch), model.language, allowed)
+        if symbol is None or symbol not in model.uppercase_to_lowercase.values():
+            continue
+        positions.append(pos)
+        wants_upper.append(was_upper)
+
+    if not positions:
+        return set(), set()
+
+    # state -> (bits, toggles, shifts)
+    previous: List[Optional[Tuple[int, int, int]]] = [(0, 0, 0), None]
+    backtrack: List[List[Optional[Tuple[int, bool, bool]]]] = []
+
+    def better(a: Tuple[int, int, int], b: Optional[Tuple[int, int, int]]) -> bool:
+        return b is None or a < b
+
+    for desired_upper in wants_upper:
+        nxt: List[Optional[Tuple[int, int, int]]] = [None, None]
+        decisions: List[Optional[Tuple[int, bool, bool]]] = [None, None]
+        for prev_state in (0, 1):
+            prev = previous[prev_state]
+            if prev is None:
+                continue
+            for next_state in (0, 1):
+                toggled = prev_state != next_state
+                shifted = desired_upper != bool(next_state)
+                cand = (
+                    prev[0] + (BITS_CASE_MODE_TOGGLE if toggled else 0) + (BITS_SHIFT if shifted else 0),
+                    prev[1] + int(toggled),
+                    prev[2] + int(shifted),
+                )
+                if better(cand, nxt[next_state]):
+                    nxt[next_state] = cand
+                    decisions[next_state] = (prev_state, toggled, shifted)
+        previous = nxt
+        backtrack.append(decisions)
+
+    state = 0 if better(previous[0], previous[1]) else 1
+    toggle_positions: set[int] = set()
+    shift_positions: set[int] = set()
+    for i in range(len(positions) - 1, -1, -1):
+        decision = backtrack[i][state]
+        assert decision is not None
+        prev_state, toggled, shifted = decision
+        if toggled:
+            toggle_positions.add(positions[i])
+        if shifted:
+            shift_positions.add(positions[i])
+        state = prev_state
+    return toggle_positions, shift_positions
+
+
+def _optimized_single_language_mcotxt_cost(text: str, model: Model) -> _OptimizedCost:
+    """Single-language v1 runtime cost with cheap CAPS plan and fallback UTF8_RUN."""
+    chars = list(text)
+    punctuation = set(PUNCTUATION_V1)
+    primary = set(model.primary)
+    extension = set(model.extension)
+    allowed = set(model.symbols)
+    toggle_positions, shift_positions = _build_single_language_case_plan(text, model)
+    memo: Dict[Tuple[int, str, Optional[int]], _OptimizedCost] = {}
+
+    def add(a: _OptimizedCost, b: _OptimizedCost) -> _OptimizedCost:
+        return _OptimizedCost(
+            bits=a.bits + b.bits,
+            tokens=a.tokens + b.tokens,
+            case_toggles=a.case_toggles + b.case_toggles,
+            shifts=a.shifts + b.shifts,
+            utf8_runs=a.utf8_runs + b.utf8_runs,
+            top4_hits=a.top4_hits + b.top4_hits,
+        )
+
+    def best_from(pos: int, context: str, previous: Optional[int]) -> _OptimizedCost:
+        if pos >= len(chars):
+            return _OptimizedCost(0)
+        key = (pos, context, previous)
+        cached = memo.get(key)
+        if cached is not None:
+            return cached
+        cp = ord(chars[pos])
+        best: Optional[_OptimizedCost] = None
+
+        if cp in punctuation:
+            if cp == LF:
+                next_context, next_previous = "start", None
+            elif cp == SPACE and context == "symbol" and previous is not None:
+                next_context, next_previous = "symbol", previous
+            elif cp == SPACE:
+                next_context, next_previous = "start", None
+            else:
+                next_context, next_previous = "after_punct", None
+            cand = add(
+                _OptimizedCost(BITS_PUNCTUATION, tokens=1),
+                best_from(pos + 1, next_context, next_previous),
+            )
+            if _better_optimized_cost(cand, best):
+                best = cand
+
+        symbol, _was_upper = _language_symbol(cp, model.language, allowed)
+        if symbol is not None:
+            symbol_index = model.symbol_to_index[symbol]
+            if context == "start":
+                row = model.start_top4_indexes
+            elif context == "after_punct":
+                row = model.punct_start_top4_indexes
+            else:
+                assert previous is not None
+                row = model.top4_row_indexes(model.symbol_to_index[previous])
+            if symbol_index in row:
+                rank = row.index(symbol_index)
+                base_bits, top4 = _top4_bits(rank), 1
+            elif symbol in primary:
+                base_bits, top4 = BITS_PRIMARY_LITERAL, 0
+            elif symbol in extension:
+                base_bits, top4 = BITS_EXTENSION_LITERAL, 0
+            else:
+                raise AssertionError("symbol is in neither primary nor extension")
+
+            toggle = pos in toggle_positions
+            shift = pos in shift_positions
+            prefix = _OptimizedCost(
+                bits=base_bits + (BITS_CASE_MODE_TOGGLE if toggle else 0) + (BITS_SHIFT if shift else 0),
+                tokens=1 + int(toggle) + int(shift),
+                case_toggles=int(toggle),
+                shifts=int(shift),
+                top4_hits=top4,
+            )
+            cand = add(prefix, best_from(pos + 1, "symbol", symbol))
+            if _better_optimized_cost(cand, best):
+                best = cand
+
+        # UTF8_RUN is only the universal fallback. Do not compete against legal
+        # language/punctuation encodings: that search was expensive for ~0.6%
+        # RU gain and is unsuitable for the MCU encoder target.
+        if best is None:
+            run_codepoints, run_bytes, _run_text = _utf8_fallback_run(
+                chars, pos, model, allowed, punctuation
+            )
+            prefix = _OptimizedCost(
+                BITS_UTF8_RUN_OVERHEAD + run_bytes * 8,
+                tokens=1,
+                utf8_runs=1,
+            )
+            best = add(prefix, best_from(pos + run_codepoints, "start", None))
+
+        memo[key] = best
+        return best
+
+    return best_from(0, "start", None)
+
+
 def evaluate_messages(messages: Iterable[str], model: Model) -> EvalStats:
     result = EvalStats()
     punctuation = set(PUNCTUATION_V1)
@@ -868,8 +1060,10 @@ def evaluate_messages(messages: Iterable[str], model: Model) -> EvalStats:
 
                 predicted = symbol_index in row
                 if predicted:
+                    rank = row.index(symbol_index)
                     result.top4_hits += 1
-                    result.token_bits += BITS_TOP4
+                    result.top4_rank_hits[rank] += 1
+                    result.token_bits += _top4_bits(rank)
                 elif symbol in primary_set:
                     result.primary_literals += 1
                     result.token_bits += BITS_PRIMARY_LITERAL
@@ -939,8 +1133,14 @@ def evaluate_messages(messages: Iterable[str], model: Model) -> EvalStats:
         #   2) smaller exact bit length;
         #   3) normal MCOtxt wins a complete tie.
         message_token_bits = result.token_bits - message_token_bits_before
-        mcotxt_bits = BITS_HEADER + message_token_bits
+        # message_token_bits remains the legacy/model-only diagnostic. Final
+        # candidate selection follows the optimized runtime planner.
+        optimized = _optimized_single_language_mcotxt_cost(text, model)
+        mcotxt_bits = BITS_HEADER + optimized.bits
         mcotxt_bytes = math.ceil(mcotxt_bits / 8)
+        result.optimized_case_mode_toggles += optimized.case_toggles
+        result.optimized_shifts += optimized.shifts
+        result.optimized_utf8_runs += optimized.utf8_runs
 
         normalized_utf8_bytes = len(text.encode("utf-8"))
         raw_bits = BITS_RAW_UTF8_HEADER + normalized_utf8_bytes * 8
@@ -1309,8 +1509,12 @@ def _start_reason_breakdown(
 
 
 def _bit_breakdown_rows(validation: EvalStats) -> List[Tuple[str, int, int]]:
+    top4_bits = sum(
+        validation.top4_rank_hits.get(rank, 0) * _top4_bits(rank)
+        for rank in range(4)
+    )
     return [
-        ("TOP-4", validation.top4_hits, validation.top4_hits * BITS_TOP4),
+        ("TOP-4 variable", validation.top4_hits, top4_bits),
         ("Primary literal", validation.primary_literals, validation.primary_literals * BITS_PRIMARY_LITERAL),
         ("Extension literal", validation.extension_literals, validation.extension_literals * BITS_EXTENSION_LITERAL),
         ("SHIFT", validation.shifts, validation.shifts * BITS_SHIFT),
@@ -1394,27 +1598,47 @@ def render_report(
     lines.append(f"- UTF-8 bytes of the same decoded/supported text: `{validation.decoded_utf8_bytes}`")
     lines.append(f"- Compression ratio vs same decoded UTF-8: `{_fmt_float(validation.ratio_vs_decoded_utf8)}x`")
     lines.append("")
-    lines.append("> Validation here is single-language model evaluation. It includes real MCOtxt v1 TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 9-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.")
+    lines.append("> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 9-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.")
+    lines.append("")
+
+    lines.append("## TOP-4 rank diagnostics — validation")
+    lines.append("")
+    rank_total = sum(validation.top4_rank_hits.values())
+    lines.append("| rank | hits | share of TOP-4 hits |")
+    lines.append("|---:|---:|---:|")
+    for rank in range(4):
+        count = validation.top4_rank_hits.get(rank, 0)
+        share = (count / rank_total * 100.0) if rank_total else 0.0
+        lines.append(f"| {rank} | {count} | {share:.2f}% |")
+    lines.append("")
+    lines.append(
+        "> Variable TOP-4 is enabled in v1: rank 0 = 2 bits, rank 1 = 3 bits, "
+        "ranks 2/3 = 4 bits. The table above shows the observed rank distribution."
+    )
     lines.append("")
 
     lines.append("## Final encoder candidate simulation — validation")
     lines.append("")
     lines.append(
-        "This section simulates the final message-level selector between forced normal "
-        "MCOtxt and whole-message RAW_UTF8. It is intentionally separate from the "
+        "This section simulates the final message-level selector between optimized normal "
+        "MCOtxt (precomputed CAPS/SHIFT plan + fallback-only UTF8_RUN) and whole-message RAW_UTF8. "
+        "It is intentionally separate from the "
         "model-only metrics above so TOP-4/model quality remains comparable between builds."
     )
     lines.append("")
-    lines.append(f"- Normal MCOtxt candidate bits: `{validation.mcotxt_candidate_bits}`")
-    lines.append(f"- Normal MCOtxt candidate packed bytes: `{validation.mcotxt_candidate_bytes}`")
+    lines.append(f"- Optimized MCOtxt candidate bits: `{validation.mcotxt_candidate_bits}`")
+    lines.append(f"- Optimized MCOtxt candidate packed bytes: `{validation.mcotxt_candidate_bytes}`")
     lines.append(f"- RAW_UTF8 candidate bits: `{validation.raw_utf8_candidate_bits}`")
     lines.append(f"- RAW_UTF8 candidate packed bytes: `{validation.raw_utf8_candidate_bytes}`")
     lines.append(f"- Selected MCOtxt messages: `{validation.selected_mcotxt_messages}`")
     lines.append(f"- Selected RAW_UTF8 messages: `{validation.selected_raw_utf8_messages}`")
+    lines.append(f"- Optimized CAPS_MODE toggles in MCOtxt candidates: `{validation.optimized_case_mode_toggles}`")
+    lines.append(f"- Optimized one-symbol SHIFTs in MCOtxt candidates: `{validation.optimized_shifts}`")
+    lines.append(f"- Optimized fallback UTF8_RUNs in MCOtxt candidates: `{validation.optimized_utf8_runs}`")
     lines.append(f"- Final selected bits: `{validation.selected_bits}`")
     lines.append(f"- Final selected packed bytes: `{validation.selected_bytes}`")
     lines.append(
-        f"- Savings vs forced MCOtxt: `{validation.selector_savings_bytes_vs_mcotxt}` bytes"
+        f"- Savings vs optimized MCOtxt: `{validation.selector_savings_bytes_vs_mcotxt}` bytes"
     )
     lines.append(
         f"- Selected ratio vs normalized UTF-8: "
@@ -1559,14 +1783,17 @@ def render_report(
     lines.append("## Most expensive TOP-4 misses — validation")
     lines.append("")
     lines.append(
-        "Sorted by avoidable bit cost relative to a hypothetical TOP-4 hit for the same target. "
+        "Sorted by avoidable bit cost relative to a hypothetical 3-bit TOP-4 reference hit for the same target. "
         "SHIFT cost is excluded because it is paid in both cases."
     )
     lines.append("")
     miss_rows = []
     for (previous, target), count in validation.top4_miss_counts.items():
         literal_bits = BITS_PRIMARY_LITERAL if target in set(model.primary) else BITS_EXTENSION_LITERAL
-        extra_per_occurrence = literal_bits - BITS_TOP4
+        # A miss has no actual rank. Use the historical 3-bit TOP4 average as
+        # a neutral diagnostic reference rather than pretending a missing
+        # target would necessarily occupy rank 0/1/2/3.
+        extra_per_occurrence = literal_bits - 3
         miss_rows.append((count * extra_per_occurrence, count, previous, target, literal_bits))
     def _miss_sort_context(previous: Optional[int]) -> int:
         if previous is None:
@@ -1631,6 +1858,7 @@ def model_to_debug_json(model: Model, train: CorpusStats, validation: EvalStats)
         "output_codepoints": validation.output_codepoints,
         "language_symbols": validation.language_symbols,
         "top4_hits": validation.top4_hits,
+        "top4_rank_hits": {str(rank): validation.top4_rank_hits.get(rank, 0) for rank in range(4)},
         "primary_literals": validation.primary_literals,
         "extension_literals": validation.extension_literals,
         "punctuation_symbols": validation.punctuation_symbols,
@@ -1651,6 +1879,9 @@ def model_to_debug_json(model: Model, train: CorpusStats, validation: EvalStats)
         "selected_bytes": validation.selected_bytes,
         "selected_mcotxt_messages": validation.selected_mcotxt_messages,
         "selected_raw_utf8_messages": validation.selected_raw_utf8_messages,
+        "optimized_case_mode_toggles": validation.optimized_case_mode_toggles,
+        "optimized_shifts": validation.optimized_shifts,
+        "optimized_utf8_runs": validation.optimized_utf8_runs,
         "selector_savings_bytes_vs_mcotxt": validation.selector_savings_bytes_vs_mcotxt,
         "selected_ratio_vs_normalized_utf8": validation.selected_ratio_vs_normalized_utf8,
         "unsupported_counts": {str(cp): count for cp, count in validation.unsupported_counts.items()},
@@ -1776,7 +2007,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--primary-selection",
         choices=("literal-savings", "frequency"),
         default="literal-savings",
-        help="How to choose the 31 primary symbols; literal-savings minimizes 7-vs-9-bit literal cost",
+        help="How to choose the 32 primary symbols; literal-savings minimizes 7-vs-9-bit literal cost",
     )
     p.add_argument(
         "--out-dir",
@@ -1952,8 +2183,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     print(
         f"  selected bytes:       {validation.selected_bytes} "
-        f"(saved {validation.selector_savings_bytes_vs_mcotxt} vs forced MCOtxt)"
+        f"(saved {validation.selector_savings_bytes_vs_mcotxt} vs optimized MCOtxt)"
     )
+    print(f"  optimized CAPS/SHIFT: {validation.optimized_case_mode_toggles} / {validation.optimized_shifts}")
+    print(f"  fallback UTF8_RUNs:   {validation.optimized_utf8_runs}")
     print(f"  Dart:                 {dart_path}")
     print(f"  Dart copy:            {dart_assets_path}")
     print(f"  C/C++:                {c_path}")

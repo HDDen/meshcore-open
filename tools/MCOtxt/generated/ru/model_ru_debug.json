@@ -19,9 +19,9 @@
     1090,
     1073,
     1076,
+    1074,
     1075,
     1095,
-    1074,
     1072,
     1079,
     1086,
@@ -35,10 +35,10 @@
     1100,
     1101,
     1097,
-    1094
+    1094,
+    1092
   ],
   "extensionSymbols": [
-    1092,
     49,
     50,
     51,
@@ -55,8 +55,8 @@
   "startTop4Indexes": [
     21,
     8,
-    13,
-    16
+    0,
+    13
   ],
   "punctStartTop4Indexes": [
     0,
@@ -68,7 +68,7 @@
     8,
     21,
     1,
-    16,
+    14,
     11,
     6,
     0,
@@ -121,6 +121,10 @@
     19,
     6,
     9,
+    0,
+    6,
+    17,
+    19,
     19,
     13,
     17,
@@ -129,10 +133,6 @@
     11,
     17,
     9,
-    0,
-    6,
-    17,
-    19,
     0,
     7,
     5,
@@ -144,7 +144,7 @@
     0,
     11,
     13,
-    16,
+    14,
     0,
     22,
     25,
@@ -155,7 +155,7 @@
     17,
     0,
     11,
-    15,
+    16,
     5,
     19,
     0,
@@ -171,7 +171,7 @@
     5,
     0,
     11,
-    15,
+    16,
     1,
     0,
     8,
@@ -215,8 +215,8 @@
     37,
     0,
     42,
-    40,
     37,
+    40,
     0,
     40,
     42,
@@ -232,7 +232,7 @@
     0,
     41,
     42,
-    33,
+    37,
     0,
     42,
     2,
@@ -260,12 +260,12 @@
     },
     {
       "uppercaseCodepoint": 1042,
-      "lowercaseSymbolIndex": 16,
+      "lowercaseSymbolIndex": 14,
       "lowercaseCodepoint": 1074
     },
     {
       "uppercaseCodepoint": 1043,
-      "lowercaseSymbolIndex": 14,
+      "lowercaseSymbolIndex": 15,
       "lowercaseCodepoint": 1075
     },
     {
@@ -365,7 +365,7 @@
     },
     {
       "uppercaseCodepoint": 1063,
-      "lowercaseSymbolIndex": 15,
+      "lowercaseSymbolIndex": 16,
       "lowercaseCodepoint": 1095
     },
     {
@@ -421,166 +421,207 @@
       "punctuation": 214
     },
     "startReasonCounts": {
-      "message_start": 22824
+      "message_start": 22434,
+      "utf8_fallback": 3427
     },
     "startCounts": {
-      "1084": 715,
-      "1082": 1020,
-      "1103": 776,
-      "1074": 1909,
-      "1077": 456,
-      "32": 215,
-      "1076": 1938,
-      "1091": 850,
-      "1072": 1386,
-      "1089": 1408,
-      "1085": 2220,
-      "1087": 3441,
-      "49": 134,
-      "1090": 1351,
-      "1079": 435,
-      "1095": 491,
-      "1080": 594,
-      "1086": 859,
-      "1073": 386,
-      "1101": 450,
-      "1088": 364,
-      "1092": 49,
-      "52": 91,
-      "1093": 274,
-      "50": 119,
-      "1083": 159,
-      "48": 15,
-      "51": 102,
-      "55": 25,
+      "1084": 732,
+      "32": 2126,
+      "1082": 1040,
+      "1103": 784,
+      "1074": 1937,
+      "1077": 462,
+      "1076": 1957,
+      "1091": 859,
+      "1072": 1401,
+      "1090": 1372,
+      "1089": 1418,
+      "1085": 2244,
+      "1087": 3461,
+      "49": 262,
+      "1079": 439,
+      "1095": 493,
+      "1080": 604,
+      "1086": 864,
+      "1073": 389,
+      "50": 229,
+      "54": 54,
+      "1101": 453,
+      "1088": 373,
+      "1092": 50,
+      "52": 291,
+      "1093": 277,
+      "51": 274,
+      "1083": 165,
+      "48": 57,
+      "55": 68,
       "1097": 26,
-      "53": 46,
-      "1078": 84,
-      "1075": 244,
-      "1096": 73,
-      "1094": 26,
-      "57": 14,
+      "53": 118,
+      "1078": 85,
+      "1075": 248,
+      "57": 58,
+      "1096": 78,
+      "1094": 27,
+      "1081": 7,
+      "56": 54,
       "1102": 18,
-      "54": 28,
-      "56": 26,
-      "1099": 2,
-      "1105": 1,
-      "1081": 4
+      "1099": 6,
+      "1105": 1
     },
     "punctStartCounts": {
-      "32": 13211,
-      "1082": 190,
-      "1090": 434,
-      "49": 288,
-      "1086": 69,
+      "32": 12978,
+      "1082": 173,
+      "1090": 426,
+      "49": 258,
+      "1086": 65,
       "1097": 2,
-      "1085": 156,
-      "1073": 38,
-      "1093": 40,
-      "50": 144,
-      "52": 104,
-      "1079": 84,
-      "1103": 41,
-      "1088": 54,
-      "1076": 73,
-      "1077": 42,
-      "51": 155,
-      "1095": 41,
-      "55": 89,
-      "57": 77,
-      "1087": 146,
-      "56": 68,
-      "1089": 173,
-      "1081": 7,
-      "1091": 38,
-      "1101": 17,
-      "53": 124,
-      "54": 59,
-      "1074": 122,
-      "1075": 21,
-      "1080": 54,
-      "1084": 93,
-      "1096": 13,
-      "48": 95,
-      "1092": 7,
-      "1072": 65,
-      "1083": 50,
+      "1085": 137,
+      "1073": 35,
+      "1093": 37,
+      "52": 92,
+      "1079": 80,
+      "1103": 35,
+      "1088": 48,
+      "50": 119,
+      "1076": 54,
+      "1077": 36,
+      "51": 123,
+      "1095": 39,
+      "55": 78,
+      "57": 67,
+      "1087": 133,
+      "56": 61,
+      "1089": 164,
+      "1081": 6,
+      "1091": 31,
+      "1101": 14,
+      "53": 113,
+      "54": 51,
+      "1074": 95,
+      "1075": 18,
+      "1080": 45,
+      "1084": 81,
+      "1096": 11,
+      "48": 84,
+      "1092": 6,
+      "1072": 53,
+      "1083": 49,
       "1102": 2,
       "1099": 3,
       "1078": 11,
       "1094": 2
     },
     "punctStartTriggerCounts": {
-      "46": 4086,
-      "45": 1952,
+      "46": 4044,
+      "45": 1886,
       "33": 347,
-      "63": 683,
-      "41": 446,
-      "44": 7261,
-      "34": 270,
-      "47": 271,
-      "58": 209,
-      "43": 146,
-      "92": 263,
-      "35": 45,
-      "39": 13,
-      "40": 203,
+      "63": 682,
+      "41": 436,
+      "44": 7222,
+      "34": 257,
+      "47": 216,
+      "58": 206,
+      "43": 142,
+      "39": 10,
+      "35": 11,
+      "40": 191,
       "171": 32,
-      "61": 27,
+      "61": 25,
       "187": 21,
-      "64": 23,
-      "95": 33,
+      "95": 16,
       "37": 56,
       "8212": 16,
-      "91": 45,
       "93": 43,
       "59": 6,
-      "38": 5
+      "92": 7,
+      "91": 35,
+      "64": 4,
+      "38": 4
     },
     "startTargetByReason": {
       "message_start": {
-        "1084": 715,
-        "1082": 1020,
-        "1103": 776,
-        "1074": 1909,
+        "1084": 713,
+        "1082": 1017,
+        "1103": 775,
+        "1074": 1903,
         "1077": 456,
-        "32": 215,
-        "1076": 1938,
-        "1091": 850,
-        "1072": 1386,
-        "1089": 1408,
-        "1085": 2220,
-        "1087": 3441,
-        "49": 134,
-        "1090": 1351,
-        "1079": 435,
-        "1095": 491,
+        "1076": 1935,
+        "1091": 848,
+        "1072": 1385,
+        "1089": 1403,
+        "1085": 2209,
+        "1087": 3427,
+        "49": 118,
+        "1090": 1347,
+        "1079": 421,
+        "1095": 487,
         "1080": 594,
-        "1086": 859,
-        "1073": 386,
-        "1101": 450,
-        "1088": 364,
-        "1092": 49,
-        "52": 91,
-        "1093": 274,
-        "50": 119,
-        "1083": 159,
-        "48": 15,
-        "51": 102,
-        "55": 25,
+        "1086": 854,
+        "1073": 383,
+        "1101": 448,
+        "1088": 363,
+        "1092": 48,
+        "1093": 273,
+        "50": 113,
+        "1083": 154,
+        "51": 92,
+        "55": 22,
         "1097": 26,
-        "53": 46,
+        "53": 37,
         "1078": 84,
         "1075": 244,
-        "1096": 73,
+        "1096": 72,
         "1094": 26,
-        "57": 14,
+        "52": 63,
+        "57": 12,
+        "48": 9,
         "1102": 18,
-        "54": 28,
-        "56": 26,
+        "54": 25,
+        "56": 23,
         "1099": 2,
         "1105": 1,
         "1081": 4
+      },
+      "utf8_fallback": {
+        "32": 2126,
+        "1090": 25,
+        "50": 116,
+        "54": 29,
+        "52": 228,
+        "1082": 23,
+        "49": 144,
+        "51": 182,
+        "48": 48,
+        "1085": 35,
+        "1095": 6,
+        "1091": 11,
+        "1087": 34,
+        "1086": 10,
+        "1079": 18,
+        "1074": 34,
+        "1089": 15,
+        "57": 46,
+        "1077": 6,
+        "1076": 22,
+        "1081": 3,
+        "56": 31,
+        "53": 81,
+        "1096": 6,
+        "1075": 4,
+        "1103": 9,
+        "1084": 19,
+        "55": 46,
+        "1080": 10,
+        "1078": 1,
+        "1093": 4,
+        "1073": 6,
+        "1072": 16,
+        "1099": 4,
+        "1101": 5,
+        "1083": 11,
+        "1088": 10,
+        "1094": 1,
+        "1092": 2
       }
     }
   },
@@ -588,17 +629,40 @@
     "messages": 5626,
     "original_utf8_bytes": 361814,
     "normalized_codepoints": 203395,
-    "output_codepoints": 198014,
+    "output_codepoints": 203395,
     "language_symbols": 190004,
-    "top4_hits": 108358,
-    "primary_literals": 79183,
-    "extension_literals": 2463,
+    "top4_hits": 108374,
+    "top4_rank_hits": {
+      "0": 46629,
+      "1": 25255,
+      "2": 20124,
+      "3": 16366
+    },
+    "primary_literals": 79501,
+    "extension_literals": 2129,
     "punctuation_symbols": 8010,
     "shifts": 7532,
-    "skipped": 5381,
-    "token_bits": 1003262,
+    "skipped": 0,
+    "utf8_fallback_runs": 1537,
+    "utf8_fallback_codepoints": 5381,
+    "utf8_fallback_bytes": 5509,
+    "utf8_fallback_bits": 65590,
+    "token_bits": 1057981,
     "header_bits": 50634,
-    "decoded_utf8_bytes": 356305,
+    "decoded_utf8_bytes": 361814,
+    "mcotxt_candidate_bits": 1107353,
+    "mcotxt_candidate_bytes": 140931,
+    "raw_utf8_candidate_bits": 2984528,
+    "raw_utf8_candidate_bytes": 373066,
+    "selected_bits": 1107153,
+    "selected_bytes": 140902,
+    "selected_mcotxt_messages": 5618,
+    "selected_raw_utf8_messages": 8,
+    "optimized_case_mode_toggles": 88,
+    "optimized_shifts": 7244,
+    "optimized_utf8_runs": 1537,
+    "selector_savings_bytes_vs_mcotxt": 29,
+    "selected_ratio_vs_normalized_utf8": 2.6143739844447875,
     "unsupported_counts": {
       "109": 146,
       "111": 278,
@@ -691,161 +755,191 @@
     },
     "start_counts": {
       "1076": 548,
-      "1085": 556,
+      "1085": 567,
       "1103": 173,
-      "1091": 225,
-      "1084": 160,
-      "1074": 465,
-      "1087": 675,
+      "1091": 228,
+      "1084": 166,
+      "1074": 473,
+      "1087": 681,
       "1096": 17,
-      "32": 67,
+      "32": 586,
+      "52": 81,
       "1079": 97,
-      "1095": 121,
-      "1089": 334,
-      "1072": 350,
-      "1090": 311,
-      "1086": 229,
+      "1095": 122,
+      "1089": 338,
+      "1072": 352,
+      "1090": 316,
+      "1086": 230,
       "1094": 6,
-      "49": 49,
+      "50": 66,
+      "49": 87,
+      "48": 22,
       "1083": 48,
-      "1082": 235,
-      "1101": 103,
-      "1080": 176,
+      "1082": 238,
+      "1101": 104,
+      "1080": 182,
       "1093": 67,
       "1088": 108,
-      "1077": 106,
-      "50": 31,
-      "55": 7,
-      "51": 24,
-      "53": 16,
-      "1075": 81,
-      "1073": 91,
-      "52": 19,
-      "57": 8,
+      "1077": 108,
+      "51": 61,
+      "55": 13,
+      "53": 27,
+      "1075": 82,
+      "1073": 92,
+      "54": 14,
+      "57": 23,
       "1078": 18,
       "1092": 4,
       "1102": 3,
       "1097": 9,
-      "54": 8,
-      "48": 8,
-      "56": 4,
+      "56": 12,
       "1081": 2,
       "1105": 1
     },
     "punct_start_counts": {
-      "32": 3577,
-      "51": 47,
-      "1082": 31,
-      "1090": 108,
-      "1101": 5,
+      "32": 3521,
+      "51": 40,
+      "1082": 28,
+      "1090": 105,
+      "1101": 4,
       "1088": 21,
-      "1087": 39,
-      "1084": 16,
-      "1072": 18,
-      "52": 28,
-      "49": 70,
-      "50": 28,
-      "1085": 45,
-      "1074": 26,
-      "1077": 11,
-      "1089": 40,
-      "1086": 16,
-      "1075": 13,
+      "1087": 33,
+      "1072": 16,
+      "52": 22,
+      "49": 60,
+      "50": 22,
+      "1085": 36,
+      "1074": 18,
+      "1077": 9,
+      "1089": 36,
+      "1086": 15,
+      "1075": 12,
       "1096": 4,
-      "1091": 9,
-      "53": 23,
+      "1091": 6,
+      "53": 22,
       "1076": 18,
-      "1080": 9,
-      "1095": 11,
+      "1080": 4,
+      "1095": 10,
       "1081": 4,
-      "1073": 14,
-      "55": 19,
-      "48": 24,
-      "57": 24,
+      "1073": 13,
+      "55": 17,
+      "48": 22,
+      "57": 21,
       "1078": 4,
-      "54": 12,
+      "1084": 12,
+      "54": 11,
       "1079": 13,
       "1083": 6,
-      "56": 20,
+      "56": 19,
       "1093": 9,
       "1103": 5,
       "1092": 3,
       "1094": 2
     },
     "punct_start_trigger_counts": {
-      "44": 1867,
-      "58": 96,
-      "45": 507,
-      "46": 1047,
-      "40": 62,
-      "92": 66,
+      "44": 1855,
+      "58": 95,
+      "45": 495,
+      "46": 1038,
+      "40": 60,
       "33": 145,
-      "34": 58,
-      "41": 102,
-      "43": 99,
-      "47": 49,
+      "34": 57,
+      "41": 98,
+      "43": 98,
+      "47": 42,
       "63": 165,
-      "35": 18,
-      "61": 9,
-      "95": 18,
       "37": 15,
-      "171": 9,
+      "171": 7,
       "8212": 4,
-      "64": 7,
-      "91": 10,
-      "93": 10,
-      "39": 2,
+      "95": 8,
+      "91": 9,
+      "93": 8,
+      "39": 1,
       "187": 2,
+      "35": 7,
+      "61": 7,
       "8221": 1,
-      "59": 3,
+      "59": 2,
+      "64": 3,
       "38": 1
     },
     "start_reason_counts": {
-      "message_start": 5560
+      "message_start": 5456,
+      "utf8_fallback": 916
     },
     "start_target_by_reason": {
       "message_start": {
         "1076": 548,
-        "1085": 556,
+        "1085": 554,
         "1103": 173,
         "1091": 225,
-        "1084": 160,
-        "1074": 465,
-        "1087": 675,
+        "1084": 159,
+        "1074": 464,
+        "1087": 674,
         "1096": 17,
-        "32": 67,
-        "1079": 97,
-        "1095": 121,
-        "1089": 334,
-        "1072": 350,
-        "1090": 311,
+        "1079": 96,
+        "1089": 332,
+        "1095": 120,
+        "1072": 348,
+        "1090": 310,
         "1086": 229,
         "1094": 6,
-        "49": 49,
+        "49": 45,
         "1083": 48,
         "1082": 235,
         "1101": 103,
         "1080": 176,
         "1093": 67,
-        "1088": 108,
+        "1088": 107,
         "1077": 106,
         "50": 31,
-        "55": 7,
-        "51": 24,
-        "53": 16,
-        "1075": 81,
+        "55": 6,
+        "51": 20,
+        "1075": 80,
         "1073": 91,
-        "52": 19,
-        "57": 8,
+        "57": 7,
         "1078": 18,
+        "52": 12,
         "1092": 4,
         "1102": 3,
         "1097": 9,
-        "54": 8,
-        "48": 8,
-        "56": 4,
+        "54": 7,
+        "53": 13,
+        "48": 7,
+        "56": 3,
         "1081": 2,
         "1105": 1
+      },
+      "utf8_fallback": {
+        "32": 586,
+        "52": 69,
+        "1095": 2,
+        "1090": 6,
+        "50": 35,
+        "48": 15,
+        "1084": 7,
+        "51": 41,
+        "49": 42,
+        "53": 14,
+        "1085": 13,
+        "1089": 6,
+        "54": 7,
+        "1077": 2,
+        "55": 7,
+        "57": 16,
+        "1087": 7,
+        "56": 9,
+        "1075": 2,
+        "1091": 3,
+        "1072": 4,
+        "1080": 6,
+        "1082": 3,
+        "1074": 9,
+        "1086": 1,
+        "1073": 1,
+        "1079": 1,
+        "1088": 1,
+        "1101": 1
       }
     },
     "message_begin_counts": {
@@ -967,7 +1061,7 @@
         "context": "SYMBOL",
         "previousCodepoint": 1086,
         "targetCodepoint": 1084,
-        "count": 762
+        "count": 761
       },
       {
         "context": "SYMBOL",
@@ -1120,6 +1214,12 @@
         "count": 476
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1074,
+        "count": 473
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1085,
         "targetCodepoint": 1099,
@@ -1181,12 +1281,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 32,
-        "count": 416
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1084,
         "count": 413
@@ -1231,7 +1325,7 @@
         "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1085,
-        "count": 367
+        "count": 366
       },
       {
         "context": "SYMBOL",
@@ -1252,6 +1346,12 @@
         "count": 353
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1072,
+        "count": 352
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1086,
         "targetCodepoint": 1077,
@@ -1262,12 +1362,6 @@
         "previousCodepoint": 1073,
         "targetCodepoint": 1091,
         "count": 351
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1072,
-        "count": 350
       },
       {
         "context": "SYMBOL",
@@ -1285,7 +1379,7 @@
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 1089,
-        "count": 334
+        "count": 338
       },
       {
         "context": "SYMBOL",
@@ -1330,15 +1424,15 @@
         "count": 321
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 1072,
-        "targetCodepoint": 1102,
-        "count": 311
-      },
-      {
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 1090,
+        "count": 316
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1102,
         "count": 311
       },
       {
@@ -1415,14 +1509,14 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1085,
-        "targetCodepoint": 32,
-        "count": 249
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1100,
+        "count": 248
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1089,
-        "targetCodepoint": 1100,
+        "previousCodepoint": 1085,
+        "targetCodepoint": 32,
         "count": 248
       },
       {
@@ -1445,12 +1539,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 49,
-        "count": 241
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1084,
         "targetCodepoint": 1091,
         "count": 238
@@ -1459,7 +1547,7 @@
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 1082,
-        "count": 235
+        "count": 238
       },
       {
         "context": "SYMBOL",
@@ -1498,6 +1586,12 @@
         "count": 230
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1086,
+        "count": 230
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1072,
         "targetCodepoint": 1078,
@@ -1512,8 +1606,8 @@
       {
         "context": "START",
         "previousCodepoint": null,
-        "targetCodepoint": 1086,
-        "count": 229
+        "targetCodepoint": 1091,
+        "count": 228
       },
       {
         "context": "SYMBOL",
@@ -1534,12 +1628,6 @@
         "count": 226
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1091,
-        "count": 225
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1103,
@@ -1550,6 +1638,12 @@
         "previousCodepoint": 32,
         "targetCodepoint": 1078,
         "count": 223
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 49,
+        "count": 222
       },
       {
         "context": "SYMBOL",
@@ -1648,16 +1742,10 @@
         "count": 187
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 50,
-        "count": 179
-      },
-      {
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 1080,
-        "count": 176
+        "count": 182
       },
       {
         "context": "SYMBOL",
@@ -1696,6 +1784,12 @@
         "count": 166
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1084,
+        "count": 166
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1081,
@@ -1709,6 +1803,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 50,
+        "count": 163
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1089,
         "targetCodepoint": 1084,
         "count": 162
@@ -1718,12 +1818,6 @@
         "previousCodepoint": 1073,
         "targetCodepoint": 1083,
         "count": 162
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1084,
-        "count": 160
       },
       {
         "context": "SYMBOL",
@@ -1895,12 +1989,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1075,
-        "targetCodepoint": 32,
-        "count": 128
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 32,
         "targetCodepoint": 1096,
         "count": 128
@@ -1910,6 +1998,12 @@
         "previousCodepoint": 1099,
         "targetCodepoint": 1093,
         "count": 128
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 32,
+        "count": 127
       },
       {
         "context": "SYMBOL",
@@ -1930,22 +2024,16 @@
         "count": 124
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 1078,
-        "targetCodepoint": 1072,
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1095,
         "count": 122
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 52,
-        "count": 121
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1095,
-        "count": 121
+        "previousCodepoint": 1078,
+        "targetCodepoint": 1072,
+        "count": 122
       },
       {
         "context": "SYMBOL",
@@ -1991,12 +2079,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 51,
-        "count": 116
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1075,
         "targetCodepoint": 1091,
         "count": 113
@@ -2038,6 +2120,12 @@
         "count": 108
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1077,
+        "count": 108
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1091,
         "targetCodepoint": 1075,
@@ -2047,12 +2135,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1082,
         "targetCodepoint": 1089,
-        "count": 106
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1077,
         "count": 106
       },
       {
@@ -2083,7 +2165,7 @@
         "context": "START",
         "previousCodepoint": null,
         "targetCodepoint": 1101,
-        "count": 103
+        "count": 104
       },
       {
         "context": "SYMBOL",
@@ -2128,6 +2210,12 @@
         "count": 92
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1073,
+        "count": 92
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1077,
         "targetCodepoint": 1078,
@@ -2141,14 +2229,14 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1096,
-        "targetCodepoint": 1100,
+        "previousCodepoint": 32,
+        "targetCodepoint": 51,
         "count": 91
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1073,
+        "context": "SYMBOL",
+        "previousCodepoint": 1096,
+        "targetCodepoint": 1100,
         "count": 91
       },
       {
@@ -2156,6 +2244,12 @@
         "previousCodepoint": 1096,
         "targetCodepoint": 1085,
         "count": 90
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 49,
+        "count": 87
       },
       {
         "context": "SYMBOL",
@@ -2188,21 +2282,27 @@
         "count": 82
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1075,
+        "count": 82
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1103,
         "count": 81
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 1090,
-        "targetCodepoint": 1103,
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 52,
         "count": 81
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 1075,
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1103,
         "count": 81
       },
       {
@@ -2321,6 +2421,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 52,
+        "count": 69
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1072,
         "count": 69
@@ -2330,18 +2436,6 @@
         "previousCodepoint": 1099,
         "targetCodepoint": 1084,
         "count": 68
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 53,
-        "count": 68
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 32,
-        "count": 67
       },
       {
         "context": "SYMBOL",
@@ -2360,6 +2454,12 @@
         "previousCodepoint": null,
         "targetCodepoint": 1093,
         "count": 67
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 50,
+        "count": 66
       },
       {
         "context": "SYMBOL",
@@ -2383,12 +2483,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1082,
         "targetCodepoint": 1074,
-        "count": 64
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 1083,
-        "targetCodepoint": 1085,
         "count": 64
       },
       {
@@ -2423,6 +2517,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1085,
+        "count": 63
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1100,
         "targetCodepoint": 1079,
         "count": 63
@@ -2447,8 +2547,20 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 53,
+        "count": 62
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1103,
         "targetCodepoint": 1077,
+        "count": 61
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 51,
         "count": 61
       },
       {
@@ -2542,12 +2654,6 @@
         "count": 51
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 49,
-        "count": 49
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1090,
         "targetCodepoint": 1087,
@@ -2566,21 +2672,9 @@
         "count": 47
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 51,
-        "count": 47
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1084,
         "targetCodepoint": 1103,
-        "count": 47
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 54,
         "count": 47
       },
       {
@@ -2597,26 +2691,20 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 54,
+        "count": 46
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1091,
         "targetCodepoint": 1085,
         "count": 46
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 55,
-        "count": 45
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1089,
-        "count": 45
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1085,
         "count": 45
       },
       {
@@ -2630,6 +2718,12 @@
         "previousCodepoint": 1077,
         "targetCodepoint": 1092,
         "count": 44
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 55,
+        "count": 43
       },
       {
         "context": "SYMBOL",
@@ -2688,14 +2782,8 @@
       {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
-        "targetCodepoint": 1089,
+        "targetCodepoint": 51,
         "count": 40
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1087,
-        "count": 39
       },
       {
         "context": "SYMBOL",
@@ -2720,12 +2808,6 @@
         "previousCodepoint": 1084,
         "targetCodepoint": 1088,
         "count": 39
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 56,
-        "count": 38
       },
       {
         "context": "SYMBOL",
@@ -2764,6 +2846,18 @@
         "count": 37
       },
       {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1085,
+        "count": 36
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1089,
+        "count": 36
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1081,
         "targetCodepoint": 1086,
@@ -2779,6 +2873,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1083,
         "targetCodepoint": 1078,
+        "count": 35
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 56,
         "count": 35
       },
       {
@@ -2807,13 +2907,13 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 57,
-        "count": 34
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1087,
+        "count": 33
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 1087,
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
         "targetCodepoint": 1087,
         "count": 33
       },
@@ -2837,12 +2937,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 32,
-        "targetCodepoint": 48,
-        "count": 31
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1105,
         "count": 31
@@ -2854,9 +2948,9 @@
         "count": 31
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 50,
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 57,
         "count": 31
       },
       {
@@ -2921,24 +3015,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1072,
-        "targetCodepoint": 1080,
-        "count": 28
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 52,
-        "count": 28
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 50,
-        "count": 28
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1093,
         "targetCodepoint": 1085,
         "count": 28
@@ -2981,6 +3057,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1080,
+        "count": 27
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 49,
         "targetCodepoint": 53,
         "count": 27
@@ -2992,21 +3074,15 @@
         "count": 27
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 49,
-        "targetCodepoint": 50,
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 53,
         "count": 27
       },
       {
         "context": "SYMBOL",
         "previousCodepoint": 1074,
         "targetCodepoint": 1087,
-        "count": 26
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1074,
         "count": 26
       },
       {
@@ -3052,27 +3128,15 @@
         "count": 24
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 51,
+        "context": "SYMBOL",
+        "previousCodepoint": 49,
+        "targetCodepoint": 50,
         "count": 24
       },
       {
         "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1092,
-        "count": 24
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 48,
-        "count": 24
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 57,
         "count": 24
       },
       {
@@ -3106,12 +3170,6 @@
         "count": 23
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 53,
-        "count": 23
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1079,
         "targetCodepoint": 1083,
@@ -3124,9 +3182,33 @@
         "count": 23
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 57,
+        "count": 23
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1084,
         "targetCodepoint": 1082,
+        "count": 22
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 48,
+        "count": 22
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 52,
+        "count": 22
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 50,
         "count": 22
       },
       {
@@ -3160,6 +3242,12 @@
         "count": 22
       },
       {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 53,
+        "count": 22
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 49,
         "targetCodepoint": 56,
@@ -3169,6 +3257,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1084,
         "targetCodepoint": 1084,
+        "count": 22
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 48,
         "count": 22
       },
       {
@@ -3217,6 +3311,18 @@
         "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1073,
+        "count": 21
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 48,
+        "count": 21
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 57,
         "count": 21
       },
       {
@@ -3280,12 +3386,6 @@
         "count": 20
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 56,
-        "count": 20
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1099,
         "targetCodepoint": 1087,
@@ -3310,12 +3410,6 @@
         "count": 19
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 55,
-        "count": 19
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1093,
         "targetCodepoint": 1083,
@@ -3323,20 +3417,14 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 49,
-        "targetCodepoint": 54,
-        "count": 19
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 52,
-        "count": 19
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1090,
         "targetCodepoint": 1095,
+        "count": 19
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 56,
         "count": 19
       },
       {
@@ -3352,15 +3440,15 @@
         "count": 18
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1072,
-        "count": 18
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1077,
         "targetCodepoint": 1103,
+        "count": 18
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1074,
         "count": 18
       },
       {
@@ -3397,6 +3485,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1077,
         "targetCodepoint": 1080,
+        "count": 18
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 49,
+        "targetCodepoint": 54,
         "count": 18
       },
       {
@@ -3448,9 +3542,9 @@
         "count": 17
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 1084,
-        "targetCodepoint": 1090,
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 55,
         "count": 17
       },
       {
@@ -3462,31 +3556,13 @@
       {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
-        "targetCodepoint": 1084,
+        "targetCodepoint": 1072,
         "count": 16
       },
       {
         "context": "SYMBOL",
         "previousCodepoint": 1072,
         "targetCodepoint": 1091,
-        "count": 16
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 1076,
-        "targetCodepoint": 1090,
-        "count": 16
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1086,
-        "count": 16
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 53,
         "count": 16
       },
       {
@@ -3505,6 +3581,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1082,
         "targetCodepoint": 1082,
+        "count": 16
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1090,
         "count": 16
       },
       {
@@ -3533,6 +3615,18 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1090,
+        "count": 15
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1086,
+        "count": 15
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1072,
         "targetCodepoint": 1105,
         "count": 15
@@ -3551,12 +3645,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 48,
-        "targetCodepoint": 57,
-        "count": 14
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1097,
         "targetCodepoint": 1091,
         "count": 14
@@ -3568,9 +3656,9 @@
         "count": 14
       },
       {
-        "context": "AFTER_PUNCT",
+        "context": "START",
         "previousCodepoint": null,
-        "targetCodepoint": 1073,
+        "targetCodepoint": 54,
         "count": 14
       },
       {
@@ -3598,9 +3686,15 @@
         "count": 13
       },
       {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 55,
+        "count": 13
+      },
+      {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
-        "targetCodepoint": 1075,
+        "targetCodepoint": 1073,
         "count": 13
       },
       {
@@ -3659,6 +3753,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 48,
+        "targetCodepoint": 57,
+        "count": 12
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1079,
         "targetCodepoint": 1075,
         "count": 12
@@ -3682,9 +3782,9 @@
         "count": 12
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 51,
-        "targetCodepoint": 54,
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1075,
         "count": 12
       },
       {
@@ -3714,7 +3814,7 @@
       {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
-        "targetCodepoint": 54,
+        "targetCodepoint": 1084,
         "count": 12
       },
       {
@@ -3739,6 +3839,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1086,
         "targetCodepoint": 1094,
+        "count": 12
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 56,
         "count": 12
       },
       {
@@ -3772,15 +3878,15 @@
         "count": 11
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1077,
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1101,
         "count": 11
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1088,
-        "targetCodepoint": 1101,
+        "previousCodepoint": 51,
+        "targetCodepoint": 54,
         "count": 11
       },
       {
@@ -3796,12 +3902,6 @@
         "count": 11
       },
       {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1095,
-        "count": 11
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1103,
         "targetCodepoint": 1094,
@@ -3814,22 +3914,16 @@
         "count": 11
       },
       {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 54,
+        "count": 11
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1105,
         "targetCodepoint": 1085,
         "count": 11
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 50,
-        "targetCodepoint": 49,
-        "count": 11
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 1090,
-        "targetCodepoint": 1084,
-        "count": 10
       },
       {
         "context": "SYMBOL",
@@ -3850,6 +3944,12 @@
         "count": 10
       },
       {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1095,
+        "count": 10
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1088,
         "targetCodepoint": 1073,
@@ -3863,26 +3963,8 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 49,
-        "targetCodepoint": 57,
-        "count": 10
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 52,
-        "targetCodepoint": 55,
-        "count": 10
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1092,
         "targetCodepoint": 32,
-        "count": 10
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 55,
-        "targetCodepoint": 56,
         "count": 10
       },
       {
@@ -3893,32 +3975,32 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 50,
-        "targetCodepoint": 51,
-        "count": 10
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 56,
         "targetCodepoint": 52,
         "count": 10
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1073,
-        "targetCodepoint": 1084,
-        "count": 9
+        "previousCodepoint": 50,
+        "targetCodepoint": 49,
+        "count": 10
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 53,
-        "targetCodepoint": 50,
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1084,
         "count": 9
       },
       {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
-        "targetCodepoint": 1091,
+        "targetCodepoint": 1077,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1084,
         "count": 9
       },
       {
@@ -3931,12 +4013,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1075,
         "targetCodepoint": 1094,
-        "count": 9
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1080,
         "count": 9
       },
       {
@@ -3953,6 +4029,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 49,
+        "targetCodepoint": 57,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 50,
         "targetCodepoint": 54,
         "count": 9
@@ -3961,6 +4043,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1090,
         "targetCodepoint": 49,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 52,
+        "targetCodepoint": 55,
         "count": 9
       },
       {
@@ -3979,12 +4067,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1094,
         "targetCodepoint": 1086,
-        "count": 9
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 56,
-        "targetCodepoint": 53,
         "count": 9
       },
       {
@@ -4025,20 +4107,8 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 50,
-        "targetCodepoint": 55,
-        "count": 8
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1099,
         "targetCodepoint": 1076,
-        "count": 8
-      },
-      {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 57,
         "count": 8
       },
       {
@@ -4054,15 +4124,21 @@
         "count": 8
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 54,
+        "context": "SYMBOL",
+        "previousCodepoint": 55,
+        "targetCodepoint": 56,
         "count": 8
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 48,
+        "context": "SYMBOL",
+        "previousCodepoint": 50,
+        "targetCodepoint": 51,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 56,
+        "targetCodepoint": 53,
         "count": 8
       },
       {
@@ -4084,12 +4160,6 @@
         "count": 8
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 55,
-        "count": 7
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 1081,
         "targetCodepoint": 1094,
@@ -4099,6 +4169,18 @@
         "context": "SYMBOL",
         "previousCodepoint": 1090,
         "targetCodepoint": 1105,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 53,
+        "targetCodepoint": 50,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 50,
+        "targetCodepoint": 55,
         "count": 7
       },
       {
@@ -4117,12 +4199,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1077,
         "targetCodepoint": 1091,
-        "count": 7
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 57,
-        "targetCodepoint": 53,
         "count": 7
       },
       {
@@ -4168,27 +4244,15 @@
         "count": 6
       },
       {
-        "context": "SYMBOL",
-        "previousCodepoint": 57,
-        "targetCodepoint": 49,
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1091,
         "count": 6
       },
       {
         "context": "SYMBOL",
         "previousCodepoint": 1100,
         "targetCodepoint": 1105,
-        "count": 6
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 50,
-        "targetCodepoint": 57,
-        "count": 6
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 54,
-        "targetCodepoint": 50,
         "count": 6
       },
       {
@@ -4253,12 +4317,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 50,
-        "targetCodepoint": 56,
-        "count": 6
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1075,
         "targetCodepoint": 1075,
         "count": 6
@@ -4273,12 +4331,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 48,
         "targetCodepoint": 53,
-        "count": 6
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 48,
-        "targetCodepoint": 49,
         "count": 6
       },
       {
@@ -4298,12 +4350,6 @@
         "previousCodepoint": 1088,
         "targetCodepoint": 1094,
         "count": 6
-      },
-      {
-        "context": "AFTER_PUNCT",
-        "previousCodepoint": null,
-        "targetCodepoint": 1101,
-        "count": 5
       },
       {
         "context": "SYMBOL",
@@ -4333,6 +4379,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1079,
         "targetCodepoint": 1090,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 50,
+        "targetCodepoint": 57,
         "count": 5
       },
       {
@@ -4391,8 +4443,8 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 53,
-        "targetCodepoint": 57,
+        "previousCodepoint": 50,
+        "targetCodepoint": 56,
         "count": 5
       },
       {
@@ -4411,12 +4463,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 56,
         "targetCodepoint": 55,
-        "count": 5
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 53,
-        "targetCodepoint": 52,
         "count": 5
       },
       {
@@ -4456,6 +4502,12 @@
         "count": 5
       },
       {
+        "context": "SYMBOL",
+        "previousCodepoint": 48,
+        "targetCodepoint": 49,
+        "count": 5
+      },
+      {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
         "targetCodepoint": 1103,
@@ -4477,12 +4529,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1076,
         "targetCodepoint": 1094,
-        "count": 5
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 1097,
-        "targetCodepoint": 32,
         "count": 5
       },
       {
@@ -4516,6 +4562,12 @@
         "count": 5
       },
       {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1101,
+        "count": 4
+      },
+      {
         "context": "SYMBOL",
         "previousCodepoint": 1087,
         "targetCodepoint": 1073,
@@ -4541,8 +4593,20 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 54,
+        "targetCodepoint": 50,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1094,
         "targetCodepoint": 1094,
+        "count": 4
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1080,
         "count": 4
       },
       {
@@ -4589,12 +4653,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 48,
-        "targetCodepoint": 51,
-        "count": 4
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1091,
         "targetCodepoint": 1103,
         "count": 4
@@ -4619,14 +4677,14 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 53,
-        "targetCodepoint": 49,
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1079,
         "count": 4
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1076,
-        "targetCodepoint": 1079,
+        "previousCodepoint": 53,
+        "targetCodepoint": 57,
         "count": 4
       },
       {
@@ -4637,26 +4695,8 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 55,
-        "targetCodepoint": 57,
-        "count": 4
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 51,
-        "targetCodepoint": 49,
-        "count": 4
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 52,
         "targetCodepoint": 49,
-        "count": 4
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 52,
-        "targetCodepoint": 50,
         "count": 4
       },
       {
@@ -4672,12 +4712,6 @@
         "count": 4
       },
       {
-        "context": "START",
-        "previousCodepoint": null,
-        "targetCodepoint": 56,
-        "count": 4
-      },
-      {
         "context": "SYMBOL",
         "previousCodepoint": 56,
         "targetCodepoint": 56,
@@ -4687,6 +4721,12 @@
         "context": "SYMBOL",
         "previousCodepoint": 1073,
         "targetCodepoint": 1090,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 57,
+        "targetCodepoint": 49,
         "count": 4
       },
       {
@@ -4825,12 +4865,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1087,
         "targetCodepoint": 1075,
-        "count": 3
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 57,
-        "targetCodepoint": 52,
         "count": 3
       },
       {
@@ -4967,12 +5001,6 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 48,
-        "targetCodepoint": 54,
-        "count": 3
-      },
-      {
-        "context": "SYMBOL",
         "previousCodepoint": 1079,
         "targetCodepoint": 1105,
         "count": 3
@@ -5009,20 +5037,26 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 51,
-        "targetCodepoint": 57,
+        "previousCodepoint": 55,
+        "targetCodepoint": 54,
         "count": 3
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 55,
-        "targetCodepoint": 54,
+        "previousCodepoint": 48,
+        "targetCodepoint": 51,
         "count": 3
       },
       {
         "context": "AFTER_PUNCT",
         "previousCodepoint": null,
         "targetCodepoint": 1092,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 52,
+        "targetCodepoint": 50,
         "count": 3
       },
       {
@@ -5057,6 +5091,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 1097,
+        "targetCodepoint": 32,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1102,
         "targetCodepoint": 1075,
         "count": 3
@@ -5077,6 +5117,18 @@
         "context": "SYMBOL",
         "previousCodepoint": 1105,
         "targetCodepoint": 1078,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 51,
+        "targetCodepoint": 49,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 53,
+        "targetCodepoint": 52,
         "count": 3
       },
       {
@@ -5219,6 +5271,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 57,
+        "targetCodepoint": 52,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1080,
         "targetCodepoint": 1105,
         "count": 2
@@ -5237,6 +5295,12 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 53,
+        "targetCodepoint": 49,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1101,
         "targetCodepoint": 1075,
         "count": 2
@@ -5245,18 +5309,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1096,
         "targetCodepoint": 1087,
-        "count": 2
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 55,
-        "targetCodepoint": 52,
-        "count": 2
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 52,
-        "targetCodepoint": 56,
         "count": 2
       },
       {
@@ -5321,14 +5373,14 @@
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 54,
-        "targetCodepoint": 54,
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1101,
         "count": 2
       },
       {
         "context": "SYMBOL",
-        "previousCodepoint": 1083,
-        "targetCodepoint": 1101,
+        "previousCodepoint": 57,
+        "targetCodepoint": 50,
         "count": 2
       },
       {
@@ -5585,6 +5637,18 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 48,
+        "targetCodepoint": 54,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 51,
+        "targetCodepoint": 57,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1087,
         "targetCodepoint": 1093,
         "count": 2
@@ -5683,12 +5747,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1073,
         "targetCodepoint": 1101,
-        "count": 1
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 1072,
-        "targetCodepoint": 50,
         "count": 1
       },
       {
@@ -5917,12 +5975,6 @@
         "context": "SYMBOL",
         "previousCodepoint": 1087,
         "targetCodepoint": 51,
-        "count": 1
-      },
-      {
-        "context": "SYMBOL",
-        "previousCodepoint": 56,
-        "targetCodepoint": 49,
         "count": 1
       },
       {
@@ -6185,6 +6237,18 @@
       },
       {
         "context": "SYMBOL",
+        "previousCodepoint": 55,
+        "targetCodepoint": 52,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 54,
+        "targetCodepoint": 54,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
         "previousCodepoint": 1087,
         "targetCodepoint": 1102,
         "count": 1
@@ -6361,6 +6425,18 @@
         "context": "SYMBOL",
         "previousCodepoint": 1083,
         "targetCodepoint": 1096,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 52,
+        "targetCodepoint": 56,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 55,
+        "targetCodepoint": 57,
         "count": 1
       },
       {
@@ -6532,10 +6608,10 @@
         "count": 1
       }
     ],
-    "total_bits": 1053896,
-    "top4_hit_rate": 0.5702932569840635,
-    "bits_per_output_char_tokens": 5.066621552011474,
-    "bits_per_output_char_total": 5.322330744290808,
-    "ratio_vs_decoded_utf8": 2.70466915141532
+    "total_bits": 1108615,
+    "top4_hit_rate": 0.5703774657375634,
+    "bits_per_output_char_tokens": 5.2016077091373925,
+    "bits_per_output_char_total": 5.450551881806337,
+    "ratio_vs_decoded_utf8": 2.610926245811215
   }
 }

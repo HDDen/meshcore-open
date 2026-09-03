@@ -17,7 +17,7 @@ class McotxtCodec {
   static const int _normalHeaderBits = _versionBits + _languageBits * 2;
   static const int _extendedLanguagePair8HeaderBits = _normalHeaderBits + 16;
   static const int _rawUtf8HeaderBits = 16;
-  static const int _primaryLimit = 31;
+  static const int _primaryLimit = 32;
   static const int _extensionLimit = 32;
   static const int _extendedControlPrefix = 63;
   static const int _extendedControlPrefixBits = 6;
@@ -25,6 +25,7 @@ class McotxtCodec {
   static const int _switchOtherLanguageSubopcode = 0;
   static const int _resetContextSubopcode = 1;
   static const int _utf8RunSubopcode = 2;
+  static const int _toggleCaseModeSubopcode = 3;
   static const int _utf8RunLengthBits = 5;
   static const int _utf8RunMaxBytes = 32;
   static const int _switchOtherLanguageBits =
@@ -33,6 +34,8 @@ class McotxtCodec {
       _extendedControlPrefixBits +
       _extendedControlSubopcodeBits +
       _utf8RunLengthBits;
+  static const int _toggleCaseModeBits =
+      _extendedControlPrefixBits + _extendedControlSubopcodeBits;
 
   static McotxtEncodeResult encode(
     String text, {
@@ -178,6 +181,7 @@ class McotxtCodec {
     var contextKind = McotxtPredictionContextKind.start;
     int? previousRune;
     var shift = false;
+    var capsMode = false;
     final output = <int>[];
     final usedTables = <McotxtTableId>[];
 
@@ -197,14 +201,21 @@ class McotxtCodec {
     }
 
     void emitLanguageRune(McotxtLanguageModel model, int rune) {
-      final outputRune = shift ? model.lowercaseToUppercase[rune] : rune;
-      if (shift && outputRune == null) {
+      final uppercaseRune = model.lowercaseToUppercase[rune];
+      if (shift && uppercaseRune == null) {
         throw const McotxtCodecException(
           McotxtCodecError.invalidShift,
           'MCOtxt SHIFT cannot be applied to this symbol',
         );
       }
-      output.add(outputRune ?? rune);
+
+      // SHIFT is a one-symbol case inversion. With CAPS_MODE disabled this is
+      // the original v1 behavior (SHIFT -> uppercase). With CAPS_MODE enabled
+      // the default for caseable symbols is uppercase and SHIFT emits one
+      // lowercase symbol. Non-caseable symbols (digits/SPACE/etc.) are
+      // unaffected by CAPS_MODE.
+      final makeUppercase = uppercaseRune != null && (capsMode != shift);
+      output.add(makeUppercase ? uppercaseRune : rune);
       contextKind = McotxtPredictionContextKind.symbol;
       previousRune = rune;
       shift = false;
@@ -221,7 +232,7 @@ class McotxtCodec {
 
     while (reader.remainingBits > 0) {
       if (reader.readBit() == 0) {
-        final rank = reader.readBits(2);
+        final rank = _readTop4Rank(reader);
         final model = currentModel();
         final predictions = model.top4ForContext(contextKind, previousRune);
         if (rank >= predictions.length) {
@@ -342,6 +353,10 @@ class McotxtCodec {
           output.addAll(text.runes);
           previousRune = null;
           contextKind = McotxtPredictionContextKind.start;
+        case _toggleCaseModeSubopcode:
+          // Persistent case mode does not alter the prediction context: the
+          // statistical model is defined over normalized lowercase symbols.
+          capsMode = !capsMode;
         default:
           throw const McotxtCodecException(
             McotxtCodecError.unknownExtendedControl,
@@ -628,6 +643,8 @@ class McotxtCodec {
         return 'SWITCH_OTHER_LANGUAGE(${token.value})';
       case _McotxtTokenType.resetContext:
         return 'RESET_CONTEXT';
+      case _McotxtTokenType.toggleCaseMode:
+        return 'TOGGLE_CASE_MODE';
       case _McotxtTokenType.utf8Run:
         final bytes = token.bytes ?? Uint8List(0);
         final byteText = bytes
@@ -638,12 +655,50 @@ class McotxtCodec {
     }
   }
 
+  static int _top4BitsForRank(int rank) {
+    if (rank == 0) return 2;
+    if (rank == 1) return 3;
+    if (rank == 2 || rank == 3) return 4;
+    throw const McotxtCodecException(
+      McotxtCodecError.invalidTop4Reference,
+      'Invalid MCOtxt TOP4 rank',
+    );
+  }
+
+  // Variable-length TOP4 code. The leading zero still identifies TOP4, so the
+  // rest of the v1 token tree (all starting with 1) remains unchanged:
+  //   rank 0 -> 00    (2 bits total)
+  //   rank 1 -> 010   (3 bits total)
+  //   rank 2 -> 0110  (4 bits total)
+  //   rank 3 -> 0111  (4 bits total)
+  static int _readTop4Rank(BitReader reader) {
+    if (reader.readBit() == 0) return 0;
+    if (reader.readBit() == 0) return 1;
+    return reader.readBit() == 0 ? 2 : 3;
+  }
+
+  static void _writeTop4Rank(BitWriter writer, int rank) {
+    switch (rank) {
+      case 0:
+        writer.writeBits(0, 2); // 00
+      case 1:
+        writer.writeBits(2, 3); // 010
+      case 2:
+        writer.writeBits(6, 4); // 0110
+      case 3:
+        writer.writeBits(7, 4); // 0111
+      default:
+        throw const McotxtCodecException(
+          McotxtCodecError.invalidTop4Reference,
+          'Invalid MCOtxt TOP4 rank',
+        );
+    }
+  }
+
   static void _writeToken(BitWriter writer, _McotxtToken token) {
     switch (token.type) {
       case _McotxtTokenType.top4:
-        writer
-          ..writeBit(0)
-          ..writeBits(token.value, 2);
+        _writeTop4Rank(writer, token.value);
       case _McotxtTokenType.primary:
         writer
           ..writeBits(2, 2)
@@ -672,6 +727,10 @@ class McotxtCodec {
         writer
           ..writeBits(_extendedControlPrefix, _extendedControlPrefixBits)
           ..writeBits(_resetContextSubopcode, _extendedControlSubopcodeBits);
+      case _McotxtTokenType.toggleCaseMode:
+        writer
+          ..writeBits(_extendedControlPrefix, _extendedControlPrefixBits)
+          ..writeBits(_toggleCaseModeSubopcode, _extendedControlSubopcodeBits);
       case _McotxtTokenType.utf8Run:
         final bytes = token.bytes;
         if (bytes == null || bytes.isEmpty || bytes.length > _utf8RunMaxBytes) {
@@ -761,6 +820,7 @@ class _McotxtPlanner {
   final McotxtLanguageId languageA;
   final McotxtLanguageId? languageB;
   final Map<String, _McotxtPlan> _memo = <String, _McotxtPlan>{};
+  late final _CasePlan _casePlan = _CasePlan.build(runes);
 
   _McotxtPlanner({
     required this.runes,
@@ -788,6 +848,9 @@ class _McotxtPlanner {
 
     final rune = runes[position];
     final candidates = <_McotxtPlan>[];
+
+    // Punctuation remains a normal candidate. SPACE is also a language symbol,
+    // so the planner is free to choose the cheaper representation.
     final punctuationId = McotxtPunctuation.idByRune[rune];
     if (punctuationId != null) {
       candidates.add(
@@ -811,73 +874,57 @@ class _McotxtPlanner {
 
     final currentModel = McotxtModelRegistry.modelFor(currentLanguage);
     if (currentModel != null) {
-      final option = _symbolTokenForModel(currentModel, rune, context);
-      if (option != null) {
-        candidates.add(
-          _bestFrom(
-            position + 1,
-            currentLanguage,
-            _McotxtPredictionContext.symbol(option.previousRune),
-          ).prependSymbolOption(option, currentModel.id),
-        );
-      }
+      _addSymbolCandidate(
+        candidates: candidates,
+        position: position,
+        targetLanguage: currentLanguage!,
+        model: currentModel,
+        symbolContext: context,
+      );
     }
 
     final toggledLanguage = _toggledLanguage(currentLanguage);
     final toggledModel = McotxtModelRegistry.modelFor(toggledLanguage);
     if (toggledModel != null) {
-      final option = _symbolTokenForModel(
-        toggledModel,
-        rune,
-        const _McotxtPredictionContext.start(),
+      _addSymbolCandidate(
+        candidates: candidates,
+        position: position,
+        targetLanguage: toggledLanguage!,
+        model: toggledModel,
+        symbolContext: const _McotxtPredictionContext.start(),
+        languagePrefix: const _McotxtToken(
+          _McotxtTokenType.toggleLanguage,
+          0,
+        ),
+        languagePrefixBits: 6,
+        languageSwitches: 1,
+        toggles: 1,
       );
-      if (option != null) {
-        candidates.add(
-          _bestFrom(
-                position + 1,
-                toggledLanguage,
-                _McotxtPredictionContext.symbol(option.previousRune),
-              )
-              .prependSymbolOption(option, toggledModel.id)
-              .prepend(
-                const _McotxtToken(_McotxtTokenType.toggleLanguage, 0),
-                bits: 6,
-                languageSwitches: 1,
-                toggles: 1,
-              ),
-        );
-      }
     }
 
     for (final model in McotxtModelRegistry.builtinModels) {
       if (model.id == currentLanguage || model.id == toggledLanguage) {
         continue;
       }
-      final option = _symbolTokenForModel(
-        model,
-        rune,
-        const _McotxtPredictionContext.start(),
-      );
-      if (option == null) continue;
-      candidates.add(
-        _bestFrom(
-              position + 1,
-              model.id,
-              _McotxtPredictionContext.symbol(option.previousRune),
-            )
-            .prependSymbolOption(option, model.id)
-            .prepend(
-              _McotxtToken(
-                _McotxtTokenType.switchOtherLanguage,
-                model.globalId,
-              ),
-              bits: McotxtCodec._switchOtherLanguageBits,
-              languageSwitches: 1,
-              otherLanguageSwitches: 1,
-            ),
+      _addSymbolCandidate(
+        candidates: candidates,
+        position: position,
+        targetLanguage: model.id,
+        model: model,
+        symbolContext: const _McotxtPredictionContext.start(),
+        languagePrefix: _McotxtToken(
+          _McotxtTokenType.switchOtherLanguage,
+          model.globalId,
+        ),
+        languagePrefixBits: McotxtCodec._switchOtherLanguageBits,
+        languageSwitches: 1,
+        otherLanguageSwitches: 1,
       );
     }
 
+    // UTF8_RUN is deliberately only the universal fallback again. It is not a
+    // competing representation for text that can be represented by a language
+    // model/punctuation. This keeps the encoder search small enough for MCU use.
     if (candidates.isEmpty) {
       final run = _utf8RunAt(position);
       candidates.add(
@@ -893,6 +940,52 @@ class _McotxtPlanner {
     final best = candidates.first;
     _memo[key] = best;
     return best;
+  }
+
+  void _addSymbolCandidate({
+    required List<_McotxtPlan> candidates,
+    required int position,
+    required McotxtLanguageId targetLanguage,
+    required McotxtLanguageModel model,
+    required _McotxtPredictionContext symbolContext,
+    _McotxtToken? languagePrefix,
+    int languagePrefixBits = 0,
+    int languageSwitches = 0,
+    int toggles = 0,
+    int otherLanguageSwitches = 0,
+  }) {
+    final option = _symbolTokenForModel(
+      model,
+      runes[position],
+      symbolContext,
+      shift: _casePlan.shiftAt(position),
+    );
+    if (option == null) return;
+
+    var plan = _bestFrom(
+      position + 1,
+      targetLanguage,
+      _McotxtPredictionContext.symbol(option.previousRune),
+    ).prependSymbolOption(option, model.id);
+
+    // Case mode is optimized separately with a tiny 2-state DP over the case
+    // pattern only. It does not multiply the much larger language/context DP.
+    if (_casePlan.toggleBefore(position)) {
+      plan = plan.prepend(
+        const _McotxtToken(_McotxtTokenType.toggleCaseMode, 0),
+        bits: McotxtCodec._toggleCaseModeBits,
+      );
+    }
+    if (languagePrefix != null) {
+      plan = plan.prepend(
+        languagePrefix,
+        bits: languagePrefixBits,
+        languageSwitches: languageSwitches,
+        toggles: toggles,
+        otherLanguageSwitches: otherLanguageSwitches,
+      );
+    }
+    candidates.add(plan);
   }
 
   McotxtLanguageId? _toggledLanguage(McotxtLanguageId? currentLanguage) {
@@ -926,6 +1019,8 @@ class _McotxtPlanner {
       if (bytes.length == McotxtCodec._utf8RunMaxBytes) break;
     }
     if (codepoints == 0) {
+      // Defensive fallback. In normal planner flow this can only happen for a
+      // rune with no legal candidate, but never split a UTF-8 codepoint.
       final runeText = String.fromCharCode(runes[position]);
       bytes.addAll(utf8.encode(runeText));
       codepoints = 1;
@@ -942,24 +1037,27 @@ class _McotxtPlanner {
   static _SymbolTokenOption? _symbolTokenForModel(
     McotxtLanguageModel model,
     int rune,
-    _McotxtPredictionContext context,
-  ) {
+    _McotxtPredictionContext context, {
+    required bool shift,
+  }) {
     final normalized = model.normalizeRune(rune);
     if (normalized == null) return null;
-    final shift = normalized != rune;
+
     if (shift && model.lowercaseToUppercase[normalized] == null) return null;
+
     final predictions = model.top4ForContext(
       context.kind,
       context.previousRune,
     );
     final rank = predictions.indexOf(normalized);
     if (rank >= 0) {
+      final top4Bits = McotxtCodec._top4BitsForRank(rank);
       return _SymbolTokenOption(
         tokens: <_McotxtToken>[
           if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
           _McotxtToken(_McotxtTokenType.top4, rank),
         ],
-        bits: shift ? 8 : 3,
+        bits: top4Bits + (shift ? 5 : 0),
         previousRune: normalized,
         top4Hits: 1,
         shifts: shift ? 1 : 0,
@@ -972,7 +1070,7 @@ class _McotxtPlanner {
           if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
           _McotxtToken(_McotxtTokenType.primary, primaryId),
         ],
-        bits: shift ? 12 : 7,
+        bits: (shift ? 5 : 0) + 7,
         previousRune: normalized,
         primaryLiterals: 1,
         shifts: shift ? 1 : 0,
@@ -985,7 +1083,7 @@ class _McotxtPlanner {
           if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
           _McotxtToken(_McotxtTokenType.extension, extensionId),
         ],
-        bits: shift ? 14 : 9,
+        bits: (shift ? 5 : 0) + 9,
         previousRune: normalized,
         extensionLiterals: 1,
         shifts: shift ? 1 : 0,
@@ -993,6 +1091,126 @@ class _McotxtPlanner {
     }
     return null;
   }
+}
+
+// CAPS/SHIFT decisions are independent of language prediction/context costs:
+// case controls never alter the normalized symbol used by TOP4. Solve that
+// tiny subproblem once with two states instead of adding capsMode to every
+// language/context DP state.
+class _CasePlan {
+  final Set<int> _toggleBeforePositions;
+  final Set<int> _shiftPositions;
+
+  const _CasePlan(this._toggleBeforePositions, this._shiftPositions);
+
+  bool toggleBefore(int position) => _toggleBeforePositions.contains(position);
+  bool shiftAt(int position) => _shiftPositions.contains(position);
+
+  factory _CasePlan.build(List<int> runes) {
+    final positions = <int>[];
+    final wantsUppercase = <bool>[];
+    for (var position = 0; position < runes.length; position++) {
+      final requirement = _caseRequirement(runes[position]);
+      if (requirement == null) continue;
+      positions.add(position);
+      wantsUppercase.add(requirement);
+    }
+    if (positions.isEmpty) {
+      return const _CasePlan(<int>{}, <int>{});
+    }
+
+    // Cost after each caseable symbol for resulting CAPS state 0/1.
+    var previous = <_CaseCost?>[
+      const _CaseCost(bits: 0, toggles: 0, shifts: 0),
+      null,
+    ];
+    final backtrack = <List<_CaseDecision?>>[];
+
+    for (var i = 0; i < positions.length; i++) {
+      final desiredUpper = wantsUppercase[i];
+      final next = <_CaseCost?>[null, null];
+      final decisions = <_CaseDecision?>[null, null];
+      for (var previousState = 0; previousState <= 1; previousState++) {
+        final previousCost = previous[previousState];
+        if (previousCost == null) continue;
+        for (var nextState = 0; nextState <= 1; nextState++) {
+          final toggled = previousState != nextState;
+          final shifted = desiredUpper != (nextState == 1);
+          final candidate = _CaseCost(
+            bits: previousCost.bits +
+                (toggled ? McotxtCodec._toggleCaseModeBits : 0) +
+                (shifted ? 5 : 0),
+            toggles: previousCost.toggles + (toggled ? 1 : 0),
+            shifts: previousCost.shifts + (shifted ? 1 : 0),
+          );
+          if (_betterCaseCost(candidate, next[nextState])) {
+            next[nextState] = candidate;
+            decisions[nextState] = _CaseDecision(
+              previousState: previousState,
+              toggled: toggled,
+              shifted: shifted,
+            );
+          }
+        }
+      }
+      previous = next;
+      backtrack.add(decisions);
+    }
+
+    var state = _betterCaseCost(previous[0]!, previous[1]) ? 0 : 1;
+    final toggles = <int>{};
+    final shifts = <int>{};
+    for (var i = positions.length - 1; i >= 0; i--) {
+      final decision = backtrack[i][state]!;
+      if (decision.toggled) toggles.add(positions[i]);
+      if (decision.shifted) shifts.add(positions[i]);
+      state = decision.previousState;
+    }
+    return _CasePlan(toggles, shifts);
+  }
+
+  static bool? _caseRequirement(int rune) {
+    for (final model in McotxtModelRegistry.builtinModels) {
+      final normalized = model.normalizeRune(rune);
+      if (normalized == null) continue;
+      if (model.lowercaseToUppercase[normalized] == null) continue;
+      return normalized != rune;
+    }
+    return null;
+  }
+}
+
+class _CaseCost {
+  final int bits;
+  final int toggles;
+  final int shifts;
+
+  const _CaseCost({
+    required this.bits,
+    required this.toggles,
+    required this.shifts,
+  });
+}
+
+class _CaseDecision {
+  final int previousState;
+  final bool toggled;
+  final bool shifted;
+
+  const _CaseDecision({
+    required this.previousState,
+    required this.toggled,
+    required this.shifted,
+  });
+}
+
+bool _betterCaseCost(_CaseCost candidate, _CaseCost? current) {
+  if (current == null) return true;
+  if (candidate.bits != current.bits) return candidate.bits < current.bits;
+  if (candidate.toggles != current.toggles) {
+    return candidate.toggles < current.toggles;
+  }
+  return candidate.shifts < current.shifts;
 }
 
 class _BuiltEncoding {
@@ -1266,6 +1484,7 @@ enum _McotxtTokenType {
   toggleLanguage,
   switchOtherLanguage,
   resetContext,
+  toggleCaseMode,
   utf8Run,
 }
 

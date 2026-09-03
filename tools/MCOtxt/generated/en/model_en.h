@@ -19,20 +19,20 @@ typedef struct MCOTXT_PACKED {
 #endif
 
 static const uint8_t mcotxt_en_language_id = 0u;
-static const uint8_t mcotxt_en_primary_count = 31u;
-static const uint8_t mcotxt_en_extension_count = 6u;
+static const uint8_t mcotxt_en_primary_count = 32u;
+static const uint8_t mcotxt_en_extension_count = 5u;
 static const uint8_t mcotxt_en_symbol_count = 37u;
 static const uint8_t mcotxt_en_uppercase_count = 26u;
 
-static const uint16_t mcotxt_en_primary_symbols[31] = {
+static const uint16_t mcotxt_en_primary_symbols[32] = {
   0x0020u, 0x006Fu, 0x0064u, 0x0061u, 0x0069u, 0x006Cu, 0x0072u, 0x006Du, 0x0079u, 0x0074u,
   0x0063u, 0x0070u, 0x0077u, 0x0073u, 0x0066u, 0x0067u, 0x0068u, 0x0062u, 0x006Eu, 0x0065u,
   0x006Bu, 0x0075u, 0x0076u, 0x0078u, 0x0031u, 0x006Au, 0x0033u, 0x0032u, 0x0038u, 0x0034u,
-  0x007Au,
+  0x007Au, 0x0035u,
 };
 
-static const uint16_t mcotxt_en_extension_symbols[6] = {
-  0x0035u, 0x0071u, 0x0036u, 0x0037u, 0x0039u, 0x0030u,
+static const uint16_t mcotxt_en_extension_symbols[5] = {
+  0x0071u, 0x0036u, 0x0037u, 0x0039u, 0x0030u,
 };
 
 static const uint8_t mcotxt_en_start_top4[4] = {
