@@ -6622,4 +6622,26 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Autor pôvodného meshcore_open — zjs81 — prijíma dary tu:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Text';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Vľavo';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'Na stred';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Vpravo';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Šírka oblasti: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Veľkosť písma: $size';
+  }
 }

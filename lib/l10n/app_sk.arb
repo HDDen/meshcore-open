@@ -3539,5 +3539,13 @@
   "settings_supportDevelopment": "Podporiť vývoj",
   "donate_intro": "Ďakujeme, že ste sa zastavili!\nAk sa vám táto modifikácia páči, môžete podporiť jej vývoj darom.",
   "donate_tipLinkLabel": "Odkaz na prepitné:",
-  "donate_upstreamAuthor": "Autor pôvodného meshcore_open — zjs81 — prijíma dary tu:"
+  "donate_upstreamAuthor": "Autor pôvodného meshcore_open — zjs81 — prijíma dary tu:",
+  "chat_canvasV4ToolText": "Text",
+  "chat_canvasV4TextAlignLeft": "Vľavo",
+  "chat_canvasV4TextAlignCenter": "Na stred",
+  "chat_canvasV4TextAlignRight": "Vpravo",
+  "chat_canvasV4TextWidth": "Šírka oblasti: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Veľkosť písma: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

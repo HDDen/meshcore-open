@@ -6633,4 +6633,26 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Avtor izvirnega meshcore_open — zjs81 — sprejema donacije tukaj:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Besedilo';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Levo';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'Sredinsko';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Desno';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Širina območja: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Velikost pisave: $size';
+  }
 }

@@ -6669,4 +6669,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Der Autor des ursprünglichen meshcore_open — zjs81 — nimmt Spenden hier entgegen:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Text';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Links';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'Zentriert';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Rechts';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Bereichsbreite: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Schriftgröße: $size';
+  }
 }

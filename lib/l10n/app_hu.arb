@@ -3542,5 +3542,13 @@
   "settings_supportDevelopment": "Fejlesztés támogatása",
   "donate_intro": "Köszönjük, hogy benézett!\nHa tetszik a módosítás, adománnyal támogathatja a fejlesztését.",
   "donate_tipLinkLabel": "Borravaló link:",
-  "donate_upstreamAuthor": "Az eredeti meshcore_open szerzője — zjs81 — itt fogad adományokat:"
+  "donate_upstreamAuthor": "Az eredeti meshcore_open szerzője — zjs81 — itt fogad adományokat:",
+  "chat_canvasV4ToolText": "Szöveg",
+  "chat_canvasV4TextAlignLeft": "Balra",
+  "chat_canvasV4TextAlignCenter": "Középre",
+  "chat_canvasV4TextAlignRight": "Jobbra",
+  "chat_canvasV4TextWidth": "Terület szélessége: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Betűméret: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

@@ -3321,5 +3321,13 @@
   "settings_supportDevelopment": "Stöd utvecklingen",
   "donate_intro": "Tack för att du tittade förbi!\nOm du gillar den här modifieringen kan du stödja utvecklingen med en donation.",
   "donate_tipLinkLabel": "Länk för dricks:",
-  "donate_upstreamAuthor": "Författaren till ursprungliga meshcore_open — zjs81 — tar emot donationer här:"
+  "donate_upstreamAuthor": "Författaren till ursprungliga meshcore_open — zjs81 — tar emot donationer här:",
+  "chat_canvasV4ToolText": "Text",
+  "chat_canvasV4TextAlignLeft": "Vänster",
+  "chat_canvasV4TextAlignCenter": "Centrerat",
+  "chat_canvasV4TextAlignRight": "Höger",
+  "chat_canvasV4TextWidth": "Områdets bredd: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Teckenstorlek: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

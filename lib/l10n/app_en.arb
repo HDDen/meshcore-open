@@ -3672,5 +3672,13 @@
   "settings_supportDevelopment": "Support development",
   "donate_intro": "Thanks for stopping by!\nIf you like this mod, you can support its development with a donation.",
   "donate_tipLinkLabel": "Tip link:",
-  "donate_upstreamAuthor": "The author of the original meshcore_open — zjs81 — accepts donations here:"
+  "donate_upstreamAuthor": "The author of the original meshcore_open — zjs81 — accepts donations here:",
+  "chat_canvasV4ToolText": "Text",
+  "chat_canvasV4TextAlignLeft": "Left",
+  "chat_canvasV4TextAlignCenter": "Center",
+  "chat_canvasV4TextAlignRight": "Right",
+  "chat_canvasV4TextWidth": "Area width: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Font size: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

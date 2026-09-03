@@ -6342,4 +6342,26 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       '원본 meshcore_open의 제작자 zjs81의 후원 링크는 여기입니다:';
+
+  @override
+  String get chat_canvasV4ToolText => '텍스트';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => '왼쪽';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => '가운데';
+
+  @override
+  String get chat_canvasV4TextAlignRight => '오른쪽';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return '영역 너비: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return '글자 크기: $size';
+  }
 }

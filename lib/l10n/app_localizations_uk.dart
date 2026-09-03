@@ -6671,4 +6671,26 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Автор оригінального meshcore_open — zjs81 — приймає донати тут:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Текст';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Ліворуч';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'По центру';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Праворуч';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Ширина області: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Розмір шрифту: $size';
+  }
 }

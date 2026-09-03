@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import '../MCOtxt/mcotxt.dart';
 import 'channel_app_data_helper.dart';
 import 'mcoimg_palette.dart';
 import 'mcoimg_types.dart';
@@ -56,7 +57,15 @@ class MCOImageV4Codec {
   static const int _extRepeatColorRun = 12;
   static const int _extGroup = 13;
   static const int _extRasterLayer = 14;
+  // Sub-opcode 15 is a second escape rather than a command: it costs four
+  // more bits and keeps fifteen slots free for figures after TEXT.
+  static const int _extEscape = 15;
   static const int _extBits = 4;
+  static const int _ext2Bits = 4;
+  static const int _ext2Text = 0;
+  static const int _textMaskBits = 3;
+  static const int _textAlignBits = 2;
+  static const int _textEncodeCacheLimit = 64;
   static const int _repeatBackWindow = 8;
   static const int _dimensionModeSquare64 = 0;
   static const int _dimensionModeSmall32 = 1;
@@ -65,6 +74,9 @@ class MCOImageV4Codec {
   static const int _coordinateOverscanMax = 16;
 
   const MCOImageV4Codec();
+
+  static final Map<String, _V4EncodedText> _textEncodeCache =
+      <String, _V4EncodedText>{};
 
   static void clearRasterLayerEncodeCache() {
     _rasterLayerEncodeCache.clear();
@@ -259,6 +271,13 @@ class MCOImageV4Codec {
       );
     }
     var currentStyle = _defaultStyleForDocument(document);
+    // Text alignment and size are sticky in the same way style is; both
+    // ends start from the same defaults, so the first text figure only
+    // pays for what it actually changes.
+    var currentTextAlign = MCOImageV4TextAlign.left;
+    var currentTextFontSize = MCOImageV4Text.defaultFontSizeFor(
+      document.width,
+    );
     final history = <MCOImageV4Figure>[];
     final figures = document.figures.where((figure) => figure.visible).toList();
     for (var index = 0; index < figures.length;) {
@@ -320,6 +339,8 @@ class MCOImageV4Codec {
           height: document.height,
           xBits: xBits,
           yBits: yBits,
+          currentTextAlign: currentTextAlign,
+          currentTextFontSize: currentTextFontSize,
         );
         if (encoded.bitLength >= fallback.bitLength) return;
         final previous = bestRepeatColorRun;
@@ -364,6 +385,8 @@ class MCOImageV4Codec {
           xBits: xBits,
           yBits: yBits,
           scalarBits: scalarBits,
+          currentTextAlign: currentTextAlign,
+          currentTextFontSize: currentTextFontSize,
         );
         writer.writeWriter(
           dotRunEncoded.bitLength < fallback.bitLength
@@ -387,8 +410,14 @@ class MCOImageV4Codec {
           xBits: xBits,
           yBits: yBits,
           scalarBits: scalarBits,
+          currentTextAlign: currentTextAlign,
+          currentTextFontSize: currentTextFontSize,
         ),
       );
+      if (figure is MCOImageV4Text) {
+        currentTextAlign = figure.align;
+        currentTextFontSize = figure.fontSize;
+      }
       history.add(figure);
       index++;
     }
@@ -463,6 +492,8 @@ class MCOImageV4Codec {
       ),
     );
     final initialStyle = currentStyle;
+    var currentTextAlign = MCOImageV4TextAlign.left;
+    var currentTextFontSize = MCOImageV4Text.defaultFontSizeFor(width);
     final figures = <MCOImageV4Figure>[];
     final history = <MCOImageV4Figure>[];
 
@@ -534,8 +565,12 @@ class MCOImageV4Codec {
             paletteProfile: paletteProfile,
             allowRasterLayer: mode == MCOImageV4Mode.mixed,
             localColorFromProfileRef: optionalLocalColorFromProfileRef,
+            textAlign: currentTextAlign,
+            textFontSize: currentTextFontSize,
           );
           currentStyle = result.style;
+          currentTextAlign = result.textAlign ?? currentTextAlign;
+          currentTextFontSize = result.textFontSize ?? currentTextFontSize;
           for (final figure in result.figures) {
             addFigure(figure);
           }
@@ -665,6 +700,8 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
     required int scalarBits,
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
   }) {
     final candidates = <_V4BitWriter>[
       _encodeFigureCommand(
@@ -677,6 +714,8 @@ class MCOImageV4Codec {
         xBits: xBits,
         yBits: yBits,
         scalarBits: scalarBits,
+        currentTextAlign: currentTextAlign,
+        currentTextFontSize: currentTextFontSize,
       ),
     ];
     final maxDistance = math.min(history.length, _repeatBackWindow);
@@ -783,10 +822,14 @@ class MCOImageV4Codec {
     required int height,
     required int xBits,
     required int yBits,
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
   }) {
     final writer = _V4BitWriter();
     final localHistory = <MCOImageV4Figure>[...history];
     var style = currentStyle;
+    var textAlign = currentTextAlign;
+    var textFontSize = currentTextFontSize;
     for (final figure in figures) {
       style = _writeStyleChanges(
         writer,
@@ -808,8 +851,14 @@ class MCOImageV4Codec {
           xBits: xBits,
           yBits: yBits,
           scalarBits: scalarBits,
+          currentTextAlign: textAlign,
+          currentTextFontSize: textFontSize,
         ),
       );
+      if (figure is MCOImageV4Text) {
+        textAlign = figure.align;
+        textFontSize = figure.fontSize;
+      }
       localHistory.add(figure);
     }
     return writer;
@@ -825,7 +874,21 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
     required int scalarBits,
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
   }) {
+    if (figure is MCOImageV4Text) {
+      return _encodeTextCommand(
+        figure,
+        currentTextAlign: currentTextAlign,
+        currentTextFontSize: currentTextFontSize,
+        width: width,
+        height: height,
+        xBits: xBits,
+        yBits: yBits,
+        scalarBits: scalarBits,
+      );
+    }
     if (figure is MCOImageV4Path) {
       return _encodeBestPath(
         figure,
@@ -846,6 +909,8 @@ class MCOImageV4Codec {
         xBits: xBits,
         yBits: yBits,
         scalarBits: scalarBits,
+        currentTextAlign: currentTextAlign,
+        currentTextFontSize: currentTextFontSize,
       );
     }
     final candidates = <_V4BitWriter>[
@@ -937,6 +1002,8 @@ class MCOImageV4Codec {
         throw const MCOImageInvalidInputException('Unexpected v4 path');
       case MCOImageV4Group():
         throw const MCOImageInvalidInputException('Unexpected v4 group');
+      case MCOImageV4Text():
+        throw const MCOImageInvalidInputException('Unexpected v4 text');
       case MCOImageV4RasterLayer():
         throw const MCOImageInvalidInputException('Unexpected v4 raster layer');
     }
@@ -954,6 +1021,8 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
     required int scalarBits,
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
   }) {
     final figures = group.figures.where((figure) => figure.visible).toList();
     if (figures.isEmpty) {
@@ -975,6 +1044,8 @@ class MCOImageV4Codec {
           height: height,
           xBits: xBits,
           yBits: yBits,
+          currentTextAlign: currentTextAlign,
+          currentTextFontSize: currentTextFontSize,
         ),
       );
   }
@@ -1150,6 +1221,8 @@ class MCOImageV4Codec {
         throw const MCOImageInvalidInputException('Unexpected v4 path');
       case MCOImageV4Group():
         throw const MCOImageInvalidInputException('Unexpected v4 group');
+      case MCOImageV4Text():
+        throw const MCOImageInvalidInputException('Unexpected v4 text');
       case MCOImageV4RasterLayer():
         throw const MCOImageInvalidInputException('Unexpected v4 raster layer');
     }
@@ -1303,6 +1376,8 @@ class MCOImageV4Codec {
     required int xBits,
     required int yBits,
     required int scalarBits,
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
   }) {
     final writer = _V4BitWriter();
     final localHistory = <MCOImageV4Figure>[...history];
@@ -1319,6 +1394,8 @@ class MCOImageV4Codec {
           xBits: xBits,
           yBits: yBits,
           scalarBits: scalarBits,
+          currentTextAlign: currentTextAlign,
+          currentTextFontSize: currentTextFontSize,
         ),
       );
       localHistory.add(dot);
@@ -2007,6 +2084,8 @@ class MCOImageV4Codec {
     required PaletteProfile paletteProfile,
     required bool allowRasterLayer,
     required int? Function() localColorFromProfileRef,
+    required MCOImageV4TextAlign textAlign,
+    required int textFontSize,
   }) {
     _V4ExtendedReadResult one(MCOImageV4Figure figure) =>
         _V4ExtendedReadResult(
@@ -2262,6 +2341,32 @@ class MCOImageV4Codec {
             yBits: yBits,
           ),
         );
+      case _extEscape:
+        final extended = reader.readBits(_ext2Bits);
+        if (extended != _ext2Text) {
+          throw MCOImageUnsupportedFormatException(
+            'Unknown MCOimg v4 extended command: $extended',
+            receivedVersion: version,
+            currentMaxSupportedVersion: version,
+          );
+        }
+        final textFigure = _readText(
+          reader,
+          style,
+          currentTextAlign: textAlign,
+          currentTextFontSize: textFontSize,
+          width: width,
+          height: height,
+          xBits: xBits,
+          yBits: yBits,
+          scalarBits: scalarBits,
+        );
+        return _V4ExtendedReadResult(
+          style: style,
+          textAlign: textFigure.align,
+          textFontSize: textFigure.fontSize,
+          figures: <MCOImageV4Figure>[textFigure],
+        );
       case _extRasterLayer:
         if (!allowRasterLayer) {
           throw const MCOImageInvalidPayloadException(
@@ -2281,6 +2386,8 @@ class MCOImageV4Codec {
       case _extGroup:
         final count = reader.readCompactUint() + 1;
         var nestedStyle = style;
+        var nestedTextAlign = textAlign;
+        var nestedTextFontSize = textFontSize;
         final nestedHistory = <MCOImageV4Figure>[];
         final figures = <MCOImageV4Figure>[];
 
@@ -2353,8 +2460,12 @@ class MCOImageV4Codec {
                 paletteProfile: paletteProfile,
                 allowRasterLayer: false,
                 localColorFromProfileRef: localColorFromProfileRef,
+                textAlign: nestedTextAlign,
+                textFontSize: nestedTextFontSize,
               );
               nestedStyle = result.style;
+              nestedTextAlign = result.textAlign ?? nestedTextAlign;
+              nestedTextFontSize = result.textFontSize ?? nestedTextFontSize;
               addNestedFigures(result.figures);
             default:
               addNestedFigures(
@@ -2386,6 +2497,161 @@ class MCOImageV4Codec {
           currentMaxSupportedVersion: version,
         );
     }
+  }
+
+  /// TEXT is the first command of the second escape tier. Alignment and font
+  /// size are written only when they differ from the state left by the
+  /// previous text figure, and the width only when the figure overrides the
+  /// default area, so a plain caption costs the mask and nothing more.
+  _V4BitWriter _encodeTextCommand(
+    MCOImageV4Text text, {
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final writer = _V4BitWriter()
+      ..writeBits(_opExtended, _opBits)
+      ..writeBits(_extEscape, _extBits)
+      ..writeBits(_ext2Text, _ext2Bits);
+    _writePoint(
+      writer,
+      text.origin,
+      xBits,
+      yBits,
+      width: width,
+      height: height,
+    );
+    final hasWidth = text.width != null;
+    final hasAlign = text.align != currentTextAlign;
+    final hasFontSize = text.fontSize != currentTextFontSize;
+    writer.writeBits(
+      (hasWidth ? 0x01 : 0) |
+          (hasAlign ? 0x02 : 0) |
+          (hasFontSize ? 0x04 : 0),
+      _textMaskBits,
+    );
+    if (hasWidth) writer.writeBits(text.width! - 1, xBits);
+    if (hasAlign) writer.writeBits(text.align.index, _textAlignBits);
+    if (hasFontSize) writer.writeBits(text.fontSize - 1, scalarBits);
+    final encoded = _encodeTextPayload(text.text);
+    writer.writeCompactUint(encoded.bitLength);
+    _writeMCOtxtBits(writer, encoded.data, encoded.bitLength);
+    return writer;
+  }
+
+  /// Typing re-encodes every text figure of the document on each payload
+  /// refresh, so the planner result is kept per string.
+  static _V4EncodedText _encodeTextPayload(String text) {
+    final cached = _textEncodeCache[text];
+    if (cached != null) return cached;
+    final MCOtxtEncodeResult encoded;
+    try {
+      encoded = MCOtxtCodec.encode(
+        text,
+        options: const MCOtxtEncodeOptions(collectStats: false),
+      );
+    } on MCOtxtCodecException catch (error) {
+      // Callers of the image codec only handle MCOImageCodecException.
+      throw MCOImageInvalidInputException('MCOtxt: ${error.message}');
+    }
+    final value = _V4EncodedText(
+      data: encoded.data,
+      bitLength: encoded.bitLength,
+    );
+    _textEncodeCache[text] = value;
+    while (_textEncodeCache.length > _textEncodeCacheLimit) {
+      _textEncodeCache.remove(_textEncodeCache.keys.first);
+    }
+    return value;
+  }
+
+  /// MCOtxt packs its stream most-significant bit first while this format
+  /// packs least-significant bit first, so the bridge moves one bit at a
+  /// time. The bit count travels ahead of the bits because an MCOtxt stream
+  /// is not self-terminating: padding would decode as extra characters.
+  static void _writeMCOtxtBits(
+    _V4BitWriter writer,
+    Uint8List data,
+    int bitLength,
+  ) {
+    for (var index = 0; index < bitLength; index++) {
+      writer.writeBits((data[index >> 3] >> (7 - (index & 7))) & 1, 1);
+    }
+  }
+
+  static Uint8List _readMCOtxtBits(_V4BitReader reader, int bitLength) {
+    if (bitLength > reader.remainingBits) {
+      throw const MCOImageInvalidPayloadException('Unexpected end of v4 bits');
+    }
+    final bytes = Uint8List((bitLength + 7) >> 3);
+    for (var index = 0; index < bitLength; index++) {
+      if (reader.readBits(1) != 0) {
+        bytes[index >> 3] |= 1 << (7 - (index & 7));
+      }
+    }
+    return bytes;
+  }
+
+  MCOImageV4Text _readText(
+    _V4BitReader reader,
+    MCOImageV4Style style, {
+    required MCOImageV4TextAlign currentTextAlign,
+    required int currentTextFontSize,
+    required int width,
+    required int height,
+    required int xBits,
+    required int yBits,
+    required int scalarBits,
+  }) {
+    final origin = _readPoint(reader, width, height, xBits, yBits);
+    final mask = reader.readBits(_textMaskBits);
+    final areaWidth = (mask & 0x01) != 0 ? reader.readBits(xBits) + 1 : null;
+    var align = currentTextAlign;
+    if ((mask & 0x02) != 0) {
+      final raw = reader.readBits(_textAlignBits);
+      if (raw >= MCOImageV4TextAlign.values.length) {
+        throw const MCOImageInvalidPayloadException(
+          'Invalid MCOimg v4 text alignment',
+        );
+      }
+      align = MCOImageV4TextAlign.values[raw];
+    }
+    var fontSize = currentTextFontSize;
+    if ((mask & 0x04) != 0) {
+      fontSize = reader.readBits(scalarBits) + 1;
+    }
+    final bitLength = reader.readCompactUint();
+    final bits = _readMCOtxtBits(reader, bitLength);
+    final MCOtxtDecodeResult decoded;
+    try {
+      decoded = MCOtxtCodec.decode(bits, bitLength: bitLength);
+    } on MCOtxtCodecException catch (error) {
+      // A text written with a codec version, a model generation or a language
+      // this build has no tables for is a missing feature, not damage: it earns
+      // the "update the app" placeholder rather than the corrupt-payload one.
+      if (error.code == MCOtxtCodecError.unknownVersion ||
+          error.code == MCOtxtCodecError.unsupportedModelGeneration ||
+          error.code == MCOtxtCodecError.modelUnavailable) {
+        throw MCOImageUnsupportedFormatException(
+          'MCOtxt: ${error.message}',
+          receivedVersion: version,
+          currentMaxSupportedVersion: version,
+        );
+      }
+      throw MCOImageInvalidPayloadException('MCOtxt: ${error.message}');
+    }
+    return MCOImageV4Text(
+      origin: origin,
+      width: areaWidth,
+      fontSize: fontSize,
+      align: align,
+      text: decoded.text,
+      style: style,
+    );
   }
 
   MCOImageV4RasterLayer _readRasterLayer(
@@ -2788,6 +3054,21 @@ class MCOImageV4Codec {
         if (depth == 0 || depth.abs() > math.max(canvasWidth, canvasHeight)) {
           throw const MCOImageInvalidInputException(
             'Invalid MCOimg v4 wave depth',
+          );
+        }
+      case MCOImageV4Text() && final textFigure:
+        point(textFigure.origin);
+        final areaWidth = textFigure.width;
+        if (areaWidth != null &&
+            (areaWidth < 1 || areaWidth > canvasWidth)) {
+          throw const MCOImageInvalidInputException(
+            'Invalid MCOimg v4 text area width',
+          );
+        }
+        if (textFigure.fontSize < 1 ||
+            textFigure.fontSize > math.max(canvasWidth, canvasHeight)) {
+          throw const MCOImageInvalidInputException(
+            'Invalid MCOimg v4 text font size',
           );
         }
       case MCOImageV4RasterLayer(
@@ -3374,12 +3655,26 @@ class _DecodedV4CanonicalDocument {
 
 class _V4ExtendedReadResult {
   final MCOImageV4Style style;
+
+  /// Null when the command left the sticky text state alone, which every
+  /// command except TEXT does.
+  final MCOImageV4TextAlign? textAlign;
+  final int? textFontSize;
   final List<MCOImageV4Figure> figures;
 
   const _V4ExtendedReadResult({
     required this.style,
     required this.figures,
+    this.textAlign,
+    this.textFontSize,
   });
+}
+
+class _V4EncodedText {
+  final Uint8List data;
+  final int bitLength;
+
+  const _V4EncodedText({required this.data, required this.bitLength});
 }
 
 class _V4BitWriter {

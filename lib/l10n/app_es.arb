@@ -3638,5 +3638,13 @@
   "settings_supportDevelopment": "Apoyar el desarrollo",
   "donate_intro": "¡Gracias por pasarte!\nSi te gusta esta modificación, puedes apoyar su desarrollo con una donación.",
   "donate_tipLinkLabel": "Enlace para propinas:",
-  "donate_upstreamAuthor": "El autor del meshcore_open original — zjs81 — acepta donaciones aquí:"
+  "donate_upstreamAuthor": "El autor del meshcore_open original — zjs81 — acepta donaciones aquí:",
+  "chat_canvasV4ToolText": "Texto",
+  "chat_canvasV4TextAlignLeft": "Izquierda",
+  "chat_canvasV4TextAlignCenter": "Centro",
+  "chat_canvasV4TextAlignRight": "Derecha",
+  "chat_canvasV4TextWidth": "Ancho del área: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Tamaño de fuente: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

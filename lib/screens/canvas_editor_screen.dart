@@ -39,6 +39,7 @@ enum _CanvasTool {
   oval,
   rectangle,
   wave,
+  text,
 }
 
 enum _PaletteSelectorValue { dynamic }
@@ -382,6 +383,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _maxCanvasSizeV2 = 256;
   static const int _defaultSize = 11;
   static const int _defaultVectorSize = 128;
+  /// The narrowest text area the width slider offers, as a share of the
+  /// canvas width; the slider itself is in cells.
+  static const int _minTextWidthPercent = 10;
+  /// The wire minimum; the slider is absolute, not tied to the default.
+  static const int _minTextFontSize = 1;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
@@ -492,6 +498,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   EncodedMCOImageV4? _v4FinalPayloadEncoded;
   Object? _v4FinalPayloadError;
   MCOImageV4Figure? _v4DraftFigure;
+  // The text layer being typed into stays in the document, so the payload
+  // counter includes it; the canvas hides it while the on-canvas field
+  // draws it instead.
+  int? _v4TextEditingIndex;
+  MCOImageV4Document? _v4TextUndoBefore;
+  Timer? _v4TextPayloadTimer;
+  final TextEditingController _v4TextController = TextEditingController();
+  final FocusNode _v4TextFocusNode = FocusNode();
+  MCOImageV4TextAlign _v4TextAlign = MCOImageV4TextAlign.left;
+  int? _v4TextFontSize;
   List<MCOImageV4Point>? _v4PencilPoints;
   final List<MCOImageV4Point> _v4ShapePoints = <MCOImageV4Point>[];
   MCOImageV4Point? _v4GestureStart;
@@ -564,6 +580,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _toolsScrollController.dispose();
     _sizeActionsScrollController.dispose();
     _canvasShortcutFocusNode.dispose();
+    _v4TextPayloadTimer?.cancel();
+    _v4TextPayloadTimer = null;
+    _v4TextController.dispose();
+    _v4TextFocusNode.dispose();
     super.dispose();
   }
 
@@ -785,6 +805,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                   ),
                 ],
+                if (_isVectorV4) _buildVectorTextControls(),
                 const SizedBox(height: 20),
                 _buildCanvas(palette, showLockButton: showLockButton),
                 const SizedBox(height: 8),
@@ -899,6 +920,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _focusCanvasShortcuts() {
+    // Typing into a text layer must not pull focus back to the canvas.
+    if (_v4TextEditingIndex != null) return;
     if (!_canvasShortcutFocusNode.hasPrimaryFocus) {
       _canvasShortcutFocusNode.requestFocus();
     }
@@ -1866,6 +1889,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       );
     }
 
+    final hasTextFigure = _activeTextFigureIndex != null;
+
     Widget toolButton({
       required _CanvasTool tool,
       required String tooltip,
@@ -1939,6 +1964,22 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           icon: Icons.crop_square,
           label: 'Прямоуг.',
         ),
+        gap,
+        toolButton(
+          tool: _CanvasTool.text,
+          tooltip: context.l10n.chat_canvasV4ToolText,
+          icon: Icons.title,
+        ),
+        gap,
+        actionButton(
+          onPressed: hasTextFigure
+              ? () => _setVectorTextAlign(MCOImageV4TextAlign.left)
+              : null,
+          tooltip: context.l10n.chat_canvasV4TextAlignLeft,
+          icon: Icons.format_align_left,
+          selected:
+              hasTextFigure && _isTextAlignActive(MCOImageV4TextAlign.left),
+        ),
       ],
     );
 
@@ -2000,6 +2041,27 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           tooltip: context.l10n.chat_canvasV4ToolEllipse,
           icon: Icons.circle_outlined,
         ),
+        gap,
+        actionButton(
+          onPressed: hasTextFigure
+              ? () => _setVectorTextAlign(MCOImageV4TextAlign.center)
+              : null,
+          tooltip: context.l10n.chat_canvasV4TextAlignCenter,
+          icon: Icons.format_align_center,
+          selected:
+              hasTextFigure &&
+              _isTextAlignActive(MCOImageV4TextAlign.center),
+        ),
+        gap,
+        actionButton(
+          onPressed: hasTextFigure
+              ? () => _setVectorTextAlign(MCOImageV4TextAlign.right)
+              : null,
+          tooltip: context.l10n.chat_canvasV4TextAlignRight,
+          icon: Icons.format_align_right,
+          selected:
+              hasTextFigure && _isTextAlignActive(MCOImageV4TextAlign.right),
+        ),
       ],
     );
 
@@ -2050,6 +2112,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           _canvasRulerExtent,
         );
         final canDraw = !showLockButton || _canvasInputLocked;
+        final canvasScale = canvasSize.width / _width;
+        final editedText = _v4TextEditingIndex == null
+            ? null
+            : _activeTextFigure;
 
         return Center(
           child: SizedBox(
@@ -2077,6 +2143,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                           canvasOffset: canvasOffset,
                           canvasSize: canvasSize,
                           rulerExtent: _canvasRulerExtent,
+                          textAreaBounds: editedText == null
+                              ? null
+                              : _textAreaBounds(editedText),
                         )
                       : _PixelCanvasPainter(
                           width: _width,
@@ -2185,6 +2254,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     child: const SizedBox.expand(),
                   ),
                 ),
+                if (editedText != null)
+                  _buildVectorTextField(
+                    editedText,
+                    drawingOffset,
+                    canvasScale,
+                  ),
               ],
             ),
           ),
@@ -2468,7 +2543,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _cancelPayloadCalculationBeforeCanvasReplacement();
     final nextDocument = rescaleFigures
         ? _rescaleVectorDocument(document, width, height)
-        : document.copyWith(width: width, height: height);
+        : document.copyWith(
+            width: width,
+            height: height,
+            figures: document.figures
+                .map(
+                  (figure) => _fittedVectorFigure(
+                    figure,
+                    canvasWidth: width,
+                    canvasHeight: height,
+                  ),
+                )
+                .toList(),
+          );
     final referencePixels = _v4ReferencePixels;
     final nextReferencePixels =
         referencePixels != null &&
@@ -2671,6 +2758,19 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             style: style,
             visible: visible,
           ),
+        MCOImageV4Text() && final textFigure => textFigure.copyWith(
+          origin: mapPoint(textFigure.origin),
+          width: textFigure.width == null
+              ? null
+              : math.min(
+                  width,
+                  math.max(1, (textFigure.width! * scaleX).round()),
+                ),
+          fontSize: math.min(
+            math.max(width, height),
+            math.max(1, (textFigure.fontSize * scalarScale).round()),
+          ),
+        ),
         MCOImageV4RasterLayer() && final layer => mapRasterLayer(layer),
       };
     }
@@ -3256,7 +3356,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       _CanvasTool.select ||
       _CanvasTool.dot ||
       _CanvasTool.polyline ||
-      _CanvasTool.wave => false,
+      _CanvasTool.wave ||
+      _CanvasTool.text => false,
     };
   }
 
@@ -3836,6 +3937,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
     final figureBounds = MCOImageV4Painter.figureLogicalBounds(
       figure.withVisibility(true),
+      canvasWidth: document.width,
     ).intersect(canvasBounds);
     if (figureBounds.isEmpty) {
       throw const MCOImageInvalidInputException(
@@ -4283,8 +4385,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       document.height.toDouble(),
     );
     for (final figure in document.figures.where((figure) => figure.visible)) {
-      final figureBounds =
-          MCOImageV4Painter.figureLogicalBounds(figure).intersect(canvasBounds);
+      final figureBounds = MCOImageV4Painter.figureLogicalBounds(
+        figure,
+        canvasWidth: document.width,
+      ).intersect(canvasBounds);
       if (figureBounds.isEmpty) continue;
       bounds = bounds == null
           ? figureBounds
@@ -4313,7 +4417,13 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       width: targetWidth,
       height: targetHeight,
       figures: document.figures
-          .map((figure) => figure.translated(-minX, -minY))
+          .map(
+            (figure) => _fittedVectorFigure(
+              figure.translated(-minX, -minY),
+              canvasWidth: targetWidth,
+              canvasHeight: targetHeight,
+            ),
+          )
           .toList(),
     );
     final referencePixels = _v4ReferencePixels;
@@ -4811,6 +4921,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   Future<void> _calculateV4FinalPayload() async {
+    _finishVectorTextEditing();
     final document = _v4Document;
     if (document == null || _v4FinalPayloadInProgress) return;
 
@@ -4909,6 +5020,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _sendV4FinalPayload() async {
     try {
+      _finishVectorTextEditing();
       if (!_finishV4RasterLayerEdit()) return;
       final optimizedDocument = _v4FinalPayloadDocument;
       if (optimizedDocument == null) return;
@@ -5446,6 +5558,400 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _rectangleSecondIndex = null;
   }
 
+  /// Index of the text layer the text controls act on: the one being typed
+  /// into, else the selected one.
+  int? get _activeTextFigureIndex {
+    final document = _v4Document;
+    if (document == null) return null;
+    final index = _v4TextEditingIndex ?? _selectedV4FigureIndex;
+    if (index == null || index < 0 || index >= document.figures.length) {
+      return null;
+    }
+    return document.figures[index] is MCOImageV4Text ? index : null;
+  }
+
+  MCOImageV4Text? get _activeTextFigure {
+    final index = _activeTextFigureIndex;
+    if (index == null) return null;
+    return _v4Document!.figures[index] as MCOImageV4Text;
+  }
+
+  bool _isTextAlignActive(MCOImageV4TextAlign align) =>
+      (_activeTextFigure?.align ?? _v4TextAlign) == align;
+
+  void _beginVectorTextAt(MCOImageV4Point point) {
+    if (_v4Document == null) return;
+    var style = _currentVectorStyle();
+    if (style.strokeColor == null) {
+      // Text without a color would be a layer nobody can find again.
+      final profile = _v4Document!.paletteProfile;
+      final black = profile.isDynamic
+          ? MCOImageDynamicPalette.blackGlobalIndexFor(profile)
+          : MCOImagePalette.blackIndexFor(profile);
+      style = style.copyWith(
+        strokeColor: _vectorLocalColorIndex(black, mutate: true),
+      );
+    }
+    final document = _v4Document!;
+    final figures = [
+      ...document.figures,
+      MCOImageV4Text(
+        origin: point,
+        // The sticky size survives a canvas resize, so it is clamped here
+        // rather than reaching the encoder as an out-of-range figure.
+        fontSize: math.min(
+          math.max(document.width, document.height),
+          math.max(
+            1,
+            _v4TextFontSize ??
+                MCOImageV4Text.defaultFontSizeFor(document.width),
+          ),
+        ),
+        align: _v4TextAlign,
+        text: '',
+        style: style,
+      ),
+    ];
+    _v4TextController.clear();
+    setState(() {
+      _v4TextUndoBefore = document;
+      _v4Document = document.copyWith(figures: figures);
+      _v4TextEditingIndex = figures.length - 1;
+      _selectedV4FigureIndex = figures.length - 1;
+      _adoptVectorStyle(style);
+    });
+  }
+
+  void _beginVectorTextEditing(int index, MCOImageV4Text figure) {
+    final document = _v4Document;
+    if (document == null) return;
+    _v4TextController.text = figure.text;
+    _v4TextController.selection = TextSelection.collapsed(
+      offset: figure.text.length,
+    );
+    setState(() {
+      _v4TextUndoBefore = document;
+      _v4TextEditingIndex = index;
+      _selectedV4FigureIndex = index;
+      _selectedTool = _CanvasTool.text;
+      _v4TextAlign = figure.align;
+      _v4TextFontSize = figure.fontSize;
+      _adoptVectorStyle(figure.style);
+    });
+  }
+
+  /// Ends the current text layer. A layer nobody typed into is dropped
+  /// rather than sent as an empty box, and the whole session collapses into
+  /// one undo step.
+  bool _finishVectorTextEditing() {
+    final index = _v4TextEditingIndex;
+    if (index == null) return false;
+    final before = _v4TextUndoBefore;
+    _v4TextPayloadTimer?.cancel();
+    _v4TextPayloadTimer = null;
+    var document = _v4Document;
+    if (document != null && index >= 0 && index < document.figures.length) {
+      final figure = document.figures[index];
+      if (figure is MCOImageV4Text && figure.text.trim().isEmpty) {
+        final figures = [...document.figures]..removeAt(index);
+        document = document.copyWith(figures: figures);
+      }
+    }
+    final next = document;
+    setState(() {
+      _v4Document = next;
+      _v4TextEditingIndex = null;
+      _v4TextUndoBefore = null;
+      _v4TextController.clear();
+      final selected = _selectedV4FigureIndex;
+      if (next != null &&
+          selected != null &&
+          selected >= next.figures.length) {
+        _selectedV4FigureIndex = null;
+      }
+    });
+    if (_v4TextFocusNode.hasFocus) _v4TextFocusNode.unfocus();
+    if (before != null && next != null && !identical(before, next)) {
+      _recordVectorDocumentChange(before, next);
+    }
+    _markPayloadDirty();
+    return true;
+  }
+
+  void _clearVectorTextEditing() {
+    _v4TextEditingIndex = null;
+    _v4TextUndoBefore = null;
+    _v4TextPayloadTimer?.cancel();
+    _v4TextPayloadTimer = null;
+    _v4TextController.clear();
+  }
+
+  void _handleVectorTextChanged(String value) {
+    _updateActiveTextFigure(
+      (figure) => figure.text == value ? figure : figure.copyWith(text: value),
+    );
+  }
+
+  void _setVectorTextAlign(MCOImageV4TextAlign align) {
+    // Sticky: the next text layer starts with the same alignment, and the
+    // encoder only spends bits where a layer actually differs.
+    setState(() => _v4TextAlign = align);
+    _updateActiveTextFigure(
+      (figure) => figure.copyWith(align: align),
+      recordUndo: _v4TextEditingIndex == null,
+    );
+  }
+
+  void _setVectorTextWidth(int cells) {
+    final document = _v4Document;
+    if (document == null) return;
+    _updateActiveTextFigure((figure) {
+      final available = MCOImageV4Text.defaultWidthFor(
+        canvasWidth: document.width,
+        originX: figure.origin.x,
+      );
+      // The area cannot usefully reach past the right edge, and reaching it
+      // exactly is the default, which never costs bits: the whole top stretch
+      // of the slider therefore means the same thing.
+      final width = cells >= available ? null : math.max(1, cells);
+      return width == figure.width ? figure : figure.copyWith(width: width);
+    });
+  }
+
+  void _setVectorTextFontSize(int size) {
+    setState(() => _v4TextFontSize = size);
+    _updateActiveTextFigure((figure) => figure.copyWith(fontSize: size));
+  }
+
+  void _updateActiveTextFigure(
+    MCOImageV4Text Function(MCOImageV4Text figure) transform, {
+    bool recordUndo = false,
+  }) {
+    final document = _v4Document;
+    final index = _activeTextFigureIndex;
+    if (document == null || index == null) return;
+    final figure = document.figures[index] as MCOImageV4Text;
+    final next = transform(figure);
+    if (identical(next, figure)) return;
+    final figures = [...document.figures]..[index] = next;
+    final updated = document.copyWith(figures: figures);
+    setState(() => _v4Document = updated);
+    if (recordUndo) _recordVectorDocumentChange(document, updated);
+    _scheduleTextPayloadRefresh();
+  }
+
+  /// Typing must not start an encode per keystroke: the counter catches up
+  /// once the user pauses, and finishing the layer refreshes it at once.
+  void _scheduleTextPayloadRefresh() {
+    _v4TextPayloadTimer?.cancel();
+    _v4TextPayloadTimer = Timer(const Duration(milliseconds: 400), () {
+      _v4TextPayloadTimer = null;
+      if (!mounted) return;
+      _markPayloadDirty();
+    });
+  }
+
+  void _beginTextSliderDrag() {
+    // While typing the whole session is already one undo step.
+    if (_v4TextEditingIndex != null) return;
+    _v4StyleDragBefore = _v4Document;
+  }
+
+  void _endTextSliderDrag() {
+    if (_v4TextEditingIndex != null) return;
+    _endVectorStyleDrag();
+  }
+
+  Widget _buildVectorTextControls() {
+    final document = _v4Document;
+    final figure = _activeTextFigure;
+    if (document == null || figure == null) return const SizedBox.shrink();
+    // The slider is in cells over the whole canvas width, so neither its
+    // range nor its value depends on where the layer stands; a percentage of
+    // the space left to the right edge changed under a layer being dragged.
+    final minWidth = math.max(
+      1,
+      (document.width * _minTextWidthPercent / 100).round(),
+    );
+    final areaWidth = figure
+        .resolvedWidth(document.width)
+        .clamp(minWidth, document.width)
+        .toInt();
+    // Absolute range in cells: from one cell to the canvas's longer side,
+    // which is exactly what the codec accepts. The travel is geometric, or a
+    // linear scale would crowd every readable size into the first fifth of
+    // the slider. A figure carrying a size outside the range widens it
+    // rather than being clamped behind the user.
+    final minFontSize = math.min(figure.fontSize, _minTextFontSize);
+    final maxFontSize = math.max(
+      figure.fontSize,
+      math.max(document.width, document.height),
+    );
+    final fontSize = math.min(
+      maxFontSize,
+      math.max(minFontSize, figure.fontSize),
+    );
+    final labelStyle = Theme.of(context).textTheme.labelLarge;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          context.l10n.chat_canvasV4TextWidth(areaWidth),
+          style: labelStyle,
+        ),
+        Slider(
+          value: areaWidth.toDouble(),
+          min: minWidth.toDouble(),
+          max: document.width.toDouble(),
+          divisions: math.max(1, document.width - minWidth),
+          label: '$areaWidth',
+          onChangeStart: (_) => _beginTextSliderDrag(),
+          onChanged: (value) => _setVectorTextWidth(value.round()),
+          onChangeEnd: (_) => _endTextSliderDrag(),
+        ),
+        Text(
+          context.l10n.chat_canvasV4TextFontSize(fontSize),
+          style: labelStyle,
+        ),
+        Slider(
+          value: _textSliderPosition(fontSize, minFontSize, maxFontSize),
+          label: '$fontSize',
+          onChangeStart: (_) => _beginTextSliderDrag(),
+          onChanged: (value) => _setVectorTextFontSize(
+            _textSliderFontSize(value, minFontSize, maxFontSize),
+          ),
+          onChangeEnd: (_) => _endTextSliderDrag(),
+        ),
+      ],
+    );
+  }
+
+  static double _textSliderPosition(int size, int minSize, int maxSize) {
+    if (maxSize <= minSize) return 0;
+    return (math.log(size / minSize) / math.log(maxSize / minSize))
+        .clamp(0.0, 1.0);
+  }
+
+  static int _textSliderFontSize(
+    double position,
+    int minSize,
+    int maxSize,
+  ) {
+    if (maxSize <= minSize) return minSize;
+    final size = minSize * math.pow(maxSize / minSize, position);
+    return size.round().clamp(minSize, maxSize).toInt();
+  }
+
+  /// Area of the text layer being typed into, in canvas cells. An empty
+  /// layer still shows a box one line tall, so the user can see where it is.
+  Rect? _textAreaBounds(MCOImageV4Text figure) {
+    final document = _v4Document;
+    if (document == null) return null;
+    final bounds = MCOImageV4Painter.figureLogicalBounds(
+      figure,
+      canvasWidth: document.width,
+    );
+    return Rect.fromLTWH(
+      bounds.left,
+      bounds.top,
+      bounds.width,
+      math.max(bounds.height, figure.fontSize.toDouble()),
+    );
+  }
+
+  /// The field is laid out in canvas cells and only then scaled to the
+  /// screen, so it breaks lines exactly where the painter will.
+  Widget _buildVectorTextField(
+    MCOImageV4Text figure,
+    Offset drawingOffset,
+    double scale,
+  ) {
+    final document = _v4Document!;
+    final strokeValue = _vectorColorValueForLocalIndex(
+      document,
+      figure.style.strokeColor,
+    );
+    final color = strokeValue == null
+        ? Theme.of(context).colorScheme.onSurface
+        : _profileColor(document.paletteProfile, strokeValue);
+    final fillValue = _vectorColorValueForLocalIndex(
+      document,
+      figure.style.fillColor,
+    );
+    final area = _textAreaBounds(figure)!;
+    return Positioned(
+      left: drawingOffset.dx + (figure.origin.x + 0.5) * scale,
+      top: drawingOffset.dy + (figure.origin.y + 0.5) * scale,
+      child: Transform.scale(
+        scale: scale,
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          // Both sides come from the measurement the painter will use, so the
+          // layer covers exactly the area it is about to be drawn in. Left to
+          // its own intrinsic height the field answers with Material metrics
+          // instead, and the layer changes size the moment editing ends.
+          width: area.width,
+          height: area.height,
+          child: ColoredBox(
+            color: fillValue == null
+                ? const Color(0x00000000)
+                : _profileColor(document.paletteProfile, fillValue),
+            // The canvas is measured in cells and the painter it has to match
+            // scales nothing. Left alone, the system font scale and the app's
+            // own UI scale enlarge the field's text and its line box, so the
+            // layer lays out differently here from the way it is drawn.
+            child: MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.noScaling),
+              child: TextField(
+                controller: _v4TextController,
+                focusNode: _v4TextFocusNode,
+                autofocus: true,
+                onChanged: _handleVectorTextChanged,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                textAlign: MCOImageV4TextRendering.alignFor(figure.align),
+                textAlignVertical: TextAlignVertical.top,
+                style: MCOImageV4TextRendering.styleFor(
+                  fontSize: figure.fontSize.toDouble(),
+                  color: color,
+                ),
+                strutStyle: MCOImageV4TextRendering.strutFor(
+                  figure.fontSize.toDouble(),
+                ),
+                cursorColor: color,
+                // Both are asked for in canvas cells, since the field is scaled
+                // up by `scale` afterwards. The caret defaults to the height of
+                // the whole line box, which is taller than the glyphs it stands
+                // next to; one em is the ink. The framework centres it on the
+                // line box and cannot be told to sit lower.
+                cursorWidth: 1.5 / scale,
+                cursorHeight: figure.fontSize.toDouble(),
+                // Collapsed rather than merely dense: the Material decoration
+                // reserves vertical space of its own, which made the layer look
+                // taller while editing than it is once painted. Every border
+                // and the fill are stated too, because the app theme supplies
+                // a filled, outlined, focus-coloured decoration and the
+                // collapsed constructor cannot switch those off.
+                decoration: const InputDecoration(
+                  isCollapsed: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _clearVectorDraftState() {
     _v4ShapePoints.clear();
     _v4DraftFigure = null;
@@ -5459,6 +5965,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _editingV4FigureIndex = null;
     _editingV4FigureBefore = null;
     _editingV4FigureVisible = true;
+    _clearVectorTextEditing();
   }
 
   int? _vectorColorValueForLocalIndex(
@@ -5675,6 +6182,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _selectVectorFigure(int? index) {
+    _finishVectorTextEditing();
     _focusCanvasShortcuts();
     final document = _v4Document;
     if (document == null ||
@@ -5710,6 +6218,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _deleteVectorFigure(int index) {
+    _finishVectorTextEditing();
     final document = _v4Document;
     if (document == null || index < 0 || index >= document.figures.length) {
       return;
@@ -5937,7 +6446,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     for (final figure in figures) {
       if (!figure.visible) continue;
       visible = true;
-      final figureBounds = MCOImageV4Painter.figureLogicalBounds(figure);
+      final figureBounds = MCOImageV4Painter.figureLogicalBounds(
+        figure,
+        canvasWidth: document.width,
+      );
       bounds = bounds == null
           ? figureBounds
           : bounds.expandToInclude(figureBounds);
@@ -6457,23 +6969,33 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (document == null) {
       throw StateError('MCOimg v4 vector document is not initialized');
     }
+    // The layer being typed into is drawn by the on-canvas text field, so
+    // the painter must not draw it a second time. It stays visible in
+    // _v4Document, which is what the payload counter reads.
+    var base = document;
+    final editing = _v4TextEditingIndex;
+    if (editing != null && editing >= 0 && editing < base.figures.length) {
+      final figures = [...base.figures];
+      figures[editing] = figures[editing].withVisibility(false);
+      base = base.copyWith(figures: figures);
+    }
     final draft = _v4DraftFigure;
-    if (draft == null) return document;
+    if (draft == null) return base;
     final appendIndex = _v4AppendGroupIndex;
     if (appendIndex != null &&
         appendIndex >= 0 &&
-        appendIndex < document.figures.length &&
-        document.figures[appendIndex] is MCOImageV4Group) {
-      final figures = [...document.figures];
+        appendIndex < base.figures.length &&
+        base.figures[appendIndex] is MCOImageV4Group) {
+      final figures = [...base.figures];
       final group = figures[appendIndex] as MCOImageV4Group;
       figures[appendIndex] = MCOImageV4Group(
         figures: [...group.figures, draft],
         style: group.style,
         visible: group.visible,
       );
-      return document.copyWith(figures: figures);
+      return base.copyWith(figures: figures);
     }
-    return document.copyWith(figures: [...document.figures, draft]);
+    return base.copyWith(figures: [...base.figures, draft]);
   }
 
   MCOImageV4Figure? get _selectedV4Figure {
@@ -6551,6 +7073,8 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   }
 
   void _selectVectorTool(_CanvasTool nextTool) {
+    // Picking any tool, the text tool included, finishes the open layer.
+    _finishVectorTextEditing();
     final isSameTool = nextTool == _selectedTool;
     final finishedDraft = _finishCurrentVectorToolOpen();
     if (isSameTool && finishedDraft) {
@@ -6613,6 +7137,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       case _CanvasTool.pencil:
       case _CanvasTool.fill:
       case _CanvasTool.eyedropper:
+      case _CanvasTool.text:
         return false;
     }
   }
@@ -6658,6 +7183,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         final points = _acceptVectorShapePoint(point, requiredCount: 3);
         if (points == null) return;
         _addVectorFigure(_vectorWave(points[0], points[1], points[2]));
+      case _CanvasTool.text:
+        // A tap outside the field while typing is ignored; the layer is
+        // finished by picking another tool or the text tool again.
+        if (_v4TextEditingIndex != null) return;
+        _beginVectorTextAt(point);
       case _CanvasTool.select:
         final index = _hitTestVectorFigure(point);
         if (_v4GroupSelectionMode) {
@@ -7007,7 +7537,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return false;
     }
     final figures = [...document.figures];
-    figures[index] = figures[index].translated(dx, dy);
+    figures[index] = _movedVectorFigure(
+      figures[index],
+      dx,
+      dy,
+      canvasWidth: document.width,
+    );
     _commitVectorDocument(document.copyWith(figures: figures));
     setState(() {
       _selectedV4FigureIndex = index;
@@ -7016,6 +7551,83 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       }
     });
     return true;
+  }
+
+  /// Moves a figure without letting a text area change size. The default
+  /// width runs to the right canvas edge, which is worth keeping only while
+  /// the layer stays where it was created: once it is moved, that width is
+  /// pinned in cells, or the text would re-wrap and the width control would
+  /// read differently at every position. Groups are walked for the same
+  /// reason.
+  MCOImageV4Figure _movedVectorFigure(
+    MCOImageV4Figure figure,
+    int dx,
+    int dy, {
+    required int canvasWidth,
+  }) {
+    switch (figure) {
+      case MCOImageV4Text(:final width) when width == null && dx != 0:
+        return figure.copyWith(
+          origin: figure.origin.translated(dx, dy),
+          width: figure.resolvedWidth(canvasWidth),
+        );
+      case MCOImageV4Group(:final figures):
+        return MCOImageV4Group(
+          figures: figures
+              .map(
+                (child) => _movedVectorFigure(
+                  child,
+                  dx,
+                  dy,
+                  canvasWidth: canvasWidth,
+                ),
+              )
+              .toList(),
+          style: figure.style,
+          visible: figure.visible,
+        );
+      default:
+        return figure.translated(dx, dy);
+    }
+  }
+
+  /// Keeps a text figure encodable on a canvas of another size: the codec
+  /// rejects an area wider than the canvas and an em taller than its longer
+  /// side, and a pinned width has no reason to shrink on its own when the
+  /// canvas is cropped around it.
+  MCOImageV4Figure _fittedVectorFigure(
+    MCOImageV4Figure figure, {
+    required int canvasWidth,
+    required int canvasHeight,
+  }) {
+    switch (figure) {
+      case MCOImageV4Text(:final width, :final fontSize):
+        final maxFontSize = math.max(canvasWidth, canvasHeight);
+        if ((width == null || width <= canvasWidth) &&
+            fontSize <= maxFontSize) {
+          return figure;
+        }
+        return figure.copyWith(
+          width: width == null ? null : math.min(width, canvasWidth),
+          fontSize: math.min(fontSize, maxFontSize),
+        );
+      case MCOImageV4Group(:final figures):
+        return MCOImageV4Group(
+          figures: figures
+              .map(
+                (child) => _fittedVectorFigure(
+                  child,
+                  canvasWidth: canvasWidth,
+                  canvasHeight: canvasHeight,
+                ),
+              )
+              .toList(),
+          style: figure.style,
+          visible: figure.visible,
+        );
+      default:
+        return figure;
+    }
   }
 
   void _moveSelectedVectorFigure(MCOImageV4Point point) {
@@ -7030,9 +7642,11 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       return;
     }
     final figures = [...document.figures];
-    figures[index] = figures[index].translated(
+    figures[index] = _movedVectorFigure(
+      figures[index],
       point.x - previous.x,
       point.y - previous.y,
+      canvasWidth: document.width,
     );
     setState(() {
       _v4Document = document.copyWith(figures: figures);
@@ -7051,7 +7665,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         selected == null) {
       return;
     }
-    final clone = selected.translated(1, 1);
+    final clone = _movedVectorFigure(
+      selected,
+      1,
+      1,
+      canvasWidth: document.width,
+    );
     final figures = [...document.figures]..insert(index + 1, clone);
     _commitVectorDocument(document.copyWith(figures: figures));
     setState(() {
@@ -7097,6 +7716,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final figure = document.figures[index];
     if (figure is MCOImageV4RasterLayer) {
       _editSelectedV4RasterLayer(document, index, figure);
+      return;
+    }
+    if (figure is MCOImageV4Text) {
+      _beginVectorTextEditing(index, figure);
       return;
     }
     final figures = [...document.figures]..removeAt(index);
@@ -7370,6 +7993,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         MCOImageV4Path() => _CanvasTool.polyline,
         MCOImageV4Wave() => _CanvasTool.wave,
         MCOImageV4Group() => _CanvasTool.select,
+        MCOImageV4Text() => _CanvasTool.text,
         MCOImageV4RasterLayer() => _CanvasTool.select,
       };
 
@@ -7397,6 +8021,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
             end,
           ],
         MCOImageV4Group() => const <MCOImageV4Point>[],
+        MCOImageV4Text() => const <MCOImageV4Point>[],
         MCOImageV4RasterLayer() => const <MCOImageV4Point>[],
       };
 
@@ -7424,9 +8049,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     for (var i = document.figures.length - 1; i >= 0; i--) {
       final figure = document.figures[i];
       if (!figure.visible) continue;
-      if (MCOImageV4Painter.figureLogicalBounds(figure)
-          .inflate(2)
-          .contains(Offset(point.x + 0.5, point.y + 0.5))) {
+      if (MCOImageV4Painter.figureLogicalBounds(
+        figure,
+        canvasWidth: document.width,
+      ).inflate(2).contains(Offset(point.x + 0.5, point.y + 0.5))) {
         return i;
       }
     }
@@ -7534,10 +8160,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         .toInt();
     final index = y * _width + x;
     switch (_selectedTool) {
+      // Vector-only tools draw nothing on a raster canvas.
       case _CanvasTool.select:
       case _CanvasTool.dot:
       case _CanvasTool.polyline:
       case _CanvasTool.wave:
+      case _CanvasTool.text:
         break;
       case _CanvasTool.pencil:
         _paintPixel(index);
@@ -8381,6 +9009,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _saveCanvasToPng() async {
     try {
+      _finishVectorTextEditing();
       if (!_finishV4RasterLayerEdit()) return;
       final bytes = await _renderCanvasPngBytes();
       final fileName = MCOImageFileSaver.pngFileName();
@@ -8414,6 +9043,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _saveCanvasToBinary() async {
     try {
+      _finishVectorTextEditing();
       if (!_finishV4RasterLayerEdit()) return;
       // Store the raw MCOimg payload, not the channel B0 transport envelope,
       // so the file can be imported back into the editor directly.
@@ -8517,6 +9147,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
 
   Future<void> _sendCanvas() async {
     try {
+      _finishVectorTextEditing();
       if (!_finishV4RasterLayerEdit()) return;
       if (_isVectorV4) {
         final encoded = await _encodedVectorForCurrentState(refreshNonce: true);
@@ -9073,6 +9704,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
       MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
       MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
       MCOImageV4Group() => 'Группа',
+      MCOImageV4Text() => context.l10n.chat_canvasV4ToolText,
       MCOImageV4RasterLayer() => 'Растр',
     };
   }
@@ -9388,7 +10020,10 @@ class _V4FigurePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final previewFigure = figure.withVisibility(true);
-    final bounds = MCOImageV4Painter.figureLogicalBounds(previewFigure);
+    final bounds = MCOImageV4Painter.figureLogicalBounds(
+      previewFigure,
+      canvasWidth: document.width,
+    );
     final longestSide = math.max(bounds.width, bounds.height);
     final padding = math.max(1.0, longestSide * 0.18);
     final viewport = bounds.inflate(padding);
@@ -9489,6 +10124,11 @@ class _VectorCanvasPainter extends CustomPainter {
   final Size canvasSize;
   final double rulerExtent;
 
+  /// Area of the text layer being typed into, in canvas cells. The
+  /// on-canvas field draws the glyphs but has no border of its own, and
+  /// without one there is nothing to see the width and height against.
+  final Rect? textAreaBounds;
+
   const _VectorCanvasPainter({
     required this.document,
     required this.selectedFigure,
@@ -9502,6 +10142,7 @@ class _VectorCanvasPainter extends CustomPainter {
     required this.canvasOffset,
     required this.canvasSize,
     required this.rulerExtent,
+    this.textAreaBounds,
   });
 
   @override
@@ -9531,8 +10172,51 @@ class _VectorCanvasPainter extends CustomPainter {
     if (showGrid) {
       _paintGrid(canvas);
     }
+    final textArea = textAreaBounds;
+    if (textArea != null) _paintTextArea(canvas, textArea);
     _paintGuidePoints(canvas);
     canvas.restore();
+  }
+
+  void _paintTextArea(Canvas canvas, Rect bounds) {
+    final scaleX = canvasSize.width / document.width;
+    final scaleY = canvasSize.height / document.height;
+    _paintDashedRect(
+      canvas,
+      Rect.fromLTRB(
+        bounds.left * scaleX,
+        bounds.top * scaleY,
+        bounds.right * scaleX,
+        bounds.bottom * scaleY,
+      ),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..isAntiAlias = false
+        ..color = const Color(0xff00aaff),
+    );
+  }
+
+  void _paintDashedRect(Canvas canvas, Rect rect, Paint paint) {
+    const dash = 4.0;
+    const gap = 3.0;
+    void dashedLine(Offset from, Offset to) {
+      final delta = to - from;
+      final length = delta.distance;
+      if (length <= 0) return;
+      final step = delta / length;
+      var travelled = 0.0;
+      while (travelled < length) {
+        final end = math.min(travelled + dash, length);
+        canvas.drawLine(from + step * travelled, from + step * end, paint);
+        travelled = end + gap;
+      }
+    }
+
+    dashedLine(rect.topLeft, rect.topRight);
+    dashedLine(rect.topRight, rect.bottomRight);
+    dashedLine(rect.bottomRight, rect.bottomLeft);
+    dashedLine(rect.bottomLeft, rect.topLeft);
   }
 
   void _paintGrid(Canvas canvas) {
@@ -9697,7 +10381,8 @@ class _VectorCanvasPainter extends CustomPainter {
         oldDelegate.showRuler != showRuler ||
         oldDelegate.canvasOffset != canvasOffset ||
         oldDelegate.canvasSize != canvasSize ||
-        oldDelegate.rulerExtent != rulerExtent;
+        oldDelegate.rulerExtent != rulerExtent ||
+        oldDelegate.textAreaBounds != textAreaBounds;
   }
 }
 

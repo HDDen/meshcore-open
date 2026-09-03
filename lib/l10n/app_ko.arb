@@ -3676,5 +3676,13 @@
   "settings_supportDevelopment": "개발 후원하기",
   "donate_intro": "방문해 주셔서 감사합니다!\n이 모드가 마음에 드셨다면 후원으로 개발을 지원하실 수 있습니다.",
   "donate_tipLinkLabel": "후원 링크:",
-  "donate_upstreamAuthor": "원본 meshcore_open의 제작자 zjs81의 후원 링크는 여기입니다:"
+  "donate_upstreamAuthor": "원본 meshcore_open의 제작자 zjs81의 후원 링크는 여기입니다:",
+  "chat_canvasV4ToolText": "텍스트",
+  "chat_canvasV4TextAlignLeft": "왼쪽",
+  "chat_canvasV4TextAlignCenter": "가운데",
+  "chat_canvasV4TextAlignRight": "오른쪽",
+  "chat_canvasV4TextWidth": "영역 너비: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "글자 크기: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

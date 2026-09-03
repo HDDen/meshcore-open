@@ -429,7 +429,10 @@ A byte container embeds a stream as a **frame**:
 is implemented by `MCOtxtFrame` in `lib/MCOtxt/mcotxt_frame.dart`; the
 application container below uses it for every MCOtxt string, and new byte
 containers should too. A bit-packed host format does not need the byte padding
-and keeps only the rule: the bit count is written ahead of the bits.
+and keeps only the rule: the bit count is written ahead of the bits. The
+MCOimg v4 text figure embeds a stream that way, as
+`bitCompactUint(bitLength)` followed by exactly that many bits, re-packed
+into that format's least-significant-bit-first order.
 
 ## Application container
 

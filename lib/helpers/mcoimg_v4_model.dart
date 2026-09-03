@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'mcoimg_types.dart';
@@ -303,6 +304,89 @@ class MCOImageV4Wave extends MCOImageV4Figure {
     style: style,
     visible: visible,
   );
+}
+
+enum MCOImageV4TextAlign { left, center, right }
+
+/// A block of text drawn inside a rectangular area.
+///
+/// [origin] is the top-left corner of that area and lines grow downward.
+/// Line breaking inside the area is left to the renderer, so only explicit
+/// line feeds travel on the wire.
+///
+/// [width] is the area width in canvas cells; null means the default width,
+/// from [origin] to the right canvas edge, which costs nothing to transmit.
+/// [fontSize] is the em height in canvas cells.
+///
+/// Glyph shapes are deliberately outside the format: no font is transmitted,
+/// so two clients may draw the same text differently. Only the anchor, the
+/// area width and the em height are normative.
+class MCOImageV4Text extends MCOImageV4Figure {
+  final MCOImageV4Point origin;
+  final int? width;
+  final int fontSize;
+  final MCOImageV4TextAlign align;
+  final String text;
+
+  const MCOImageV4Text({
+    required this.origin,
+    required this.fontSize,
+    required this.align,
+    required this.text,
+    this.width,
+    required super.style,
+    super.visible,
+  });
+
+  /// Area width for a figure that carries none: from [originX] to the right
+  /// canvas edge. Both ends derive it the same way, so it costs no bits.
+  static int defaultWidthFor({
+    required int canvasWidth,
+    required int originX,
+  }) {
+    return math.max(1, math.min(canvasWidth, canvasWidth - originX));
+  }
+
+  /// Em height a document starts at: about 12% of the canvas width, which
+  /// puts an average Latin glyph at roughly 6% of it.
+  static int defaultFontSizeFor(int canvasWidth) {
+    return math.max(1, (canvasWidth * 12) ~/ 100);
+  }
+
+  int resolvedWidth(int canvasWidth) =>
+      width ?? defaultWidthFor(canvasWidth: canvasWidth, originX: origin.x);
+
+  MCOImageV4Text copyWith({
+    MCOImageV4Point? origin,
+    Object? width = _unchanged,
+    int? fontSize,
+    MCOImageV4TextAlign? align,
+    String? text,
+    MCOImageV4Style? style,
+    bool? visible,
+  }) {
+    return MCOImageV4Text(
+      origin: origin ?? this.origin,
+      width: identical(width, _unchanged) ? this.width : width as int?,
+      fontSize: fontSize ?? this.fontSize,
+      align: align ?? this.align,
+      text: text ?? this.text,
+      style: style ?? this.style,
+      visible: visible ?? this.visible,
+    );
+  }
+
+  static const Object _unchanged = Object();
+
+  @override
+  MCOImageV4Text translated(int dx, int dy) =>
+      copyWith(origin: origin.translated(dx, dy));
+
+  @override
+  MCOImageV4Text withStyle(MCOImageV4Style style) => copyWith(style: style);
+
+  @override
+  MCOImageV4Text withVisibility(bool visible) => copyWith(visible: visible);
 }
 
 class MCOImageV4RasterLayer extends MCOImageV4Figure {

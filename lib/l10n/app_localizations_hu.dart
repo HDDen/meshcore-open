@@ -6656,4 +6656,26 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Az eredeti meshcore_open szerzője — zjs81 — itt fogad adományokat:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Szöveg';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Balra';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'Középre';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Jobbra';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Terület szélessége: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Betűméret: $size';
+  }
 }

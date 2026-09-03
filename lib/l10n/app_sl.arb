@@ -3539,5 +3539,13 @@
   "settings_supportDevelopment": "Podprite razvoj",
   "donate_intro": "Hvala, da ste se oglasili!\nČe vam je ta modifikacija všeč, lahko z donacijo podprete njen razvoj.",
   "donate_tipLinkLabel": "Povezava za napitnino:",
-  "donate_upstreamAuthor": "Avtor izvirnega meshcore_open — zjs81 — sprejema donacije tukaj:"
+  "donate_upstreamAuthor": "Avtor izvirnega meshcore_open — zjs81 — sprejema donacije tukaj:",
+  "chat_canvasV4ToolText": "Besedilo",
+  "chat_canvasV4TextAlignLeft": "Levo",
+  "chat_canvasV4TextAlignCenter": "Sredinsko",
+  "chat_canvasV4TextAlignRight": "Desno",
+  "chat_canvasV4TextWidth": "Širina območja: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Velikost pisave: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

@@ -8,6 +8,82 @@ import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_types.dart';
 import '../helpers/mcoimg_v4_model.dart';
 
+/// How this app draws MCOimg v4 text.
+///
+/// The format carries no font, so rendering is not normative and other
+/// clients may lay the same text out differently. Within this app it is
+/// defined once here, so the on-canvas editor and the painter agree.
+abstract final class MCOImageV4TextRendering {
+  /// Bundled with the app, so our own output matches on every platform.
+  static const String fontFamily = 'Inter';
+
+  /// Height of one line box in em, fixed here rather than taken from the font.
+  /// The font's own metrics are tighter than its ink: glyphs hung below the
+  /// filled area while leaving a gap above it. A stated line box, with the
+  /// leading split evenly, centres the ink and keeps every line inside the
+  /// area the figure declares.
+  static const double lineHeight = 1.2;
+
+  static TextStyle styleFor({
+    required double fontSize,
+    required Color color,
+  }) {
+    // Every metric is stated rather than inherited: the editor overlays a
+    // real text field over the canvas, and a theme default there would lay
+    // the text out differently from the painter.
+    return TextStyle(
+      fontFamily: fontFamily,
+      fontSize: fontSize,
+      color: color,
+      fontWeight: FontWeight.normal,
+      fontStyle: FontStyle.normal,
+      letterSpacing: 0,
+      decoration: TextDecoration.none,
+      height: lineHeight,
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
+  /// Pins the line box to [lineHeight] em for both the painter and the
+  /// editor's on-canvas field, so a font with taller metrics cannot stretch
+  /// one of them and not the other.
+  static StrutStyle strutFor(double fontSize) => StrutStyle(
+    fontFamily: fontFamily,
+    fontSize: fontSize,
+    height: lineHeight,
+    leading: 0,
+    leadingDistribution: TextLeadingDistribution.even,
+    forceStrutHeight: true,
+  );
+
+  static TextAlign alignFor(MCOImageV4TextAlign align) => switch (align) {
+    MCOImageV4TextAlign.left => TextAlign.left,
+    MCOImageV4TextAlign.center => TextAlign.center,
+    MCOImageV4TextAlign.right => TextAlign.right,
+  };
+
+  /// Laid out in canvas cells: the painter works in a scaled canvas where
+  /// one logical unit is one cell, so the em height is the font size and
+  /// the area width is the layout width. `minWidth` is set as well, or the
+  /// painter would shrink to the longest line and alignment would do nothing.
+  static TextPainter painterFor({
+    required MCOImageV4Text figure,
+    required int canvasWidth,
+    required Color color,
+  }) {
+    final width = figure.resolvedWidth(canvasWidth).toDouble();
+    return TextPainter(
+      text: TextSpan(
+        text: figure.text,
+        style: styleFor(fontSize: figure.fontSize.toDouble(), color: color),
+      ),
+      textAlign: alignFor(figure.align),
+      textDirection: TextDirection.ltr,
+      strutStyle: strutFor(figure.fontSize.toDouble()),
+    )..layout(minWidth: width, maxWidth: width);
+  }
+}
+
 class MCOImageV4View extends StatelessWidget {
   final MCOImageV4Document document;
   final double maxSize;
@@ -32,6 +108,7 @@ class MCOImageV4View extends StatelessWidget {
 
 class MCOImageV4Painter extends CustomPainter {
   static const Color _gridColor = Color(0xff00ff00);
+  static const int _maxCanvasSize = 256;
 
   final MCOImageV4Document document;
   final MCOImageV4Figure? selectedFigure;
@@ -279,6 +356,31 @@ class MCOImageV4Painter extends CustomPainter {
             endOffset.dy,
           );
         _drawPath(canvas, path, style, closedStroke: closed);
+      case MCOImageV4Text() && final textFigure:
+        final stroke = textFigure.style.strokeColor;
+        final fill = textFigure.style.fillColor;
+        if (stroke == null && fill == null) return;
+        final origin = _point(textFigure.origin);
+        final textPainter = MCOImageV4TextRendering.painterFor(
+          figure: textFigure,
+          canvasWidth: document.width,
+          color: stroke == null ? const Color(0x00000000) : _color(stroke),
+        );
+        if (fill != null) {
+          canvas.drawRect(
+            Rect.fromLTWH(
+              origin.dx,
+              origin.dy,
+              textPainter.width,
+              textPainter.height,
+            ),
+            Paint()
+              ..isAntiAlias = antiAlias
+              ..style = PaintingStyle.fill
+              ..color = _color(fill),
+          );
+        }
+        if (stroke != null) textPainter.paint(canvas, origin);
       case MCOImageV4Group(:final figures):
         for (final child in figures) {
           if (!child.visible) continue;
@@ -355,7 +457,10 @@ class MCOImageV4Painter extends CustomPainter {
   }
 
   void _drawSelection(Canvas canvas, MCOImageV4Figure figure, double scale) {
-    final bounds = figureLogicalBounds(figure).inflate(2 / scale);
+    final bounds = figureLogicalBounds(
+      figure,
+      canvasWidth: document.width,
+    ).inflate(2 / scale);
     canvas.drawRect(
       bounds,
       Paint()
@@ -379,7 +484,13 @@ class MCOImageV4Painter extends CustomPainter {
   static Offset _point(MCOImageV4Point point) =>
       Offset(point.x + 0.5, point.y + 0.5);
 
-  static Rect figureLogicalBounds(MCOImageV4Figure figure) {
+  /// [canvasWidth] resolves the default width of a text area; without it a
+  /// text figure that carries no width of its own is measured against the
+  /// largest canvas the format allows.
+  static Rect figureLogicalBounds(
+    MCOImageV4Figure figure, {
+    int? canvasWidth,
+  }) {
     switch (figure) {
       case MCOImageV4Dot(:final point, :final style):
         return Rect.fromCircle(
@@ -434,11 +545,27 @@ class MCOImageV4Painter extends CustomPainter {
         return Rect.fromPoints(_point(start), _point(end)).inflate(
           depth.abs() + style.strokeWidth / 2,
         );
+      case MCOImageV4Text() && final textFigure:
+        final origin = _point(textFigure.origin);
+        final textPainter = MCOImageV4TextRendering.painterFor(
+          figure: textFigure,
+          canvasWidth: canvasWidth ?? _maxCanvasSize,
+          color: const Color(0xff000000),
+        );
+        return Rect.fromLTWH(
+          origin.dx,
+          origin.dy,
+          textPainter.width,
+          textPainter.height,
+        );
       case MCOImageV4Group(:final figures):
         Rect? bounds;
         for (final child in figures) {
           if (!child.visible) continue;
-          final childBounds = figureLogicalBounds(child);
+          final childBounds = figureLogicalBounds(
+            child,
+            canvasWidth: canvasWidth,
+          );
           bounds = bounds == null
               ? childBounds
               : bounds.expandToInclude(childBounds);

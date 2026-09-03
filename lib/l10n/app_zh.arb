@@ -3544,5 +3544,13 @@
   "settings_supportDevelopment": "支持开发",
   "donate_intro": "感谢您的光临！\n如果您喜欢这个修改版，可以通过捐赠支持它的开发。",
   "donate_tipLinkLabel": "打赏链接：",
-  "donate_upstreamAuthor": "原版 meshcore_open 的作者 zjs81 在这里接受捐赠："
+  "donate_upstreamAuthor": "原版 meshcore_open 的作者 zjs81 在这里接受捐赠：",
+  "chat_canvasV4ToolText": "文本",
+  "chat_canvasV4TextAlignLeft": "左对齐",
+  "chat_canvasV4TextAlignCenter": "居中",
+  "chat_canvasV4TextAlignRight": "右对齐",
+  "chat_canvasV4TextWidth": "区域宽度：{cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "字号：{size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

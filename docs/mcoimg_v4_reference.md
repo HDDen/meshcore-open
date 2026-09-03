@@ -13,6 +13,10 @@ The editor defaults to a `128x128` coordinate grid and the `Master 8` palette
 profile, while the user chooses width, height, and profile before drawing
 starts.
 
+A figure may also be a block of text. The text travels as an MCOtxt v1
+stream rather than as glyphs, so the payload stays small and no font is
+transmitted; see [Text](#text).
+
 Alongside vector figures a document may carry raster layers. A raster layer is
 an ordinary figure in the same stream, so it takes part in the z-order like any
 other figure, and its pixels are carried as a v3 body. A document containing at
@@ -269,7 +273,7 @@ Opcode 15 is an escape followed by a 4-bit sub-opcode:
 | 12 | `REPEAT_COLOR_RUN` |
 | 13 | `GROUP` |
 | 14 | `RASTER_LAYER` |
-| 15 | reserved |
+| 15 | `EXTENDED2` escape |
 
 Every alternate form is a pure encoder choice: the encoder builds all applicable
 candidates and emits the shortest. A decoder must accept all of them and gets the
@@ -476,6 +480,59 @@ The layer's own size, pixels, and transparent color come from the v3 image; only
 the origin is stored by v4. `payloadLength` must be at least 2. Raster layers are
 valid only in `mixed` mode and only at the top level of the stream.
 
+## Text
+
+```text
+TEXT  op(4) + ext(4) = 15 + ext2(4) = 0
+      + originPoint + mask(3)
+      + widthMinus1(xBits)?           // mask bit 0
+      + align(2)?                     // mask bit 1
+      + fontSizeMinus1(scalarBits)?   // mask bit 2
+      + bitCompactUint(bitLength) + bitLength bits of MCOtxt stream
+```
+
+Extended sub-opcode `15` is a second escape rather than a command: four more
+bits choose one of sixteen commands, of which `0` is `TEXT` and the rest are
+reserved. A decoder that meets a reserved one reports an unsupported format,
+not a damaged payload.
+
+`originPoint` is the top-left corner of the text area and lines grow
+downward. `align` is `0` left, `1` center, `2` right; `3` is invalid. The area
+width is stored in canvas cells, and a cleared mask bit 0 means the default,
+`max(1, min(width, width - originX))`, from the anchor to the right canvas
+edge. `fontSize` is the em height in canvas cells.
+
+Alignment and font size are **sticky**, the way style is. A document starts at
+left alignment and a font size of `max(1, width * 12 / 100)`, and every `TEXT`
+command writes only the fields it changes, so a run of captions pays for a
+change once. A group keeps its own text state, seeded from the state current
+at the group and discarded when the group ends. A repeat leaves the state
+alone and reproduces the text fields of the figure it copies; the reference
+encoder never offers a repeat for text.
+
+The text itself is an MCOtxt v1 stream, specified in
+[`MCOTXT_V1_PROTOCOL.md`](MCOTXT_V1_PROTOCOL.md). It is embedded bit by bit,
+because MCOtxt packs most-significant bit first while this format packs
+least-significant bit first, and `bitCompactUint(bitLength)` precedes it: an
+MCOtxt stream is not self-terminating, so its bit count has to travel with it.
+The stream carries its own codec version and model generation, so a client
+without the tables the text was written with rejects the whole image; it does so
+as an unsupported format rather than as damage, which is what earns the reader
+an "update the app" placeholder. An empty text is legal and draws nothing.
+
+Only explicit line feeds, which the MCOtxt punctuation page carries, travel on
+the wire. Where a line is broken to fit the area is left to the renderer.
+
+**Rendering is not normative.** No font is transmitted, so two clients may lay
+the same text out differently; the anchor, the area width and the em height
+are the only things they are guaranteed to agree on. This app draws glyphs in
+the stroke color of the current style and fills the area with its fill color,
+over the area width and the height the text laid out to; a text with no stroke
+color draws no glyphs. It lays each line out in a box of `1.2` em with the
+leading split evenly, so the filled area is `lines * 1.2 * fontSize` tall and
+the glyphs sit in the middle of it rather than following the font's own
+metrics.
+
 ## Transport tail and replies
 
 Tail starts with byte flags:
@@ -514,15 +571,19 @@ points, wave depth zero, stroke width outside `1 .. max(width, height)`, dots
 without a stroke color, paths with too few points, repeats without a matching
 prior figure, `END` inside a group, groups that overflow their declared count,
 raster layers outside `mixed` mode or inside a group, raster payloads shorter
-than two bytes, raster layers whose profile disagrees with the document,
-non-zero padding, and unknown transport-tail flags. Partially damaged drawings
+than two bytes, raster layers whose profile disagrees with the document, a
+reserved second-escape command, a text alignment of `3`, a text area width
+outside `1 .. width`, a font size outside `1 .. max(width, height)`, an
+MCOtxt stream this build cannot decode, non-zero padding, and unknown
+transport-tail flags. Partially damaged drawings
 are not rendered.
 
 ## Implementation status
 
-The Dart codec, vector renderer and editor, raster layers with v3-encoded
-payloads, compression-level selection, the binary send and receive path, replies,
-stable identity, gallery, and BIN/PNG import and export are implemented.
+The Dart codec, vector renderer and editor, text figures over MCOtxt, raster
+layers with v3-encoded payloads, compression-level selection, the binary send
+and receive path, replies, stable identity, gallery, and BIN/PNG import and
+export are implemented.
 
 A dedicated pure-raster mode (`mode = 2`), optional overlap removal between
 layers, the JavaScript port, and cross-runtime fixtures remain follow-up phases.

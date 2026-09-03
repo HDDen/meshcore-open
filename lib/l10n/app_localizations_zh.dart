@@ -6203,4 +6203,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donate_upstreamAuthor => '原版 meshcore_open 的作者 zjs81 在这里接受捐赠：';
+
+  @override
+  String get chat_canvasV4ToolText => '文本';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => '左对齐';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => '居中';
+
+  @override
+  String get chat_canvasV4TextAlignRight => '右对齐';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return '区域宽度：$cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return '字号：$size';
+  }
 }

@@ -3644,5 +3644,13 @@
   "settings_supportDevelopment": "開発を支援する",
   "donate_intro": "お立ち寄りいただきありがとうございます！\nこの改造版を気に入っていただけましたら、寄付で開発を支援できます。",
   "donate_tipLinkLabel": "投げ銭リンク:",
-  "donate_upstreamAuthor": "オリジナルの meshcore_open の作者 zjs81 への寄付はこちらです:"
+  "donate_upstreamAuthor": "オリジナルの meshcore_open の作者 zjs81 への寄付はこちらです:",
+  "chat_canvasV4ToolText": "テキスト",
+  "chat_canvasV4TextAlignLeft": "左揃え",
+  "chat_canvasV4TextAlignCenter": "中央揃え",
+  "chat_canvasV4TextAlignRight": "右揃え",
+  "chat_canvasV4TextWidth": "領域の幅: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "文字サイズ: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

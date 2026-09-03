@@ -11343,6 +11343,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The author of the original meshcore_open — zjs81 — accepts donations here:'**
   String get donate_upstreamAuthor;
+
+  /// No description provided for @chat_canvasV4ToolText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get chat_canvasV4ToolText;
+
+  /// No description provided for @chat_canvasV4TextAlignLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get chat_canvasV4TextAlignLeft;
+
+  /// No description provided for @chat_canvasV4TextAlignCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get chat_canvasV4TextAlignCenter;
+
+  /// No description provided for @chat_canvasV4TextAlignRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get chat_canvasV4TextAlignRight;
+
+  /// No description provided for @chat_canvasV4TextWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Area width: {cells}'**
+  String chat_canvasV4TextWidth(int cells);
+
+  /// No description provided for @chat_canvasV4TextFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size: {size}'**
+  String chat_canvasV4TextFontSize(int size);
 }
 
 class _AppLocalizationsDelegate

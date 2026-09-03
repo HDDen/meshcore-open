@@ -6668,4 +6668,26 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get donate_upstreamAuthor =>
       'Авторът на оригиналния meshcore_open — zjs81 — приема дарения тук:';
+
+  @override
+  String get chat_canvasV4ToolText => 'Текст';
+
+  @override
+  String get chat_canvasV4TextAlignLeft => 'Отляво';
+
+  @override
+  String get chat_canvasV4TextAlignCenter => 'Центрирано';
+
+  @override
+  String get chat_canvasV4TextAlignRight => 'Отдясно';
+
+  @override
+  String chat_canvasV4TextWidth(int cells) {
+    return 'Ширина на областта: $cells';
+  }
+
+  @override
+  String chat_canvasV4TextFontSize(int size) {
+    return 'Размер на шрифта: $size';
+  }
 }

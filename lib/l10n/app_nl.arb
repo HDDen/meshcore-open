@@ -3321,5 +3321,13 @@
   "settings_supportDevelopment": "Ontwikkeling steunen",
   "donate_intro": "Bedankt voor je bezoek!\nAls deze modificatie je bevalt, kun je de ontwikkeling ervan steunen met een donatie.",
   "donate_tipLinkLabel": "Link voor fooien:",
-  "donate_upstreamAuthor": "De auteur van de originele meshcore_open — zjs81 — accepteert donaties hier:"
+  "donate_upstreamAuthor": "De auteur van de originele meshcore_open — zjs81 — accepteert donaties hier:",
+  "chat_canvasV4ToolText": "Tekst",
+  "chat_canvasV4TextAlignLeft": "Links",
+  "chat_canvasV4TextAlignCenter": "Gecentreerd",
+  "chat_canvasV4TextAlignRight": "Rechts",
+  "chat_canvasV4TextWidth": "Breedte van het vlak: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Tekengrootte: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

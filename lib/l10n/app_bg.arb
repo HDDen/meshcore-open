@@ -3539,5 +3539,13 @@
   "settings_supportDevelopment": "Подкрепете разработката",
   "donate_intro": "Благодарим, че наминахте!\nАко харесвате модификацията, можете да подкрепите разработката ѝ с дарение.",
   "donate_tipLinkLabel": "Връзка за бакшиш:",
-  "donate_upstreamAuthor": "Авторът на оригиналния meshcore_open — zjs81 — приема дарения тук:"
+  "donate_upstreamAuthor": "Авторът на оригиналния meshcore_open — zjs81 — приема дарения тук:",
+  "chat_canvasV4ToolText": "Текст",
+  "chat_canvasV4TextAlignLeft": "Отляво",
+  "chat_canvasV4TextAlignCenter": "Центрирано",
+  "chat_canvasV4TextAlignRight": "Отдясно",
+  "chat_canvasV4TextWidth": "Ширина на областта: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Размер на шрифта: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

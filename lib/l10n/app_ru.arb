@@ -2840,5 +2840,13 @@
   "settings_supportDevelopment": "Поддержать разработку",
   "donate_intro": "Спасибо, что заглянули!\nЕсли Вам понравилась модификация, Вы можете поддержать её разработку, отправив донат.",
   "donate_tipLinkLabel": "Ссылка для чаевых:",
-  "donate_upstreamAuthor": "Автор оригинального meshcore_open — zjs81 — принимает донаты здесь:"
+  "donate_upstreamAuthor": "Автор оригинального meshcore_open — zjs81 — принимает донаты здесь:",
+  "chat_canvasV4ToolText": "Текст",
+  "chat_canvasV4TextAlignLeft": "Слева",
+  "chat_canvasV4TextAlignCenter": "По центру",
+  "chat_canvasV4TextAlignRight": "Справа",
+  "chat_canvasV4TextWidth": "Ширина области: {cells}",
+  "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
+  "chat_canvasV4TextFontSize": "Размер шрифта: {size}",
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
 }

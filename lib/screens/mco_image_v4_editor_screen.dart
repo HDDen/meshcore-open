@@ -1718,6 +1718,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Path() => _V4Tool.polyline,
         MCOImageV4Wave() => _V4Tool.wave,
         MCOImageV4Group() => _V4Tool.select,
+        MCOImageV4Text() => _V4Tool.select,
         MCOImageV4RasterLayer() => _V4Tool.select,
       };
 
@@ -1741,6 +1742,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             end,
           ],
         MCOImageV4Group() => const <MCOImageV4Point>[],
+        MCOImageV4Text() => const <MCOImageV4Point>[],
         MCOImageV4RasterLayer() => const <MCOImageV4Point>[],
       };
 
@@ -2605,6 +2607,7 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
             style: style,
             visible: figure.visible,
           ),
+        MCOImageV4Text() && final textFigure => textFigure,
         MCOImageV4RasterLayer() && final layer => rescaleRasterLayer(layer),
       };
     }
@@ -2839,7 +2842,8 @@ class _MCOImageV4EditorScreenState extends State<MCOImageV4EditorScreen> {
         MCOImageV4Path() => context.l10n.chat_canvasV4ToolPolyline,
         MCOImageV4Wave() => context.l10n.chat_canvasV4ToolWave,
         MCOImageV4Group() => 'Группа',
-        MCOImageV4RasterLayer() => 'Растр',
+        MCOImageV4Text() => 'Текст',
+      MCOImageV4RasterLayer() => 'Растр',
       };
 }
 
