@@ -430,6 +430,8 @@ class ChannelMessage {
 
       final decodedDetails = MessageTextCodec.tryDecodeKnownCompressionDetails(
         actualText,
+        inheritedTimestamp: timestampRaw,
+        inheritedSenderName: senderName,
       );
       final decodedText = decodedDetails?.text ?? actualText;
       final compression = MessageCompressionMetadata.fromEncodedText(

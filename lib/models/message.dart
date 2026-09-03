@@ -308,6 +308,7 @@ class Message {
       final rawText = reader.readCString();
       final decodedDetails = MessageTextCodec.tryDecodeKnownCompressionDetails(
         rawText,
+        inheritedTimestamp: timestampRaw,
       );
       final text = decodedDetails?.text ?? rawText;
       final compression = MessageCompressionMetadata.fromEncodedText(

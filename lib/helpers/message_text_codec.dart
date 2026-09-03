@@ -16,11 +16,23 @@ class DecodedMessageText {
 }
 
 class MessageTextCodec {
-  static String? tryDecodeKnownCompression(String text) {
-    return tryDecodeKnownCompressionDetails(text)?.text;
+  static String? tryDecodeKnownCompression(
+    String text, {
+    int? inheritedTimestamp,
+    String? inheritedSenderName,
+  }) {
+    return tryDecodeKnownCompressionDetails(
+      text,
+      inheritedTimestamp: inheritedTimestamp,
+      inheritedSenderName: inheritedSenderName,
+    )?.text;
   }
 
-  static DecodedMessageText? tryDecodeKnownCompressionDetails(String text) {
+  static DecodedMessageText? tryDecodeKnownCompressionDetails(
+    String text, {
+    int? inheritedTimestamp,
+    String? inheritedSenderName,
+  }) {
     final mcmpMessage = McmpAppCodec.tryDecodeTextPayloadMessage(text);
     if (mcmpMessage != null) {
       return DecodedMessageText(
@@ -28,7 +40,11 @@ class MessageTextCodec {
         mcmpMessage: mcmpMessage,
       );
     }
-    final mcotxtMessage = MCOtxtAppCodec.tryDecodeTextPayloadMessage(text);
+    final mcotxtMessage = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+      text,
+      inheritedTimestamp: inheritedTimestamp,
+      inheritedSenderName: inheritedSenderName,
+    );
     if (mcotxtMessage != null) {
       return DecodedMessageText(
         text: mcotxtMessage.text,

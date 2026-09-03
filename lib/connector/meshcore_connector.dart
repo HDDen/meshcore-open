@@ -6029,10 +6029,17 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    // Meta exactly as transmitted in the MCMP body (if any): reply anchors
-    // and manual signature re-checks rely on the verbatim values.
+    // Meta as carried by compressed app payloads. MCMP signs the exact body;
+    // MCOtxt may inherit the timestamp/name from the outer text packet.
     final mcmpMeta = McmpAppCodec.tryDecodeTextPayloadMessage(outboundText);
-    final mcotxtMeta = MCOtxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
+    final mcotxtMeta = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+      outboundText,
+      inheritedTimestamp:
+          (pendingTimestamp?.millisecondsSinceEpoch ??
+              DateTime.now().millisecondsSinceEpoch) ~/
+          1000,
+      inheritedSenderName: contact.type == advTypeRoom ? _selfName : null,
+    );
     final mcmpStatus = mcmpMeta == null
         ? McmpSignatureStatus.none
         : (mcmpMeta.isSigned
@@ -6770,7 +6777,11 @@ class MeshCoreConnector extends ChangeNotifier {
             dataType: binaryOutbound!.dataType,
             payload: binaryOutbound.payload,
           )?.mcotxtMessage
-        : MCOtxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
+        : MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+            outboundText,
+            inheritedTimestamp: mcotxtTimestamp,
+            inheritedSenderName: _selfName,
+          );
     final packetRegion = _displayPacketRegion(outgoingRegion);
     if (pendingMessageId != null) {
       _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
@@ -10117,7 +10128,10 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       final decodedDetails = isCli
           ? null
-          : MessageTextCodec.tryDecodeKnownCompressionDetails(msgText);
+          : MessageTextCodec.tryDecodeKnownCompressionDetails(
+              msgText,
+              inheritedTimestamp: timestampRaw,
+            );
       final decodedText = isCli ? msgText : (decodedDetails?.text ?? msgText);
       final compression = isCli
           ? null

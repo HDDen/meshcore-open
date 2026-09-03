@@ -57,7 +57,9 @@ class MCOtxtAppCodec {
 
   static const int _flagReply = 1 << 0;
   static const int _flagSenderName = 1 << 1;
-  static const int _knownFlags = _flagReply | _flagSenderName;
+  static const int _flagTimestampInherited = 1 << 2;
+  static const int _knownFlags =
+      _flagReply | _flagSenderName | _flagTimestampInherited;
   static const int _stringModeMCOtxt = 0x00;
   static const int _stringModeUtf8 = 0x01;
 
@@ -92,6 +94,8 @@ class MCOtxtAppCodec {
     String? senderName,
     String? replyAuthorName,
     int? replyTimestamp,
+    bool includeTimestamp = true,
+    bool includeSenderName = true,
   }) {
     if (timestamp < 0 || timestamp > 0xffffffff) {
       throw RangeError.range(timestamp, 0, 0xffffffff, 'timestamp');
@@ -106,13 +110,14 @@ class MCOtxtAppCodec {
       throw RangeError.range(replyTimestamp, 0, 0xffffffff, 'replyTimestamp');
     }
 
+    final writesSenderName = senderName != null && includeSenderName;
     final flags =
         (replyAuthorName != null ? _flagReply : 0) |
-        (senderName != null ? _flagSenderName : 0);
-    final writer = _ByteWriter()
-      ..writeByte(flags)
-      ..writeUint32LE(timestamp);
-    if (senderName != null) _writeString(writer, senderName);
+        (writesSenderName ? _flagSenderName : 0) |
+        (!includeTimestamp ? _flagTimestampInherited : 0);
+    final writer = _ByteWriter()..writeByte(flags);
+    if (includeTimestamp) writer.writeUint32LE(timestamp);
+    if (writesSenderName) _writeString(writer, senderName);
     if (replyAuthorName != null && replyTimestamp != null) {
       _writeString(writer, replyAuthorName);
       writer.writeUint32LE(replyTimestamp);
@@ -121,15 +126,21 @@ class MCOtxtAppCodec {
     return writer.toBytes();
   }
 
-  static DecodedMCOtxtAppMessage decodeBody(Uint8List body) {
+  static DecodedMCOtxtAppMessage decodeBody(
+    Uint8List body, {
+    int? inheritedTimestamp,
+    String? inheritedSenderName,
+  }) {
     final reader = _ByteReader(body);
     final flags = reader.readByte();
     if ((flags & ~_knownFlags) != 0) {
       throw const FormatException('Unsupported MCOtxt app flags');
     }
-    final timestamp = reader.readUint32LE();
+    final timestamp = (flags & _flagTimestampInherited) != 0
+        ? (inheritedTimestamp ?? 0)
+        : reader.readUint32LE();
 
-    String? senderName;
+    String? senderName = inheritedSenderName;
     if ((flags & _flagSenderName) != 0) {
       senderName = _readString(reader);
     }
@@ -199,6 +210,8 @@ class MCOtxtAppCodec {
     String? senderName,
     String? replyAuthorName,
     int? replyTimestamp,
+    bool includeTimestamp = false,
+    bool includeSenderName = true,
   }) {
     if (text.isEmpty || isTextPayload(text)) return text;
     try {
@@ -209,6 +222,8 @@ class MCOtxtAppCodec {
           senderName: senderName,
           replyAuthorName: replyAuthorName,
           replyTimestamp: replyTimestamp,
+          includeTimestamp: includeTimestamp,
+          includeSenderName: includeSenderName,
         ),
       );
     } catch (_) {
@@ -216,10 +231,18 @@ class MCOtxtAppCodec {
     }
   }
 
-  static DecodedMCOtxtAppMessage? tryDecodeTextPayloadMessage(String text) {
+  static DecodedMCOtxtAppMessage? tryDecodeTextPayloadMessage(
+    String text, {
+    int? inheritedTimestamp,
+    String? inheritedSenderName,
+  }) {
     if (!isTextPayload(text)) return null;
     try {
-      return decodeBody(bodyFromText(text));
+      return decodeBody(
+        bodyFromText(text),
+        inheritedTimestamp: inheritedTimestamp,
+        inheritedSenderName: inheritedSenderName,
+      );
     } on MCOtxtUnsupportedFormatException catch (error) {
       return unsupportedMessage(error.receivedVersion);
     } catch (_) {
@@ -248,7 +271,9 @@ class MCOtxtAppCodec {
     if ((flags & ~_knownFlags) != 0) {
       throw const FormatException('Unsupported MCOtxt app flags');
     }
-    reader.readUint32LE();
+    if ((flags & _flagTimestampInherited) == 0) {
+      reader.readUint32LE();
+    }
     if ((flags & _flagSenderName) != 0) {
       _skipString(reader);
     }
