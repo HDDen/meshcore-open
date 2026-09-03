@@ -460,14 +460,14 @@ class MessageStore {
       'compressionOriginalBytes': msg.compressionOriginalBytes,
       'compressionPayloadBytes': msg.compressionPayloadBytes,
       'mcmpSignatureStatus': msg.mcmpSignatureStatus.name,
-      'mcmpTimestamp': msg.mcmpTimestamp,
-      'mcmpSenderName': msg.mcmpSenderName,
+      'containerTimestamp': msg.containerTimestamp,
+      'containerSenderName': msg.containerSenderName,
       'mcmpIsSigned': msg.mcmpIsSigned,
       'mcmpSignature': msg.mcmpSignature != null
           ? base64Encode(msg.mcmpSignature!)
           : null,
-      'mcmpReplyAuthorName': msg.mcmpReplyAuthorName,
-      'mcmpReplyTimestamp': msg.mcmpReplyTimestamp,
+      'containerReplyAuthorName': msg.containerReplyAuthorName,
+      'containerReplyTimestamp': msg.containerReplyTimestamp,
       'verifiedSenderKeyHex': msg.verifiedSenderKeyHex,
       'mcmpNameCollision': msg.mcmpNameCollision,
       'replyToMessageId': msg.replyToMessageId,
@@ -578,14 +578,22 @@ class MessageStore {
       mcmpSignatureStatus: _parseMcmpSignatureStatus(
         json['mcmpSignatureStatus'],
       ),
-      mcmpTimestamp: json['mcmpTimestamp'] as int?,
-      mcmpSenderName: json['mcmpSenderName'] as String?,
+      // Rows written before the rename still carry the mcmp* keys.
+      containerTimestamp:
+          json['containerTimestamp'] as int? ?? json['mcmpTimestamp'] as int?,
+      containerSenderName:
+          json['containerSenderName'] as String? ??
+          json['mcmpSenderName'] as String?,
       mcmpIsSigned: json['mcmpIsSigned'] as bool? ?? false,
       mcmpSignature: json['mcmpSignature'] != null
           ? Uint8List.fromList(base64Decode(json['mcmpSignature'] as String))
           : null,
-      mcmpReplyAuthorName: json['mcmpReplyAuthorName'] as String?,
-      mcmpReplyTimestamp: json['mcmpReplyTimestamp'] as int?,
+      containerReplyAuthorName:
+          json['containerReplyAuthorName'] as String? ??
+          json['mcmpReplyAuthorName'] as String?,
+      containerReplyTimestamp:
+          json['containerReplyTimestamp'] as int? ??
+          json['mcmpReplyTimestamp'] as int?,
       verifiedSenderKeyHex: json['verifiedSenderKeyHex'] as String?,
       mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
       replyToMessageId: json['replyToMessageId'] as String?,

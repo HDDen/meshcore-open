@@ -1,25 +1,26 @@
 const Duration mcmpTimestampWarningThreshold = Duration(minutes: 30);
 
-/// Detects a suspicious clock mismatch; it does not establish message
-/// freshness or prove that a replay occurred.
+/// Detects a suspicious clock mismatch between the packet timestamp and the
+/// container timestamp (MCMP v3 or MCOtxt v1); it does not establish
+/// message freshness or prove that a replay occurred.
 abstract final class McmpTimestampWarning {
   static int? differenceSeconds({
     required DateTime packetTimestamp,
-    required int? mcmpTimestamp,
+    required int? containerTimestamp,
   }) {
-    if (mcmpTimestamp == null) return null;
+    if (containerTimestamp == null) return null;
     final packetTimestampSeconds =
         packetTimestamp.millisecondsSinceEpoch ~/ 1000;
-    return (mcmpTimestamp - packetTimestampSeconds).abs();
+    return (containerTimestamp - packetTimestampSeconds).abs();
   }
 
   static int? suspiciousDifferenceSeconds({
     required DateTime packetTimestamp,
-    required int? mcmpTimestamp,
+    required int? containerTimestamp,
   }) {
     final difference = differenceSeconds(
       packetTimestamp: packetTimestamp,
-      mcmpTimestamp: mcmpTimestamp,
+      containerTimestamp: containerTimestamp,
     );
     if (difference == null ||
         difference <= mcmpTimestampWarningThreshold.inSeconds) {

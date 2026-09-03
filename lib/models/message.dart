@@ -34,14 +34,19 @@ class Message {
   final int? compressionPayloadBytes;
   final McmpSignatureStatus mcmpSignatureStatus;
 
-  // MCMP v3 metadata exactly as transmitted in the packet body. Kept verbatim
-  // so reply anchors resolve precisely and signatures can be re-checked later.
-  final int? mcmpTimestamp;
-  final String? mcmpSenderName;
+  // Container metadata as carried by the compressed payload. MCMP v3 and
+  // MCOtxt v1 fill the same four `container*` slots: both ship a timestamp,
+  // an optional embedded sender name and a reply anchor. A name is reported
+  // only when the body carries it; the MCOtxt text transport inherits its
+  // timestamp from the outer packet. Kept verbatim so reply anchors resolve
+  // precisely and MCMP signatures can be re-checked later; the signature
+  // fields are MCMP-only.
+  final int? containerTimestamp;
+  final String? containerSenderName;
   final bool mcmpIsSigned;
   final Uint8List? mcmpSignature;
-  final String? mcmpReplyAuthorName;
-  final int? mcmpReplyTimestamp;
+  final String? containerReplyAuthorName;
+  final int? containerReplyTimestamp;
 
   /// Hex of the contact key that successfully verified the signature.
   final String? verifiedSenderKeyHex;
@@ -50,7 +55,7 @@ class Message {
   /// the signature was checked.
   final bool mcmpNameCollision;
 
-  // Resolved reply reference (from the MCMP reply anchor), mirroring the
+  // Resolved reply reference (from the container reply anchor), mirroring the
   // ChannelMessage reply fields.
   final String? replyToMessageId;
   final String? replyToSenderName;
@@ -106,12 +111,12 @@ class Message {
     this.compressionOriginalBytes,
     this.compressionPayloadBytes,
     this.mcmpSignatureStatus = McmpSignatureStatus.none,
-    this.mcmpTimestamp,
-    this.mcmpSenderName,
+    this.containerTimestamp,
+    this.containerSenderName,
     this.mcmpIsSigned = false,
     this.mcmpSignature,
-    this.mcmpReplyAuthorName,
-    this.mcmpReplyTimestamp,
+    this.containerReplyAuthorName,
+    this.containerReplyTimestamp,
     this.verifiedSenderKeyHex,
     this.mcmpNameCollision = false,
     this.replyToMessageId,
@@ -173,12 +178,12 @@ class Message {
     Object? compressionOriginalBytes = _unset,
     Object? compressionPayloadBytes = _unset,
     McmpSignatureStatus? mcmpSignatureStatus,
-    Object? mcmpTimestamp = _unset,
-    Object? mcmpSenderName = _unset,
+    Object? containerTimestamp = _unset,
+    Object? containerSenderName = _unset,
     bool? mcmpIsSigned,
     Object? mcmpSignature = _unset,
-    Object? mcmpReplyAuthorName = _unset,
-    Object? mcmpReplyTimestamp = _unset,
+    Object? containerReplyAuthorName = _unset,
+    Object? containerReplyTimestamp = _unset,
     Object? verifiedSenderKeyHex = _unset,
     bool? mcmpNameCollision,
     Object? replyToMessageId = _unset,
@@ -229,22 +234,22 @@ class Message {
           ? this.compressionPayloadBytes
           : compressionPayloadBytes as int?,
       mcmpSignatureStatus: mcmpSignatureStatus ?? this.mcmpSignatureStatus,
-      mcmpTimestamp: mcmpTimestamp == _unset
-          ? this.mcmpTimestamp
-          : mcmpTimestamp as int?,
-      mcmpSenderName: mcmpSenderName == _unset
-          ? this.mcmpSenderName
-          : mcmpSenderName as String?,
+      containerTimestamp: containerTimestamp == _unset
+          ? this.containerTimestamp
+          : containerTimestamp as int?,
+      containerSenderName: containerSenderName == _unset
+          ? this.containerSenderName
+          : containerSenderName as String?,
       mcmpIsSigned: mcmpIsSigned ?? this.mcmpIsSigned,
       mcmpSignature: mcmpSignature == _unset
           ? this.mcmpSignature
           : mcmpSignature as Uint8List?,
-      mcmpReplyAuthorName: mcmpReplyAuthorName == _unset
-          ? this.mcmpReplyAuthorName
-          : mcmpReplyAuthorName as String?,
-      mcmpReplyTimestamp: mcmpReplyTimestamp == _unset
-          ? this.mcmpReplyTimestamp
-          : mcmpReplyTimestamp as int?,
+      containerReplyAuthorName: containerReplyAuthorName == _unset
+          ? this.containerReplyAuthorName
+          : containerReplyAuthorName as String?,
+      containerReplyTimestamp: containerReplyTimestamp == _unset
+          ? this.containerReplyTimestamp
+          : containerReplyTimestamp as int?,
       verifiedSenderKeyHex: verifiedSenderKeyHex == _unset
           ? this.verifiedSenderKeyHex
           : verifiedSenderKeyHex as String?,
@@ -335,18 +340,18 @@ class Message {
         mcmpSignatureStatus:
             decodedDetails?.mcmpMessage?.signatureStatus ??
             McmpSignatureStatus.none,
-        mcmpTimestamp:
+        containerTimestamp:
             decodedDetails?.mcmpMessage?.timestamp ??
             decodedDetails?.mcotxtMessage?.metadataTimestamp,
-        mcmpSenderName:
+        containerSenderName:
             decodedDetails?.mcmpMessage?.senderName ??
             decodedDetails?.mcotxtMessage?.senderName,
         mcmpIsSigned: decodedDetails?.mcmpMessage?.isSigned ?? false,
         mcmpSignature: decodedDetails?.mcmpMessage?.signature,
-        mcmpReplyAuthorName:
+        containerReplyAuthorName:
             decodedDetails?.mcmpMessage?.replyAuthorName ??
             decodedDetails?.mcotxtMessage?.replyAuthorName,
-        mcmpReplyTimestamp:
+        containerReplyTimestamp:
             decodedDetails?.mcmpMessage?.replyTimestamp ??
             decodedDetails?.mcotxtMessage?.replyTimestamp,
         pathBytes: Uint8List(0),
@@ -371,12 +376,12 @@ class Message {
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
     McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
-    int? mcmpTimestamp,
-    String? mcmpSenderName,
+    int? containerTimestamp,
+    String? containerSenderName,
     bool mcmpIsSigned = false,
     Uint8List? mcmpSignature,
-    String? mcmpReplyAuthorName,
-    int? mcmpReplyTimestamp,
+    String? containerReplyAuthorName,
+    int? containerReplyTimestamp,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -393,12 +398,12 @@ class Message {
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
       mcmpSignatureStatus: mcmpSignatureStatus,
-      mcmpTimestamp: mcmpTimestamp,
-      mcmpSenderName: mcmpSenderName,
+      containerTimestamp: containerTimestamp,
+      containerSenderName: containerSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
-      mcmpReplyAuthorName: mcmpReplyAuthorName,
-      mcmpReplyTimestamp: mcmpReplyTimestamp,
+      containerReplyAuthorName: containerReplyAuthorName,
+      containerReplyTimestamp: containerReplyTimestamp,
       timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       isCli: false,

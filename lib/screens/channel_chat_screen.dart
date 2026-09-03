@@ -1321,7 +1321,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         !McmpSignatureBadge.isVisible(
           status: message.mcmpSignatureStatus,
           isOutgoing: false,
-          wasMcmpV3: message.mcmpTimestamp != null,
+          wasMcmpV3: message.containerTimestamp != null,
         )) {
       return const SizedBox.shrink();
     }
@@ -1332,11 +1332,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         status: message.mcmpSignatureStatus,
         isOutgoing: false,
         isSigned: message.mcmpIsSigned,
-        wasMcmpV3: message.mcmpTimestamp != null,
+        wasMcmpV3: message.containerTimestamp != null,
         verifiedSenderKeyHex: message.verifiedSenderKeyHex,
         nameCollision: message.mcmpNameCollision,
         packetTimestamp: message.timestamp,
-        mcmpTimestamp: message.mcmpTimestamp,
+        containerTimestamp: message.containerTimestamp,
         textScale: 1.0,
         color: scheme.onSurface.withValues(alpha: 0.65),
         errorColor: scheme.error,
@@ -1389,7 +1389,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final compressionTypeLabel = compressionType == null
         ? null
         : compressionType == MessageCompressionType.mcmp
-        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        ? (message.containerTimestamp != null ? 'mcmp3' : 'mcmp2')
         : compressionType.label;
     final compressionLabel = compressionTypeLabel == null
         ? null
@@ -1433,7 +1433,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // fragment that matched local history — keeps its bubble, because there is
     // a real message to point at and its text was cut from the body for it.
     final preciseIncomingQuote = ExactQuoteHelper.rendersAsQuote(
-      mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+      containerReplyTimestamp: message.containerReplyTimestamp,
       replyToMessageId: message.replyToMessageId,
       replyIsExact: message.replyIsExact,
     );
@@ -1705,7 +1705,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 if (McmpSignatureBadge.isVisible(
                                   status: message.mcmpSignatureStatus,
                                   isOutgoing: true,
-                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                  wasMcmpV3: message.containerTimestamp != null,
                                 )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -1714,7 +1714,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -1855,7 +1855,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 if (McmpSignatureBadge.isVisible(
                                   status: message.mcmpSignatureStatus,
                                   isOutgoing: true,
-                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                  wasMcmpV3: message.containerTimestamp != null,
                                 )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -1864,7 +1864,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -1923,7 +1923,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 if (McmpSignatureBadge.isVisible(
                                   status: message.mcmpSignatureStatus,
                                   isOutgoing: true,
-                                  wasMcmpV3: message.mcmpTimestamp != null,
+                                  wasMcmpV3: message.containerTimestamp != null,
                                 )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -1932,7 +1932,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -1953,7 +1953,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         //     McmpSignatureBadge.isVisible(
                         //       status: message.mcmpSignatureStatus,
                         //       isOutgoing: true,
-                        //       wasMcmpV3: message.mcmpTimestamp != null,
+                        //       wasMcmpV3: message.containerTimestamp != null,
                         //     )) ...[
                         //   const SizedBox(height: 3),
                         //   Padding(
@@ -2160,14 +2160,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     McmpSignatureBadge.isVisible(
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                     )) ...[
                                   const SizedBox(width: 6),
                                   McmpSignatureBadge(
                                     status: message.mcmpSignatureStatus,
                                     isOutgoing: true,
                                     isSigned: message.mcmpIsSigned,
-                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    wasMcmpV3: message.containerTimestamp != null,
                                     verifiedSenderKeyHex:
                                         message.verifiedSenderKeyHex,
                                     nameCollision: message.mcmpNameCollision,
@@ -3376,7 +3376,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           replyTargetName: _replyingToMessage?.senderName,
           replyTimestamp: _replyingToMessage == null
               ? null
-              : _replyingToMessage!.mcmpTimestamp ??
+              : _replyingToMessage!.containerTimestamp ??
                     _replyingToMessage!.timestamp.millisecondsSinceEpoch ~/
                         1000,
         ),
@@ -4106,7 +4106,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         // not resolve on other devices.
         replyToTimestamp: replyTarget == null
             ? null
-            : replyTarget.mcmpTimestamp ??
+            : replyTarget.containerTimestamp ??
                   replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     } else {
@@ -4126,7 +4126,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         // not resolve on other devices.
         replyToTimestamp: replyTarget == null
             ? null
-            : replyTarget.mcmpTimestamp ??
+            : replyTarget.containerTimestamp ??
                   replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
       );
     }
@@ -4178,7 +4178,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         replyAuthorName: _replyingToMessage?.senderName,
         replyTimestamp: _replyingToMessage == null
             ? null
-            : _replyingToMessage!.mcmpTimestamp ??
+            : _replyingToMessage!.containerTimestamp ??
                   (_replyingToMessage!.timestamp.millisecondsSinceEpoch ~/
                       1000),
       );
@@ -4788,7 +4788,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       replyToText: message.replyToText,
       // Keep the reply anchor on manual resend (metadata is rebuilt and the
       // message re-signed, but the quoted target stays the same).
-      replyToTimestamp: message.mcmpReplyTimestamp,
+      replyToTimestamp: message.containerReplyTimestamp,
     );
     showDismissibleSnackBar(
       context,
@@ -4801,7 +4801,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       return message.text;
     }
     final replySenderName =
-        (message.replyToSenderName ?? message.mcmpReplyAuthorName)?.trim();
+        (message.replyToSenderName ?? message.containerReplyAuthorName)?.trim();
     if (replySenderName == null || replySenderName.isEmpty) {
       return message.text;
     }

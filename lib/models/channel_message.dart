@@ -48,14 +48,19 @@ class ChannelMessage {
   final int? compressionPayloadBytes;
   final McmpSignatureStatus mcmpSignatureStatus;
 
-  // MCMP v3 metadata exactly as transmitted in the packet body. Kept verbatim
-  // so reply anchors resolve precisely and signatures can be re-checked later.
-  final int? mcmpTimestamp;
-  final String? mcmpSenderName;
+  // Container metadata as carried by the compressed payload. MCMP v3 and
+  // MCOtxt v1 fill the same four `container*` slots: both ship a timestamp,
+  // an optional embedded sender name and a reply anchor. A name is reported
+  // only when the body carries it; the MCOtxt text transport inherits its
+  // timestamp from the outer packet. Kept verbatim so reply anchors resolve
+  // precisely and MCMP signatures can be re-checked later; the signature
+  // fields are MCMP-only.
+  final int? containerTimestamp;
+  final String? containerSenderName;
   final bool mcmpIsSigned;
   final Uint8List? mcmpSignature;
-  final String? mcmpReplyAuthorName;
-  final int? mcmpReplyTimestamp;
+  final String? containerReplyAuthorName;
+  final int? containerReplyTimestamp;
 
   /// Hex of the contact key that successfully verified the signature.
   final String? verifiedSenderKeyHex;
@@ -110,7 +115,7 @@ class ChannelMessage {
   /// history there, and read while replies are drawn as plain mentions
   /// (`AppSettings.incomingQuoteAsMentions`) — that rendering is for replies
   /// whose target is a guess. An MCMP v3 reply needs no flag of its own:
-  /// `mcmpReplyTimestamp` together with a resolved [replyToMessageId] says
+  /// `containerReplyTimestamp` together with a resolved [replyToMessageId] says
   /// the same thing. `ExactQuoteHelper.rendersAsQuote` reads both.
   final bool replyIsExact;
   final Map<String, List<String?>> reactions;
@@ -133,12 +138,12 @@ class ChannelMessage {
     this.compressionOriginalBytes,
     this.compressionPayloadBytes,
     this.mcmpSignatureStatus = McmpSignatureStatus.none,
-    this.mcmpTimestamp,
-    this.mcmpSenderName,
+    this.containerTimestamp,
+    this.containerSenderName,
     this.mcmpIsSigned = false,
     this.mcmpSignature,
-    this.mcmpReplyAuthorName,
-    this.mcmpReplyTimestamp,
+    this.containerReplyAuthorName,
+    this.containerReplyTimestamp,
     this.verifiedSenderKeyHex,
     this.mcmpNameCollision = false,
     this.wasBinaryTransport = false,
@@ -235,12 +240,12 @@ class ChannelMessage {
     Object? compressionOriginalBytes = _unset,
     Object? compressionPayloadBytes = _unset,
     McmpSignatureStatus? mcmpSignatureStatus,
-    Object? mcmpTimestamp = _unset,
-    Object? mcmpSenderName = _unset,
+    Object? containerTimestamp = _unset,
+    Object? containerSenderName = _unset,
     bool? mcmpIsSigned,
     Object? mcmpSignature = _unset,
-    Object? mcmpReplyAuthorName = _unset,
-    Object? mcmpReplyTimestamp = _unset,
+    Object? containerReplyAuthorName = _unset,
+    Object? containerReplyTimestamp = _unset,
     Object? verifiedSenderKeyHex = _unset,
     bool? mcmpNameCollision,
     bool? wasBinaryTransport,
@@ -286,22 +291,22 @@ class ChannelMessage {
           ? this.compressionPayloadBytes
           : compressionPayloadBytes as int?,
       mcmpSignatureStatus: mcmpSignatureStatus ?? this.mcmpSignatureStatus,
-      mcmpTimestamp: mcmpTimestamp == _unset
-          ? this.mcmpTimestamp
-          : mcmpTimestamp as int?,
-      mcmpSenderName: mcmpSenderName == _unset
-          ? this.mcmpSenderName
-          : mcmpSenderName as String?,
+      containerTimestamp: containerTimestamp == _unset
+          ? this.containerTimestamp
+          : containerTimestamp as int?,
+      containerSenderName: containerSenderName == _unset
+          ? this.containerSenderName
+          : containerSenderName as String?,
       mcmpIsSigned: mcmpIsSigned ?? this.mcmpIsSigned,
       mcmpSignature: mcmpSignature == _unset
           ? this.mcmpSignature
           : mcmpSignature as Uint8List?,
-      mcmpReplyAuthorName: mcmpReplyAuthorName == _unset
-          ? this.mcmpReplyAuthorName
-          : mcmpReplyAuthorName as String?,
-      mcmpReplyTimestamp: mcmpReplyTimestamp == _unset
-          ? this.mcmpReplyTimestamp
-          : mcmpReplyTimestamp as int?,
+      containerReplyAuthorName: containerReplyAuthorName == _unset
+          ? this.containerReplyAuthorName
+          : containerReplyAuthorName as String?,
+      containerReplyTimestamp: containerReplyTimestamp == _unset
+          ? this.containerReplyTimestamp
+          : containerReplyTimestamp as int?,
       verifiedSenderKeyHex: verifiedSenderKeyHex == _unset
           ? this.verifiedSenderKeyHex
           : verifiedSenderKeyHex as String?,
@@ -431,7 +436,6 @@ class ChannelMessage {
       final decodedDetails = MessageTextCodec.tryDecodeKnownCompressionDetails(
         actualText,
         inheritedTimestamp: timestampRaw,
-        inheritedSenderName: senderName,
       );
       final decodedText = decodedDetails?.text ?? actualText;
       final compression = MessageCompressionMetadata.fromEncodedText(
@@ -458,17 +462,17 @@ class ChannelMessage {
         compressionPayloadBytes: compression?.payloadBytes,
         mcmpSignatureStatus:
             mcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
-        mcmpTimestamp:
+        containerTimestamp:
             mcmpMessage?.timestamp ??
                 decodedDetails?.mcotxtMessage?.metadataTimestamp,
-        mcmpSenderName:
+        containerSenderName:
             mcmpMessage?.senderName ?? decodedDetails?.mcotxtMessage?.senderName,
         mcmpIsSigned: mcmpMessage?.isSigned ?? false,
         mcmpSignature: mcmpMessage?.signature,
-        mcmpReplyAuthorName:
+        containerReplyAuthorName:
             mcmpMessage?.replyAuthorName ??
             decodedDetails?.mcotxtMessage?.replyAuthorName,
-        mcmpReplyTimestamp:
+        containerReplyTimestamp:
             mcmpMessage?.replyTimestamp ??
             decodedDetails?.mcotxtMessage?.replyTimestamp,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
@@ -508,12 +512,12 @@ class ChannelMessage {
     int? compressionOriginalBytes,
     int? compressionPayloadBytes,
     McmpSignatureStatus mcmpSignatureStatus = McmpSignatureStatus.none,
-    int? mcmpTimestamp,
-    String? mcmpSenderName,
+    int? containerTimestamp,
+    String? containerSenderName,
     bool mcmpIsSigned = false,
     Uint8List? mcmpSignature,
-    String? mcmpReplyAuthorName,
-    int? mcmpReplyTimestamp,
+    String? containerReplyAuthorName,
+    int? containerReplyTimestamp,
     bool wasBinaryTransport = false,
     int? binaryPacketBytes,
     Uint8List? rawPayload,
@@ -535,12 +539,12 @@ class ChannelMessage {
       compressionOriginalBytes: compressionOriginalBytes,
       compressionPayloadBytes: compressionPayloadBytes,
       mcmpSignatureStatus: mcmpSignatureStatus,
-      mcmpTimestamp: mcmpTimestamp,
-      mcmpSenderName: mcmpSenderName,
+      containerTimestamp: containerTimestamp,
+      containerSenderName: containerSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
-      mcmpReplyAuthorName: mcmpReplyAuthorName,
-      mcmpReplyTimestamp: mcmpReplyTimestamp,
+      containerReplyAuthorName: containerReplyAuthorName,
+      containerReplyTimestamp: containerReplyTimestamp,
       wasBinaryTransport: wasBinaryTransport,
       binaryPacketBytes: binaryPacketBytes,
       rawPayload: rawPayload,

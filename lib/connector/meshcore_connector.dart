@@ -6030,7 +6030,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     // Meta as carried by compressed app payloads. MCMP signs the exact body;
-    // MCOtxt may inherit the timestamp/name from the outer text packet.
+    // MCOtxt may inherit the timestamp from the outer text packet.
     final mcmpMeta = McmpAppCodec.tryDecodeTextPayloadMessage(outboundText);
     final mcotxtMeta = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
       outboundText,
@@ -6038,7 +6038,6 @@ class MeshCoreConnector extends ChangeNotifier {
           (pendingTimestamp?.millisecondsSinceEpoch ??
               DateTime.now().millisecondsSinceEpoch) ~/
           1000,
-      inheritedSenderName: contact.type == advTypeRoom ? _selfName : null,
     );
     final mcmpStatus = mcmpMeta == null
         ? McmpSignatureStatus.none
@@ -6107,13 +6106,13 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
         mcmpSignatureStatus: mcmpStatus,
-        mcmpTimestamp: mcmpMeta?.timestamp ?? mcotxtMeta?.metadataTimestamp,
-        mcmpSenderName: mcmpMeta?.senderName ?? mcotxtMeta?.senderName,
+        containerTimestamp: mcmpMeta?.timestamp ?? mcotxtMeta?.metadataTimestamp,
+        containerSenderName: mcmpMeta?.senderName ?? mcotxtMeta?.senderName,
         mcmpIsSigned: mcmpMeta?.isSigned ?? false,
         mcmpSignature: mcmpMeta?.signature,
-        mcmpReplyAuthorName:
+        containerReplyAuthorName:
             mcmpMeta?.replyAuthorName ?? mcotxtMeta?.replyAuthorName,
-        mcmpReplyTimestamp:
+        containerReplyTimestamp:
             mcmpMeta?.replyTimestamp ?? mcotxtMeta?.replyTimestamp,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
@@ -6134,13 +6133,13 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
         mcmpSignatureStatus: mcmpStatus,
-        mcmpTimestamp: mcmpMeta?.timestamp ?? mcotxtMeta?.metadataTimestamp,
-        mcmpSenderName: mcmpMeta?.senderName ?? mcotxtMeta?.senderName,
+        containerTimestamp: mcmpMeta?.timestamp ?? mcotxtMeta?.metadataTimestamp,
+        containerSenderName: mcmpMeta?.senderName ?? mcotxtMeta?.senderName,
         mcmpIsSigned: mcmpMeta?.isSigned ?? false,
         mcmpSignature: mcmpMeta?.signature,
-        mcmpReplyAuthorName:
+        containerReplyAuthorName:
             mcmpMeta?.replyAuthorName ?? mcotxtMeta?.replyAuthorName,
-        mcmpReplyTimestamp:
+        containerReplyTimestamp:
             mcmpMeta?.replyTimestamp ?? mcotxtMeta?.replyTimestamp,
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
@@ -6602,8 +6601,8 @@ class MeshCoreConnector extends ChangeNotifier {
     // MCMP v3: the reply pair travels only when both parts are known, and the
     // signature covers the exact same flags/reply data as the encoded body.
     final hasReplyPair = replyToSenderName != null && replyToTimestamp != null;
-    final mcmpReplyAuthorName = hasReplyPair ? replyToSenderName : null;
-    final mcmpReplyTimestamp = hasReplyPair ? replyToTimestamp : null;
+    final containerReplyAuthorName = hasReplyPair ? replyToSenderName : null;
+    final containerReplyTimestamp = hasReplyPair ? replyToTimestamp : null;
     final mcmpV3Applies =
         !hasExplicitMcoImageV3 &&
         isChannelMcmpEnabled(channel.index) &&
@@ -6612,7 +6611,7 @@ class MeshCoreConnector extends ChangeNotifier {
           text,
           allowMarkerPayload: channelMcmpUseSign(channel.index),
         );
-    final mcmpTimestamp = mcmpV3Applies
+    final mcmpV3Timestamp = mcmpV3Applies
         ? DateTime.now().millisecondsSinceEpoch ~/ 1000
         : null;
     final mcotxtApplies =
@@ -6651,11 +6650,11 @@ class MeshCoreConnector extends ChangeNotifier {
         context: McmpSigningContext.channel,
         binding: McmpAppCodec.channelSigningBinding(channel.psk),
         senderName: _selfName ?? 'Me',
-        timestamp: mcmpTimestamp!,
+        timestamp: mcmpV3Timestamp!,
         hasSenderNameInBody: false,
         text: text,
-        replyAuthorName: mcmpReplyAuthorName,
-        replyTimestamp: mcmpReplyTimestamp,
+        replyAuthorName: containerReplyAuthorName,
+        replyTimestamp: containerReplyTimestamp,
       );
 
       // Drop the placeholder; the finalized message is (re-)added below in the
@@ -6695,7 +6694,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 mcmpVersion: channelMcmpVersion(channel.index),
                 mcmpUseSign: channelMcmpUseSign(channel.index),
                 timestamp:
-                    mcmpTimestamp ??
+                    mcmpV3Timestamp ??
                     mcotxtTimestamp ??
                     DateTime.now().millisecondsSinceEpoch ~/ 1000,
                 signature: mcmpSignature,
@@ -6717,10 +6716,10 @@ class MeshCoreConnector extends ChangeNotifier {
       // the sender name stays in the outer "Name: text" layer (no bit2).
       final wrapped = McmpAppCodec.encodeTextTransport(
         text: text,
-        timestamp: mcmpTimestamp!,
+        timestamp: mcmpV3Timestamp!,
         signature: mcmpSignature,
-        replyAuthorName: mcmpReplyAuthorName,
-        replyTimestamp: mcmpReplyTimestamp,
+        replyAuthorName: containerReplyAuthorName,
+        replyTimestamp: containerReplyTimestamp,
       );
       // Base91 hands back most of what the compressor won and the signature
       // costs 64 bytes on top, so a long marker can end up over the frame.
@@ -6737,8 +6736,8 @@ class MeshCoreConnector extends ChangeNotifier {
       outboundText = MCOtxtAppCodec.encodeTextTransport(
         text: text,
         timestamp: mcotxtTimestamp!,
-        replyAuthorName: mcmpReplyAuthorName,
-        replyTimestamp: mcmpReplyTimestamp,
+        replyAuthorName: containerReplyAuthorName,
+        replyTimestamp: containerReplyTimestamp,
       );
     } else {
       outboundText = prepareChannelOutboundText(channel.index, text);
@@ -6780,7 +6779,6 @@ class MeshCoreConnector extends ChangeNotifier {
         : MCOtxtAppCodec.tryDecodeTextPayloadMessage(
             outboundText,
             inheritedTimestamp: mcotxtTimestamp,
-            inheritedSenderName: _selfName,
           );
     final packetRegion = _displayPacketRegion(outgoingRegion);
     if (pendingMessageId != null) {
@@ -6810,14 +6808,16 @@ class MeshCoreConnector extends ChangeNotifier {
           : (binaryOutbound?.kind == ChannelBinaryDataKind.mcmp
                 ? binaryOutbound!.mcmpSignatureStatus
                 : McmpAppCodec.signatureStatusFromTextPayload(outboundText)),
-      mcmpTimestamp: mcmpV3Sent ? mcmpTimestamp : mcotxtMeta?.metadataTimestamp,
+      containerTimestamp: mcmpV3Sent
+          ? mcmpV3Timestamp
+          : mcotxtMeta?.metadataTimestamp,
       mcmpIsSigned: mcmpV3Sent && mcmpSignature != null,
       mcmpSignature: mcmpV3Sent ? mcmpSignature : null,
-      mcmpReplyAuthorName: mcmpV3Sent
-          ? mcmpReplyAuthorName
+      containerReplyAuthorName: mcmpV3Sent
+          ? containerReplyAuthorName
           : mcotxtMeta?.replyAuthorName,
-      mcmpReplyTimestamp: mcmpV3Sent
-          ? mcmpReplyTimestamp
+      containerReplyTimestamp: mcmpV3Sent
+          ? containerReplyTimestamp
           : mcotxtMeta?.replyTimestamp,
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
@@ -7637,7 +7637,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // version is already decided, and the compression badge derives it from
       // this timestamp, so a queued v3 message would otherwise read as v2.
       mcmpSignatureStatus: McmpSignatureStatus.none,
-      mcmpTimestamp: mcmpV3Applies
+      containerTimestamp: mcmpV3Applies
           ? DateTime.now().millisecondsSinceEpoch ~/ 1000
           : null,
       pathLength: resolved.useFlood ? -1 : resolved.hopCount,
@@ -7773,7 +7773,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // off this timestamp — without it a queued v3 message would sit in the
       // composer advertising itself as v2.
       mcmpSignatureStatus: McmpSignatureStatus.none,
-      mcmpTimestamp: mcmpV3Applies || mcotxtApplies
+      containerTimestamp: mcmpV3Applies || mcotxtApplies
           ? DateTime.now().millisecondsSinceEpoch ~/ 1000
           : null,
       wasBinaryTransport: usesBinaryTransport,
@@ -10167,14 +10167,14 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionPayloadBytes: compression?.payloadBytes,
         mcmpSignatureStatus:
             mcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
-        mcmpTimestamp:
+        containerTimestamp:
             mcmpMessage?.timestamp ?? mcotxtMessage?.metadataTimestamp,
-        mcmpSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
+        containerSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
         mcmpIsSigned: mcmpMessage?.isSigned ?? false,
         mcmpSignature: mcmpMessage?.signature,
-        mcmpReplyAuthorName:
+        containerReplyAuthorName:
             mcmpMessage?.replyAuthorName ?? mcotxtMessage?.replyAuthorName,
-        mcmpReplyTimestamp:
+        containerReplyTimestamp:
             mcmpMessage?.replyTimestamp ?? mcotxtMessage?.replyTimestamp,
         pathLength: pathLength == 0xFF ? -1 : (pathLength & 0x3F),
         pathBytes: Uint8List(0),
@@ -10881,7 +10881,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (message.senderName.trim() != replySender) continue;
       final outerTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
       if (outerTimestamp == replyTimestamp ||
-          message.mcmpTimestamp == replyTimestamp) {
+          message.containerTimestamp == replyTimestamp) {
         return _McmpReplyReference(
           messageId: message.messageId,
           senderName: message.senderName,
@@ -10889,10 +10889,10 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
       var delta = (outerTimestamp - replyTimestamp).abs();
-      final mcmpTimestamp = message.mcmpTimestamp;
-      if (mcmpTimestamp != null) {
-        final mcmpDelta = (mcmpTimestamp - replyTimestamp).abs();
-        if (mcmpDelta < delta) delta = mcmpDelta;
+      final containerTimestamp = message.containerTimestamp;
+      if (containerTimestamp != null) {
+        final containerDelta = (containerTimestamp - replyTimestamp).abs();
+        if (containerDelta < delta) delta = containerDelta;
       }
       if (delta <= _replyAnchorToleranceSeconds &&
           (closestDelta == null || delta < closestDelta)) {
@@ -10928,7 +10928,7 @@ class MeshCoreConnector extends ChangeNotifier {
   ) async {
     if (!message.mcmpIsSigned ||
         message.mcmpSignature == null ||
-        message.mcmpTimestamp == null ||
+        message.containerTimestamp == null ||
         message.channelIndex == null) {
       return message;
     }
@@ -10940,11 +10940,11 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     final decoded = DecodedMcmpAppMessage(
       text: message.text,
-      timestamp: message.mcmpTimestamp!,
-      senderName: message.mcmpSenderName,
+      timestamp: message.containerTimestamp!,
+      senderName: message.containerSenderName,
       signature: message.mcmpSignature,
-      replyAuthorName: message.mcmpReplyAuthorName,
-      replyTimestamp: message.mcmpReplyTimestamp,
+      replyAuthorName: message.containerReplyAuthorName,
+      replyTimestamp: message.containerReplyTimestamp,
     );
     final result = await McmpSignatureVerifier.verifyChannelMessage(
       message: decoded,
@@ -10971,7 +10971,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Message message,
     Contact contact,
   ) async {
-    if (message.mcmpTimestamp == null) return message;
+    if (message.containerTimestamp == null) return message;
     final isRoomPost =
         contact.type == advTypeRoom &&
         message.fourByteRoomContactKey.isNotEmpty;
@@ -10987,11 +10987,11 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     final decoded = DecodedMcmpAppMessage(
       text: message.text,
-      timestamp: message.mcmpTimestamp!,
-      senderName: message.mcmpSenderName,
+      timestamp: message.containerTimestamp!,
+      senderName: message.containerSenderName,
       signature: message.mcmpSignature,
-      replyAuthorName: message.mcmpReplyAuthorName,
-      replyTimestamp: message.mcmpReplyTimestamp,
+      replyAuthorName: message.containerReplyAuthorName,
+      replyTimestamp: message.containerReplyTimestamp,
     );
     final result = await McmpSignatureVerifier.verifyRoomMessage(
       message: decoded,
@@ -11075,15 +11075,15 @@ class MeshCoreConnector extends ChangeNotifier {
   /// identities are known) and resolve by timestamp alone.
   Message _resolveContactReplyReference(Message message, Contact contact) {
     final isRoom = contact.type == advTypeRoom;
-    final replySender = message.mcmpReplyAuthorName?.trim();
-    final replyTimestamp = message.mcmpReplyTimestamp;
+    final replySender = message.containerReplyAuthorName?.trim();
+    final replyTimestamp = message.containerReplyTimestamp;
     if (replyTimestamp == null) return message;
     if (isRoom && (replySender == null || replySender.isEmpty)) {
       return message;
     }
 
     String? authorNameFor(Message candidate) {
-      if (candidate.mcmpSenderName != null) return candidate.mcmpSenderName;
+      if (candidate.containerSenderName != null) return candidate.containerSenderName;
       if (candidate.isOutgoing) return _selfName;
       if (candidate.fourByteRoomContactKey.isNotEmpty) {
         final author = _contacts.cast<Contact?>().firstWhere(
@@ -11110,7 +11110,7 @@ class MeshCoreConnector extends ChangeNotifier {
         continue;
       }
       final outerTimestamp = candidate.timestamp.millisecondsSinceEpoch ~/ 1000;
-      if (candidate.mcmpTimestamp == replyTimestamp ||
+      if (candidate.containerTimestamp == replyTimestamp ||
           outerTimestamp == replyTimestamp) {
         return message.copyWith(
           replyToMessageId: candidate.messageId,
@@ -11119,10 +11119,10 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
       var delta = (outerTimestamp - replyTimestamp).abs();
-      final mcmpTimestamp = candidate.mcmpTimestamp;
-      if (mcmpTimestamp != null) {
-        final mcmpDelta = (mcmpTimestamp - replyTimestamp).abs();
-        if (mcmpDelta < delta) delta = mcmpDelta;
+      final containerTimestamp = candidate.containerTimestamp;
+      if (containerTimestamp != null) {
+        final containerDelta = (containerTimestamp - replyTimestamp).abs();
+        if (containerDelta < delta) delta = containerDelta;
       }
       if (delta <= _replyAnchorToleranceSeconds &&
           (closestDelta == null || delta < closestDelta)) {
@@ -11394,8 +11394,8 @@ class MeshCoreConnector extends ChangeNotifier {
       );
       final textReplyReference = _resolveChannelReplyAnchor(
         parsed.channelIndex!,
-        message.mcmpReplyAuthorName,
-        message.mcmpReplyTimestamp,
+        message.containerReplyAuthorName,
+        message.containerReplyTimestamp,
       );
       if (textReplyReference != null) {
         message = message.copyWith(
@@ -11519,13 +11519,13 @@ class MeshCoreConnector extends ChangeNotifier {
       mcmpSignatureStatus: decoded != null
           ? decoded.mcmpSignatureStatus
           : appData!.mcmpSignatureStatus,
-      mcmpTimestamp: mcmpMessage?.timestamp ?? mcotxtMessage?.metadataTimestamp,
-      mcmpSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
+      containerTimestamp: mcmpMessage?.timestamp ?? mcotxtMessage?.metadataTimestamp,
+      containerSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
       mcmpIsSigned: mcmpMessage?.isSigned ?? false,
       mcmpSignature: mcmpMessage?.signature,
-      mcmpReplyAuthorName:
+      containerReplyAuthorName:
           mcmpMessage?.replyAuthorName ?? mcotxtMessage?.replyAuthorName,
-      mcmpReplyTimestamp:
+      containerReplyTimestamp:
           mcmpMessage?.replyTimestamp ?? mcotxtMessage?.replyTimestamp,
       wasBinaryTransport: true,
       binaryPacketBytes: dataFrame.payload.length,
@@ -11712,16 +11712,16 @@ class MeshCoreConnector extends ChangeNotifier {
             compressionPayloadBytes: compression?.payloadBytes,
             mcmpSignatureStatus:
                 logRxMcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
-            mcmpTimestamp:
+            containerTimestamp:
                 logRxMcmpMessage?.timestamp ??
                     logRxMCOtxtMessage?.metadataTimestamp,
-            mcmpSenderName: logRxMcmpMessage?.senderName,
+            containerSenderName: logRxMcmpMessage?.senderName,
             mcmpIsSigned: logRxMcmpMessage?.isSigned ?? false,
             mcmpSignature: logRxMcmpMessage?.signature,
-            mcmpReplyAuthorName:
+            containerReplyAuthorName:
                 logRxMcmpMessage?.replyAuthorName ??
                 logRxMCOtxtMessage?.replyAuthorName,
-            mcmpReplyTimestamp:
+            containerReplyTimestamp:
                 logRxMcmpMessage?.replyTimestamp ??
                 logRxMCOtxtMessage?.replyTimestamp,
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
@@ -11873,13 +11873,13 @@ class MeshCoreConnector extends ChangeNotifier {
       mcmpSignatureStatus: decoded != null
           ? decoded.mcmpSignatureStatus
           : appData!.mcmpSignatureStatus,
-      mcmpTimestamp: mcmpMessage?.timestamp ?? mcotxtMessage?.metadataTimestamp,
-      mcmpSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
+      containerTimestamp: mcmpMessage?.timestamp ?? mcotxtMessage?.metadataTimestamp,
+      containerSenderName: mcmpMessage?.senderName ?? mcotxtMessage?.senderName,
       mcmpIsSigned: mcmpMessage?.isSigned ?? false,
       mcmpSignature: mcmpMessage?.signature,
-      mcmpReplyAuthorName:
+      containerReplyAuthorName:
           mcmpMessage?.replyAuthorName ?? mcotxtMessage?.replyAuthorName,
-      mcmpReplyTimestamp:
+      containerReplyTimestamp:
           mcmpMessage?.replyTimestamp ?? mcotxtMessage?.replyTimestamp,
       wasBinaryTransport: true,
       binaryPacketBytes: dataPayload.length,
@@ -12901,7 +12901,7 @@ class MeshCoreConnector extends ChangeNotifier {
       // when it is cut out; the two settings that govern quoting meet there
       // rather than here.
       final quoteSettings = _appSettingsService?.settings;
-      final hasMcmpAnchor = message.mcmpReplyTimestamp != null;
+      final hasMcmpAnchor = message.containerReplyTimestamp != null;
       final quotesAsMentions =
           !message.isOutgoing &&
           (quoteSettings?.incomingQuoteAsMentions ?? false);
@@ -12934,7 +12934,7 @@ class MeshCoreConnector extends ChangeNotifier {
           replyInfo.actualMessage;
 
       if ((replyToSenderName == null || replyToText == null) &&
-          message.mcmpReplyTimestamp == null) {
+          message.containerReplyTimestamp == null) {
         // Fallback for incoming/legacy messages where only the @mention
         // exists. Messages with an MCMP reply anchor must never fall back to
         // "most recent from this sender": if the anchor did not resolve, a
@@ -12971,12 +12971,12 @@ class MeshCoreConnector extends ChangeNotifier {
         compressionOriginalBytes: message.compressionOriginalBytes,
         compressionPayloadBytes: message.compressionPayloadBytes,
         mcmpSignatureStatus: message.mcmpSignatureStatus,
-        mcmpTimestamp: message.mcmpTimestamp,
-        mcmpSenderName: message.mcmpSenderName,
+        containerTimestamp: message.containerTimestamp,
+        containerSenderName: message.containerSenderName,
         mcmpIsSigned: message.mcmpIsSigned,
         mcmpSignature: message.mcmpSignature,
-        mcmpReplyAuthorName: message.mcmpReplyAuthorName,
-        mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+        containerReplyAuthorName: message.containerReplyAuthorName,
+        containerReplyTimestamp: message.containerReplyTimestamp,
         verifiedSenderKeyHex: message.verifiedSenderKeyHex,
         mcmpNameCollision: message.mcmpNameCollision,
         wasBinaryTransport: message.wasBinaryTransport,

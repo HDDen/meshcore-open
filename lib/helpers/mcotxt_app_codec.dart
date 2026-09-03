@@ -25,6 +25,10 @@ class EncodedMCOtxtAppMessage {
 class DecodedMCOtxtAppMessage {
   final String text;
   final int timestamp;
+
+  /// Sender name embedded in the body. Room posts and the binary channel
+  /// envelope carry it inside; the channel text transport leaves it in the
+  /// outer "Name: text" layer and reports null here, as MCMP does.
   final String? senderName;
   final String? replyAuthorName;
   final int? replyTimestamp;
@@ -129,7 +133,6 @@ class MCOtxtAppCodec {
   static DecodedMCOtxtAppMessage decodeBody(
     Uint8List body, {
     int? inheritedTimestamp,
-    String? inheritedSenderName,
   }) {
     final reader = _ByteReader(body);
     final flags = reader.readByte();
@@ -140,10 +143,8 @@ class MCOtxtAppCodec {
         ? (inheritedTimestamp ?? 0)
         : reader.readUint32LE();
 
-    String? senderName = inheritedSenderName;
-    if ((flags & _flagSenderName) != 0) {
-      senderName = _readString(reader);
-    }
+    final senderName =
+        (flags & _flagSenderName) != 0 ? _readString(reader) : null;
 
     String? replyAuthorName;
     int? replyTimestamp;
@@ -234,14 +235,12 @@ class MCOtxtAppCodec {
   static DecodedMCOtxtAppMessage? tryDecodeTextPayloadMessage(
     String text, {
     int? inheritedTimestamp,
-    String? inheritedSenderName,
   }) {
     if (!isTextPayload(text)) return null;
     try {
       return decodeBody(
         bodyFromText(text),
         inheritedTimestamp: inheritedTimestamp,
-        inheritedSenderName: inheritedSenderName,
       );
     } on MCOtxtUnsupportedFormatException catch (error) {
       return unsupportedMessage(error.receivedVersion);

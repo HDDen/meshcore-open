@@ -2170,12 +2170,12 @@ class _ChatScreenState extends State<ChatScreen> {
       compressionOriginalBytes: message.compressionOriginalBytes,
       compressionPayloadBytes: message.compressionPayloadBytes,
       mcmpSignatureStatus: message.mcmpSignatureStatus,
-      mcmpTimestamp: message.mcmpTimestamp,
-      mcmpSenderName: message.mcmpSenderName,
+      containerTimestamp: message.containerTimestamp,
+      containerSenderName: message.containerSenderName,
       mcmpIsSigned: message.mcmpIsSigned,
       mcmpSignature: message.mcmpSignature,
-      mcmpReplyAuthorName: message.mcmpReplyAuthorName,
-      mcmpReplyTimestamp: message.mcmpReplyTimestamp,
+      containerReplyAuthorName: message.containerReplyAuthorName,
+      containerReplyTimestamp: message.containerReplyTimestamp,
       verifiedSenderKeyHex: message.verifiedSenderKeyHex,
       mcmpNameCollision: message.mcmpNameCollision,
       timestamp: message.timestamp,
@@ -2718,7 +2718,7 @@ class _MessageBubble extends StatelessWidget {
     final compressionTypeLabel = compressionType == null
         ? null
         : compressionType == MessageCompressionType.mcmp
-        ? (message.mcmpTimestamp != null ? 'mcmp3' : 'mcmp2')
+        ? (message.containerTimestamp != null ? 'mcmp3' : 'mcmp2')
         : compressionType.label;
     final compressionLabel = compressionTypeLabel == null
         ? null
@@ -2948,7 +2948,7 @@ class _MessageBubble extends StatelessWidget {
                                     McmpSignatureBadge.isVisible(
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                     )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -2957,7 +2957,7 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -3104,7 +3104,7 @@ class _MessageBubble extends StatelessWidget {
                                     McmpSignatureBadge.isVisible(
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                     )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -3113,7 +3113,7 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -3170,7 +3170,7 @@ class _MessageBubble extends StatelessWidget {
                                     McmpSignatureBadge.isVisible(
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                     )) ...[
                                   const SizedBox(width: 4),
                                   Padding(
@@ -3179,7 +3179,7 @@ class _MessageBubble extends StatelessWidget {
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
                                       isSigned: message.mcmpIsSigned,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                       verifiedSenderKeyHex:
                                           message.verifiedSenderKeyHex,
                                       nameCollision: message.mcmpNameCollision,
@@ -3203,7 +3203,7 @@ class _MessageBubble extends StatelessWidget {
                             McmpSignatureBadge.isVisible(
                               status: message.mcmpSignatureStatus,
                               isOutgoing: isOutgoing,
-                              wasMcmpV3: message.mcmpTimestamp != null,
+                              wasMcmpV3: message.containerTimestamp != null,
                             )) ...[
                           const SizedBox(height: 3),
                           Padding(
@@ -3214,12 +3214,12 @@ class _MessageBubble extends StatelessWidget {
                               status: message.mcmpSignatureStatus,
                               isOutgoing: isOutgoing,
                               isSigned: message.mcmpIsSigned,
-                              wasMcmpV3: message.mcmpTimestamp != null,
+                              wasMcmpV3: message.containerTimestamp != null,
                               verifiedSenderKeyHex:
                                   message.verifiedSenderKeyHex,
                               nameCollision: message.mcmpNameCollision,
                               packetTimestamp: message.timestamp,
-                              mcmpTimestamp: message.mcmpTimestamp,
+                              containerTimestamp: message.containerTimestamp,
                               // Direct messages never show a fingerprint;
                               // room posts do.
                               showFingerprint:
@@ -3367,14 +3367,14 @@ class _MessageBubble extends StatelessWidget {
                                     McmpSignatureBadge.isVisible(
                                       status: message.mcmpSignatureStatus,
                                       isOutgoing: true,
-                                      wasMcmpV3: message.mcmpTimestamp != null,
+                                      wasMcmpV3: message.containerTimestamp != null,
                                     )) ...[
                                   const SizedBox(width: 4),
                                   McmpSignatureBadge(
                                     status: message.mcmpSignatureStatus,
                                     isOutgoing: true,
                                     isSigned: message.mcmpIsSigned,
-                                    wasMcmpV3: message.mcmpTimestamp != null,
+                                    wasMcmpV3: message.containerTimestamp != null,
                                     verifiedSenderKeyHex:
                                         message.verifiedSenderKeyHex,
                                     nameCollision: message.mcmpNameCollision,

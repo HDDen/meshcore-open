@@ -99,12 +99,12 @@ class ExactQuoteHelper {
   /// no message to show inside the bubble and none to scroll to, so a mention
   /// states the little that is known more honestly than an empty quote would.
   static bool rendersAsQuote({
-    required int? mcmpReplyTimestamp,
+    required int? containerReplyTimestamp,
     required String? replyToMessageId,
     required bool replyIsExact,
   }) =>
       replyIsExact ||
-      (mcmpReplyTimestamp != null && replyToMessageId != null);
+      (containerReplyTimestamp != null && replyToMessageId != null);
 
   /// Appended when the fragment is shorter than the message it came from, so a
   /// quote that could not be resolved still reads as an excerpt. Stripped

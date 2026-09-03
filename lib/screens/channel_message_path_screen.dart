@@ -178,7 +178,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
   String? _signatureStatusLabel(AppLocalizations l10n) {
     if (message.isOutgoing) {
       // Own messages: only whether they were sent with a signature.
-      if (message.mcmpTimestamp == null) return null;
+      if (message.containerTimestamp == null) return null;
       return message.mcmpIsSigned
           ? l10n.settings_mcmp_signed
           : l10n.settings_mcmp_noSign;
@@ -602,31 +602,31 @@ class ChannelMessagePathScreen extends StatelessWidget {
   }
 
   String _mcmpTimestampLabel(AppLocalizations l10n) {
-    final rawSeconds = message.mcmpTimestamp!;
+    final rawSeconds = message.containerTimestamp!;
     if (rawSeconds == 0) return '—';
     final timestamp = DateTime.fromMillisecondsSinceEpoch(rawSeconds * 1000);
     return '$rawSeconds (${_formatTime(timestamp, l10n)})';
   }
 
   bool get _hasDistinctMcmpTimestamp {
-    final mcmpTimestamp = message.mcmpTimestamp;
-    if (mcmpTimestamp == null) return false;
+    final containerTimestamp = message.containerTimestamp;
+    if (containerTimestamp == null) return false;
     final packetTimestamp = message.timestamp.millisecondsSinceEpoch ~/ 1000;
-    return mcmpTimestamp != packetTimestamp;
+    return containerTimestamp != packetTimestamp;
   }
 
   int? get _mcmpTimestampWarningSeconds {
     if (message.isOutgoing) return null;
     return McmpTimestampWarning.suspiciousDifferenceSeconds(
       packetTimestamp: message.timestamp,
-      mcmpTimestamp: message.mcmpTimestamp,
+      containerTimestamp: message.containerTimestamp,
     );
   }
 
   String? _mcmpReplyTargetLabel() {
-    if (message.mcmpTimestamp == null) return null;
-    final replyAuthorName = message.mcmpReplyAuthorName?.trim();
-    final replyTimestamp = message.mcmpReplyTimestamp;
+    if (message.containerTimestamp == null) return null;
+    final replyAuthorName = message.containerReplyAuthorName?.trim();
+    final replyTimestamp = message.containerReplyTimestamp;
     if (replyAuthorName == null ||
         replyAuthorName.isEmpty ||
         replyTimestamp == null) {

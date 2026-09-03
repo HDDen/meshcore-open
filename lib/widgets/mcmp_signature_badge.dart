@@ -26,7 +26,7 @@ class McmpSignatureBadge extends StatelessWidget {
   final String? verifiedSenderKeyHex;
   final bool nameCollision;
   final DateTime? packetTimestamp;
-  final int? mcmpTimestamp;
+  final int? containerTimestamp;
 
   /// Direct messages never show a fingerprint.
   final bool showFingerprint;
@@ -43,7 +43,7 @@ class McmpSignatureBadge extends StatelessWidget {
     this.verifiedSenderKeyHex,
     this.nameCollision = false,
     this.packetTimestamp,
-    this.mcmpTimestamp,
+    this.containerTimestamp,
     this.showFingerprint = true,
     required this.textScale,
     required this.color,
@@ -185,7 +185,7 @@ class McmpSignatureBadge extends StatelessWidget {
         ? null
         : McmpTimestampWarning.suspiciousDifferenceSeconds(
             packetTimestamp: packetTimestamp!,
-            mcmpTimestamp: mcmpTimestamp,
+            containerTimestamp: containerTimestamp,
           );
 
     Widget iconWidget = Icon(icon, size: iconSize, color: iconColor);
