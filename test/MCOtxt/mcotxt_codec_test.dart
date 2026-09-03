@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
@@ -463,6 +464,55 @@ void main() {
 
         expect(decoded.text, encoded.decodedText);
       }
+    });
+  });
+
+  group('MCOtxt frame', () {
+    test('roundtrips and reports its extent', () {
+      const text = 'Привет, как дела';
+      final bytes = MCOtxtFrame.encode(text);
+      final framed = MCOtxtFrame.decode(bytes);
+
+      expect(framed.text, text);
+      expect(framed.span.offset, 0);
+      expect(framed.span.length, bytes.length);
+      expect(framed.span.end, bytes.length);
+    });
+
+    test('carries the exact bit count of the codec stream', () {
+      final encoded = MCOtxtCodec.encode('hello world');
+      final bytes = MCOtxtFrame.wrap(encoded);
+      final span = MCOtxtFrame.span(bytes);
+
+      expect(span.bitLength, encoded.bitLength);
+      expect(span.payloadLength, encoded.data.length);
+      expect(bytes.sublist(span.payloadOffset), encoded.data);
+    });
+
+    test('decodes at an offset inside a larger buffer', () {
+      final frame = MCOtxtFrame.encode('offset');
+      final buffer = Uint8List.fromList(<int>[0xaa, 0xbb, ...frame, 0xcc]);
+      final framed = MCOtxtFrame.decode(buffer, offset: 2);
+
+      expect(framed.text, 'offset');
+      expect(framed.span.offset, 2);
+      expect(framed.span.end, 2 + frame.length);
+    });
+
+    test('rejects a truncated frame', () {
+      final frame = MCOtxtFrame.encode('truncated');
+
+      expect(
+        () => MCOtxtFrame.decode(frame.sublist(0, frame.length - 1)),
+        throwsFormatException,
+      );
+    });
+
+    test('is what the app container stores after the string mode byte', () {
+      final body = MCOtxtAppCodec.encodeBody(text: 'A', timestamp: 1);
+
+      // flags(1) + timestamp(4) + string mode(1), then the frame.
+      expect(body.sublist(6), MCOtxtFrame.encode('A'));
     });
   });
 }

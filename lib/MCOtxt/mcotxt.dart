@@ -2,6 +2,7 @@ export 'bit_reader.dart';
 export 'bit_writer.dart';
 export 'mcotxt_codec.dart';
 export 'mcotxt_errors.dart';
+export 'mcotxt_frame.dart';
 export 'mcotxt_options.dart';
 export 'mcotxt_result.dart';
 export 'models/mcotxt_model.dart';

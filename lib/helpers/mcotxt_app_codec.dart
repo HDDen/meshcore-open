@@ -293,22 +293,6 @@ class MCOtxtAppCodec {
     }
   }
 
-  static void _writeMCOtxtString(_ByteWriter writer, String text) {
-    final encoded = MCOtxtCodec.encode(
-      text,
-      options: const MCOtxtEncodeOptions(collectStats: false),
-    );
-    writer
-      ..writeVarUint(encoded.bitLength)
-      ..writeBytes(encoded.data);
-  }
-
-  static String _readMCOtxtString(_ByteReader reader) {
-    final bitLength = reader.readVarUint();
-    final bytes = reader.readBytes(_bytesForBits(bitLength));
-    return MCOtxtCodec.decode(bytes, bitLength: bitLength).text;
-  }
-
   static void _writeString(_ByteWriter writer, String text) {
     final normalized = MCOtxtModelRegistry.normalizeInputText(text);
     final utf8Candidate = _buildUtf8StringCandidate(normalized);
@@ -325,15 +309,16 @@ class MCOtxtAppCodec {
   }
 
   static void _writeMCOtxtOnlyString(_ByteWriter writer, String text) {
-    writer.writeByte(_stringModeMCOtxt);
-    _writeMCOtxtString(writer, MCOtxtModelRegistry.normalizeInputText(text));
+    writer
+      ..writeByte(_stringModeMCOtxt)
+      ..writeBytes(MCOtxtFrame.encode(text));
   }
 
   static Uint8List _buildMCOtxtStringCandidate(String normalizedText) {
-    final writer = _ByteWriter()
-      ..writeByte(_stringModeMCOtxt);
-    _writeMCOtxtString(writer, normalizedText);
-    return writer.toBytes();
+    return Uint8List.fromList(<int>[
+      _stringModeMCOtxt,
+      ...MCOtxtFrame.encode(normalizedText),
+    ]);
   }
 
   static Uint8List _buildUtf8StringCandidate(String normalizedText) {
@@ -357,7 +342,7 @@ class MCOtxtAppCodec {
     final mode = reader.readByte();
     switch (mode) {
       case _stringModeMCOtxt:
-        return _readMCOtxtString(reader);
+        return reader.readMCOtxtFrame();
       case _stringModeUtf8:
         return reader.readUtf8String();
       default:
@@ -369,10 +354,7 @@ class MCOtxtAppCodec {
     final mode = reader.readByte();
     switch (mode) {
       case _stringModeMCOtxt:
-        final bitLength = reader.readVarUint();
-        final byteLength = _bytesForBits(bitLength);
-        reader.skipBytes(byteLength);
-        return byteLength;
+        return reader.skipMCOtxtFrame();
       case _stringModeUtf8:
         final byteLength = reader.readVarUint();
         reader.skipBytes(byteLength);
@@ -380,11 +362,6 @@ class MCOtxtAppCodec {
       default:
         throw FormatException('Unsupported MCOtxt string mode: $mode');
     }
-  }
-
-  static int _bytesForBits(int bitLength) {
-    if (bitLength < 0) throw RangeError.value(bitLength, 'bitLength');
-    return (bitLength + 7) >> 3;
   }
 }
 
@@ -470,6 +447,20 @@ class _ByteReader {
 
   void skipBytes(int length) {
     readBytes(length);
+  }
+
+  String readMCOtxtFrame() {
+    final framed = MCOtxtFrame.decode(_bytes, offset: _offset);
+    _offset = framed.span.end;
+    return framed.text;
+  }
+
+  /// Skips a frame and returns its stream length in bytes, header
+  /// excluded, which is what the compression ratio counts.
+  int skipMCOtxtFrame() {
+    final span = MCOtxtFrame.span(_bytes, offset: _offset);
+    _offset = span.end;
+    return span.payloadLength;
   }
 
   int readUint32LE() {
