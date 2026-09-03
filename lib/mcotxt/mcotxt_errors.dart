@@ -2,6 +2,7 @@ enum McotxtCodecError {
   invalidInput,
   unknownVersion,
   unknownLanguage,
+  modelUnavailable,
   unexpectedEnd,
   invalidTop4Reference,
   invalidPrimaryId,

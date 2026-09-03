@@ -2,8 +2,10 @@
 // MCOtxt v1 static TOP-4 model (START + AFTER_PUNCT): RU (wire id 1).
 // Generated with Python Unicode database 15.1.0.
 
-// Package import is intentional: generated models may live outside lib/.
+// Package import is intentional: trainer output is also copied into lib/ for runtime.
 import 'package:meshcore_open/mcotxt/models/mcotxt_model.dart';
+
+const String mcotxtRuWireHash = 'd123c4978a635bf1b26fe37261b7e96a0206b3ba15b2a80542e560f00d1eb193';
 
 const List<int> mcotxtRuPrimarySymbols = <int>[
   0x0020, 0x0441, 0x043C, 0x0443, 0x0440, 0x043A, 0x0435, 0x043B, 0x043D, 0x0438, 0x044F, 0x0442,
@@ -126,6 +128,7 @@ const Map<int, int> mcotxtRuUppercaseToLowercase = <int, int>{
 
 final McotxtLanguageModel mcotxtModelRu = McotxtLanguageModel(
   id: McotxtLanguageId.ru,
+  wireHash: mcotxtRuWireHash,
   primarySymbols: mcotxtRuPrimarySymbols,
   extensionSymbols: mcotxtRuExtensionSymbols,
   startTop4: mcotxtRuStartTop4,

@@ -67,6 +67,8 @@ enum McotxtTableId {
 
 class McotxtLanguageModel {
   final McotxtLanguageId id;
+  final bool available;
+  final String? wireHash;
   final List<int> primarySymbols;
   final List<int> extensionSymbols;
   final List<List<int>> top4;
@@ -80,13 +82,15 @@ class McotxtLanguageModel {
 
   McotxtLanguageModel({
     required this.id,
+    this.wireHash,
     required Iterable<int> primarySymbols,
     required Iterable<int> extensionSymbols,
     required Iterable<int> startTop4,
     required Iterable<int> punctStartTop4,
     required Iterable<Iterable<int>> top4,
     required Map<int, int> uppercaseToLowercase,
-  }) : primarySymbols = List<int>.unmodifiable(primarySymbols),
+  }) : available = true,
+       primarySymbols = List<int>.unmodifiable(primarySymbols),
        extensionSymbols = List<int>.unmodifiable(extensionSymbols),
        startTop4 = List<int>.unmodifiable(startTop4),
        punctStartTop4 = List<int>.unmodifiable(punctStartTop4),
@@ -139,6 +143,20 @@ class McotxtLanguageModel {
       _validateTop4Row(this.top4[i], 'top4[$i]');
     }
   }
+
+  McotxtLanguageModel.unavailable({required this.id})
+    : available = false,
+      wireHash = null,
+      primarySymbols = const <int>[],
+      extensionSymbols = const <int>[],
+      top4 = const <List<int>>[],
+      startTop4 = const <int>[],
+      punctStartTop4 = const <int>[],
+      uppercaseToLowercase = const <int, int>{},
+      lowercaseToUppercase = const <int, int>{},
+      _primaryIdByRune = const <int, int>{},
+      _extensionIdByRune = const <int, int>{},
+      _symbolIndexByRune = const <int, int>{};
 
   int get symbolCount => primarySymbols.length + extensionSymbols.length;
 

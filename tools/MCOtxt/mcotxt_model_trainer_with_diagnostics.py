@@ -1281,6 +1281,166 @@ def _camel(code: str) -> str:
     return "".join(part.capitalize() for part in re.split(r"[^A-Za-z0-9]+", code) if part)
 
 
+
+MODEL_MANIFEST_VERSION = 1
+MODEL_MANIFEST_FILENAME = "model_manifest.json"
+
+
+def model_wire_identity(model: Model) -> Dict[str, object]:
+    """Canonical wire-significant model representation used for compatibility hashes."""
+    case_pairs = sorted(
+        (upper, model.symbol_to_index[lower])
+        for upper, lower in model.uppercase_to_lowercase.items()
+    )
+    return {
+        "codecVersion": MCOTXT_VERSION,
+        "language": model.language.code,
+        "languageId": model.language.wire_id,
+        "primarySymbols": list(model.primary),
+        "extensionSymbols": list(model.extension),
+        "startTop4Indexes": list(model.start_top4_indexes),
+        "punctStartTop4Indexes": list(model.punct_start_top4_indexes),
+        "top4Indexes": list(model.top4_indexes),
+        "uppercaseMap": [
+            {"uppercaseCodepoint": upper, "lowercaseSymbolIndex": lower_idx}
+            for upper, lower_idx in case_pairs
+        ],
+    }
+
+
+def model_wire_hash(model: Model) -> str:
+    canonical = json.dumps(
+        model_wire_identity(model),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _empty_manifest() -> Dict[str, object]:
+    return {
+        "format": "MCOtxt model manifest",
+        "manifestVersion": MODEL_MANIFEST_VERSION,
+        "codecVersion": MCOTXT_VERSION,
+        "frozen": False,
+        "hashAlgorithm": "sha256",
+        "hashScope": "canonical wire-significant model data",
+        "models": {
+            code: {
+                "languageId": language.wire_id,
+                "available": False,
+                "wireHash": None,
+                "primaryCount": 0,
+                "extensionCount": 0,
+                "symbolCount": 0,
+                "unicodeDatabaseVersion": None,
+            }
+            for code, language in sorted(LANGUAGES.items(), key=lambda item: item[1].wire_id)
+        },
+    }
+
+
+def load_model_manifest(path: Path) -> Dict[str, object]:
+    if not path.is_file():
+        return _empty_manifest()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("manifestVersion") != MODEL_MANIFEST_VERSION or data.get("codecVersion") != MCOTXT_VERSION:
+        raise ValueError(f"Unsupported/incompatible MCOtxt model manifest: {path}")
+    models = data.setdefault("models", {})
+    template = _empty_manifest()["models"]
+    for code, entry in template.items():
+        models.setdefault(code, entry)
+    return data
+
+
+def update_manifest_for_model(manifest: Dict[str, object], model: Model) -> str:
+    code = model.language.code
+    new_hash = model_wire_hash(model)
+    models = manifest["models"]
+    old = models.get(code, {})
+    if manifest.get("frozen"):
+        if not old.get("available") or old.get("wireHash") != new_hash:
+            raise ValueError(
+                f"MCOtxt v{MCOTXT_VERSION} model set is frozen: {code.upper()} wire tables "
+                "cannot be added or changed under the same version/language ID"
+            )
+    models[code] = {
+        "languageId": model.language.wire_id,
+        "available": True,
+        "wireHash": new_hash,
+        "primaryCount": len(model.primary),
+        "extensionCount": len(model.extension),
+        "symbolCount": model.symbol_count,
+        "unicodeDatabaseVersion": unicodedata.unidata_version,
+    }
+    return new_hash
+
+
+def render_unavailable_dart(language: LanguageDefinition, import_path: str) -> str:
+    code = language.code
+    camel = _camel(code)
+    lines = [
+        "// GENERATED FILE - DO NOT EDIT BY HAND.",
+        f"// MCOtxt v{MCOTXT_VERSION} unavailable model placeholder: {code.upper()} (wire id {language.wire_id}).",
+        "",
+    ]
+    if import_path:
+        lines += [f"import '{import_path}';", ""]
+    lines += [
+        f"final McotxtLanguageModel mcotxtModel{camel} = McotxtLanguageModel.unavailable(",
+        f"  id: McotxtLanguageId.{code},",
+        ");",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def render_unavailable_c_header(language: LanguageDefinition) -> str:
+    code = _safe_identifier(language.code)
+    upper = code.upper()
+    guard = f"MCOTXT_MODEL_{upper}_H"
+    prefix = f"mcotxt_{code}"
+    return "\n".join([
+        "/* GENERATED FILE - DO NOT EDIT BY HAND. */",
+        f"/* MCOtxt v{MCOTXT_VERSION} unavailable model placeholder: {upper} (wire id {language.wire_id}). */",
+        f"#ifndef {guard}",
+        f"#define {guard}",
+        "",
+        "#include <stdint.h>",
+        "",
+        f"static const uint8_t {prefix}_available = 0u;",
+        f"static const char {prefix}_wire_hash[] = \"\";",
+        f"static const uint8_t {prefix}_language_id = {language.wire_id}u;",
+        f"static const uint8_t {prefix}_primary_count = 0u;",
+        f"static const uint8_t {prefix}_extension_count = 0u;",
+        f"static const uint8_t {prefix}_symbol_count = 0u;",
+        f"static const uint8_t {prefix}_uppercase_count = 0u;",
+        "",
+        f"#endif /* {guard} */",
+        "",
+    ])
+
+
+def sync_unavailable_placeholders(
+    manifest: Dict[str, object],
+    generated_root: Path,
+    runtime_dir: Path,
+    import_path: str,
+) -> None:
+    models = manifest["models"]
+    for code, language in LANGUAGES.items():
+        if models.get(code, {}).get("available"):
+            continue
+        lang_dir = generated_root / code
+        lang_dir.mkdir(parents=True, exist_ok=True)
+        dart_text = render_unavailable_dart(language, import_path)
+        (lang_dir / f"model_{code}.dart").write_text(dart_text, encoding="utf-8", newline="\n")
+        (lang_dir / f"model_{code}.h").write_text(
+            render_unavailable_c_header(language), encoding="utf-8", newline="\n"
+        )
+        (runtime_dir / f"model_{code}.dart").write_text(dart_text, encoding="utf-8", newline="\n")
+
 # ---------------------------------------------------------------------------
 # Export: Dart
 # ---------------------------------------------------------------------------
@@ -1294,6 +1454,7 @@ def render_dart(model: Model, import_path: str, variable_name: Optional[str]) ->
     start_cp = model.start_top4_codepoints()
     punct_start_cp = model.punct_start_top4_codepoints()
     top4_rows_cp = [model.top4_row_codepoints(i) for i in range(model.symbol_count)]
+    wire_hash = model_wire_hash(model)
 
     lines: List[str] = []
     lines.append("// GENERATED FILE - DO NOT EDIT BY HAND.")
@@ -1301,9 +1462,11 @@ def render_dart(model: Model, import_path: str, variable_name: Optional[str]) ->
     lines.append(f"// Generated with Python Unicode database {unicodedata.unidata_version}.")
     lines.append("")
     if import_path:
-        lines.append("// Package import is intentional: generated models may live outside lib/.")
+        lines.append("// Package import is intentional: trainer output is also copied into lib/ for runtime.")
         lines.append(f"import '{import_path}';")
         lines.append("")
+    lines.append(f"const String {prefix}WireHash = '{wire_hash}';")
+    lines.append("")
 
     lines.append(f"const List<int> {prefix}PrimarySymbols = <int>[")
     lines.append(_dart_int_list(model.primary))
@@ -1359,6 +1522,7 @@ def render_dart(model: Model, import_path: str, variable_name: Optional[str]) ->
 
     lines.append(f"final McotxtLanguageModel {var_name} = McotxtLanguageModel(")
     lines.append(f"  id: McotxtLanguageId.{code},")
+    lines.append(f"  wireHash: {prefix}WireHash,")
     lines.append(f"  primarySymbols: {prefix}PrimarySymbols,")
     lines.append(f"  extensionSymbols: {prefix}ExtensionSymbols,")
     lines.append(f"  startTop4: {prefix}StartTop4,")
@@ -1381,6 +1545,7 @@ def render_c_header(model: Model) -> str:
     prefix = f"mcotxt_{code}"
 
     case_items = sorted(model.uppercase_to_lowercase.items())
+    wire_hash = model_wire_hash(model)
 
     lines: List[str] = []
     lines.append("/* GENERATED FILE - DO NOT EDIT BY HAND. */")
@@ -1404,6 +1569,8 @@ def render_c_header(model: Model) -> str:
     lines.append("#endif")
     lines.append("")
 
+    lines.append(f"static const uint8_t {prefix}_available = 1u;")
+    lines.append(f"static const char {prefix}_wire_hash[] = \"{wire_hash}\";")
     lines.append(f"static const uint8_t {prefix}_language_id = {model.language.wire_id}u;")
     lines.append(f"static const uint8_t {prefix}_primary_count = {len(model.primary)}u;")
     lines.append(f"static const uint8_t {prefix}_extension_count = {len(model.extension)}u;")
@@ -2016,7 +2183,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "Directory for generated artifacts. By default the trainer finds "
             "the meshcore-open project root (pubspec.yaml) and writes to "
             "tools/MCOtxt/generated. The Dart model is additionally copied to "
-            "assets/models/MCOtxt/v<version>."
+            "lib/mcotxt/models/generated/v<version> for runtime compilation."
         ),
     )
     p.add_argument(
@@ -2036,6 +2203,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--max-unsupported", type=int, default=100, help="Max unsupported symbols listed in report")
     p.add_argument("--debug-json", action="store_true", help="Also emit non-production JSON debug artifact")
+    p.add_argument(
+        "--freeze-manifest",
+        action="store_true",
+        help="Freeze the v1 model manifest after this successful generation; later wire-table changes will be rejected",
+    )
     return p
 
 
@@ -2098,8 +2270,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     validation = evaluate_messages(val_messages_factory(), model)
 
-    # Resolve the meshcore-open project root. It is needed both for the
-    # default generated directory and for the mirrored Dart asset.
+    # Resolve the meshcore-open project root. It is needed for the default
+    # generated directory and the compiled runtime Dart model copy.
     script_path = Path(__file__).resolve()
     project_root = None
     for candidate in (script_path.parent, *script_path.parents):
@@ -2120,31 +2292,58 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "Run the trainer from inside the repository."
         )
 
+    generated_root = project_root / "tools" / "MCOtxt" / "generated"
     if args.out_dir:
         out_dir = Path(args.out_dir)
     else:
-        out_dir = project_root / "tools" / "MCOtxt" / "generated"
+        out_dir = generated_root / args.lang
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    generated_root.mkdir(parents=True, exist_ok=True)
     stem = f"model_{args.lang}"
 
     dart_path = out_dir / f"{stem}.dart"
     c_path = out_dir / f"{stem}.h"
     report_path = out_dir / f"{stem}_report.md"
 
-    dart_path.write_text(
-        render_dart(model, args.dart_import, args.dart_variable),
+    dart_runtime_dir = (
+        project_root / "lib" / "mcotxt" / "models" / "generated" / f"v{MCOTXT_VERSION}"
+    )
+    dart_runtime_dir.mkdir(parents=True, exist_ok=True)
+    dart_runtime_path = dart_runtime_dir / dart_path.name
+
+    manifest_path = generated_root / MODEL_MANIFEST_FILENAME
+    manifest = load_model_manifest(manifest_path)
+    update_manifest_for_model(manifest, model)
+    if args.freeze_manifest:
+        unavailable = [
+            code.upper()
+            for code, entry in manifest["models"].items()
+            if not entry.get("available")
+        ]
+        if unavailable:
+            raise ValueError(
+                "Cannot freeze MCOtxt model manifest while models are unavailable: "
+                + ", ".join(unavailable)
+            )
+        manifest["frozen"] = True
+
+    dart_text = render_dart(model, args.dart_import, args.dart_variable)
+    dart_path.write_text(dart_text, encoding="utf-8", newline="\n")
+    dart_runtime_path.write_text(dart_text, encoding="utf-8", newline="\n")
+    c_path.write_text(render_c_header(model), encoding="utf-8", newline="\n")
+
+    sync_unavailable_placeholders(
+        manifest=manifest,
+        generated_root=generated_root,
+        runtime_dir=dart_runtime_dir,
+        import_path=args.dart_import,
+    )
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )
-
-    # Mirror only the Dart runtime model into assets/models/MCOtxt.
-    # Reports, debug JSON and C/C++ headers remain in tools/MCOtxt/generated.
-    dart_assets_dir = project_root / "assets" / "models" / "MCOtxt" / f"v{MCOTXT_VERSION}"
-    dart_assets_dir.mkdir(parents=True, exist_ok=True)
-    dart_assets_path = dart_assets_dir / dart_path.name
-    shutil.copy2(dart_path, dart_assets_path)
-    c_path.write_text(render_c_header(model), encoding="utf-8", newline="\n")
     report_path.write_text(
         render_report(
             model=model,
@@ -2188,8 +2387,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(f"  optimized CAPS/SHIFT: {validation.optimized_case_mode_toggles} / {validation.optimized_shifts}")
     print(f"  fallback UTF8_RUNs:   {validation.optimized_utf8_runs}")
     print(f"  Dart:                 {dart_path}")
-    print(f"  Dart copy:            {dart_assets_path}")
+    print(f"  Dart runtime copy:    {dart_runtime_path}")
     print(f"  C/C++:                {c_path}")
+    print(f"  model manifest:       {manifest_path}")
+    print(f"  manifest frozen:      {bool(manifest.get('frozen'))}")
     print(f"  report:               {report_path}")
     if debug_path:
         print(f"  debug JSON:           {debug_path}")

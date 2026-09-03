@@ -1,0 +1,73 @@
+{
+  "format": "MCOtxt model manifest",
+  "manifestVersion": 1,
+  "codecVersion": 1,
+  "frozen": false,
+  "hashAlgorithm": "sha256",
+  "hashScope": "canonical wire-significant model data",
+  "models": {
+    "en": {
+      "languageId": 0,
+      "available": true,
+      "wireHash": "55988b3bb2a000adf6e768a8541df5a25fec1628b4ec661a10b577e3af8b3770",
+      "primaryCount": 32,
+      "extensionCount": 5,
+      "symbolCount": 37,
+      "unicodeDatabaseVersion": "15.1.0"
+    },
+    "ru": {
+      "languageId": 1,
+      "available": true,
+      "wireHash": "d123c4978a635bf1b26fe37261b7e96a0206b3ba15b2a80542e560f00d1eb193",
+      "primaryCount": 32,
+      "extensionCount": 12,
+      "symbolCount": 44,
+      "unicodeDatabaseVersion": "15.1.0"
+    },
+    "fr": {
+      "languageId": 2,
+      "available": true,
+      "wireHash": "910c5821a202a9b35313a9b939355f09d1c4293fe2ed246fed0123639d379ccb",
+      "primaryCount": 32,
+      "extensionCount": 21,
+      "symbolCount": 53,
+      "unicodeDatabaseVersion": "15.1.0"
+    },
+    "de": {
+      "languageId": 3,
+      "available": false,
+      "wireHash": null,
+      "primaryCount": 0,
+      "extensionCount": 0,
+      "symbolCount": 0,
+      "unicodeDatabaseVersion": null
+    },
+    "it": {
+      "languageId": 4,
+      "available": false,
+      "wireHash": null,
+      "primaryCount": 0,
+      "extensionCount": 0,
+      "symbolCount": 0,
+      "unicodeDatabaseVersion": null
+    },
+    "uk": {
+      "languageId": 5,
+      "available": false,
+      "wireHash": null,
+      "primaryCount": 0,
+      "extensionCount": 0,
+      "symbolCount": 0,
+      "unicodeDatabaseVersion": null
+    },
+    "be": {
+      "languageId": 6,
+      "available": false,
+      "wireHash": null,
+      "primaryCount": 0,
+      "extensionCount": 0,
+      "symbolCount": 0,
+      "unicodeDatabaseVersion": null
+    }
+  }
+}

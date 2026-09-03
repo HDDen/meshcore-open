@@ -1,5 +1,11 @@
 import 'mcotxt_model.dart';
-import 'punctuation.dart';
+import 'generated/v1/model_be.dart';
+import 'generated/v1/model_de.dart';
+import 'generated/v1/model_en.dart';
+import 'generated/v1/model_fr.dart';
+import 'generated/v1/model_it.dart';
+import 'generated/v1/model_ru.dart';
+import 'generated/v1/model_uk.dart';
 
 class McotxtModelRegistry {
   static const int languageNoneWireId = 7;
@@ -9,85 +15,29 @@ class McotxtModelRegistry {
   static const int globalLanguageNoneId = 255;
   static const int inlineLanguageMaxId = 6;
 
-  static final List<McotxtLanguageModel> builtinModels =
-      <McotxtLanguageModel>[
-        _buildModel(
-          McotxtLanguageId.en,
-          primary: ' etaoinshrdlucmfwypvbgkqjxz',
-          extension: '0123456789',
-          uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-          lowercase: 'abcdefghijklmnopqrstuvwxyz',
-          top4Seed: ' etaoinsrhl',
-          training:
-              'the quick brown fox jumps over the lazy dog. hello, world: meshcore lora message text',
-        ),
-        _buildModel(
-          McotxtLanguageId.ru,
-          primary: ' оеаинтсрвлкмдпуяызьгчбжйхцшюф',
-          extension: 'ёъэщ',
-          uppercase: 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
-          lowercase: 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',
-          top4Seed: ' оеаинтрсвл',
-          training:
-              'привет мир, как дела. нормально работает: сообщение текст',
-        ),
-        _buildModel(
-          McotxtLanguageId.fr,
-          primary: ' eaistnrulodcmpvqfbghjxyzwk',
-          extension: 'éèêëàâîïôùûçœ0123456789',
-          uppercase:
-              'ABCDEFGHIJKLMNOPQRSTUVWXYZÉÈÊËÀÂÎÏÔÙÛÇŒ',
-          lowercase:
-              'abcdefghijklmnopqrstuvwxyzéèêëàâîïôùûçœ',
-          top4Seed: ' esaitnrul',
-          training:
-              'bonjour le monde, comment ca va. message texte reseau radio',
-        ),
-        _buildModel(
-          McotxtLanguageId.de,
-          primary: ' enirsatdhulgocmbfwkzpvjyxq',
-          extension: 'äöüß0123456789',
-          uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ',
-          lowercase: 'abcdefghijklmnopqrstuvwxyzäöü',
-          top4Seed: ' enirsathd',
-          training:
-              'hallo welt, wie geht es dir. nachricht text funk netz',
-        ),
-        _buildModel(
-          McotxtLanguageId.it,
-          primary: ' eaionlrtscdupmvgfbzhqàèéìòù',
-          extension: '0123456789',
-          uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÈÉÌÒÙ',
-          lowercase: 'abcdefghijklmnopqrstuvwxyzàèéìòù',
-          top4Seed: ' eaionlrst',
-          training:
-              'ciao mondo, come stai. messaggio testo radio rete',
-        ),
-        _buildModel(
-          McotxtLanguageId.uk,
-          primary: ' оаиенвртслкмудпязибьгчхйцшю',
-          extension: 'іїєґщжфъыёэ',
-          uppercase: 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ',
-          lowercase: 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя',
-          top4Seed: ' оаинертвс',
-          training:
-              'привіт світ, як справи. повідомлення текст працює через радіо',
-        ),
-        _buildModel(
-          McotxtLanguageId.be,
-          primary: ' аоеінтрсвлкмдзпуяыьчгхбйшю',
-          extension: 'ўёэфцщжъ',
-          uppercase: 'АБВГДЕЁЖЗІЙКЛМНОПРСТУЎФХЦЧШЫЬЭЮЯ',
-          lowercase: 'абвгдеёжзійклмнопрстуўфхцчшыьэюя',
-          top4Seed: ' аоеінтрсв',
-          training:
-              'прывітанне свет, як справы. паведамленне тэкст працуе радыё',
-        ),
-      ];
+  // All reserved v1 language IDs have a static generated artifact.
+  // Missing trained languages are represented by explicit unavailable models;
+  // runtime never derives statistical tables from embedded training strings.
+  static final List<McotxtLanguageModel> allModels = <McotxtLanguageModel>[
+    mcotxtModelEn,
+    mcotxtModelRu,
+    mcotxtModelFr,
+    mcotxtModelDe,
+    mcotxtModelIt,
+    mcotxtModelUk,
+    mcotxtModelBe,
+  ];
 
-  static final Map<McotxtLanguageId, McotxtLanguageModel> _modelsById =
+  // Historical name retained for codec callers: only wire-usable models are
+  // exposed here, so unavailable placeholders never enter encoder search.
+  static final List<McotxtLanguageModel> builtinModels =
+      List<McotxtLanguageModel>.unmodifiable(
+        allModels.where((model) => model.available),
+      );
+
+  static final Map<McotxtLanguageId, McotxtLanguageModel> _allModelsById =
       <McotxtLanguageId, McotxtLanguageModel>{
-        for (final model in builtinModels) model.id: model,
+        for (final model in allModels) model.id: model,
       };
 
   static final Map<int, McotxtLanguageModel> _modelsByGlobalId =
@@ -95,9 +45,17 @@ class McotxtModelRegistry {
         for (final model in builtinModels) model.globalId: model,
       };
 
-  static McotxtLanguageModel? modelFor(McotxtLanguageId? id) {
+  static McotxtLanguageModel? declarationFor(McotxtLanguageId? id) {
     if (id == null) return null;
-    return _modelsById[id];
+    return _allModelsById[id];
+  }
+
+  static bool isAvailable(McotxtLanguageId? id) =>
+      declarationFor(id)?.available ?? false;
+
+  static McotxtLanguageModel? modelFor(McotxtLanguageId? id) {
+    final model = declarationFor(id);
+    return model != null && model.available ? model : null;
   }
 
   static McotxtLanguageModel? modelForGlobalId(int? globalId) {
@@ -187,145 +145,4 @@ class McotxtModelRegistry {
     (0x0443, 0x0306, 0x045e),
     (0x0423, 0x0306, 0x040e),
   ];
-
-  static McotxtLanguageModel _buildModel(
-    McotxtLanguageId id, {
-    required String primary,
-    required String extension,
-    required String uppercase,
-    required String lowercase,
-    required String top4Seed,
-    required String training,
-  }) {
-    final primaryRunes = _uniqueRunes(primary);
-    final extensionRunes = _uniqueRunes(extension)
-        .where((rune) => !primaryRunes.contains(rune))
-        .toList(growable: false);
-    final symbols = <int>[...primaryRunes, ...extensionRunes];
-    final caseMap = _caseMap(uppercase, lowercase);
-    final seed = _uniqueRunes(top4Seed)
-        .where(symbols.contains)
-        .toList(growable: true);
-    for (final symbol in symbols) {
-      if (seed.length >= 4) break;
-      if (!seed.contains(symbol)) seed.add(symbol);
-    }
-    final modelTop4 = _buildTop4Tables(
-      symbols: symbols,
-      seed: seed,
-      training: training,
-      caseMap: caseMap,
-    );
-    return McotxtLanguageModel(
-      id: id,
-      primarySymbols: primaryRunes,
-      extensionSymbols: extensionRunes,
-      startTop4: modelTop4.startTop4,
-      punctStartTop4: modelTop4.punctStartTop4,
-      top4: modelTop4.top4,
-      uppercaseToLowercase: caseMap,
-    );
-  }
-
-  static ({
-    List<int> startTop4,
-    List<int> punctStartTop4,
-    List<List<int>> top4,
-  })
-  _buildTop4Tables({
-    required List<int> symbols,
-    required List<int> seed,
-    required String training,
-    required Map<int, int> caseMap,
-  }) {
-    final symbolSet = symbols.toSet();
-    final symbolIndex = <int, int>{
-      for (var i = 0; i < symbols.length; i++) symbols[i]: i,
-    };
-    final startCounts = <int, int>{};
-    final punctStartCounts = <int, int>{};
-    final transitionCounts = <int, Map<int, int>>{
-      for (final symbol in symbols) symbol: <int, int>{},
-    };
-    var contextKind = McotxtPredictionContextKind.start;
-    int? previous;
-    for (final rawRune in training.runes) {
-      if (rawRune != McotxtPunctuation.space &&
-          McotxtPunctuation.idByRune.containsKey(rawRune)) {
-        contextKind = rawRune == McotxtPunctuation.lineFeed
-            ? McotxtPredictionContextKind.start
-            : McotxtPredictionContextKind.afterPunctuation;
-        previous = null;
-        continue;
-      }
-      final rune = symbolSet.contains(rawRune) ? rawRune : caseMap[rawRune];
-      if (rune == null || !symbolSet.contains(rune)) {
-        continue;
-      }
-      switch (contextKind) {
-        case McotxtPredictionContextKind.start:
-          startCounts[rune] = (startCounts[rune] ?? 0) + 1;
-        case McotxtPredictionContextKind.afterPunctuation:
-          punctStartCounts[rune] = (punctStartCounts[rune] ?? 0) + 1;
-        case McotxtPredictionContextKind.symbol:
-          final counts = transitionCounts[previous]!;
-          counts[rune] = (counts[rune] ?? 0) + 1;
-      }
-      previous = rune;
-      contextKind = McotxtPredictionContextKind.symbol;
-    }
-
-    List<int> rankedTop4(Map<int, int> counts) {
-      final ranked = counts.keys.toList(growable: true)
-        ..sort((a, b) {
-          final countCompare = counts[b]!.compareTo(counts[a]!);
-          if (countCompare != 0) return countCompare;
-          return symbolIndex[a]!.compareTo(symbolIndex[b]!);
-        });
-      final result = <int>[];
-      for (final rune in ranked) {
-        if (!result.contains(rune)) result.add(rune);
-        if (result.length == 4) return result;
-      }
-      for (final rune in seed) {
-        if (!result.contains(rune)) result.add(rune);
-        if (result.length == 4) return result;
-      }
-      for (final rune in symbols) {
-        if (!result.contains(rune)) result.add(rune);
-        if (result.length == 4) return result;
-      }
-      return result;
-    }
-
-    return (
-      startTop4: List<int>.unmodifiable(rankedTop4(startCounts)),
-      punctStartTop4: List<int>.unmodifiable(rankedTop4(punctStartCounts)),
-      top4: List<List<int>>.unmodifiable(
-        symbols.map((symbol) {
-          return List<int>.unmodifiable(rankedTop4(transitionCounts[symbol]!));
-        }),
-      ),
-    );
-  }
-
-  static List<int> _uniqueRunes(String text) {
-    final seen = <int>{};
-    final result = <int>[];
-    for (final rune in text.runes) {
-      if (seen.add(rune)) result.add(rune);
-    }
-    return result;
-  }
-
-  static Map<int, int> _caseMap(String uppercase, String lowercase) {
-    final upperRunes = uppercase.runes.toList(growable: false);
-    final lowerRunes = lowercase.runes.toList(growable: false);
-    if (upperRunes.length != lowerRunes.length) {
-      throw ArgumentError('MCOtxt case map lengths differ');
-    }
-    return <int, int>{
-      for (var i = 0; i < upperRunes.length; i++) upperRunes[i]: lowerRunes[i],
-    };
-  }
 }

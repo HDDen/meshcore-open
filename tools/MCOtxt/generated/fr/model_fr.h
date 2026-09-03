@@ -18,6 +18,8 @@ typedef struct MCOTXT_PACKED {
 } mcotxt_uppercase_pair_t;
 #endif
 
+static const uint8_t mcotxt_fr_available = 1u;
+static const char mcotxt_fr_wire_hash[] = "910c5821a202a9b35313a9b939355f09d1c4293fe2ed246fed0123639d379ccb";
 static const uint8_t mcotxt_fr_language_id = 2u;
 static const uint8_t mcotxt_fr_primary_count = 32u;
 static const uint8_t mcotxt_fr_extension_count = 21u;

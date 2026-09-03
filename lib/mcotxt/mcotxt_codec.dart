@@ -192,9 +192,15 @@ class McotxtCodec {
     McotxtLanguageModel currentModel() {
       final model = McotxtModelRegistry.modelFor(currentLanguage);
       if (model == null) {
-        throw const McotxtCodecException(
-          McotxtCodecError.unknownLanguage,
-          'Language token without active MCOtxt language',
+        final knownLanguage = currentLanguage != null &&
+            McotxtModelRegistry.declarationFor(currentLanguage) != null;
+        throw McotxtCodecException(
+          knownLanguage
+              ? McotxtCodecError.modelUnavailable
+              : McotxtCodecError.unknownLanguage,
+          knownLanguage
+              ? 'MCOtxt model for ${currentLanguage.name.toUpperCase()} is unavailable'
+              : 'Language token without active MCOtxt language',
         );
       }
       return model;
@@ -330,11 +336,16 @@ class McotxtCodec {
           final globalId = reader.readBits(8);
           final language = McotxtModelRegistry.languageForGlobalId(globalId);
           if (globalId == McotxtModelRegistry.globalLanguageNoneId ||
-              language == null ||
-              McotxtModelRegistry.modelFor(language) == null) {
+              language == null) {
             throw const McotxtCodecException(
               McotxtCodecError.invalidOtherLanguage,
               'Invalid MCOtxt SWITCH_OTHER_LANGUAGE',
+            );
+          }
+          if (!McotxtModelRegistry.isAvailable(language)) {
+            throw const McotxtCodecException(
+              McotxtCodecError.modelUnavailable,
+              'MCOtxt SWITCH_OTHER_LANGUAGE references an unavailable model',
             );
           }
           currentLanguage = language;
@@ -427,6 +438,13 @@ class McotxtCodec {
     McotxtLanguageId languageA,
     McotxtLanguageId? languageB,
   ) {
+    if (!McotxtModelRegistry.isAvailable(languageA) ||
+        (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
+      throw const McotxtCodecException(
+        McotxtCodecError.modelUnavailable,
+        'Requested MCOtxt language model is unavailable',
+      );
+    }
     final planner = _McotxtPlanner(
       runes: runes,
       languageA: languageA,
@@ -550,6 +568,13 @@ class McotxtCodec {
           'Invalid MCOtxt Language B',
         );
       }
+      if (!McotxtModelRegistry.isAvailable(languageA) ||
+          (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
+        throw const McotxtCodecException(
+          McotxtCodecError.modelUnavailable,
+          'MCOtxt payload requires a language model unavailable in this build',
+        );
+      }
       return _McotxtHeader(languageA: languageA, languageB: languageB);
     }
 
@@ -575,15 +600,22 @@ class McotxtCodec {
     }
     final languageA = McotxtModelRegistry.languageForGlobalId(languageAGlobal);
     final languageB = McotxtModelRegistry.languageForGlobalId(languageBGlobal);
-    if (McotxtModelRegistry.modelFor(languageA) == null ||
+    if (languageA == null ||
         (languageBGlobal != McotxtModelRegistry.globalLanguageNoneId &&
-            McotxtModelRegistry.modelFor(languageB) == null)) {
+            languageB == null)) {
       throw const McotxtCodecException(
         McotxtCodecError.unknownLanguage,
         'Unknown MCOtxt global language ID',
       );
     }
-    return _McotxtHeader(languageA: languageA!, languageB: languageB);
+    if (!McotxtModelRegistry.isAvailable(languageA) ||
+        (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
+      throw const McotxtCodecException(
+        McotxtCodecError.modelUnavailable,
+        'MCOtxt payload requires a language model unavailable in this build',
+      );
+    }
+    return _McotxtHeader(languageA: languageA, languageB: languageB);
   }
 
   static String _readRawUtf8Payload(BitReader reader) {
