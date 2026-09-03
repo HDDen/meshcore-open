@@ -1840,40 +1840,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Сжатие MCOtxt'),
-                  value: mcotxtEnabled,
-                  onChanged: (value) {
-                    connector.setContactMcotxtEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    if (value) {
-                      connector.setContactMcmpEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactSmazEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactCyr2LatEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                    }
-                    setDialogState(() {
-                      mcotxtEnabled = value;
-                      if (mcotxtEnabled) {
-                        mcmpEnabled = false;
-                        smazEnabled = false;
-                        cyr2latEnabled = false;
-                      }
-                    });
-                  },
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
                   title: Text(context.l10n.channels_smazCompression),
                   subtitle: Text(context.l10n.chat_compressOutgoingMessages),
                   value: smazEnabled,
@@ -1967,6 +1933,40 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ],
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Сжатие MCOtxt'),
+                  value: mcotxtEnabled,
+                  onChanged: (value) {
+                    connector.setContactMcotxtEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    if (value) {
+                      connector.setContactMcmpEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                      connector.setContactSmazEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                      connector.setContactCyr2LatEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                    }
+                    setDialogState(() {
+                      mcotxtEnabled = value;
+                      if (mcotxtEnabled) {
+                        mcmpEnabled = false;
+                        smazEnabled = false;
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
