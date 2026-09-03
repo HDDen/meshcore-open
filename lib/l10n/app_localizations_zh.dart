@@ -1303,6 +1303,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '发送时将一些西里尔字符替换为拉丁字符。';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt 压缩';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Cyr2Lat 設定';
 
   @override

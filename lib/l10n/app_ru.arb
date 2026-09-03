@@ -301,6 +301,7 @@
   "channels_allowOrderingInGroup": "Сортировка каналов внутри группы",
   "channels_cyr2latCompression": "Сжатие Cyr2Lat",
   "channels_cyr2latCompressionDscr": "Заменяет некоторые кириллические символы на латиницу при отправке.",
+  "channels_mcotxtCompression": "Сжатие MCOtxt",
   "channels_cyr2latSettingsHeading": "Настройка Cyr2Lat",
   "channels_cyr2latSettingsSubheading": "Список замен",
   "channels_cyr2latSettingsDscr": "Редактировать JSON-конфигурацию замены символов",

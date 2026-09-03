@@ -10,7 +10,7 @@ import 'models/mcotxt_model.dart';
 import 'models/mcotxt_model_registry.dart';
 import 'models/punctuation.dart';
 
-class McotxtCodec {
+class MCOtxtCodec {
   static const int version = 1;
   static const int _versionBits = 3;
   static const int _languageBits = 3;
@@ -37,11 +37,11 @@ class McotxtCodec {
   static const int _toggleCaseModeBits =
       _extendedControlPrefixBits + _extendedControlSubopcodeBits;
 
-  static McotxtEncodeResult encode(
+  static MCOtxtEncodeResult encode(
     String text, {
-    McotxtEncodeOptions options = const McotxtEncodeOptions(),
+    MCOtxtEncodeOptions options = const MCOtxtEncodeOptions(),
   }) {
-    final normalizedText = McotxtModelRegistry.normalizeInputText(text);
+    final normalizedText = MCOtxtModelRegistry.normalizeInputText(text);
     final runes = normalizedText.runes.toList(growable: false);
     final built = _chooseEncoding(runes, options);
     final mcotxtWriter = BitWriter();
@@ -61,12 +61,12 @@ class McotxtCodec {
     final bitLength =
         useRawUtf8 ? rawUtf8Candidate.bitLength : mcotxtWriter.bitLength;
     final decoded = decode(data, bitLength: bitLength);
-    return McotxtEncodeResult(
+    return MCOtxtEncodeResult(
       inputText: text,
       data: data,
       bitLength: bitLength,
       encodingMode:
-          useRawUtf8 ? McotxtEncodingMode.rawUtf8 : McotxtEncodingMode.mcotxt,
+          useRawUtf8 ? MCOtxtEncodingMode.rawUtf8 : MCOtxtEncodingMode.mcotxt,
       bitStream: useRawUtf8 ? rawUtf8Candidate.bitStream : mcotxtWriter.bitString,
       debugTokens: useRawUtf8
           ? <String>[
@@ -83,7 +83,7 @@ class McotxtCodec {
             ],
       decodedText: decoded.text,
       encoderVersion: version,
-      usedTables: useRawUtf8 ? const <McotxtTableId>[] : built.plan.usedTables,
+      usedTables: useRawUtf8 ? const <MCOtxtTableId>[] : built.plan.usedTables,
       languageA: useRawUtf8 ? null : built.languageA,
       languageB: useRawUtf8 ? null : built.languageB,
       mcotxtCandidateBitLength: mcotxtWriter.bitLength,
@@ -93,7 +93,7 @@ class McotxtCodec {
       selectedBitLength: bitLength,
       selectedBytes: data.length,
       stats: options.collectStats
-          ? McotxtEncodeStats(
+          ? MCOtxtEncodeStats(
               inputCharacters: runes.length,
               encodedCharacters:
                   useRawUtf8 ? runes.length : built.plan.encodedCharacters,
@@ -120,22 +120,22 @@ class McotxtCodec {
     );
   }
 
-  static McotxtEncodeResult encodeToBitLimit(
+  static MCOtxtEncodeResult encodeToBitLimit(
     String text, {
     required int maxBits,
-    McotxtEncodeOptions options = const McotxtEncodeOptions(),
+    MCOtxtEncodeOptions options = const MCOtxtEncodeOptions(),
   }) {
     if (maxBits < _normalHeaderBits) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'maxBits is too small for MCOtxt header',
       );
     }
-    final normalizedText = McotxtModelRegistry.normalizeInputText(text);
+    final normalizedText = MCOtxtModelRegistry.normalizeInputText(text);
     final runes = normalizedText.runes.toList(growable: false);
     var low = 0;
     var high = runes.length;
-    McotxtEncodeResult best = encode('', options: options);
+    MCOtxtEncodeResult best = encode('', options: options);
     while (low <= high) {
       final middle = (low + high) >> 1;
       final candidate = encode(
@@ -152,25 +152,25 @@ class McotxtCodec {
     return best;
   }
 
-  static McotxtDecodeResult decode(
+  static MCOtxtDecodeResult decode(
     Uint8List data, {
     required int bitLength,
   }) {
     final reader = BitReader(data, bitLength: bitLength);
     final receivedVersion = reader.readBits(_versionBits);
     if (receivedVersion != version) {
-      throw McotxtCodecException(
-        McotxtCodecError.unknownVersion,
+      throw MCOtxtCodecException(
+        MCOtxtCodecError.unknownVersion,
         'Unsupported MCOtxt version $receivedVersion',
       );
     }
     final header = _readHeader(reader);
-    if (header.mode == _McotxtWireMode.rawUtf8) {
+    if (header.mode == _MCOtxtWireMode.rawUtf8) {
       final text = _readRawUtf8Payload(reader);
-      return McotxtDecodeResult(
+      return MCOtxtDecodeResult(
         text: text,
         decoderVersion: version,
-        usedTables: const <McotxtTableId>[],
+        usedTables: const <MCOtxtTableId>[],
         languageA: null,
         languageB: null,
       );
@@ -178,26 +178,26 @@ class McotxtCodec {
     final languageA = header.languageA;
     final languageB = header.languageB;
     var currentLanguage = languageA;
-    var contextKind = McotxtPredictionContextKind.start;
+    var contextKind = MCOtxtPredictionContextKind.start;
     int? previousRune;
     var shift = false;
     var capsMode = false;
     final output = <int>[];
-    final usedTables = <McotxtTableId>[];
+    final usedTables = <MCOtxtTableId>[];
 
-    void addTable(McotxtTableId table) {
+    void addTable(MCOtxtTableId table) {
       if (!usedTables.contains(table)) usedTables.add(table);
     }
 
-    McotxtLanguageModel currentModel() {
-      final model = McotxtModelRegistry.modelFor(currentLanguage);
+    MCOtxtLanguageModel currentModel() {
+      final model = MCOtxtModelRegistry.modelFor(currentLanguage);
       if (model == null) {
         final knownLanguage = currentLanguage != null &&
-            McotxtModelRegistry.declarationFor(currentLanguage) != null;
-        throw McotxtCodecException(
+            MCOtxtModelRegistry.declarationFor(currentLanguage) != null;
+        throw MCOtxtCodecException(
           knownLanguage
-              ? McotxtCodecError.modelUnavailable
-              : McotxtCodecError.unknownLanguage,
+              ? MCOtxtCodecError.modelUnavailable
+              : MCOtxtCodecError.unknownLanguage,
           knownLanguage
               ? 'MCOtxt model for ${currentLanguage.name.toUpperCase()} is unavailable'
               : 'Language token without active MCOtxt language',
@@ -206,11 +206,11 @@ class McotxtCodec {
       return model;
     }
 
-    void emitLanguageRune(McotxtLanguageModel model, int rune) {
+    void emitLanguageRune(MCOtxtLanguageModel model, int rune) {
       final uppercaseRune = model.lowercaseToUppercase[rune];
       if (shift && uppercaseRune == null) {
-        throw const McotxtCodecException(
-          McotxtCodecError.invalidShift,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.invalidShift,
           'MCOtxt SHIFT cannot be applied to this symbol',
         );
       }
@@ -222,16 +222,16 @@ class McotxtCodec {
       // unaffected by CAPS_MODE.
       final makeUppercase = uppercaseRune != null && (capsMode != shift);
       output.add(makeUppercase ? uppercaseRune : rune);
-      contextKind = McotxtPredictionContextKind.symbol;
+      contextKind = MCOtxtPredictionContextKind.symbol;
       previousRune = rune;
       shift = false;
-      addTable(McotxtTableId.fromLanguage(model.id));
+      addTable(MCOtxtTableId.fromLanguage(model.id));
     }
 
     void assertNoPendingShiftBeforeControl() {
       if (!shift) return;
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidShift,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidShift,
         'MCOtxt SHIFT must be followed by a language symbol',
       );
     }
@@ -242,8 +242,8 @@ class McotxtCodec {
         final model = currentModel();
         final predictions = model.top4ForContext(contextKind, previousRune);
         if (rank >= predictions.length) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidTop4Reference,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidTop4Reference,
             'Invalid MCOtxt TOP4 reference',
           );
         }
@@ -255,8 +255,8 @@ class McotxtCodec {
         final model = currentModel();
         if (primaryId >= _primaryLimit ||
             primaryId >= model.primarySymbols.length) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidPrimaryId,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidPrimaryId,
             'Invalid MCOtxt primary literal',
           );
         }
@@ -266,13 +266,13 @@ class McotxtCodec {
       if (reader.readBit() == 0) {
         assertNoPendingShiftBeforeControl();
         final punctuationId = reader.readBits(5);
-        if (punctuationId >= McotxtPunctuation.symbols.length) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidPunctuationId,
+        if (punctuationId >= MCOtxtPunctuation.symbols.length) {
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidPunctuationId,
             'Invalid MCOtxt punctuation literal',
           );
         }
-        final rune = McotxtPunctuation.symbols[punctuationId];
+        final rune = MCOtxtPunctuation.symbols[punctuationId];
         output.add(rune);
         final context = _contextAfterPunctuationRune(
           rune,
@@ -281,7 +281,7 @@ class McotxtCodec {
         );
         contextKind = context.kind;
         previousRune = context.previousRune;
-        addTable(McotxtTableId.punctuation);
+        addTable(MCOtxtTableId.punctuation);
         continue;
       }
       if (reader.readBit() == 0) {
@@ -289,8 +289,8 @@ class McotxtCodec {
         final model = currentModel();
         if (extensionId >= _extensionLimit ||
             extensionId >= model.extensionSymbols.length) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidExtensionId,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidExtensionId,
             'Invalid MCOtxt extension literal',
           );
         }
@@ -299,8 +299,8 @@ class McotxtCodec {
       }
       if (reader.readBit() == 0) {
         if (shift) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidShift,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidShift,
             'Duplicate MCOtxt SHIFT',
           );
         }
@@ -310,8 +310,8 @@ class McotxtCodec {
       if (reader.readBit() == 0) {
         assertNoPendingShiftBeforeControl();
         if (languageB == null) {
-          throw const McotxtCodecException(
-            McotxtCodecError.toggleWithoutLanguageB,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.toggleWithoutLanguageB,
             'MCOtxt TOGGLE_LANGUAGE without Language B',
           );
         }
@@ -320,13 +320,13 @@ class McotxtCodec {
         } else if (currentLanguage == languageB) {
           currentLanguage = languageA;
         } else {
-          throw const McotxtCodecException(
-            McotxtCodecError.toggleWithoutLanguageB,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.toggleWithoutLanguageB,
             'MCOtxt TOGGLE_LANGUAGE outside A/B context',
           );
         }
         previousRune = null;
-        contextKind = McotxtPredictionContextKind.start;
+        contextKind = MCOtxtPredictionContextKind.start;
         continue;
       }
       assertNoPendingShiftBeforeControl();
@@ -334,26 +334,26 @@ class McotxtCodec {
       switch (subopcode) {
         case _switchOtherLanguageSubopcode:
           final globalId = reader.readBits(8);
-          final language = McotxtModelRegistry.languageForGlobalId(globalId);
-          if (globalId == McotxtModelRegistry.globalLanguageNoneId ||
+          final language = MCOtxtModelRegistry.languageForGlobalId(globalId);
+          if (globalId == MCOtxtModelRegistry.globalLanguageNoneId ||
               language == null) {
-            throw const McotxtCodecException(
-              McotxtCodecError.invalidOtherLanguage,
+            throw const MCOtxtCodecException(
+              MCOtxtCodecError.invalidOtherLanguage,
               'Invalid MCOtxt SWITCH_OTHER_LANGUAGE',
             );
           }
-          if (!McotxtModelRegistry.isAvailable(language)) {
-            throw const McotxtCodecException(
-              McotxtCodecError.modelUnavailable,
+          if (!MCOtxtModelRegistry.isAvailable(language)) {
+            throw const MCOtxtCodecException(
+              MCOtxtCodecError.modelUnavailable,
               'MCOtxt SWITCH_OTHER_LANGUAGE references an unavailable model',
             );
           }
           currentLanguage = language;
           previousRune = null;
-          contextKind = McotxtPredictionContextKind.start;
+          contextKind = MCOtxtPredictionContextKind.start;
         case _resetContextSubopcode:
           previousRune = null;
-          contextKind = McotxtPredictionContextKind.start;
+          contextKind = MCOtxtPredictionContextKind.start;
         case _utf8RunSubopcode:
           final length = reader.readBits(_utf8RunLengthBits) + 1;
           final bytes = Uint8List(length);
@@ -363,27 +363,27 @@ class McotxtCodec {
           final text = _decodeStrictUtf8(bytes);
           output.addAll(text.runes);
           previousRune = null;
-          contextKind = McotxtPredictionContextKind.start;
+          contextKind = MCOtxtPredictionContextKind.start;
         case _toggleCaseModeSubopcode:
           // Persistent case mode does not alter the prediction context: the
           // statistical model is defined over normalized lowercase symbols.
           capsMode = !capsMode;
         default:
-          throw const McotxtCodecException(
-            McotxtCodecError.unknownExtendedControl,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.unknownExtendedControl,
             'Unknown MCOtxt extended control',
           );
       }
     }
 
     if (shift) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidShift,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidShift,
         'MCOtxt stream ends after SHIFT',
       );
     }
 
-    return McotxtDecodeResult(
+    return MCOtxtDecodeResult(
       text: String.fromCharCodes(output),
       decoderVersion: version,
       usedTables: usedTables,
@@ -394,18 +394,18 @@ class McotxtCodec {
 
   static _BuiltEncoding _chooseEncoding(
     List<int> runes,
-    McotxtEncodeOptions options,
+    MCOtxtEncodeOptions options,
   ) {
     if (options.languageA != null || options.languageB != null) {
       if (options.languageA != null && options.languageA == options.languageB) {
-        throw const McotxtCodecException(
-          McotxtCodecError.invalidInput,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.invalidInput,
           'MCOtxt Language A and Language B must differ',
         );
       }
       if (options.languageA == null && options.languageB != null) {
-        throw const McotxtCodecException(
-          McotxtCodecError.invalidInput,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.invalidInput,
           'MCOtxt Language A is required when Language B is set',
         );
       }
@@ -415,10 +415,10 @@ class McotxtCodec {
         options.languageB,
       );
     }
-    final languageAIds = McotxtModelRegistry.builtinModels
+    final languageAIds = MCOtxtModelRegistry.builtinModels
         .map((model) => model.id)
         .toList(growable: false);
-    final languageBIds = <McotxtLanguageId?>[
+    final languageBIds = <MCOtxtLanguageId?>[
       ...languageAIds,
       null,
     ];
@@ -435,17 +435,17 @@ class McotxtCodec {
 
   static _BuiltEncoding _encodeWithLanguagePair(
     List<int> runes,
-    McotxtLanguageId languageA,
-    McotxtLanguageId? languageB,
+    MCOtxtLanguageId languageA,
+    MCOtxtLanguageId? languageB,
   ) {
-    if (!McotxtModelRegistry.isAvailable(languageA) ||
-        (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
-      throw const McotxtCodecException(
-        McotxtCodecError.modelUnavailable,
+    if (!MCOtxtModelRegistry.isAvailable(languageA) ||
+        (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.modelUnavailable,
         'Requested MCOtxt language model is unavailable',
       );
     }
-    final planner = _McotxtPlanner(
+    final planner = _MCOtxtPlanner(
       runes: runes,
       languageA: languageA,
       languageB: languageB,
@@ -463,10 +463,10 @@ class McotxtCodec {
     final writer = BitWriter()
       ..writeBits(version, _versionBits)
       ..writeBits(
-        McotxtModelRegistry.extendedLanguageHeaderWireId,
+        MCOtxtModelRegistry.extendedLanguageHeaderWireId,
         _languageBits,
       )
-      ..writeBits(McotxtModelRegistry.rawUtf8HeaderFormat, _languageBits)
+      ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, _languageBits)
       ..writeBits(0, 7);
     for (final byte in textBytes) {
       writer.writeBits(byte, 8);
@@ -496,17 +496,17 @@ class McotxtCodec {
     return false;
   }
 
-  static int _wireIdForLanguage(McotxtLanguageId? language) {
-    return language?.wireId ?? McotxtModelRegistry.languageNoneWireId;
+  static int _wireIdForLanguage(MCOtxtLanguageId? language) {
+    return language?.wireId ?? MCOtxtModelRegistry.languageNoneWireId;
   }
 
-  static int _globalIdForLanguage(McotxtLanguageId? language) {
-    return language?.globalId ?? McotxtModelRegistry.globalLanguageNoneId;
+  static int _globalIdForLanguage(MCOtxtLanguageId? language) {
+    return language?.globalId ?? MCOtxtModelRegistry.globalLanguageNoneId;
   }
 
   static int _headerBitsFor(
-    McotxtLanguageId languageA,
-    McotxtLanguageId? languageB,
+    MCOtxtLanguageId languageA,
+    MCOtxtLanguageId? languageB,
   ) {
     return _usesNormalHeader(languageA, languageB)
         ? _normalHeaderBits
@@ -514,19 +514,19 @@ class McotxtCodec {
   }
 
   static bool _usesNormalHeader(
-    McotxtLanguageId languageA,
-    McotxtLanguageId? languageB,
+    MCOtxtLanguageId languageA,
+    MCOtxtLanguageId? languageB,
   ) {
-    return McotxtModelRegistry.inlineHeaderIdForGlobalId(languageA.globalId) !=
+    return MCOtxtModelRegistry.inlineHeaderIdForGlobalId(languageA.globalId) !=
             null &&
-        McotxtModelRegistry.inlineHeaderIdForGlobalId(languageB?.globalId) !=
+        MCOtxtModelRegistry.inlineHeaderIdForGlobalId(languageB?.globalId) !=
             null;
   }
 
   static void _writeHeader(
     BitWriter writer,
-    McotxtLanguageId languageA,
-    McotxtLanguageId? languageB,
+    MCOtxtLanguageId languageA,
+    MCOtxtLanguageId? languageB,
   ) {
     writer.writeBits(version, _versionBits);
     if (_usesNormalHeader(languageA, languageB)) {
@@ -537,98 +537,98 @@ class McotxtCodec {
     }
     writer
       ..writeBits(
-        McotxtModelRegistry.extendedLanguageHeaderWireId,
+        MCOtxtModelRegistry.extendedLanguageHeaderWireId,
         _languageBits,
       )
       ..writeBits(
-        McotxtModelRegistry.extendedLanguagePair8Format,
+        MCOtxtModelRegistry.extendedLanguagePair8Format,
         _languageBits,
       )
       ..writeBits(languageA.globalId, 8)
       ..writeBits(_globalIdForLanguage(languageB), 8);
   }
 
-  static _McotxtHeader _readHeader(BitReader reader) {
+  static _MCOtxtHeader _readHeader(BitReader reader) {
     final languageAInline = reader.readBits(_languageBits);
     final languageBInlineOrFormat = reader.readBits(_languageBits);
     if (languageAInline !=
-        McotxtModelRegistry.extendedLanguageHeaderWireId) {
-      final languageA = McotxtLanguageId.fromWireId(languageAInline);
+        MCOtxtModelRegistry.extendedLanguageHeaderWireId) {
+      final languageA = MCOtxtLanguageId.fromWireId(languageAInline);
       if (languageA == null) {
-        throw const McotxtCodecException(
-          McotxtCodecError.unknownLanguage,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.unknownLanguage,
           'Invalid MCOtxt Language A',
         );
       }
-      final languageB = McotxtLanguageId.fromWireId(languageBInlineOrFormat);
-      if (languageBInlineOrFormat != McotxtModelRegistry.languageNoneWireId &&
+      final languageB = MCOtxtLanguageId.fromWireId(languageBInlineOrFormat);
+      if (languageBInlineOrFormat != MCOtxtModelRegistry.languageNoneWireId &&
           languageB == null) {
-        throw const McotxtCodecException(
-          McotxtCodecError.unknownLanguage,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.unknownLanguage,
           'Invalid MCOtxt Language B',
         );
       }
-      if (!McotxtModelRegistry.isAvailable(languageA) ||
-          (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
-        throw const McotxtCodecException(
-          McotxtCodecError.modelUnavailable,
+      if (!MCOtxtModelRegistry.isAvailable(languageA) ||
+          (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.modelUnavailable,
           'MCOtxt payload requires a language model unavailable in this build',
         );
       }
-      return _McotxtHeader(languageA: languageA, languageB: languageB);
+      return _MCOtxtHeader(languageA: languageA, languageB: languageB);
     }
 
-    if (languageBInlineOrFormat == McotxtModelRegistry.rawUtf8HeaderFormat) {
-      return const _McotxtHeader.rawUtf8();
+    if (languageBInlineOrFormat == MCOtxtModelRegistry.rawUtf8HeaderFormat) {
+      return const _MCOtxtHeader.rawUtf8();
     }
 
     if (languageBInlineOrFormat !=
-        McotxtModelRegistry.extendedLanguagePair8Format) {
-      throw const McotxtCodecException(
-        McotxtCodecError.unsupportedExtendedHeader,
+        MCOtxtModelRegistry.extendedLanguagePair8Format) {
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.unsupportedExtendedHeader,
         'Unsupported MCOtxt extended language header',
       );
     }
 
     final languageAGlobal = reader.readBits(8);
     final languageBGlobal = reader.readBits(8);
-    if (languageAGlobal == McotxtModelRegistry.globalLanguageNoneId) {
-      throw const McotxtCodecException(
-        McotxtCodecError.unknownLanguage,
+    if (languageAGlobal == MCOtxtModelRegistry.globalLanguageNoneId) {
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.unknownLanguage,
         'MCOtxt extended Language A cannot be NONE',
       );
     }
-    final languageA = McotxtModelRegistry.languageForGlobalId(languageAGlobal);
-    final languageB = McotxtModelRegistry.languageForGlobalId(languageBGlobal);
+    final languageA = MCOtxtModelRegistry.languageForGlobalId(languageAGlobal);
+    final languageB = MCOtxtModelRegistry.languageForGlobalId(languageBGlobal);
     if (languageA == null ||
-        (languageBGlobal != McotxtModelRegistry.globalLanguageNoneId &&
+        (languageBGlobal != MCOtxtModelRegistry.globalLanguageNoneId &&
             languageB == null)) {
-      throw const McotxtCodecException(
-        McotxtCodecError.unknownLanguage,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.unknownLanguage,
         'Unknown MCOtxt global language ID',
       );
     }
-    if (!McotxtModelRegistry.isAvailable(languageA) ||
-        (languageB != null && !McotxtModelRegistry.isAvailable(languageB))) {
-      throw const McotxtCodecException(
-        McotxtCodecError.modelUnavailable,
+    if (!MCOtxtModelRegistry.isAvailable(languageA) ||
+        (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.modelUnavailable,
         'MCOtxt payload requires a language model unavailable in this build',
       );
     }
-    return _McotxtHeader(languageA: languageA, languageB: languageB);
+    return _MCOtxtHeader(languageA: languageA, languageB: languageB);
   }
 
   static String _readRawUtf8Payload(BitReader reader) {
     final padding = reader.readBits(7);
     if (padding != 0) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidRawUtf8,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidRawUtf8,
         'MCOtxt RAW_UTF8 padding bits must be zero',
       );
     }
     if (reader.remainingBits % 8 != 0) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidRawUtf8,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidRawUtf8,
         'MCOtxt RAW_UTF8 payload must be byte-aligned',
       );
     }
@@ -639,8 +639,8 @@ class McotxtCodec {
     try {
       return utf8.decode(bytes, allowMalformed: false);
     } on FormatException catch (error) {
-      throw McotxtCodecException(
-        McotxtCodecError.invalidRawUtf8,
+      throw MCOtxtCodecException(
+        MCOtxtCodecError.invalidRawUtf8,
         'Invalid MCOtxt RAW_UTF8 bytes: ${error.message}',
       );
     }
@@ -650,34 +650,34 @@ class McotxtCodec {
     try {
       return utf8.decode(bytes, allowMalformed: false);
     } on FormatException catch (error) {
-      throw McotxtCodecException(
-        McotxtCodecError.invalidUtf8Fallback,
+      throw MCOtxtCodecException(
+        MCOtxtCodecError.invalidUtf8Fallback,
         'Invalid MCOtxt UTF8_RUN bytes: ${error.message}',
       );
     }
   }
 
-  static String _debugToken(_McotxtToken token) {
+  static String _debugToken(_MCOtxtToken token) {
     switch (token.type) {
-      case _McotxtTokenType.top4:
+      case _MCOtxtTokenType.top4:
         return 'TOP4(${token.value})';
-      case _McotxtTokenType.primary:
+      case _MCOtxtTokenType.primary:
         return 'PRIMARY(${token.value})';
-      case _McotxtTokenType.punctuation:
+      case _MCOtxtTokenType.punctuation:
         return 'PUNCT(${token.value})';
-      case _McotxtTokenType.extension:
+      case _MCOtxtTokenType.extension:
         return 'EXTENSION(${token.value})';
-      case _McotxtTokenType.shift:
+      case _MCOtxtTokenType.shift:
         return 'SHIFT';
-      case _McotxtTokenType.toggleLanguage:
+      case _MCOtxtTokenType.toggleLanguage:
         return 'TOGGLE_LANGUAGE';
-      case _McotxtTokenType.switchOtherLanguage:
+      case _MCOtxtTokenType.switchOtherLanguage:
         return 'SWITCH_OTHER_LANGUAGE(${token.value})';
-      case _McotxtTokenType.resetContext:
+      case _MCOtxtTokenType.resetContext:
         return 'RESET_CONTEXT';
-      case _McotxtTokenType.toggleCaseMode:
+      case _MCOtxtTokenType.toggleCaseMode:
         return 'TOGGLE_CASE_MODE';
-      case _McotxtTokenType.utf8Run:
+      case _MCOtxtTokenType.utf8Run:
         final bytes = token.bytes ?? Uint8List(0);
         final byteText = bytes
             .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
@@ -691,8 +691,8 @@ class McotxtCodec {
     if (rank == 0) return 2;
     if (rank == 1) return 3;
     if (rank == 2 || rank == 3) return 4;
-    throw const McotxtCodecException(
-      McotxtCodecError.invalidTop4Reference,
+    throw const MCOtxtCodecException(
+      MCOtxtCodecError.invalidTop4Reference,
       'Invalid MCOtxt TOP4 rank',
     );
   }
@@ -720,34 +720,34 @@ class McotxtCodec {
       case 3:
         writer.writeBits(7, 4); // 0111
       default:
-        throw const McotxtCodecException(
-          McotxtCodecError.invalidTop4Reference,
+        throw const MCOtxtCodecException(
+          MCOtxtCodecError.invalidTop4Reference,
           'Invalid MCOtxt TOP4 rank',
         );
     }
   }
 
-  static void _writeToken(BitWriter writer, _McotxtToken token) {
+  static void _writeToken(BitWriter writer, _MCOtxtToken token) {
     switch (token.type) {
-      case _McotxtTokenType.top4:
+      case _MCOtxtTokenType.top4:
         _writeTop4Rank(writer, token.value);
-      case _McotxtTokenType.primary:
+      case _MCOtxtTokenType.primary:
         writer
           ..writeBits(2, 2)
           ..writeBits(token.value, 5);
-      case _McotxtTokenType.punctuation:
+      case _MCOtxtTokenType.punctuation:
         writer
           ..writeBits(6, 3)
           ..writeBits(token.value, 5);
-      case _McotxtTokenType.extension:
+      case _MCOtxtTokenType.extension:
         writer
           ..writeBits(14, 4)
           ..writeBits(token.value, 5);
-      case _McotxtTokenType.shift:
+      case _MCOtxtTokenType.shift:
         writer.writeBits(30, 5);
-      case _McotxtTokenType.toggleLanguage:
+      case _MCOtxtTokenType.toggleLanguage:
         writer.writeBits(62, 6);
-      case _McotxtTokenType.switchOtherLanguage:
+      case _MCOtxtTokenType.switchOtherLanguage:
         writer
           ..writeBits(_extendedControlPrefix, _extendedControlPrefixBits)
           ..writeBits(
@@ -755,19 +755,19 @@ class McotxtCodec {
             _extendedControlSubopcodeBits,
           )
           ..writeBits(token.value, 8);
-      case _McotxtTokenType.resetContext:
+      case _MCOtxtTokenType.resetContext:
         writer
           ..writeBits(_extendedControlPrefix, _extendedControlPrefixBits)
           ..writeBits(_resetContextSubopcode, _extendedControlSubopcodeBits);
-      case _McotxtTokenType.toggleCaseMode:
+      case _MCOtxtTokenType.toggleCaseMode:
         writer
           ..writeBits(_extendedControlPrefix, _extendedControlPrefixBits)
           ..writeBits(_toggleCaseModeSubopcode, _extendedControlSubopcodeBits);
-      case _McotxtTokenType.utf8Run:
+      case _MCOtxtTokenType.utf8Run:
         final bytes = token.bytes;
         if (bytes == null || bytes.isEmpty || bytes.length > _utf8RunMaxBytes) {
-          throw const McotxtCodecException(
-            McotxtCodecError.invalidInput,
+          throw const MCOtxtCodecException(
+            MCOtxtCodecError.invalidInput,
             'Invalid MCOtxt UTF8_RUN token',
           );
         }
@@ -782,21 +782,21 @@ class McotxtCodec {
   }
 }
 
-enum _McotxtWireMode {
+enum _MCOtxtWireMode {
   mcotxt,
   rawUtf8,
 }
 
-class _McotxtHeader {
-  final _McotxtWireMode mode;
-  final McotxtLanguageId? languageA;
-  final McotxtLanguageId? languageB;
+class _MCOtxtHeader {
+  final _MCOtxtWireMode mode;
+  final MCOtxtLanguageId? languageA;
+  final MCOtxtLanguageId? languageB;
 
-  const _McotxtHeader({required this.languageA, required this.languageB})
-    : mode = _McotxtWireMode.mcotxt;
+  const _MCOtxtHeader({required this.languageA, required this.languageB})
+    : mode = _MCOtxtWireMode.mcotxt;
 
-  const _McotxtHeader.rawUtf8()
-    : mode = _McotxtWireMode.rawUtf8,
+  const _MCOtxtHeader.rawUtf8()
+    : mode = _MCOtxtWireMode.rawUtf8,
       languageA = null,
       languageB = null;
 }
@@ -815,63 +815,63 @@ class _RawUtf8Candidate {
   });
 }
 
-_McotxtPredictionContext _contextAfterPunctuationRune(
+_MCOtxtPredictionContext _contextAfterPunctuationRune(
   int rune,
-  McotxtPredictionContextKind currentKind,
+  MCOtxtPredictionContextKind currentKind,
   int? currentPreviousRune,
 ) {
-  if (rune == McotxtPunctuation.space) {
-    return currentKind == McotxtPredictionContextKind.symbol
-        ? _McotxtPredictionContext.symbol(currentPreviousRune!)
-        : const _McotxtPredictionContext.start();
+  if (rune == MCOtxtPunctuation.space) {
+    return currentKind == MCOtxtPredictionContextKind.symbol
+        ? _MCOtxtPredictionContext.symbol(currentPreviousRune!)
+        : const _MCOtxtPredictionContext.start();
   }
-  if (rune == McotxtPunctuation.lineFeed) {
-    return const _McotxtPredictionContext.start();
+  if (rune == MCOtxtPunctuation.lineFeed) {
+    return const _MCOtxtPredictionContext.start();
   }
-  return const _McotxtPredictionContext.afterPunctuation();
+  return const _MCOtxtPredictionContext.afterPunctuation();
 }
 
-class _McotxtPredictionContext {
-  final McotxtPredictionContextKind kind;
+class _MCOtxtPredictionContext {
+  final MCOtxtPredictionContextKind kind;
   final int? previousRune;
 
-  const _McotxtPredictionContext.start()
-    : kind = McotxtPredictionContextKind.start,
+  const _MCOtxtPredictionContext.start()
+    : kind = MCOtxtPredictionContextKind.start,
       previousRune = null;
 
-  const _McotxtPredictionContext.afterPunctuation()
-    : kind = McotxtPredictionContextKind.afterPunctuation,
+  const _MCOtxtPredictionContext.afterPunctuation()
+    : kind = MCOtxtPredictionContextKind.afterPunctuation,
       previousRune = null;
 
-  const _McotxtPredictionContext.symbol(this.previousRune)
-    : kind = McotxtPredictionContextKind.symbol;
+  const _MCOtxtPredictionContext.symbol(this.previousRune)
+    : kind = MCOtxtPredictionContextKind.symbol;
 }
 
-class _McotxtPlanner {
+class _MCOtxtPlanner {
   final List<int> runes;
-  final McotxtLanguageId languageA;
-  final McotxtLanguageId? languageB;
-  final Map<String, _McotxtPlan> _memo = <String, _McotxtPlan>{};
+  final MCOtxtLanguageId languageA;
+  final MCOtxtLanguageId? languageB;
+  final Map<String, _MCOtxtPlan> _memo = <String, _MCOtxtPlan>{};
   late final _CasePlan _casePlan = _CasePlan.build(runes);
 
-  _McotxtPlanner({
+  _MCOtxtPlanner({
     required this.runes,
     required this.languageA,
     required this.languageB,
   });
 
-  _McotxtPlan plan() => _bestFrom(
+  _MCOtxtPlan plan() => _bestFrom(
     0,
     languageA,
-    const _McotxtPredictionContext.start(),
+    const _MCOtxtPredictionContext.start(),
   );
 
-  _McotxtPlan _bestFrom(
+  _MCOtxtPlan _bestFrom(
     int position,
-    McotxtLanguageId? currentLanguage,
-    _McotxtPredictionContext context,
+    MCOtxtLanguageId? currentLanguage,
+    _MCOtxtPredictionContext context,
   ) {
-    if (position >= runes.length) return _McotxtPlan.empty();
+    if (position >= runes.length) return _MCOtxtPlan.empty();
     final key =
         '$position|${currentLanguage?.globalId ?? 255}|'
         '${context.kind.index}|${context.previousRune ?? -1}';
@@ -879,11 +879,11 @@ class _McotxtPlanner {
     if (cached != null) return cached;
 
     final rune = runes[position];
-    final candidates = <_McotxtPlan>[];
+    final candidates = <_MCOtxtPlan>[];
 
     // Punctuation remains a normal candidate. SPACE is also a language symbol,
     // so the planner is free to choose the cheaper representation.
-    final punctuationId = McotxtPunctuation.idByRune[rune];
+    final punctuationId = MCOtxtPunctuation.idByRune[rune];
     if (punctuationId != null) {
       candidates.add(
         _bestFrom(
@@ -895,16 +895,16 @@ class _McotxtPlanner {
             context.previousRune,
           ),
         ).prepend(
-          _McotxtToken(_McotxtTokenType.punctuation, punctuationId),
+          _MCOtxtToken(_MCOtxtTokenType.punctuation, punctuationId),
           bits: 8,
           encodedCharacters: 1,
           punctuationSymbols: 1,
-          table: McotxtTableId.punctuation,
+          table: MCOtxtTableId.punctuation,
         ),
       );
     }
 
-    final currentModel = McotxtModelRegistry.modelFor(currentLanguage);
+    final currentModel = MCOtxtModelRegistry.modelFor(currentLanguage);
     if (currentModel != null) {
       _addSymbolCandidate(
         candidates: candidates,
@@ -916,16 +916,16 @@ class _McotxtPlanner {
     }
 
     final toggledLanguage = _toggledLanguage(currentLanguage);
-    final toggledModel = McotxtModelRegistry.modelFor(toggledLanguage);
+    final toggledModel = MCOtxtModelRegistry.modelFor(toggledLanguage);
     if (toggledModel != null) {
       _addSymbolCandidate(
         candidates: candidates,
         position: position,
         targetLanguage: toggledLanguage!,
         model: toggledModel,
-        symbolContext: const _McotxtPredictionContext.start(),
-        languagePrefix: const _McotxtToken(
-          _McotxtTokenType.toggleLanguage,
+        symbolContext: const _MCOtxtPredictionContext.start(),
+        languagePrefix: const _MCOtxtToken(
+          _MCOtxtTokenType.toggleLanguage,
           0,
         ),
         languagePrefixBits: 6,
@@ -934,7 +934,7 @@ class _McotxtPlanner {
       );
     }
 
-    for (final model in McotxtModelRegistry.builtinModels) {
+    for (final model in MCOtxtModelRegistry.builtinModels) {
       if (model.id == currentLanguage || model.id == toggledLanguage) {
         continue;
       }
@@ -943,12 +943,12 @@ class _McotxtPlanner {
         position: position,
         targetLanguage: model.id,
         model: model,
-        symbolContext: const _McotxtPredictionContext.start(),
-        languagePrefix: _McotxtToken(
-          _McotxtTokenType.switchOtherLanguage,
+        symbolContext: const _MCOtxtPredictionContext.start(),
+        languagePrefix: _MCOtxtToken(
+          _MCOtxtTokenType.switchOtherLanguage,
           model.globalId,
         ),
-        languagePrefixBits: McotxtCodec._switchOtherLanguageBits,
+        languagePrefixBits: MCOtxtCodec._switchOtherLanguageBits,
         languageSwitches: 1,
         otherLanguageSwitches: 1,
       );
@@ -963,24 +963,24 @@ class _McotxtPlanner {
         _bestFrom(
           position + run.codepoints,
           currentLanguage,
-          const _McotxtPredictionContext.start(),
+          const _MCOtxtPredictionContext.start(),
         ).prependUtf8Run(run),
       );
     }
 
-    candidates.sort(_McotxtPlan.compare);
+    candidates.sort(_MCOtxtPlan.compare);
     final best = candidates.first;
     _memo[key] = best;
     return best;
   }
 
   void _addSymbolCandidate({
-    required List<_McotxtPlan> candidates,
+    required List<_MCOtxtPlan> candidates,
     required int position,
-    required McotxtLanguageId targetLanguage,
-    required McotxtLanguageModel model,
-    required _McotxtPredictionContext symbolContext,
-    _McotxtToken? languagePrefix,
+    required MCOtxtLanguageId targetLanguage,
+    required MCOtxtLanguageModel model,
+    required _MCOtxtPredictionContext symbolContext,
+    _MCOtxtToken? languagePrefix,
     int languagePrefixBits = 0,
     int languageSwitches = 0,
     int toggles = 0,
@@ -997,15 +997,15 @@ class _McotxtPlanner {
     var plan = _bestFrom(
       position + 1,
       targetLanguage,
-      _McotxtPredictionContext.symbol(option.previousRune),
+      _MCOtxtPredictionContext.symbol(option.previousRune),
     ).prependSymbolOption(option, model.id);
 
     // Case mode is optimized separately with a tiny 2-state DP over the case
     // pattern only. It does not multiply the much larger language/context DP.
     if (_casePlan.toggleBefore(position)) {
       plan = plan.prepend(
-        const _McotxtToken(_McotxtTokenType.toggleCaseMode, 0),
-        bits: McotxtCodec._toggleCaseModeBits,
+        const _MCOtxtToken(_MCOtxtTokenType.toggleCaseMode, 0),
+        bits: MCOtxtCodec._toggleCaseModeBits,
       );
     }
     if (languagePrefix != null) {
@@ -1020,7 +1020,7 @@ class _McotxtPlanner {
     candidates.add(plan);
   }
 
-  McotxtLanguageId? _toggledLanguage(McotxtLanguageId? currentLanguage) {
+  MCOtxtLanguageId? _toggledLanguage(MCOtxtLanguageId? currentLanguage) {
     if (languageB == null) return null;
     if (currentLanguage == languageA) return languageB;
     if (currentLanguage == languageB) return languageA;
@@ -1028,8 +1028,8 @@ class _McotxtPlanner {
   }
 
   static bool _isSupportedAnywhere(int rune) {
-    if (McotxtPunctuation.idByRune.containsKey(rune)) return true;
-    for (final model in McotxtModelRegistry.builtinModels) {
+    if (MCOtxtPunctuation.idByRune.containsKey(rune)) return true;
+    for (final model in MCOtxtModelRegistry.builtinModels) {
       if (model.normalizeRune(rune) != null) return true;
     }
     return false;
@@ -1043,12 +1043,12 @@ class _McotxtPlanner {
       final runeText = String.fromCharCode(runes[i]);
       final runeBytes = utf8.encode(runeText);
       if (bytes.isNotEmpty &&
-          bytes.length + runeBytes.length > McotxtCodec._utf8RunMaxBytes) {
+          bytes.length + runeBytes.length > MCOtxtCodec._utf8RunMaxBytes) {
         break;
       }
       bytes.addAll(runeBytes);
       codepoints++;
-      if (bytes.length == McotxtCodec._utf8RunMaxBytes) break;
+      if (bytes.length == MCOtxtCodec._utf8RunMaxBytes) break;
     }
     if (codepoints == 0) {
       // Defensive fallback. In normal planner flow this can only happen for a
@@ -1067,9 +1067,9 @@ class _McotxtPlanner {
   }
 
   static _SymbolTokenOption? _symbolTokenForModel(
-    McotxtLanguageModel model,
+    MCOtxtLanguageModel model,
     int rune,
-    _McotxtPredictionContext context, {
+    _MCOtxtPredictionContext context, {
     required bool shift,
   }) {
     final normalized = model.normalizeRune(rune);
@@ -1083,11 +1083,11 @@ class _McotxtPlanner {
     );
     final rank = predictions.indexOf(normalized);
     if (rank >= 0) {
-      final top4Bits = McotxtCodec._top4BitsForRank(rank);
+      final top4Bits = MCOtxtCodec._top4BitsForRank(rank);
       return _SymbolTokenOption(
-        tokens: <_McotxtToken>[
-          if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
-          _McotxtToken(_McotxtTokenType.top4, rank),
+        tokens: <_MCOtxtToken>[
+          if (shift) const _MCOtxtToken(_MCOtxtTokenType.shift, 0),
+          _MCOtxtToken(_MCOtxtTokenType.top4, rank),
         ],
         bits: top4Bits + (shift ? 5 : 0),
         previousRune: normalized,
@@ -1098,9 +1098,9 @@ class _McotxtPlanner {
     final primaryId = model.primaryId(normalized);
     if (primaryId != null) {
       return _SymbolTokenOption(
-        tokens: <_McotxtToken>[
-          if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
-          _McotxtToken(_McotxtTokenType.primary, primaryId),
+        tokens: <_MCOtxtToken>[
+          if (shift) const _MCOtxtToken(_MCOtxtTokenType.shift, 0),
+          _MCOtxtToken(_MCOtxtTokenType.primary, primaryId),
         ],
         bits: (shift ? 5 : 0) + 7,
         previousRune: normalized,
@@ -1111,9 +1111,9 @@ class _McotxtPlanner {
     final extensionId = model.extensionId(normalized);
     if (extensionId != null) {
       return _SymbolTokenOption(
-        tokens: <_McotxtToken>[
-          if (shift) const _McotxtToken(_McotxtTokenType.shift, 0),
-          _McotxtToken(_McotxtTokenType.extension, extensionId),
+        tokens: <_MCOtxtToken>[
+          if (shift) const _MCOtxtToken(_MCOtxtTokenType.shift, 0),
+          _MCOtxtToken(_MCOtxtTokenType.extension, extensionId),
         ],
         bits: (shift ? 5 : 0) + 9,
         previousRune: normalized,
@@ -1170,7 +1170,7 @@ class _CasePlan {
           final shifted = desiredUpper != (nextState == 1);
           final candidate = _CaseCost(
             bits: previousCost.bits +
-                (toggled ? McotxtCodec._toggleCaseModeBits : 0) +
+                (toggled ? MCOtxtCodec._toggleCaseModeBits : 0) +
                 (shifted ? 5 : 0),
             toggles: previousCost.toggles + (toggled ? 1 : 0),
             shifts: previousCost.shifts + (shifted ? 1 : 0),
@@ -1202,7 +1202,7 @@ class _CasePlan {
   }
 
   static bool? _caseRequirement(int rune) {
-    for (final model in McotxtModelRegistry.builtinModels) {
+    for (final model in MCOtxtModelRegistry.builtinModels) {
       final normalized = model.normalizeRune(rune);
       if (normalized == null) continue;
       if (model.lowercaseToUppercase[normalized] == null) continue;
@@ -1246,9 +1246,9 @@ bool _betterCaseCost(_CaseCost candidate, _CaseCost? current) {
 }
 
 class _BuiltEncoding {
-  final McotxtLanguageId languageA;
-  final McotxtLanguageId? languageB;
-  final _McotxtPlan plan;
+  final MCOtxtLanguageId languageA;
+  final MCOtxtLanguageId? languageB;
+  final _MCOtxtPlan plan;
 
   const _BuiltEncoding({
     required this.languageA,
@@ -1256,7 +1256,7 @@ class _BuiltEncoding {
     required this.plan,
   });
 
-  int get headerBits => McotxtCodec._headerBitsFor(languageA, languageB);
+  int get headerBits => MCOtxtCodec._headerBitsFor(languageA, languageB);
 
   int get bitLength => headerBits + plan.bits;
 
@@ -1276,8 +1276,8 @@ class _BuiltEncoding {
     final a = languageA.globalId;
     final otherA = other.languageA.globalId;
     if (a != otherA) return a < otherA;
-    final b = McotxtCodec._globalIdForLanguage(languageB);
-    final otherB = McotxtCodec._globalIdForLanguage(other.languageB);
+    final b = MCOtxtCodec._globalIdForLanguage(languageB);
+    final otherB = MCOtxtCodec._globalIdForLanguage(other.languageB);
     return b < otherB;
   }
 
@@ -1286,7 +1286,7 @@ class _BuiltEncoding {
   }
 }
 
-class _McotxtPlan {
+class _MCOtxtPlan {
   final int bits;
   final int tokensCount;
   final int languageSwitches;
@@ -1303,10 +1303,10 @@ class _McotxtPlan {
   final int shifts;
   final int toggles;
   final int otherLanguageSwitches;
-  final List<_McotxtToken> tokens;
-  final List<McotxtTableId> usedTables;
+  final List<_MCOtxtToken> tokens;
+  final List<MCOtxtTableId> usedTables;
 
-  const _McotxtPlan({
+  const _MCOtxtPlan({
     required this.bits,
     required this.tokensCount,
     required this.languageSwitches,
@@ -1327,8 +1327,8 @@ class _McotxtPlan {
     required this.usedTables,
   });
 
-  factory _McotxtPlan.empty() {
-    return const _McotxtPlan(
+  factory _MCOtxtPlan.empty() {
+    return const _MCOtxtPlan(
       bits: 0,
       tokensCount: 0,
       languageSwitches: 0,
@@ -1345,14 +1345,14 @@ class _McotxtPlan {
       shifts: 0,
       toggles: 0,
       otherLanguageSwitches: 0,
-      tokens: <_McotxtToken>[],
-      usedTables: <McotxtTableId>[],
+      tokens: <_MCOtxtToken>[],
+      usedTables: <MCOtxtTableId>[],
     );
   }
 
-  _McotxtPlan prependSymbolOption(
+  _MCOtxtPlan prependSymbolOption(
     _SymbolTokenOption option,
-    McotxtLanguageId language,
+    MCOtxtLanguageId language,
   ) {
     return prependAll(
       option.tokens,
@@ -1362,15 +1362,15 @@ class _McotxtPlan {
       primaryLiterals: option.primaryLiterals,
       extensionLiterals: option.extensionLiterals,
       shifts: option.shifts,
-      table: McotxtTableId.fromLanguage(language),
+      table: MCOtxtTableId.fromLanguage(language),
     );
   }
 
-  _McotxtPlan prependUtf8Run(_Utf8FallbackRun run) {
+  _MCOtxtPlan prependUtf8Run(_Utf8FallbackRun run) {
     final bits =
-        McotxtCodec._utf8RunOverheadBits + run.bytes.length * 8;
+        MCOtxtCodec._utf8RunOverheadBits + run.bytes.length * 8;
     return prepend(
-      _McotxtToken.utf8Run(run.bytes, run.text),
+      _MCOtxtToken.utf8Run(run.bytes, run.text),
       bits: bits,
       encodedCharacters: run.codepoints,
       utf8FallbackRuns: 1,
@@ -1380,8 +1380,8 @@ class _McotxtPlan {
     );
   }
 
-  _McotxtPlan prepend(
-    _McotxtToken token, {
+  _MCOtxtPlan prepend(
+    _MCOtxtToken token, {
     required int bits,
     int languageSwitches = 0,
     int encodedCharacters = 0,
@@ -1397,10 +1397,10 @@ class _McotxtPlan {
     int shifts = 0,
     int toggles = 0,
     int otherLanguageSwitches = 0,
-    McotxtTableId? table,
+    MCOtxtTableId? table,
   }) {
     return prependAll(
-      <_McotxtToken>[token],
+      <_MCOtxtToken>[token],
       bits: bits,
       languageSwitches: languageSwitches,
       encodedCharacters: encodedCharacters,
@@ -1420,8 +1420,8 @@ class _McotxtPlan {
     );
   }
 
-  _McotxtPlan prependAll(
-    List<_McotxtToken> prefix, {
+  _MCOtxtPlan prependAll(
+    List<_MCOtxtToken> prefix, {
     required int bits,
     int languageSwitches = 0,
     int encodedCharacters = 0,
@@ -1437,14 +1437,14 @@ class _McotxtPlan {
     int shifts = 0,
     int toggles = 0,
     int otherLanguageSwitches = 0,
-    McotxtTableId? table,
+    MCOtxtTableId? table,
   }) {
-    final nextTables = <McotxtTableId>[];
+    final nextTables = <MCOtxtTableId>[];
     if (table != null) nextTables.add(table);
     for (final used in usedTables) {
       if (!nextTables.contains(used)) nextTables.add(used);
     }
-    return _McotxtPlan(
+    return _MCOtxtPlan(
       bits: this.bits + bits,
       tokensCount: tokensCount + prefix.length,
       languageSwitches: this.languageSwitches + languageSwitches,
@@ -1463,12 +1463,12 @@ class _McotxtPlan {
       toggles: this.toggles + toggles,
       otherLanguageSwitches:
           this.otherLanguageSwitches + otherLanguageSwitches,
-      tokens: <_McotxtToken>[...prefix, ...tokens],
+      tokens: <_MCOtxtToken>[...prefix, ...tokens],
       usedTables: nextTables,
     );
   }
 
-  static int compare(_McotxtPlan a, _McotxtPlan b) {
+  static int compare(_MCOtxtPlan a, _MCOtxtPlan b) {
     if (a.encodedCharacters != b.encodedCharacters) {
       return b.encodedCharacters.compareTo(a.encodedCharacters);
     }
@@ -1488,7 +1488,7 @@ class _McotxtPlan {
 }
 
 class _SymbolTokenOption {
-  final List<_McotxtToken> tokens;
+  final List<_MCOtxtToken> tokens;
   final int bits;
   final int previousRune;
   final int top4Hits;
@@ -1507,7 +1507,7 @@ class _SymbolTokenOption {
   });
 }
 
-enum _McotxtTokenType {
+enum _MCOtxtTokenType {
   top4,
   primary,
   punctuation,
@@ -1520,18 +1520,18 @@ enum _McotxtTokenType {
   utf8Run,
 }
 
-class _McotxtToken {
-  final _McotxtTokenType type;
+class _MCOtxtToken {
+  final _MCOtxtTokenType type;
   final int value;
   final Uint8List? bytes;
   final String? text;
 
-  const _McotxtToken(this.type, this.value)
+  const _MCOtxtToken(this.type, this.value)
     : bytes = null,
       text = null;
 
-  const _McotxtToken.utf8Run(this.bytes, this.text)
-    : type = _McotxtTokenType.utf8Run,
+  const _MCOtxtToken.utf8Run(this.bytes, this.text)
+    : type = _MCOtxtTokenType.utf8Run,
       value = 0;
 }
 

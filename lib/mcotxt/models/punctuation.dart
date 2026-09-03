@@ -1,4 +1,4 @@
-class McotxtPunctuation {
+class MCOtxtPunctuation {
   static const int space = 0x20;
   static const int lineFeed = 0x0a;
 

@@ -2,32 +2,32 @@ import 'dart:typed_data';
 
 import 'models/mcotxt_model.dart';
 
-enum McotxtEncodingMode {
+enum MCOtxtEncodingMode {
   mcotxt,
   rawUtf8,
 }
 
-class McotxtEncodeResult {
+class MCOtxtEncodeResult {
   final String inputText;
   final Uint8List data;
   final int bitLength;
-  final McotxtEncodingMode encodingMode;
+  final MCOtxtEncodingMode encodingMode;
   final String bitStream;
   final List<String> debugTokens;
   final String decodedText;
   final int encoderVersion;
-  final List<McotxtTableId> usedTables;
-  final McotxtLanguageId? languageA;
-  final McotxtLanguageId? languageB;
+  final List<MCOtxtTableId> usedTables;
+  final MCOtxtLanguageId? languageA;
+  final MCOtxtLanguageId? languageB;
   final int mcotxtCandidateBitLength;
   final int mcotxtCandidateBytes;
   final int rawUtf8CandidateBitLength;
   final int rawUtf8CandidateBytes;
   final int selectedBitLength;
   final int selectedBytes;
-  final McotxtEncodeStats? stats;
+  final MCOtxtEncodeStats? stats;
 
-  const McotxtEncodeResult({
+  const MCOtxtEncodeResult({
     required this.inputText,
     required this.data,
     required this.bitLength,
@@ -49,14 +49,14 @@ class McotxtEncodeResult {
   });
 }
 
-class McotxtDecodeResult {
+class MCOtxtDecodeResult {
   final String text;
   final int decoderVersion;
-  final List<McotxtTableId> usedTables;
-  final McotxtLanguageId? languageA;
-  final McotxtLanguageId? languageB;
+  final List<MCOtxtTableId> usedTables;
+  final MCOtxtLanguageId? languageA;
+  final MCOtxtLanguageId? languageB;
 
-  const McotxtDecodeResult({
+  const MCOtxtDecodeResult({
     required this.text,
     required this.decoderVersion,
     required this.usedTables,
@@ -65,7 +65,7 @@ class McotxtDecodeResult {
   });
 }
 
-class McotxtEncodeStats {
+class MCOtxtEncodeStats {
   final int inputCharacters;
   final int encodedCharacters;
   final int skippedCharacters;
@@ -83,7 +83,7 @@ class McotxtEncodeStats {
   final int totalBits;
   final int utf8Bytes;
 
-  const McotxtEncodeStats({
+  const MCOtxtEncodeStats({
     required this.inputCharacters,
     required this.encodedCharacters,
     required this.skippedCharacters,

@@ -1394,6 +1394,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Remplace certains caractères cyrilliques par des caractères latins lors de l\'envoi.';
 
   @override
+  String get channels_mcotxtCompression => 'Compression MCOtxt';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Paramètres Cyr2Lat';
 
   @override

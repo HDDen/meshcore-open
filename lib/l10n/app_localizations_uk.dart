@@ -1386,6 +1386,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Замінює деякі кириличні символи на латиницю при відправці.';
 
   @override
+  String get channels_mcotxtCompression => 'Стиснення MCOtxt';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Налаштування Cyr2Lat';
 
   @override

@@ -199,7 +199,7 @@ def expand_paths(items: Sequence[str]) -> List[Path]:
 
 
 def is_validation_message(text: str, ratio: float, seed: str) -> bool:
-    """Match mcotxt_model_trainer.py deterministic SHA-256 hold-out exactly."""
+    """Match MCOtxt_model_trainer_with_diagnostics.py deterministic SHA-256 hold-out exactly."""
     if ratio <= 0.0:
         return False
     if ratio >= 1.0:
@@ -295,7 +295,7 @@ def _add_cost(a: _PathCost, b: _PathCost) -> _PathCost:
 def _better_path(a: _PathCost, b: Optional[_PathCost]) -> bool:
     if b is None:
         return True
-    # Mirrors the meaningful Dart _McotxtPlan.compare priorities.
+    # Mirrors the meaningful Dart _MCOtxtPlan.compare priorities.
     return (
         a.bits,
         a.tokens,

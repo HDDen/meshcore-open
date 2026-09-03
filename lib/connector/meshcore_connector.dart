@@ -488,7 +488,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, bool> _channelMcmpEnabled = {};
   final Map<int, int> _channelMcmpVersion = {};
   final Map<int, bool> _channelMcmpUseSign = {};
-  final Map<int, bool> _channelMcotxtEnabled = {};
+  final Map<int, bool> _channelMCOtxtEnabled = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
@@ -503,7 +503,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, bool> _contactMcmpEnabled = {};
   final Map<String, int> _contactMcmpVersion = {};
   final Map<String, bool> _contactMcmpUseSign = {};
-  final Map<String, bool> _contactMcotxtEnabled = {};
+  final Map<String, bool> _contactMCOtxtEnabled = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
@@ -2255,8 +2255,8 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelMcmpUseSign[channelIndex] ?? false;
   }
 
-  bool isChannelMcotxtEnabled(int channelIndex) {
-    return _channelMcotxtEnabled[channelIndex] ?? false;
+  bool isChannelMCOtxtEnabled(int channelIndex) {
+    return _channelMCOtxtEnabled[channelIndex] ?? false;
   }
 
   bool isChannelSmazEnabled(int channelIndex) {
@@ -2277,8 +2277,8 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactMcmpUseSign[contactKeyHex] ?? false;
   }
 
-  bool isContactMcotxtEnabled(String contactKeyHex) {
-    return _contactMcotxtEnabled[contactKeyHex] ?? false;
+  bool isContactMCOtxtEnabled(String contactKeyHex) {
+    return _contactMCOtxtEnabled[contactKeyHex] ?? false;
   }
 
   bool isContactSmazEnabled(String contactKeyHex) {
@@ -2291,8 +2291,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _ensureContactMcmpUseSignLoaded(contactKeyHex);
   }
 
-  void ensureContactMcotxtSettingLoaded(String contactKeyHex) {
-    _ensureContactMcotxtSettingLoaded(contactKeyHex);
+  void ensureContactMCOtxtSettingLoaded(String contactKeyHex) {
+    _ensureContactMCOtxtSettingLoaded(contactKeyHex);
   }
 
   bool hasChannelRegion(int channelIndex) {
@@ -2658,10 +2658,10 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setChannelMcmpEnabled(int channelIndex, bool enabled) async {
     _channelMcmpEnabled[channelIndex] = enabled;
     if (enabled) {
-      _channelMcotxtEnabled[channelIndex] = false;
+      _channelMCOtxtEnabled[channelIndex] = false;
       _channelSmazEnabled[channelIndex] = false;
       _channelCyr2LatEnabled[channelIndex] = false;
-      await _channelSettingsStore.saveMcotxtEnabled(channelIndex, false);
+      await _channelSettingsStore.saveMCOtxtEnabled(channelIndex, false);
       await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
@@ -2688,18 +2688,18 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelSmazEnabled[channelIndex] = enabled;
     if (enabled) {
       _channelMcmpEnabled[channelIndex] = false;
-      _channelMcotxtEnabled[channelIndex] = false;
+      _channelMCOtxtEnabled[channelIndex] = false;
       _channelCyr2LatEnabled[channelIndex] = false;
       await _channelSettingsStore.saveMcmpEnabled(channelIndex, false);
-      await _channelSettingsStore.saveMcotxtEnabled(channelIndex, false);
+      await _channelSettingsStore.saveMCOtxtEnabled(channelIndex, false);
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
     await _channelSettingsStore.saveSmazEnabled(channelIndex, enabled);
     notifyListeners();
   }
 
-  Future<void> setChannelMcotxtEnabled(int channelIndex, bool enabled) async {
-    _channelMcotxtEnabled[channelIndex] = enabled;
+  Future<void> setChannelMCOtxtEnabled(int channelIndex, bool enabled) async {
+    _channelMCOtxtEnabled[channelIndex] = enabled;
     if (enabled) {
       _channelMcmpEnabled[channelIndex] = false;
       _channelSmazEnabled[channelIndex] = false;
@@ -2708,17 +2708,17 @@ class MeshCoreConnector extends ChangeNotifier {
       await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
-    await _channelSettingsStore.saveMcotxtEnabled(channelIndex, enabled);
+    await _channelSettingsStore.saveMCOtxtEnabled(channelIndex, enabled);
     notifyListeners();
   }
 
   Future<void> setContactMcmpEnabled(String contactKeyHex, bool enabled) async {
     _contactMcmpEnabled[contactKeyHex] = enabled;
     if (enabled) {
-      _contactMcotxtEnabled[contactKeyHex] = false;
+      _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
       _contactCyr2LatEnabled[contactKeyHex] = false;
-      await _contactSettingsStore.saveMcotxtEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
@@ -2745,21 +2745,21 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactSmazEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
-      _contactMcotxtEnabled[contactKeyHex] = false;
+      _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactCyr2LatEnabled[contactKeyHex] = false;
       await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveMcotxtEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
-  Future<void> setContactMcotxtEnabled(
+  Future<void> setContactMCOtxtEnabled(
     String contactKeyHex,
     bool enabled,
   ) async {
-    _contactMcotxtEnabled[contactKeyHex] = enabled;
+    _contactMCOtxtEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
@@ -2768,7 +2768,7 @@ class MeshCoreConnector extends ChangeNotifier {
       await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
-    await _contactSettingsStore.saveMcotxtEnabled(contactKeyHex, enabled);
+    await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
@@ -2777,10 +2777,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelCyr2LatEnabled[channelIndex] = enabled;
     if (enabled) {
       _channelMcmpEnabled[channelIndex] = false;
-      _channelMcotxtEnabled[channelIndex] = false;
+      _channelMCOtxtEnabled[channelIndex] = false;
       _channelSmazEnabled[channelIndex] = false;
       await _channelSettingsStore.saveMcmpEnabled(channelIndex, false);
-      await _channelSettingsStore.saveMcotxtEnabled(channelIndex, false);
+      await _channelSettingsStore.saveMCOtxtEnabled(channelIndex, false);
       await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
     }
     await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
@@ -2795,10 +2795,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
-      _contactMcotxtEnabled[contactKeyHex] = false;
+      _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
       await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveMcotxtEnabled(contactKeyHex, false);
+      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
       await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
@@ -3398,7 +3398,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled.clear();
     _channelMcmpVersion.clear();
     _channelMcmpUseSign.clear();
-    _channelMcotxtEnabled.clear();
+    _channelMCOtxtEnabled.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     _channelCyr2LatProfileId.clear();
@@ -3437,7 +3437,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final mcmpUseSign = await channelSettingsStore.loadMcmpUseSign(
       channelIndex,
     );
-    final mcotxtEnabled = await channelSettingsStore.loadMcotxtEnabled(
+    final mcotxtEnabled = await channelSettingsStore.loadMCOtxtEnabled(
       channelIndex,
     );
     final smazEnabled = await channelSettingsStore.loadSmazEnabled(
@@ -3465,7 +3465,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpEnabled[channelIndex] = mcmpEnabled;
     _channelMcmpVersion[channelIndex] = mcmpVersion == 3 ? 3 : 2;
     _channelMcmpUseSign[channelIndex] = mcmpUseSign;
-    _channelMcotxtEnabled[channelIndex] = mcotxtEnabled;
+    _channelMCOtxtEnabled[channelIndex] = mcotxtEnabled;
     _channelSmazEnabled[channelIndex] = smazEnabled;
     _channelCyr2LatEnabled[channelIndex] = cyr2LatEnabled;
     _channelSendingDelayEnabled[channelIndex] = sendingDelayEnabled;
@@ -6032,7 +6032,7 @@ class MeshCoreConnector extends ChangeNotifier {
     // Meta exactly as transmitted in the MCMP body (if any): reply anchors
     // and manual signature re-checks rely on the verbatim values.
     final mcmpMeta = McmpAppCodec.tryDecodeTextPayloadMessage(outboundText);
-    final mcotxtMeta = McotxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
+    final mcotxtMeta = MCOtxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
     final mcmpStatus = mcmpMeta == null
         ? McmpSignatureStatus.none
         : (mcmpMeta.isSigned
@@ -6610,7 +6610,7 @@ class MeshCoreConnector extends ChangeNotifier {
         : null;
     final mcotxtApplies =
         !hasExplicitMcoImageV3 &&
-        isChannelMcotxtEnabled(channel.index) &&
+        isChannelMCOtxtEnabled(channel.index) &&
         _isMcmpSignableText(text);
     final mcotxtTimestamp = mcotxtApplies
         ? DateTime.now().millisecondsSinceEpoch ~/ 1000
@@ -6684,7 +6684,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 text: text,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
-                mcotxtEnabled: isChannelMcotxtEnabled(channel.index),
+                mcotxtEnabled: isChannelMCOtxtEnabled(channel.index),
                 mcmpVersion: channelMcmpVersion(channel.index),
                 mcmpUseSign: channelMcmpUseSign(channel.index),
                 timestamp:
@@ -6727,7 +6727,7 @@ class MeshCoreConnector extends ChangeNotifier {
         outboundText = wrapped;
       }
     } else if (mcotxtApplies && binaryOutbound == null) {
-      outboundText = McotxtAppCodec.encodeTextTransport(
+      outboundText = MCOtxtAppCodec.encodeTextTransport(
         text: text,
         timestamp: mcotxtTimestamp!,
         replyAuthorName: mcmpReplyAuthorName,
@@ -6770,7 +6770,7 @@ class MeshCoreConnector extends ChangeNotifier {
             dataType: binaryOutbound!.dataType,
             payload: binaryOutbound.payload,
           )?.mcotxtMessage
-        : McotxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
+        : MCOtxtAppCodec.tryDecodeTextPayloadMessage(outboundText);
     final packetRegion = _displayPacketRegion(outgoingRegion);
     if (pendingMessageId != null) {
       _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
@@ -7687,7 +7687,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 text: text,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
-                mcotxtEnabled: isChannelMcotxtEnabled(channel.index),
+                mcotxtEnabled: isChannelMCOtxtEnabled(channel.index),
                 mcmpVersion: channelMcmpVersion(channel.index),
             mcmpUseSign: channelMcmpUseSign(channel.index),
             timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -7703,9 +7703,9 @@ class MeshCoreConnector extends ChangeNotifier {
           );
     if (binaryOutbound == null &&
         mcoImageV3 == null &&
-        isChannelMcotxtEnabled(channel.index) &&
+        isChannelMCOtxtEnabled(channel.index) &&
         _isMcmpSignableText(text)) {
-      outboundText = McotxtAppCodec.encodeTextTransport(
+      outboundText = MCOtxtAppCodec.encodeTextTransport(
         text: text,
         timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         replyAuthorName: replyToSenderName,
@@ -7743,7 +7743,7 @@ class MeshCoreConnector extends ChangeNotifier {
         _isMcmpSignableText(text);
     final mcotxtApplies =
         mcoImageV3 == null &&
-        isChannelMcotxtEnabled(channel.index) &&
+        isChannelMCOtxtEnabled(channel.index) &&
         _isMcmpSignableText(text);
     final baseMessage = ChannelMessage.outgoing(
       messageText,
@@ -10232,11 +10232,11 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
-  void _ensureContactMcotxtSettingLoaded(String contactKeyHex) {
-    if (_contactMcotxtEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMcotxtEnabled(contactKeyHex).then((enabled) {
-      if (_contactMcotxtEnabled[contactKeyHex] == enabled) return;
-      _contactMcotxtEnabled[contactKeyHex] = enabled;
+  void _ensureContactMCOtxtSettingLoaded(String contactKeyHex) {
+    if (_contactMCOtxtEnabled.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadMCOtxtEnabled(contactKeyHex).then((enabled) {
+      if (_contactMCOtxtEnabled[contactKeyHex] == enabled) return;
+      _contactMCOtxtEnabled[contactKeyHex] = enabled;
       notifyListeners();
     });
   }
@@ -10430,7 +10430,7 @@ class MeshCoreConnector extends ChangeNotifier {
         parseSharedContactText(trimmed) == null &&
         !MeshCompressor.instance.hasPrefix(trimmed) &&
         !McmpAppCodec.isTextPayload(trimmed) &&
-        !McotxtAppCodec.isTextPayload(trimmed);
+        !MCOtxtAppCodec.isTextPayload(trimmed);
   }
 
   /// The cyr2lat substitution table a channel's outgoing text is
@@ -10453,7 +10453,7 @@ class MeshCoreConnector extends ChangeNotifier {
     return _isMcmpSignableText(text) &&
         ((isChannelMcmpEnabled(channelIndex) &&
                 channelMcmpVersion(channelIndex) == 3) ||
-            isChannelMcotxtEnabled(channelIndex));
+            isChannelMCOtxtEnabled(channelIndex));
   }
 
   void _notifyMcmpSigningFailed() {
@@ -10555,10 +10555,10 @@ class MeshCoreConnector extends ChangeNotifier {
         replyTimestamp: effectiveReplyTimestamp,
       );
     }
-    if (isContactMcotxtEnabled(contact.publicKeyHex) &&
+    if (isContactMCOtxtEnabled(contact.publicKeyHex) &&
         _isMcmpSignableText(text)) {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      return McotxtAppCodec.encodeTextTransport(
+      return MCOtxtAppCodec.encodeTextTransport(
         text: text,
         timestamp: timestamp,
         senderName: contact.type == advTypeRoom ? _selfName ?? 'Me' : null,
@@ -10600,10 +10600,10 @@ class MeshCoreConnector extends ChangeNotifier {
         parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
         McmpAppCodec.isTextPayload(trimmed) ||
-        McotxtAppCodec.isTextPayload(trimmed);
+        MCOtxtAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
-      if (isContactMcotxtEnabled(contact.publicKeyHex)) {
-        return McotxtAppCodec.encodeTextTransport(
+      if (isContactMCOtxtEnabled(contact.publicKeyHex)) {
+        return MCOtxtAppCodec.encodeTextTransport(
           text: text,
           timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
           senderName: contact.type == advTypeRoom ? _selfName ?? 'Me' : null,
@@ -10687,10 +10687,10 @@ class MeshCoreConnector extends ChangeNotifier {
         parseSharedContactText(trimmed) != null ||
         MeshCompressor.instance.hasPrefix(trimmed) ||
         McmpAppCodec.isTextPayload(trimmed) ||
-        McotxtAppCodec.isTextPayload(trimmed);
+        MCOtxtAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
-      if (isChannelMcotxtEnabled(channelIndex)) {
-        return McotxtAppCodec.encodeTextTransport(
+      if (isChannelMCOtxtEnabled(channelIndex)) {
+        return MCOtxtAppCodec.encodeTextTransport(
           text: text,
           timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         );
@@ -10762,10 +10762,10 @@ class MeshCoreConnector extends ChangeNotifier {
           compressedBytes: mcmpV3TextBytes,
         );
       }
-    } else if (isContactMcotxtEnabled(contact.publicKeyHex) &&
-        McotxtAppCodec.isTextPayload(outboundText)) {
+    } else if (isContactMCOtxtEnabled(contact.publicKeyHex) &&
+        MCOtxtAppCodec.isTextPayload(outboundText)) {
       type = MessageCompressionType.mcotxt;
-      final mcotxtTextBytes = McotxtAppCodec.compressedTextBytesFromTextPayload(
+      final mcotxtTextBytes = MCOtxtAppCodec.compressedTextBytesFromTextPayload(
         outboundText,
       );
       if (mcotxtTextBytes != null) {
@@ -10793,7 +10793,7 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isMcmpEncodedText(String text) {
     return MeshCompressor.instance.hasPrefix(text) ||
         McmpAppCodec.isTextPayload(text) ||
-        McotxtAppCodec.isTextPayload(text);
+        MCOtxtAppCodec.isTextPayload(text);
   }
 
   _McmpReplyReference? _resolveMcmpReplyReference(
@@ -11154,8 +11154,8 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }
     }
-    if (isChannelMcotxtEnabled(channelIndex)) {
-      final mcotxtTextBytes = McotxtAppCodec.compressedTextBytesFromTextPayload(
+    if (isChannelMCOtxtEnabled(channelIndex)) {
+      final mcotxtTextBytes = MCOtxtAppCodec.compressedTextBytesFromTextPayload(
         outboundText,
       );
       if (mcotxtTextBytes != null) {
@@ -11167,7 +11167,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
     }
     if (binaryPayloadBytes != null) {
-      final type = isChannelMcotxtEnabled(channelIndex)
+      final type = isChannelMCOtxtEnabled(channelIndex)
           ? MessageCompressionType.mcotxt
           : MessageCompressionType.mcmp;
       return MessageCompressionMetadata.fromByteLengths(
@@ -11186,8 +11186,8 @@ class MeshCoreConnector extends ChangeNotifier {
     if (isChannelMcmpEnabled(channelIndex) &&
         _isMcmpEncodedText(outboundText)) {
       type = MessageCompressionType.mcmp;
-    } else if (isChannelMcotxtEnabled(channelIndex) &&
-        McotxtAppCodec.isTextPayload(outboundText)) {
+    } else if (isChannelMCOtxtEnabled(channelIndex) &&
+        MCOtxtAppCodec.isTextPayload(outboundText)) {
       type = MessageCompressionType.mcotxt;
     } else if (isChannelSmazEnabled(channelIndex) &&
         Smaz.hasPrefix(outboundText)) {
@@ -11248,7 +11248,7 @@ class MeshCoreConnector extends ChangeNotifier {
         return MessageCompressionMetadata.fromByteLengths(
           type: MessageCompressionType.mcotxt,
           originalBytes: utf8.encode(decoded.text!).length,
-          compressedBytes: McotxtAppCodec.compressedTextBytesFromBody(
+          compressedBytes: MCOtxtAppCodec.compressedTextBytesFromBody(
             decoded.body,
           ),
         );
@@ -11685,7 +11685,7 @@ class MeshCoreConnector extends ChangeNotifier {
           );
 
           final logRxMcmpMessage = decoded?.mcmpMessage;
-          final logRxMcotxtMessage = decoded?.mcotxtMessage;
+          final logRxMCOtxtMessage = decoded?.mcotxtMessage;
           final packetRegion = _resolvePacketRegion(packet);
           final unverifiedMessage = ChannelMessage(
             senderKey: null,
@@ -11700,16 +11700,16 @@ class MeshCoreConnector extends ChangeNotifier {
                 logRxMcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
             mcmpTimestamp:
                 logRxMcmpMessage?.timestamp ??
-                    logRxMcotxtMessage?.metadataTimestamp,
+                    logRxMCOtxtMessage?.metadataTimestamp,
             mcmpSenderName: logRxMcmpMessage?.senderName,
             mcmpIsSigned: logRxMcmpMessage?.isSigned ?? false,
             mcmpSignature: logRxMcmpMessage?.signature,
             mcmpReplyAuthorName:
                 logRxMcmpMessage?.replyAuthorName ??
-                logRxMcotxtMessage?.replyAuthorName,
+                logRxMCOtxtMessage?.replyAuthorName,
             mcmpReplyTimestamp:
                 logRxMcmpMessage?.replyTimestamp ??
-                logRxMcotxtMessage?.replyTimestamp,
+                logRxMCOtxtMessage?.replyTimestamp,
             timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
             isOutgoing: false,
             status: ChannelMessageStatus.sent,
@@ -12164,7 +12164,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _channelMcmpEnabled.remove(channel.index);
       _channelMcmpVersion.remove(channel.index);
       _channelMcmpUseSign.remove(channel.index);
-      _channelMcotxtEnabled.remove(channel.index);
+      _channelMCOtxtEnabled.remove(channel.index);
       _channelSmazEnabled.remove(channel.index);
       _channelCyr2LatEnabled.remove(channel.index);
       _channelCyr2LatProfileId.remove(channel.index);

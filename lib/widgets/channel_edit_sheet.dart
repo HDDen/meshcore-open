@@ -27,7 +27,7 @@ void showChannelEditSheet(
   bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
   int selectedMcmpVersion = connector.channelMcmpVersion(channel.index);
   bool mcmpUseSign = connector.channelMcmpUseSign(channel.index);
-  bool mcotxtEnabled = connector.isChannelMcotxtEnabled(channel.index);
+  bool mcotxtEnabled = connector.isChannelMCOtxtEnabled(channel.index);
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
@@ -214,7 +214,7 @@ void showChannelEditSheet(
                   ],
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Сжатие MCOtxt'),
+                    title: Text(sheetContext.l10n.channels_mcotxtCompression),
                     value: mcotxtEnabled,
                     onChanged: (value) => setSheetState(() {
                       mcotxtEnabled = value;
@@ -326,7 +326,7 @@ void showChannelEditSheet(
                               channel.index,
                               mcmpUseSign,
                             );
-                            await connector.setChannelMcotxtEnabled(
+                            await connector.setChannelMCOtxtEnabled(
                               channel.index,
                               mcotxtEnabled,
                             );

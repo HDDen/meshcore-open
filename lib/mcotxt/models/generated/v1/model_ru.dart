@@ -3,7 +3,7 @@
 // Generated with Python Unicode database 15.1.0.
 
 // Package import is intentional: trainer output is also copied into lib/ for runtime.
-import 'package:meshcore_open/mcotxt/models/mcotxt_model.dart';
+import 'package:meshcore_open/MCOtxt/models/mcotxt_model.dart';
 
 const String mcotxtRuWireHash = 'd123c4978a635bf1b26fe37261b7e96a0206b3ba15b2a80542e560f00d1eb193';
 
@@ -126,8 +126,8 @@ const Map<int, int> mcotxtRuUppercaseToLowercase = <int, int>{
   0x042F: 0x044F, // Я -> я
 };
 
-final McotxtLanguageModel mcotxtModelRu = McotxtLanguageModel(
-  id: McotxtLanguageId.ru,
+final MCOtxtLanguageModel mcotxtModelRu = MCOtxtLanguageModel(
+  id: MCOtxtLanguageId.ru,
   wireHash: mcotxtRuWireHash,
   primarySymbols: mcotxtRuPrimarySymbols,
   extensionSymbols: mcotxtRuExtensionSymbols,

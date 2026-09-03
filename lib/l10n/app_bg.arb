@@ -429,6 +429,7 @@
   "channels_smazCompression": "Компресия SMAZ",
   "channels_cyr2latCompression": "Компресия Cyr2Lat",
   "channels_cyr2latCompressionDscr": "Заменя някои кирилични символи с латиница при изпращане.",
+  "channels_mcotxtCompression": "Компресия MCOtxt",
   "channels_cyr2latSettingsHeading": "Настройки на Cyr2Lat",
   "channels_cyr2latSettingsSubheading": "Списък със замествания",
   "channels_cyr2latSettingsDscr": "Редактиране на JSON конфигурацията за заместване на символи",

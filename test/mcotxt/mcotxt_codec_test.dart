@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
-import 'package:meshcore_open/mcotxt/mcotxt.dart';
+import 'package:meshcore_open/MCOtxt/mcotxt.dart';
 
 void main() {
   group('MCOtxt UTF-8 fallback', () {
@@ -19,21 +19,21 @@ void main() {
       'Привет MeshCore 🙂 OK',
     ]) {
       test('roundtrips $text', () {
-        final encoded = McotxtCodec.encode(text);
-        final decoded = McotxtCodec.decode(
+        final encoded = MCOtxtCodec.encode(text);
+        final decoded = MCOtxtCodec.decode(
           encoded.data,
           bitLength: encoded.bitLength,
         );
 
-        expect(decoded.text, McotxtModelRegistry.normalizeInputText(text));
+        expect(decoded.text, MCOtxtModelRegistry.normalizeInputText(text));
         expect(encoded.decodedText, decoded.text);
       });
     }
 
     test('reports UTF8 fallback stats and never skips valid Unicode', () {
-      final encoded = McotxtCodec.encode(
+      final encoded = MCOtxtCodec.encode(
         'Hello 🙂👍🔥 world',
-        options: const McotxtEncodeOptions(collectStats: true),
+        options: const MCOtxtEncodeOptions(collectStats: true),
       );
       final stats = encoded.stats!;
 
@@ -59,13 +59,13 @@ void main() {
       final text = '${List.filled(64, 'hello ').join()}'
           '${List.filled(8, '🙂').join()}'
           '${List.filled(64, ' hello').join()}';
-      final encoded = McotxtCodec.encode(
+      final encoded = MCOtxtCodec.encode(
         text,
-        options: const McotxtEncodeOptions(collectStats: true),
+        options: const MCOtxtEncodeOptions(collectStats: true),
       );
 
       expect(encoded.decodedText, text);
-      expect(encoded.encodingMode, McotxtEncodingMode.mcotxt);
+      expect(encoded.encodingMode, MCOtxtEncodingMode.mcotxt);
       expect(encoded.stats!.utf8FallbackRuns, 1);
       expect(encoded.stats!.utf8FallbackBytes, 32);
     });
@@ -74,29 +74,29 @@ void main() {
       final text = '${List.filled(64, 'hello ').join()}'
           '${List.filled(9, '🙂').join()}'
           '${List.filled(64, ' hello').join()}';
-      final encoded = McotxtCodec.encode(
+      final encoded = MCOtxtCodec.encode(
         text,
-        options: const McotxtEncodeOptions(collectStats: true),
+        options: const MCOtxtEncodeOptions(collectStats: true),
       );
 
       expect(encoded.decodedText, text);
-      expect(encoded.encodingMode, McotxtEncodingMode.mcotxt);
+      expect(encoded.encodingMode, MCOtxtEncodingMode.mcotxt);
       expect(encoded.stats!.utf8FallbackRuns, 2);
       expect(encoded.stats!.utf8FallbackBytes, 36);
     });
 
     test('UTF8_RUN resets prediction context to START', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
       final previousRune = model.symbols.firstWhere((rune) {
         final index = model.symbolIndex(rune)!;
         return model.top4[index].first != model.startTop4.first;
       });
 
-      final writer = _writer(McotxtLanguageId.ru)
-        ..languageSymbol(McotxtLanguageId.ru, previousRune)
+      final writer = _writer(MCOtxtLanguageId.ru)
+        ..languageSymbol(MCOtxtLanguageId.ru, previousRune)
         ..utf8Run('🙂')
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -109,12 +109,12 @@ void main() {
     });
 
     test('UTF8_RUN preserves active language', () {
-      final en = McotxtModelRegistry.modelFor(McotxtLanguageId.en)!;
-      final writer = _writer(McotxtLanguageId.ru, b: McotxtLanguageId.en)
+      final en = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.en)!;
+      final writer = _writer(MCOtxtLanguageId.ru, b: MCOtxtLanguageId.en)
         ..toggle()
         ..utf8Run('🙂')
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -123,26 +123,26 @@ void main() {
     });
 
     test('truncated UTF8_RUN is rejected', () {
-      final writer = _writer(McotxtLanguageId.en)
+      final writer = _writer(MCOtxtLanguageId.en)
         ..writeBits(63, 6)
         ..writeBits(2, 3)
         ..writeBits(3, 5)
         ..writeBits(0xf0, 8);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.unexpectedEnd,
+            MCOtxtCodecError.unexpectedEnd,
           ),
         ),
       );
     });
 
     test('invalid UTF8_RUN bytes are rejected', () {
-      final writer = _writer(McotxtLanguageId.en)
+      final writer = _writer(MCOtxtLanguageId.en)
         ..writeBits(63, 6)
         ..writeBits(2, 3)
         ..writeBits(1, 5)
@@ -150,12 +150,12 @@ void main() {
         ..writeBits(0x28, 8);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.invalidUtf8Fallback,
+            MCOtxtCodecError.invalidUtf8Fallback,
           ),
         ),
       );
@@ -165,9 +165,9 @@ void main() {
   group('MCOtxt RAW_UTF8 mode', () {
     test('selects RAW_UTF8 when whole-message UTF-8 is smaller', () {
       const text = '你好世界🙂';
-      final encoded = McotxtCodec.encode(text);
+      final encoded = MCOtxtCodec.encode(text);
 
-      expect(encoded.encodingMode, McotxtEncodingMode.rawUtf8);
+      expect(encoded.encodingMode, MCOtxtEncodingMode.rawUtf8);
       expect(encoded.decodedText, text);
       expect(encoded.data.length, encoded.selectedBytes);
       expect(encoded.bitLength, encoded.selectedBitLength);
@@ -177,9 +177,9 @@ void main() {
     });
 
     test('prefers normal MCOtxt when payload bytes and bits tie-break allow it', () {
-      final encoded = McotxtCodec.encode('');
+      final encoded = MCOtxtCodec.encode('');
 
-      expect(encoded.encodingMode, McotxtEncodingMode.mcotxt);
+      expect(encoded.encodingMode, MCOtxtEncodingMode.mcotxt);
       expect(encoded.data.length, encoded.rawUtf8CandidateBytes);
       expect(encoded.bitLength, lessThan(encoded.rawUtf8CandidateBitLength));
     });
@@ -187,7 +187,7 @@ void main() {
     test('decodes byte-aligned RAW_UTF8 payload', () {
       const text = 'Привет 東京🙂';
       final writer = _rawUtf8Writer(text);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -199,40 +199,40 @@ void main() {
     });
 
     test('rejects non-zero RAW_UTF8 padding bits', () {
-      final writer = _McotxtTestWriter()
-        ..writeBits(McotxtCodec.version, 3)
+      final writer = _MCOtxtTestWriter()
+        ..writeBits(MCOtxtCodec.version, 3)
         ..writeBits(7, 3)
-        ..writeBits(McotxtModelRegistry.rawUtf8HeaderFormat, 3)
+        ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
         ..writeBits(1, 7);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.invalidRawUtf8,
+            MCOtxtCodecError.invalidRawUtf8,
           ),
         ),
       );
     });
 
     test('rejects invalid RAW_UTF8 bytes', () {
-      final writer = _McotxtTestWriter()
-        ..writeBits(McotxtCodec.version, 3)
+      final writer = _MCOtxtTestWriter()
+        ..writeBits(MCOtxtCodec.version, 3)
         ..writeBits(7, 3)
-        ..writeBits(McotxtModelRegistry.rawUtf8HeaderFormat, 3)
+        ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
         ..writeBits(0, 7)
         ..writeBits(0xc3, 8)
         ..writeBits(0x28, 8);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.invalidRawUtf8,
+            MCOtxtCodecError.invalidRawUtf8,
           ),
         ),
       );
@@ -241,12 +241,12 @@ void main() {
 
   group('MCOtxt app string candidates', () {
     test('uses container UTF-8 for short metadata when it is smaller', () {
-      final body = McotxtAppCodec.encodeBody(
+      final body = MCOtxtAppCodec.encodeBody(
         text: 'hello hello hello hello hello',
         timestamp: 1,
         senderName: 'A',
       );
-      final decoded = McotxtAppCodec.decodeBody(body);
+      final decoded = MCOtxtAppCodec.decodeBody(body);
 
       expect(decoded.senderName, 'A');
       expect(decoded.text, 'hello hello hello hello hello');
@@ -255,16 +255,16 @@ void main() {
 
     test('keeps MCOtxt for long compressible message text', () {
       final text = List.filled(80, 'hello ').join();
-      final body = McotxtAppCodec.encodeBody(text: text, timestamp: 1);
-      final decoded = McotxtAppCodec.decodeBody(body);
+      final body = MCOtxtAppCodec.encodeBody(text: text, timestamp: 1);
+      final decoded = MCOtxtAppCodec.decodeBody(body);
 
       expect(decoded.text, text);
       expect(body[5], 0);
     });
 
     test('keeps main message text in MCOtxt string mode', () {
-      final body = McotxtAppCodec.encodeBody(text: 'A', timestamp: 1);
-      final decoded = McotxtAppCodec.decodeBody(body);
+      final body = MCOtxtAppCodec.encodeBody(text: 'A', timestamp: 1);
+      final decoded = MCOtxtAppCodec.decodeBody(body);
 
       expect(decoded.text, 'A');
       expect(body[5], 0);
@@ -273,41 +273,41 @@ void main() {
 
   group('MCOtxt extended language header', () {
     test('normal header remains 9 bits for current inline languages', () {
-      final encoded = McotxtCodec.encode(
+      final encoded = MCOtxtCodec.encode(
         'Hello',
-        options: const McotxtEncodeOptions(languageA: McotxtLanguageId.en),
+        options: const MCOtxtEncodeOptions(languageA: MCOtxtLanguageId.en),
       );
 
       expect(encoded.bitStream.substring(0, 9), '001000111');
     });
 
     test('reserved extended header formats are rejected', () {
-      final writer = _McotxtTestWriter()
-        ..writeBits(McotxtCodec.version, 3)
+      final writer = _MCOtxtTestWriter()
+        ..writeBits(MCOtxtCodec.version, 3)
         ..writeBits(7, 3)
         ..writeBits(1, 3);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.unsupportedExtendedHeader,
+            MCOtxtCodecError.unsupportedExtendedHeader,
           ),
         ),
       );
     });
 
     test('SWITCH_OTHER_LANGUAGE uses 8-bit global language IDs', () {
-      final en = McotxtModelRegistry.modelFor(McotxtLanguageId.en)!;
-      final ru = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
-      final writer = _writer(McotxtLanguageId.en)
-        ..switchOther(McotxtLanguageId.ru.globalId)
+      final en = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.en)!;
+      final ru = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
+      final writer = _writer(MCOtxtLanguageId.en)
+        ..switchOther(MCOtxtLanguageId.ru.globalId)
         ..top4(0)
-        ..switchOther(McotxtLanguageId.en.globalId)
+        ..switchOther(MCOtxtLanguageId.en.globalId)
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -320,15 +320,15 @@ void main() {
     });
 
     test('unknown global language IDs are rejected', () {
-      final writer = _writer(McotxtLanguageId.en)..switchOther(254);
+      final writer = _writer(MCOtxtLanguageId.en)..switchOther(254);
 
       expect(
-        () => McotxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
         throwsA(
-          isA<McotxtCodecException>().having(
+          isA<MCOtxtCodecException>().having(
             (error) => error.code,
             'code',
-            McotxtCodecError.invalidOtherLanguage,
+            MCOtxtCodecError.invalidOtherLanguage,
           ),
         ),
       );
@@ -337,11 +337,11 @@ void main() {
 
   group('MCOtxt punctuation prediction context', () {
     test('message start uses startTop4', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
       expect(model.startTop4.first, isNot(model.punctStartTop4.first));
 
-      final writer = _writer(McotxtLanguageId.ru)..top4(0);
-      final decoded = McotxtCodec.decode(
+      final writer = _writer(MCOtxtLanguageId.ru)..top4(0);
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -350,15 +350,15 @@ void main() {
     });
 
     test('ordinary punctuation uses punctStartTop4', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
-      final spaceRank = model.punctStartTop4.indexOf(McotxtPunctuation.space);
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
+      final spaceRank = model.punctStartTop4.indexOf(MCOtxtPunctuation.space);
       expect(spaceRank, isNonNegative);
-      expect(model.startTop4[spaceRank], isNot(McotxtPunctuation.space));
+      expect(model.startTop4[spaceRank], isNot(MCOtxtPunctuation.space));
 
-      final writer = _writer(McotxtLanguageId.ru)
+      final writer = _writer(MCOtxtLanguageId.ru)
         ..punctuation(',')
         ..top4(spaceRank);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -367,16 +367,16 @@ void main() {
     });
 
     test('symbol after language SPACE uses regular top4 row', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
-      final spaceRank = model.punctStartTop4.indexOf(McotxtPunctuation.space);
-      final spaceIndex = model.symbolIndex(McotxtPunctuation.space)!;
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
+      final spaceRank = model.punctStartTop4.indexOf(MCOtxtPunctuation.space);
+      final spaceIndex = model.symbolIndex(MCOtxtPunctuation.space)!;
       final nextRune = model.top4[spaceIndex].first;
 
-      final writer = _writer(McotxtLanguageId.ru)
+      final writer = _writer(MCOtxtLanguageId.ru)
         ..punctuation(',')
         ..top4(spaceRank)
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -385,13 +385,13 @@ void main() {
     });
 
     test('newline resets to startTop4', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
       expect(model.startTop4.first, isNot(model.punctStartTop4.first));
 
-      final writer = _writer(McotxtLanguageId.ru)
+      final writer = _writer(MCOtxtLanguageId.ru)
         ..punctuation('\n')
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -400,11 +400,11 @@ void main() {
     });
 
     test('language toggle resets to startTop4 of the new language', () {
-      final en = McotxtModelRegistry.modelFor(McotxtLanguageId.en)!;
-      final writer = _writer(McotxtLanguageId.ru, b: McotxtLanguageId.en)
+      final en = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.en)!;
+      final writer = _writer(MCOtxtLanguageId.ru, b: MCOtxtLanguageId.en)
         ..toggle()
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -413,12 +413,12 @@ void main() {
     });
 
     test('reset context returns to startTop4', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.ru)!;
-      final writer = _writer(McotxtLanguageId.ru)
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.ru)!;
+      final writer = _writer(MCOtxtLanguageId.ru)
         ..punctuation(',')
         ..resetContext()
         ..top4(0);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -427,18 +427,18 @@ void main() {
     });
 
     test('shift after punctuation keeps after-punctuation prediction', () {
-      final model = McotxtModelRegistry.modelFor(McotxtLanguageId.en)!;
+      final model = MCOtxtModelRegistry.modelFor(MCOtxtLanguageId.en)!;
       final rank = model.punctStartTop4.indexWhere(
         (rune) => model.lowercaseToUppercase.containsKey(rune),
       );
       expect(rank, isNonNegative);
       expect(model.startTop4[rank], isNot(model.punctStartTop4[rank]));
 
-      final writer = _writer(McotxtLanguageId.en)
+      final writer = _writer(MCOtxtLanguageId.en)
         ..punctuation('.')
         ..shift()
         ..top4(rank);
-      final decoded = McotxtCodec.decode(
+      final decoded = MCOtxtCodec.decode(
         writer.toBytes(),
         bitLength: writer.bitLength,
       );
@@ -455,8 +455,8 @@ void main() {
         'Привет MeshCore!',
         '. Hello',
       ]) {
-        final encoded = McotxtCodec.encode(text);
-        final decoded = McotxtCodec.decode(
+        final encoded = MCOtxtCodec.encode(text);
+        final decoded = MCOtxtCodec.decode(
           encoded.data,
           bitLength: encoded.bitLength,
         );
@@ -467,18 +467,18 @@ void main() {
   });
 }
 
-_McotxtTestWriter _writer(McotxtLanguageId a, {McotxtLanguageId? b}) {
-  return _McotxtTestWriter()
-    ..writeBits(McotxtCodec.version, 3)
+_MCOtxtTestWriter _writer(MCOtxtLanguageId a, {MCOtxtLanguageId? b}) {
+  return _MCOtxtTestWriter()
+    ..writeBits(MCOtxtCodec.version, 3)
     ..writeBits(a.wireId, 3)
-    ..writeBits(b?.wireId ?? McotxtModelRegistry.languageNoneWireId, 3);
+    ..writeBits(b?.wireId ?? MCOtxtModelRegistry.languageNoneWireId, 3);
 }
 
-_McotxtTestWriter _rawUtf8Writer(String text) {
-  final writer = _McotxtTestWriter()
-    ..writeBits(McotxtCodec.version, 3)
+_MCOtxtTestWriter _rawUtf8Writer(String text) {
+  final writer = _MCOtxtTestWriter()
+    ..writeBits(MCOtxtCodec.version, 3)
     ..writeBits(7, 3)
-    ..writeBits(McotxtModelRegistry.rawUtf8HeaderFormat, 3)
+    ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
     ..writeBits(0, 7);
   for (final byte in utf8.encode(text)) {
     writer.writeBits(byte, 8);
@@ -486,7 +486,7 @@ _McotxtTestWriter _rawUtf8Writer(String text) {
   return writer;
 }
 
-class _McotxtTestWriter extends BitWriter {
+class _MCOtxtTestWriter extends BitWriter {
   void top4(int rank) {
     writeBit(0);
     writeBits(rank, 2);
@@ -495,14 +495,14 @@ class _McotxtTestWriter extends BitWriter {
   void punctuation(String value) {
     final runes = value.runes.toList(growable: false);
     expect(runes, hasLength(1));
-    final id = McotxtPunctuation.idByRune[runes.single];
+    final id = MCOtxtPunctuation.idByRune[runes.single];
     expect(id, isNotNull);
     writeBits(6, 3);
     writeBits(id!, 5);
   }
 
-  void languageSymbol(McotxtLanguageId language, int rune) {
-    final model = McotxtModelRegistry.modelFor(language)!;
+  void languageSymbol(MCOtxtLanguageId language, int rune) {
+    final model = MCOtxtModelRegistry.modelFor(language)!;
     final primaryId = model.primaryId(rune);
     if (primaryId != null) {
       writeBits(2, 2);

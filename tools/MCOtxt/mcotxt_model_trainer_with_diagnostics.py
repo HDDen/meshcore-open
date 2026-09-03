@@ -45,7 +45,7 @@ LF = 0x000A
 
 # Source-of-truth fallback copied from the MCOtxt v1 specification discussed for
 # the codec. When possible, pass --punctuation-dart pointing at the actual
-# lib/mcotxt/models/punctuation.dart; the trainer will verify that the Dart file
+# lib/MCOtxt/models/punctuation.dart; the trainer will verify that the Dart file
 # contains an equivalent 32-codepoint list and will fail on mismatch.
 PUNCTUATION_V1: Tuple[int, ...] = (
     0x0020,  #  0 SPACE
@@ -1388,8 +1388,8 @@ def render_unavailable_dart(language: LanguageDefinition, import_path: str) -> s
     if import_path:
         lines += [f"import '{import_path}';", ""]
     lines += [
-        f"final McotxtLanguageModel mcotxtModel{camel} = McotxtLanguageModel.unavailable(",
-        f"  id: McotxtLanguageId.{code},",
+        f"final MCOtxtLanguageModel mcotxtModel{camel} = MCOtxtLanguageModel.unavailable(",
+        f"  id: MCOtxtLanguageId.{code},",
         ");",
         "",
     ]
@@ -1520,8 +1520,8 @@ def render_dart(model: Model, import_path: str, variable_name: Optional[str]) ->
     lines.append("};")
     lines.append("")
 
-    lines.append(f"final McotxtLanguageModel {var_name} = McotxtLanguageModel(")
-    lines.append(f"  id: McotxtLanguageId.{code},")
+    lines.append(f"final MCOtxtLanguageModel {var_name} = MCOtxtLanguageModel(")
+    lines.append(f"  id: MCOtxtLanguageId.{code},")
     lines.append(f"  wireHash: {prefix}WireHash,")
     lines.append(f"  primarySymbols: {prefix}PrimarySymbols,")
     lines.append(f"  extensionSymbols: {prefix}ExtensionSymbols,")
@@ -2183,19 +2183,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "Directory for generated artifacts. By default the trainer finds "
             "the meshcore-open project root (pubspec.yaml) and writes to "
             "tools/MCOtxt/generated. The Dart model is additionally copied to "
-            "lib/mcotxt/models/generated/v<version> for runtime compilation."
+            "lib/MCOtxt/models/generated/v<version> for runtime compilation."
         ),
     )
     p.add_argument(
         "--dart-import",
-        default="package:meshcore_open/mcotxt/models/mcotxt_model.dart",
+        default="package:meshcore_open/MCOtxt/models/mcotxt_model.dart",
         help=(
             "Import emitted at top of generated Dart model. "
             "Defaults to the meshcore_open package import so generated files "
             "compile from tools/ as well as lib/. Use an empty string to omit."
         ),
     )
-    p.add_argument("--dart-variable", default=None, help="Override generated McotxtLanguageModel variable name")
+    p.add_argument("--dart-variable", default=None, help="Override generated MCOtxtLanguageModel variable name")
     p.add_argument(
         "--punctuation-dart",
         default=None,
@@ -2307,7 +2307,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     report_path = out_dir / f"{stem}_report.md"
 
     dart_runtime_dir = (
-        project_root / "lib" / "mcotxt" / "models" / "generated" / f"v{MCOTXT_VERSION}"
+        project_root / "lib" / "MCOtxt" / "models" / "generated" / f"v{MCOTXT_VERSION}"
     )
     dart_runtime_dir.mkdir(parents=True, exist_ok=True)
     dart_runtime_path = dart_runtime_dir / dart_path.name

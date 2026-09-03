@@ -2287,7 +2287,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         : null;
     if (isRoom) {
       connector.ensureContactMcmpSettingLoaded(contact.publicKeyHex);
-      connector.ensureContactMcotxtSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactMCOtxtSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
       connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSendingDelaySettingLoaded(contact.publicKeyHex);
@@ -2296,7 +2296,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool mcotxtEnabled =
-        isRoom && connector.isContactMcotxtEnabled(contact.publicKeyHex);
+        isRoom && connector.isContactMCOtxtEnabled(contact.publicKeyHex);
     int selectedMcmpVersion = isRoom
         ? connector.contactMcmpVersion(contact.publicKeyHex)
         : 2;
@@ -2399,7 +2399,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
-                        connector.setContactMcotxtEnabled(
+                        connector.setContactMCOtxtEnabled(
                           contact.publicKeyHex,
                           false,
                         );
@@ -2492,7 +2492,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
-                        connector.setContactMcotxtEnabled(
+                        connector.setContactMCOtxtEnabled(
                           contact.publicKeyHex,
                           false,
                         );
@@ -2527,7 +2527,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
-                        connector.setContactMcotxtEnabled(
+                        connector.setContactMCOtxtEnabled(
                           contact.publicKeyHex,
                           false,
                         );
@@ -2577,10 +2577,10 @@ class _ContactsScreenState extends State<ContactsScreen>
                     ),
                   ],
                   SwitchListTile(
-                    title: const Text('Сжатие MCOtxt'),
+                    title: Text(context.l10n.channels_mcotxtCompression),
                     value: mcotxtEnabled,
                     onChanged: (value) {
-                      connector.setContactMcotxtEnabled(
+                      connector.setContactMCOtxtEnabled(
                         contact.publicKeyHex,
                         value,
                       );

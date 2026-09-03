@@ -6,7 +6,7 @@ import 'smaz.dart';
 class DecodedMessageText {
   final String text;
   final DecodedMcmpAppMessage? mcmpMessage;
-  final DecodedMcotxtAppMessage? mcotxtMessage;
+  final DecodedMCOtxtAppMessage? mcotxtMessage;
 
   const DecodedMessageText({
     required this.text,
@@ -28,7 +28,7 @@ class MessageTextCodec {
         mcmpMessage: mcmpMessage,
       );
     }
-    final mcotxtMessage = McotxtAppCodec.tryDecodeTextPayloadMessage(text);
+    final mcotxtMessage = MCOtxtAppCodec.tryDecodeTextPayloadMessage(text);
     if (mcotxtMessage != null) {
       return DecodedMessageText(
         text: mcotxtMessage.text,

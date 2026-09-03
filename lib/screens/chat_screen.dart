@@ -1045,7 +1045,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final key = widget.contact.publicKeyHex;
     final usesEncoding =
         connector.isContactMcmpEnabled(key) ||
-        connector.isContactMcotxtEnabled(key) ||
+        connector.isContactMCOtxtEnabled(key) ||
         connector.isContactSmazEnabled(key) ||
         connector.isContactCyr2LatEnabled(key);
     if (!usesEncoding) return null;
@@ -1563,7 +1563,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ? math.min(maxContactMessageBytes(), maxRoomServerTextBytes)
         : maxContactMessageBytes();
     if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex) ||
-        connector.isContactMcotxtEnabled(widget.contact.publicKeyHex)) {
+        connector.isContactMCOtxtEnabled(widget.contact.publicKeyHex)) {
       return math.max(0, limit - 2);
     }
     return limit;
@@ -1697,7 +1697,7 @@ class _ChatScreenState extends State<ChatScreen> {
       listen: false,
     );
     connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
-    connector.ensureContactMcotxtSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactMCOtxtSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSendingDelaySettingLoaded(
@@ -1706,7 +1706,7 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
-    bool mcotxtEnabled = connector.isContactMcotxtEnabled(contact.publicKeyHex);
+    bool mcotxtEnabled = connector.isContactMCOtxtEnabled(contact.publicKeyHex);
     int selectedMcmpVersion = connector.contactMcmpVersion(
       contact.publicKeyHex,
     );
@@ -1761,7 +1761,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         contact.publicKeyHex,
                         false,
                       );
-                      connector.setContactMcotxtEnabled(
+                      connector.setContactMCOtxtEnabled(
                         contact.publicKeyHex,
                         false,
                       );
@@ -1852,7 +1852,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       false,
                     );
-                    connector.setContactMcotxtEnabled(
+                    connector.setContactMCOtxtEnabled(
                       contact.publicKeyHex,
                       false,
                     );
@@ -1885,7 +1885,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       false,
                     );
-                    connector.setContactMcotxtEnabled(
+                    connector.setContactMCOtxtEnabled(
                       contact.publicKeyHex,
                       false,
                     );
@@ -1936,10 +1936,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Сжатие MCOtxt'),
+                  title: Text(context.l10n.channels_mcotxtCompression),
                   value: mcotxtEnabled,
                   onChanged: (value) {
-                    connector.setContactMcotxtEnabled(
+                    connector.setContactMCOtxtEnabled(
                       contact.publicKeyHex,
                       value,
                     );

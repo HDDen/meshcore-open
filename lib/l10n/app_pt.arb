@@ -429,6 +429,7 @@
   "channels_smazCompression": "Compressão SMAZ",
   "channels_cyr2latCompression": "Compressão Cyr2Lat",
   "channels_cyr2latCompressionDscr": "Substitui alguns caracteres cirílicos por caracteres latinos ao enviar.",
+  "channels_mcotxtCompression": "Compressão MCOtxt",
   "channels_cyr2latSettingsHeading": "Configuração do Cyr2Lat",
   "channels_cyr2latSettingsSubheading": "Lista de substituições",
   "channels_cyr2latSettingsDscr": "Editar a configuração JSON de substituição de caracteres",

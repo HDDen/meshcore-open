@@ -269,7 +269,7 @@ class MessageRetryService extends ChangeNotifier {
           compressionType == MessageCompressionType.mcotxt ||
           MeshCompressor.instance.hasPrefix(effectiveOutbound) ||
           McmpAppCodec.isTextPayload(effectiveOutbound) ||
-          McotxtAppCodec.isTextPayload(effectiveOutbound),
+          MCOtxtAppCodec.isTextPayload(effectiveOutbound),
       compressionType: compressionType,
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,

@@ -1,6 +1,6 @@
 # MCOtxt v1 model trainer
 
-`mcotxt_model_trainer.py` строит статическую TOP-4 модель одного языка MCOtxt v1 и экспортирует её в Dart и C/C++/nRF.
+`MCOtxt_model_trainer_with_diagnostics.py` строит статическую TOP-4 модель одного языка MCOtxt v1 и экспортирует её в Dart и C/C++/nRF.
 
 ## Требования
 
@@ -55,13 +55,13 @@ TXT тоже поддерживается. В режиме `lines` каждая 
 ## Запуск с отдельным validation corpus
 
 ```powershell
-python .\mcotxt_model_trainer.py `
+python .\MCOtxt_model_trainer_with_diagnostics.py `
   --lang ru `
   --train .\corpora\ru\train `
   --validation .\corpora\ru\validation `
   --format auto `
   --out-dir .\generated\ru `
-  --punctuation-dart O:\_git\meshcore-open\lib\mcotxt\models\punctuation.dart `
+  --punctuation-dart O:\_git\meshcore-open\lib\MCOtxt\models\punctuation.dart `
   --debug-json
 ```
 
@@ -72,7 +72,7 @@ python .\mcotxt_model_trainer.py `
 Если `--validation` не указан, по умолчанию 20% сообщений детерминированно уходят в validation через SHA-256:
 
 ```powershell
-python .\mcotxt_model_trainer.py `
+python .\MCOtxt_model_trainer_with_diagnostics.py `
   --lang ru `
   --train .\corpora\ru `
   --validation-ratio 0.20 `
@@ -103,7 +103,7 @@ Dart-файл содержит:
 - runtime-compatible `startTop4` codepoints;
 - runtime-compatible nested `top4` codepoints;
 - `uppercaseToLowercase` codepoint map;
-- готовый `McotxtLanguageModel`.
+- готовый `MCOtxtLanguageModel`.
 
 По умолчанию генерируется:
 
@@ -175,7 +175,7 @@ uppercase_map        uppercase uint16_t + lowercaseSymbolIndex uint8_t
 Но **источником истины должен быть ваш `punctuation.dart`**. Поэтому перед freeze модели рекомендуется всегда запускать с:
 
 ```text
---punctuation-dart O:\_git\meshcore-open\lib\mcotxt\models\punctuation.dart
+--punctuation-dart O:\_git\meshcore-open\lib\MCOtxt\models\punctuation.dart
 ```
 
 Trainer ищет в Dart-файле 32-элементный integer list и завершает работу ошибкой, если он не совпадает с ожидаемой таблицей. Если текущий `punctuation.dart` строит список не литералами, а выражениями/константами, best-effort parser потребуется немного адаптировать.

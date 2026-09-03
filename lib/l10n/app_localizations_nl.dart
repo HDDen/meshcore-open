@@ -1381,6 +1381,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'Vervangt sommige Cyrillische tekens door Latijnse tekens bij het verzenden.';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt-compressie';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Instellingen Cyr2Lat';
 
   @override

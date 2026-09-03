@@ -3664,7 +3664,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             .toDouble();
     final usesChannelEncoding =
         connector.isChannelMcmpEnabled(widget.channel.index) ||
-        connector.isChannelMcotxtEnabled(widget.channel.index) ||
+        connector.isChannelMCOtxtEnabled(widget.channel.index) ||
         connector.isChannelSmazEnabled(widget.channel.index) ||
         connector.isChannelCyr2LatEnabled(widget.channel.index);
 
@@ -4149,7 +4149,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ) {
     if (ChannelBinaryDataHelper.canSend &&
         (connector.isChannelMcmpEnabled(widget.channel.index) ||
-            connector.isChannelMcotxtEnabled(widget.channel.index))) {
+            connector.isChannelMCOtxtEnabled(widget.channel.index))) {
       return _maxChannelBinaryPayloadBytes(settings);
     }
     return _maxChannelInputBytes(connector, settings);
@@ -4171,7 +4171,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       senderName,
     );
     if (imagePayloadBytes != null) return imagePayloadBytes;
-    if (connector.isChannelMcotxtEnabled(widget.channel.index)) {
+    if (connector.isChannelMCOtxtEnabled(widget.channel.index)) {
       return ChannelBinaryDataHelper.mcotxtAppPayloadLength(
         text,
         senderName,

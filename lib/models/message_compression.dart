@@ -12,7 +12,7 @@ extension MessageCompressionTypeLabel on MessageCompressionType {
     MessageCompressionType.mcmp => 'mcmp',
     MessageCompressionType.smaz => 'smaz',
     MessageCompressionType.cyr2lat => 'cyr2lat',
-    MessageCompressionType.mcotxt => 'mcotxt',
+    MessageCompressionType.mcotxt => 'MCOtxt',
   };
 
   static MessageCompressionType? fromJson(dynamic value) {
@@ -46,7 +46,7 @@ class MessageCompressionMetadata {
         MeshCompressor.instance.hasPrefix(encodedText) ||
             McmpAppCodec.isTextPayload(encodedText)
         ? MessageCompressionType.mcmp
-        : McotxtAppCodec.isTextPayload(encodedText)
+        : MCOtxtAppCodec.isTextPayload(encodedText)
         ? MessageCompressionType.mcotxt
         : Smaz.hasPrefix(encodedText)
         ? MessageCompressionType.smaz
@@ -66,7 +66,7 @@ class MessageCompressionMetadata {
         compressedBytes: mcmpV3TextBytes,
       );
     }
-    final mcotxtTextBytes = McotxtAppCodec.compressedTextBytesFromTextPayload(
+    final mcotxtTextBytes = MCOtxtAppCodec.compressedTextBytesFromTextPayload(
       encodedText,
     );
     if (mcotxtTextBytes != null) {

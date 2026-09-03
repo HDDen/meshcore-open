@@ -2566,6 +2566,12 @@ abstract class AppLocalizations {
   /// **'Replaces some Cyrillic characters with Latin characters when sending.'**
   String get channels_cyr2latCompressionDscr;
 
+  /// No description provided for @channels_mcotxtCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOtxt compression'**
+  String get channels_mcotxtCompression;
+
   /// No description provided for @channels_cyr2latSettingsHeading.
   ///
   /// In en, this message translates to:

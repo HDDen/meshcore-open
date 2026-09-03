@@ -11,7 +11,7 @@ def find_root() -> Path:
         if (candidate / "pubspec.yaml").is_file():
             return candidate
     for candidate in (Path.cwd().resolve(), *Path.cwd().resolve().parents):
-        if (candidate / "lib" / "mcotxt" / "models" / "mcotxt_model_registry.dart").is_file():
+        if (candidate / "lib" / "MCOtxt" / "models" / "mcotxt_model_registry.dart").is_file():
             return candidate
     raise SystemExit("Cannot locate project root")
 

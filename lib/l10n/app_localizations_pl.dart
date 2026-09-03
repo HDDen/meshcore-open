@@ -1400,6 +1400,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Zastępuje niektóre znaki cyrylicy alfabetem łacińskim podczas wysyłania.';
 
   @override
+  String get channels_mcotxtCompression => 'Kompresja MCOtxt';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Ustawienia Cyr2Lat';
 
   @override

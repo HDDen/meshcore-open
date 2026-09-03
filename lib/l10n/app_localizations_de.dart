@@ -1391,6 +1391,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ersetzt beim Senden einige kyrillische Zeichen durch lateinische Zeichen.';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt-Komprimierung';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Cyr2Lat-Einstellungen';
 
   @override

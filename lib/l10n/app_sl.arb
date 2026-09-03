@@ -429,6 +429,7 @@
   "channels_smazCompression": "Kompresija SMAZ",
   "channels_cyr2latCompression": "Kompresija Cyr2Lat",
   "channels_cyr2latCompressionDscr": "Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.",
+  "channels_mcotxtCompression": "Kompresija MCOtxt",
   "channels_cyr2latSettingsHeading": "Nastavitve Cyr2Lat",
   "channels_cyr2latSettingsSubheading": "Seznam zamenjav",
   "channels_cyr2latSettingsDscr": "Uredi JSON-konfiguracijo zamenjav znakov",

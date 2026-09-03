@@ -1386,6 +1386,9 @@ class AppLocalizationsHu extends AppLocalizations {
       'Küldéskor egyes cirill karaktereket latin karakterekre cserél.';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt tömörítés';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Cyr2Lat beállítás';
 
   @override

@@ -12,8 +12,8 @@ class BitReader {
     required int bitLength,
   }) : _bitLength = bitLength {
     if (bitLength < 0 || bitLength > _data.length * 8) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Invalid bitLength',
       );
     }
@@ -25,14 +25,14 @@ class BitReader {
 
   int readBits(int count) {
     if (count < 0 || count > 32) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Invalid bit field length',
       );
     }
     if (_bitIndex + count > _bitLength) {
-      throw const McotxtCodecException(
-        McotxtCodecError.unexpectedEnd,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.unexpectedEnd,
         'Unexpected end of MCOtxt bitstream',
       );
     }

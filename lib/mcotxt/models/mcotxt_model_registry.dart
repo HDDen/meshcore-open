@@ -7,7 +7,7 @@ import 'generated/v1/model_it.dart';
 import 'generated/v1/model_ru.dart';
 import 'generated/v1/model_uk.dart';
 
-class McotxtModelRegistry {
+class MCOtxtModelRegistry {
   static const int languageNoneWireId = 7;
   static const int extendedLanguageHeaderWireId = 7;
   static const int extendedLanguagePair8Format = 0;
@@ -18,7 +18,7 @@ class McotxtModelRegistry {
   // All reserved v1 language IDs have a static generated artifact.
   // Missing trained languages are represented by explicit unavailable models;
   // runtime never derives statistical tables from embedded training strings.
-  static final List<McotxtLanguageModel> allModels = <McotxtLanguageModel>[
+  static final List<MCOtxtLanguageModel> allModels = <MCOtxtLanguageModel>[
     mcotxtModelEn,
     mcotxtModelRu,
     mcotxtModelFr,
@@ -30,42 +30,42 @@ class McotxtModelRegistry {
 
   // Historical name retained for codec callers: only wire-usable models are
   // exposed here, so unavailable placeholders never enter encoder search.
-  static final List<McotxtLanguageModel> builtinModels =
-      List<McotxtLanguageModel>.unmodifiable(
+  static final List<MCOtxtLanguageModel> builtinModels =
+      List<MCOtxtLanguageModel>.unmodifiable(
         allModels.where((model) => model.available),
       );
 
-  static final Map<McotxtLanguageId, McotxtLanguageModel> _allModelsById =
-      <McotxtLanguageId, McotxtLanguageModel>{
+  static final Map<MCOtxtLanguageId, MCOtxtLanguageModel> _allModelsById =
+      <MCOtxtLanguageId, MCOtxtLanguageModel>{
         for (final model in allModels) model.id: model,
       };
 
-  static final Map<int, McotxtLanguageModel> _modelsByGlobalId =
-      <int, McotxtLanguageModel>{
+  static final Map<int, MCOtxtLanguageModel> _modelsByGlobalId =
+      <int, MCOtxtLanguageModel>{
         for (final model in builtinModels) model.globalId: model,
       };
 
-  static McotxtLanguageModel? declarationFor(McotxtLanguageId? id) {
+  static MCOtxtLanguageModel? declarationFor(MCOtxtLanguageId? id) {
     if (id == null) return null;
     return _allModelsById[id];
   }
 
-  static bool isAvailable(McotxtLanguageId? id) =>
+  static bool isAvailable(MCOtxtLanguageId? id) =>
       declarationFor(id)?.available ?? false;
 
-  static McotxtLanguageModel? modelFor(McotxtLanguageId? id) {
+  static MCOtxtLanguageModel? modelFor(MCOtxtLanguageId? id) {
     final model = declarationFor(id);
     return model != null && model.available ? model : null;
   }
 
-  static McotxtLanguageModel? modelForGlobalId(int? globalId) {
+  static MCOtxtLanguageModel? modelForGlobalId(int? globalId) {
     if (globalId == null || globalId == globalLanguageNoneId) return null;
     return _modelsByGlobalId[globalId];
   }
 
-  static McotxtLanguageId? languageForGlobalId(int? globalId) {
+  static MCOtxtLanguageId? languageForGlobalId(int? globalId) {
     if (globalId == null || globalId == globalLanguageNoneId) return null;
-    return McotxtLanguageId.fromGlobalId(globalId);
+    return MCOtxtLanguageId.fromGlobalId(globalId);
   }
 
   static List<int> get availableGlobalLanguageIds =>

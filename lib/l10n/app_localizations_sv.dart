@@ -1370,6 +1370,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ersätter vissa kyrilliska tecken med latinska tecken när du skickar.';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt-komprimering';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Inställningar för Cyr2Lat';
 
   @override

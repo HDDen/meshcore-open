@@ -23,7 +23,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForMcmpVersion => '$_mcmpVersionKeyPrefix$publicKeyHex';
   String get keyForMcmpUseSign => '$_mcmpUseSignKeyPrefix$publicKeyHex';
-  String get keyForMcotxt => '$_mcotxtKeyPrefix$publicKeyHex';
+  String get keyForMCOtxt => '$_mcotxtKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
@@ -166,18 +166,18 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         write: PrefsManager.instance.setBool,
       );
 
-  Future<bool> loadMcotxtEnabled(int channelIndex) async =>
+  Future<bool> loadMCOtxtEnabled(int channelIndex) async =>
       await _loadValue<bool>(
-        nameKeyPrefix: keyForMcotxt,
+        nameKeyPrefix: keyForMCOtxt,
         channelIndex: channelIndex,
         read: PrefsManager.instance.getBool,
         write: PrefsManager.instance.setBool,
       ) ??
       false;
 
-  Future<void> saveMcotxtEnabled(int channelIndex, bool enabled) =>
+  Future<void> saveMCOtxtEnabled(int channelIndex, bool enabled) =>
       _saveValue<bool>(
-        nameKeyPrefix: keyForMcotxt,
+        nameKeyPrefix: keyForMCOtxt,
         channelIndex: channelIndex,
         value: enabled,
         write: PrefsManager.instance.setBool,
@@ -286,7 +286,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
       keyForMcmp,
       keyForMcmpVersion,
       keyForMcmpUseSign,
-      keyForMcotxt,
+      keyForMCOtxt,
       keyForCyr2Lat,
       '${keyForCyr2Lat}profile_',
       keyForSendingDelay,

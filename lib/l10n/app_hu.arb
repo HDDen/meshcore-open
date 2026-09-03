@@ -553,6 +553,7 @@
   "channels_smazCompression": "SMAZ tömörítés",
   "channels_cyr2latCompression": "Cyr2Lat tömörítés",
   "channels_cyr2latCompressionDscr": "Küldéskor egyes cirill karaktereket latin karakterekre cserél.",
+  "channels_mcotxtCompression": "MCOtxt tömörítés",
   "channels_cyr2latSettingsHeading": "Cyr2Lat beállítás",
   "channels_cyr2latSettingsSubheading": "A helyettesítők listája",
   "channels_cyr2latSettingsDscr": "Szerkessze a karaktercsere JSON-konfigurációját",

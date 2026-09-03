@@ -21,7 +21,7 @@ class ContactSettingsStore {
   String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
   String get keyForMcmpVersion => '$_mcmpVersionKeyPrefix$publicKeyHex';
   String get keyForMcmpUseSign => '$_mcmpUseSignKeyPrefix$publicKeyHex';
-  String get keyForMcotxt => '$_mcotxtKeyPrefix$publicKeyHex';
+  String get keyForMCOtxt => '$_mcotxtKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
@@ -152,7 +152,7 @@ class ContactSettingsStore {
     await prefs.setBool(key, useSign);
   }
 
-  Future<bool> loadMcotxtEnabled(String contactKeyHex) async {
+  Future<bool> loadMCOtxtEnabled(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load contact MCOtxt settings.',
@@ -160,11 +160,11 @@ class ContactSettingsStore {
       return false;
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyForMcotxt$contactKeyHex';
+    final key = '$keyForMCOtxt$contactKeyHex';
     return prefs.getBool(key) ?? false;
   }
 
-  Future<void> saveMcotxtEnabled(String contactKeyHex, bool enabled) async {
+  Future<void> saveMCOtxtEnabled(String contactKeyHex, bool enabled) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot save contact MCOtxt settings.',
@@ -172,7 +172,7 @@ class ContactSettingsStore {
       return;
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyForMcotxt$contactKeyHex';
+    final key = '$keyForMCOtxt$contactKeyHex';
     await prefs.setBool(key, enabled);
   }
 

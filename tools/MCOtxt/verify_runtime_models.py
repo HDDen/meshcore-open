@@ -13,7 +13,7 @@ def find_root() -> Path:
     for candidate in (here.parent,*here.parents):
         if (candidate/"pubspec.yaml").is_file(): return candidate
     for candidate in (Path.cwd().resolve(),*Path.cwd().resolve().parents):
-        if (candidate/"lib/mcotxt/models/mcotxt_model_registry.dart").is_file(): return candidate
+        if (candidate/"lib/MCOtxt/models/mcotxt_model_registry.dart").is_file(): return candidate
     raise SystemExit("Cannot locate project root")
 
 
@@ -53,7 +53,7 @@ def canonical_hash_from_c(text:str, lang:str, language_id:int)->str:
 
 
 def main()->int:
-    root=find_root(); runtime=root/f"lib/mcotxt/models/generated/v{VERSION}"; gen=root/"tools/MCOtxt/generated"; manifest_path=gen/"model_manifest.json"; registry=root/"lib/mcotxt/models/mcotxt_model_registry.dart"
+    root=find_root(); runtime=root/f"lib/MCOtxt/models/generated/v{VERSION}"; gen=root/"tools/MCOtxt/generated"; manifest_path=gen/"model_manifest.json"; registry=root/"lib/MCOtxt/models/mcotxt_model_registry.dart"
     manifest=json.loads(manifest_path.read_text(encoding="utf-8")); reg=registry.read_text(encoding="utf-8"); ok=True
     if manifest.get("codecVersion")!=VERSION: print("MANIFEST ERROR: codecVersion mismatch"); ok=False
     for lang in LANGS:
@@ -75,7 +75,7 @@ def main()->int:
                 print(f"HASH MISMATCH {lang.upper()}: manifest/Dart/C disagree"); ok=False
             else: print(f"OK {lang.upper()}: available, wire hash {expected[:12]}…")
         else:
-            if "McotxtLanguageModel.unavailable" not in rt_text or re.search(r'_available\s*=\s*0u',c_text) is None:
+            if "MCOtxtLanguageModel.unavailable" not in rt_text or re.search(r'_available\s*=\s*0u',c_text) is None:
                 print(f"PLACEHOLDER ERROR {lang.upper()}: unavailable marker missing"); ok=False
             else: print(f"OK {lang.upper()}: unavailable placeholder")
     if "_buildModel(" in reg or "_buildTop4Tables(" in reg: print("REGISTRY ERROR: runtime model-building remains"); ok=False

@@ -1322,6 +1322,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '보낼 때 일부 키릴 문자를 라틴 문자로 바꿉니다.';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt 압축';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Cyr2Lat 설정';
 
   @override

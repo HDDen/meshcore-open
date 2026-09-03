@@ -1319,6 +1319,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_cyr2latCompressionDscr => '送信時に一部のキリル文字をラテン文字に置き換えます。';
 
   @override
+  String get channels_mcotxtCompression => 'MCOtxt 圧縮';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Cyr2Lat 設定';
 
   @override

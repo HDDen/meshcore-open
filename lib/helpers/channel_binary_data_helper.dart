@@ -68,7 +68,7 @@ class ChannelAppDataInbound {
   final MCOImage? mcoImage;
   final DecodedMCOImageV4? mcoImageV4;
   final DecodedMcmpAppMessage? mcmpMessage;
-  final DecodedMcotxtAppMessage? mcotxtMessage;
+  final DecodedMCOtxtAppMessage? mcotxtMessage;
   final String? text;
   final bool wasMcmpCompressed;
   final McmpSignatureStatus mcmpSignatureStatus;
@@ -190,11 +190,11 @@ class ChannelBinaryDataHelper {
           parseSharedContactText(trimmed) != null ||
           MeshCompressor.instance.hasPrefix(trimmed) ||
           McmpAppCodec.isTextPayload(trimmed) ||
-          McotxtAppCodec.isTextPayload(trimmed);
+          MCOtxtAppCodec.isTextPayload(trimmed);
       if (isStructuredPayload) return null;
 
       if (mcotxtEnabled) {
-        final encoded = McotxtAppCodec.encodeBody(
+        final encoded = MCOtxtAppCodec.encodeBody(
           text: text,
           timestamp:
               timestamp ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -368,7 +368,7 @@ class ChannelBinaryDataHelper {
           parseSharedContactText(trimmed) != null ||
           MeshCompressor.instance.hasPrefix(trimmed) ||
           McmpAppCodec.isTextPayload(trimmed) ||
-          McotxtAppCodec.isTextPayload(trimmed)) {
+          MCOtxtAppCodec.isTextPayload(trimmed)) {
         return null;
       }
       final hasReply = replyAuthorName != null && replyTimestamp != null;
@@ -399,7 +399,7 @@ class ChannelBinaryDataHelper {
           parseSharedContactText(trimmed) != null ||
           MeshCompressor.instance.hasPrefix(trimmed) ||
           McmpAppCodec.isTextPayload(trimmed) ||
-          McotxtAppCodec.isTextPayload(trimmed)) {
+          MCOtxtAppCodec.isTextPayload(trimmed)) {
         return null;
       }
       final compressed = MeshCompressor.instance.compressToBytes(text);
@@ -428,11 +428,11 @@ class ChannelBinaryDataHelper {
           parseSharedContactText(trimmed) != null ||
           MeshCompressor.instance.hasPrefix(trimmed) ||
           McmpAppCodec.isTextPayload(trimmed) ||
-          McotxtAppCodec.isTextPayload(trimmed)) {
+          MCOtxtAppCodec.isTextPayload(trimmed)) {
         return null;
       }
       final hasReply = replyAuthorName != null && replyTimestamp != null;
-      final encoded = McotxtAppCodec.encodeBody(
+      final encoded = MCOtxtAppCodec.encodeBody(
         text: text,
         timestamp: 0,
         senderName: senderName,
@@ -643,12 +643,12 @@ class ChannelBinaryDataHelper {
             subtype: ChannelAppDataSubtype.mcotxt,
             body: envelope.body,
             payloadLength: payload.length,
-            text: McotxtAppCodec.unsupportedFormatText(envelope.version),
+            text: MCOtxtAppCodec.unsupportedFormatText(envelope.version),
           );
         }
-        final DecodedMcotxtAppMessage decoded;
+        final DecodedMCOtxtAppMessage decoded;
         try {
-          decoded = McotxtAppCodec.decodeBody(envelope.body);
+          decoded = MCOtxtAppCodec.decodeBody(envelope.body);
         } catch (_) {
           return ChannelAppDataInbound(
             senderName: envelope.senderName,
@@ -657,7 +657,7 @@ class ChannelBinaryDataHelper {
             subtype: ChannelAppDataSubtype.mcotxt,
             body: envelope.body,
             payloadLength: payload.length,
-            text: McotxtAppCodec.decodeFailedText(envelope.version),
+            text: MCOtxtAppCodec.decodeFailedText(envelope.version),
           );
         }
         return ChannelAppDataInbound(

@@ -15,8 +15,8 @@ class BitWriter {
 
   void writeBit(int value) {
     if (value != 0 && value != 1) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Bit value must be 0 or 1',
       );
     }
@@ -25,14 +25,14 @@ class BitWriter {
 
   void writeBits(int value, int count) {
     if (count < 0 || count > 32 || value < 0) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Invalid bit field',
       );
     }
     if (count < 32 && value >= (1 << count)) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Bit field overflow',
       );
     }
@@ -51,8 +51,8 @@ class BitWriter {
 
   void writeBytes(Uint8List bytes, int bitLength) {
     if (bitLength < 0 || bitLength > bytes.length * 8) {
-      throw const McotxtCodecException(
-        McotxtCodecError.invalidInput,
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
         'Invalid source bitstream length',
       );
     }

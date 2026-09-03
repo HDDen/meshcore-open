@@ -1,4 +1,4 @@
-enum McotxtCodecError {
+enum MCOtxtCodecError {
   invalidInput,
   unknownVersion,
   unknownLanguage,
@@ -17,12 +17,12 @@ enum McotxtCodecError {
   unsupportedExtendedHeader,
 }
 
-class McotxtCodecException implements Exception {
-  final McotxtCodecError code;
+class MCOtxtCodecException implements Exception {
+  final MCOtxtCodecError code;
   final String message;
 
-  const McotxtCodecException(this.code, this.message);
+  const MCOtxtCodecException(this.code, this.message);
 
   @override
-  String toString() => 'McotxtCodecException($code): $message';
+  String toString() => 'MCOtxtCodecException($code): $message';
 }

@@ -1380,6 +1380,9 @@ class AppLocalizationsSk extends AppLocalizations {
       'Pri odosielaní nahradí niektoré znaky cyriliky latinskými znakmi.';
 
   @override
+  String get channels_mcotxtCompression => 'Kompresia MCOtxt';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Nastavenia Cyr2Lat';
 
   @override

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../mcotxt/mcotxt.dart';
+import '../MCOtxt/mcotxt.dart';
 import 'channel_app_data_helper.dart';
 
-class EncodedMcotxtAppMessage {
+class EncodedMCOtxtAppMessage {
   final Uint8List body;
   final int timestamp;
   final bool isReply;
@@ -12,7 +12,7 @@ class EncodedMcotxtAppMessage {
   final String? replyAuthorName;
   final int? replyTimestamp;
 
-  const EncodedMcotxtAppMessage({
+  const EncodedMCOtxtAppMessage({
     required this.body,
     required this.timestamp,
     required this.isReply,
@@ -22,7 +22,7 @@ class EncodedMcotxtAppMessage {
   });
 }
 
-class DecodedMcotxtAppMessage {
+class DecodedMCOtxtAppMessage {
   final String text;
   final int timestamp;
   final String? senderName;
@@ -31,7 +31,7 @@ class DecodedMcotxtAppMessage {
   final int? unsupportedVersion;
   final bool decodeFailed;
 
-  const DecodedMcotxtAppMessage({
+  const DecodedMCOtxtAppMessage({
     required this.text,
     required this.timestamp,
     this.senderName,
@@ -46,8 +46,8 @@ class DecodedMcotxtAppMessage {
   int? get metadataTimestamp => isUnsupported || decodeFailed ? null : timestamp;
 }
 
-class McotxtAppCodec {
-  McotxtAppCodec._();
+class MCOtxtAppCodec {
+  MCOtxtAppCodec._();
 
   static const int subtypeId = 0x03;
   static const int formatVersion = 1;
@@ -58,7 +58,7 @@ class McotxtAppCodec {
   static const int _flagReply = 1 << 0;
   static const int _flagSenderName = 1 << 1;
   static const int _knownFlags = _flagReply | _flagSenderName;
-  static const int _stringModeMcotxt = 0x00;
+  static const int _stringModeMCOtxt = 0x00;
   static const int _stringModeUtf8 = 0x01;
 
   static String unsupportedFormatText(int receivedVersion) {
@@ -69,16 +69,16 @@ class McotxtAppCodec {
     return 'MCOtxt v$receivedVersion не удалось раскодировать';
   }
 
-  static DecodedMcotxtAppMessage unsupportedMessage(int receivedVersion) {
-    return DecodedMcotxtAppMessage(
+  static DecodedMCOtxtAppMessage unsupportedMessage(int receivedVersion) {
+    return DecodedMCOtxtAppMessage(
       text: unsupportedFormatText(receivedVersion),
       timestamp: 0,
       unsupportedVersion: receivedVersion,
     );
   }
 
-  static DecodedMcotxtAppMessage failedMessage(int receivedVersion) {
-    return DecodedMcotxtAppMessage(
+  static DecodedMCOtxtAppMessage failedMessage(int receivedVersion) {
+    return DecodedMCOtxtAppMessage(
       text: decodeFailedText(receivedVersion),
       timestamp: 0,
       unsupportedVersion: receivedVersion,
@@ -117,11 +117,11 @@ class McotxtAppCodec {
       _writeString(writer, replyAuthorName);
       writer.writeUint32LE(replyTimestamp);
     }
-    _writeMcotxtOnlyString(writer, text);
+    _writeMCOtxtOnlyString(writer, text);
     return writer.toBytes();
   }
 
-  static DecodedMcotxtAppMessage decodeBody(Uint8List body) {
+  static DecodedMCOtxtAppMessage decodeBody(Uint8List body) {
     final reader = _ByteReader(body);
     final flags = reader.readByte();
     if ((flags & ~_knownFlags) != 0) {
@@ -145,7 +145,7 @@ class McotxtAppCodec {
     if (!reader.isDone) {
       throw const FormatException('Trailing MCOtxt app bytes');
     }
-    return DecodedMcotxtAppMessage(
+    return DecodedMCOtxtAppMessage(
       text: text,
       timestamp: timestamp,
       senderName: senderName,
@@ -160,7 +160,7 @@ class McotxtAppCodec {
       version: wireVersion,
       body: body,
     );
-    return '$textPrefix${_McotxtBase91.encode(payload)}';
+    return '$textPrefix${_MCOtxtBase91.encode(payload)}';
   }
 
   static bool isTextPayload(String text) {
@@ -178,7 +178,7 @@ class McotxtAppCodec {
     if (!isTextPayload(trimmedLeft)) {
       throw const FormatException('Missing MCOtxt app text prefix');
     }
-    final payload = _McotxtBase91.decode(
+    final payload = _MCOtxtBase91.decode(
       trimmedLeft.substring(textPrefix.length),
     );
     final envelope = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
@@ -188,7 +188,7 @@ class McotxtAppCodec {
       throw const FormatException('Missing MCOtxt app payload');
     }
     if (envelope.version != wireVersion) {
-      throw McotxtUnsupportedFormatException(envelope.version);
+      throw MCOtxtUnsupportedFormatException(envelope.version);
     }
     return envelope;
   }
@@ -216,16 +216,16 @@ class McotxtAppCodec {
     }
   }
 
-  static DecodedMcotxtAppMessage? tryDecodeTextPayloadMessage(String text) {
+  static DecodedMCOtxtAppMessage? tryDecodeTextPayloadMessage(String text) {
     if (!isTextPayload(text)) return null;
     try {
       return decodeBody(bodyFromText(text));
-    } on McotxtUnsupportedFormatException catch (error) {
+    } on MCOtxtUnsupportedFormatException catch (error) {
       return unsupportedMessage(error.receivedVersion);
     } catch (_) {
       try {
         final trimmedLeft = text.trimLeft();
-        final payload = _McotxtBase91.decode(
+        final payload = _MCOtxtBase91.decode(
           trimmedLeft.substring(textPrefix.length),
         );
         final envelope = ChannelAppDataHelper.tryDecodeAppPayloadWithoutSender(
@@ -269,29 +269,29 @@ class McotxtAppCodec {
     }
   }
 
-  static void _writeMcotxtString(_ByteWriter writer, String text) {
-    final encoded = McotxtCodec.encode(
+  static void _writeMCOtxtString(_ByteWriter writer, String text) {
+    final encoded = MCOtxtCodec.encode(
       text,
-      options: const McotxtEncodeOptions(collectStats: false),
+      options: const MCOtxtEncodeOptions(collectStats: false),
     );
     writer
       ..writeVarUint(encoded.bitLength)
       ..writeBytes(encoded.data);
   }
 
-  static String _readMcotxtString(_ByteReader reader) {
+  static String _readMCOtxtString(_ByteReader reader) {
     final bitLength = reader.readVarUint();
     final bytes = reader.readBytes(_bytesForBits(bitLength));
-    return McotxtCodec.decode(bytes, bitLength: bitLength).text;
+    return MCOtxtCodec.decode(bytes, bitLength: bitLength).text;
   }
 
   static void _writeString(_ByteWriter writer, String text) {
-    final normalized = McotxtModelRegistry.normalizeInputText(text);
+    final normalized = MCOtxtModelRegistry.normalizeInputText(text);
     final utf8Candidate = _buildUtf8StringCandidate(normalized);
     try {
-      final mcotxtCandidate = _buildMcotxtStringCandidate(normalized);
+      final mcotxtCandidate = _buildMCOtxtStringCandidate(normalized);
       writer.writeBytes(
-        _preferMcotxtStringCandidate(mcotxtCandidate, utf8Candidate)
+        _preferMCOtxtStringCandidate(mcotxtCandidate, utf8Candidate)
             ? mcotxtCandidate
             : utf8Candidate,
       );
@@ -300,15 +300,15 @@ class McotxtAppCodec {
     }
   }
 
-  static void _writeMcotxtOnlyString(_ByteWriter writer, String text) {
-    writer.writeByte(_stringModeMcotxt);
-    _writeMcotxtString(writer, McotxtModelRegistry.normalizeInputText(text));
+  static void _writeMCOtxtOnlyString(_ByteWriter writer, String text) {
+    writer.writeByte(_stringModeMCOtxt);
+    _writeMCOtxtString(writer, MCOtxtModelRegistry.normalizeInputText(text));
   }
 
-  static Uint8List _buildMcotxtStringCandidate(String normalizedText) {
+  static Uint8List _buildMCOtxtStringCandidate(String normalizedText) {
     final writer = _ByteWriter()
-      ..writeByte(_stringModeMcotxt);
-    _writeMcotxtString(writer, normalizedText);
+      ..writeByte(_stringModeMCOtxt);
+    _writeMCOtxtString(writer, normalizedText);
     return writer.toBytes();
   }
 
@@ -319,7 +319,7 @@ class McotxtAppCodec {
     return writer.toBytes();
   }
 
-  static bool _preferMcotxtStringCandidate(
+  static bool _preferMCOtxtStringCandidate(
     Uint8List mcotxtCandidate,
     Uint8List utf8Candidate,
   ) {
@@ -332,8 +332,8 @@ class McotxtAppCodec {
   static String _readString(_ByteReader reader) {
     final mode = reader.readByte();
     switch (mode) {
-      case _stringModeMcotxt:
-        return _readMcotxtString(reader);
+      case _stringModeMCOtxt:
+        return _readMCOtxtString(reader);
       case _stringModeUtf8:
         return reader.readUtf8String();
       default:
@@ -344,7 +344,7 @@ class McotxtAppCodec {
   static int _skipString(_ByteReader reader) {
     final mode = reader.readByte();
     switch (mode) {
-      case _stringModeMcotxt:
+      case _stringModeMCOtxt:
         final bitLength = reader.readVarUint();
         final byteLength = _bytesForBits(bitLength);
         reader.skipBytes(byteLength);
@@ -364,10 +364,10 @@ class McotxtAppCodec {
   }
 }
 
-class McotxtUnsupportedFormatException implements Exception {
+class MCOtxtUnsupportedFormatException implements Exception {
   final int receivedVersion;
 
-  const McotxtUnsupportedFormatException(this.receivedVersion);
+  const MCOtxtUnsupportedFormatException(this.receivedVersion);
 
   @override
   String toString() {
@@ -473,7 +473,7 @@ class _ByteReader {
   }
 }
 
-class _McotxtBase91 {
+class _MCOtxtBase91 {
   static const String _alphabet =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
       '!#\$%&()*+,./:;<=>?@[]^_`{|}~"';

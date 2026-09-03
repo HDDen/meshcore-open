@@ -132,7 +132,7 @@ String _decodeStoredTextIfNeeded(String text) {
   final trimmed = text.trimLeft();
   final isKnownCompressedText =
       trimmed.startsWith(McmpAppCodec.textPrefix) ||
-      trimmed.startsWith(McotxtAppCodec.textPrefix) ||
+      trimmed.startsWith(MCOtxtAppCodec.textPrefix) ||
       MeshCompressor.instance.hasPrefix(trimmed) ||
       Smaz.hasPrefix(trimmed);
   if (!isKnownCompressedText) return text;

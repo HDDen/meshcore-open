@@ -1,11 +1,11 @@
 import 'models/mcotxt_model.dart';
 
-class McotxtEncodeOptions {
-  final McotxtLanguageId? languageA;
-  final McotxtLanguageId? languageB;
+class MCOtxtEncodeOptions {
+  final MCOtxtLanguageId? languageA;
+  final MCOtxtLanguageId? languageB;
   final bool collectStats;
 
-  const McotxtEncodeOptions({
+  const MCOtxtEncodeOptions({
     this.languageA,
     this.languageB,
     this.collectStats = true,

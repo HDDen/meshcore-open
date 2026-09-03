@@ -1,28 +1,28 @@
-python .\mcotxt_model_trainer_with_diagnostics.py `
+python .\MCOtxt_model_trainer_with_diagnostics.py `
   --lang ru `
   --train .\corpora\ru `
   --out-dir .\generated\ru `
   --debug-json
 
-python .\mcotxt_model_trainer_with_diagnostics.py `
+python .\MCOtxt_model_trainer_with_diagnostics.py `
   --lang en `
   --train .\corpora\en `
   --out-dir .\generated\en `
   --debug-json
 
-python .\mcotxt_model_trainer_with_diagnostics.py `
+python .\MCOtxt_model_trainer_with_diagnostics.py `
   --lang fr `
   --train .\corpora\fr `
   --out-dir .\generated\fr `
   --debug-json
 
 
-mcotxt_model_trainer_with_diagnostics.py — обучает модель языка и генерирует .dart, .h, report/debug JSON. Пример:
-python mcotxt_model_trainer_with_diagnostics.py --lang ru --train corpus_ru.txt --debug-json
-Готовая Dart-модель автоматически копируется в lib/mcotxt/models/generated/v1/.
+MCOtxt_model_trainer_with_diagnostics.py — обучает модель языка и генерирует .dart, .h, report/debug JSON. Пример:
+python MCOtxt_model_trainer_with_diagnostics.py --lang ru --train corpus_ru.txt --debug-json
+Готовая Dart-модель автоматически копируется в lib/MCOtxt/models/generated/v1/.
 
-mcotxt_ab_benchmark.py — проверяет сжатие смешанного текста парой моделей, например RU+EN:
-python mcotxt_ab_benchmark.py --model-a generated/ru/model_ru_debug.json --model-b generated/en/model_en_debug.json --input corpus.txt
+MCOtxt_ab_benchmark.py — проверяет сжатие смешанного текста парой моделей, например RU+EN:
+python MCOtxt_ab_benchmark.py --model-a generated/ru/model_ru_debug.json --model-b generated/en/model_en_debug.json --input corpus.txt
 
 verify_runtime_models.py — проверяет manifest, Dart/C-модели, их wire-hash и placeholders:
 python verify_runtime_models.py
@@ -35,7 +35,7 @@ python freeze_model_manifest.py
 
 
 bench
-python .\mcotxt_ab_benchmark.py `
+python .\MCOtxt_ab_benchmark.py `
   --model-a .\generated\ru\model_ru_debug.json `
   --model-b .\generated\en\model_en_debug.json `
   --input `

@@ -1378,6 +1378,9 @@ class AppLocalizationsSl extends AppLocalizations {
       'Pri pošiljanju nekatere cirilice nadomesti z latiničnimi.';
 
   @override
+  String get channels_mcotxtCompression => 'Kompresija MCOtxt';
+
+  @override
   String get channels_cyr2latSettingsHeading => 'Nastavitve Cyr2Lat';
 
   @override

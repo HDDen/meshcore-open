@@ -1,4 +1,4 @@
-enum McotxtLanguageId {
+enum MCOtxtLanguageId {
   en,
   ru,
   fr,
@@ -9,13 +9,13 @@ enum McotxtLanguageId {
 
   int get wireId {
     return switch (this) {
-      McotxtLanguageId.en => 0,
-      McotxtLanguageId.ru => 1,
-      McotxtLanguageId.fr => 2,
-      McotxtLanguageId.de => 3,
-      McotxtLanguageId.it => 4,
-      McotxtLanguageId.uk => 5,
-      McotxtLanguageId.be => 6,
+      MCOtxtLanguageId.en => 0,
+      MCOtxtLanguageId.ru => 1,
+      MCOtxtLanguageId.fr => 2,
+      MCOtxtLanguageId.de => 3,
+      MCOtxtLanguageId.it => 4,
+      MCOtxtLanguageId.uk => 5,
+      MCOtxtLanguageId.be => 6,
     };
   }
 
@@ -23,26 +23,26 @@ enum McotxtLanguageId {
 
   bool get hasInlineHeaderId => wireId >= 0 && wireId <= 6;
 
-  static McotxtLanguageId? fromWireId(int value) {
+  static MCOtxtLanguageId? fromWireId(int value) {
     return switch (value) {
-      0 => McotxtLanguageId.en,
-      1 => McotxtLanguageId.ru,
-      2 => McotxtLanguageId.fr,
-      3 => McotxtLanguageId.de,
-      4 => McotxtLanguageId.it,
-      5 => McotxtLanguageId.uk,
-      6 => McotxtLanguageId.be,
+      0 => MCOtxtLanguageId.en,
+      1 => MCOtxtLanguageId.ru,
+      2 => MCOtxtLanguageId.fr,
+      3 => MCOtxtLanguageId.de,
+      4 => MCOtxtLanguageId.it,
+      5 => MCOtxtLanguageId.uk,
+      6 => MCOtxtLanguageId.be,
       7 => null,
       _ => null,
     };
   }
 
-  static McotxtLanguageId? fromGlobalId(int value) {
+  static MCOtxtLanguageId? fromGlobalId(int value) {
     return fromWireId(value);
   }
 }
 
-enum McotxtTableId {
+enum MCOtxtTableId {
   en,
   ru,
   fr,
@@ -52,21 +52,21 @@ enum McotxtTableId {
   be,
   punctuation;
 
-  static McotxtTableId fromLanguage(McotxtLanguageId language) {
+  static MCOtxtTableId fromLanguage(MCOtxtLanguageId language) {
     return switch (language) {
-      McotxtLanguageId.en => McotxtTableId.en,
-      McotxtLanguageId.ru => McotxtTableId.ru,
-      McotxtLanguageId.fr => McotxtTableId.fr,
-      McotxtLanguageId.de => McotxtTableId.de,
-      McotxtLanguageId.it => McotxtTableId.it,
-      McotxtLanguageId.uk => McotxtTableId.uk,
-      McotxtLanguageId.be => McotxtTableId.be,
+      MCOtxtLanguageId.en => MCOtxtTableId.en,
+      MCOtxtLanguageId.ru => MCOtxtTableId.ru,
+      MCOtxtLanguageId.fr => MCOtxtTableId.fr,
+      MCOtxtLanguageId.de => MCOtxtTableId.de,
+      MCOtxtLanguageId.it => MCOtxtTableId.it,
+      MCOtxtLanguageId.uk => MCOtxtTableId.uk,
+      MCOtxtLanguageId.be => MCOtxtTableId.be,
     };
   }
 }
 
-class McotxtLanguageModel {
-  final McotxtLanguageId id;
+class MCOtxtLanguageModel {
+  final MCOtxtLanguageId id;
   final bool available;
   final String? wireHash;
   final List<int> primarySymbols;
@@ -80,7 +80,7 @@ class McotxtLanguageModel {
   final Map<int, int> _extensionIdByRune;
   final Map<int, int> _symbolIndexByRune;
 
-  McotxtLanguageModel({
+  MCOtxtLanguageModel({
     required this.id,
     this.wireHash,
     required Iterable<int> primarySymbols,
@@ -144,7 +144,7 @@ class McotxtLanguageModel {
     }
   }
 
-  McotxtLanguageModel.unavailable({required this.id})
+  MCOtxtLanguageModel.unavailable({required this.id})
     : available = false,
       wireHash = null,
       primarySymbols = const <int>[],
@@ -178,11 +178,11 @@ class McotxtLanguageModel {
   }
 
   List<int> top4ForContext(
-    McotxtPredictionContextKind contextKind,
+    MCOtxtPredictionContextKind contextKind,
     int? previousRune,
   ) {
-    if (contextKind == McotxtPredictionContextKind.start) return startTop4;
-    if (contextKind == McotxtPredictionContextKind.afterPunctuation) {
+    if (contextKind == MCOtxtPredictionContextKind.start) return startTop4;
+    if (contextKind == MCOtxtPredictionContextKind.afterPunctuation) {
       return punctStartTop4;
     }
     if (previousRune == null) return const <int>[];
@@ -203,7 +203,7 @@ class McotxtLanguageModel {
   }
 }
 
-enum McotxtPredictionContextKind {
+enum MCOtxtPredictionContextKind {
   start,
   afterPunctuation,
   symbol,
