@@ -56,6 +56,10 @@ def main()->int:
     root=find_root(); runtime=root/f"lib/MCOtxt/models/generated/v{VERSION}"; gen=root/"tools/MCOtxt/generated"; manifest_path=gen/"model_manifest.json"; registry=root/"lib/MCOtxt/models/mcotxt_model_registry.dart"
     manifest=json.loads(manifest_path.read_text(encoding="utf-8")); reg=registry.read_text(encoding="utf-8"); ok=True
     if manifest.get("codecVersion")!=VERSION: print("MANIFEST ERROR: codecVersion mismatch"); ok=False
+    generation=manifest.get("modelGeneration")
+    if isinstance(generation,bool) or not isinstance(generation,int) or generation<0 or generation>262: print("MANIFEST ERROR: modelGeneration missing or out of range 0..262"); ok=False
+    elif f"generation: {generation}," not in reg: print(f"REGISTRY ERROR: no model set registered for generation {generation}"); ok=False
+    else: print(f"OK manifest: codec v{VERSION}, model generation {generation}")
     for lang in LANGS:
         entry=manifest["models"][lang]; wid=entry["languageId"]; rt=runtime/f"model_{lang}.dart"; local=gen/lang/f"model_{lang}.dart"; chead=gen/lang/f"model_{lang}.h"; C=lang[0].upper()+lang[1:]
         for path,label in ((rt,"runtime Dart"),(local,"generated Dart"),(chead,"generated C")):
@@ -80,7 +84,7 @@ def main()->int:
             else: print(f"OK {lang.upper()}: unavailable placeholder")
     if "_buildModel(" in reg or "_buildTop4Tables(" in reg: print("REGISTRY ERROR: runtime model-building remains"); ok=False
     if ok:
-        print(f"All MCOtxt v{VERSION} static model artifacts match the manifest. frozen={bool(manifest.get('frozen'))}")
+        print(f"All MCOtxt v{VERSION} static model artifacts match the manifest (generation {manifest.get('modelGeneration')}). frozen={bool(manifest.get('frozen'))}")
         return 0
     return 1
 

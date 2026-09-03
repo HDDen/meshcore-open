@@ -12,11 +12,18 @@ import 'models/punctuation.dart';
 
 class MCOtxtCodec {
   static const int version = 1;
-  static const int _versionBits = 3;
+  static const int _headerFieldBits = 3;
+  static const int _versionBits = _headerFieldBits;
+  static const int _generationBits = _headerFieldBits;
+  static const int _headerFieldEscape = 7;
+  static const int _headerFieldEscapeBits = 8;
+  static const int _headerFieldMax = _headerFieldEscape + 0xff;
   static const int _languageBits = 3;
-  static const int _normalHeaderBits = _versionBits + _languageBits * 2;
+  static const int _normalHeaderBits =
+      _versionBits + _generationBits + _languageBits * 2;
   static const int _extendedLanguagePair8HeaderBits = _normalHeaderBits + 16;
   static const int _rawUtf8HeaderBits = 16;
+  static const int _rawUtf8PaddingBits = 4;
   static const int _primaryLimit = 32;
   static const int _extensionLimit = 32;
   static const int _extendedControlPrefix = 63;
@@ -41,16 +48,25 @@ class MCOtxtCodec {
     String text, {
     MCOtxtEncodeOptions options = const MCOtxtEncodeOptions(),
   }) {
+    final modelSet = _modelSetForOptions(options);
     final normalizedText = MCOtxtModelRegistry.normalizeInputText(text);
     final runes = normalizedText.runes.toList(growable: false);
-    final built = _chooseEncoding(runes, options);
+    final built = _chooseEncoding(runes, options, modelSet);
     final mcotxtWriter = BitWriter();
-    _writeHeader(mcotxtWriter, built.languageA, built.languageB);
+    _writeHeader(
+      mcotxtWriter,
+      modelSet.generation,
+      built.languageA,
+      built.languageB,
+    );
     for (final token in built.plan.tokens) {
       _writeToken(mcotxtWriter, token);
     }
     final mcotxtData = mcotxtWriter.toBytes();
-    final rawUtf8Candidate = _buildRawUtf8Candidate(normalizedText);
+    final rawUtf8Candidate = _buildRawUtf8Candidate(
+      normalizedText,
+      modelSet.generation,
+    );
     final useRawUtf8 = _isRawUtf8Better(
       rawDataLength: rawUtf8Candidate.data.length,
       rawBitLength: rawUtf8Candidate.bitLength,
@@ -83,6 +99,7 @@ class MCOtxtCodec {
             ],
       decodedText: decoded.text,
       encoderVersion: version,
+      modelGeneration: modelSet.generation,
       usedTables: useRawUtf8 ? const <MCOtxtTableId>[] : built.plan.usedTables,
       languageA: useRawUtf8 ? null : built.languageA,
       languageB: useRawUtf8 ? null : built.languageB,
@@ -157,26 +174,38 @@ class MCOtxtCodec {
     required int bitLength,
   }) {
     final reader = BitReader(data, bitLength: bitLength);
-    final receivedVersion = reader.readBits(_versionBits);
+    final receivedVersion = _readHeaderField(reader);
     if (receivedVersion != version) {
       throw MCOtxtCodecException(
         MCOtxtCodecError.unknownVersion,
         'Unsupported MCOtxt version $receivedVersion',
       );
     }
+    final generation = _readHeaderField(reader);
     final header = _readHeader(reader);
     if (header.mode == _MCOtxtWireMode.rawUtf8) {
+      // RAW_UTF8 uses no tables, so the generation is reported as read
+      // and a stream from a newer generation still decodes.
       final text = _readRawUtf8Payload(reader);
       return MCOtxtDecodeResult(
         text: text,
         decoderVersion: version,
+        modelGeneration: generation,
         usedTables: const <MCOtxtTableId>[],
         languageA: null,
         languageB: null,
       );
     }
+    final modelSet = _modelSetForGeneration(generation);
     final languageA = header.languageA;
     final languageB = header.languageB;
+    if (!modelSet.isAvailable(languageA) ||
+        (languageB != null && !modelSet.isAvailable(languageB))) {
+      throw const MCOtxtCodecException(
+        MCOtxtCodecError.modelUnavailable,
+        'MCOtxt payload requires a language model unavailable in this build',
+      );
+    }
     var currentLanguage = languageA;
     var contextKind = MCOtxtPredictionContextKind.start;
     int? previousRune;
@@ -190,10 +219,10 @@ class MCOtxtCodec {
     }
 
     MCOtxtLanguageModel currentModel() {
-      final model = MCOtxtModelRegistry.modelFor(currentLanguage);
+      final model = modelSet.modelFor(currentLanguage);
       if (model == null) {
         final knownLanguage = currentLanguage != null &&
-            MCOtxtModelRegistry.declarationFor(currentLanguage) != null;
+            modelSet.declarationFor(currentLanguage) != null;
         throw MCOtxtCodecException(
           knownLanguage
               ? MCOtxtCodecError.modelUnavailable
@@ -342,7 +371,7 @@ class MCOtxtCodec {
               'Invalid MCOtxt SWITCH_OTHER_LANGUAGE',
             );
           }
-          if (!MCOtxtModelRegistry.isAvailable(language)) {
+          if (!modelSet.isAvailable(language)) {
             throw const MCOtxtCodecException(
               MCOtxtCodecError.modelUnavailable,
               'MCOtxt SWITCH_OTHER_LANGUAGE references an unavailable model',
@@ -386,6 +415,7 @@ class MCOtxtCodec {
     return MCOtxtDecodeResult(
       text: String.fromCharCodes(output),
       decoderVersion: version,
+      modelGeneration: generation,
       usedTables: usedTables,
       languageA: languageA,
       languageB: languageB,
@@ -395,6 +425,7 @@ class MCOtxtCodec {
   static _BuiltEncoding _chooseEncoding(
     List<int> runes,
     MCOtxtEncodeOptions options,
+    MCOtxtModelSet modelSet,
   ) {
     if (options.languageA != null || options.languageB != null) {
       if (options.languageA != null && options.languageA == options.languageB) {
@@ -413,9 +444,10 @@ class MCOtxtCodec {
         runes,
         options.languageA!,
         options.languageB,
+        modelSet,
       );
     }
-    final languageAIds = MCOtxtModelRegistry.builtinModels
+    final languageAIds = modelSet.models
         .map((model) => model.id)
         .toList(growable: false);
     final languageBIds = <MCOtxtLanguageId?>[
@@ -426,7 +458,12 @@ class MCOtxtCodec {
     for (final languageA in languageAIds) {
       for (final languageB in languageBIds) {
         if (languageB != null && languageB == languageA) continue;
-        final candidate = _encodeWithLanguagePair(runes, languageA, languageB);
+        final candidate = _encodeWithLanguagePair(
+          runes,
+          languageA,
+          languageB,
+          modelSet,
+        );
         if (best == null || candidate.isBetterThan(best)) best = candidate;
       }
     }
@@ -437,9 +474,10 @@ class MCOtxtCodec {
     List<int> runes,
     MCOtxtLanguageId languageA,
     MCOtxtLanguageId? languageB,
+    MCOtxtModelSet modelSet,
   ) {
-    if (!MCOtxtModelRegistry.isAvailable(languageA) ||
-        (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
+    if (!modelSet.isAvailable(languageA) ||
+        (languageB != null && !modelSet.isAvailable(languageB))) {
       throw const MCOtxtCodecException(
         MCOtxtCodecError.modelUnavailable,
         'Requested MCOtxt language model is unavailable',
@@ -449,6 +487,7 @@ class MCOtxtCodec {
       runes: runes,
       languageA: languageA,
       languageB: languageB,
+      modelSet: modelSet,
     );
     final plan = planner.plan();
     return _BuiltEncoding(
@@ -458,21 +497,30 @@ class MCOtxtCodec {
     );
   }
 
-  static _RawUtf8Candidate _buildRawUtf8Candidate(String normalizedText) {
+  static _RawUtf8Candidate _buildRawUtf8Candidate(
+    String normalizedText,
+    int generation,
+  ) {
     final textBytes = Uint8List.fromList(utf8.encode(normalizedText));
-    final writer = BitWriter()
-      ..writeBits(version, _versionBits)
+    final writer = BitWriter();
+    _writeHeaderField(writer, version);
+    _writeHeaderField(writer, generation);
+    writer
       ..writeBits(
         MCOtxtModelRegistry.extendedLanguageHeaderWireId,
         _languageBits,
       )
       ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, _languageBits)
-      ..writeBits(0, 7);
+      ..writeBits(0, _rawUtf8PaddingBits);
+    // Every escape adds eight bits, so the header stays whole bytes and the
+    // UTF-8 payload byte-aligned.
+    final headerBits = writer.bitLength;
+    assert(headerBits >= _rawUtf8HeaderBits && headerBits % 8 == 0);
     for (final byte in textBytes) {
       writer.writeBits(byte, 8);
     }
     final bitLength = writer.bitLength;
-    assert(bitLength == _rawUtf8HeaderBits + textBytes.length * 8);
+    assert(bitLength == headerBits + textBytes.length * 8);
     return _RawUtf8Candidate(
       data: writer.toBytes(),
       bitLength: bitLength,
@@ -525,10 +573,12 @@ class MCOtxtCodec {
 
   static void _writeHeader(
     BitWriter writer,
+    int generation,
     MCOtxtLanguageId languageA,
     MCOtxtLanguageId? languageB,
   ) {
-    writer.writeBits(version, _versionBits);
+    _writeHeaderField(writer, version);
+    _writeHeaderField(writer, generation);
     if (_usesNormalHeader(languageA, languageB)) {
       writer
         ..writeBits(languageA.wireId, _languageBits)
@@ -548,6 +598,8 @@ class MCOtxtCodec {
       ..writeBits(_globalIdForLanguage(languageB), 8);
   }
 
+  /// Parses the language part of the header. Whether the selected
+  /// generation has tables for the languages is checked by [decode].
   static _MCOtxtHeader _readHeader(BitReader reader) {
     final languageAInline = reader.readBits(_languageBits);
     final languageBInlineOrFormat = reader.readBits(_languageBits);
@@ -566,13 +618,6 @@ class MCOtxtCodec {
         throw const MCOtxtCodecException(
           MCOtxtCodecError.unknownLanguage,
           'Invalid MCOtxt Language B',
-        );
-      }
-      if (!MCOtxtModelRegistry.isAvailable(languageA) ||
-          (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
-        throw const MCOtxtCodecException(
-          MCOtxtCodecError.modelUnavailable,
-          'MCOtxt payload requires a language model unavailable in this build',
         );
       }
       return _MCOtxtHeader(languageA: languageA, languageB: languageB);
@@ -608,18 +653,53 @@ class MCOtxtCodec {
         'Unknown MCOtxt global language ID',
       );
     }
-    if (!MCOtxtModelRegistry.isAvailable(languageA) ||
-        (languageB != null && !MCOtxtModelRegistry.isAvailable(languageB))) {
-      throw const MCOtxtCodecException(
-        MCOtxtCodecError.modelUnavailable,
-        'MCOtxt payload requires a language model unavailable in this build',
-      );
-    }
     return _MCOtxtHeader(languageA: languageA, languageB: languageB);
   }
 
+  /// Version and generation share one shape: a value below 7 is written in
+  /// three bits, 7 and above as the escape `7` followed by eight bits of
+  /// `value - 7`. Every value therefore has exactly one encoding.
+  static void _writeHeaderField(BitWriter writer, int value) {
+    if (value < 0 || value > _headerFieldMax) {
+      throw MCOtxtCodecException(
+        MCOtxtCodecError.invalidInput,
+        'MCOtxt header field $value is out of range',
+      );
+    }
+    if (value < _headerFieldEscape) {
+      writer.writeBits(value, _headerFieldBits);
+      return;
+    }
+    writer
+      ..writeBits(_headerFieldEscape, _headerFieldBits)
+      ..writeBits(value - _headerFieldEscape, _headerFieldEscapeBits);
+  }
+
+  static int _readHeaderField(BitReader reader) {
+    final inline = reader.readBits(_headerFieldBits);
+    if (inline != _headerFieldEscape) return inline;
+    return _headerFieldEscape + reader.readBits(_headerFieldEscapeBits);
+  }
+
+  static MCOtxtModelSet _modelSetForOptions(MCOtxtEncodeOptions options) {
+    final generation = options.modelGeneration;
+    if (generation == null) return MCOtxtModelRegistry.latest;
+    return _modelSetForGeneration(generation);
+  }
+
+  static MCOtxtModelSet _modelSetForGeneration(int generation) {
+    final modelSet = MCOtxtModelRegistry.setFor(generation);
+    if (modelSet == null) {
+      throw MCOtxtCodecException(
+        MCOtxtCodecError.unsupportedModelGeneration,
+        'MCOtxt model generation $generation is not available in this build',
+      );
+    }
+    return modelSet;
+  }
+
   static String _readRawUtf8Payload(BitReader reader) {
-    final padding = reader.readBits(7);
+    final padding = reader.readBits(_rawUtf8PaddingBits);
     if (padding != 0) {
       throw const MCOtxtCodecException(
         MCOtxtCodecError.invalidRawUtf8,
@@ -851,13 +931,15 @@ class _MCOtxtPlanner {
   final List<int> runes;
   final MCOtxtLanguageId languageA;
   final MCOtxtLanguageId? languageB;
+  final MCOtxtModelSet modelSet;
   final Map<String, _MCOtxtPlan> _memo = <String, _MCOtxtPlan>{};
-  late final _CasePlan _casePlan = _CasePlan.build(runes);
+  late final _CasePlan _casePlan = _CasePlan.build(runes, modelSet);
 
   _MCOtxtPlanner({
     required this.runes,
     required this.languageA,
     required this.languageB,
+    required this.modelSet,
   });
 
   _MCOtxtPlan plan() => _bestFrom(
@@ -904,7 +986,7 @@ class _MCOtxtPlanner {
       );
     }
 
-    final currentModel = MCOtxtModelRegistry.modelFor(currentLanguage);
+    final currentModel = modelSet.modelFor(currentLanguage);
     if (currentModel != null) {
       _addSymbolCandidate(
         candidates: candidates,
@@ -916,7 +998,7 @@ class _MCOtxtPlanner {
     }
 
     final toggledLanguage = _toggledLanguage(currentLanguage);
-    final toggledModel = MCOtxtModelRegistry.modelFor(toggledLanguage);
+    final toggledModel = modelSet.modelFor(toggledLanguage);
     if (toggledModel != null) {
       _addSymbolCandidate(
         candidates: candidates,
@@ -934,7 +1016,7 @@ class _MCOtxtPlanner {
       );
     }
 
-    for (final model in MCOtxtModelRegistry.builtinModels) {
+    for (final model in modelSet.models) {
       if (model.id == currentLanguage || model.id == toggledLanguage) {
         continue;
       }
@@ -1027,9 +1109,9 @@ class _MCOtxtPlanner {
     return null;
   }
 
-  static bool _isSupportedAnywhere(int rune) {
+  bool _isSupportedAnywhere(int rune) {
     if (MCOtxtPunctuation.idByRune.containsKey(rune)) return true;
-    for (final model in MCOtxtModelRegistry.builtinModels) {
+    for (final model in modelSet.models) {
       if (model.normalizeRune(rune) != null) return true;
     }
     return false;
@@ -1138,11 +1220,11 @@ class _CasePlan {
   bool toggleBefore(int position) => _toggleBeforePositions.contains(position);
   bool shiftAt(int position) => _shiftPositions.contains(position);
 
-  factory _CasePlan.build(List<int> runes) {
+  factory _CasePlan.build(List<int> runes, MCOtxtModelSet modelSet) {
     final positions = <int>[];
     final wantsUppercase = <bool>[];
     for (var position = 0; position < runes.length; position++) {
-      final requirement = _caseRequirement(runes[position]);
+      final requirement = _caseRequirement(runes[position], modelSet);
       if (requirement == null) continue;
       positions.add(position);
       wantsUppercase.add(requirement);
@@ -1201,8 +1283,8 @@ class _CasePlan {
     return _CasePlan(toggles, shifts);
   }
 
-  static bool? _caseRequirement(int rune) {
-    for (final model in MCOtxtModelRegistry.builtinModels) {
+  static bool? _caseRequirement(int rune, MCOtxtModelSet modelSet) {
+    for (final model in modelSet.models) {
       final normalized = model.normalizeRune(rune);
       if (normalized == null) continue;
       if (model.lowercaseToUppercase[normalized] == null) continue;

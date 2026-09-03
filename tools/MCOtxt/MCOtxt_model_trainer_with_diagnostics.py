@@ -89,7 +89,7 @@ BITS_TOGGLE = 6
 BITS_PRIMARY_LITERAL = 7
 BITS_PUNCTUATION = 8
 BITS_EXTENSION_LITERAL = 9
-BITS_HEADER = 9  # VVV AAA BBB. Single-language validation uses B=NONE.
+BITS_HEADER = 12  # VVV GGG AAA BBB. Single-language validation uses B=NONE.
 BITS_RAW_UTF8_HEADER = 16  # RAW_UTF8 mode header padded/aligned to 2 bytes.
 BITS_CASE_MODE_TOGGLE = 9  # EXTENDED_CONTROL + TOGGLE_CASE_MODE subopcode.
 BITS_UTF8_RUN_OVERHEAD = 14  # EXTENDED_CONTROL + subtype + lengthMinus1.
@@ -1284,6 +1284,10 @@ def _camel(code: str) -> str:
 
 MODEL_MANIFEST_VERSION = 1
 MODEL_MANIFEST_FILENAME = "model_manifest.json"
+# Generation of the bundled table set, written into the stream header. It
+# moves when an existing table is regenerated, not when a reserved language
+# gains tables; see README "Поколения моделей".
+MODEL_GENERATION = 0
 
 
 def model_wire_identity(model: Model) -> Dict[str, object]:
@@ -1323,6 +1327,7 @@ def _empty_manifest() -> Dict[str, object]:
         "format": "MCOtxt model manifest",
         "manifestVersion": MODEL_MANIFEST_VERSION,
         "codecVersion": MCOTXT_VERSION,
+        "modelGeneration": MODEL_GENERATION,
         "frozen": False,
         "hashAlgorithm": "sha256",
         "hashScope": "canonical wire-significant model data",
@@ -1347,6 +1352,7 @@ def load_model_manifest(path: Path) -> Dict[str, object]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("manifestVersion") != MODEL_MANIFEST_VERSION or data.get("codecVersion") != MCOTXT_VERSION:
         raise ValueError(f"Unsupported/incompatible MCOtxt model manifest: {path}")
+    data.setdefault("modelGeneration", MODEL_GENERATION)
     models = data.setdefault("models", {})
     template = _empty_manifest()["models"]
     for code, entry in template.items():
@@ -1758,14 +1764,14 @@ def render_report(
     lines.append(f"- SHIFT tokens: `{validation.shifts}`")
     lines.append(f"- Punctuation tokens: `{validation.punctuation_symbols}`")
     lines.append(f"- Token bits: `{validation.token_bits}`")
-    lines.append(f"- Header bits (9/message): `{validation.header_bits}`")
+    lines.append(f"- Header bits (12/message): `{validation.header_bits}`")
     lines.append(f"- Total bits: `{validation.total_bits}`")
     lines.append(f"- Bits/output-char, tokens only: `{_fmt_float(validation.bits_per_output_char_tokens)}`")
     lines.append(f"- Bits/output-char, incl. per-message header: `{_fmt_float(validation.bits_per_output_char_total)}`")
     lines.append(f"- UTF-8 bytes of the same decoded/supported text: `{validation.decoded_utf8_bytes}`")
     lines.append(f"- Compression ratio vs same decoded UTF-8: `{_fmt_float(validation.ratio_vs_decoded_utf8)}x`")
     lines.append("")
-    lines.append("> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 9-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.")
+    lines.append("> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 12-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.")
     lines.append("")
 
     lines.append("## TOP-4 rank diagnostics — validation")
@@ -2375,7 +2381,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(f"  primary / extension:  {len(model.primary)} / {len(model.extension)}")
     print(f"  validation messages:  {validation.messages}")
     print(f"  TOP-4 hit rate:       {validation.top4_hit_rate * 100:.2f}%")
-    print(f"  bits/output char:     {validation.bits_per_output_char_total:.4f} (forced MCOtxt, incl. 9-bit header/message)")
+    print(f"  bits/output char:     {validation.bits_per_output_char_total:.4f} (forced MCOtxt, incl. 12-bit header/message)")
     print(
         f"  RAW_UTF8 selected:    {validation.selected_raw_utf8_messages} / "
         f"{validation.messages} messages"

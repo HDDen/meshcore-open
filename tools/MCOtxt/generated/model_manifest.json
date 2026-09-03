@@ -2,6 +2,7 @@
   "format": "MCOtxt model manifest",
   "manifestVersion": 1,
   "codecVersion": 1,
+  "modelGeneration": 0,
   "frozen": false,
   "hashAlgorithm": "sha256",
   "hashScope": "canonical wire-significant model data",

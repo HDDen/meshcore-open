@@ -10,7 +10,7 @@ This is a reference cost benchmark, not a bitstream encoder/decoder.
 It is useful for comparing trained tables/corpora independently of Flutter.
 
 Semantics:
-- 9-bit header/message.
+- 12-bit header/message: VVV GGG AAA BBB (version, model generation, languages A and B).
 - variable TOP4: rank0=2 bits, rank1=3 bits, rank2/rank3=4 bits.
 - PRIMARY literal 7 bits.
 - EXTENSION literal 9 bits.
@@ -41,7 +41,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
-HEADER_BITS = 9
+HEADER_BITS = 12
 RAW_UTF8_HEADER_BITS = 16
 TOP4_BITS_BY_RANK = (2, 3, 4, 4)
 PRIMARY_BITS = 7

@@ -31,13 +31,15 @@ letter from a static TOP-4 table per language and spends a variable-length
 token on each character. A whole model is a few hundred bytes, so the same
 tables are exported as a C header for microcontroller ports.
 
-- The codec version travels in the first three bits of every stream; `1` is
-  the only value a decoder accepts today.
+- The codec version is the first header field of every stream (`1` today) and
+  the model generation the second (`0` today). Both use the escape described
+  under [Header](#header), so neither is limited to three bits.
 - The application container is MCO Advanced channel subtype `0x03`, wire
   revision `0x01`, packed as the byte `0x31`. Its text transport uses the
   prefix `mct:`.
 - Language tables are identified by a SHA-256 wire hash recorded in
-  `tools/MCOtxt/generated/model_manifest.json`. The manifest is **not frozen
+  `tools/MCOtxt/generated/model_manifest.json` together with the current
+  `modelGeneration`. The manifest is **not frozen
   yet** (`"frozen": false`): the bundled English, Russian and French tables can
   still be regenerated before the freeze, and a regenerated table changes its
   hash. After the freeze a table may only change under a new language id or a
@@ -69,7 +71,7 @@ transport        GROUP_TEXT "Name: mct:<Base91>"   |   GROUP_DATA 0x0120 envelop
 container        flags | [timestamp] | [senderName] | [reply] | text
 string           mode byte (0 = MCOtxt frame, 1 = UTF-8)
 frame            varuint(bitLength) | ceil(bitLength / 8) bytes
-stream           3-bit version | language header | tokens
+stream           version | generation | language header | tokens
 ```
 
 An implementation that only needs to embed text in its own format (an image
@@ -82,22 +84,30 @@ container and transports are how MeshCore Open Advanced sends chat messages.
 
 | Bits | Field | Values |
 |---:|---|---|
-| 3 | version | `1` (`001`). Any other value: `unknownVersion`. |
+| 3 (+8) | version | Codec version, escaped field; `1` today. `0` and every other value: `unknownVersion`. |
+| 3 (+8) | generation | Model-set generation, escaped field; `0` today. See [Model generations](#model-generations). |
 | 3 | language A | `0`–`6` inline language id; `7` = an extended header follows. |
 | 3 | language B | `0`–`6` inline language id; `7` = no second language. |
 
-With an inline language A the header is 9 bits long. Language A is the active
-language when decoding starts; language B, when present, is the partner of
-`TOGGLE_LANGUAGE`. Both must be languages this build has tables for, otherwise
-the decoder reports `modelUnavailable`. A and B must differ.
+**Escaped fields.** `version` and `generation` share one shape: a value from
+`0` to `6` is written in three bits; `7` and above are written as the three-bit
+escape `7` followed by eight bits holding `value − 7`. The range is therefore
+`0`–`262`, and every value has exactly one encoding, since the escape cannot
+produce a value below `7` and the short form cannot reach `7`.
+
+With inline fields and an inline language A the header is 12 bits long; every
+escape adds eight bits. Language A is the active language when decoding
+starts; language B, when present, is the partner of `TOGGLE_LANGUAGE`. Both
+must be languages the selected generation has tables for, otherwise the
+decoder reports `modelUnavailable`. A and B must differ.
 
 When the language A field is `7`, the next 3 bits select an extended header
 format:
 
 | Format | Meaning | Header length |
 |---:|---|---:|
-| `0` | Language pair as two 8-bit global ids: A (must not be `255`), then B (`255` = none). | 25 bits |
-| `1` | `RAW_UTF8` message mode: 7 zero padding bits follow, then the whole text as UTF-8 bytes. | 16 bits |
+| `0` | Language pair as two 8-bit global ids: A (must not be `255`), then B (`255` = none). | 28 bits |
+| `1` | `RAW_UTF8` message mode: 4 zero padding bits follow, then the whole text as UTF-8 bytes. | 16 bits |
 | `2`–`7` | Reserved: `unsupportedExtendedHeader`. | — |
 
 Today every language id fits the inline field, so the reference encoder never
@@ -199,10 +209,13 @@ express.
 ### RAW_UTF8 message mode
 
 When the whole message is smaller as plain UTF-8, the encoder emits the 16-bit
-header (`001` `111` `001` and seven zero bits) followed by the UTF-8 bytes of
-the normalised text. The decoder requires the padding bits to be zero, the
-remaining bit count to be a multiple of eight, and the bytes to be valid UTF-8
-(`invalidRawUtf8`). No language tables are involved.
+header (`001` version, `000` generation, `111`, `001` format and four zero
+padding bits) followed by the UTF-8 bytes of the normalised text. An escaped
+version or generation adds eight bits, so the payload stays byte-aligned. The
+decoder requires the padding bits to be zero, the remaining bit count to be a
+multiple of eight, and the bytes to be valid UTF-8 (`invalidRawUtf8`). No
+language tables are involved: the generation is read and reported but never
+checked, so a `RAW_UTF8` message from a newer generation still decodes.
 
 ### Punctuation page
 
@@ -266,8 +279,10 @@ stream fits a bit budget, for containers with a fixed capacity.
 
 A decoder reads tokens until the declared bit count is exhausted. It rejects:
 
-- a version other than `1`, an unknown or unavailable language, a reserved
-  extended header format or sub-opcode;
+- a version other than `1`; a generation this build has no tables for
+  (`unsupportedModelGeneration`, checked after the header and never in
+  `RAW_UTF8`); an unknown or unavailable language; a reserved extended header
+  format or sub-opcode;
 - a table id beyond the table it indexes;
 - `TOGGLE_LANGUAGE` without a language B or outside the A/B pair;
 - any `SHIFT` misuse listed above;
@@ -278,6 +293,29 @@ A decoder reads tokens until the declared bit count is exhausted. It rejects:
 The error codes are `MCOtxtCodecError` in `lib/MCOtxt/mcotxt_errors.dart`.
 
 ## Language models
+
+### Model generations
+
+The `generation` header field names the complete set of tables a stream was
+encoded with, all seven language ids at once rather than a single language.
+The rules that move it:
+
+- regenerating a table that already exists changes its wire hash and starts a
+  new generation;
+- adding tables to a reserved language (German, Italian, Ukrainian,
+  Belarusian) keeps the generation, since no existing stream changes meaning;
+- changing the punctuation page, the token tree, the prediction contexts or
+  the table limits is a new codec version, not a new generation. Generations
+  are numbered within a version, and the pair (version, generation) identifies
+  the table set exactly.
+
+A decoder keeps the sets it knows (`MCOtxtModelSet` in
+`lib/MCOtxt/models/mcotxt_model_registry.dart`, generation `0` today) and
+resolves the header's generation to one of them. A generation it does not have
+is `unsupportedModelGeneration`, distinct from `unknownLanguage` and
+`modelUnavailable`, so a client can tell "update me" from "bad data". An
+encoder writes the latest generation it has unless asked for a specific one.
+The current generation is recorded as `modelGeneration` in the model manifest.
 
 ### Language identifiers
 
@@ -318,9 +356,10 @@ the wire format**: it defines the literal ids.
 
 ### Bundled v1 tables
 
-Symbol order below is the literal id order; `␠` is SPACE. The complete TOP-4
-rows are in `tools/MCOtxt/generated/<lang>/model_<lang>.dart` and `.h` and are
-covered by the wire hash.
+These tables form generation `0`. Symbol order below is the literal id order;
+`␠` is SPACE. The complete TOP-4 rows are in
+`tools/MCOtxt/generated/<lang>/model_<lang>.dart` and `.h` and are covered by
+the wire hash.
 
 **English, id 0**, hash `55988b3bb2a000adf6e768a8541df5a25fec1628b4ec661a10b577e3af8b3770`
 
@@ -573,7 +612,8 @@ How MeshCore Open Advanced applies the codec; other clients may differ.
 
 Excluding the text stream itself:
 
-- stream header: 9 bits per string (16 for `RAW_UTF8`);
+- stream header: 12 bits per string (16 for `RAW_UTF8`), plus 8 for every
+  escaped version or generation;
 - frame: 1 byte of bit count up to 127 bits, 2 bytes beyond;
 - string: 1 mode byte;
 - container: 1 flags byte, plus 4 bytes of timestamp unless inherited, plus
@@ -586,7 +626,8 @@ Excluding the text stream itself:
 
 On the validation hold-outs of the bundled corpora the stream itself costs
 about 5.5 bits per character for Russian and about 5.2 for English and French,
-9-bit header included.
+measured with the earlier 9-bit header; the three extra header bits add under
+0.1 bit per character on those corpora.
 
 ## Decoder validation checklist
 
@@ -594,7 +635,8 @@ A conforming decoder should:
 
 - require the caller to supply the exact bit count and never infer it from a
   byte count;
-- reject a version other than `1`;
+- reject a version other than `1`, and outside `RAW_UTF8` a generation it has
+  no tables for;
 - reject languages it has no tables for, in the header and in
   `SWITCH_OTHER_LANGUAGE`;
 - reject reserved header formats and sub-opcodes;
@@ -614,6 +656,7 @@ A conforming decoder should:
 Codec, frame and container coverage lives in
 `test/MCOtxt/mcotxt_codec_test.dart`. `tools/MCOtxt/verify_runtime_models.py`
 checks that the runtime Dart tables, the generated C headers and the manifest
-carry the same wire hashes; `tools/MCOtxt/freeze_model_manifest.py` freezes the
+carry the same wire hashes and that the manifest's `modelGeneration` has a
+registered set; `tools/MCOtxt/freeze_model_manifest.py` freezes the
 manifest once every reserved language has tables. The trainer and its
 README live in `tools/MCOtxt/`.

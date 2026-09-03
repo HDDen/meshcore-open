@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'mcotxt_model.dart';
 import 'generated/v1/model_be.dart';
 import 'generated/v1/model_de.dart';
@@ -7,6 +9,70 @@ import 'generated/v1/model_it.dart';
 import 'generated/v1/model_ru.dart';
 import 'generated/v1/model_uk.dart';
 
+/// One complete set of language tables: all seven declared languages of a
+/// model generation, available ones and `unavailable` placeholders alike.
+///
+/// A generation numbers the whole set, not a single language. Regenerating a
+/// table that already exists changes its wire hash and therefore starts a new
+/// generation; adding tables to a reserved language keeps the generation,
+/// since no existing stream changes meaning. Generations are numbered within
+/// a codec version: a change to the punctuation page, the token tree, the
+/// contexts or the table limits is a new codec version instead.
+class MCOtxtModelSet {
+  final int generation;
+  final List<MCOtxtLanguageModel> allModels;
+  final List<MCOtxtLanguageModel> models;
+  final Map<MCOtxtLanguageId, MCOtxtLanguageModel> _byId;
+  final Map<int, MCOtxtLanguageModel> _byGlobalId;
+
+  MCOtxtModelSet({
+    required this.generation,
+    required List<MCOtxtLanguageModel> allModels,
+  }) : allModels = List<MCOtxtLanguageModel>.unmodifiable(allModels),
+       models = List<MCOtxtLanguageModel>.unmodifiable(
+         allModels.where((model) => model.available),
+       ),
+       _byId = <MCOtxtLanguageId, MCOtxtLanguageModel>{
+         for (final model in allModels) model.id: model,
+       },
+       _byGlobalId = <int, MCOtxtLanguageModel>{
+         for (final model in allModels)
+           if (model.available) model.globalId: model,
+       } {
+    if (generation < 0 ||
+        generation > MCOtxtModelRegistry.maxModelGeneration) {
+      throw ArgumentError.value(
+        generation,
+        'generation',
+        'MCOtxt model generation must be 0..'
+            '${MCOtxtModelRegistry.maxModelGeneration}',
+      );
+    }
+  }
+
+  MCOtxtLanguageModel? declarationFor(MCOtxtLanguageId? id) =>
+      id == null ? null : _byId[id];
+
+  bool isAvailable(MCOtxtLanguageId? id) =>
+      declarationFor(id)?.available ?? false;
+
+  MCOtxtLanguageModel? modelFor(MCOtxtLanguageId? id) {
+    final model = declarationFor(id);
+    return model != null && model.available ? model : null;
+  }
+
+  MCOtxtLanguageModel? modelForGlobalId(int? globalId) {
+    if (globalId == null ||
+        globalId == MCOtxtModelRegistry.globalLanguageNoneId) {
+      return null;
+    }
+    return _byGlobalId[globalId];
+  }
+
+  List<int> get availableGlobalLanguageIds =>
+      List<int>.unmodifiable(_byGlobalId.keys);
+}
+
 class MCOtxtModelRegistry {
   static const int languageNoneWireId = 7;
   static const int extendedLanguageHeaderWireId = 7;
@@ -15,53 +81,54 @@ class MCOtxtModelRegistry {
   static const int globalLanguageNoneId = 255;
   static const int inlineLanguageMaxId = 6;
 
-  // All reserved v1 language IDs have a static generated artifact.
-  // Missing trained languages are represented by explicit unavailable models;
-  // runtime never derives statistical tables from embedded training strings.
-  static final List<MCOtxtLanguageModel> allModels = <MCOtxtLanguageModel>[
-    mcotxtModelEn,
-    mcotxtModelRu,
-    mcotxtModelFr,
-    mcotxtModelDe,
-    mcotxtModelIt,
-    mcotxtModelUk,
-    mcotxtModelBe,
-  ];
+  /// Largest generation the escaped header field can carry: `7 + 0xff`.
+  static const int maxModelGeneration = 262;
 
-  // Historical name retained for codec callers: only wire-usable models are
-  // exposed here, so unavailable placeholders never enter encoder search.
-  static final List<MCOtxtLanguageModel> builtinModels =
-      List<MCOtxtLanguageModel>.unmodifiable(
-        allModels.where((model) => model.available),
-      );
+  // Every generation lists all reserved v1 language IDs with a static
+  // generated artifact. Missing trained languages are represented by explicit
+  // unavailable models; runtime never derives statistical tables from
+  // embedded training strings.
+  static final Map<int, MCOtxtModelSet> _modelSets = <int, MCOtxtModelSet>{
+    0: MCOtxtModelSet(
+      generation: 0,
+      allModels: <MCOtxtLanguageModel>[
+        mcotxtModelEn,
+        mcotxtModelRu,
+        mcotxtModelFr,
+        mcotxtModelDe,
+        mcotxtModelIt,
+        mcotxtModelUk,
+        mcotxtModelBe,
+      ],
+    ),
+  };
 
-  static final Map<MCOtxtLanguageId, MCOtxtLanguageModel> _allModelsById =
-      <MCOtxtLanguageId, MCOtxtLanguageModel>{
-        for (final model in allModels) model.id: model,
-      };
+  static List<int> get generations =>
+      List<int>.unmodifiable(_modelSets.keys.toList()..sort());
 
-  static final Map<int, MCOtxtLanguageModel> _modelsByGlobalId =
-      <int, MCOtxtLanguageModel>{
-        for (final model in builtinModels) model.globalId: model,
-      };
+  static int get latestGeneration => _modelSets.keys.reduce(math.max);
 
-  static MCOtxtLanguageModel? declarationFor(MCOtxtLanguageId? id) {
-    if (id == null) return null;
-    return _allModelsById[id];
-  }
+  /// The set new streams are encoded with unless a generation is pinned.
+  static MCOtxtModelSet get latest => _modelSets[latestGeneration]!;
 
-  static bool isAvailable(MCOtxtLanguageId? id) =>
-      declarationFor(id)?.available ?? false;
+  static MCOtxtModelSet? setFor(int generation) => _modelSets[generation];
 
-  static MCOtxtLanguageModel? modelFor(MCOtxtLanguageId? id) {
-    final model = declarationFor(id);
-    return model != null && model.available ? model : null;
-  }
+  // Historical entry points kept as views of the latest generation; the
+  // codec itself works on the [MCOtxtModelSet] it resolved from the header.
+  static List<MCOtxtLanguageModel> get allModels => latest.allModels;
 
-  static MCOtxtLanguageModel? modelForGlobalId(int? globalId) {
-    if (globalId == null || globalId == globalLanguageNoneId) return null;
-    return _modelsByGlobalId[globalId];
-  }
+  static List<MCOtxtLanguageModel> get builtinModels => latest.models;
+
+  static MCOtxtLanguageModel? declarationFor(MCOtxtLanguageId? id) =>
+      latest.declarationFor(id);
+
+  static bool isAvailable(MCOtxtLanguageId? id) => latest.isAvailable(id);
+
+  static MCOtxtLanguageModel? modelFor(MCOtxtLanguageId? id) =>
+      latest.modelFor(id);
+
+  static MCOtxtLanguageModel? modelForGlobalId(int? globalId) =>
+      latest.modelForGlobalId(globalId);
 
   static MCOtxtLanguageId? languageForGlobalId(int? globalId) {
     if (globalId == null || globalId == globalLanguageNoneId) return null;
@@ -69,7 +136,7 @@ class MCOtxtModelRegistry {
   }
 
   static List<int> get availableGlobalLanguageIds =>
-      List<int>.unmodifiable(_modelsByGlobalId.keys);
+      latest.availableGlobalLanguageIds;
 
   static int? inlineHeaderIdForGlobalId(int? globalId) {
     if (globalId == null || globalId == globalLanguageNoneId) {

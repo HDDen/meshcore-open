@@ -201,10 +201,11 @@ void main() {
 
     test('rejects non-zero RAW_UTF8 padding bits', () {
       final writer = _MCOtxtTestWriter()
-        ..writeBits(MCOtxtCodec.version, 3)
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(MCOtxtModelRegistry.latestGeneration)
         ..writeBits(7, 3)
         ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
-        ..writeBits(1, 7);
+        ..writeBits(1, 4);
 
       expect(
         () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
@@ -220,10 +221,11 @@ void main() {
 
     test('rejects invalid RAW_UTF8 bytes', () {
       final writer = _MCOtxtTestWriter()
-        ..writeBits(MCOtxtCodec.version, 3)
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(MCOtxtModelRegistry.latestGeneration)
         ..writeBits(7, 3)
         ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
-        ..writeBits(0, 7)
+        ..writeBits(0, 4)
         ..writeBits(0xc3, 8)
         ..writeBits(0x28, 8);
 
@@ -273,20 +275,22 @@ void main() {
   });
 
   group('MCOtxt extended language header', () {
-    test('normal header remains 9 bits for current inline languages', () {
+    test('normal header is 12 bits for current inline languages', () {
       final encoded = MCOtxtCodec.encode(
         'Hello',
         options: const MCOtxtEncodeOptions(languageA: MCOtxtLanguageId.en),
       );
 
-      expect(encoded.bitStream.substring(0, 9), '001000111');
+      // version 1, generation 0, EN, no language B.
+      expect(encoded.bitStream.substring(0, 12), '001000000111');
     });
 
     test('reserved extended header formats are rejected', () {
       final writer = _MCOtxtTestWriter()
-        ..writeBits(MCOtxtCodec.version, 3)
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(MCOtxtModelRegistry.latestGeneration)
         ..writeBits(7, 3)
-        ..writeBits(1, 3);
+        ..writeBits(2, 3);
 
       expect(
         () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
@@ -467,6 +471,142 @@ void main() {
     });
   });
 
+  group('MCOtxt header', () {
+    test('encode reports the latest generation and decode returns it', () {
+      final encoded = MCOtxtCodec.encode('Привет, как дела');
+      final decoded = MCOtxtCodec.decode(
+        encoded.data,
+        bitLength: encoded.bitLength,
+      );
+
+      expect(encoded.encodingMode, MCOtxtEncodingMode.mcotxt);
+      expect(encoded.modelGeneration, MCOtxtModelRegistry.latestGeneration);
+      expect(decoded.modelGeneration, MCOtxtModelRegistry.latestGeneration);
+    });
+
+    test('RAW_UTF8 encode carries the generation as well', () {
+      final encoded = MCOtxtCodec.encode('你好世界🙂');
+      final decoded = MCOtxtCodec.decode(
+        encoded.data,
+        bitLength: encoded.bitLength,
+      );
+
+      expect(encoded.encodingMode, MCOtxtEncodingMode.rawUtf8);
+      expect(encoded.modelGeneration, MCOtxtModelRegistry.latestGeneration);
+      expect(decoded.modelGeneration, MCOtxtModelRegistry.latestGeneration);
+    });
+
+    test('a pinned generation without tables is rejected on encode', () {
+      expect(
+        () => MCOtxtCodec.encode(
+          'hello',
+          options: const MCOtxtEncodeOptions(modelGeneration: 3),
+        ),
+        throwsA(
+          isA<MCOtxtCodecException>().having(
+            (error) => error.code,
+            'code',
+            MCOtxtCodecError.unsupportedModelGeneration,
+          ),
+        ),
+      );
+    });
+
+    test('a version written through the escape is rejected by number', () {
+      final writer = _MCOtxtTestWriter()
+        ..headerField(8)
+        ..headerField(MCOtxtModelRegistry.latestGeneration)
+        ..writeBits(MCOtxtLanguageId.en.wireId, 3)
+        ..writeBits(MCOtxtModelRegistry.languageNoneWireId, 3)
+        ..top4(0);
+
+      expect(
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        throwsA(
+          isA<MCOtxtCodecException>().having(
+            (error) => error.code,
+            'code',
+            MCOtxtCodecError.unknownVersion,
+          ),
+        ),
+      );
+    });
+
+    test('an inline generation without tables is rejected', () {
+      final writer = _MCOtxtTestWriter()
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(3)
+        ..writeBits(MCOtxtLanguageId.en.wireId, 3)
+        ..writeBits(MCOtxtModelRegistry.languageNoneWireId, 3)
+        ..top4(0);
+
+      expect(
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        throwsA(
+          isA<MCOtxtCodecException>().having(
+            (error) => error.code,
+            'code',
+            MCOtxtCodecError.unsupportedModelGeneration,
+          ),
+        ),
+      );
+    });
+
+    test('an escaped generation without tables is rejected in MCOtxt mode', () {
+      final writer = _MCOtxtTestWriter()
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(7)
+        ..writeBits(MCOtxtLanguageId.en.wireId, 3)
+        ..writeBits(MCOtxtModelRegistry.languageNoneWireId, 3)
+        ..top4(0);
+
+      // 3 version + 3 escape + 8 payload + 3 + 3 languages + 2 TOP4.
+      expect(writer.bitLength, 22);
+      expect(
+        () => MCOtxtCodec.decode(writer.toBytes(), bitLength: writer.bitLength),
+        throwsA(
+          isA<MCOtxtCodecException>().having(
+            (error) => error.code,
+            'code',
+            MCOtxtCodecError.unsupportedModelGeneration,
+          ),
+        ),
+      );
+    });
+
+    test('RAW_UTF8 decodes under an unknown generation and reports it', () {
+      final writer = _rawUtf8Writer('hi', generation: 5);
+      final decoded = MCOtxtCodec.decode(
+        writer.toBytes(),
+        bitLength: writer.bitLength,
+      );
+
+      expect(decoded.text, 'hi');
+      expect(decoded.modelGeneration, 5);
+      expect(decoded.languageA, isNull);
+    });
+
+    test('an escaped generation keeps the RAW_UTF8 header byte-aligned', () {
+      final writer = _MCOtxtTestWriter()
+        ..headerField(MCOtxtCodec.version)
+        ..headerField(9)
+        ..writeBits(7, 3)
+        ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
+        ..writeBits(0, 4);
+      expect(writer.bitLength, 24);
+      for (final byte in utf8.encode('ok')) {
+        writer.writeBits(byte, 8);
+      }
+      final decoded = MCOtxtCodec.decode(
+        writer.toBytes(),
+        bitLength: writer.bitLength,
+      );
+
+      expect(decoded.text, 'ok');
+      expect(decoded.modelGeneration, 9);
+    });
+  });
+
   group('MCOtxt frame', () {
     test('roundtrips and reports its extent', () {
       const text = 'Привет, как дела';
@@ -519,17 +659,19 @@ void main() {
 
 _MCOtxtTestWriter _writer(MCOtxtLanguageId a, {MCOtxtLanguageId? b}) {
   return _MCOtxtTestWriter()
-    ..writeBits(MCOtxtCodec.version, 3)
+    ..headerField(MCOtxtCodec.version)
+    ..headerField(MCOtxtModelRegistry.latestGeneration)
     ..writeBits(a.wireId, 3)
     ..writeBits(b?.wireId ?? MCOtxtModelRegistry.languageNoneWireId, 3);
 }
 
-_MCOtxtTestWriter _rawUtf8Writer(String text) {
+_MCOtxtTestWriter _rawUtf8Writer(String text, {int? generation}) {
   final writer = _MCOtxtTestWriter()
-    ..writeBits(MCOtxtCodec.version, 3)
+    ..headerField(MCOtxtCodec.version)
+    ..headerField(generation ?? MCOtxtModelRegistry.latestGeneration)
     ..writeBits(7, 3)
     ..writeBits(MCOtxtModelRegistry.rawUtf8HeaderFormat, 3)
-    ..writeBits(0, 7);
+    ..writeBits(0, 4);
   for (final byte in utf8.encode(text)) {
     writer.writeBits(byte, 8);
   }
@@ -537,9 +679,30 @@ _MCOtxtTestWriter _rawUtf8Writer(String text) {
 }
 
 class _MCOtxtTestWriter extends BitWriter {
+  // Header fields: 0..6 inline, 7 and above as the escape plus eight bits.
+  void headerField(int value) {
+    if (value < 7) {
+      writeBits(value, 3);
+      return;
+    }
+    writeBits(7, 3);
+    writeBits(value - 7, 8);
+  }
+
+  // Variable-length TOP4 codes: 00, 010, 0110, 0111.
   void top4(int rank) {
-    writeBit(0);
-    writeBits(rank, 2);
+    switch (rank) {
+      case 0:
+        writeBits(0, 2);
+      case 1:
+        writeBits(2, 3);
+      case 2:
+        writeBits(6, 4);
+      case 3:
+        writeBits(7, 4);
+      default:
+        fail('Invalid TOP4 rank $rank');
+    }
   }
 
   void punctuation(String value) {

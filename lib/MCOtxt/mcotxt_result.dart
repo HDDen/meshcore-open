@@ -16,6 +16,9 @@ class MCOtxtEncodeResult {
   final List<String> debugTokens;
   final String decodedText;
   final int encoderVersion;
+
+  /// Generation written into the header, also for RAW_UTF8 streams.
+  final int modelGeneration;
   final List<MCOtxtTableId> usedTables;
   final MCOtxtLanguageId? languageA;
   final MCOtxtLanguageId? languageB;
@@ -36,6 +39,7 @@ class MCOtxtEncodeResult {
     required this.debugTokens,
     required this.decodedText,
     required this.encoderVersion,
+    required this.modelGeneration,
     required this.usedTables,
     required this.languageA,
     required this.languageB,
@@ -52,6 +56,10 @@ class MCOtxtEncodeResult {
 class MCOtxtDecodeResult {
   final String text;
   final int decoderVersion;
+
+  /// Generation read from the header. For RAW_UTF8 it is reported as
+  /// written and never checked against the tables this build has.
+  final int modelGeneration;
   final List<MCOtxtTableId> usedTables;
   final MCOtxtLanguageId? languageA;
   final MCOtxtLanguageId? languageB;
@@ -59,6 +67,7 @@ class MCOtxtDecodeResult {
   const MCOtxtDecodeResult({
     required this.text,
     required this.decoderVersion,
+    required this.modelGeneration,
     required this.usedTables,
     required this.languageA,
     required this.languageB,

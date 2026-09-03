@@ -314,8 +314,10 @@ model, MCOtxt predicts the next letter from a static per-language TOP-4 table an
 variable-length token per character — a whole model is a few hundred bytes, so the same tables
 are exported as C headers for microcontroller ports. Four layers, each in its own place:
 
-- **Stream** — `lib/MCOtxt/mcotxt_codec.dart`: 3-bit version (`1`), 3+3-bit language pair
-  (`7` = none / extended header), then tokens. TOP4 ranks cost 2/3/4/4 bits, primary literals 7,
+- **Stream** — `lib/MCOtxt/mcotxt_codec.dart`: a header of four 3-bit fields — codec version
+  (`1`), model-set generation (`0`), language A, language B — where version and generation escape
+  through `7` + 8 bits (range 0–262, one encoding per value) and language `7` means none /
+  extended header; then tokens. TOP4 ranks cost 2/3/4/4 bits, primary literals 7,
   punctuation 8, extension literals 9, SHIFT 5, TOGGLE_LANGUAGE 6, extended controls 9+
   (SWITCH_OTHER_LANGUAGE, RESET_CONTEXT, UTF8_RUN up to 32 bytes, TOGGLE_CASE_MODE). Three
   prediction contexts: START, AFTER_PUNCT, SYMBOL(prev). A whole message that is smaller as
@@ -334,7 +336,12 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   tables are generated, never edited: `tools/MCOtxt/MCOtxt_model_trainer_with_diagnostics.py`
   writes `models/generated/v1/model_<lang>.dart`, a C header and a report, and records a SHA-256
   wire hash in `tools/MCOtxt/generated/model_manifest.json`; `verify_runtime_models.py` checks
-  Dart, C and manifest agree; `freeze_model_manifest.py` freezes the set (not frozen yet).
+  Dart, C and manifest agree; `freeze_model_manifest.py` freezes the set (not frozen yet). Tables
+  live in `MCOtxtModelSet`s keyed by generation (`MCOtxtModelRegistry.latest` / `setFor`): a
+  regenerated existing table is a new generation, a table added to a reserved language is not,
+  and a header generation this build lacks decodes as `unsupportedModelGeneration` — except in
+  RAW_UTF8, which needs no tables. Generations are numbered within a codec version; the manifest
+  records the current one as `modelGeneration`.
 - **Container and transports** — `lib/helpers/mcotxt_app_codec.dart`: flags (`0x01` reply,
   `0x02` embedded sender name, `0x04` timestamp inherited from the packet), optional u32
   timestamp, optional name, optional reply anchor, then the text; every string is a mode byte
