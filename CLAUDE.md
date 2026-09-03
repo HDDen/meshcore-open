@@ -45,7 +45,8 @@ lib/
 ├── models/          # Plain data classes (Contact, Channel, Message, Community, …)
 ├── services/        # ChangeNotifier services + IO services (retry, wardrive, ML, …)
 ├── storage/         # Per-device-key stores (SharedPreferences; message history in SQLite)
-├── helpers/         # Pure utilities (MCMP/Smaz/cyr2lat compression, MCO image codec, GIF parsing, path hop resolution)
+├── helpers/         # Pure utilities (MCMP/Smaz/cyr2lat compression, MCMP/MCOtxt app containers, MCO image codec, GIF parsing, path hop resolution)
+├── MCOtxt/          # MCOtxt v1 text codec: bit codec, frame primitive, static language models (generated)
 ├── utils/           # Platform / IO / UX utilities (logger, GPX export, dialogs)
 ├── theme/           # MeshTheme — warm-dark MeshPalette, wired in main.dart
 ├── l10n/            # ARB localization for 18 locales
@@ -157,7 +158,7 @@ Most stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleto
 | `channel_store`, `channel_order_store`, `channel_settings_store`, `channel_group_store` | Channels, display order, per-channel compression/sign toggles, channel groups |
 | `channel_region_store`, `region_store` | Per-channel region tag + known regions / flood scopes (Advanced mod) |
 | `community_store` | Communities (32-byte shared secrets) |
-| `contact_group_store`, `contact_settings_store` | Groups; per-contact compression (MCMP/Smaz/cyr2lat), sign, sending-delay, quick-answer, widget-color settings |
+| `contact_group_store`, `contact_settings_store` | Groups; per-contact compression (MCMP/MCOtxt/Smaz/cyr2lat), sign, sending-delay, quick-answer, widget-color settings |
 | `node_identity_store` | Cached self/node identity metadata |
 | `connection_transport_preference_store` | Last-used transport (BLE/USB/TCP) per device |
 | `mco_image_gallery_store` | On-device MCO image gallery + bundled `.mcoimg.pack` index (Advanced mod) |
@@ -275,12 +276,13 @@ Every non-template locale carries ~37 keys that `app_en.arb` no longer has — t
 
 Everything below is fork-specific and lives on top of the vanilla protocol. Most is threaded through `MeshCoreConnector` on the send/receive paths; toggles are per-contact / per-channel in `contact_settings_store` / `channel_settings_store` and edited in `mod_settings_screen.dart`.
 
-### Text compression (3 selectable schemes)
-`MessageCompressionType { mcmp, smaz, cyr2lat }` (`models/message_compression.dart`). Applied outbound in `MeshCoreConnector.prepareContactOutboundText()` / `prepareChannelOutboundText()`; decoded inbound via `helpers/message_text_codec.dart` by prefix.
+### Text compression (4 selectable schemes)
+`MessageCompressionType { mcmp, smaz, cyr2lat, mcotxt }` (`models/message_compression.dart`). Applied outbound in `MeshCoreConnector.prepareContactOutboundText()` / `prepareChannelOutboundText()`; decoded inbound via `helpers/message_text_codec.dart` by prefix (`mcmp2:`, `mcmp3:`, `mct:`, SMAZ).
 - **MCMP** (`helpers/mesh_compressor.dart`) — context-mixing + arithmetic coder driven by the bundled `assets/models/model-en-ru.json` (EN/RU), Base91 output, prefix `mcmp2:` (legacy `mcmp:` gated off). A v3 signed/metadata container is handled by `helpers/mcmp_app_codec.dart`.
 - **SMAZ** (`helpers/smaz.dart`) — classic short-string dictionary coder.
 - **cyr2lat** (`helpers/cyr2lat.dart`) — not real compression; maps look-alike Cyrillic letters to ASCII so Cyrillic text fits the cheaper wire encoding.
-MCMP v2 and SMAZ use their `encodeIfSmaller` paths. MCMP v3 always uses its metadata container
+- **MCOtxt** (`lib/MCOtxt/`, container in `helpers/mcotxt_app_codec.dart`) — static TOP-4 letter-prediction codec with per-language tables, text prefix `mct:`, channel app subtype byte `0x31`. See **MCOtxt v1** below.
+MCMP v2 and SMAZ use their `encodeIfSmaller` paths. MCMP v3 and MCOtxt always use their metadata container
 when selected for an eligible message, whether signed or unsigned; structured payloads that have
 their own format stay outside the normal text-compression path.
 
@@ -303,6 +305,49 @@ being authenticated by its own transport. And shared map markers on a channel tr
 text** under this default: `allowMarkerPayload` is fed from the same flag, and an unsigned envelope
 would cost bytes while proving nothing. A channel whose pins matter has to turn signing on, which is
 what makes a `del:` command attributable.
+
+### MCOtxt v1 (static-model text codec)
+Fork-only text codec specified in [`docs/MCOTXT_V1_PROTOCOL.md`](docs/MCOTXT_V1_PROTOCOL.md)
+(Russian: `docs/MCOTXT_V1_PROTOCOL_RU.md`); keep that document in step with the code, it is
+written for other implementations. Where MCMP runs an arithmetic coder over a large n-gram
+model, MCOtxt predicts the next letter from a static per-language TOP-4 table and spends a
+variable-length token per character — a whole model is a few hundred bytes, so the same tables
+are exported as C headers for microcontroller ports. Four layers, each in its own place:
+
+- **Stream** — `lib/MCOtxt/mcotxt_codec.dart`: 3-bit version (`1`), 3+3-bit language pair
+  (`7` = none / extended header), then tokens. TOP4 ranks cost 2/3/4/4 bits, primary literals 7,
+  punctuation 8, extension literals 9, SHIFT 5, TOGGLE_LANGUAGE 6, extended controls 9+
+  (SWITCH_OTHER_LANGUAGE, RESET_CONTEXT, UTF8_RUN up to 32 bytes, TOGGLE_CASE_MODE). Three
+  prediction contexts: START, AFTER_PUNCT, SYMBOL(prev). A whole message that is smaller as
+  UTF-8 goes out in RAW_UTF8 mode (16-bit header). Case is planned by a separate two-state DP.
+  The stream is **not self-terminating**: padding bits decode as TOP4 tokens, so every embedding
+  carries the bit count. `encodeToBitLimit` fits text into a bit budget.
+- **Frame** — `lib/MCOtxt/mcotxt_frame.dart`, `MCOtxtFrame`: `varuint(bitLength)` + bytes. The
+  one agreed way to put a stream into a byte container; the app container uses it for every
+  string, and a new byte container should call it rather than frame the stream its own way. A
+  bit-packed host (MCOimg v4) keeps only the rule: bit count ahead of the bits.
+- **Models** — `lib/MCOtxt/models/`: `MCOtxtLanguageModel` (primary ≤ 32 with SPACE at index 0,
+  extension ≤ 32, `startTop4`, `punctStartTop4`, one TOP-4 row per symbol, uppercase map) and
+  the shared 32-entry punctuation page. Seven language ids (en ru fr de it uk be); only EN, RU
+  and FR have tables, the rest are `MCOtxtLanguageModel.unavailable` placeholders the decoder
+  rejects with `modelUnavailable`. **Symbol order is wire format** (it defines literal ids), so
+  tables are generated, never edited: `tools/MCOtxt/MCOtxt_model_trainer_with_diagnostics.py`
+  writes `models/generated/v1/model_<lang>.dart`, a C header and a report, and records a SHA-256
+  wire hash in `tools/MCOtxt/generated/model_manifest.json`; `verify_runtime_models.py` checks
+  Dart, C and manifest agree; `freeze_model_manifest.py` freezes the set (not frozen yet).
+- **Container and transports** — `lib/helpers/mcotxt_app_codec.dart`: flags (`0x01` reply,
+  `0x02` embedded sender name, `0x04` timestamp inherited from the packet), optional u32
+  timestamp, optional name, optional reply anchor, then the text; every string is a mode byte
+  (`0` MCOtxt frame, `1` UTF-8) — names take the shorter, text is always `0`. Text transport is
+  `mct:` + Base91 of `0x31` + body; binary channel transport is the `0x0120` envelope with an
+  **empty** outer name and subtype byte `0x31`, the name travelling inside the body. A revision
+  other than `1` is shown as a placeholder text rather than dropped.
+
+Two rules that are easy to break. `DecodedMCOtxtAppMessage.senderName` is set **only** from a
+name embedded in the body, as `DecodedMcmpAppMessage.senderName` is; the outer `Name: text`
+layer is the message's `senderName`, never container metadata. And the container fills the same
+`container*` model fields as MCMP v3 (see the signatures section), so anything that consumes a
+reply anchor or timestamp works for both codecs without asking which one filled them.
 
 ### MCMP v3 signatures (Ed25519, verified app-side)
 The node signs canonical message bytes via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer
@@ -948,7 +993,7 @@ The pattern is deliberately stricter than the whole-message one: both halves mus
 Anything in a chat composer that reacts to the text controller must go through `widgets/composer_text_builder.dart`, never a bare `ValueListenableBuilder`. A `TextEditingController` notifies on every value change, **selection included**, and dragging an Android selection handle changes the selection continuously — rebuilding the text field underneath the gesture makes the handle stutter badly enough to be unusable. `ComposerTextBuilder` rebuilds only when the text actually changes; `ByteCountedTextField` keeps its own listener with the same guard, plus a byte-count cache, because its encoder runs full MCMP compression over the message and that is far too expensive to repeat per pointer move. `MarkupTextEditingController` caches its span tree for the same reason — `buildTextSpan` fires on every repaint, not just on rebuilds.
 
 ### MCO image codec (image/GIF over LoRa)
-Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→ordered-candidate index of installed `.mcoimg.pack` sets and renders a matching high-quality original in priority order: `.lottie.json`, `.lottie`, `.webp`, `.png`, `.gif`, `.jpg`, `.jpeg`. Invalid candidates fall through to the next format and finally to decoded MCOimg. Lottie and animated raster originals pause outside the viewport. Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcmp }`).
+Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messages. `helpers/mcoimg_codec.dart` (v1/v2, text prefix `im:`) and `helpers/mcoimg_v3_codec.dart` (binary container) quantize to fixed/dynamic palettes (`mcoimg_palette.dart`, `mcoimg_dynamic_palettes.dart`, up to 512 colors) and brute-force many encoders, keeping the smallest. Because the transmitted image is degraded, `services/mco_image_pack_originals.dart` keeps a hash→ordered-candidate index of installed `.mcoimg.pack` sets and renders a matching high-quality original in priority order: `.lottie.json`, `.lottie`, `.webp`, `.png`, `.gif`, `.jpg`, `.jpeg`. Invalid candidates fall through to the next format and finally to decoded MCOimg. Lottie and animated raster originals pause outside the viewport. Compose/send in `canvas_editor_screen.dart`; manage in `mco_image_gallery_screen.dart`. Channel image payloads go through `helpers/channel_binary_data_helper.dart` (`ChannelBinaryDataKind { mcoImage, mcoImageV3, mcoImageV4, mcmp, mcotxt }`).
 
 ### AEIC image store: pictures are paged in lazily
 
@@ -1215,7 +1260,10 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/services/translation_service.dart` | On-device LLM translation — **disabled stub** in this build |
 | `lib/services/wardrive_service.dart` | Coverage-mapping scanner (Advanced mod) |
 | `lib/helpers/mesh_compressor.dart` | MCMP arithmetic-coder text compression (`mcmp2:`) |
-| `lib/helpers/message_text_codec.dart` | Inbound decode across MCMP/Smaz prefixes |
+| `lib/MCOtxt/mcotxt_codec.dart` | MCOtxt v1 bit codec: header, token tree, planner, decoder |
+| `lib/MCOtxt/mcotxt_frame.dart` | Length-prefixed MCOtxt frame for byte containers |
+| `lib/helpers/mcotxt_app_codec.dart` | MCOtxt app container (flags, timestamp, name, reply) and the `mct:` transport |
+| `lib/helpers/message_text_codec.dart` | Inbound decode across MCMP/MCOtxt/Smaz prefixes |
 | `lib/helpers/mcmp_signature_verifier.dart` | App-side Ed25519 verification of MCMP v3 signatures |
 | `lib/helpers/exact_quote_helper.dart` | Quote fragments that pin plain-text replies to the message they answer |
 | `lib/helpers/message_markup.dart` | Inline `**bold**` / `__italic__` / `~~strike~~` / mono markup parser |

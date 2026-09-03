@@ -41,6 +41,6 @@ python .\MCOtxt_ab_benchmark.py `
   --input `
     .\corpora\ru\meshcoretel-ru.jsonl `
     .\corpora\ru\messages.jsonl `
-    .\corpora\en\meshcoretel-en-clean.jsonl `
+    .\corpora\en\meshcoretel-en.jsonl `
   --validation-only `
   --top 20

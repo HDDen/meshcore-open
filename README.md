@@ -40,7 +40,7 @@ but also for Windows and iOS (as .ipa files)
 
 ## What MCOa adds - detailed
 
-### Text compression — two additional selectable schemes
+### Text compression — three additional selectable schemes
 
 Compression is chosen per contact and per channel:
 
@@ -53,6 +53,13 @@ Compression is chosen per contact and per channel:
   dimapanov: an arithmetic coder driven by a bundled statistical 9-gram language model. 
   On typical chat text it reaches up to ~70% compression, so
   a message roughly three times longer than usual still fits into a single packet.
+- **MCOtxt** — the fork's own codec: a static per-language TOP-4 letter-prediction table
+  (English, Russian and French so far) drives a variable-length token stream, with a UTF-8
+  escape for anything outside the tables. It needs no arithmetic coder and a whole model is a
+  few hundred bytes, so the same tables also fit a microcontroller; on chat text it spends
+  just over 5 bits per character. The wire format is documented in
+  [`docs/MCOTXT_V1_PROTOCOL.md`](docs/MCOTXT_V1_PROTOCOL.md) and its
+  [`Russian translation`](docs/MCOTXT_V1_PROTOCOL_RU.md).
 
 ### Signed messages (MCMP v3, Ed25519)
 

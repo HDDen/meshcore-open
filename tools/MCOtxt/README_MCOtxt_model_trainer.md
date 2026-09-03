@@ -12,8 +12,8 @@
 - читает UTF-8 corpus;
 - нормализует CRLF/CR в LF и Unicode в NFC;
 - приводит uppercase к lowercase **только через встроенный явный case-map языка** (`str.lower()`/`casefold()` не используются);
-- считает частоты символов, START и `previous -> next` переходы;
-- строит TOP-4 для START и для каждого символа;
+- считает частоты символов, START, AFTER_PUNCT и `previous -> next` переходы;
+- строит TOP-4 для START, для AFTER_PUNCT и для каждого символа;
 - выбирает 31 primary symbol и до 32 extension symbols;
 - по умолчанию primary выбирается по **literal-savings**: преимущество получают символы, которые часто не попадают в TOP-4 и поэтому реально экономят 2 бита при `PRIMARY_LITERAL=7` вместо `EXTENSION_LITERAL=9`;
 - валидирует индексы и ограничения MCOtxt v1;
@@ -96,11 +96,12 @@ model_ru_debug.json   # только с --debug-json
 
 Dart-файл содержит:
 
+- `wireHash` — sha256 канонического представления wire-таблиц (см. `model_manifest.json`);
 - `primarySymbols` codepoints;
 - `extensionSymbols` codepoints;
-- `startTop4Indexes`;
+- `startTop4Indexes` и `punctStartTop4Indexes`;
 - flattened `top4Indexes`;
-- runtime-compatible `startTop4` codepoints;
+- runtime-compatible `startTop4` и `punctStartTop4` codepoints;
 - runtime-compatible nested `top4` codepoints;
 - `uppercaseToLowercase` codepoint map;
 - готовый `MCOtxtLanguageModel`.
@@ -124,9 +125,12 @@ import 'mcotxt_model.dart';
 C header хранит TOP-4 именно как `uint8_t symbol indexes`:
 
 ```text
+available            uint8_t (1, у заглушек 0)
+wire_hash            char[] (sha256 hex, как в манифесте)
 primary_symbols      uint16_t[]
 extension_symbols    uint16_t[]
 start_top4           uint8_t[4]
+punct_start_top4     uint8_t[4]
 top4                 uint8_t[symbolCount * 4]
 uppercase_map        uppercase uint16_t + lowercaseSymbolIndex uint8_t
 ```
@@ -184,12 +188,15 @@ Trainer ищет в Dart-файле 32-элементный integer list и за
 
 Report считает реальную для одной языковой модели стоимость:
 
-- TOP-4: 3 bits;
+- TOP-4: переменная длина, 2/3/4/4 bits по рангу;
 - SHIFT: 5 bits;
 - primary literal: 7 bits;
 - punctuation: 8 bits;
 - extension literal: 9 bits;
-- header: 9 bits на сообщение.
+- CAPS_MODE toggle: 9 bits (планируется отдельным двухсостоянийным DP);
+- UTF8_RUN: 14 bits + 8 на каждый байт, только как fallback;
+- header: 9 bits на сообщение; RAW_UTF8-кандидат считается с 16-битным заголовком и
+  выбирается на уровне сообщения, когда он короче.
 
 В отчёте отдельно показываются:
 
@@ -203,9 +210,9 @@ Report считает реальную для одной языковой мод
 Символ, который не входит в alphabet выбранного языка и не является punctuation v1:
 
 - не участвует в модели;
-- при validation считается skipped;
+- при validation учитывается как UTF-8 fallback (runs, bytes, bits), skipped всегда 0;
 - выводится в отчёте по частоте;
-- не сбрасывает previous-symbol context, как и в MCOtxt v1.
+- кодируется через UTF8_RUN и сбрасывает контекст в START, как в MCOtxt v1.
 
 Это особенно полезно для поиска мусора в корпусе: emoji, символов другого языка, необычных Unicode punctuation и т. п.
 
@@ -219,4 +226,7 @@ Report считает реальную для одной языковой мод
 4. сравнить `literal-savings` с `--primary-selection frequency`;
 5. проверить TOP-4 hit rate и bits/char на validation;
 6. отдельно прогнать реальные mixed-language сообщения через полный Dart encoder;
-7. только после этого заморозить generated tables как MCOtxt v1.
+7. только после этого заморозить generated tables как MCOtxt v1 (`freeze_model_manifest.py`).
+
+Формат провода целиком описан в `docs/MCOTXT_V1_PROTOCOL.md` (по-русски:
+`docs/MCOTXT_V1_PROTOCOL_RU.md`); порядок символов в `primary` и `extension` — часть формата.
