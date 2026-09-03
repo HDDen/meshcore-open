@@ -1,16 +1,18 @@
 import 'dart:convert';
 
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/mcotxt_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/smaz.dart';
 
-enum MessageCompressionType { mcmp, smaz, cyr2lat }
+enum MessageCompressionType { mcmp, smaz, cyr2lat, mcotxt }
 
 extension MessageCompressionTypeLabel on MessageCompressionType {
   String get label => switch (this) {
     MessageCompressionType.mcmp => 'mcmp',
     MessageCompressionType.smaz => 'smaz',
     MessageCompressionType.cyr2lat => 'cyr2lat',
+    MessageCompressionType.mcotxt => 'mcotxt',
   };
 
   static MessageCompressionType? fromJson(dynamic value) {
@@ -44,6 +46,8 @@ class MessageCompressionMetadata {
         MeshCompressor.instance.hasPrefix(encodedText) ||
             McmpAppCodec.isTextPayload(encodedText)
         ? MessageCompressionType.mcmp
+        : McotxtAppCodec.isTextPayload(encodedText)
+        ? MessageCompressionType.mcotxt
         : Smaz.hasPrefix(encodedText)
         ? MessageCompressionType.smaz
         : null;
@@ -60,6 +64,16 @@ class MessageCompressionMetadata {
         type: type,
         originalBytes: utf8.encode(decodedText).length,
         compressedBytes: mcmpV3TextBytes,
+      );
+    }
+    final mcotxtTextBytes = McotxtAppCodec.compressedTextBytesFromTextPayload(
+      encodedText,
+    );
+    if (mcotxtTextBytes != null) {
+      return MessageCompressionMetadata.fromByteLengths(
+        type: type,
+        originalBytes: utf8.encode(decodedText).length,
+        compressedBytes: mcotxtTextBytes,
       );
     }
 

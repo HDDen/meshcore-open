@@ -448,19 +448,27 @@ class ChannelMessage {
         rawText: actualText,
         wasMcmpCompressed:
             MeshCompressor.instance.hasPrefix(actualText) ||
-            McmpAppCodec.isTextPayload(actualText),
+            McmpAppCodec.isTextPayload(actualText) ||
+            decodedDetails?.mcotxtMessage != null,
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
         compressionPayloadBytes: compression?.payloadBytes,
         mcmpSignatureStatus:
             mcmpMessage?.signatureStatus ?? McmpSignatureStatus.none,
-        mcmpTimestamp: mcmpMessage?.timestamp,
-        mcmpSenderName: mcmpMessage?.senderName,
+        mcmpTimestamp:
+            mcmpMessage?.timestamp ??
+                decodedDetails?.mcotxtMessage?.metadataTimestamp,
+        mcmpSenderName:
+            mcmpMessage?.senderName ?? decodedDetails?.mcotxtMessage?.senderName,
         mcmpIsSigned: mcmpMessage?.isSigned ?? false,
         mcmpSignature: mcmpMessage?.signature,
-        mcmpReplyAuthorName: mcmpMessage?.replyAuthorName,
-        mcmpReplyTimestamp: mcmpMessage?.replyTimestamp,
+        mcmpReplyAuthorName:
+            mcmpMessage?.replyAuthorName ??
+            decodedDetails?.mcotxtMessage?.replyAuthorName,
+        mcmpReplyTimestamp:
+            mcmpMessage?.replyTimestamp ??
+            decodedDetails?.mcotxtMessage?.replyTimestamp,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
         isOutgoing: isOutgoing,
         status: ChannelMessageStatus.sent,

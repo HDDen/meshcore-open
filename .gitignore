@@ -85,6 +85,10 @@ keystore.properties
 *.freezed.dart
 *.mocks.dart
 
+# MCOtxt
+tools/MCOtxt/corpora/
+tools/MCOtxt/parsing.js
+
 # IDE
 .vscode/launch.json
 .vscode/settings.json
@@ -105,3 +109,4 @@ pubspec_overrides.yaml
 # except
 !docs/mcoimg-js
 !docs/mcoimg-js/mcoimg-codec.global.js
+tools/MCOtxt/mcotxt-independent-benchmark.jsonl

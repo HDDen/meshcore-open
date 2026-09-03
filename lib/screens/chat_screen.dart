@@ -1045,6 +1045,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final key = widget.contact.publicKeyHex;
     final usesEncoding =
         connector.isContactMcmpEnabled(key) ||
+        connector.isContactMcotxtEnabled(key) ||
         connector.isContactSmazEnabled(key) ||
         connector.isContactCyr2LatEnabled(key);
     if (!usesEncoding) return null;
@@ -1561,7 +1562,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final limit = _resolveContact(connector).type == advTypeRoom
         ? math.min(maxContactMessageBytes(), maxRoomServerTextBytes)
         : maxContactMessageBytes();
-    if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex)) {
+    if (connector.isContactMcmpEnabled(widget.contact.publicKeyHex) ||
+        connector.isContactMcotxtEnabled(widget.contact.publicKeyHex)) {
       return math.max(0, limit - 2);
     }
     return limit;
@@ -1695,6 +1697,7 @@ class _ChatScreenState extends State<ChatScreen> {
       listen: false,
     );
     connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
+    connector.ensureContactMcotxtSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactSendingDelaySettingLoaded(
@@ -1703,6 +1706,7 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
+    bool mcotxtEnabled = connector.isContactMcotxtEnabled(contact.publicKeyHex);
     int selectedMcmpVersion = connector.contactMcmpVersion(
       contact.publicKeyHex,
     );
@@ -1757,6 +1761,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         contact.publicKeyHex,
                         false,
                       );
+                      connector.setContactMcotxtEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
                       connector.setContactCyr2LatEnabled(
                         contact.publicKeyHex,
                         false,
@@ -1765,6 +1773,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     setDialogState(() {
                       mcmpEnabled = value;
                       if (mcmpEnabled) {
+                        mcotxtEnabled = false;
                         smazEnabled = false;
                         cyr2latEnabled = false;
                       }
@@ -1831,6 +1840,40 @@ class _ChatScreenState extends State<ChatScreen> {
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
+                  title: const Text('Сжатие MCOtxt'),
+                  value: mcotxtEnabled,
+                  onChanged: (value) {
+                    connector.setContactMcotxtEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    if (value) {
+                      connector.setContactMcmpEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                      connector.setContactSmazEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                      connector.setContactCyr2LatEnabled(
+                        contact.publicKeyHex,
+                        false,
+                      );
+                    }
+                    setDialogState(() {
+                      mcotxtEnabled = value;
+                      if (mcotxtEnabled) {
+                        mcmpEnabled = false;
+                        smazEnabled = false;
+                        cyr2latEnabled = false;
+                      }
+                    });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text(context.l10n.channels_smazCompression),
                   subtitle: Text(context.l10n.chat_compressOutgoingMessages),
                   value: smazEnabled,
@@ -1843,6 +1886,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       false,
                     );
+                    connector.setContactMcotxtEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
                     connector.setContactCyr2LatEnabled(
                       contact.publicKeyHex,
                       false,
@@ -1851,6 +1898,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       smazEnabled = value;
                       if (smazEnabled) {
                         mcmpEnabled = false;
+                        mcotxtEnabled = false;
                         cyr2latEnabled = false;
                       }
                     });
@@ -1871,6 +1919,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       contact.publicKeyHex,
                       false,
                     );
+                    connector.setContactMcotxtEnabled(
+                      contact.publicKeyHex,
+                      false,
+                    );
                     connector.setContactSmazEnabled(
                       contact.publicKeyHex,
                       false,
@@ -1879,6 +1931,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       cyr2latEnabled = value;
                       if (cyr2latEnabled) {
                         mcmpEnabled = false;
+                        mcotxtEnabled = false;
                         smazEnabled = false;
                       }
                     });

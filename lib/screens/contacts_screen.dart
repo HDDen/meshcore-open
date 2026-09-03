@@ -2287,6 +2287,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         : null;
     if (isRoom) {
       connector.ensureContactMcmpSettingLoaded(contact.publicKeyHex);
+      connector.ensureContactMcotxtSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSmazSettingLoaded(contact.publicKeyHex);
       connector.ensureContactCyr2LatSettingLoaded(contact.publicKeyHex);
       connector.ensureContactSendingDelaySettingLoaded(contact.publicKeyHex);
@@ -2294,6 +2295,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     bool mcmpEnabled =
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
+    bool mcotxtEnabled =
+        isRoom && connector.isContactMcotxtEnabled(contact.publicKeyHex);
     int selectedMcmpVersion = isRoom
         ? connector.contactMcmpVersion(contact.publicKeyHex)
         : 2;
@@ -2396,6 +2399,10 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
+                        connector.setContactMcotxtEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
                         connector.setContactCyr2LatEnabled(
                           contact.publicKeyHex,
                           false,
@@ -2404,6 +2411,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       setSheetState(() {
                         mcmpEnabled = value;
                         if (mcmpEnabled) {
+                          mcotxtEnabled = false;
                           smazEnabled = false;
                           cyr2latEnabled = false;
                         }
@@ -2484,6 +2492,10 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
+                        connector.setContactMcotxtEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
                         connector.setContactCyr2LatEnabled(
                           contact.publicKeyHex,
                           false,
@@ -2493,6 +2505,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         smazEnabled = value;
                         if (smazEnabled) {
                           mcmpEnabled = false;
+                          mcotxtEnabled = false;
                           cyr2latEnabled = false;
                         }
                       });
@@ -2514,6 +2527,10 @@ class _ContactsScreenState extends State<ContactsScreen>
                           contact.publicKeyHex,
                           false,
                         );
+                        connector.setContactMcotxtEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
                         connector.setContactSmazEnabled(
                           contact.publicKeyHex,
                           false,
@@ -2523,6 +2540,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         cyr2latEnabled = value;
                         if (cyr2latEnabled) {
                           mcmpEnabled = false;
+                          mcotxtEnabled = false;
                           smazEnabled = false;
                         }
                       });
@@ -2558,6 +2576,38 @@ class _ContactsScreenState extends State<ContactsScreen>
                       ),
                     ),
                   ],
+                  SwitchListTile(
+                    title: const Text('Сжатие MCOtxt'),
+                    value: mcotxtEnabled,
+                    onChanged: (value) {
+                      connector.setContactMcotxtEnabled(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      if (value) {
+                        connector.setContactMcmpEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                        connector.setContactSmazEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                        connector.setContactCyr2LatEnabled(
+                          contact.publicKeyHex,
+                          false,
+                        );
+                      }
+                      setSheetState(() {
+                        mcotxtEnabled = value;
+                        if (mcotxtEnabled) {
+                          mcmpEnabled = false;
+                          smazEnabled = false;
+                          cyr2latEnabled = false;
+                        }
+                      });
+                    },
+                  ),
                   SwitchListTile(
                     title: Text(context.l10n.settings_useSendingDelay),
                     value: sendingDelayEnabled,

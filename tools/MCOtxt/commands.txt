@@ -1,0 +1,26 @@
+python .\mcotxt_model_trainer_with_diagnostics.py `
+  --lang ru `
+  --train .\corpora\ru `
+  --out-dir .\generated\ru `
+  --debug-json
+
+python .\mcotxt_model_trainer_with_diagnostics.py `
+  --lang en `
+  --train .\corpora\en `
+  --out-dir .\generated\en `
+  --debug-json
+
+
+
+
+
+bench
+python .\mcotxt_ab_benchmark.py `
+  --model-a .\generated\ru\model_ru_debug.json `
+  --model-b .\generated\en\model_en_debug.json `
+  --input `
+    .\corpora\ru\meshcoretel-ru.jsonl `
+    .\corpora\ru\messages.jsonl `
+    .\corpora\en\meshcoretel-en-clean.jsonl `
+  --validation-only `
+  --top 20

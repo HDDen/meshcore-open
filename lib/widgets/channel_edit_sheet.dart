@@ -27,6 +27,7 @@ void showChannelEditSheet(
   bool mcmpEnabled = connector.isChannelMcmpEnabled(channel.index);
   int selectedMcmpVersion = connector.channelMcmpVersion(channel.index);
   bool mcmpUseSign = connector.channelMcmpUseSign(channel.index);
+  bool mcotxtEnabled = connector.isChannelMcotxtEnabled(channel.index);
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
@@ -101,6 +102,7 @@ void showChannelEditSheet(
                     onChanged: (value) => setSheetState(() {
                       mcmpEnabled = value;
                       if (mcmpEnabled) {
+                        mcotxtEnabled = false;
                         smazEnabled = false;
                         cyr2latEnabled = false;
                       }
@@ -164,6 +166,7 @@ void showChannelEditSheet(
                       smazEnabled = value;
                       if (smazEnabled) {
                         mcmpEnabled = false;
+                        mcotxtEnabled = false;
                         cyr2latEnabled = false;
                       }
                     }),
@@ -179,6 +182,7 @@ void showChannelEditSheet(
                       cyr2latEnabled = value;
                       if (cyr2latEnabled) {
                         mcmpEnabled = false;
+                        mcotxtEnabled = false;
                         smazEnabled = false;
                       }
                     }),
@@ -208,6 +212,19 @@ void showChannelEditSheet(
                       ),
                     ),
                   ],
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Сжатие MCOtxt'),
+                    value: mcotxtEnabled,
+                    onChanged: (value) => setSheetState(() {
+                      mcotxtEnabled = value;
+                      if (mcotxtEnabled) {
+                        mcmpEnabled = false;
+                        smazEnabled = false;
+                        cyr2latEnabled = false;
+                      }
+                    }),
+                  ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(sheetContext.l10n.settings_useSendingDelay),
@@ -308,6 +325,10 @@ void showChannelEditSheet(
                             await connector.setChannelMcmpUseSign(
                               channel.index,
                               mcmpUseSign,
+                            );
+                            await connector.setChannelMcotxtEnabled(
+                              channel.index,
+                              mcotxtEnabled,
                             );
                             await connector.setChannelSmazEnabled(
                               channel.index,

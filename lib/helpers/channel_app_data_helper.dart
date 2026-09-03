@@ -5,7 +5,8 @@ import '../connector/meshcore_protocol.dart';
 
 enum ChannelAppDataSubtype {
   mcoImage(0x01),
-  mcmp(0x02);
+  mcmp(0x02),
+  mcotxt(0x03);
 
   final int id;
 
@@ -110,6 +111,7 @@ class ChannelAppDataHelper {
   ///   0x13 = MCOimg v3
   ///   0x14 = MCOimg v4
   ///   0x20 = MCMP v3
+  ///   0x31 = MCOtxt v1
   ///
   /// MCOimg v3/v4 bodies are binary. They can be carried either in this
   /// official binary envelope or in their Base91 text transports.
@@ -117,17 +119,21 @@ class ChannelAppDataHelper {
 
   static const int mcoImageSubtype = 0x01;
   static const int mcmpSubtype = 0x02;
+  static const int mcotxtSubtype = 0x03;
 
   static const int mcoImageV3Version = 0x03;
   static const int mcoImageV4Version = 0x04;
   static const int mcmpV3FormatVersion = 0x03;
   static const int mcmpV3WireVersion = 0x00;
+  static const int mcotxtV1WireVersion = 0x01;
   static const int mcoImageV3SubtypeVersion =
       (mcoImageSubtype << 4) | mcoImageV3Version;
   static const int mcoImageV4SubtypeVersion =
       (mcoImageSubtype << 4) | mcoImageV4Version;
   static const int mcmpV3SubtypeVersion =
       (mcmpSubtype << 4) | mcmpV3WireVersion;
+  static const int mcotxtV1SubtypeVersion =
+      (mcotxtSubtype << 4) | mcotxtV1WireVersion;
 
   static int packSubtypeVersion({
     required int subtypeId,

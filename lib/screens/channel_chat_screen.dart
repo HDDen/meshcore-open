@@ -3664,6 +3664,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             .toDouble();
     final usesChannelEncoding =
         connector.isChannelMcmpEnabled(widget.channel.index) ||
+        connector.isChannelMcotxtEnabled(widget.channel.index) ||
         connector.isChannelSmazEnabled(widget.channel.index) ||
         connector.isChannelCyr2LatEnabled(widget.channel.index);
 
@@ -4147,7 +4148,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     AppSettings settings,
   ) {
     if (ChannelBinaryDataHelper.canSend &&
-        connector.isChannelMcmpEnabled(widget.channel.index)) {
+        (connector.isChannelMcmpEnabled(widget.channel.index) ||
+            connector.isChannelMcotxtEnabled(widget.channel.index))) {
       return _maxChannelBinaryPayloadBytes(settings);
     }
     return _maxChannelInputBytes(connector, settings);
@@ -4169,6 +4171,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       senderName,
     );
     if (imagePayloadBytes != null) return imagePayloadBytes;
+    if (connector.isChannelMcotxtEnabled(widget.channel.index)) {
+      return ChannelBinaryDataHelper.mcotxtAppPayloadLength(
+        text,
+        senderName,
+        replyAuthorName: _replyingToMessage?.senderName,
+        replyTimestamp: _replyingToMessage == null
+            ? null
+            : _replyingToMessage!.mcmpTimestamp ??
+                  (_replyingToMessage!.timestamp.millisecondsSinceEpoch ~/
+                      1000),
+      );
+    }
     if (!connector.isChannelMcmpEnabled(widget.channel.index)) return null;
     if (connector.channelMcmpVersion(widget.channel.index) == 3) {
       return ChannelBinaryDataHelper.mcmpV3AppPayloadLength(

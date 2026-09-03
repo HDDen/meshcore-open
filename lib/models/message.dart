@@ -325,7 +325,8 @@ class Message {
         status: MessageStatus.delivered,
         wasMcmpCompressed:
             MeshCompressor.instance.hasPrefix(rawText) ||
-            McmpAppCodec.isTextPayload(rawText),
+            McmpAppCodec.isTextPayload(rawText) ||
+            decodedDetails?.mcotxtMessage != null,
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
         compressionOriginalBytes: compression?.originalBytes,
@@ -333,6 +334,20 @@ class Message {
         mcmpSignatureStatus:
             decodedDetails?.mcmpMessage?.signatureStatus ??
             McmpSignatureStatus.none,
+        mcmpTimestamp:
+            decodedDetails?.mcmpMessage?.timestamp ??
+            decodedDetails?.mcotxtMessage?.metadataTimestamp,
+        mcmpSenderName:
+            decodedDetails?.mcmpMessage?.senderName ??
+            decodedDetails?.mcotxtMessage?.senderName,
+        mcmpIsSigned: decodedDetails?.mcmpMessage?.isSigned ?? false,
+        mcmpSignature: decodedDetails?.mcmpMessage?.signature,
+        mcmpReplyAuthorName:
+            decodedDetails?.mcmpMessage?.replyAuthorName ??
+            decodedDetails?.mcotxtMessage?.replyAuthorName,
+        mcmpReplyTimestamp:
+            decodedDetails?.mcmpMessage?.replyTimestamp ??
+            decodedDetails?.mcotxtMessage?.replyTimestamp,
         pathBytes: Uint8List(0),
       );
     } catch (e) {
@@ -359,6 +374,8 @@ class Message {
     String? mcmpSenderName,
     bool mcmpIsSigned = false,
     Uint8List? mcmpSignature,
+    String? mcmpReplyAuthorName,
+    int? mcmpReplyTimestamp,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -379,6 +396,8 @@ class Message {
       mcmpSenderName: mcmpSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
+      mcmpReplyAuthorName: mcmpReplyAuthorName,
+      mcmpReplyTimestamp: mcmpReplyTimestamp,
       timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       isCli: false,

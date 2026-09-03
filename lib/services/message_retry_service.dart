@@ -10,6 +10,7 @@ import '../models/message_compression.dart';
 import '../models/path_selection.dart';
 import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
+import '../helpers/mcotxt_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
@@ -241,6 +242,8 @@ class MessageRetryService extends ChangeNotifier {
     String? mcmpSenderName,
     bool mcmpIsSigned = false,
     Uint8List? mcmpSignature,
+    String? mcmpReplyAuthorName,
+    int? mcmpReplyTimestamp,
     Uint8List? pathBytes,
     int? pathLength,
   }) async {
@@ -263,8 +266,10 @@ class MessageRetryService extends ChangeNotifier {
       translationModelId: translationModelId,
       wasMcmpCompressed:
           compressionType == MessageCompressionType.mcmp ||
+          compressionType == MessageCompressionType.mcotxt ||
           MeshCompressor.instance.hasPrefix(effectiveOutbound) ||
-          McmpAppCodec.isTextPayload(effectiveOutbound),
+          McmpAppCodec.isTextPayload(effectiveOutbound) ||
+          McotxtAppCodec.isTextPayload(effectiveOutbound),
       compressionType: compressionType,
       compressionSavingsPercent: compressionSavingsPercent,
       compressionOriginalBytes: compressionOriginalBytes,
@@ -274,6 +279,8 @@ class MessageRetryService extends ChangeNotifier {
       mcmpSenderName: mcmpSenderName,
       mcmpIsSigned: mcmpIsSigned,
       mcmpSignature: mcmpSignature,
+      mcmpReplyAuthorName: mcmpReplyAuthorName,
+      mcmpReplyTimestamp: mcmpReplyTimestamp,
       timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       status: MessageStatus.pending,

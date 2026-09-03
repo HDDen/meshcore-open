@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'mcmp_app_codec.dart';
+import 'mcotxt_app_codec.dart';
 import 'message_text_codec.dart';
 import 'mesh_compressor.dart';
 import 'smaz.dart';
@@ -131,6 +132,7 @@ String _decodeStoredTextIfNeeded(String text) {
   final trimmed = text.trimLeft();
   final isKnownCompressedText =
       trimmed.startsWith(McmpAppCodec.textPrefix) ||
+      trimmed.startsWith(McotxtAppCodec.textPrefix) ||
       MeshCompressor.instance.hasPrefix(trimmed) ||
       Smaz.hasPrefix(trimmed);
   if (!isKnownCompressedText) return text;

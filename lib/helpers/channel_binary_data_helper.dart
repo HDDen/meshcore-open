@@ -9,10 +9,11 @@ import 'mcoimg_v3_codec.dart';
 import 'mcoimg_v4_codec.dart';
 import 'mcoimg_v4_model.dart';
 import 'mcmp_app_codec.dart';
+import 'mcotxt_app_codec.dart';
 import 'mesh_compressor.dart';
 import 'shared_marker_deletions.dart';
 
-enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcoImageV4, mcmp }
+enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcoImageV4, mcmp, mcotxt }
 
 class ChannelBinaryDataOutbound {
   final int dataType;
@@ -67,6 +68,7 @@ class ChannelAppDataInbound {
   final MCOImage? mcoImage;
   final DecodedMCOImageV4? mcoImageV4;
   final DecodedMcmpAppMessage? mcmpMessage;
+  final DecodedMcotxtAppMessage? mcotxtMessage;
   final String? text;
   final bool wasMcmpCompressed;
   final McmpSignatureStatus mcmpSignatureStatus;
@@ -81,6 +83,7 @@ class ChannelAppDataInbound {
     this.mcoImage,
     this.mcoImageV4,
     this.mcmpMessage,
+    this.mcotxtMessage,
     this.text,
     this.wasMcmpCompressed = false,
     this.mcmpSignatureStatus = McmpSignatureStatus.none,
@@ -107,9 +110,12 @@ class ChannelBinaryDataHelper {
   static const int appDataType = ChannelAppDataHelper.appDataType;
   static const int mcoImageSubtype = ChannelAppDataHelper.mcoImageSubtype;
   static const int mcmpSubtype = ChannelAppDataHelper.mcmpSubtype;
+  static const int mcotxtSubtype = ChannelAppDataHelper.mcotxtSubtype;
   static const int mcoImageV3Version = ChannelAppDataHelper.mcoImageV3Version;
   static const int mcoImageV4Version = ChannelAppDataHelper.mcoImageV4Version;
   static const int mcmpV3WireVersion = ChannelAppDataHelper.mcmpV3WireVersion;
+  static const int mcotxtV1WireVersion =
+      ChannelAppDataHelper.mcotxtV1WireVersion;
   static const int channelDataHeaderLength = 3;
   // [cmd][channel_idx][path_len][data_type u16] for the current flood frame.
   static const int outgoingCommandHeaderLength = 5;
@@ -121,6 +127,7 @@ class ChannelBinaryDataHelper {
     required String text,
     required String senderName,
     required bool mcmpEnabled,
+    bool mcotxtEnabled = false,
     int mcmpVersion = 2,
     bool mcmpUseSign = true,
     int? timestamp,
@@ -180,8 +187,29 @@ class ChannelBinaryDataHelper {
           trimmed.startsWith('V1|') ||
           // Shared contact payloads (<pubkey:type:name>) must travel as
           // plain text so receivers can parse them.
-          parseSharedContactText(trimmed) != null;
+          parseSharedContactText(trimmed) != null ||
+          MeshCompressor.instance.hasPrefix(trimmed) ||
+          McmpAppCodec.isTextPayload(trimmed) ||
+          McotxtAppCodec.isTextPayload(trimmed);
       if (isStructuredPayload) return null;
+
+      if (mcotxtEnabled) {
+        final encoded = McotxtAppCodec.encodeBody(
+          text: text,
+          timestamp:
+              timestamp ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          senderName: senderName,
+          replyAuthorName: replyAuthorName,
+          replyTimestamp: replyTimestamp,
+        );
+        return _encodeAppEnvelope(
+          subtypeId: mcotxtSubtype,
+          version: mcotxtV1WireVersion,
+          body: encoded,
+          senderName: '',
+          kind: ChannelBinaryDataKind.mcotxt,
+        );
+      }
 
       if (mcmpEnabled) {
         if (mcmpVersion == 3) {
@@ -337,7 +365,10 @@ class ChannelBinaryDataHelper {
           trimmed.startsWith('m:') ||
           trimmed.startsWith('V1|') ||
           trimmed.startsWith(MCOImageCodec.prefix) ||
-          parseSharedContactText(trimmed) != null) {
+          parseSharedContactText(trimmed) != null ||
+          MeshCompressor.instance.hasPrefix(trimmed) ||
+          McmpAppCodec.isTextPayload(trimmed) ||
+          McotxtAppCodec.isTextPayload(trimmed)) {
         return null;
       }
       final hasReply = replyAuthorName != null && replyTimestamp != null;
@@ -365,13 +396,52 @@ class ChannelBinaryDataHelper {
           trimmed.startsWith('m:') ||
           trimmed.startsWith('V1|') ||
           trimmed.startsWith(MCOImageCodec.prefix) ||
-          parseSharedContactText(trimmed) != null) {
+          parseSharedContactText(trimmed) != null ||
+          MeshCompressor.instance.hasPrefix(trimmed) ||
+          McmpAppCodec.isTextPayload(trimmed) ||
+          McotxtAppCodec.isTextPayload(trimmed)) {
         return null;
       }
       final compressed = MeshCompressor.instance.compressToBytes(text);
       return _envelopeLength(
         bodyLength: compressed.length,
         senderName: senderName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static int? mcotxtAppPayloadLength(
+    String text,
+    String senderName, {
+    String? replyAuthorName,
+    int? replyTimestamp,
+  }) {
+    if (!canSend) return null;
+    try {
+      final trimmed = text.trim();
+      if (trimmed.startsWith('g:') ||
+          trimmed.startsWith('m:') ||
+          trimmed.startsWith('V1|') ||
+          trimmed.startsWith(MCOImageCodec.prefix) ||
+          parseSharedContactText(trimmed) != null ||
+          MeshCompressor.instance.hasPrefix(trimmed) ||
+          McmpAppCodec.isTextPayload(trimmed) ||
+          McotxtAppCodec.isTextPayload(trimmed)) {
+        return null;
+      }
+      final hasReply = replyAuthorName != null && replyTimestamp != null;
+      final encoded = McotxtAppCodec.encodeBody(
+        text: text,
+        timestamp: 0,
+        senderName: senderName,
+        replyAuthorName: hasReply ? replyAuthorName : null,
+        replyTimestamp: hasReply ? replyTimestamp : null,
+      );
+      return ChannelAppDataHelper.envelopeLength(
+        bodyLength: encoded.length,
+        senderName: '',
       );
     } catch (_) {
       return null;
@@ -563,6 +633,44 @@ class ChannelBinaryDataHelper {
           text: decoded.text,
           wasMcmpCompressed: true,
           mcmpSignatureStatus: decoded.signatureStatus,
+        );
+      case ChannelAppDataSubtype.mcotxt:
+        if (envelope.version != mcotxtV1WireVersion) {
+          return ChannelAppDataInbound(
+            senderName: envelope.senderName,
+            subtypeId: envelope.subtypeId,
+            version: envelope.version,
+            subtype: ChannelAppDataSubtype.mcotxt,
+            body: envelope.body,
+            payloadLength: payload.length,
+            text: McotxtAppCodec.unsupportedFormatText(envelope.version),
+          );
+        }
+        final DecodedMcotxtAppMessage decoded;
+        try {
+          decoded = McotxtAppCodec.decodeBody(envelope.body);
+        } catch (_) {
+          return ChannelAppDataInbound(
+            senderName: envelope.senderName,
+            subtypeId: envelope.subtypeId,
+            version: envelope.version,
+            subtype: ChannelAppDataSubtype.mcotxt,
+            body: envelope.body,
+            payloadLength: payload.length,
+            text: McotxtAppCodec.decodeFailedText(envelope.version),
+          );
+        }
+        return ChannelAppDataInbound(
+          senderName: decoded.senderName ?? envelope.senderName,
+          subtypeId: envelope.subtypeId,
+          version: envelope.version,
+          subtype: ChannelAppDataSubtype.mcotxt,
+          body: envelope.body,
+          payloadLength: payload.length,
+          mcotxtMessage: decoded,
+          text: decoded.text,
+          wasMcmpCompressed: true,
+          mcmpSignatureStatus: McmpSignatureStatus.none,
         );
       case null:
         return null;
