@@ -3652,5 +3652,6 @@
   "chat_canvasV4TextWidth": "領域の幅: {cells}",
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "文字サイズ: {size}",
-  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
+  "channels_mcotxtPlainWhenSmaller": "通常のメッセージの方が小さければそれを送信"
 }

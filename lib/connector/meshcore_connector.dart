@@ -489,6 +489,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<int, int> _channelMcmpVersion = {};
   final Map<int, bool> _channelMcmpUseSign = {};
   final Map<int, bool> _channelMCOtxtEnabled = {};
+  final Map<int, bool> _channelMCOtxtPlainWhenSmaller = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
@@ -504,6 +505,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, int> _contactMcmpVersion = {};
   final Map<String, bool> _contactMcmpUseSign = {};
   final Map<String, bool> _contactMCOtxtEnabled = {};
+  final Map<String, bool> _contactMCOtxtPlainWhenSmaller = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
@@ -2259,6 +2261,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return _channelMCOtxtEnabled[channelIndex] ?? false;
   }
 
+  /// Mirrors the store default (on), as [channelMcmpVersion] does.
+  bool isChannelMCOtxtPlainWhenSmaller(int channelIndex) {
+    return _channelMCOtxtPlainWhenSmaller[channelIndex] ?? true;
+  }
+
   bool isChannelSmazEnabled(int channelIndex) {
     return _channelSmazEnabled[channelIndex] ?? false;
   }
@@ -2281,6 +2288,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return _contactMCOtxtEnabled[contactKeyHex] ?? false;
   }
 
+  /// Mirrors the store default (on), as [contactMcmpVersion] does.
+  bool isContactMCOtxtPlainWhenSmaller(String contactKeyHex) {
+    return _contactMCOtxtPlainWhenSmaller[contactKeyHex] ?? true;
+  }
+
   bool isContactSmazEnabled(String contactKeyHex) {
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
@@ -2293,6 +2305,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void ensureContactMCOtxtSettingLoaded(String contactKeyHex) {
     _ensureContactMCOtxtSettingLoaded(contactKeyHex);
+    _ensureContactMCOtxtPlainWhenSmallerLoaded(contactKeyHex);
   }
 
   bool hasChannelRegion(int channelIndex) {
@@ -2712,6 +2725,19 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setChannelMCOtxtPlainWhenSmaller(
+    int channelIndex,
+    bool enabled,
+  ) async {
+    if (_channelMCOtxtPlainWhenSmaller[channelIndex] == enabled) return;
+    _channelMCOtxtPlainWhenSmaller[channelIndex] = enabled;
+    await _channelSettingsStore.saveMCOtxtPlainWhenSmaller(
+      channelIndex,
+      enabled,
+    );
+    notifyListeners();
+  }
+
   Future<void> setContactMcmpEnabled(String contactKeyHex, bool enabled) async {
     _contactMcmpEnabled[contactKeyHex] = enabled;
     if (enabled) {
@@ -2769,6 +2795,19 @@ class MeshCoreConnector extends ChangeNotifier {
       await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
     await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setContactMCOtxtPlainWhenSmaller(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (_contactMCOtxtPlainWhenSmaller[contactKeyHex] == enabled) return;
+    _contactMCOtxtPlainWhenSmaller[contactKeyHex] = enabled;
+    await _contactSettingsStore.saveMCOtxtPlainWhenSmaller(
+      contactKeyHex,
+      enabled,
+    );
     notifyListeners();
   }
 
@@ -3399,6 +3438,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpVersion.clear();
     _channelMcmpUseSign.clear();
     _channelMCOtxtEnabled.clear();
+    _channelMCOtxtPlainWhenSmaller.clear();
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     _channelCyr2LatProfileId.clear();
@@ -3440,6 +3480,8 @@ class MeshCoreConnector extends ChangeNotifier {
     final mcotxtEnabled = await channelSettingsStore.loadMCOtxtEnabled(
       channelIndex,
     );
+    final mcotxtPlainWhenSmaller = await channelSettingsStore
+        .loadMCOtxtPlainWhenSmaller(channelIndex);
     final smazEnabled = await channelSettingsStore.loadSmazEnabled(
       channelIndex,
     );
@@ -3466,6 +3508,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelMcmpVersion[channelIndex] = mcmpVersion == 3 ? 3 : 2;
     _channelMcmpUseSign[channelIndex] = mcmpUseSign;
     _channelMCOtxtEnabled[channelIndex] = mcotxtEnabled;
+    _channelMCOtxtPlainWhenSmaller[channelIndex] = mcotxtPlainWhenSmaller;
     _channelSmazEnabled[channelIndex] = smazEnabled;
     _channelCyr2LatEnabled[channelIndex] = cyr2LatEnabled;
     _channelSendingDelayEnabled[channelIndex] = sendingDelayEnabled;
@@ -6508,7 +6551,7 @@ class MeshCoreConnector extends ChangeNotifier {
     DateTime? pendingReceivedAt,
   }) async {
     // See sendMessage: normalised up front, and only for a first send.
-    final text =
+    var text =
         pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
         ? prepareChannelOutboundText(channel.index, rawText)
         : rawText;
@@ -6614,13 +6657,34 @@ class MeshCoreConnector extends ChangeNotifier {
     final mcmpV3Timestamp = mcmpV3Applies
         ? DateTime.now().millisecondsSinceEpoch ~/ 1000
         : null;
-    final mcotxtApplies =
+    var mcotxtApplies =
         !hasExplicitMcoImageV3 &&
         isChannelMCOtxtEnabled(channel.index) &&
         _isMcmpSignableText(text);
-    final mcotxtTimestamp = mcotxtApplies
+    var mcotxtTimestamp = mcotxtApplies
         ? DateTime.now().millisecondsSinceEpoch ~/ 1000
         : null;
+    // "Plain when smaller": both packets are costed as the firmware builds
+    // them and the plain one wins ties. A reply gets its exact-quote fragment
+    // back, which the composer left out for the container's anchor.
+    var mcotxtPlainFallback = false;
+    if (mcotxtApplies) {
+      final plain = _channelPlainIfSmallerThanMCOtxt(
+        channel,
+        text,
+        timestamp: mcotxtTimestamp!,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
+        replyToMessageId: replyToMessageId,
+        replyToTimestamp: replyToTimestamp,
+      );
+      if (plain != null) {
+        text = plain;
+        mcotxtApplies = false;
+        mcotxtTimestamp = null;
+        mcotxtPlainFallback = true;
+      }
+    }
     Uint8List? mcmpSignature;
     if (mcmpV3Applies && channelMcmpUseSign(channel.index)) {
       // Signing round-trips to the node (up to a few seconds). Show the
@@ -6690,7 +6754,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 text: text,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
-                mcotxtEnabled: isChannelMCOtxtEnabled(channel.index),
+                mcotxtEnabled: mcotxtApplies,
                 mcmpVersion: channelMcmpVersion(channel.index),
                 mcmpUseSign: channelMcmpUseSign(channel.index),
                 timestamp:
@@ -6739,6 +6803,9 @@ class MeshCoreConnector extends ChangeNotifier {
         replyAuthorName: containerReplyAuthorName,
         replyTimestamp: containerReplyTimestamp,
       );
+    } else if (mcotxtPlainFallback) {
+      // Not through prepareChannelOutboundText, which would wrap it again.
+      outboundText = text;
     } else {
       outboundText = prepareChannelOutboundText(channel.index, text);
     }
@@ -7688,7 +7755,26 @@ class MeshCoreConnector extends ChangeNotifier {
         ? prepareChannelOutboundText(channel.index, rawText)
         : rawText;
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
-    var outboundText = prepareChannelOutboundText(channel.index, text);
+    // The preview follows the "plain when smaller" choice the commit will
+    // make; the queued text stays as typed and the commit recomputes it.
+    var mcotxtApplies =
+        mcoImageV3 == null &&
+        isChannelMCOtxtEnabled(channel.index) &&
+        _isMcmpSignableText(text);
+    final plainFallback = mcotxtApplies
+        ? _channelPlainIfSmallerThanMCOtxt(
+            channel,
+            text,
+            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            replyToSenderName: replyToSenderName,
+            replyToText: replyToText,
+            replyToMessageId: replyToMessageId,
+            replyToTimestamp: replyToTimestamp,
+          )
+        : null;
+    if (plainFallback != null) mcotxtApplies = false;
+    var outboundText =
+        plainFallback ?? prepareChannelOutboundText(channel.index, text);
     final binaryOutbound = mcoImageV3 != null
         ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
             image: mcoImageV3,
@@ -7698,7 +7784,7 @@ class MeshCoreConnector extends ChangeNotifier {
                 text: text,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
-                mcotxtEnabled: isChannelMCOtxtEnabled(channel.index),
+                mcotxtEnabled: mcotxtApplies,
                 mcmpVersion: channelMcmpVersion(channel.index),
             mcmpUseSign: channelMcmpUseSign(channel.index),
             timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -7712,10 +7798,7 @@ class MeshCoreConnector extends ChangeNotifier {
             binaryOutbound.dataType,
             binaryOutbound.payload,
           );
-    if (binaryOutbound == null &&
-        mcoImageV3 == null &&
-        isChannelMCOtxtEnabled(channel.index) &&
-        _isMcmpSignableText(text)) {
+    if (binaryOutbound == null && mcotxtApplies) {
       outboundText = MCOtxtAppCodec.encodeTextTransport(
         text: text,
         timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -7751,10 +7834,6 @@ class MeshCoreConnector extends ChangeNotifier {
         mcoImageV3 == null &&
         isChannelMcmpEnabled(channel.index) &&
         channelMcmpVersion(channel.index) == 3 &&
-        _isMcmpSignableText(text);
-    final mcotxtApplies =
-        mcoImageV3 == null &&
-        isChannelMCOtxtEnabled(channel.index) &&
         _isMcmpSignableText(text);
     final baseMessage = ChannelMessage.outgoing(
       messageText,
@@ -10255,6 +10334,17 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  void _ensureContactMCOtxtPlainWhenSmallerLoaded(String contactKeyHex) {
+    if (_contactMCOtxtPlainWhenSmaller.containsKey(contactKeyHex)) return;
+    _contactSettingsStore.loadMCOtxtPlainWhenSmaller(contactKeyHex).then((
+      enabled,
+    ) {
+      if (_contactMCOtxtPlainWhenSmaller[contactKeyHex] == enabled) return;
+      _contactMCOtxtPlainWhenSmaller[contactKeyHex] = enabled;
+      notifyListeners();
+    });
+  }
+
   void _ensureContactCyr2LatSettingLoaded(String contactKeyHex) {
     if (_contactCyr2LatEnabled.containsKey(contactKeyHex)) return;
     _contactSettingsStore.loadCyr2LatEnabled(contactKeyHex).then((enabled) {
@@ -10460,6 +10550,137 @@ class MeshCoreConnector extends ChangeNotifier {
         ?.charMap;
   }
 
+  /// "Plain when smaller" for a contact or room: both forms travel as the
+  /// text of the same packet, so their UTF-8 lengths are the whole
+  /// difference. A room post embeds the sender name in the container while
+  /// the plain form carries none, which is exactly what the comparison
+  /// should see. Plain wins ties, being readable by every client.
+  String _contactPlainIfSmallerThanMCOtxt(
+    Contact contact,
+    String plain,
+    String encoded,
+  ) {
+    if (!isContactMCOtxtPlainWhenSmaller(contact.publicKeyHex)) return encoded;
+    return utf8.encode(plain).length <= utf8.encode(encoded).length
+        ? plain
+        : encoded;
+  }
+
+  /// The composer's view of the channel rule: the plain text a message would
+  /// go out as, or null when it goes out as MCOtxt (or MCOtxt does not apply).
+  String? channelPlainIfSmallerThanMCOtxt(
+    int channelIndex,
+    String text, {
+    String? replyToSenderName,
+    String? replyToText,
+    String? replyToMessageId,
+    int? replyToTimestamp,
+  }) {
+    final channelIndexInList = _channels.indexWhere(
+      (channel) => channel.index == channelIndex,
+    );
+    if (channelIndexInList < 0) return null;
+    if (!isChannelMCOtxtEnabled(channelIndex) || !_isMcmpSignableText(text)) {
+      return null;
+    }
+    return _channelPlainIfSmallerThanMCOtxt(
+      _channels[channelIndexInList],
+      text,
+      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+      replyToMessageId: replyToMessageId,
+      replyToTimestamp: replyToTimestamp,
+    );
+  }
+
+  /// "Plain when smaller" for a channel: the plain text to send instead of
+  /// MCOtxt, or null when MCOtxt is the smaller packet, the rule is off, or
+  /// the plain text would not fit a text frame. Both packets are costed as
+  /// the firmware builds them: GRP_TXT is `timestamp(4) + type(1) +
+  /// "Name: text"`, GRP_DATA is `data_type(2) + length(1) + envelope`, and
+  /// the encryption around them is the same. Plain wins ties.
+  String? _channelPlainIfSmallerThanMCOtxt(
+    Channel channel,
+    String text, {
+    required int timestamp,
+    String? replyToSenderName,
+    String? replyToText,
+    String? replyToMessageId,
+    int? replyToTimestamp,
+  }) {
+    if (!isChannelMCOtxtPlainWhenSmaller(channel.index)) return null;
+    final senderName = _selfName ?? 'Me';
+    final hasReplyPair = replyToSenderName != null && replyToTimestamp != null;
+    final replyAuthorName = hasReplyPair ? replyToSenderName : null;
+    final replyTimestamp = hasReplyPair ? replyToTimestamp : null;
+    final int mcotxtBytes;
+    if (ChannelBinaryDataHelper.canSend) {
+      final envelope = ChannelBinaryDataHelper.mcotxtAppPayloadLength(
+        text,
+        senderName,
+        replyAuthorName: replyAuthorName,
+        replyTimestamp: replyTimestamp,
+      );
+      if (envelope == null) return null;
+      mcotxtBytes = ChannelBinaryDataHelper.finalBinaryPayloadLength(envelope);
+    } else {
+      mcotxtBytes = _groupTextPacketBytes(
+        MCOtxtAppCodec.encodeTextTransport(
+          text: text,
+          timestamp: timestamp,
+          replyAuthorName: replyAuthorName,
+          replyTimestamp: replyTimestamp,
+        ),
+      );
+    }
+    final plain = _channelPlainAlternative(
+      channel,
+      text,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+      replyToMessageId: replyToMessageId,
+    );
+    if (utf8.encode(plain).length > maxChannelMessageBytes(_selfName)) {
+      return null;
+    }
+    return _groupTextPacketBytes(plain) <= mcotxtBytes ? plain : null;
+  }
+
+  /// The plain-text form of a channel message that would otherwise go out
+  /// as MCOtxt. A reply gets its exact-quote fragment back: the composer
+  /// leaves it out when the container carries an anchor, and a plain packet
+  /// has no anchor to fall back on.
+  String _channelPlainAlternative(
+    Channel channel,
+    String text, {
+    String? replyToSenderName,
+    String? replyToText,
+    String? replyToMessageId,
+  }) {
+    if (replyToSenderName == null) return text;
+    final mention = '@[$replyToSenderName] ';
+    if (!text.startsWith(mention)) return text;
+    final settings = _appSettingsService?.settings;
+    return ExactQuoteHelper.formatReply(
+      senderName: replyToSenderName,
+      text: text.substring(mention.length),
+      quotedText: replyToText,
+      quotedMessageId: replyToMessageId,
+      history: getChannelMessages(channel),
+      enabled: settings?.exactQuote ?? false,
+      maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
+      outboundCharMap: channelCyr2LatCharMap(channel.index),
+    );
+  }
+
+  /// Plaintext bytes of a GRP_TXT packet before encryption, as
+  /// `BaseChatMesh::sendGroupMessage` builds it: timestamp, type byte and
+  /// `"Name: text"`, the prefix counted the way the composer counter counts
+  /// it ([channelSenderPrefixBytes]).
+  int _groupTextPacketBytes(String text) =>
+      5 + channelSenderPrefixBytes(_selfName) + utf8.encode(text).length;
+
   /// Whether a channel reply will travel with an MCMP v3 reply anchor
   /// (quoted author + timestamp), which pins the quoted message exactly and
   /// makes a plain-text quote fragment redundant.
@@ -10572,16 +10793,20 @@ class MeshCoreConnector extends ChangeNotifier {
     if (isContactMCOtxtEnabled(contact.publicKeyHex) &&
         _isMcmpSignableText(text)) {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      return MCOtxtAppCodec.encodeTextTransport(
-        text: text,
-        timestamp: timestamp,
-        senderName: contact.type == advTypeRoom ? _selfName ?? 'Me' : null,
-        replyAuthorName: contact.type == advTypeRoom
-            ? effectiveReplyName
-            : hasReplyPair
-            ? ''
-            : null,
-        replyTimestamp: effectiveReplyTimestamp,
+      return _contactPlainIfSmallerThanMCOtxt(
+        contact,
+        text,
+        MCOtxtAppCodec.encodeTextTransport(
+          text: text,
+          timestamp: timestamp,
+          senderName: contact.type == advTypeRoom ? _selfName ?? 'Me' : null,
+          replyAuthorName: contact.type == advTypeRoom
+              ? effectiveReplyName
+              : hasReplyPair
+              ? ''
+              : null,
+          replyTimestamp: effectiveReplyTimestamp,
+        ),
       );
     }
     return prepareContactOutboundText(contact, text);
@@ -10617,10 +10842,16 @@ class MeshCoreConnector extends ChangeNotifier {
         MCOtxtAppCodec.isTextPayload(trimmed);
     if (!isStructuredPayload) {
       if (isContactMCOtxtEnabled(contact.publicKeyHex)) {
-        return MCOtxtAppCodec.encodeTextTransport(
-          text: text,
-          timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          senderName: contact.type == advTypeRoom ? _selfName ?? 'Me' : null,
+        return _contactPlainIfSmallerThanMCOtxt(
+          contact,
+          text,
+          MCOtxtAppCodec.encodeTextTransport(
+            text: text,
+            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            senderName: contact.type == advTypeRoom
+                ? _selfName ?? 'Me'
+                : null,
+          ),
         );
       }
       if (isContactMcmpEnabled(contact.publicKeyHex)) {

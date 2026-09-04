@@ -6644,4 +6644,8 @@ class AppLocalizationsSk extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Veľkosť písma: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Poslať bežnú správu, ak je menšia';
 }

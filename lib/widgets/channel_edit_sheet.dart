@@ -28,6 +28,9 @@ void showChannelEditSheet(
   int selectedMcmpVersion = connector.channelMcmpVersion(channel.index);
   bool mcmpUseSign = connector.channelMcmpUseSign(channel.index);
   bool mcotxtEnabled = connector.isChannelMCOtxtEnabled(channel.index);
+  bool mcotxtPlainWhenSmaller = connector.isChannelMCOtxtPlainWhenSmaller(
+    channel.index,
+  );
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
@@ -225,6 +228,17 @@ void showChannelEditSheet(
                       }
                     }),
                   ),
+                  if (mcotxtEnabled)
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        sheetContext.l10n.channels_mcotxtPlainWhenSmaller,
+                      ),
+                      value: mcotxtPlainWhenSmaller,
+                      onChanged: (value) => setSheetState(() {
+                        mcotxtPlainWhenSmaller = value;
+                      }),
+                    ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(sheetContext.l10n.settings_useSendingDelay),
@@ -329,6 +343,10 @@ void showChannelEditSheet(
                             await connector.setChannelMCOtxtEnabled(
                               channel.index,
                               mcotxtEnabled,
+                            );
+                            await connector.setChannelMCOtxtPlainWhenSmaller(
+                              channel.index,
+                              mcotxtPlainWhenSmaller,
                             );
                             await connector.setChannelSmazEnabled(
                               channel.index,

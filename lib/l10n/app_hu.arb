@@ -3550,5 +3550,6 @@
   "chat_canvasV4TextWidth": "Terület szélessége: {cells}",
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Betűméret: {size}",
-  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
+  "channels_mcotxtPlainWhenSmaller": "Sima üzenet küldése, ha az kisebb"
 }

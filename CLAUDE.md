@@ -286,6 +286,20 @@ MCMP v2 and SMAZ use their `encodeIfSmaller` paths. MCMP v3 and MCOtxt always us
 when selected for an eligible message, whether signed or unsigned; structured payloads that have
 their own format stay outside the normal text-compression path.
 
+MCOtxt has one exception: the per-channel / per-contact **"plain when smaller"** rule, default on,
+shown under the MCOtxt toggle in `channel_edit_sheet.dart`, `chat_screen.dart` and
+`contacts_screen.dart` and stored under `*_mcotxt_plain_when_smaller_` keys in the two settings
+stores. Before an MCOtxt send the connector costs both packets as the firmware builds them
+(`BaseChatMesh::sendGroupMessage` / `sendGroupData`): GRP_TXT is `timestamp(4) + type(1) +
+"Name: text"`, GRP_DATA is `data_type(2) + length(1) + envelope`, and the encryption around them
+is the same; for a contact or room both forms are the text of one packet, so their UTF-8 lengths
+decide. Plain text goes out when it is not larger. The plain candidate of a channel reply gets
+its exact-quote fragment back (`_channelPlainAlternative`), because the composer leaves the
+fragment out whenever `channelReplyCarriesMcmpAnchor` promises a container anchor; a plain
+candidate that would not fit `maxChannelMessageBytes` keeps MCOtxt. The channel composer counter
+asks the same question through `channelPlainIfSmallerThanMCOtxt`, and `prepareContactOutboundText`
+applies the rule itself, so the contact composer follows for free.
+
 The MCMP version and the sign flag are per channel and per contact (`channel_settings_store` /
 `contact_settings_store`, each mirrored by a `MeshCoreConnector` getter for the window before the
 stored value is read back). **The defaults are v3, unsigned**, and each of the two lives in four

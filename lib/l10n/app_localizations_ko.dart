@@ -6364,4 +6364,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return '글자 크기: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller => '일반 메시지가 더 작으면 일반 메시지로 전송';
 }

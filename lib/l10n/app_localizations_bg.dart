@@ -6690,4 +6690,8 @@ class AppLocalizationsBg extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Размер на шрифта: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Изпращане на обикновено съобщение, ако е по-компактно';
 }

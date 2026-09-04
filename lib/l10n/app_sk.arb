@@ -3547,5 +3547,6 @@
   "chat_canvasV4TextWidth": "Šírka oblasti: {cells}",
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Veľkosť písma: {size}",
-  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
+  "channels_mcotxtPlainWhenSmaller": "Poslať bežnú správu, ak je menšia"
 }

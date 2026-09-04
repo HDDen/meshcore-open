@@ -1707,6 +1707,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final contact = widget.contact;
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool mcotxtEnabled = connector.isContactMCOtxtEnabled(contact.publicKeyHex);
+    bool mcotxtPlainWhenSmaller = connector.isContactMCOtxtPlainWhenSmaller(
+      contact.publicKeyHex,
+    );
     int selectedMcmpVersion = connector.contactMcmpVersion(
       contact.publicKeyHex,
     );
@@ -1967,6 +1970,23 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                 ),
+                if (mcotxtEnabled)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      context.l10n.channels_mcotxtPlainWhenSmaller,
+                    ),
+                    value: mcotxtPlainWhenSmaller,
+                    onChanged: (value) {
+                      connector.setContactMCOtxtPlainWhenSmaller(
+                        contact.publicKeyHex,
+                        value,
+                      );
+                      setDialogState(() {
+                        mcotxtPlainWhenSmaller = value;
+                      });
+                    },
+                  ),
                 const Divider(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,

@@ -6718,4 +6718,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Taille de police : $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Envoyer un message normal s\'il est plus compact';
 }

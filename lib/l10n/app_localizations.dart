@@ -11379,6 +11379,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font size: {size}'**
   String chat_canvasV4TextFontSize(int size);
+
+  /// No description provided for @channels_mcotxtPlainWhenSmaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a plain message when it is smaller'**
+  String get channels_mcotxtPlainWhenSmaller;
 }
 
 class _AppLocalizationsDelegate

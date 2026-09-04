@@ -6678,4 +6678,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Betűméret: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Sima üzenet küldése, ha az kisebb';
 }

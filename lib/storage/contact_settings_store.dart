@@ -8,6 +8,8 @@ class ContactSettingsStore {
   static const String _mcmpVersionKeyPrefix = 'contact_mcmp_version_';
   static const String _mcmpUseSignKeyPrefix = 'contact_mcmp_use_sign_';
   static const String _mcotxtKeyPrefix = 'contact_mcotxt_';
+  static const String _mcotxtPlainWhenSmallerKeyPrefix =
+      'contact_mcotxt_plain_when_smaller_';
   static const String _cyr2latKeyPrefix = 'contact_cyr2lat_';
   static const String _sendingDelayKeyPrefix = 'contact_sending_delay_';
   // Store quick answer ids, not text, so editing a reply keeps chat assignment.
@@ -22,6 +24,8 @@ class ContactSettingsStore {
   String get keyForMcmpVersion => '$_mcmpVersionKeyPrefix$publicKeyHex';
   String get keyForMcmpUseSign => '$_mcmpUseSignKeyPrefix$publicKeyHex';
   String get keyForMCOtxt => '$_mcotxtKeyPrefix$publicKeyHex';
+  String get keyForMCOtxtPlainWhenSmaller =>
+      '$_mcotxtPlainWhenSmallerKeyPrefix$publicKeyHex';
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
@@ -173,6 +177,35 @@ class ContactSettingsStore {
     }
     final prefs = PrefsManager.instance;
     final key = '$keyForMCOtxt$contactKeyHex';
+    await prefs.setBool(key, enabled);
+  }
+
+  /// Default on: an MCOtxt contact or room sends a message as plain text
+  /// whenever that packet is the smaller of the two.
+  Future<bool> loadMCOtxtPlainWhenSmaller(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load contact MCOtxt settings.',
+      );
+      return true;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForMCOtxtPlainWhenSmaller$contactKeyHex';
+    return prefs.getBool(key) ?? true;
+  }
+
+  Future<void> saveMCOtxtPlainWhenSmaller(
+    String contactKeyHex,
+    bool enabled,
+  ) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save contact MCOtxt settings.',
+      );
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForMCOtxtPlainWhenSmaller$contactKeyHex';
     await prefs.setBool(key, enabled);
   }
 

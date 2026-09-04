@@ -3678,7 +3678,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         return _byteCountPlaceholder(binaryPayloadBytes);
       }
       return usesChannelEncoding
-          ? connector.prepareChannelOutboundText(widget.channel.index, sendText)
+          ? _channelPlainFallback(connector, sendText) ??
+                connector.prepareChannelOutboundText(
+                  widget.channel.index,
+                  sendText,
+                )
           : sendText;
     }
 
@@ -4038,10 +4042,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     final compressionSourceText = messageText;
 
-    final outboundText = connector.prepareChannelOutboundText(
-      widget.channel.index,
-      messageText,
-    );
+    final outboundText =
+        _channelPlainFallback(connector, messageText) ??
+        connector.prepareChannelOutboundText(widget.channel.index, messageText);
     final textPayloadBytes = utf8.encode(outboundText).length;
     final binaryPayloadBytes = _channelBinaryPayloadBytes(
       connector,
@@ -4172,6 +4175,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     if (imagePayloadBytes != null) return imagePayloadBytes;
     if (connector.isChannelMCOtxtEnabled(widget.channel.index)) {
+      // The connector may send this one as plain text; count it as such.
+      if (_channelPlainFallback(connector, text) != null) return null;
       return ChannelBinaryDataHelper.mcotxtAppPayloadLength(
         text,
         senderName,
@@ -4223,6 +4228,23 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   String _byteCountPlaceholder(int bytes) => List.filled(bytes, 'x').join();
+
+  /// The plain text the connector's "plain when smaller" rule would send
+  /// instead of MCOtxt, with the exact-quote fragment it puts back, or null.
+  String? _channelPlainFallback(MeshCoreConnector connector, String text) {
+    final replyingTo = _replyingToMessage;
+    return connector.channelPlainIfSmallerThanMCOtxt(
+      widget.channel.index,
+      text,
+      replyToSenderName: replyingTo?.senderName,
+      replyToText: replyingTo?.text,
+      replyToMessageId: replyingTo?.messageId,
+      replyToTimestamp: replyingTo == null
+          ? null
+          : replyingTo.containerTimestamp ??
+                (replyingTo.timestamp.millisecondsSinceEpoch ~/ 1000),
+    );
+  }
 
   int _maxChannelInputBytes(MeshCoreConnector connector, AppSettings settings) {
     var limit = maxChannelMessageBytes(connector.selfName);

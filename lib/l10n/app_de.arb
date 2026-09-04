@@ -3674,5 +3674,6 @@
   "chat_canvasV4TextWidth": "Bereichsbreite: {cells}",
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Schriftgröße: {size}",
-  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}}
+  "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
+  "channels_mcotxtPlainWhenSmaller": "Normale Nachricht senden, wenn sie kleiner ist"
 }

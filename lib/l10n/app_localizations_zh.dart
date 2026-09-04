@@ -6225,4 +6225,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return '字号：$size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller => '普通消息更小时改为发送普通消息';
 }

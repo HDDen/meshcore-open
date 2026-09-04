@@ -6686,4 +6686,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Tamaño de fuente: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Enviar un mensaje normal si es más compacto';
 }

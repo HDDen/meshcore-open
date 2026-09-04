@@ -6662,4 +6662,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Tekengrootte: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Gewoon bericht sturen als het kleiner is';
 }

@@ -2297,6 +2297,9 @@ class _ContactsScreenState extends State<ContactsScreen>
         isRoom && connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool mcotxtEnabled =
         isRoom && connector.isContactMCOtxtEnabled(contact.publicKeyHex);
+    bool mcotxtPlainWhenSmaller =
+        isRoom &&
+        connector.isContactMCOtxtPlainWhenSmaller(contact.publicKeyHex);
     int selectedMcmpVersion = isRoom
         ? connector.contactMcmpVersion(contact.publicKeyHex)
         : 2;
@@ -2608,6 +2611,22 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
+                  if (mcotxtEnabled)
+                    SwitchListTile(
+                      title: Text(
+                        context.l10n.channels_mcotxtPlainWhenSmaller,
+                      ),
+                      value: mcotxtPlainWhenSmaller,
+                      onChanged: (value) {
+                        connector.setContactMCOtxtPlainWhenSmaller(
+                          contact.publicKeyHex,
+                          value,
+                        );
+                        setSheetState(() {
+                          mcotxtPlainWhenSmaller = value;
+                        });
+                      },
+                    ),
                   SwitchListTile(
                     title: Text(context.l10n.settings_useSendingDelay),
                     value: sendingDelayEnabled,

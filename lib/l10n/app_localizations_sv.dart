@@ -6630,4 +6630,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Teckenstorlek: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Skicka vanligt meddelande om det är mindre';
 }

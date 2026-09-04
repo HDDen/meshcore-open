@@ -6655,4 +6655,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String chat_canvasV4TextFontSize(int size) {
     return 'Velikost pisave: $size';
   }
+
+  @override
+  String get channels_mcotxtPlainWhenSmaller =>
+      'Pošlji navadno sporočilo, če je manjše';
 }
