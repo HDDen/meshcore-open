@@ -3553,5 +3553,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "字号：{size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "普通消息更小时改为发送普通消息"
+  "channels_mcotxtPlainWhenSmaller": "普通消息更小时改为发送普通消息",
+  "chat_canvasV4TextSize": "文字大小"
 }

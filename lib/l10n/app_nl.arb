@@ -3330,5 +3330,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Tekengrootte: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Gewoon bericht sturen als het kleiner is"
+  "channels_mcotxtPlainWhenSmaller": "Gewoon bericht sturen als het kleiner is",
+  "chat_canvasV4TextSize": "Tekstgrootte"
 }

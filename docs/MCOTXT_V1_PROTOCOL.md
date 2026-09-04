@@ -259,8 +259,8 @@ that decodes to the same normalised text. What the reference does:
 
 - encodes with a fixed language pair when the application supplies one: the
   UI language as A and EN as B, or EN and RU when the UI is English, with a
-  language that has no table replaced by RU when it is written in Cyrillic
-  and by EN otherwise; without such a pair it tries every available language
+  UI language that has no model replaced by RU when it is written in
+  Cyrillic and by EN otherwise; without such a pair it tries every available language
   as A with every other available language or none as B, and keeps the
   candidate with the most encoded characters, then the fewest bits, then the
   fewest language switches, then the fewest declared languages, then the

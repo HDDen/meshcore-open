@@ -3586,5 +3586,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Rozmiar czcionki: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Wysyłać zwykłą wiadomość, jeśli jest mniejsza"
+  "channels_mcotxtPlainWhenSmaller": "Wysyłać zwykłą wiadomość, jeśli jest mniejsza",
+  "chat_canvasV4TextSize": "Rozmiar tekstu"
 }

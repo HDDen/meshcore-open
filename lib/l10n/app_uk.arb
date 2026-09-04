@@ -3528,5 +3528,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Розмір шрифту: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Надсилати звичайне повідомлення, якщо воно компактніше"
+  "channels_mcotxtPlainWhenSmaller": "Надсилати звичайне повідомлення, якщо воно компактніше",
+  "chat_canvasV4TextSize": "Розмір тексту"
 }

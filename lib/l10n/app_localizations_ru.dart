@@ -6693,4 +6693,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
       'Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра';
+
+  @override
+  String get chat_canvasV4TextSize => 'Размер текста';
 }

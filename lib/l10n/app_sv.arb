@@ -3330,5 +3330,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Teckenstorlek: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Skicka vanligt meddelande om det är mindre"
+  "channels_mcotxtPlainWhenSmaller": "Skicka vanligt meddelande om det är mindre",
+  "chat_canvasV4TextSize": "Textstorlek"
 }

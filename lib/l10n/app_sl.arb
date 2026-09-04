@@ -3548,5 +3548,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Velikost pisave: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Pošlji navadno sporočilo, če je manjše"
+  "channels_mcotxtPlainWhenSmaller": "Pošlji navadno sporočilo, če je manjše",
+  "chat_canvasV4TextSize": "Velikost besedila"
 }

@@ -809,7 +809,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                     ),
                   ),
                 ],
-                if (_isVectorV4) _buildVectorTextControls(),
                 const SizedBox(height: 20),
                 _buildCanvas(palette, showLockButton: showLockButton),
                 const SizedBox(height: 8),
@@ -1983,6 +1982,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           icon: Icons.format_align_left,
           selected:
               hasTextFigure && _isTextAlignActive(MCOImageV4TextAlign.left),
+        ),
+        gap,
+        actionButton(
+          onPressed: hasTextFigure ? _showVectorTextSizeDialog : null,
+          tooltip: context.l10n.chat_canvasV4TextSize,
+          icon: Icons.format_size,
         ),
       ],
     );
@@ -5760,18 +5765,76 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     });
   }
 
-  void _beginTextSliderDrag() {
-    // While typing the whole session is already one undo step.
-    if (_v4TextEditingIndex != null) return;
-    _v4StyleDragBefore = _v4Document;
+  /// Width and font size of the active text layer live in a dialog rather
+  /// than above the canvas: two sliders there pushed the canvas down on a
+  /// phone, out from under the lock button that had just been pressed. The
+  /// sliders change the layer live; Cancel puts the document back as it was,
+  /// OK records the whole dialog as one undo step, unless the layer is being
+  /// typed into, where the typing session already is one. Nothing here
+  /// touches the selection or the editing session: while the dialog is up
+  /// the field merely has no focus, and the route hands it back on close.
+  Future<void> _showVectorTextSizeDialog() async {
+    final before = _v4Document;
+    if (before == null || _activeTextFigure == null) return;
+    final stickyFontSize = _v4TextFontSize;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(context.l10n.chat_canvasV4TextSize),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: _buildVectorTextSliders(
+              onChanged: () => setDialogState(() {}),
+            ),
+          ),
+          actions: [_buildDialogActionRow(dialogContext)],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (confirmed == true) {
+      final after = _v4Document;
+      if (_v4TextEditingIndex == null &&
+          after != null &&
+          !identical(before, after)) {
+        _recordVectorDocumentChange(before, after);
+      }
+      return;
+    }
+    setState(() {
+      _v4Document = before;
+      _v4TextFontSize = stickyFontSize;
+    });
+    _scheduleTextPayloadRefresh();
   }
 
-  void _endTextSliderDrag() {
-    if (_v4TextEditingIndex != null) return;
-    _endVectorStyleDrag();
+  /// Cancel and OK on one line whatever the width: the dialog's own overflow
+  /// bar would stack them, so a row of two flexible buttons shrinks their
+  /// labels to an ellipsis instead.
+  Widget _buildDialogActionRow(BuildContext dialogContext) {
+    Widget button(String label, bool result) => Flexible(
+      child: TextButton(
+        onPressed: () => Navigator.of(dialogContext).pop(result),
+        child: Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        button(context.l10n.common_cancel, false),
+        const SizedBox(width: 8),
+        button(context.l10n.common_ok, true),
+      ],
+    );
   }
 
-  Widget _buildVectorTextControls() {
+  Widget _buildVectorTextSliders({required VoidCallback onChanged}) {
     final document = _v4Document;
     final figure = _activeTextFigure;
     if (document == null || figure == null) return const SizedBox.shrink();
@@ -5802,9 +5865,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
     final labelStyle = Theme.of(context).textTheme.labelLarge;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
         Text(
           context.l10n.chat_canvasV4TextWidth(areaWidth),
           style: labelStyle,
@@ -5815,10 +5878,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           max: document.width.toDouble(),
           divisions: math.max(1, document.width - minWidth),
           label: '$areaWidth',
-          onChangeStart: (_) => _beginTextSliderDrag(),
-          onChanged: (value) => _setVectorTextWidth(value.round()),
-          onChangeEnd: (_) => _endTextSliderDrag(),
+          onChanged: (value) {
+            _setVectorTextWidth(value.round());
+            onChanged();
+          },
         ),
+        const SizedBox(height: 8),
         Text(
           context.l10n.chat_canvasV4TextFontSize(fontSize),
           style: labelStyle,
@@ -5826,11 +5891,12 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
         Slider(
           value: _textSliderPosition(fontSize, minFontSize, maxFontSize),
           label: '$fontSize',
-          onChangeStart: (_) => _beginTextSliderDrag(),
-          onChanged: (value) => _setVectorTextFontSize(
-            _textSliderFontSize(value, minFontSize, maxFontSize),
-          ),
-          onChangeEnd: (_) => _endTextSliderDrag(),
+          onChanged: (value) {
+            _setVectorTextFontSize(
+              _textSliderFontSize(value, minFontSize, maxFontSize),
+            );
+            onChanged();
+          },
         ),
       ],
     );

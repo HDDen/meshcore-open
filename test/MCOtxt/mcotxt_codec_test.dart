@@ -292,17 +292,24 @@ void main() {
       );
     });
 
-    test('forLocale falls back by script when the language has no table', () {
-      // Declared but without tables in this build.
-      expect(MCOtxtModelRegistry.isAvailable(MCOtxtLanguageId.uk), isFalse);
-      expect(MCOtxtModelRegistry.isAvailable(MCOtxtLanguageId.de), isFalse);
+    test('forLocale uses the language\'s own model when the build has it', () {
+      for (final id in MCOtxtLanguageId.values) {
+        if (!MCOtxtModelRegistry.isAvailable(id)) continue;
+        final other = id == MCOtxtLanguageId.en
+            ? MCOtxtLanguageId.ru
+            : MCOtxtLanguageId.en;
+        expect(
+          MCOtxtLanguagePair.forLocale(id.name),
+          MCOtxtLanguagePair(id, other),
+          reason: id.name,
+        );
+      }
+    });
+
+    test('forLocale falls back by script for a language without a model', () {
       expect(
-        MCOtxtLanguagePair.forLocale('uk'),
+        MCOtxtLanguagePair.forLocale('bg'),
         const MCOtxtLanguagePair(MCOtxtLanguageId.ru, MCOtxtLanguageId.en),
-      );
-      expect(
-        MCOtxtLanguagePair.forLocale('de'),
-        const MCOtxtLanguagePair(MCOtxtLanguageId.en, MCOtxtLanguageId.ru),
       );
       expect(
         MCOtxtLanguagePair.forLocale('pl'),
@@ -342,17 +349,6 @@ void main() {
       );
       expect(encoded.languageA, MCOtxtLanguageId.fr);
       expect(encoded.languageB, isNull);
-    });
-
-    test('an unavailable default pair falls back to the search', () {
-      MCOtxtCodec.defaultLanguagePair = const MCOtxtLanguagePair(
-        MCOtxtLanguageId.de,
-        MCOtxtLanguageId.en,
-      );
-      final encoded = MCOtxtCodec.encode(
-        'Привет, это довольно длинное сообщение на русском языке',
-      );
-      expect(encoded.languageA, MCOtxtLanguageId.ru);
     });
   });
 

@@ -11397,6 +11397,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short'**
   String get settings_modSettingsRecoverLongEchoesDscr;
+
+  /// No description provided for @chat_canvasV4TextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get chat_canvasV4TextSize;
 }
 
 class _AppLocalizationsDelegate

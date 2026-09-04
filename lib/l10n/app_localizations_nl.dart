@@ -6674,4 +6674,7 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
       'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+
+  @override
+  String get chat_canvasV4TextSize => 'Tekstgrootte';
 }

@@ -2851,5 +2851,6 @@
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "Отправлять обычное сообщение, если оно компактнее",
   "settings_modSettingsRecoverLongEchoes": "Восстанавливать ретрансляции длинных пакетов",
-  "settings_modSettingsRecoverLongEchoesDscr": "Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра"
+  "settings_modSettingsRecoverLongEchoesDscr": "Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра",
+  "chat_canvasV4TextSize": "Размер текста"
 }

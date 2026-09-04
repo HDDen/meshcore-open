@@ -339,8 +339,8 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   The stream is **not self-terminating**: padding bits decode as TOP4 tokens, so every embedding
   carries the bit count. `encodeToBitLimit` fits text into a bit budget. The languages are not
   searched for: `main.dart` sets `MCOtxtCodec.defaultLanguagePair` from the resolved UI locale
-  (`MCOtxtLanguagePair.forLocale` — that language and EN, or EN and RU for English; a language
-  without a table becomes RU if Cyrillic, else EN), and the encoder plans once with that pair.
+  (`MCOtxtLanguagePair.forLocale` — that language and EN, or EN and RU for English; a UI language
+  with no model becomes RU if Cyrillic, else EN), and the encoder plans once with that pair.
   Trying every available pair, the reference behaviour, runs only while the default is null,
   which is how the tests see the codec; explicit `MCOtxtEncodeOptions` languages win over both.
 - **Frame** — `lib/MCOtxt/mcotxt_frame.dart`, `MCOtxtFrame`: `varuint(bitLength)` + bytes. The
@@ -349,9 +349,9 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   bit-packed host (MCOimg v4) keeps only the rule: bit count ahead of the bits.
 - **Models** — `lib/MCOtxt/models/`: `MCOtxtLanguageModel` (primary ≤ 32 with SPACE at index 0,
   extension ≤ 32, `startTop4`, `punctStartTop4`, one TOP-4 row per symbol, uppercase map) and
-  the shared 32-entry punctuation page. Seven language ids (en ru fr de it uk be); only EN, RU
-  and FR have tables, the rest are `MCOtxtLanguageModel.unavailable` placeholders the decoder
-  rejects with `modelUnavailable`. **Symbol order is wire format** (it defines literal ids), so
+  the shared 32-entry punctuation page. Seven language ids (en ru fr de it uk be), each with a
+  generated table; a build lacking one would carry an `MCOtxtLanguageModel.unavailable`
+  placeholder, which the decoder rejects with `modelUnavailable`. **Symbol order is wire format** (it defines literal ids), so
   tables are generated, never edited: `tools/MCOtxt/MCOtxt_model_trainer_with_diagnostics.py`
   writes `models/generated/v1/model_<lang>.dart`, a C header and a report, and records a SHA-256
   wire hash in `tools/MCOtxt/generated/model_manifest.json`; `verify_runtime_models.py` checks

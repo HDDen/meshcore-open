@@ -10,10 +10,10 @@ class MCOtxtLanguagePair {
   final MCOtxtLanguageId? b;
 
   /// The pair the app encodes with by default, derived from the UI language:
-  /// that language and EN, or EN and RU when the UI is English. A language
-  /// without a table falls back to RU when it is written in Cyrillic and to
-  /// EN otherwise, so the second language stays the one most likely to be
-  /// mixed in. Trying every available pair instead costs a full planning
+  /// that language and EN, or EN and RU when the UI is English. A UI
+  /// language with no model falls back to RU when it is written in Cyrillic
+  /// and to EN otherwise, so the second language stays the one most likely
+  /// to be mixed in. Trying every available pair instead costs a full planning
   /// pass per pair on every keystroke of the composer counter.
   factory MCOtxtLanguagePair.forLocale(
     String languageCode, {

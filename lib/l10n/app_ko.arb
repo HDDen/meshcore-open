@@ -3685,5 +3685,6 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "글자 크기: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "일반 메시지가 더 작으면 일반 메시지로 전송"
+  "channels_mcotxtPlainWhenSmaller": "일반 메시지가 더 작으면 일반 메시지로 전송",
+  "chat_canvasV4TextSize": "텍스트 크기"
 }
