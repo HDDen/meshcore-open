@@ -57,9 +57,15 @@ class _PendingSendCancelBarState extends State<PendingSendCancelBar> {
       context,
     ).style.copyWith(color: widget.foregroundColor);
 
+    // Full width of the bubble, not of this row: the divider is meant to
+    // span the message. That only works under a column laid out with
+    // IntrinsicWidth, which both chats add while this bar is shown; in a
+    // loose column an infinite width would blow the bubble up to its
+    // maximum, and IntrinsicWidth here shrank the divider to this row.
     return InkWell(
       onTap: widget.onCancel,
-      child: IntrinsicWidth(
+      child: SizedBox(
+        width: double.infinity,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

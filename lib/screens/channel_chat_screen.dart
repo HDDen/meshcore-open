@@ -1580,7 +1580,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       borderRadius: borderRadius,
                       border: Border.all(color: bubbleBorder, width: 1),
                     ),
-                    child: Column(
+                    child: _stretchToContentWhen(
+                      pendingSendAt != null,
+                      Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (!isOutgoing) ...[
@@ -2225,6 +2227,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 : EdgeInsets.zero,
                           ),
                       ],
+                    ),
                     ),
                   ),
                 ),
@@ -5467,3 +5470,11 @@ class _ComposerEncoding {
   final int? binaryPayloadBytes;
   final String outboundText;
 }
+
+/// Wraps the bubble column in [IntrinsicWidth] only while a pending-send bar
+/// is shown. The bar's divider has to follow the bubble's own width, which a
+/// loosely laid out column cannot tell it: without the wrapper the bar either
+/// shrinks to its row or, asking for infinite width, blows the bubble up to
+/// its maximum. The intrinsic pass is not worth paying on every bubble.
+Widget _stretchToContentWhen(bool condition, Widget child) =>
+    condition ? IntrinsicWidth(child: child) : child;

@@ -2876,7 +2876,9 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     child: Stack(
                       children: [
-                        Column(
+                        _stretchToContentWhen(
+                          pendingSendAt != null,
+                          Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         if (!isOutgoing) ...[
@@ -3437,6 +3439,7 @@ class _MessageBubble extends StatelessWidget {
                           const SizedBox(height: 6),
                           ],
                         ),
+                        ),
                         if (showDeliveryProgress)
                           Positioned(
                             left: 0,
@@ -3818,3 +3821,11 @@ class _CoordinateMessageLink extends StatelessWidget {
     );
   }
 }
+
+/// Wraps the bubble column in [IntrinsicWidth] only while a pending-send bar
+/// is shown. The bar's divider has to follow the bubble's own width, which a
+/// loosely laid out column cannot tell it: without the wrapper the bar either
+/// shrinks to its row or, asking for infinite width, blows the bubble up to
+/// its maximum. The intrinsic pass is not worth paying on every bubble.
+Widget _stretchToContentWhen(bool condition, Widget child) =>
+    condition ? IntrinsicWidth(child: child) : child;
