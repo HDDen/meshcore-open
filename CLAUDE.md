@@ -1159,7 +1159,7 @@ Recoverable BLE loss does not navigate away from the current chat/canvas. The co
 
 ## Dependencies
 
-App version: `9.5.1-mcoa.1.8.6+43` — Dart SDK constraint: `^3.9.2`
+App version: `9.5.1-mcoa.1.9.0+44` — Dart SDK constraint: `^3.9.2`
 
 **Connectivity**
 
