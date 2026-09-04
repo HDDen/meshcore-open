@@ -1092,6 +1092,13 @@ channel's region. The scope on the wire is applied for images identically to tex
 `sendImageChunks` wraps the whole burst in `_runScopedChannelSend`, so every chunk of one image
 goes out under one scope and no other channel send can slip in between them.
 
+The chunk layout follows the parity toggle in the send preview (`imageChunkDataSizes`). With
+parity every chunk but the last is full: a contract with every shipped receiver, whose parity
+recovery refuses to rebuild a short chunk that is not the last one. Without parity the same
+number of chunks shares the bytes evenly, so a two-chunk image's packets both stay short enough
+for the companion's RX log to carry the repeater's echo. Reassembly concatenates by index, so old
+receivers take either layout; only the parity path cares.
+
 An image is not stored inside the message it arrived with — the message holds only a sentinel — so
 clearing a conversation has to reach this store separately, or the bytes stay on disk with nothing
 left pointing at them. The connector holds a `_deleteImagesForChannel` callback, wired in `main()`

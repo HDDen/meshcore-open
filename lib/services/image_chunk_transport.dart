@@ -48,6 +48,18 @@
 /// a single blob. The cost is exactly one wasted byte in each data chunk; that
 /// is the price of self-describing single-loss recovery.
 ///
+/// ## Data layout across chunks
+///
+/// With parity, every data chunk but the last is filled to capacity. That is
+/// not a preference but a contract with every receiver shipped so far: their
+/// parity recovery refuses to rebuild a short chunk that is not the last one
+/// (see [ImageReassembler]), so a short earlier chunk would be unrecoverable
+/// for them. Without parity the same number of chunks carries the bytes spread
+/// evenly, later chunks taking the remainder, so each packet is as short as it
+/// can be — short enough, for two chunks, for the companion's RX log to carry
+/// the repeater's echo of both. Reassembly concatenates by index and never
+/// assumed sizes, so old receivers take either layout.
+///
 /// ## Integrity
 ///
 /// There is deliberately NO app-level checksum. Two layers below already cover
@@ -445,6 +457,34 @@ int imageDataChunkCount(int payloadBytes) {
   return 1 + (remaining / kImageChunkCapacity).ceil();
 }
 
+/// Image bytes carried by each data chunk, in send order: filled front to
+/// back with [parity], spread evenly without it — see "Data layout across
+/// chunks" above. Chunk 0 also carries the metadata byte, not counted here.
+List<int> imageChunkDataSizes(int payloadBytes, {required bool parity}) {
+  final n = math.max(payloadBytes, 0);
+  final total = imageDataChunkCount(n);
+  final sizes = <int>[];
+  if (parity) {
+    var offset = 0;
+    for (var i = 0; i < total; i++) {
+      final capacity = i == 0 ? kImageChunkFirstCapacity : kImageChunkCapacity;
+      final take = math.min(capacity, n - offset);
+      sizes.add(take);
+      offset += take;
+    }
+    return sizes;
+  }
+  // The remainder goes to the last chunks: chunk 0 has one byte less room
+  // than the others, and the floor never exceeds that room for a count
+  // [imageDataChunkCount] chose.
+  final base = n ~/ total;
+  final extra = n % total;
+  for (var i = 0; i < total; i++) {
+    sizes.add(base + (i >= total - extra ? 1 : 0));
+  }
+  return sizes;
+}
+
 /// The blobs of one image, ready to hand to `CMD_SEND_CHANNEL_DATA`.
 class ImageChunkSet {
   /// Every blob in send order; the parity blob, if any, is last.
@@ -496,14 +536,14 @@ ImageChunkSet buildImageChunks({
       'exceeds kImageMaxPayloadBytes ($kImageMaxPayloadBytes)',
     );
   }
-  final total = imageDataChunkCount(payload.length);
+  final sizes = imageChunkDataSizes(payload.length, parity: parity);
+  final total = sizes.length;
 
   // Build the bodies first; parity is a pure function of them.
   final bodies = <Uint8List>[];
   var offset = 0;
   for (var i = 0; i < total; i++) {
-    final capacity = i == 0 ? kImageChunkFirstCapacity : kImageChunkCapacity;
-    final take = math.min(capacity, payload.length - offset);
+    final take = sizes[i];
     final body = BytesBuilder();
     if (i == 0) body.addByte(metadata.encode());
     if (take > 0) body.add(payload.sublist(offset, offset + take));

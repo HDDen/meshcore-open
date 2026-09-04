@@ -167,6 +167,52 @@ void main() {
     });
   });
 
+  group('data layout', () {
+    test('with parity every chunk but the last is full', () {
+      expect(imageChunkDataSizes(209, parity: true), [157, 52]);
+      expect(imageChunkDataSizes(315, parity: true), [157, 158]);
+      expect(imageChunkDataSizes(400, parity: true), [157, 158, 85]);
+    });
+
+    test('without parity the same chunks share the bytes evenly', () {
+      expect(imageChunkDataSizes(209, parity: false), [104, 105]);
+      expect(imageChunkDataSizes(315, parity: false), [157, 158]);
+      expect(imageChunkDataSizes(400, parity: false), [133, 133, 134]);
+      expect(imageChunkDataSizes(100, parity: false), [100]);
+      expect(imageChunkDataSizes(0, parity: false), [0]);
+    });
+
+    test('the even layout never changes the chunk count or overfills', () {
+      for (var length = 0; length <= kImageMaxPayloadBytes; length++) {
+        final sizes = imageChunkDataSizes(length, parity: false);
+        expect(sizes.length, imageDataChunkCount(length), reason: '$length');
+        expect(sizes.fold<int>(0, (a, b) => a + b), length);
+        expect(sizes.first, lessThanOrEqualTo(kImageChunkFirstCapacity));
+        for (final size in sizes.skip(1)) {
+          expect(size, lessThanOrEqualTo(kImageChunkCapacity));
+        }
+      }
+    });
+
+    test('an evenly split image reassembles, even out of order', () {
+      for (final length in <int>[209, 315, 460]) {
+        final payload = payloadOf(length);
+        final set = buildImageChunks(
+          payload: payload,
+          metadata: stdMeta,
+          senderPrefix: senderA,
+          imgId: 9,
+          parity: false,
+        );
+        for (final blob in set.blobs) {
+          expect(blob.length, lessThanOrEqualTo(kImageChunkBlobBytes));
+        }
+        final reversed = set.blobs.reversed.toList();
+        expect(feed(ImageReassembler(), reversed)!.data, payload);
+      }
+    });
+  });
+
   group('round trip', () {
     for (final length in <int>[
       100, // 1 chunk

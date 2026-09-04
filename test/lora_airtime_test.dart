@@ -147,6 +147,8 @@ void main() {
       // chunk 0), and each time a hardcoded expectation here would have hidden
       // the estimator drifting away from the chunker.
       expect(imageChunkCount(110), 1);
+      expect(imageChunkPayloadSizes(209), [157, 52]);
+      expect(imageChunkPayloadSizes(209, parity: false), [104, 105]);
       expect(imageChunkCount(209), 2);
       expect(imageChunkCount(156), 156 <= kImageChunkFirstCapacity ? 1 : 2);
       for (final pl in [110, 156, 209]) {

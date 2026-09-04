@@ -8,10 +8,9 @@ import '../models/radio_settings.dart';
 // re-export instead, so there is exactly one declaration in the program.
 import '../services/image_chunk_transport.dart'
     show
+        imageChunkDataSizes,
         imageDataChunkCount,
         kImageChunkBlobBytes,
-        kImageChunkCapacity,
-        kImageChunkFirstCapacity,
         kImageChunkHeaderBytes,
         kImageChunkZeroMetadataBytes;
 
@@ -271,19 +270,12 @@ int imageChunkCount(int payloadBytes) {
   return imageDataChunkCount(payloadBytes);
 }
 
-/// Payload bytes carried by each data chunk, in order.
-List<int> imageChunkPayloadSizes(int payloadBytes) {
-  final count = imageChunkCount(payloadBytes);
-  if (count == 0) return const [];
-  final sizes = <int>[];
-  var remaining = payloadBytes;
-  for (var i = 0; i < count; i++) {
-    final capacity = i == 0 ? kImageChunkFirstCapacity : kImageChunkCapacity;
-    final take = remaining < capacity ? remaining : capacity;
-    sizes.add(take);
-    remaining -= take;
-  }
-  return sizes;
+/// Payload bytes carried by each data chunk, in order. The layout follows
+/// [parity], as the chunker's does: filled front to back with a parity chunk,
+/// spread evenly without one.
+List<int> imageChunkPayloadSizes(int payloadBytes, {bool parity = true}) {
+  if (imageChunkCount(payloadBytes) == 0) return const [];
+  return imageChunkDataSizes(payloadBytes, parity: parity);
 }
 
 /// Estimates packet count and airtime for sending [payloadBytes] of chunked
@@ -326,7 +318,7 @@ SendEstimate estimateSendFromRadioParams({
   int onAirOverheadBytes = kMeshCoreOnAirOverheadBytes,
 }) {
   final payload = math.max(payloadBytes, 0);
-  final sizes = imageChunkPayloadSizes(payload);
+  final sizes = imageChunkPayloadSizes(payload, parity: parity);
   final dataChunks = sizes.length;
   final withParity = parity && dataChunks > 0;
 
