@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'l10n/app_localizations.dart';
+import 'MCOtxt/mcotxt.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/chrome_required_screen.dart';
@@ -796,6 +797,11 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
               // Update notification service with resolved locale
               final locale = Localizations.localeOf(context);
               NotificationService().setLocale(locale);
+              // MCOtxt plans with one language pair instead of trying every
+              // available one; the UI language decides which.
+              MCOtxtCodec.defaultLanguagePair = MCOtxtLanguagePair.forLocale(
+                locale.languageCode,
+              );
 
               final settings = settingsService.settings;
               Widget content = child ?? const SizedBox.shrink();

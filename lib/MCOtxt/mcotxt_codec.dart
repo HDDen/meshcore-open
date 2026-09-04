@@ -44,6 +44,12 @@ class MCOtxtCodec {
   static const int _toggleCaseModeBits =
       _extendedControlPrefixBits + _extendedControlSubopcodeBits;
 
+  /// Languages used when the options name none. The app sets this from the
+  /// UI language ([MCOtxtLanguagePair.forLocale]); left null, the encoder
+  /// tries every available pair and keeps the best, which is the reference
+  /// behaviour and the one the tests pin. Explicit options always win.
+  static MCOtxtLanguagePair? defaultLanguagePair;
+
   static MCOtxtEncodeResult encode(
     String text, {
     MCOtxtEncodeOptions options = const MCOtxtEncodeOptions(),
@@ -444,6 +450,18 @@ class MCOtxtCodec {
         runes,
         options.languageA!,
         options.languageB,
+        modelSet,
+      );
+    }
+    final preferred = defaultLanguagePair;
+    if (preferred != null &&
+        preferred.a != preferred.b &&
+        modelSet.isAvailable(preferred.a) &&
+        (preferred.b == null || modelSet.isAvailable(preferred.b))) {
+      return _encodeWithLanguagePair(
+        runes,
+        preferred.a,
+        preferred.b,
         modelSet,
       );
     }

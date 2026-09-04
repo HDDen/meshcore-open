@@ -274,6 +274,88 @@ void main() {
     });
   });
 
+  group('MCOtxt default language pair', () {
+    tearDown(() => MCOtxtCodec.defaultLanguagePair = null);
+
+    test('forLocale pairs the UI language with EN, and EN with RU', () {
+      expect(
+        MCOtxtLanguagePair.forLocale('ru'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.ru, MCOtxtLanguageId.en),
+      );
+      expect(
+        MCOtxtLanguagePair.forLocale('fr'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.fr, MCOtxtLanguageId.en),
+      );
+      expect(
+        MCOtxtLanguagePair.forLocale('en'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.en, MCOtxtLanguageId.ru),
+      );
+    });
+
+    test('forLocale falls back by script when the language has no table', () {
+      // Declared but without tables in this build.
+      expect(MCOtxtModelRegistry.isAvailable(MCOtxtLanguageId.uk), isFalse);
+      expect(MCOtxtModelRegistry.isAvailable(MCOtxtLanguageId.de), isFalse);
+      expect(
+        MCOtxtLanguagePair.forLocale('uk'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.ru, MCOtxtLanguageId.en),
+      );
+      expect(
+        MCOtxtLanguagePair.forLocale('de'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.en, MCOtxtLanguageId.ru),
+      );
+      expect(
+        MCOtxtLanguagePair.forLocale('pl'),
+        const MCOtxtLanguagePair(MCOtxtLanguageId.en, MCOtxtLanguageId.ru),
+      );
+    });
+
+    test('the default pair is declared as given instead of being searched', () {
+      const text = 'Привет, это довольно длинное сообщение на русском языке';
+      final searched = MCOtxtCodec.encode(text);
+      expect(searched.encodingMode, MCOtxtEncodingMode.mcotxt);
+      expect(searched.languageA, MCOtxtLanguageId.ru);
+
+      MCOtxtCodec.defaultLanguagePair = const MCOtxtLanguagePair(
+        MCOtxtLanguageId.en,
+        MCOtxtLanguageId.ru,
+      );
+      final fixed = MCOtxtCodec.encode(text);
+      expect(fixed.encodingMode, MCOtxtEncodingMode.mcotxt);
+      expect(fixed.languageA, MCOtxtLanguageId.en);
+      expect(fixed.languageB, MCOtxtLanguageId.ru);
+      expect(fixed.decodedText, text);
+      expect(
+        MCOtxtCodec.decode(fixed.data, bitLength: fixed.bitLength).text,
+        text,
+      );
+    });
+
+    test('explicit options win over the default pair', () {
+      MCOtxtCodec.defaultLanguagePair = const MCOtxtLanguagePair(
+        MCOtxtLanguageId.en,
+        MCOtxtLanguageId.ru,
+      );
+      final encoded = MCOtxtCodec.encode(
+        'Bonjour tout le monde, comment allez-vous aujourd\'hui',
+        options: const MCOtxtEncodeOptions(languageA: MCOtxtLanguageId.fr),
+      );
+      expect(encoded.languageA, MCOtxtLanguageId.fr);
+      expect(encoded.languageB, isNull);
+    });
+
+    test('an unavailable default pair falls back to the search', () {
+      MCOtxtCodec.defaultLanguagePair = const MCOtxtLanguagePair(
+        MCOtxtLanguageId.de,
+        MCOtxtLanguageId.en,
+      );
+      final encoded = MCOtxtCodec.encode(
+        'Привет, это довольно длинное сообщение на русском языке',
+      );
+      expect(encoded.languageA, MCOtxtLanguageId.ru);
+    });
+  });
+
   group('MCOtxt extended language header', () {
     test('normal header is 12 bits for current inline languages', () {
       final encoded = MCOtxtCodec.encode(

@@ -257,10 +257,14 @@ The reference encoder is a dynamic-programming search over positions ×
 a normative sequence of decisions. A conforming encoder may produce any stream
 that decodes to the same normalised text. What the reference does:
 
-- tries every available language as A with every other available language or
-  none as B, and keeps the candidate with the most encoded characters, then
-  the fewest bits, then the fewest language switches, then the fewest declared
-  languages, then the lowest A id, then the lowest B id;
+- encodes with a fixed language pair when the application supplies one: the
+  UI language as A and EN as B, or EN and RU when the UI is English, with a
+  language that has no table replaced by RU when it is written in Cyrillic
+  and by EN otherwise; without such a pair it tries every available language
+  as A with every other available language or none as B, and keeps the
+  candidate with the most encoded characters, then the fewest bits, then the
+  fewest language switches, then the fewest declared languages, then the
+  lowest A id, then the lowest B id;
 - for each character considers the punctuation page, the active model, the
   toggled model (with `TOGGLE_LANGUAGE`) and every other model (with
   `SWITCH_OTHER_LANGUAGE`); `UTF8_RUN` is considered only when nothing else

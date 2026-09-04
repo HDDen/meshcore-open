@@ -337,7 +337,12 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   prediction contexts: START, AFTER_PUNCT, SYMBOL(prev). A whole message that is smaller as
   UTF-8 goes out in RAW_UTF8 mode (16-bit header). Case is planned by a separate two-state DP.
   The stream is **not self-terminating**: padding bits decode as TOP4 tokens, so every embedding
-  carries the bit count. `encodeToBitLimit` fits text into a bit budget.
+  carries the bit count. `encodeToBitLimit` fits text into a bit budget. The languages are not
+  searched for: `main.dart` sets `MCOtxtCodec.defaultLanguagePair` from the resolved UI locale
+  (`MCOtxtLanguagePair.forLocale` — that language and EN, or EN and RU for English; a language
+  without a table becomes RU if Cyrillic, else EN), and the encoder plans once with that pair.
+  Trying every available pair, the reference behaviour, runs only while the default is null,
+  which is how the tests see the codec; explicit `MCOtxtEncodeOptions` languages win over both.
 - **Frame** — `lib/MCOtxt/mcotxt_frame.dart`, `MCOtxtFrame`: `varuint(bitLength)` + bytes. The
   one agreed way to put a stream into a byte container; the app container uses it for every
   string, and a new byte container should call it rather than frame the stream its own way. A
