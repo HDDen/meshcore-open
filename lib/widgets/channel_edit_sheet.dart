@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -323,11 +323,18 @@ void showChannelEditSheet(
 
                           Navigator.pop(sheetContext);
                           try {
-                            await connector.setChannel(
-                              channel.index,
-                              name,
-                              psk,
-                            );
+                            // Only a changed name or key goes to the radio:
+                            // setChannel re-syncs every channel and reloads
+                            // its history from storage, which a compression
+                            // toggle has no reason to trigger.
+                            if (name != channel.name ||
+                                !listEquals(psk, channel.psk)) {
+                              await connector.setChannel(
+                                channel.index,
+                                name,
+                                psk,
+                              );
+                            }
                             await connector.setChannelMcmpEnabled(
                               channel.index,
                               mcmpEnabled,

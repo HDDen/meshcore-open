@@ -522,8 +522,26 @@ JOIN history_messages AS latest
   ) async {
     if (messages.isEmpty) return false;
     final companions = _companionsFor(kind, storageKey, messages);
+    // The conflict target is the identity index, named explicitly. Drift's
+    // default target is the primary key, and `id` is autoincrement and absent
+    // on insert, so a second save of one message never conflicted on it: it
+    // tripped the unique identity index instead, the batch failed, and no
+    // update of an existing row ever reached the disk.
     await batch((batch) {
-      batch.insertAllOnConflictUpdate(historyMessages, companions);
+      for (final companion in companions) {
+        batch.insert(
+          historyMessages,
+          companion,
+          onConflict: DoUpdate(
+            (_) => companion,
+            target: [
+              historyMessages.kind,
+              historyMessages.storageKey,
+              historyMessages.messageId,
+            ],
+          ),
+        );
+      }
     });
     return companions.any((companion) => companion.containsMarker.value);
   }
