@@ -1801,9 +1801,9 @@ class _ContactsScreenState extends State<ContactsScreen>
       );
       return;
     }
-    // Check if this is a repeater
+    // A repeater opens its options sheet; the login is one of its entries.
     if (contact.type == advTypeRepeater) {
-      _showRepeaterLogin(context, contact);
+      _showRepeaterOptions(context, connector, contact);
     } else if (contact.type == advTypeRoom) {
       _showRoomLogin(context, contact, RoomLoginDestination.chat);
     } else {
@@ -2277,7 +2277,9 @@ class _ContactsScreenState extends State<ContactsScreen>
   ) {
     final isRepeater = contact.type == advTypeRepeater;
     if (isRepeater) {
-      _showRepeaterOptions(context, connector, contact);
+      // Swapped with the tap on purpose: the sheet is the frequent action,
+      // the login the deliberate one.
+      _showRepeaterLogin(context, contact);
       return;
     }
     final isRoom = contact.type == advTypeRoom;
