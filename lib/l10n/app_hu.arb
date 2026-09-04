@@ -2576,7 +2576,7 @@
   "settings_channelResendTimeoutTitle": "Kézi újraküldési késleltetés",
   "settings_channelResendTimeoutSubtitle": "Hatással van a kimenő üzenetek duplikált megjelenítését megszüntető belső mechanizmusra is",
   "settings_channelMaxbytesOutgoingTitle": "Kimenő csatorna-payload korlátozása, bájt",
-  "settings_channelMaxbytesOutgoingSubtitle": "A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. USB esetén ez a határ körülbelül 155 bájt.",
+  "settings_channelMaxbytesOutgoingSubtitle": "A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. TCP/USB esetén ez a határ körülbelül 150 bájt.",
   "settings_quickAnswersTitle": "Gyors válaszok",
   "settings_quickAnswersSubtitle": "Gyors válaszként kiválasztható kifejezések listája. Ezeket a névjegyekhez/csatornákhoz lehet rendelni a beállításaikban.",
   "settings_quickAnswersAddText": "Kérjük, adja meg a szöveget",

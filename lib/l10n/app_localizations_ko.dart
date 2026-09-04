@@ -687,7 +687,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      '이 제한은 메시지 텍스트와 보낸 사람 이름을 함께 계산합니다. 메시지가 특정 바이트 수를 초과하면 패킷 반복 확인이 더 이상 전송되지 않는 것으로 관찰되었습니다. BLE 연결에서 특히 두드러집니다. 확인이 계속 작동하는 대략적인 임계값은 139바이트입니다. USB의 경우 이 제한은 약 155바이트입니다.';
+      '이 제한은 메시지 텍스트와 보낸 사람 이름을 함께 계산합니다. 메시지가 특정 바이트 수를 초과하면 패킷 반복 확인이 더 이상 전송되지 않는 것으로 관찰되었습니다. BLE 연결에서 특히 두드러집니다. 확인이 계속 작동하는 대략적인 임계값은 139바이트입니다. TCP/USB의 경우 이 제한은 약 150바이트입니다.';
 
   @override
   String get settings_quickAnswersTitle => '빠른 답장';
@@ -6367,4 +6367,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channels_mcotxtPlainWhenSmaller => '일반 메시지가 더 작으면 일반 메시지로 전송';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

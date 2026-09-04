@@ -724,7 +724,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Limit uwzględnia tekst wiadomości oraz nazwę nadawcy. Zaobserwowano, że gdy wiadomość przekroczy określoną liczbę bajtów, potwierdzenia retransmisji pakietów przestają być przesyłane. Jest to szczególnie widoczne przy połączeniach BLE. Przybliżony próg, przy którym potwierdzenia nadal działają, wynosi 139 bajtów. Dla USB limit wynosi około 155 bajtów.';
+      'Limit uwzględnia tekst wiadomości oraz nazwę nadawcy. Zaobserwowano, że gdy wiadomość przekroczy określoną liczbę bajtów, potwierdzenia retransmisji pakietów przestają być przesyłane. Jest to szczególnie widoczne przy połączeniach BLE. Przybliżony próg, przy którym potwierdzenia nadal działają, wynosi 139 bajtów. Dla TCP/USB limit wynosi około 150 bajtów.';
 
   @override
   String get settings_quickAnswersTitle => 'Szybkie odpowiedzi';
@@ -6708,4 +6708,12 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Wysyłać zwykłą wiadomość, jeśli jest mniejsza';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

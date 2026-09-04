@@ -706,7 +706,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.';
+      'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For TCP/USB, this limit is ~150 bytes.';
 
   @override
   String get settings_quickAnswersTitle => 'Quick replies';
@@ -6580,4 +6580,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Send a plain message when it is smaller';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

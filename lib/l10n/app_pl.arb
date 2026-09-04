@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Opóźnienie ręcznego ponownego wysyłania",
   "settings_channelResendTimeoutSubtitle": "Wpływa również na wewnętrzny mechanizm eliminowania podwójnego wyświetlania wiadomości wychodzących",
   "settings_channelMaxbytesOutgoingTitle": "Ogranicz wychodzący payload kanałów, bajty",
-  "settings_channelMaxbytesOutgoingSubtitle": "Limit uwzględnia tekst wiadomości oraz nazwę nadawcy. Zaobserwowano, że gdy wiadomość przekroczy określoną liczbę bajtów, potwierdzenia retransmisji pakietów przestają być przesyłane. Jest to szczególnie widoczne przy połączeniach BLE. Przybliżony próg, przy którym potwierdzenia nadal działają, wynosi 139 bajtów. Dla USB limit wynosi około 155 bajtów.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Limit uwzględnia tekst wiadomości oraz nazwę nadawcy. Zaobserwowano, że gdy wiadomość przekroczy określoną liczbę bajtów, potwierdzenia retransmisji pakietów przestają być przesyłane. Jest to szczególnie widoczne przy połączeniach BLE. Przybliżony próg, przy którym potwierdzenia nadal działają, wynosi 139 bajtów. Dla TCP/USB limit wynosi około 150 bajtów.",
   "settings_quickAnswersTitle": "Szybkie odpowiedzi",
   "settings_quickAnswersSubtitle": "Lista fraz dostępnych do wyboru jako szybkie odpowiedzi. Są przypisywane do kontaktów/kanałów w ich ustawieniach.",
   "settings_quickAnswersAddText": "Wpisz tekst",

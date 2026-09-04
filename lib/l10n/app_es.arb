@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Retardo de reenvío manual",
   "settings_channelResendTimeoutSubtitle": "También afecta al mecanismo interno para eliminar renderizados duplicados de mensajes salientes",
   "settings_channelMaxbytesOutgoingTitle": "Limitar el payload saliente de canales, bytes",
-  "settings_channelMaxbytesOutgoingSubtitle": "El límite tiene en cuenta el texto del mensaje más el nombre del remitente. Se ha observado que, cuando un mensaje supera cierto número de bytes, las confirmaciones de repetición de paquetes dejan de transmitirse. Esto se nota especialmente con conexiones BLE. El umbral aproximado en el que las confirmaciones aún funcionan es de 139 bytes. Para USB, este límite es de ~155 bytes.",
+  "settings_channelMaxbytesOutgoingSubtitle": "El límite tiene en cuenta el texto del mensaje más el nombre del remitente. Se ha observado que, cuando un mensaje supera cierto número de bytes, las confirmaciones de repetición de paquetes dejan de transmitirse. Esto se nota especialmente con conexiones BLE. El umbral aproximado en el que las confirmaciones aún funcionan es de 139 bytes. Para TCP/USB, este límite es de ~150 bytes.",
   "settings_quickAnswersTitle": "Respuestas rápidas",
   "settings_quickAnswersSubtitle": "Una lista de frases disponibles para seleccionar como respuestas rápidas. Se asignan a contactos/canales en sus ajustes.",
   "settings_quickAnswersAddText": "Introduce tu texto",

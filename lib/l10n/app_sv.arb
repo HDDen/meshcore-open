@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Fördröjning för manuell omsändning",
   "settings_channelResendTimeoutSubtitle": "Påverkar också den interna mekanismen som tar bort dubbla visningar av utgående meddelanden",
   "settings_channelMaxbytesOutgoingTitle": "Begränsa utgående payload för kanaler, byte",
-  "settings_channelMaxbytesOutgoingSubtitle": "Gränsen tar hänsyn till meddelandetexten plus avsändarens namn. Det har observerats att när ett meddelande överstiger ett visst antal byte slutar bekräftelser för paketupprepning att överföras. Detta märks särskilt med BLE-anslutningar. Den ungefärliga tröskeln där bekräftelser fortfarande fungerar är 139 byte. För USB är gränsen cirka 155 byte.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Gränsen tar hänsyn till meddelandetexten plus avsändarens namn. Det har observerats att när ett meddelande överstiger ett visst antal byte slutar bekräftelser för paketupprepning att överföras. Detta märks särskilt med BLE-anslutningar. Den ungefärliga tröskeln där bekräftelser fortfarande fungerar är 139 byte. För TCP/USB är gränsen cirka 150 byte.",
   "settings_quickAnswersTitle": "Snabbsvar",
   "settings_quickAnswersSubtitle": "En lista med fraser som kan väljas som snabbsvar. De tilldelas kontakter/kanaler i deras inställningar.",
   "settings_quickAnswersAddText": "Ange din text",

@@ -686,7 +686,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'この制限には、メッセージ本文と送信者名が含まれます。メッセージが一定のバイト数を超えると、パケット再送確認が送信されなくなることが確認されています。これはBLE接続で特に目立ちます。確認がまだ機能するおおよそのしきい値は139バイトです。USBでは、この制限は約155バイトです。';
+      'この制限には、メッセージ本文と送信者名が含まれます。メッセージが一定のバイト数を超えると、パケット再送確認が送信されなくなることが確認されています。これはBLE接続で特に目立ちます。確認がまだ機能するおおよそのしきい値は139バイトです。TCP/USBでは、この制限は約150バイトです。';
 
   @override
   String get settings_quickAnswersTitle => 'クイック返信';
@@ -6360,4 +6360,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get channels_mcotxtPlainWhenSmaller => '通常のメッセージの方が小さければそれを送信';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

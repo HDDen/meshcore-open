@@ -226,6 +226,10 @@ class AppSettings {
   /// Appends the SNR and RSSI our own radio measured to the hop list of a
   /// channel message.
   final bool showLastHopSignal;
+
+  /// Recognises an RX-log copy of our own channel packet that the frame
+  /// limit cut short, so the repeat of a long message is still counted.
+  final bool recoverLongPacketEchoes;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -635,6 +639,7 @@ class AppSettings {
     this.exactQuote = true,
     this.exactQuoteLimit = defaultExactQuoteLimit,
     this.showLastHopSignal = true,
+    this.recoverLongPacketEchoes = true,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -776,6 +781,7 @@ class AppSettings {
       'exact_quote': exactQuote,
       'exact_quote_limit': exactQuoteLimit,
       'show_last_hop_signal': showLastHopSignal,
+      'recover_long_packet_echoes': recoverLongPacketEchoes,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -948,6 +954,8 @@ class AppSettings {
       exactQuote: json['exact_quote'] as bool? ?? true,
       exactQuoteLimit: normalizeExactQuoteLimit(json['exact_quote_limit']),
       showLastHopSignal: json['show_last_hop_signal'] as bool? ?? true,
+      recoverLongPacketEchoes:
+          json['recover_long_packet_echoes'] as bool? ?? true,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1160,6 +1168,7 @@ class AppSettings {
     bool? exactQuote,
     int? exactQuoteLimit,
     bool? showLastHopSignal,
+    bool? recoverLongPacketEchoes,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1287,6 +1296,8 @@ class AppSettings {
       exactQuote: exactQuote ?? this.exactQuote,
       exactQuoteLimit: exactQuoteLimit ?? this.exactQuoteLimit,
       showLastHopSignal: showLastHopSignal ?? this.showLastHopSignal,
+      recoverLongPacketEchoes:
+          recoverLongPacketEchoes ?? this.recoverLongPacketEchoes,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,

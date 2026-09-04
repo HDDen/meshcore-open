@@ -723,7 +723,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'La limite tient compte du texte du message ainsi que du nom de l’expéditeur. Il a été observé qu’au-delà d’un certain nombre d’octets, les accusés de répétition des paquets cessent d’être transmis. C’est particulièrement visible avec les connexions BLE. Le seuil approximatif auquel les accusés fonctionnent encore est de 139 octets. Pour l’USB, cette limite est d’environ 155 octets.';
+      'La limite tient compte du texte du message ainsi que du nom de l’expéditeur. Il a été observé qu’au-delà d’un certain nombre d’octets, les accusés de répétition des paquets cessent d’être transmis. C’est particulièrement visible avec les connexions BLE. Le seuil approximatif auquel les accusés fonctionnent encore est de 139 octets. Pour l’TCP/USB, cette limite est d’environ 150 octets.';
 
   @override
   String get settings_quickAnswersTitle => 'Réponses rapides';
@@ -6722,4 +6722,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Envoyer un message normal s\'il est plus compact';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

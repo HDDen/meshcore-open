@@ -26,6 +26,7 @@ import '../helpers/reaction_helper.dart';
 import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
@@ -5544,6 +5545,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       rethrow;
     }
+    _registerChannelEchoExpectation(data);
 
     if (pendingAck?.completer != null) {
       try {
@@ -11804,6 +11806,58 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  /// Expected MAC and ciphertext of our recent channel sends, so an echo the
+  /// frame limit cut short is still recognised. See [ChannelEchoRecovery].
+  final ChannelEchoRecovery _channelEchoRecovery = ChannelEchoRecovery();
+
+  bool get _recoverLongPacketEchoes =>
+      _appSettingsService?.settings.recoverLongPacketEchoes ?? true;
+
+  Uint8List? _channelPskFor(int channelIndex) {
+    final channels = _channels.isNotEmpty ? _channels : _cachedChannels;
+    for (final channel in channels) {
+      if (channel.index != channelIndex) continue;
+      return channel.isEmpty ? null : channel.psk;
+    }
+    return null;
+  }
+
+  /// Every frame written to the radio passes through here; only channel text
+  /// and channel data sends are kept, since those are the packets whose bytes
+  /// the firmware builds predictably from what we hand it.
+  void _registerChannelEchoExpectation(Uint8List frame) {
+    if (!_recoverLongPacketEchoes) return;
+    try {
+      _channelEchoRecovery.registerOutgoingFrame(
+        frame,
+        pskFor: _channelPskFor,
+        senderName: _selfName,
+      );
+    } catch (e) {
+      appLogger.warn('Could not register a channel echo expectation: $e');
+    }
+  }
+
+  /// [encrypted] is the MAC and ciphertext of a group packet the normal
+  /// decode rejected. Returns the full payload of our own packet it is a cut
+  /// copy of, so the caller can decode that in its place.
+  Uint8List? _recoverTruncatedChannelEcho(
+    Channel channel,
+    Uint8List encrypted, {
+    required int frameLength,
+  }) {
+    if (!_recoverLongPacketEchoes) return null;
+    final recovered = _channelEchoRecovery.recover(encrypted);
+    if (recovered == null) return null;
+    appLogger.info(
+      'Recovered a cut echo of our own packet on channel ${channel.index}: '
+      'frame $frameLength bytes, ${recovered.length - encrypted.length} '
+      'byte(s) missing',
+      tag: 'Connector',
+    );
+    return recovered;
+  }
+
   void _handleLogRxData(Uint8List frame) async {
     if (frame.length < 4) return;
     try {
@@ -11835,8 +11889,20 @@ class MeshCoreConnector extends ChangeNotifier {
         final hash = _computeChannelHash(channel.psk);
         if (hash != channelHash) continue;
         try {
-          final decryptedBytes = _decryptPayload(channel.psk, encrypted);
-          if (decryptedBytes == null) return;
+          var decryptedBytes = _decryptPayload(channel.psk, encrypted);
+          if (decryptedBytes == null) {
+            // A copy cut by the frame limit fails the MAC. If it is the head
+            // of one of our own packets, decode the packet we sent instead,
+            // so path, signal and repeat counting take the ordinary route.
+            final recovered = _recoverTruncatedChannelEcho(
+              channel,
+              encrypted,
+              frameLength: frame.length,
+            );
+            if (recovered == null) return;
+            decryptedBytes = _decryptPayload(channel.psk, recovered);
+            if (decryptedBytes == null) return;
+          }
           if (packet.payloadType == _payloadTypeGroupData) {
             if (_countImageChunkRepeat(channel.index, decryptedBytes)) return;
             final packetRegion = _resolvePacketRegion(packet);

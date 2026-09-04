@@ -719,7 +719,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Das Limit berücksichtigt den Nachrichtentext plus den Namen des Absenders. Es wurde beobachtet, dass ab einer bestimmten Nachrichtengröße in Bytes keine Paket-Wiederholungsbestätigungen mehr übertragen werden. Das ist besonders bei BLE-Verbindungen sichtbar. Der ungefähre Schwellenwert, bei dem Bestätigungen noch funktionieren, liegt bei 139 Byte. Für USB liegt dieses Limit bei etwa 155 Byte.';
+      'Das Limit berücksichtigt den Nachrichtentext plus den Namen des Absenders. Es wurde beobachtet, dass ab einer bestimmten Nachrichtengröße in Bytes keine Paket-Wiederholungsbestätigungen mehr übertragen werden. Das ist besonders bei BLE-Verbindungen sichtbar. Der ungefähre Schwellenwert, bei dem Bestätigungen noch funktionieren, liegt bei 139 Byte. Für TCP/USB liegt dieses Limit bei etwa 150 Byte.';
 
   @override
   String get settings_quickAnswersTitle => 'Schnellantworten';
@@ -6695,4 +6695,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Normale Nachricht senden, wenn sie kleiner ist';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

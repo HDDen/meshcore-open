@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Verzögerung für manuelles erneutes Senden",
   "settings_channelResendTimeoutSubtitle": "Beeinflusst auch den internen Mechanismus zur Vermeidung doppelter Anzeige ausgehender Nachrichten",
   "settings_channelMaxbytesOutgoingTitle": "Ausgehende Payload für Kanäle begrenzen, Byte",
-  "settings_channelMaxbytesOutgoingSubtitle": "Das Limit berücksichtigt den Nachrichtentext plus den Namen des Absenders. Es wurde beobachtet, dass ab einer bestimmten Nachrichtengröße in Bytes keine Paket-Wiederholungsbestätigungen mehr übertragen werden. Das ist besonders bei BLE-Verbindungen sichtbar. Der ungefähre Schwellenwert, bei dem Bestätigungen noch funktionieren, liegt bei 139 Byte. Für USB liegt dieses Limit bei etwa 155 Byte.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Das Limit berücksichtigt den Nachrichtentext plus den Namen des Absenders. Es wurde beobachtet, dass ab einer bestimmten Nachrichtengröße in Bytes keine Paket-Wiederholungsbestätigungen mehr übertragen werden. Das ist besonders bei BLE-Verbindungen sichtbar. Der ungefähre Schwellenwert, bei dem Bestätigungen noch funktionieren, liegt bei 139 Byte. Für TCP/USB liegt dieses Limit bei etwa 150 Byte.",
   "settings_quickAnswersTitle": "Schnellantworten",
   "settings_quickAnswersSubtitle": "Eine Liste von Phrasen, die als Schnellantworten ausgewählt werden können. Sie werden Kontakten/Kanälen in deren Einstellungen zugewiesen.",
   "settings_quickAnswersAddText": "Bitte Text eingeben",

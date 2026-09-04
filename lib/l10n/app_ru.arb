@@ -142,7 +142,7 @@
   "settings_channelResendTimeoutTitle": "Задержка для ручной переотправки",
   "settings_channelResendTimeoutSubtitle": "Также влияет на внутренний механизм устранения отрисовки дублей исходящих сообщений",
   "settings_channelMaxbytesOutgoingTitle": "Ограничить payload исходящих канальных сообщений, байт",
-  "settings_channelMaxbytesOutgoingSubtitle": "Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для usb этот лимит ~155 байт.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для TCP/USB этот лимит ~150 байт.",
   "settings_quickAnswersTitle": "Быстрые ответы",
   "settings_quickAnswersSubtitle": "Список строк, доступных для выбора в качестве быстрого ответа. Назначаются для контактов/каналов в их настройках.",
   "settings_quickAnswersAddText": "Введите текст ответа",
@@ -2849,5 +2849,7 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Размер шрифта: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Отправлять обычное сообщение, если оно компактнее"
+  "channels_mcotxtPlainWhenSmaller": "Отправлять обычное сообщение, если оно компактнее",
+  "settings_modSettingsRecoverLongEchoes": "Восстанавливать ретрансляции длинных пакетов",
+  "settings_modSettingsRecoverLongEchoesDscr": "Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра"
 }

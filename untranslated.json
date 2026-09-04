@@ -41,7 +41,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "de": [
@@ -86,7 +88,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "es": [
@@ -131,7 +135,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "fr": [
@@ -176,7 +182,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "hu": [
@@ -221,7 +229,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "it": [
@@ -266,7 +276,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "ja": [
@@ -311,7 +323,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "ko": [
@@ -356,7 +370,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "nl": [
@@ -401,7 +417,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "pl": [
@@ -446,7 +464,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "pt": [
@@ -491,7 +511,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "sk": [
@@ -536,7 +558,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "sl": [
@@ -581,7 +605,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "sv": [
@@ -626,7 +652,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "uk": [
@@ -671,7 +699,9 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ],
 
   "zh": [
@@ -716,6 +746,8 @@
     "chat_canvasV4ToolRect",
     "chat_canvasV4ToolEllipse",
     "chat_canvasV4ToolCircle",
-    "chat_canvasV4ToolWave"
+    "chat_canvasV4ToolWave",
+    "settings_modSettingsRecoverLongEchoes",
+    "settings_modSettingsRecoverLongEchoesDscr"
   ]
 }

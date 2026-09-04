@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Handmatige vertraging voor opnieuw verzenden",
   "settings_channelResendTimeoutSubtitle": "Beïnvloedt ook het interne mechanisme om dubbele weergave van uitgaande berichten te voorkomen",
   "settings_channelMaxbytesOutgoingTitle": "Uitgaande payload voor kanalen beperken, bytes",
-  "settings_channelMaxbytesOutgoingSubtitle": "De limiet houdt rekening met de berichttekst plus de naam van de afzender. Er is waargenomen dat zodra een bericht een bepaald aantal bytes overschrijdt, bevestigingen voor pakket-herhaling niet meer worden verzonden. Dit is vooral merkbaar bij BLE-verbindingen. De geschatte drempel waarbij bevestigingen nog werken is 139 bytes. Voor USB is deze limiet ongeveer 155 bytes.",
+  "settings_channelMaxbytesOutgoingSubtitle": "De limiet houdt rekening met de berichttekst plus de naam van de afzender. Er is waargenomen dat zodra een bericht een bepaald aantal bytes overschrijdt, bevestigingen voor pakket-herhaling niet meer worden verzonden. Dit is vooral merkbaar bij BLE-verbindingen. De geschatte drempel waarbij bevestigingen nog werken is 139 bytes. Voor TCP/USB is deze limiet ongeveer 150 bytes.",
   "settings_quickAnswersTitle": "Snelle antwoorden",
   "settings_quickAnswersSubtitle": "Een lijst met zinnen die als snelle antwoorden kunnen worden geselecteerd. Ze worden toegewezen aan contacten/kanalen in hun instellingen.",
   "settings_quickAnswersAddText": "Voer je tekst in",

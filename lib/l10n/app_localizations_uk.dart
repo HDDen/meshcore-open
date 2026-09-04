@@ -717,7 +717,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Ліміт враховує текст повідомлення разом з іменем відправника. Було помічено, що коли повідомлення перевищує певну кількість байтів, підтвердження ретрансляції пакетів перестають передаватися. Це особливо помітно для BLE-підключень. Орієнтовний поріг, за якого підтвердження ще працюють, становить 139 байтів. Для USB цей ліміт становить приблизно 155 байтів.';
+      'Ліміт враховує текст повідомлення разом з іменем відправника. Було помічено, що коли повідомлення перевищує певну кількість байтів, підтвердження ретрансляції пакетів перестають передаватися. Це особливо помітно для BLE-підключень. Орієнтовний поріг, за якого підтвердження ще працюють, становить 139 байтів. Для TCP/USB цей ліміт становить приблизно 150 байтів.';
 
   @override
   String get settings_quickAnswersTitle => 'Швидкі відповіді';
@@ -6697,4 +6697,12 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Надсилати звичайне повідомлення, якщо воно компактніше';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

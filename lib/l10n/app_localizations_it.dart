@@ -719,7 +719,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Il limite considera il testo del messaggio più il nome del mittente. È stato osservato che, quando un messaggio supera un certo numero di byte, le conferme di ripetizione dei pacchetti smettono di essere trasmesse. Questo è particolarmente evidente con le connessioni BLE. La soglia approssimativa alla quale le conferme funzionano ancora è 139 byte. Per USB, questo limite è di circa 155 byte.';
+      'Il limite considera il testo del messaggio più il nome del mittente. È stato osservato che, quando un messaggio supera un certo numero di byte, le conferme di ripetizione dei pacchetti smettono di essere trasmesse. Questo è particolarmente evidente con le connessioni BLE. La soglia approssimativa alla quale le conferme funzionano ancora è 139 byte. Per TCP/USB, questo limite è di circa 150 byte.';
 
   @override
   String get settings_quickAnswersTitle => 'Risposte rapide';
@@ -6702,4 +6702,12 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Invia un messaggio normale se è più compatto';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

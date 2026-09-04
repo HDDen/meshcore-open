@@ -712,7 +712,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Omejitev upošteva besedilo sporočila in ime pošiljatelja. Opaženo je bilo, da se po preseženi določeni velikosti sporočila v bajtih potrditve ponavljanja paketov prenehajo prenašati. To je posebej opazno pri povezavah BLE. Približni prag, pri katerem potrditve še delujejo, je 139 bajtov. Za USB je ta omejitev približno 155 bajtov.';
+      'Omejitev upošteva besedilo sporočila in ime pošiljatelja. Opaženo je bilo, da se po preseženi določeni velikosti sporočila v bajtih potrditve ponavljanja paketov prenehajo prenašati. To je posebej opazno pri povezavah BLE. Približni prag, pri katerem potrditve še delujejo, je 139 bajtov. Za TCP/USB je ta omejitev približno 150 bajtov.';
 
   @override
   String get settings_quickAnswersTitle => 'Hitri odgovori';
@@ -6659,4 +6659,12 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Pošlji navadno sporočilo, če je manjše';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

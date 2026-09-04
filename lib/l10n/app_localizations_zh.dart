@@ -677,7 +677,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 USB，此限制约为 155 字节。';
+      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。';
 
   @override
   String get settings_quickAnswersTitle => '快捷回复';
@@ -6228,4 +6228,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channels_mcotxtPlainWhenSmaller => '普通消息更小时改为发送普通消息';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

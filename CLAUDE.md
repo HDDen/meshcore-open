@@ -769,6 +769,32 @@ against, and `_armProgressTracker` refuses to arm for it on the same test.
 Delivery fills the bar to `totalSteps`, and `chat_screen.dart` hides it once the status reaches
 `delivered`. Both fields are persisted by `message_store` and default to `0` for older records.
 
+### Recovering a cut echo of our own channel packet
+
+The RX log is the only place our own echo is visible: `sendFlood` marks the packet as seen, so
+the companion drops the repeat on dedupe before it could become a channel message. But
+`logRxRaw` refuses a raw packet longer than 173 bytes (`len + 3 <= MAX_FRAME_SIZE`), and an
+ESP32 companion sets its BLE MTU to `MAX_FRAME_SIZE` itself, so a 174–176-byte frame arrives cut
+to 173. A cut copy fails the MAC and used to be dropped, and the repeat of a long message went
+uncounted.
+
+`helpers/channel_echo_recovery.dart` closes that ESP32 band. The payload of a channel packet is
+predictable — AES-128-ECB with zero padding over `timestamp + type + "Name: text"` (or
+`data_type + length + data`), the first two HMAC-SHA256 bytes in front, all under the channel
+PSK and a timestamp the app chose itself — so `_sendFrameDirect` registers the expected MAC and
+ciphertext of every `CMD_SEND_CHANNEL_TXT_MSG` / `CMD_SEND_CHANNEL_DATA` it writes, whatever
+built the frame: text, MCMP/MCOtxt envelopes, images, markers, scheduled commits and retries all
+pass that one point. When `_handleLogRxData` fails to decrypt a group packet it asks the registry
+for an entry the received bytes are a strict prefix of and decodes the full packet in place of
+the cut one, so path, SNR/RSSI and repeat counting run through the ordinary code. A match needs
+the MAC and one whole block: AES under one key is a permutation, so a shared block means the
+same plaintext under the same key, which is our own packet; a copy as long as the packet is not
+a cut one and is never "recovered". Entries live ten minutes, the self-echo window of
+`_isChannelRepeat`. `AppSettings.recoverLongPacketEchoes` (default on, mod settings) gates both
+registration and matching. A packet longer than 173 bytes on the wire produces no frame at all
+and nothing here can help it; direct messages are out of reach too, their ciphertext needs the
+node's private key.
+
 ### Map raster sources
 
 Sources live in `MapRasterSourceCatalog` (`services/map_tile_cache_service.dart`) and are picked in app settings. Two carry an API key: Stadia (`mapTileApiKey`, with a shared demo key as fallback) and **Yandex** (`mapYandexApiKey`, no demo — the map silently falls back to OpenStreetMap until the user pastes their own key from the Yandex developer dashboard).

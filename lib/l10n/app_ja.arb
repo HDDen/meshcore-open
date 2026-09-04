@@ -239,7 +239,7 @@
   "settings_channelResendTimeoutTitle": "手動再送信の遅延",
   "settings_channelResendTimeoutSubtitle": "送信メッセージの重複表示を除去する内部メカニズムにも影響します",
   "settings_channelMaxbytesOutgoingTitle": "チャンネルの送信payload制限、バイト",
-  "settings_channelMaxbytesOutgoingSubtitle": "この制限には、メッセージ本文と送信者名が含まれます。メッセージが一定のバイト数を超えると、パケット再送確認が送信されなくなることが確認されています。これはBLE接続で特に目立ちます。確認がまだ機能するおおよそのしきい値は139バイトです。USBでは、この制限は約155バイトです。",
+  "settings_channelMaxbytesOutgoingSubtitle": "この制限には、メッセージ本文と送信者名が含まれます。メッセージが一定のバイト数を超えると、パケット再送確認が送信されなくなることが確認されています。これはBLE接続で特に目立ちます。確認がまだ機能するおおよそのしきい値は139バイトです。TCP/USBでは、この制限は約150バイトです。",
   "settings_quickAnswersTitle": "クイック返信",
   "settings_quickAnswersSubtitle": "クイック返信として選択できるフレーズのリストです。連絡先/チャンネルの設定で割り当てます。",
   "settings_quickAnswersAddText": "テキストを入力してください",

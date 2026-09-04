@@ -714,7 +714,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre USB je tento limit približne 155 bajtov.';
+      'Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre TCP/USB je tento limit približne 150 bajtov.';
 
   @override
   String get settings_quickAnswersTitle => 'Rýchle odpovede';
@@ -6648,4 +6648,12 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Poslať bežnú správu, ak je menšia';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

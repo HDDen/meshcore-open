@@ -717,7 +717,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. USB esetén ez a határ körülbelül 155 bájt.';
+      'A korlát a szöveg mellett a küldő nevét is figyelembe veszi. Megfigyelhető, hogy egy bizonyos bájtszám felett a csomagismétlési visszaigazolások már nem továbbítódnak. Ez különösen BLE-kapcsolatoknál látható. A hozzávetőleges küszöb, amelynél a visszaigazolások még működnek, 139 bájt. TCP/USB esetén ez a határ körülbelül 150 bájt.';
 
   @override
   String get settings_quickAnswersTitle => 'Gyors válaszok';
@@ -6682,4 +6682,12 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Sima üzenet küldése, ha az kisebb';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }

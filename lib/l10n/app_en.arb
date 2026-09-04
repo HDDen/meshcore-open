@@ -283,7 +283,7 @@
   "settings_channelResendTimeoutTitle": "Manual resending delay",
   "settings_channelResendTimeoutSubtitle": "It also affects the internal mechanism for eliminating duplicate renderings of outgoing messages",
   "settings_channelMaxbytesOutgoingTitle": "Limit the outgoing payload for channels, bytes",
-  "settings_channelMaxbytesOutgoingSubtitle": "The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.",
+  "settings_channelMaxbytesOutgoingSubtitle": "The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For TCP/USB, this limit is ~150 bytes.",
   "settings_quickAnswersTitle": "Quick replies",
   "settings_quickAnswersSubtitle": "A list of phrases available to select as quick replies. These are assigned to contacts/channels in their settings.",
   "settings_quickAnswersAddText": "Please, enter your text",
@@ -3681,5 +3681,7 @@
   "@chat_canvasV4TextWidth": {"placeholders": {"cells": {"type": "int"}}},
   "chat_canvasV4TextFontSize": "Font size: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
-  "channels_mcotxtPlainWhenSmaller": "Send a plain message when it is smaller"
+  "channels_mcotxtPlainWhenSmaller": "Send a plain message when it is smaller",
+  "settings_modSettingsRecoverLongEchoes": "Recover repeats of long packets",
+  "settings_modSettingsRecoverLongEchoesDscr": "Recognise an RX-log copy of our own channel message that the BLE frame limit cut short"
 }

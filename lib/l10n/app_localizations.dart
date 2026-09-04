@@ -1411,7 +1411,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_channelMaxbytesOutgoingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For USB, this limit is ~155 bytes.'**
+  /// **'The limit takes into account the message text plus the sender’s name. It has been observed that once a message exceeds a certain number of bytes, packet repeat acknowledgements cease to be transmitted. This is particularly noticeable with BLE connections. The approximate threshold at which acknowledgements still work is 139 bytes. For TCP/USB, this limit is ~150 bytes.'**
   String get settings_channelMaxbytesOutgoingSubtitle;
 
   /// No description provided for @settings_quickAnswersTitle.
@@ -11385,6 +11385,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send a plain message when it is smaller'**
   String get channels_mcotxtPlainWhenSmaller;
+
+  /// No description provided for @settings_modSettingsRecoverLongEchoes.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover repeats of long packets'**
+  String get settings_modSettingsRecoverLongEchoes;
+
+  /// No description provided for @settings_modSettingsRecoverLongEchoesDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short'**
+  String get settings_modSettingsRecoverLongEchoesDscr;
 }
 
 class _AppLocalizationsDelegate

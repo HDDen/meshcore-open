@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Oneskorenie manuálneho opätovného odoslania",
   "settings_channelResendTimeoutSubtitle": "Ovplyvňuje aj interný mechanizmus na odstránenie duplicitného zobrazenia odchádzajúcich správ",
   "settings_channelMaxbytesOutgoingTitle": "Obmedziť odchádzajúci payload kanálov, bajty",
-  "settings_channelMaxbytesOutgoingSubtitle": "Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre USB je tento limit približne 155 bajtov.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Limit zohľadňuje text správy aj meno odosielateľa. Bolo pozorované, že keď správa prekročí určitý počet bajtov, potvrdenia opakovania paketov sa prestanú prenášať. Je to obzvlášť viditeľné pri BLE pripojeniach. Približná hranica, pri ktorej potvrdenia ešte fungujú, je 139 bajtov. Pre TCP/USB je tento limit približne 150 bajtov.",
   "settings_quickAnswersTitle": "Rýchle odpovede",
   "settings_quickAnswersSubtitle": "Zoznam fráz dostupných na výber ako rýchle odpovede. Priraďujú sa ku kontaktom/kanálom v ich nastaveniach.",
   "settings_quickAnswersAddText": "Zadajte text",

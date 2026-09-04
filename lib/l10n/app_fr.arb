@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Délai de renvoi manuel",
   "settings_channelResendTimeoutSubtitle": "Affecte également le mécanisme interne qui évite l’affichage en double des messages sortants",
   "settings_channelMaxbytesOutgoingTitle": "Limiter le payload sortant des canaux, octets",
-  "settings_channelMaxbytesOutgoingSubtitle": "La limite tient compte du texte du message ainsi que du nom de l’expéditeur. Il a été observé qu’au-delà d’un certain nombre d’octets, les accusés de répétition des paquets cessent d’être transmis. C’est particulièrement visible avec les connexions BLE. Le seuil approximatif auquel les accusés fonctionnent encore est de 139 octets. Pour l’USB, cette limite est d’environ 155 octets.",
+  "settings_channelMaxbytesOutgoingSubtitle": "La limite tient compte du texte du message ainsi que du nom de l’expéditeur. Il a été observé qu’au-delà d’un certain nombre d’octets, les accusés de répétition des paquets cessent d’être transmis. C’est particulièrement visible avec les connexions BLE. Le seuil approximatif auquel les accusés fonctionnent encore est de 139 octets. Pour l’TCP/USB, cette limite est d’environ 150 octets.",
   "settings_quickAnswersTitle": "Réponses rapides",
   "settings_quickAnswersSubtitle": "Liste de phrases disponibles comme réponses rapides. Elles sont attribuées aux contacts/canaux dans leurs paramètres.",
   "settings_quickAnswersAddText": "Veuillez saisir votre texte",

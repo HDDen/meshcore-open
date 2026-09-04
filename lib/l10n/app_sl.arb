@@ -166,7 +166,7 @@
   "settings_channelResendTimeoutTitle": "Zakasnitev ročnega ponovnega pošiljanja",
   "settings_channelResendTimeoutSubtitle": "Vpliva tudi na notranji mehanizem za odpravljanje podvojenega prikaza odhodnih sporočil",
   "settings_channelMaxbytesOutgoingTitle": "Omeji odhodni payload kanalov, bajti",
-  "settings_channelMaxbytesOutgoingSubtitle": "Omejitev upošteva besedilo sporočila in ime pošiljatelja. Opaženo je bilo, da se po preseženi določeni velikosti sporočila v bajtih potrditve ponavljanja paketov prenehajo prenašati. To je posebej opazno pri povezavah BLE. Približni prag, pri katerem potrditve še delujejo, je 139 bajtov. Za USB je ta omejitev približno 155 bajtov.",
+  "settings_channelMaxbytesOutgoingSubtitle": "Omejitev upošteva besedilo sporočila in ime pošiljatelja. Opaženo je bilo, da se po preseženi določeni velikosti sporočila v bajtih potrditve ponavljanja paketov prenehajo prenašati. To je posebej opazno pri povezavah BLE. Približni prag, pri katerem potrditve še delujejo, je 139 bajtov. Za TCP/USB je ta omejitev približno 150 bajtov.",
   "settings_quickAnswersTitle": "Hitri odgovori",
   "settings_quickAnswersSubtitle": "Seznam fraz, ki jih je mogoče izbrati kot hitre odgovore. Dodelijo se stikom/kanalom v njihovih nastavitvah.",
   "settings_quickAnswersAddText": "Vnesite besedilo",

@@ -721,7 +721,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для usb этот лимит ~155 байт.';
+      'Лимит учитывает текст сообщения + имя отправителя. Замечено, что при превышении некоторого количества байт в сообщении перестают проходить отметки о репитах пакета. Особенно сильно это выражается при подключениях по BLE. Примерная граница, где подтверждения работают - 139 байт. Для TCP/USB этот лимит ~150 байт.';
 
   @override
   String get settings_quickAnswersTitle => 'Быстрые ответы';
@@ -6685,4 +6685,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Отправлять обычное сообщение, если оно компактнее';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Восстанавливать ретрансляции длинных пакетов';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра';
 }

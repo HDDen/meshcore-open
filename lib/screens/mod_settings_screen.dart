@@ -418,6 +418,27 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setShowLastHopSignal,
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(
+                      Icons.settings_backup_restore,
+                      size: 20,
+                    ),
+                    title: Text(
+                      context.l10n.settings_modSettingsRecoverLongEchoes,
+                    ),
+                    subtitle: Text(
+                      context.l10n.settings_modSettingsRecoverLongEchoesDscr,
+                    ),
+                    value: settings.recoverLongPacketEchoes,
+                    onChanged: settingsService.setRecoverLongPacketEchoes,
+                  ),
+                ),
                 if (PlatformInfo.isAndroid)
                   MeshCard(
                     padding: EdgeInsets.zero,

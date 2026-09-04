@@ -171,7 +171,7 @@
   "settings_channelResendTimeoutTitle": "手动重发延迟",
   "settings_channelResendTimeoutSubtitle": "也会影响用于消除外发消息重复显示的内部机制",
   "settings_channelMaxbytesOutgoingTitle": "限制频道外发 payload，字节",
-  "settings_channelMaxbytesOutgoingSubtitle": "此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 USB，此限制约为 155 字节。",
+  "settings_channelMaxbytesOutgoingSubtitle": "此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。",
   "settings_quickAnswersTitle": "快捷回复",
   "settings_quickAnswersSubtitle": "可作为快捷回复选择的短语列表。它们会在联系人/频道设置中分配。",
   "settings_quickAnswersAddText": "请输入文本",

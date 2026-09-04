@@ -715,7 +715,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      'De limiet houdt rekening met de berichttekst plus de naam van de afzender. Er is waargenomen dat zodra een bericht een bepaald aantal bytes overschrijdt, bevestigingen voor pakket-herhaling niet meer worden verzonden. Dit is vooral merkbaar bij BLE-verbindingen. De geschatte drempel waarbij bevestigingen nog werken is 139 bytes. Voor USB is deze limiet ongeveer 155 bytes.';
+      'De limiet houdt rekening met de berichttekst plus de naam van de afzender. Er is waargenomen dat zodra een bericht een bepaald aantal bytes overschrijdt, bevestigingen voor pakket-herhaling niet meer worden verzonden. Dit is vooral merkbaar bij BLE-verbindingen. De geschatte drempel waarbij bevestigingen nog werken is 139 bytes. Voor TCP/USB is deze limiet ongeveer 150 bytes.';
 
   @override
   String get settings_quickAnswersTitle => 'Snelle antwoorden';
@@ -6666,4 +6666,12 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get channels_mcotxtPlainWhenSmaller =>
       'Gewoon bericht sturen als het kleiner is';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoes =>
+      'Recover repeats of long packets';
+
+  @override
+  String get settings_modSettingsRecoverLongEchoesDscr =>
+      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
 }
