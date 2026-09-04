@@ -388,6 +388,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   static const int _minTextWidthPercent = 10;
   /// The wire minimum; the slider is absolute, not tied to the default.
   static const int _minTextFontSize = 1;
+
+  /// `RenderEditable` lays its text out on the field width less a caret
+  /// margin of this gap plus `cursorWidth`, whether or not a caret is shown.
+  static const double _textFieldCaretGap = 1;
   // Keep a small text budget for a human-readable image marker around the codec payload.
   static const int _humanReadablePrefixReserveChars = 4;
   // Master64 is the baseline; smaller palettes need fewer bits per cell, so we
@@ -2146,6 +2150,16 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
                           textAreaBounds: editedText == null
                               ? null
                               : _textAreaBounds(editedText),
+                          textAreaFill: editedText == null
+                              ? null
+                              : _textFillColor(editedText),
+                          textCaret: editedText == null
+                              ? null
+                              : _textCaret,
+                          repaint: Listenable.merge(<Listenable>[
+                            _v4TextController,
+                            _v4TextFocusNode,
+                          ]),
                         )
                       : _PixelCanvasPainter(
                           width: _width,
@@ -5860,6 +5874,62 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     );
   }
 
+  Color _textStrokeColor(MCOImageV4Text figure) {
+    final document = _v4Document!;
+    final value = _vectorColorValueForLocalIndex(
+      document,
+      figure.style.strokeColor,
+    );
+    return value == null
+        ? Theme.of(context).colorScheme.onSurface
+        : _profileColor(document.paletteProfile, value);
+  }
+
+  Color? _textFillColor(MCOImageV4Text figure) {
+    final document = _v4Document!;
+    final value = _vectorColorValueForLocalIndex(
+      document,
+      figure.style.fillColor,
+    );
+    return value == null ? null : _profileColor(document.paletteProfile, value);
+  }
+
+  /// Caret of the text layer being typed into, in canvas cells, laid out with
+  /// the same painter that will draw the layer so it lands between the same
+  /// glyphs. It spans the whole line box. The controller's text is used
+  /// rather than the figure's, which lags one notification behind it.
+  ({Rect bounds, Color color})? _textCaret() {
+    final document = _v4Document;
+    final index = _v4TextEditingIndex;
+    if (document == null || index == null || !_v4TextFocusNode.hasFocus) {
+      return null;
+    }
+    if (index >= document.figures.length) return null;
+    final figure = document.figures[index];
+    if (figure is! MCOImageV4Text) return null;
+    final selection = _v4TextController.selection;
+    if (!selection.isValid) return null;
+    final text = _v4TextController.text;
+    final painter = MCOImageV4TextRendering.painterFor(
+      figure: figure.copyWith(text: text),
+      canvasWidth: document.width,
+      color: const Color(0xff000000),
+    );
+    final offset = painter.getOffsetForCaret(
+      TextPosition(offset: selection.extentOffset.clamp(0, text.length)),
+      Rect.zero,
+    );
+    return (
+      bounds: Rect.fromLTWH(
+        figure.origin.x + 0.5 + offset.dx,
+        figure.origin.y + 0.5 + offset.dy,
+        0,
+        MCOImageV4TextRendering.lineBoxFor(figure.fontSize).toDouble(),
+      ),
+      color: _textStrokeColor(figure),
+    );
+  }
+
   /// The field is laid out in canvas cells and only then scaled to the
   /// screen, so it breaks lines exactly where the painter will.
   Widget _buildVectorTextField(
@@ -5867,18 +5937,6 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     Offset drawingOffset,
     double scale,
   ) {
-    final document = _v4Document!;
-    final strokeValue = _vectorColorValueForLocalIndex(
-      document,
-      figure.style.strokeColor,
-    );
-    final color = strokeValue == null
-        ? Theme.of(context).colorScheme.onSurface
-        : _profileColor(document.paletteProfile, strokeValue);
-    final fillValue = _vectorColorValueForLocalIndex(
-      document,
-      figure.style.fillColor,
-    );
     final area = _textAreaBounds(figure)!;
     return Positioned(
       left: drawingOffset.dx + (figure.origin.x + 0.5) * scale,
@@ -5890,60 +5948,54 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           // Both sides come from the measurement the painter will use, so the
           // layer covers exactly the area it is about to be drawn in. Left to
           // its own intrinsic height the field answers with Material metrics
-          // instead, and the layer changes size the moment editing ends.
-          width: area.width,
+          // instead, and the layer changes size the moment editing ends. The
+          // width carries the caret margin the field subtracts before laying
+          // text out (with `cursorWidth` zero, only the gap), or it would wrap
+          // words cells earlier than the painter does.
+          width: area.width + _textFieldCaretGap,
           height: area.height,
-          child: ColoredBox(
-            color: fillValue == null
-                ? const Color(0x00000000)
-                : _profileColor(document.paletteProfile, fillValue),
-            // The canvas is measured in cells and the painter it has to match
-            // scales nothing. Left alone, the system font scale and the app's
-            // own UI scale enlarge the field's text and its line box, so the
-            // layer lays out differently here from the way it is drawn.
-            child: MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.noScaling),
-              child: TextField(
-                controller: _v4TextController,
-                focusNode: _v4TextFocusNode,
-                autofocus: true,
-                onChanged: _handleVectorTextChanged,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                textAlign: MCOImageV4TextRendering.alignFor(figure.align),
-                textAlignVertical: TextAlignVertical.top,
-                style: MCOImageV4TextRendering.styleFor(
-                  fontSize: figure.fontSize.toDouble(),
-                  color: color,
-                ),
-                strutStyle: MCOImageV4TextRendering.strutFor(
-                  figure.fontSize.toDouble(),
-                ),
-                cursorColor: color,
-                // Both are asked for in canvas cells, since the field is scaled
-                // up by `scale` afterwards. The caret defaults to the height of
-                // the whole line box, which is taller than the glyphs it stands
-                // next to; one em is the ink. The framework centres it on the
-                // line box and cannot be told to sit lower.
-                cursorWidth: 1.5 / scale,
-                cursorHeight: figure.fontSize.toDouble(),
-                // Collapsed rather than merely dense: the Material decoration
-                // reserves vertical space of its own, which made the layer look
-                // taller while editing than it is once painted. Every border
-                // and the fill are stated too, because the app theme supplies
-                // a filled, outlined, focus-coloured decoration and the
-                // collapsed constructor cannot switch those off.
-                decoration: const InputDecoration(
-                  isCollapsed: true,
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
+          // The canvas is measured in cells and the painter it has to match
+          // scales nothing. Left alone, the system font scale and the app's
+          // own UI scale enlarge the field's text and its line box, so the
+          // layer lays out differently here from the way it is drawn.
+          child: MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.noScaling),
+            child: TextField(
+              controller: _v4TextController,
+              focusNode: _v4TextFocusNode,
+              autofocus: true,
+              onChanged: _handleVectorTextChanged,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+              textAlign: MCOImageV4TextRendering.alignFor(figure.align),
+              textAlignVertical: TextAlignVertical.top,
+              style: MCOImageV4TextRendering.styleFor(
+                fontSize: figure.fontSize.toDouble(),
+                color: _textStrokeColor(figure),
+              ),
+              strutStyle: MCOImageV4TextRendering.strutFor(figure.fontSize),
+              // The field draws glyphs and selection only. Its fill and caret
+              // are painted by the canvas underneath, in `_paintTextArea` and
+              // `_paintTextCaret`, so the layer looks the same while typed
+              // into as once drawn, and the caret spans the whole line box.
+              showCursor: false,
+              cursorWidth: 0,
+              // Collapsed rather than merely dense: the Material decoration
+              // reserves vertical space of its own, which made the layer look
+              // taller while editing than it is once painted. Every border
+              // and the fill are stated too, because the app theme supplies
+              // a filled, outlined, focus-coloured decoration and the
+              // collapsed constructor cannot switch those off.
+              decoration: const InputDecoration(
+                isCollapsed: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),
@@ -10129,6 +10181,15 @@ class _VectorCanvasPainter extends CustomPainter {
   /// without one there is nothing to see the width and height against.
   final Rect? textAreaBounds;
 
+  /// Fill of that layer. The field above draws glyphs only, since an opaque
+  /// background there would hide the outline and the caret painted here.
+  final Color? textAreaFill;
+
+  /// Caret of that layer, in canvas cells, read at paint time: the field's
+  /// own caret centres itself on the line and lifts by two logical pixels,
+  /// which at canvas scale are two cells. Repaints come from [repaint].
+  final ({Rect bounds, Color color})? Function()? textCaret;
+
   const _VectorCanvasPainter({
     required this.document,
     required this.selectedFigure,
@@ -10143,6 +10204,9 @@ class _VectorCanvasPainter extends CustomPainter {
     required this.canvasSize,
     required this.rulerExtent,
     this.textAreaBounds,
+    this.textAreaFill,
+    this.textCaret,
+    super.repaint,
   });
 
   @override
@@ -10173,27 +10237,51 @@ class _VectorCanvasPainter extends CustomPainter {
       _paintGrid(canvas);
     }
     final textArea = textAreaBounds;
-    if (textArea != null) _paintTextArea(canvas, textArea);
+    if (textArea != null) _paintTextArea(canvas, textArea, textAreaFill);
+    final caret = textCaret?.call();
+    if (caret != null) _paintTextCaret(canvas, caret.bounds, caret.color);
     _paintGuidePoints(canvas);
     canvas.restore();
   }
 
-  void _paintTextArea(Canvas canvas, Rect bounds) {
+  void _paintTextArea(Canvas canvas, Rect bounds, Color? fill) {
     final scaleX = canvasSize.width / document.width;
     final scaleY = canvasSize.height / document.height;
+    final rect = Rect.fromLTRB(
+      bounds.left * scaleX,
+      bounds.top * scaleY,
+      bounds.right * scaleX,
+      bounds.bottom * scaleY,
+    );
+    if (fill != null) {
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..isAntiAlias = false
+          ..color = fill,
+      );
+    }
     _paintDashedRect(
       canvas,
-      Rect.fromLTRB(
-        bounds.left * scaleX,
-        bounds.top * scaleY,
-        bounds.right * scaleX,
-        bounds.bottom * scaleY,
-      ),
+      rect,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
         ..isAntiAlias = false
         ..color = const Color(0xff00aaff),
+    );
+  }
+
+  void _paintTextCaret(Canvas canvas, Rect bounds, Color color) {
+    final x = bounds.left * canvasSize.width / document.width;
+    final scaleY = canvasSize.height / document.height;
+    canvas.drawLine(
+      Offset(x, bounds.top * scaleY),
+      Offset(x, bounds.bottom * scaleY),
+      Paint()
+        ..strokeWidth = 1.5
+        ..color = color,
     );
   }
 
@@ -10382,7 +10470,9 @@ class _VectorCanvasPainter extends CustomPainter {
         oldDelegate.canvasOffset != canvasOffset ||
         oldDelegate.canvasSize != canvasSize ||
         oldDelegate.rulerExtent != rulerExtent ||
-        oldDelegate.textAreaBounds != textAreaBounds;
+        oldDelegate.textAreaBounds != textAreaBounds ||
+        oldDelegate.textAreaFill != textAreaFill ||
+        oldDelegate.textCaret != textCaret;
   }
 }
 

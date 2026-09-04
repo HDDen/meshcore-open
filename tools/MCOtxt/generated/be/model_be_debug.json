@@ -1,0 +1,2794 @@
+{
+  "format": "MCOtxt model debug v1",
+  "language": "be",
+  "languageId": 6,
+  "unicodeDatabaseVersion": "15.1.0",
+  "primarySelection": "literal-savings",
+  "primarySymbols": [
+    32,
+    1082,
+    1083,
+    1084,
+    1089,
+    1077,
+    1088,
+    1074,
+    1085,
+    1103,
+    1076,
+    1091,
+    1090,
+    1095,
+    1086,
+    1087,
+    1079,
+    1099,
+    1081,
+    1075,
+    1073,
+    1078,
+    1072,
+    1096,
+    1102,
+    1093,
+    1100,
+    1101,
+    50,
+    1092,
+    1094,
+    49
+  ],
+  "extensionSymbols": [
+    52,
+    1105,
+    51,
+    54,
+    56,
+    53,
+    55,
+    48,
+    57,
+    1110,
+    1118
+  ],
+  "startTop4Indexes": [
+    0,
+    12,
+    8,
+    5
+  ],
+  "punctStartTop4Indexes": [
+    0,
+    12,
+    28,
+    38
+  ],
+  "top4Indexes": [
+    8,
+    15,
+    7,
+    4,
+    22,
+    14,
+    0,
+    2,
+    14,
+    26,
+    0,
+    22,
+    14,
+    0,
+    5,
+    22,
+    12,
+    0,
+    5,
+    14,
+    0,
+    12,
+    8,
+    6,
+    14,
+    22,
+    5,
+    11,
+    0,
+    22,
+    5,
+    14,
+    22,
+    14,
+    5,
+    11,
+    0,
+    12,
+    16,
+    8,
+    5,
+    14,
+    22,
+    11,
+    0,
+    12,
+    21,
+    4,
+    14,
+    22,
+    0,
+    26,
+    5,
+    22,
+    12,
+    8,
+    0,
+    10,
+    20,
+    12,
+    14,
+    6,
+    22,
+    5,
+    22,
+    0,
+    8,
+    14,
+    0,
+    18,
+    2,
+    12,
+    0,
+    12,
+    1,
+    4,
+    14,
+    6,
+    10,
+    22,
+    14,
+    17,
+    11,
+    6,
+    5,
+    8,
+    11,
+    22,
+    0,
+    2,
+    4,
+    12,
+    5,
+    26,
+    22,
+    12,
+    13,
+    0,
+    12,
+    10,
+    14,
+    0,
+    22,
+    16,
+    0,
+    8,
+    23,
+    12,
+    12,
+    1,
+    29,
+    7,
+    0,
+    28,
+    39,
+    32,
+    14,
+    22,
+    29,
+    11,
+    5,
+    22,
+    7,
+    17,
+    39,
+    37,
+    0,
+    31,
+    0,
+    37,
+    36,
+    39,
+    0,
+    12,
+    3,
+    14,
+    0,
+    39,
+    28,
+    32,
+    0,
+    36,
+    38,
+    40,
+    35,
+    0,
+    37,
+    14,
+    0,
+    39,
+    35,
+    4,
+    0,
+    35,
+    28,
+    37,
+    39,
+    0,
+    28,
+    37,
+    39,
+    0,
+    3,
+    34,
+    0,
+    14,
+    5,
+    22,
+    0,
+    14,
+    5,
+    22
+  ],
+  "uppercaseMap": [
+    {
+      "uppercaseCodepoint": 1025,
+      "lowercaseSymbolIndex": 33,
+      "lowercaseCodepoint": 1105
+    },
+    {
+      "uppercaseCodepoint": 1030,
+      "lowercaseSymbolIndex": 41,
+      "lowercaseCodepoint": 1110
+    },
+    {
+      "uppercaseCodepoint": 1038,
+      "lowercaseSymbolIndex": 42,
+      "lowercaseCodepoint": 1118
+    },
+    {
+      "uppercaseCodepoint": 1040,
+      "lowercaseSymbolIndex": 22,
+      "lowercaseCodepoint": 1072
+    },
+    {
+      "uppercaseCodepoint": 1041,
+      "lowercaseSymbolIndex": 20,
+      "lowercaseCodepoint": 1073
+    },
+    {
+      "uppercaseCodepoint": 1042,
+      "lowercaseSymbolIndex": 7,
+      "lowercaseCodepoint": 1074
+    },
+    {
+      "uppercaseCodepoint": 1043,
+      "lowercaseSymbolIndex": 19,
+      "lowercaseCodepoint": 1075
+    },
+    {
+      "uppercaseCodepoint": 1044,
+      "lowercaseSymbolIndex": 10,
+      "lowercaseCodepoint": 1076
+    },
+    {
+      "uppercaseCodepoint": 1045,
+      "lowercaseSymbolIndex": 5,
+      "lowercaseCodepoint": 1077
+    },
+    {
+      "uppercaseCodepoint": 1046,
+      "lowercaseSymbolIndex": 21,
+      "lowercaseCodepoint": 1078
+    },
+    {
+      "uppercaseCodepoint": 1047,
+      "lowercaseSymbolIndex": 16,
+      "lowercaseCodepoint": 1079
+    },
+    {
+      "uppercaseCodepoint": 1049,
+      "lowercaseSymbolIndex": 18,
+      "lowercaseCodepoint": 1081
+    },
+    {
+      "uppercaseCodepoint": 1050,
+      "lowercaseSymbolIndex": 1,
+      "lowercaseCodepoint": 1082
+    },
+    {
+      "uppercaseCodepoint": 1051,
+      "lowercaseSymbolIndex": 2,
+      "lowercaseCodepoint": 1083
+    },
+    {
+      "uppercaseCodepoint": 1052,
+      "lowercaseSymbolIndex": 3,
+      "lowercaseCodepoint": 1084
+    },
+    {
+      "uppercaseCodepoint": 1053,
+      "lowercaseSymbolIndex": 8,
+      "lowercaseCodepoint": 1085
+    },
+    {
+      "uppercaseCodepoint": 1054,
+      "lowercaseSymbolIndex": 14,
+      "lowercaseCodepoint": 1086
+    },
+    {
+      "uppercaseCodepoint": 1055,
+      "lowercaseSymbolIndex": 15,
+      "lowercaseCodepoint": 1087
+    },
+    {
+      "uppercaseCodepoint": 1056,
+      "lowercaseSymbolIndex": 6,
+      "lowercaseCodepoint": 1088
+    },
+    {
+      "uppercaseCodepoint": 1057,
+      "lowercaseSymbolIndex": 4,
+      "lowercaseCodepoint": 1089
+    },
+    {
+      "uppercaseCodepoint": 1058,
+      "lowercaseSymbolIndex": 12,
+      "lowercaseCodepoint": 1090
+    },
+    {
+      "uppercaseCodepoint": 1059,
+      "lowercaseSymbolIndex": 11,
+      "lowercaseCodepoint": 1091
+    },
+    {
+      "uppercaseCodepoint": 1060,
+      "lowercaseSymbolIndex": 29,
+      "lowercaseCodepoint": 1092
+    },
+    {
+      "uppercaseCodepoint": 1061,
+      "lowercaseSymbolIndex": 25,
+      "lowercaseCodepoint": 1093
+    },
+    {
+      "uppercaseCodepoint": 1062,
+      "lowercaseSymbolIndex": 30,
+      "lowercaseCodepoint": 1094
+    },
+    {
+      "uppercaseCodepoint": 1063,
+      "lowercaseSymbolIndex": 13,
+      "lowercaseCodepoint": 1095
+    },
+    {
+      "uppercaseCodepoint": 1064,
+      "lowercaseSymbolIndex": 23,
+      "lowercaseCodepoint": 1096
+    },
+    {
+      "uppercaseCodepoint": 1067,
+      "lowercaseSymbolIndex": 17,
+      "lowercaseCodepoint": 1099
+    },
+    {
+      "uppercaseCodepoint": 1068,
+      "lowercaseSymbolIndex": 26,
+      "lowercaseCodepoint": 1100
+    },
+    {
+      "uppercaseCodepoint": 1069,
+      "lowercaseSymbolIndex": 27,
+      "lowercaseCodepoint": 1101
+    },
+    {
+      "uppercaseCodepoint": 1070,
+      "lowercaseSymbolIndex": 24,
+      "lowercaseCodepoint": 1102
+    },
+    {
+      "uppercaseCodepoint": 1071,
+      "lowercaseSymbolIndex": 9,
+      "lowercaseCodepoint": 1103
+    }
+  ],
+  "training": {
+    "messages": 441,
+    "normalizedCodepoints": 19873,
+    "languageSymbols": 17161,
+    "unsupported": 1985,
+    "messageBeginCounts": {
+      "language_symbol": 413,
+      "foreign_language": 25,
+      "unsupported": 2,
+      "punctuation": 1
+    },
+    "startReasonCounts": {
+      "message_start": 413,
+      "utf8_fallback": 1105,
+      "newline": 18
+    },
+    "startCounts": {
+      "1087": 57,
+      "1096": 13,
+      "1077": 112,
+      "32": 303,
+      "1085": 124,
+      "1090": 153,
+      "1079": 33,
+      "1103": 59,
+      "1083": 85,
+      "1088": 27,
+      "1072": 48,
+      "1089": 50,
+      "1076": 60,
+      "1086": 35,
+      "1105": 4,
+      "1102": 9,
+      "1095": 39,
+      "1078": 13,
+      "1093": 16,
+      "1082": 51,
+      "1074": 86,
+      "1084": 50,
+      "1075": 13,
+      "1081": 18,
+      "50": 7,
+      "54": 2,
+      "1094": 7,
+      "1073": 21,
+      "1091": 10,
+      "1100": 3,
+      "55": 1,
+      "1101": 4,
+      "52": 8,
+      "49": 5,
+      "51": 8,
+      "56": 1,
+      "1092": 1
+    },
+    "punctStartCounts": {
+      "32": 299,
+      "1086": 1,
+      "1090": 9,
+      "50": 9,
+      "1091": 3,
+      "1081": 1,
+      "1083": 2,
+      "1089": 3,
+      "1077": 2,
+      "48": 3,
+      "55": 9,
+      "52": 5,
+      "1087": 3,
+      "1079": 1,
+      "1074": 3,
+      "49": 7,
+      "53": 1,
+      "1082": 3,
+      "1103": 1,
+      "1076": 2,
+      "1072": 1,
+      "51": 1,
+      "56": 1,
+      "54": 1,
+      "57": 1
+    },
+    "punctStartTriggerCounts": {
+      "46": 99,
+      "44": 168,
+      "41": 13,
+      "63": 14,
+      "171": 1,
+      "187": 1,
+      "45": 32,
+      "47": 11,
+      "43": 2,
+      "40": 11,
+      "37": 2,
+      "58": 4,
+      "34": 6,
+      "33": 3,
+      "91": 2,
+      "93": 1,
+      "95": 2
+    },
+    "startTargetByReason": {
+      "message_start": {
+        "1087": 54,
+        "1085": 44,
+        "1088": 8,
+        "1072": 34,
+        "1103": 15,
+        "1089": 28,
+        "1076": 33,
+        "1086": 28,
+        "1077": 14,
+        "1090": 24,
+        "1074": 36,
+        "1083": 3,
+        "1093": 3,
+        "1082": 22,
+        "1095": 13,
+        "50": 1,
+        "1084": 19,
+        "54": 1,
+        "1079": 10,
+        "55": 1,
+        "1101": 4,
+        "1075": 2,
+        "1091": 9,
+        "1094": 2,
+        "49": 3,
+        "1073": 1,
+        "1078": 1
+      },
+      "utf8_fallback": {
+        "1096": 13,
+        "1077": 97,
+        "32": 303,
+        "1090": 128,
+        "1079": 23,
+        "1103": 43,
+        "1083": 82,
+        "1072": 13,
+        "1085": 75,
+        "1088": 19,
+        "1105": 4,
+        "1102": 9,
+        "1095": 26,
+        "1078": 12,
+        "1093": 13,
+        "1087": 2,
+        "1089": 21,
+        "1082": 29,
+        "1084": 30,
+        "1076": 27,
+        "1075": 11,
+        "1074": 47,
+        "1081": 18,
+        "1086": 6,
+        "1094": 5,
+        "50": 5,
+        "1073": 20,
+        "1091": 1,
+        "1100": 3,
+        "52": 8,
+        "49": 2,
+        "51": 7,
+        "54": 1,
+        "56": 1,
+        "1092": 1
+      },
+      "newline": {
+        "1087": 1,
+        "1072": 1,
+        "1089": 1,
+        "1085": 5,
+        "1103": 1,
+        "1074": 3,
+        "50": 1,
+        "51": 1,
+        "1090": 1,
+        "1077": 1,
+        "1084": 1,
+        "1086": 1
+      }
+    }
+  },
+  "validation": {
+    "messages": 105,
+    "original_utf8_bytes": 9787,
+    "normalized_codepoints": 5465,
+    "output_codepoints": 5465,
+    "language_symbols": 4858,
+    "top4_hits": 2875,
+    "top4_rank_hits": {
+      "0": 1235,
+      "1": 684,
+      "2": 523,
+      "3": 433
+    },
+    "primary_literals": 1955,
+    "extension_literals": 28,
+    "punctuation_symbols": 151,
+    "shifts": 104,
+    "skipped": 0,
+    "utf8_fallback_runs": 344,
+    "utf8_fallback_codepoints": 456,
+    "utf8_fallback_bytes": 779,
+    "utf8_fallback_bits": 11048,
+    "token_bits": 35059,
+    "header_bits": 1260,
+    "decoded_utf8_bytes": 9787,
+    "mcotxt_candidate_bits": 36314,
+    "mcotxt_candidate_bytes": 4584,
+    "raw_utf8_candidate_bits": 79976,
+    "raw_utf8_candidate_bytes": 9997,
+    "selected_bits": 36314,
+    "selected_bytes": 4584,
+    "selected_mcotxt_messages": 105,
+    "selected_raw_utf8_messages": 0,
+    "optimized_case_mode_toggles": 0,
+    "optimized_shifts": 104,
+    "optimized_utf8_runs": 344,
+    "selector_savings_bytes_vs_mcotxt": 0,
+    "selected_ratio_vs_normalized_utf8": 2.1560830533678472,
+    "unsupported_counts": {
+      "1080": 296,
+      "1097": 21,
+      "110": 6,
+      "114": 7,
+      "102": 2,
+      "1098": 2,
+      "117": 6,
+      "105": 10,
+      "107": 2,
+      "104": 9,
+      "100": 6,
+      "72": 1,
+      "101": 9,
+      "108": 3,
+      "116": 13,
+      "99": 2,
+      "84": 3,
+      "65": 1,
+      "112": 4,
+      "97": 6,
+      "1048": 4,
+      "76": 3,
+      "111": 8,
+      "82": 2,
+      "66": 2,
+      "69": 2,
+      "103": 3,
+      "70": 1,
+      "115": 6,
+      "85": 1,
+      "98": 4,
+      "109": 5,
+      "86": 1,
+      "77": 1,
+      "67": 1,
+      "119": 1,
+      "118": 1,
+      "80": 1
+    },
+    "start_counts": {
+      "1083": 32,
+      "1079": 13,
+      "1072": 12,
+      "1077": 32,
+      "1078": 4,
+      "1084": 12,
+      "1090": 45,
+      "32": 82,
+      "1085": 37,
+      "1076": 16,
+      "1103": 11,
+      "1086": 9,
+      "1093": 1,
+      "1074": 23,
+      "1089": 15,
+      "1105": 6,
+      "1095": 11,
+      "1073": 5,
+      "51": 1,
+      "1082": 11,
+      "1087": 15,
+      "1102": 1,
+      "1088": 9,
+      "1094": 2,
+      "1081": 1,
+      "1101": 1,
+      "1096": 3,
+      "49": 2,
+      "1091": 5,
+      "1092": 1,
+      "1075": 5,
+      "54": 1
+    },
+    "punct_start_counts": {
+      "32": 66,
+      "1090": 3,
+      "1089": 2,
+      "55": 3,
+      "50": 1,
+      "1077": 2,
+      "1076": 1,
+      "48": 1,
+      "56": 1,
+      "1085": 1,
+      "1084": 1,
+      "1079": 1
+    },
+    "punct_start_trigger_counts": {
+      "44": 34,
+      "41": 3,
+      "46": 28,
+      "45": 6,
+      "33": 1,
+      "63": 3,
+      "40": 5,
+      "95": 1,
+      "92": 1,
+      "43": 1
+    },
+    "start_reason_counts": {
+      "message_start": 100,
+      "utf8_fallback": 317,
+      "newline": 7
+    },
+    "start_target_by_reason": {
+      "message_start": {
+        "1083": 2,
+        "1072": 8,
+        "1085": 14,
+        "1076": 8,
+        "1077": 6,
+        "1086": 5,
+        "1074": 5,
+        "1079": 3,
+        "1089": 10,
+        "1084": 5,
+        "1095": 2,
+        "1090": 4,
+        "1103": 6,
+        "51": 1,
+        "1082": 2,
+        "1087": 11,
+        "1101": 1,
+        "1096": 1,
+        "1073": 1,
+        "1091": 5
+      },
+      "utf8_fallback": {
+        "1079": 10,
+        "1077": 23,
+        "1078": 4,
+        "1084": 7,
+        "1090": 39,
+        "32": 82,
+        "1076": 8,
+        "1085": 23,
+        "1103": 5,
+        "1093": 1,
+        "1105": 6,
+        "1074": 18,
+        "1073": 4,
+        "1083": 30,
+        "1095": 9,
+        "1072": 3,
+        "1102": 1,
+        "1088": 9,
+        "1094": 2,
+        "1089": 5,
+        "1081": 1,
+        "1087": 3,
+        "1086": 4,
+        "49": 2,
+        "1092": 1,
+        "1075": 5,
+        "1082": 9,
+        "1096": 2,
+        "54": 1
+      },
+      "newline": {
+        "1090": 2,
+        "1087": 1,
+        "1072": 1,
+        "1077": 3
+      }
+    },
+    "message_begin_counts": {
+      "language_symbol": 100,
+      "foreign_language": 5
+    },
+    "top4_misses": [
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1082,
+        "count": 45
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1090,
+        "count": 43
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1077,
+        "count": 42
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1083,
+        "count": 32
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1084,
+        "count": 32
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1089,
+        "count": 30
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1086,
+        "count": 29
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1088,
+        "count": 29
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1076,
+        "count": 28
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1088,
+        "count": 27
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1089,
+        "count": 27
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1073,
+        "count": 25
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1074,
+        "count": 24
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1088,
+        "count": 23
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1074,
+        "count": 23
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1081,
+        "count": 23
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1085,
+        "count": 22
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1091,
+        "count": 22
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1082,
+        "count": 22
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1095,
+        "count": 22
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1083,
+        "count": 20
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1084,
+        "count": 19
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1084,
+        "count": 19
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1083,
+        "count": 19
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1085,
+        "count": 18
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1074,
+        "count": 18
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1075,
+        "count": 17
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1103,
+        "count": 17
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1078,
+        "count": 17
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1076,
+        "count": 16
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1077,
+        "count": 16
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1082,
+        "count": 16
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1081,
+        "count": 15
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1089,
+        "count": 15
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1079,
+        "count": 15
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1087,
+        "count": 15
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1088,
+        "count": 15
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1084,
+        "count": 14
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1083,
+        "count": 14
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1103,
+        "count": 14
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1079,
+        "count": 13
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1101,
+        "count": 13
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1082,
+        "count": 13
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1087,
+        "count": 13
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1076,
+        "count": 12
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1072,
+        "count": 12
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1084,
+        "count": 12
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1087,
+        "count": 12
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1072,
+        "count": 12
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1099,
+        "count": 12
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1095,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1087,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1103,
+        "count": 11
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1103,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1103,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1088,
+        "count": 11
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1095,
+        "count": 11
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1082,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1099,
+        "count": 11
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1076,
+        "count": 10
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1086,
+        "count": 10
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1072,
+        "count": 10
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1073,
+        "count": 10
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1096,
+        "count": 10
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1086,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1085,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1103,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1074,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1081,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1090,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1100,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1083,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1082,
+        "count": 9
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1088,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1090,
+        "count": 9
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1077,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1076,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1077,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1089,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1072,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1102,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1091,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1075,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1075,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1103,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 32,
+        "count": 8
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 32,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1083,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1082,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 32,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1091,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1102,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1099,
+        "count": 7
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1074,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1091,
+        "count": 6
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1105,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1089,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1095,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1074,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1096,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1077,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1085,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1077,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1082,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1082,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1077,
+        "count": 6
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1100,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1073,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1089,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1084,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1091,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1088,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1096,
+        "targetCodepoint": 1083,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1088,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1089,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1083,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1083,
+        "count": 5
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1073,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1090,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1085,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1082,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1085,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1078,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1089,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1079,
+        "count": 5
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1091,
+        "count": 5
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1075,
+        "count": 5
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1085,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1086,
+        "count": 4
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1078,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1091,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1075,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1103,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1096,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 1091,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1078,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 32,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1085,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1075,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1096,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1084,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1102,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1081,
+        "targetCodepoint": 1085,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1087,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1079,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 50,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1084,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1088,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1089,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1089,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1077,
+        "count": 4
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1091,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1087,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1083,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1096,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1093,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1079,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1074,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1085,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1076,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1099,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1089,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1099,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1079,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1095,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1093,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1074,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1091,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1081,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1093,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1099,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1102,
+        "count": 3
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1096,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1091,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1084,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1077,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1076,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1083,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 56,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 49,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1075,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1087,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1090,
+        "count": 3
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1076,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1090,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1095,
+        "targetCodepoint": 1100,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1103,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1078,
+        "targetCodepoint": 1076,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1102,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1096,
+        "targetCodepoint": 1082,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1075,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1099,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1095,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1093,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1092,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1085,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1096,
+        "targetCodepoint": 1091,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1076,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1078,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1074,
+        "count": 2
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1089,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1094,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1092,
+        "targetCodepoint": 1077,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1089,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1083,
+        "count": 2
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1094,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1076,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1077,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1092,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1095,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1085,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1082,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1079,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1072,
+        "targetCodepoint": 1094,
+        "count": 2
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 49,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 49,
+        "targetCodepoint": 52,
+        "count": 2
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1077,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1073,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 1085,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1082,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1094,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1085,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1103,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1074,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1084,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1084,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1083,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1088,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1096,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1074,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1099,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1077,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 54,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1089,
+        "count": 2
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1081,
+        "targetCodepoint": 1096,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1088,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1087,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1093,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1096,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1094,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1096,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1096,
+        "targetCodepoint": 1086,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1095,
+        "targetCodepoint": 1091,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1088,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 51,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1081,
+        "targetCodepoint": 1083,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1073,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1073,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1092,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1102,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1089,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1075,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1076,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1081,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1101,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1078,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1089,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1094,
+        "targetCodepoint": 1086,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 32,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1073,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 50,
+        "targetCodepoint": 53,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1093,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1084,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 1092,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1101,
+        "targetCodepoint": 1085,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1075,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1086,
+        "targetCodepoint": 1101,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1093,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1093,
+        "targetCodepoint": 1091,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1091,
+        "targetCodepoint": 1083,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1095,
+        "targetCodepoint": 1096,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1087,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1076,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1094,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1073,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1084,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1085,
+        "targetCodepoint": 1092,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1082,
+        "targetCodepoint": 1074,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 48,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 48,
+        "targetCodepoint": 55,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1073,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 56,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 55,
+        "targetCodepoint": 55,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1085,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1105,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1105,
+        "targetCodepoint": 1089,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1083,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 52,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 52,
+        "targetCodepoint": 51,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 51,
+        "targetCodepoint": 51,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 32,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1075,
+        "targetCodepoint": 1083,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 49,
+        "targetCodepoint": 57,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 48,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1094,
+        "count": 1
+      },
+      {
+        "context": "START",
+        "previousCodepoint": null,
+        "targetCodepoint": 54,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1094,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1083,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1103,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1084,
+        "targetCodepoint": 1088,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1079,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 1100,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1077,
+        "targetCodepoint": 1078,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1088,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1089,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1102,
+        "targetCodepoint": 1078,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1073,
+        "targetCodepoint": 1103,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1103,
+        "targetCodepoint": 1082,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1084,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1078,
+        "targetCodepoint": 32,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1088,
+        "targetCodepoint": 1078,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1100,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1076,
+        "targetCodepoint": 1103,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1083,
+        "targetCodepoint": 1090,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1078,
+        "targetCodepoint": 1099,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1087,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1087,
+        "targetCodepoint": 1099,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 50,
+        "targetCodepoint": 55,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1090,
+        "targetCodepoint": 1090,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1079,
+        "targetCodepoint": 1103,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1099,
+        "targetCodepoint": 1079,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 32,
+        "targetCodepoint": 53,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1089,
+        "targetCodepoint": 1102,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1081,
+        "targetCodepoint": 1095,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1100,
+        "targetCodepoint": 1077,
+        "count": 1
+      },
+      {
+        "context": "AFTER_PUNCT",
+        "previousCodepoint": null,
+        "targetCodepoint": 1079,
+        "count": 1
+      },
+      {
+        "context": "SYMBOL",
+        "previousCodepoint": 1074,
+        "targetCodepoint": 1076,
+        "count": 1
+      }
+    ],
+    "total_bits": 36319,
+    "top4_hit_rate": 0.5918073281185673,
+    "bits_per_output_char_tokens": 6.415187557182068,
+    "bits_per_output_char_total": 6.645745654162854,
+    "ratio_vs_decoded_utf8": 2.155786227594372
+  }
+}

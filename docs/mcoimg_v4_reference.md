@@ -528,10 +528,12 @@ the same text out differently; the anchor, the area width and the em height
 are the only things they are guaranteed to agree on. This app draws glyphs in
 the stroke color of the current style and fills the area with its fill color,
 over the area width and the height the text laid out to; a text with no stroke
-color draws no glyphs. It lays each line out in a box of `1.2` em with the
-leading split evenly, so the filled area is `lines * 1.2 * fontSize` tall and
-the glyphs sit in the middle of it rather than following the font's own
-metrics.
+color draws no glyphs. Each line gets a box of `ceil(1.209 * fontSize)`
+cells, a cap height plus two descenders rounded up to whole cells, with the
+capitals centred in it: a line without descenders has the same room above and
+below, a descender always fits, and whole cells keep the engine's own rounding
+of line heights from cutting anything on small sizes. The filled area is
+`lines` such boxes tall.
 
 ## Transport tail and replies
 

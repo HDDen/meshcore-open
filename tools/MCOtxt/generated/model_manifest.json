@@ -3,7 +3,7 @@
   "manifestVersion": 1,
   "codecVersion": 1,
   "modelGeneration": 0,
-  "frozen": false,
+  "frozen": true,
   "hashAlgorithm": "sha256",
   "hashScope": "canonical wire-significant model data",
   "models": {
@@ -36,39 +36,39 @@
     },
     "de": {
       "languageId": 3,
-      "available": false,
-      "wireHash": null,
-      "primaryCount": 0,
-      "extensionCount": 0,
-      "symbolCount": 0,
-      "unicodeDatabaseVersion": null
+      "available": true,
+      "wireHash": "00b971288fee56f37535ce03b4ac0d8ebddfc12ecbd5ef282ab4b0f4a659f451",
+      "primaryCount": 32,
+      "extensionCount": 9,
+      "symbolCount": 41,
+      "unicodeDatabaseVersion": "15.1.0"
     },
     "it": {
       "languageId": 4,
-      "available": false,
-      "wireHash": null,
-      "primaryCount": 0,
-      "extensionCount": 0,
-      "symbolCount": 0,
-      "unicodeDatabaseVersion": null
+      "available": true,
+      "wireHash": "f6d073a1d6ae6344eaac445b86fb8a454b276a740fd40651956b1ff28f5af270",
+      "primaryCount": 32,
+      "extensionCount": 14,
+      "symbolCount": 46,
+      "unicodeDatabaseVersion": "15.1.0"
     },
     "uk": {
       "languageId": 5,
-      "available": false,
-      "wireHash": null,
-      "primaryCount": 0,
-      "extensionCount": 0,
-      "symbolCount": 0,
-      "unicodeDatabaseVersion": null
+      "available": true,
+      "wireHash": "949992c57156526843cdb9634c5c14bee23218878f116ef90be2a8497274c131",
+      "primaryCount": 32,
+      "extensionCount": 12,
+      "symbolCount": 44,
+      "unicodeDatabaseVersion": "15.1.0"
     },
     "be": {
       "languageId": 6,
-      "available": false,
-      "wireHash": null,
-      "primaryCount": 0,
-      "extensionCount": 0,
-      "symbolCount": 0,
-      "unicodeDatabaseVersion": null
+      "available": true,
+      "wireHash": "dd23c2b82288e0a4452f237ccd905055974779e3cc5cc6f3d03be1b24e5bb1fd",
+      "primaryCount": 32,
+      "extensionCount": 11,
+      "symbolCount": 43,
+      "unicodeDatabaseVersion": "15.1.0"
     }
   }
 }

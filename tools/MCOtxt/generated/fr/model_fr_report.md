@@ -44,14 +44,14 @@
 - SHIFT tokens: `416`
 - Punctuation tokens: `442`
 - Token bits: `46957`
-- Header bits (9/message): `2691`
-- Total bits: `49648`
+- Header bits (12/message): `3588`
+- Total bits: `50545`
 - Bits/output-char, tokens only: `4.9801`
-- Bits/output-char, incl. per-message header: `5.2655`
+- Bits/output-char, incl. per-message header: `5.3606`
 - UTF-8 bytes of the same decoded/supported text: `9666`
-- Compression ratio vs same decoded UTF-8: `1.5575x`
+- Compression ratio vs same decoded UTF-8: `1.5299x`
 
-> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 9-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.
+> Validation here is single-language model evaluation. It includes real MCOtxt v1 variable TOP-4 / literal / SHIFT / punctuation / UTF8_RUN costs and a 12-bit normal MCOtxt header per message, but does not model A/B TOGGLE or SWITCH_OTHER_LANGUAGE for mixed-language messages.
 
 ## TOP-4 rank diagnostics — validation
 
@@ -68,8 +68,8 @@
 
 This section simulates the final message-level selector between optimized normal MCOtxt (precomputed CAPS/SHIFT plan + fallback-only UTF8_RUN) and whole-message RAW_UTF8. It is intentionally separate from the model-only metrics above so TOP-4/model quality remains comparable between builds.
 
-- Optimized MCOtxt candidate bits: `49311`
-- Optimized MCOtxt candidate packed bytes: `6285`
+- Optimized MCOtxt candidate bits: `50208`
+- Optimized MCOtxt candidate packed bytes: `6411`
 - RAW_UTF8 candidate bits: `82112`
 - RAW_UTF8 candidate packed bytes: `10264`
 - Selected MCOtxt messages: `298`
@@ -77,10 +77,10 @@ This section simulates the final message-level selector between optimized normal
 - Optimized CAPS_MODE toggles in MCOtxt candidates: `31`
 - Optimized one-symbol SHIFTs in MCOtxt candidates: `298`
 - Optimized fallback UTF8_RUNs in MCOtxt candidates: `16`
-- Final selected bits: `49296`
-- Final selected packed bytes: `6283`
-- Savings vs optimized MCOtxt: `2` bytes
-- Selected ratio vs normalized UTF-8: `1.5686x`
+- Final selected bits: `50190`
+- Final selected packed bytes: `6408`
+- Savings vs optimized MCOtxt: `3` bytes
+- Selected ratio vs normalized UTF-8: `1.5407x`
 
 > RAW_UTF8 simulation uses a `16`-bit byte-aligned message-mode header, matching the current Python A/B reference benchmark.
 
@@ -344,13 +344,13 @@ This section simulates the final message-level selector between optimized normal
 
 | category | tokens | bits | share of total bits |
 |---|---:|---:|---:|
-| TOP-4 variable | 5363 | 15359 | 30.94% |
-| Primary literal | 3473 | 24311 | 48.97% |
-| Extension literal | 135 | 1215 | 2.45% |
-| SHIFT | 416 | 2080 | 4.19% |
-| Punctuation | 442 | 3536 | 7.12% |
-| UTF-8 fallback | 16 | 456 | 0.92% |
-| Header | 299 | 2691 | 5.42% |
+| TOP-4 variable | 5363 | 15359 | 30.39% |
+| Primary literal | 3473 | 24311 | 48.10% |
+| Extension literal | 135 | 1215 | 2.40% |
+| SHIFT | 416 | 2080 | 4.12% |
+| Punctuation | 442 | 3536 | 7.00% |
+| UTF-8 fallback | 16 | 456 | 0.90% |
+| Header | 299 | 3588 | 7.10% |
 
 ## UTF-8 fallback — validation
 
@@ -358,7 +358,7 @@ This section simulates the final message-level selector between optimized normal
 - Unicode codepoints: `16`
 - UTF-8 bytes: `29`
 - Total fallback bits: `456`
-- Share of total encoded bits: `0.92%`
+- Share of total encoded bits: `0.90%`
 
 | count | codepoint | symbol | Unicode name |
 |---:|---|---|---|

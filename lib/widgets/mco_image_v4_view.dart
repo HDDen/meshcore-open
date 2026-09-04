@@ -17,12 +17,31 @@ abstract final class MCOImageV4TextRendering {
   /// Bundled with the app, so our own output matches on every platform.
   static const String fontFamily = 'Inter';
 
-  /// Height of one line box in em, fixed here rather than taken from the font.
-  /// The font's own metrics are tighter than its ink: glyphs hung below the
-  /// filled area while leaving a gap above it. A stated line box, with the
-  /// leading split evenly, centres the ink and keeps every line inside the
-  /// area the figure declares.
-  static const double lineHeight = 1.2;
+  // Inter's vertical metrics in em (hhea and OS/2 agree). The ascent reaches
+  // far above a capital, so laying the font out by its own metrics would
+  // leave a wide gap over the letters and no room under a descender.
+  static const double _ascent = 0.969;
+  static const double _descent = 0.241;
+  static const double _capHeight = 0.727;
+
+  /// Height of one line box, in whole cells. The capitals are centred in it,
+  /// so a line without descenders has the same room above and below, and it
+  /// is at least a cap height plus two descenders tall, so a descender always
+  /// fits into the room under the baseline. Whole cells because the engine
+  /// rounds a line's height to whole logical pixels: a fractional box would
+  /// come out up to half a cell shorter than asked and cut descenders on
+  /// small sizes, where half a cell is a large part of the em.
+  static int lineBoxFor(int fontSize) =>
+      (fontSize * (_capHeight + 2 * _descent)).ceil();
+
+  // With an even leading distribution a strut keeps its font's own ascent
+  // and descent and splits the rest of its height equally above and below,
+  // so its baseline sits (ascent - descent) / 2 below the middle of the box.
+  // Centring a capital wants capHeight / 2 there, hence a strut font of
+  // capHeight / (ascent - descent) em; for Inter that is almost exactly one.
+  // Leading is no use here: a forced strut contributes ascent and descent
+  // only, and the engine drops its leading.
+  static const double _strutScale = _capHeight / (_ascent - _descent);
 
   static TextStyle styleFor({
     required double fontSize,
@@ -39,22 +58,23 @@ abstract final class MCOImageV4TextRendering {
       fontStyle: FontStyle.normal,
       letterSpacing: 0,
       decoration: TextDecoration.none,
-      height: lineHeight,
-      leadingDistribution: TextLeadingDistribution.even,
     );
   }
 
-  /// Pins the line box to [lineHeight] em for both the painter and the
-  /// editor's on-canvas field, so a font with taller metrics cannot stretch
-  /// one of them and not the other.
-  static StrutStyle strutFor(double fontSize) => StrutStyle(
-    fontFamily: fontFamily,
-    fontSize: fontSize,
-    height: lineHeight,
-    leading: 0,
-    leadingDistribution: TextLeadingDistribution.even,
-    forceStrutHeight: true,
-  );
+  /// Pins the line box to [lineBoxFor] cells with the capitals centred, for
+  /// both the painter and the editor's on-canvas field, so the two cannot
+  /// lay a line out differently.
+  static StrutStyle strutFor(int fontSize) {
+    final strutFontSize = fontSize * _strutScale;
+    return StrutStyle(
+      fontFamily: fontFamily,
+      fontSize: strutFontSize,
+      height: lineBoxFor(fontSize) / strutFontSize,
+      leading: 0,
+      leadingDistribution: TextLeadingDistribution.even,
+      forceStrutHeight: true,
+    );
+  }
 
   static TextAlign alignFor(MCOImageV4TextAlign align) => switch (align) {
     MCOImageV4TextAlign.left => TextAlign.left,
@@ -79,7 +99,7 @@ abstract final class MCOImageV4TextRendering {
       ),
       textAlign: alignFor(figure.align),
       textDirection: TextDirection.ltr,
-      strutStyle: strutFor(figure.fontSize.toDouble()),
+      strutStyle: strutFor(figure.fontSize),
     )..layout(minWidth: width, maxWidth: width);
   }
 }

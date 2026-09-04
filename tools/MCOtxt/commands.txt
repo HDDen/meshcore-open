@@ -16,6 +16,30 @@ python .\MCOtxt_model_trainer_with_diagnostics.py `
   --out-dir .\generated\fr `
   --debug-json
 
+python .\MCOtxt_model_trainer_with_diagnostics.py `
+  --lang it `
+  --train .\corpora\it `
+  --out-dir .\generated\it `
+  --debug-json
+
+python .\MCOtxt_model_trainer_with_diagnostics.py `
+  --lang de `
+  --train .\corpora\de `
+  --out-dir .\generated\de `
+  --debug-json
+
+python .\MCOtxt_model_trainer_with_diagnostics.py `
+  --lang uk `
+  --train .\corpora\uk `
+  --out-dir .\generated\uk `
+  --debug-json
+
+python .\MCOtxt_model_trainer_with_diagnostics.py `
+  --lang be `
+  --train .\corpora\be `
+  --out-dir .\generated\be `
+  --debug-json
+
 
 MCOtxt_model_trainer_with_diagnostics.py — обучает модель языка и генерирует .dart, .h, report/debug JSON. Пример:
 python MCOtxt_model_trainer_with_diagnostics.py --lang ru --train corpus_ru.txt --debug-json

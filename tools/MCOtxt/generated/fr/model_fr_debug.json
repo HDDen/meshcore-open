@@ -693,21 +693,21 @@
     "utf8_fallback_bytes": 29,
     "utf8_fallback_bits": 456,
     "token_bits": 46957,
-    "header_bits": 2691,
+    "header_bits": 3588,
     "decoded_utf8_bytes": 9666,
-    "mcotxt_candidate_bits": 49311,
-    "mcotxt_candidate_bytes": 6285,
+    "mcotxt_candidate_bits": 50208,
+    "mcotxt_candidate_bytes": 6411,
     "raw_utf8_candidate_bits": 82112,
     "raw_utf8_candidate_bytes": 10264,
-    "selected_bits": 49296,
-    "selected_bytes": 6283,
+    "selected_bits": 50190,
+    "selected_bytes": 6408,
     "selected_mcotxt_messages": 298,
     "selected_raw_utf8_messages": 1,
     "optimized_case_mode_toggles": 31,
     "optimized_shifts": 298,
     "optimized_utf8_runs": 16,
-    "selector_savings_bytes_vs_mcotxt": 2,
-    "selected_ratio_vs_normalized_utf8": 1.5686465433300876,
+    "selector_savings_bytes_vs_mcotxt": 3,
+    "selected_ratio_vs_normalized_utf8": 1.5407053197848177,
     "unsupported_counts": {
       "124": 8,
       "228": 2,
@@ -3711,10 +3711,10 @@
         "count": 1
       }
     ],
-    "total_bits": 49648,
+    "total_bits": 50545,
     "top4_hit_rate": 0.5978151822539294,
     "bits_per_output_char_tokens": 4.980061512355499,
-    "bits_per_output_char_total": 5.2654576307137555,
-    "ratio_vs_decoded_utf8": 1.5575249758298422
+    "bits_per_output_char_total": 5.360589670166507,
+    "ratio_vs_decoded_utf8": 1.5298842615491146
   }
 }
