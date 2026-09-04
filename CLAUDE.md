@@ -796,7 +796,11 @@ the MAC and one whole block: AES under one key is a permutation, so a shared blo
 same plaintext under the same key, which is our own packet; a copy as long as the packet is not
 a cut one and is never "recovered". Entries live ten minutes, the self-echo window of
 `_isChannelRepeat`. `AppSettings.recoverLongPacketEchoes` (default on, mod settings) gates both
-registration and matching. A packet longer than 173 bytes on the wire produces no frame at all
+registration and matching, and the channel composer's counter: while it is on, a message whose
+packet would be too long even for a cut copy shows `160 (-5) / 165`, the bytes to drop for the
+first repeater's echo to fit (`ChannelEchoRecovery.plaintextBytesOverEchoLimit`, one hop, the
+region scope's transport codes counted). The counter and that budget read one memoised encoding
+per keystroke (`_composerEncoding`), so the compressor does not run twice. A packet longer than 173 bytes on the wire produces no frame at all
 and nothing here can help it; direct messages are out of reach too, their ciphertext needs the
 node's private key.
 

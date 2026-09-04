@@ -63,6 +63,11 @@ class ByteCountedTextField extends StatefulWidget {
   /// If provided, byte limits and counters will use the encoded text length.
   final String Function(String)? encoder;
 
+  /// Optional second budget: how many bytes the text is over it, shown as
+  /// `(-N)` between the count and the limit, or null to show nothing.
+  /// Evaluated together with [encoder], on text changes only.
+  final int? Function(String text)? excessBytes;
+
   /// Minimum number of visible lines before the field starts expanding.
   final int minLines;
 
@@ -87,6 +92,7 @@ class ByteCountedTextField extends StatefulWidget {
     this.errorThreshold = 0.9,
     this.hideCounterWhenEmpty = true,
     this.encoder,
+    this.excessBytes,
     this.minLines = 1,
     this.maxHeight,
     this.enabled = true,
@@ -106,6 +112,7 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
   late String _text = widget.controller.text;
   String? _encodedFor;
   int _usedBytes = 0;
+  int? _excessBytes;
 
   @override
   void initState() {
@@ -122,7 +129,10 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
       _text = widget.controller.text;
       _encodedFor = null;
     }
-    if (oldWidget.encoder != widget.encoder) _encodedFor = null;
+    if (oldWidget.encoder != widget.encoder ||
+        oldWidget.excessBytes != widget.excessBytes) {
+      _encodedFor = null;
+    }
   }
 
   @override
@@ -141,6 +151,7 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
     final encoder = widget.encoder;
     final effective = encoder != null ? encoder(_text) : _text;
     _usedBytes = utf8.encode(effective).length;
+    _excessBytes = widget.excessBytes?.call(_text);
     _encodedFor = _text;
     return _usedBytes;
   }
@@ -305,6 +316,7 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
   @override
   Widget build(BuildContext context) {
     final usedBytes = _byteCount;
+    final excessBytes = _excessBytes;
     final ratio = widget.maxBytes > 0 ? usedBytes / widget.maxBytes : 0.0;
     final showCounter = !(widget.hideCounterWhenEmpty && _text.isEmpty);
 
@@ -371,7 +383,9 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                '$usedBytes / ${widget.maxBytes}',
+                excessBytes == null
+                    ? '$usedBytes / ${widget.maxBytes}'
+                    : '$usedBytes (-$excessBytes) / ${widget.maxBytes}',
                 style: TextStyle(fontSize: 11, color: counterColor),
               ),
             ),

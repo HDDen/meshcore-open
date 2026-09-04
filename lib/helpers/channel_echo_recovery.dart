@@ -42,6 +42,36 @@ class ChannelEchoRecovery {
   /// The shortest prefix that proves a match: the MAC and one whole block.
   static const int minMatchLength = macSize + blockSize;
 
+  /// The longest raw packet the companion's RX log carries: `logRxRaw` sends
+  /// the frame only when `len + 3 <= MAX_FRAME_SIZE`.
+  static const int maxLoggedRawPacketLength = 173;
+
+  /// `timestamp(4) + type(1) + "Name: " + text`, the plaintext of a group
+  /// text; [senderPrefixBytes] is what `"Name: "` costs.
+  static int groupTextPlaintextLength({
+    required int senderPrefixBytes,
+    required int textBytes,
+  }) => 5 + senderPrefixBytes + textBytes;
+
+  /// How many plaintext bytes a channel packet is over the longest packet
+  /// whose echo the RX log still carries, or null when it fits. The echo is
+  /// the copy the first repeater sends back, so it carries one hop of
+  /// [pathHashWidth] bytes; [transportCodes] adds the four bytes of a region
+  /// scope. The ciphertext grows a block at a time, so the answer is the
+  /// distance to the last whole block that fits, not to the limit itself.
+  static int? plaintextBytesOverEchoLimit({
+    required int plaintextLength,
+    int pathHashWidth = 1,
+    bool transportCodes = false,
+  }) {
+    // Header, transport codes, path length, one hop, channel hash, MAC.
+    final overhead =
+        1 + (transportCodes ? 4 : 0) + 1 + pathHashWidth + 1 + macSize;
+    final blocks = (maxLoggedRawPacketLength - overhead) ~/ blockSize;
+    final limit = blocks * blockSize;
+    return plaintextLength > limit ? plaintextLength - limit : null;
+  }
+
   /// How long an expectation stays valid. Repeats of one packet keep arriving
   /// for a while, and the self-echo window elsewhere is the same ten minutes.
   final Duration ttl;

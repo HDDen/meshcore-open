@@ -2323,6 +2323,11 @@ class MeshCoreConnector extends ChangeNotifier {
     return _defaultRegionScope?.trim() ?? '';
   }
 
+  /// Whether a send on this channel goes out with a flood scope, which the
+  /// firmware carries as four transport-code bytes in front of the path.
+  bool channelSendCarriesTransportCodes(int channelIndex) =>
+      _outgoingChannelRegion(channelIndex).isNotEmpty;
+
   void _setDefaultRegionScopeCache(String? region) {
     final normalized = region?.trim();
     _defaultRegionScope = normalized == null || normalized.isEmpty

@@ -94,6 +94,59 @@ void main() {
     });
   });
 
+  group('echo budget', () {
+    test('a first-hop echo fits the RX log up to ten whole blocks', () {
+      for (final transportCodes in [false, true]) {
+        for (final width in [1, 2, 3, 4]) {
+          expect(
+            ChannelEchoRecovery.plaintextBytesOverEchoLimit(
+              plaintextLength: 160,
+              pathHashWidth: width,
+              transportCodes: transportCodes,
+            ),
+            isNull,
+            reason: 'width $width, transport $transportCodes',
+          );
+          expect(
+            ChannelEchoRecovery.plaintextBytesOverEchoLimit(
+              plaintextLength: 165,
+              pathHashWidth: width,
+              transportCodes: transportCodes,
+            ),
+            5,
+            reason: 'width $width, transport $transportCodes',
+          );
+        }
+      }
+      expect(
+        ChannelEchoRecovery.plaintextBytesOverEchoLimit(plaintextLength: 161),
+        1,
+      );
+    });
+
+    test('a wider path lowers the budget a whole block at a time', () {
+      // Two hops of four bytes with a scope: 173 - 17 = 156 -> nine blocks.
+      expect(
+        ChannelEchoRecovery.plaintextBytesOverEchoLimit(
+          plaintextLength: 150,
+          pathHashWidth: 8,
+          transportCodes: true,
+        ),
+        6,
+      );
+    });
+
+    test('group text plaintext counts the name prefix and the header', () {
+      expect(
+        ChannelEchoRecovery.groupTextPlaintextLength(
+          senderPrefixBytes: 5,
+          textBytes: 155,
+        ),
+        165,
+      );
+    });
+  });
+
   group('registerOutgoingFrame', () {
     final psk = _psk();
     Uint8List? pskFor(int index) => index == 3 ? psk : null;

@@ -22,6 +22,7 @@ import '../storage/community_store.dart';
 import '../utils/platform_info.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_echo_recovery.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
@@ -134,6 +135,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ChannelMessage? _replyingToMessage;
   String? _plainReplyComposerPrefix;
   List<Contact> _mentionSuggestions = const [];
+  _ComposerEncoding? _composerEncodingMemo;
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
   final CommunityStore _communityStore = CommunityStore();
@@ -3668,22 +3670,44 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         connector.isChannelSmazEnabled(widget.channel.index) ||
         connector.isChannelCyr2LatEnabled(widget.channel.index);
 
+    // One encoding per keystroke: the counter and the echo budget below
+    // read the same memo, so the compressor does not run twice.
+    _composerEncodingMemo = null;
     String encodeComposerText(String text) {
-      final sendText = _composerWireText(text);
-      final binaryPayloadBytes = _channelBinaryPayloadBytes(
+      final encoding = _composerEncoding(
         connector,
-        sendText,
+        text,
+        usesChannelEncoding: usesChannelEncoding,
       );
+      final binaryPayloadBytes = encoding.binaryPayloadBytes;
       if (binaryPayloadBytes != null) {
         return _byteCountPlaceholder(binaryPayloadBytes);
       }
-      return usesChannelEncoding
-          ? _channelPlainFallback(connector, sendText) ??
-                connector.prepareChannelOutboundText(
-                  widget.channel.index,
-                  sendText,
-                )
-          : sendText;
+      return encoding.outboundText;
+    }
+
+    // Bytes over the length whose echo the RX log still carries, shown in
+    // the counter as `(-N)`. Group text counts the packet as the firmware
+    // builds it, name prefix included; a binary payload already is the
+    // packet's plaintext.
+    int? echoExcessBytes(String text) {
+      final encoding = _composerEncoding(
+        connector,
+        text,
+        usesChannelEncoding: usesChannelEncoding,
+      );
+      final plaintextLength =
+          encoding.binaryPayloadBytes ??
+          ChannelEchoRecovery.groupTextPlaintextLength(
+            senderPrefixBytes: channelSenderPrefixBytes(connector.selfName),
+            textBytes: utf8.encode(encoding.outboundText).length,
+          );
+      return ChannelEchoRecovery.plaintextBytesOverEchoLimit(
+        plaintextLength: plaintextLength,
+        transportCodes: connector.channelSendCarriesTransportCodes(
+          widget.channel.index,
+        ),
+      );
     }
 
     return Column(
@@ -3850,6 +3874,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         encoder:
                             _replyingToMessage != null || usesChannelEncoding
                             ? encodeComposerText
+                            : null,
+                        excessBytes: settings.recoverLongPacketEchoes
+                            ? echoExcessBytes
                             : null,
                         decoration: InputDecoration(
                           hintText: context.l10n.chat_typeMessage,
@@ -4243,6 +4270,39 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ? null
           : replyingTo.containerTimestamp ??
                 (replyingTo.timestamp.millisecondsSinceEpoch ~/ 1000),
+    );
+  }
+
+  /// The composer's outbound form of [text], memoised for the last text so
+  /// that the counter and the echo budget, which the field evaluates
+  /// together, cost one encoding per keystroke. The memo is dropped on every
+  /// build, like the field's own cache, since the reply target and the
+  /// channel's compression settings change what the same text encodes to.
+  _ComposerEncoding _composerEncoding(
+    MeshCoreConnector connector,
+    String text, {
+    required bool usesChannelEncoding,
+  }) {
+    final memo = _composerEncodingMemo;
+    if (memo != null &&
+        memo.text == text &&
+        memo.usesChannelEncoding == usesChannelEncoding) {
+      return memo;
+    }
+    final sendText = _composerWireText(text);
+    final binaryPayloadBytes = _channelBinaryPayloadBytes(connector, sendText);
+    final outboundText = binaryPayloadBytes != null || !usesChannelEncoding
+        ? sendText
+        : _channelPlainFallback(connector, sendText) ??
+              connector.prepareChannelOutboundText(
+                widget.channel.index,
+                sendText,
+              );
+    return _composerEncodingMemo = _ComposerEncoding(
+      text: text,
+      usesChannelEncoding: usesChannelEncoding,
+      binaryPayloadBytes: binaryPayloadBytes,
+      outboundText: outboundText,
     );
   }
 
@@ -5385,4 +5445,20 @@ ReceivedImageStrings _receivedImageStrings(BuildContext context) {
     decodeAgain: l10n.receivedImage_decodeAgain,
     openSettings: l10n.receivedImage_openSettings,
   );
+}
+
+/// What the composer's text becomes on the wire: the binary payload length
+/// when the channel sends a binary envelope, else the outbound text.
+class _ComposerEncoding {
+  const _ComposerEncoding({
+    required this.text,
+    required this.usesChannelEncoding,
+    required this.binaryPayloadBytes,
+    required this.outboundText,
+  });
+
+  final String text;
+  final bool usesChannelEncoding;
+  final int? binaryPayloadBytes;
+  final String outboundText;
 }
