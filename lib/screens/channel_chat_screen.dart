@@ -3687,23 +3687,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     // Bytes over the length whose echo the RX log still carries, shown in
-    // the counter as `(-N)`. Group text counts the packet as the firmware
-    // builds it, name prefix included; a binary payload already is the
-    // packet's plaintext.
+    // the counter as `(-N)`. Both forms are costed as the firmware builds
+    // the packet: group text with the name prefix and the packet header,
+    // a binary payload with the data header the counter leaves out. The
+    // echo is the first repeater's copy, one hop at the node's hash width.
     int? echoExcessBytes(String text) {
       final encoding = _composerEncoding(
         connector,
         text,
         usesChannelEncoding: usesChannelEncoding,
       );
-      final plaintextLength =
-          encoding.binaryPayloadBytes ??
-          ChannelEchoRecovery.groupTextPlaintextLength(
-            senderPrefixBytes: channelSenderPrefixBytes(connector.selfName),
-            textBytes: utf8.encode(encoding.outboundText).length,
-          );
+      final binaryPayloadBytes = encoding.binaryPayloadBytes;
+      final plaintextLength = binaryPayloadBytes != null
+          ? ChannelEchoRecovery.groupDataPlaintextLength(
+              dataBytes: binaryPayloadBytes,
+            )
+          : ChannelEchoRecovery.groupTextPlaintextLength(
+              senderPrefixBytes: channelSenderPrefixBytes(connector.selfName),
+              textBytes: utf8.encode(encoding.outboundText).length,
+            );
       return ChannelEchoRecovery.plaintextBytesOverEchoLimit(
         plaintextLength: plaintextLength,
+        pathHashWidth: connector.pathHashByteWidth,
         transportCodes: connector.channelSendCarriesTransportCodes(
           widget.channel.index,
         ),

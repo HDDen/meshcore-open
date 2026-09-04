@@ -798,8 +798,11 @@ a cut one and is never "recovered". Entries live ten minutes, the self-echo wind
 `_isChannelRepeat`. `AppSettings.recoverLongPacketEchoes` (default on, mod settings) gates both
 registration and matching, and the channel composer's counter: while it is on, a message whose
 packet would be too long even for a cut copy shows `160 (-5) / 165`, the bytes to drop for the
-first repeater's echo to fit (`ChannelEchoRecovery.plaintextBytesOverEchoLimit`, one hop, the
-region scope's transport codes counted). The counter and that budget read one memoised encoding
+first repeater's echo to fit (`ChannelEchoRecovery.plaintextBytesOverEchoLimit`: one hop at
+the node's `pathHashByteWidth`, the region scope's transport codes counted, and for a binary
+payload the firmware's three-byte `data_type + length` header added, because the binary counters
+report only the bytes handed to `CMD_SEND_CHANNEL_DATA`, so the budget there is 157 data bytes
+rather than 160 of plaintext). The counter and that budget read one memoised encoding
 per keystroke (`_composerEncoding`), so the compressor does not run twice. A packet longer than 173 bytes on the wire produces no frame at all
 and nothing here can help it; direct messages are out of reach too, their ciphertext needs the
 node's private key.

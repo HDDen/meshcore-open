@@ -53,6 +53,13 @@ class ChannelEchoRecovery {
     required int textBytes,
   }) => 5 + senderPrefixBytes + textBytes;
 
+  /// `data_type(2) + length(1) + data`, the plaintext of a group datagram.
+  /// The composer's binary counters report [dataBytes] alone, the bytes
+  /// handed to `CMD_SEND_CHANNEL_DATA`; the firmware puts the header in
+  /// front, so it is added here.
+  static int groupDataPlaintextLength({required int dataBytes}) =>
+      3 + dataBytes;
+
   /// How many plaintext bytes a channel packet is over the longest packet
   /// whose echo the RX log still carries, or null when it fits. The echo is
   /// the copy the first repeater sends back, so it carries one hop of

@@ -145,6 +145,19 @@ void main() {
         165,
       );
     });
+
+    test('group data plaintext adds the firmware header to the data', () {
+      expect(ChannelEchoRecovery.groupDataPlaintextLength(dataBytes: 157), 160);
+      // What the composer shows as 160 data bytes is an eleventh block.
+      expect(
+        ChannelEchoRecovery.plaintextBytesOverEchoLimit(
+          plaintextLength: ChannelEchoRecovery.groupDataPlaintextLength(
+            dataBytes: 160,
+          ),
+        ),
+        3,
+      );
+    });
   });
 
   group('registerOutgoingFrame', () {
