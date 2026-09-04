@@ -3153,9 +3153,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     final saved = PrefsManager.instance.getString(_prefsEncodingVersionKey);
     return switch (saved) {
       'v3' => MCOImageEncodingVersion.v3,
-      'v4' when widget.maxBinaryPayloadBytes != null &&
-              widget.binarySenderName != null =>
-        MCOImageEncodingVersion.v4,
+      'v4' => MCOImageEncodingVersion.v4,
       _ => MCOImageEncodingVersion.v3,
     };
   }
@@ -3225,13 +3223,10 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     if (_isEditingV4RasterLayer) {
       return [MCOImageEncodingVersion.v3];
     }
-    return [
-      MCOImageEncodingVersion.v3,
-      if (_isVectorV4 ||
-          (widget.maxBinaryPayloadBytes != null &&
-              widget.binarySenderName != null))
-        MCOImageEncodingVersion.v4,
-    ];
+    // v4 does not depend on the binary channel transport: a direct or room
+    // chat opens the editor without it and sends the image as `im4:` text,
+    // which is why the size estimate falls back to the text length there.
+    return [MCOImageEncodingVersion.v3, MCOImageEncodingVersion.v4];
   }
 
   int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {

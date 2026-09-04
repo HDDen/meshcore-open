@@ -35,6 +35,7 @@ import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
+import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/quick_answers_helper.dart';
@@ -1498,6 +1499,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       if (!outgoingText.startsWith(MCOImageCodec.prefix) &&
           !MCOImageV3Codec.isTextPayload(outgoingText) &&
+          !MCOImageV4Codec.isTextPayload(outgoingText) &&
           // Shared contact payloads must stay untouched.
           parseSharedContactText(outgoingText) == null &&
           // See channel_chat_screen: markers keep their structure and `del:`
