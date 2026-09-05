@@ -39,13 +39,12 @@ tables are exported as a C header for microcontroller ports.
   prefix `mct:`.
 - Language tables are identified by a SHA-256 wire hash recorded in
   `tools/MCOtxt/generated/model_manifest.json` together with the current
-  `modelGeneration`. The manifest is **not frozen
-  yet** (`"frozen": false`): the bundled English, Russian and French tables can
-  still be regenerated before the freeze, and a regenerated table changes its
-  hash. After the freeze a table may only change under a new language id or a
-  new codec version.
-- German, Italian, Ukrainian and Belarusian have reserved language ids but no
-  tables. A decoder that meets one of them rejects the stream.
+  `modelGeneration`. The manifest is **frozen** (`"frozen": true`) as
+  generation `0` with all seven tables, since 2026-09-04: a regenerated table
+  changes its hash and may only ship as a new generation, and a new language
+  may only take a new language id.
+- All seven language ids carry tables. A build that ships without one of them
+  rejects a stream that uses it (`modelUnavailable`).
 
 ## Conventions
 

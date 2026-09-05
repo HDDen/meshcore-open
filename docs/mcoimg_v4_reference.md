@@ -191,10 +191,11 @@ stored           = value + margin(size)
 valid value      = -margin(size) .. size + margin(size) - 1
 ```
 
-Stored codes outside `0 .. valueCount - 1` cannot occur because the field is
-exactly `coordinateBits` wide; a decoded value outside the valid range is
-rejected. Spare codes at the top of the field are invalid and are not normalized
-over the axis.
+The field is `coordinateBits` wide, which holds more codes than `valueCount`
+whenever `valueCount` is not a power of two; a stored code of `valueCount` or
+above is a spare code and is rejected, never normalized over the axis. Every
+form that rebuilds a point from deltas or from a bounds box checks the result
+against the valid range as well.
 
 Point `(x, y)` maps to logical position `(x + 0.5, y + 0.5)` in canvas bounds
 `[0, width] x [0, height]`.
@@ -224,11 +225,13 @@ need special edge-reaching fill semantics.
 - `0 + 2 bits`: 0..3;
 - `10 + 4 bits`: 4..19;
 - `110 + 8 bits`: 20..275;
-- `111 + bitVarUint7`: values above 275 in shortest form.
+- `111 + bitVarUint7`: values above 275; a value of 275 or less written this
+  way is non-canonical and rejected.
 
 `bitVarUint7` is a 7-bit continuation integer written as whole bytes through the
-bit writer, at most five bytes, shortest form. A continuation byte whose payload
-is zero is non-canonical and rejected.
+bit writer, at the current bit position rather than byte-aligned, at most five
+bytes, shortest form. A final byte whose payload is zero after the first byte,
+a leading zero group, is non-canonical and rejected, and so is a sixth byte.
 
 Signed short fields use ZigZag: `encoded = value < 0 ? -value * 2 - 1 : value * 2`.
 A short delta of width `d` is valid only while the ZigZag code fits `d` bits.
@@ -282,6 +285,10 @@ Every alternate form is a pure encoder choice: the encoder builds all applicable
 candidates and emits the shortest. A decoder must accept all of them and gets the
 same figures either way.
 
+Every figure a command produces enters the repeat history in stream order: each
+dot of a `DOT_RUN`, each figure of a `REPEAT_COLOR_RUN`, a group as one figure.
+Raster layers do not enter it, and style commands produce no figure.
+
 Below, `point` means `x(xBits) + y(yBits)` with the coordinate offset applied,
 `color` means `present(1) + ref(profileColorBits)?`, and `selector(2)` selects a
 short delta width from `[3, 4, 5, 6]`.
@@ -301,7 +308,8 @@ SET_STYLE         op(4) + ext(4) + mask(3)
 The header defines the initial style; the editor model stores absolute styles
 and the encoder emits only transitions. For each transition the encoder compares
 the separate `SET_*` commands against one combined `SET_STYLE` and emits the
-shorter. `stroke = none` means no outline; width zero is not representable.
+shorter. `stroke = none` means no outline; width zero is not representable. A
+`SET_STYLE` whose mask is zero is invalid.
 
 ## Figures
 
@@ -316,17 +324,30 @@ WAVE                   op(4) + closed(1) + point + point
                        + negative(1) + depthMinus1(scalarBits)
 ```
 
-- `DOT`: one point; diameter equals stroke width. A dot requires a stroke color.
+- `DOT`: one point; a filled circle whose diameter equals the stroke width. A
+  dot requires a stroke color.
 - `LINE`: start and end points.
-- `RECT`: three control points `A, C, B`; the fourth corner is `D = A + C - B`.
-- `ELLIPSE`: three control points. The first two define the major axis; the third
-  defines the minor axis along the major-axis normal.
+- `RECT`: three control points. `first` and `second` are opposite corners,
+  `third` is a corner adjacent to both, and the fourth corner is
+  `first + second - third`; the outline runs `first, third, second, fourth`.
+- `ELLIPSE`: three control points. The centre is the midpoint of `first` and
+  `second`, the semi-major axis is half their distance along
+  `axis = second - first`, and the semi-minor axis is the distance of `third`
+  from the axis line, `|dot(third - centre, n)|` for the unit normal
+  `n = (-axis.y, axis.x) / |axis|`; where `third` sits along the axis does not
+  matter. This app draws an ellipse whose semi-minor axis is below half a cell
+  as the axis line.
 - The axis-aligned forms apply when the third control point is derivable from the
   other two. `swapped = 0` means `third = (first.x, second.y)`; `swapped = 1`
-  means `third = (second.x, first.y)`.
-- `WAVE` is a quadratic Bezier. Signed depth follows the chord normal and marks
-  the visible arc midpoint; the control point uses twice that depth. Endpoints
-  remain on the point-center grid. Depth zero is invalid.
+  means `third = (second.x, first.y)`. The reference encoder never writes such
+  a figure in the three-point form: its full-form candidate is the axis-aligned
+  one, competing only with the delta and depth forms.
+- `WAVE` is a quadratic Bezier from `start` to `end`. With `chord = end - start`,
+  its midpoint `mid` and the unit normal `n = (-chord.y, chord.x) / |chord|`,
+  the control point is `mid + n * 2 * depth`, so the visible arc passes through
+  `mid + n * depth`; a negative depth bends the other way. Endpoints remain on
+  the point-center grid. Depth zero is invalid, and `|depth|` may not exceed
+  `max(width, height)`.
 
 An open filled path or wave is closed for fill only. The closing outline is
 drawn only when `closed = true`. The three control points of an area figure must
@@ -366,9 +387,11 @@ path forms it has no per-component escape, so the delta variant is offered only
 when every step fits the selected width.
 
 `ELLIPSE_DEPTH` replaces the third control point with a signed distance along the
-major-axis normal from the axis midpoint. The encoder uses it only when the third
-point is reproduced exactly by that reconstruction; the decoder rejects a depth
-that does not land on an integer point.
+major-axis normal from the axis midpoint: with `axis = second - first`, its
+midpoint `mid` and `n = (-axis.y, axis.x) / |axis|`, the third point is
+`mid + n * depth`. The encoder uses it only when the third point is reproduced
+exactly by that reconstruction; the decoder rejects a depth that does not land on
+an integer point.
 
 ## Paths
 
@@ -407,7 +430,10 @@ point costs one direction bit plus one short delta instead of two components.
 The bounds forms store the path's bounding box and then address points inside it,
 so a small path on a large canvas pays only the bits its own extent needs. The
 origin uses full canvas coordinates; the local fields use `localBits` of the
-bounding-box size and are unsigned offsets from the origin.
+bounding-box size and are unsigned offsets from the origin. The box must lie
+inside the coordinate range, `origin + bounds - 1` on each axis included, and a
+local offset of `bw` or `bh` and above, or a delta that leaves the box, is
+rejected.
 
 `PATH_DELTA` is the only path form with a per-component escape: `0` selects the
 short ZigZag delta, `1` selects a full absolute axis coordinate. The other delta
@@ -446,10 +472,14 @@ repeated figure joins the history and can itself be repeated.
 offset from the previous one, starting from the last figure in history. When
 `hasColorChanges` is set, every figure after the first carries its own optional
 color, applied to the stroke when `strokeColorRun` is set and to the fill
-otherwise. The run leaves the last applied color as the current style.
+otherwise; each color replaces that field of the style current at the run, the
+changes do not accumulate, and the first figure uses that style unchanged. The
+run leaves the last applied color as the current style.
 
-If a translated result would fall outside the coordinate range, the encoder emits
-the full figure instead. A repeat with no prior figure is invalid.
+A translated figure is validated like any other, so a repeat whose result leaves
+the coordinate range is rejected; the encoder emits the full figure instead of
+such a repeat. A repeat with no prior figure is invalid, and so is a
+`REPEAT_BACK` whose distance exceeds the history.
 
 ## Groups
 
@@ -458,12 +488,17 @@ GROUP  op(4) + ext(4) + bitCompactUint(figureCount - 1) + nested command stream
 ```
 
 A group holds at least one figure. Its command stream uses the same opcodes and
-its own nested style state, seeded from the style current at the group, and its
-own nested history, which starts empty. The group ends when `figureCount` figures
-have been produced; `END` inside a group is invalid, and so is a stream that
-yields more figures than declared.
+its own nested style state, seeded from the style current at the group and
+discarded when the group ends, so the outer stream continues with the style it
+had at the `GROUP` command; the text state behaves the same way. It also has its
+own nested history, which starts empty. The group ends when `figureCount`
+figures have been produced, every figure a nested command yields counting, a
+nested group as one; `END` inside a group is invalid, and so is a stream that
+yields more figures than declared. Groups nest.
 
-Raster layers cannot be nested in a group.
+Raster layers cannot be nested in a group. The reference encoder writes the
+style of the group's first visible figure before the `GROUP` command, so the
+nested stream opens without a style change.
 
 ## Raster layers
 
@@ -480,8 +515,12 @@ prepends it to the payload, and decodes the result with the v3 decoder; a layer
 whose decoded profile differs from the document profile is invalid.
 
 The layer's own size, pixels, and transparent color come from the v3 image; only
-the origin is stored by v4. `payloadLength` must be at least 2. Raster layers are
-valid only in `mixed` mode and only at the top level of the stream.
+the origin is stored by v4. The payload bytes are written into the bit stream at
+the current bit position, not byte-aligned. `payloadLength` must be at least 2.
+Raster layers are valid only in `mixed` mode and only at the top level of the
+stream, and a `mixed` document must contain at least one. A raster layer takes
+no style, the fill and stroke current at it do not apply, and it never enters
+the repeat history.
 
 ## Text
 
@@ -547,8 +586,9 @@ Tail starts with byte flags:
 - bits 2-7: reserved and zero.
 
 `byteVarUint7` here is a byte-level shortest-form 7-bit continuation integer, not
-the bit-stream primitive. An empty target name is invalid. The tail is absent
-when neither field is present.
+the bit-stream primitive. An empty target name is invalid, and so are bytes after
+the last field. The tail is absent when neither field is present; the reference
+encoder trims surrounding whitespace from the target name first.
 
 The tail is not part of the canonical document. It remains in chat transport but
 is removed when saving to the gallery, an image pack, or `.mcoimg.bin`.
@@ -570,18 +610,23 @@ computing this hash requires a v4 parser rather than a byte-offset rule.
 
 The decoder fails closed. Rejected input includes truncated bit streams,
 non-canonical `bitCompactUint` and `bitVarUint7`, non-canonical dimension modes,
-reserved modes `2` and `3`, unknown palette profiles, out-of-range color
-references, coordinates outside the overscan range, duplicate area control
-points, wave depth zero, stroke width outside `1 .. max(width, height)`, dots
-without a stroke color, paths with too few points, repeats without a matching
-prior figure, `END` inside a group, groups that overflow their declared count,
-raster layers outside `mixed` mode or inside a group, raster payloads shorter
-than two bytes, raster layers whose profile disagrees with the document, a
-reserved second-escape command, a text alignment of `3`, a text area width
-outside `1 .. width`, a font size outside `1 .. max(width, height)`, an
-MCOtxt stream this build cannot decode, non-zero padding, and unknown
-transport-tail flags. Partially damaged drawings
-are not rendered.
+reserved modes `2` and `3`, out-of-range color references (all sixteen profile
+codes are assigned, so the profile field itself cannot be invalid), coordinates
+outside the overscan range, path bounds boxes that leave it or local offsets
+that leave the box, a `SET_STYLE` with an empty mask, duplicate area control
+points, wave depth zero or above `max(width, height)`, an ellipse depth that
+does not land on an integer point, stroke width outside `1 .. max(width,
+height)`, dots without a stroke color, paths with too few points, repeats
+without a matching prior figure or with a `REPEAT_BACK` distance beyond the
+history, repeats whose result leaves the coordinate range, `END` inside a
+group, groups that overflow their declared count, raster layers outside
+`mixed` mode or inside a group, a `mixed` document without a raster layer,
+raster payloads shorter than two bytes, raster layers whose profile disagrees
+with the document, a reserved second-escape command, a text alignment of `3`,
+a text area width outside `1 .. width`, a font size outside
+`1 .. max(width, height)`, an MCOtxt stream this build cannot decode,
+non-zero padding, unknown transport-tail flags, and bytes after the tail's
+last field. Partially damaged drawings are not rendered.
 
 ## Implementation status
 
@@ -592,3 +637,6 @@ export are implemented.
 
 A dedicated pure-raster mode (`mode = 2`), optional overlap removal between
 layers, the JavaScript port, and cross-runtime fixtures remain follow-up phases.
+There are no golden v4 vectors yet: the only v4-specific tests,
+`test/helpers/mcoimg_v4_text_test.dart`, cover the text figure, and no
+automated test covers the other commands.

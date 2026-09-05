@@ -355,7 +355,9 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   tables are generated, never edited: `tools/MCOtxt/MCOtxt_model_trainer_with_diagnostics.py`
   writes `models/generated/v1/model_<lang>.dart`, a C header and a report, and records a SHA-256
   wire hash in `tools/MCOtxt/generated/model_manifest.json`; `verify_runtime_models.py` checks
-  Dart, C and manifest agree; `freeze_model_manifest.py` freezes the set (not frozen yet). Tables
+  Dart, C and manifest agree; `freeze_model_manifest.py` froze the set as generation 0 on
+  2026-09-04 (`"frozen": true`, all seven tables), so a table can now change only as a new
+  generation. Tables
   live in `MCOtxtModelSet`s keyed by generation (`MCOtxtModelRegistry.latest` / `setFor`): a
   regenerated existing table is a new generation, a table added to a reserved language is not,
   and a header generation this build lacks decodes as `unsupportedModelGeneration` — except in
