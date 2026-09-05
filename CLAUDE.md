@@ -369,6 +369,12 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   **empty** outer name and subtype byte `0x31`, the name travelling inside the body. A revision
   other than `1` is shown as a placeholder text rather than dropped.
 
+The app names itself `MeshCoreOpen;cap=mctxt` in `CMD_APP_START`
+(`buildMeshCoreOpenAppName`, with `cap=frmfrg1` in front when framed packets are on). A South
+Edition node reads that token: without it, and with its **MCOtxt conversion** setting on, the
+node hands incoming MCOtxt to the app already decoded, in numbered `[i/n]` parts when long. The
+app decodes for itself, so the token is always sent.
+
 Two rules that are easy to break. `DecodedMCOtxtAppMessage.senderName` is set **only** from a
 name embedded in the body, as `DecodedMcmpAppMessage.senderName` is; the outer `Name: text`
 layer is the message's `senderName`, never container metadata. And the container fills the same

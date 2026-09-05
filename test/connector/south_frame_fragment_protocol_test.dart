@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 
 void main() {
-  test('APP_START advertises FR01 only when the setting is enabled', () {
+  test('APP_START advertises FR01 only when the setting is enabled, MCOtxt always', () {
     final enabledName = buildMeshCoreOpenAppName(
       enableSouthFrameFragments: true,
     );
@@ -12,8 +12,8 @@ void main() {
       enableSouthFrameFragments: false,
     );
 
-    expect(enabledName, 'MeshCoreOpen;cap=frmfrg1');
-    expect(disabledName, 'MeshCoreOpen');
+    expect(enabledName, 'MeshCoreOpen;cap=frmfrg1;cap=mctxt');
+    expect(disabledName, 'MeshCoreOpen;cap=mctxt');
 
     final enabledFrame = buildAppStartFrame(appName: enabledName);
     final disabledFrame = buildAppStartFrame(appName: disabledName);

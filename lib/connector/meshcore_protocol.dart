@@ -716,10 +716,15 @@ Uint8List buildRemoveContactFrame(Uint8List pubKey) {
 
 // Build CMD_APP_START frame
 // Format: [cmd][app_ver][reserved x6][app_name...]
+//
+// A South Edition node reads `cap=` tokens out of the name: `cap=frmfrg1`
+// when the app reassembles FR01 fragments, and `cap=mctxt` always, because
+// the app decodes MCOtxt itself and a node missing that token would hand
+// MCOtxt messages over as plain-text parts instead.
 String buildMeshCoreOpenAppName({required bool enableSouthFrameFragments}) {
   return enableSouthFrameFragments
-      ? 'MeshCoreOpen;cap=frmfrg1'
-      : 'MeshCoreOpen';
+      ? 'MeshCoreOpen;cap=frmfrg1;cap=mctxt'
+      : 'MeshCoreOpen;cap=mctxt';
 }
 
 Uint8List buildAppStartFrame({
