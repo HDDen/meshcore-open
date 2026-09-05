@@ -1462,11 +1462,11 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne filtriraj lastnih paketov sporočil v teh kanalih in obravnavaj sporočila kot brezpogojno dostavljena';
+      'Sporočila v teh kanalih obravnavaj kot zagotovo dostavljena';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Privzeto se lastna sporočila iz vaše node prezrejo. To povzroča težave pri nekaterih firmware z vgrajenim TerminalCLI';
+      'Sporočila v navedene kanale se pošljejo brez čakanja na potrditev vozlišča in brez ponovitev.';
 
   @override
   String get channels_publicChannelAdded => 'javna skupnost dodana';

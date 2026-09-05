@@ -392,14 +392,23 @@ class ChannelMessage {
         reader.skipBytes(1); // Skip reserved byte
         channelIdx = reader.readByte();
         final pathByte = reader.readUInt8();
-        // pathByte packs: top 2 bits = hash width mode, low 6 bits = hop count
-        packetPathHashWidth = ((pathByte & 0xC0) >> 6) + 1;
-        final hopCount = pathByte & 0x3F;
-        pathLen = hopCount;
-        // If a path is present, read hopCount * width bytes
-        if (hasPath && hopCount > 0) {
-          final totalPathBytes = hopCount * packetPathHashWidth;
-          pathBytes = reader.readBytes(totalPathBytes);
+        if (pathByte == 0xFF) {
+          // The firmware's "no path": a packet that arrived over a direct
+          // route, or a message the node itself put into the queue (its own
+          // keyboard, a TerminalCLI reply). The v1 frame and the channel-data
+          // frame report the same byte as -1; unpacked as width and hop
+          // count it would claim 63 hops of 4-byte hashes.
+          pathLen = -1;
+        } else {
+          // pathByte packs: top 2 bits = hash width mode, low 6 bits = hop count
+          packetPathHashWidth = ((pathByte & 0xC0) >> 6) + 1;
+          final hopCount = pathByte & 0x3F;
+          pathLen = hopCount;
+          // If a path is present, read hopCount * width bytes
+          if (hasPath && hopCount > 0) {
+            final totalPathBytes = hopCount * packetPathHashWidth;
+            pathBytes = reader.readBytes(totalPathBytes);
+          }
         }
         // After consuming optional path bytes, read the text type byte.
         txtType = reader.readByte();

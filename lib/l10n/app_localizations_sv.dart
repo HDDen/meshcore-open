@@ -1453,11 +1453,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Filtrera inte egna meddelandepaket i dessa kanaler och betrakta meddelanden som ovillkorligt levererade';
+      'Betrakta meddelanden i dessa kanaler som säkert levererade';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Som standard ignoreras egna meddelanden från din nod. Detta orsakar problem på vissa firmware med inbyggd TerminalCLI';
+      'Meddelanden till de listade kanalerna skickas utan att vänta på nodens bekräftelse och utan omsändningar.';
 
   @override
   String get channels_publicChannelAdded => 'Allmänt kanal tillagd';

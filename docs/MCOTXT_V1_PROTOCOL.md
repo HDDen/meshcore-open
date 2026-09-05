@@ -678,4 +678,7 @@ README live in `tools/MCOtxt/`.
   the text, as plain-text parts, to a connected app without the codec; a
   greedy encoder for a fixed language pair, which produces a valid stream that
   may be a few bits longer than this reference's search. Its C tables are the
-  generated headers from `tools/MCOtxt/generated/`.
+  generated headers from `tools/MCOtxt/generated/`. Decoder (`MCOtxtCodec`,
+  `MCOtxtTransport`) and encoder (`MCOtxtEncoder`) are separate files behind
+  separate build flags, so a decoder-only port takes the decoder files, the
+  tables and a Base91 decoder and nothing else.

@@ -1475,11 +1475,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Eigene Nachrichtenpakete in diesen Kanälen nicht filtern und Nachrichten als bedingungslos zugestellt betrachten';
+      'Nachrichten in diesen Kanälen als sicher zugestellt betrachten';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Standardmäßig werden eigene Nachrichten deines Knotens ignoriert. Das verursacht bei einigen Firmwares mit integriertem TerminalCLI Probleme';
+      'Nachrichten an die aufgeführten Kanäle werden ohne Warten auf die Bestätigung des Knotens und ohne Wiederholungen gesendet.';
 
   @override
   String get channels_publicChannelAdded => 'Öffentlicher Kanal hinzugefügt';

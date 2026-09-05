@@ -52,7 +52,9 @@ Compression is chosen per contact and per channel:
 - **MCMP** — the [mesh-compressor](https://dimapanov.github.io/mesh-compressor/) algorithm by
   dimapanov: an arithmetic coder driven by a bundled statistical 9-gram language model. 
   On typical chat text it reaches up to ~70% compression, so
-  a message roughly three times longer than usual still fits into a single packet.
+  a message roughly three times longer than usual still fits into a single packet. A South
+  Edition node cannot decompress it, but recognises MCMP messages and shows their kind,
+  sender and signed state on its own display instead of the Base91 string.
 - **MCOtxt** — the fork's own codec: a static per-language TOP-4 letter-prediction table
   (English, Russian, French, German, Italian, Ukrainian and Belarusian) drives a
   variable-length token stream, with a UTF-8 escape for anything outside the tables. It needs

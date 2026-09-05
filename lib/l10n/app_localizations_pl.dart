@@ -1485,11 +1485,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Nie filtruj własnych pakietów wiadomości na tych kanałach i uznawaj wiadomości za bezwarunkowo dostarczone';
+      'Uznawać wiadomości w tych kanałach za na pewno dostarczone';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Domyślnie własne wiadomości z twojego węzła są ignorowane. Powoduje to problemy w niektórych firmware z wbudowanym TerminalCLI';
+      'Wiadomości do wymienionych kanałów są wysyłane bez oczekiwania na potwierdzenie węzła i bez ponownych prób.';
 
   @override
   String get channels_publicChannelAdded => 'Kanał publiczny dodany';

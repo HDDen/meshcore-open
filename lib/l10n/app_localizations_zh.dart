@@ -1381,12 +1381,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_cancelSend => '取消发送';
 
   @override
-  String get settings_doNotFilterMessagesOnChannels =>
-      '不过滤这些频道中自己的消息包，并将消息视为无条件已送达';
+  String get settings_doNotFilterMessagesOnChannels => '将这些频道中的消息视为已确定送达';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      '默认情况下，来自你节点的自己消息会被忽略。这会在某些内置 TerminalCLI 的固件上造成问题';
+      '发送到所列频道的消息不等待节点确认，也不重试。';
 
   @override
   String get channels_publicChannelAdded => '已添加公共频道';

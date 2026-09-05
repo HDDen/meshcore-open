@@ -1468,11 +1468,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne szűrje a saját üzenetcsomagokat ezekben a csatornákban, és tekintse az üzeneteket feltétel nélkül kézbesítettnek';
+      'Ezeken a csatornákon az üzeneteket biztosan kézbesítettnek tekinti';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Alapértelmezés szerint a saját csomópont üzeneteit figyelmen kívül hagyja az alkalmazás. Ez problémákat okoz néhány beépített TerminalCLI-t használó firmware esetén';
+      'A felsorolt csatornákra küldött üzenetek a node visszaigazolásának megvárása és ismétlések nélkül mennek ki.';
 
   @override
   String get channels_publicChannelAdded => 'Nyilvános csatorna hozzáadva';

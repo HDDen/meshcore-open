@@ -1469,11 +1469,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не фільтрувати власні пакети повідомлень на цих каналах і вважати повідомлення безумовно доставленими';
+      'Вважати повідомлення в цих каналах безумовно доставленими';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'За замовчуванням власні повідомлення з вашої ноди ігноруються. Це спричиняє проблеми на деяких прошивках із вбудованим TerminalCLI';
+      'Повідомлення в перелічені канали надсилаються без очікування підтвердження від ноди та без повторів.';
 
   @override
   String get channels_publicChannelAdded => 'Публічний канал додано';

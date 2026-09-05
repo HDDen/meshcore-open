@@ -847,3 +847,17 @@ Container, transport, reply, and malformed-input coverage lives in
 live in `test/helpers/mcmp_signature_verifier_test.dart`. These tests exercise
 the same public helpers referenced at the beginning of this document and are a
 useful starting point for cross-runtime fixtures.
+
+## Implementations
+
+- **MeshCore Open Advanced** (this repository): `lib/helpers/mesh_compressor.dart`,
+  `lib/helpers/mcmp_app_codec.dart` and `lib/helpers/mcmp_signature_verifier.dart`,
+  the reference for the body, both transports, signing and verification.
+- **South Edition companion firmware** (Luchik, `src/helpers/mcmp/` in that
+  fork of MeshCore): a metadata-only reader. It recognises the three text
+  prefixes and the binary envelope and parses the v3 header — flags,
+  timestamp, embedded sender name, signature presence, reply anchor — without
+  decompressing the text or verifying the signature, since the node holds
+  neither the model nor the contact keys; its display shows a placeholder with
+  the sender. It is a useful check that a header stays readable on its own:
+  the compressed text is the only field it cannot interpret.

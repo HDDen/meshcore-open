@@ -1398,11 +1398,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'これらのチャンネルで自分のメッセージパケットをフィルターせず、メッセージを無条件に配信済みとみなす';
+      'これらのチャンネルのメッセージを確実に配信済みとみなす';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      '既定では、自分のノードからのメッセージは無視されます。組み込みTerminalCLIを持つ一部のファームウェアでは問題が発生します';
+      '指定したチャンネルへのメッセージは、ノードの確認を待たず、再送も行いません。';
 
   @override
   String get channels_publicChannelAdded => '公開チャンネルを追加しました';

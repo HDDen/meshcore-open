@@ -1478,11 +1478,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Ne pas filtrer les paquets de messages personnels dans ces canaux et considérer les messages comme livrés inconditionnellement';
+      'Considérer les messages de ces canaux comme définitivement livrés';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Par défaut, les messages personnels de votre nœud sont ignorés. Cela provoque des problèmes sur certains firmwares avec TerminalCLI intégré';
+      'Les messages vers les canaux listés sont envoyés sans attendre la confirmation du nœud et sans nouvelles tentatives.';
 
   @override
   String get channels_publicChannelAdded => 'Canal public ajouté';

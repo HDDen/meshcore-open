@@ -2713,13 +2713,13 @@ abstract class AppLocalizations {
   /// No description provided for @settings_doNotFilterMessagesOnChannels.
   ///
   /// In en, this message translates to:
-  /// **'Do not filter selfmessages on channels and consider messages as definitely delivered'**
+  /// **'Consider messages on these channels definitely delivered'**
   String get settings_doNotFilterMessagesOnChannels;
 
   /// No description provided for @settings_doNotFilterMessagesOnChannelsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI'**
+  /// **'Messages sent to the listed channels skip the node\'s acknowledgement and the retries.'**
   String get settings_doNotFilterMessagesOnChannelsSubtitle;
 
   /// No description provided for @channels_publicChannelAdded.

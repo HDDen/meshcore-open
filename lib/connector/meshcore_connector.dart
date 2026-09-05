@@ -11609,15 +11609,6 @@ class MeshCoreConnector extends ChangeNotifier {
       sourceLabel: localSourceLabel,
     );
     if (parsed != null && parsed.channelIndex != null) {
-      final channelName = _channelDisplayName(parsed.channelIndex!);
-      if (localSourceLabel == null &&
-          _shouldDropSelfChannelMessage(
-            parsed.senderName,
-            parsed.pathBytes,
-            channelName: channelName,
-          )) {
-        return;
-      }
       _lastChannelMsgRxTime = parsed.receivedAt;
       final contentHash = _computeContentHash(
         parsed.channelIndex!,
@@ -11708,16 +11699,6 @@ class MeshCoreConnector extends ChangeNotifier {
 
     final channelName = _channelDisplayName(dataFrame.channelIndex);
     final senderName = decoded?.senderName ?? appData!.senderName;
-    // In received channel-data frames, raw 0xFF means direct route.
-    // The parser maps it to -1; pathLength == 0 is a valid zero-hop flood.
-    final isSelfDirect =
-        dataFrame.pathLength == -1 &&
-        senderName.trim() == (_selfName ?? '').trim();
-    if (localSourceLabel == null &&
-        isSelfDirect &&
-        !_isSelfChannelFilterBypassed(channelName)) {
-      return;
-    }
 
     final receivedAt = DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
@@ -11983,17 +11964,6 @@ class MeshCoreConnector extends ChangeNotifier {
                 decoded?.mcotxtMessage?.replyAuthorName,
                 decoded?.mcotxtMessage?.replyTimestamp,
               );
-          final label = channel.name.isEmpty
-              ? 'Channel ${channel.index}'
-              : channel.name;
-          if (_shouldDropSelfChannelMessage(
-            parsed.senderName,
-            packet.pathBytes,
-            channelName: label,
-          )) {
-            return;
-          }
-
           final contentHash = _computeContentHash(
             channel.index,
             timestampRaw,
@@ -13484,32 +13454,12 @@ class MeshCoreConnector extends ChangeNotifier {
     return false;
   }
 
-  bool _shouldDropSelfChannelMessage(
-    String senderName,
-    Uint8List pathBytes, {
-    String? channelName,
-  }) {
-    final trimmed = senderName.trim();
-    if (trimmed.isEmpty) return false;
-
-    final selfName = _selfName?.trim();
-    if (selfName == null || selfName.isEmpty) return false;
-
-    // If sender name doesn't match, keep the message
-    if (trimmed != selfName) return false;
-
-    // Name matches - this is from self
-    if (_isSelfChannelFilterBypassed(channelName)) return false;
-
-    // Drop only if pathBytes is empty (direct broadcast)
-    // Keep if pathBytes has data (repeated through another node)
-    return pathBytes.isEmpty;
-  }
-
-  bool _isSelfChannelFilterBypassed(String? channelName) {
-    return _isChannelListedInDoNotFilterSetting(channelName);
-  }
-
+  // Incoming channel messages under our own name are not filtered: the
+  // upstream rule that dropped one arriving without path bytes also dropped
+  // every message a node produces itself (TerminalCLI replies, its own
+  // keyboard), since companion firmware never forwards path bytes, and our
+  // own echo is merged into the outgoing message by _isChannelRepeat. The
+  // setting below kept its key and now has only this send-side meaning.
   bool _isChannelAckAndRetryBypassed(String? channelName) {
     return _isChannelListedInDoNotFilterSetting(channelName);
   }

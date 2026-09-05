@@ -128,6 +128,24 @@ void main() {
       expect(message.text, equals('Hello world'));
     });
 
+    test('path byte 0xFF -> no path, pathLength -1, no hash width', () {
+      // (4 - 1) << 6 | 63 is the raw 0xFF the firmware writes for "no path".
+      final frame = _buildChannelMessageFrameV3(
+        pathHashWidth: 4,
+        hopCount: 63,
+        hasPath: false,
+      );
+
+      final message = ChannelMessage.fromFrame(frame);
+
+      expect(message, isNotNull);
+      expect(message!.pathLength, equals(-1));
+      expect(message.pathHashWidth, isNull);
+      expect(message.pathBytes, isEmpty);
+      expect(message.senderName, equals('Alice'));
+      expect(message.text, equals('Hello world'));
+    });
+
     test('non-plain txtType with path -> returns null', () {
       final frame = _buildChannelMessageFrameV3(
         pathHashWidth: 2,

@@ -1448,11 +1448,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Do not filter selfmessages on channels and consider messages as definitely delivered';
+      'Consider messages on these channels definitely delivered';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'By default, selfmessages from your node are ignored. This causes issues on some firmwares with built-in TerminalCLI';
+      'Messages sent to the listed channels skip the node\'s acknowledgement and the retries.';
 
   @override
   String get channels_publicChannelAdded => 'Public channel added';

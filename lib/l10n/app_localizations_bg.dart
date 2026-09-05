@@ -1481,11 +1481,11 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не филтрирай собствените пакети със съобщения в тези канали и считай съобщенията за безусловно доставени';
+      'Считай съобщенията в тези канали за сигурно доставени';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'По подразбиране собствените съобщения от вашата нода се игнорират. Това създава проблеми при някои фърмуери с вграден TerminalCLI';
+      'Съобщенията към изброените канали се изпращат без изчакване на потвърждение от нода и без повторения.';
 
   @override
   String get channels_publicChannelAdded => 'Публичен канал добавен';

@@ -1474,11 +1474,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Не фильтровать собственные пакеты сообщений на этих каналах и считать сообщения безусловно доставленными';
+      'Считать сообщения в этих каналах безусловно доставленными';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'По умолчанию, сообщения от своей же ноды игнорируются. Это делает невозможным работу встроенного терминала (TerminalCLI) на некоторых прошивках';
+      'Сообщения в перечисленные каналы отправляются без ожидания подтверждения от ноды и без повторов.';
 
   @override
   String get channels_publicChannelAdded => 'Публичный канал добавлен';

@@ -1464,11 +1464,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Eigen berichtpakketten in deze kanalen niet filteren en berichten als onvoorwaardelijk afgeleverd beschouwen';
+      'Berichten in deze kanalen als zeker afgeleverd beschouwen';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Standaard worden eigen berichten van je node genegeerd. Dit veroorzaakt problemen bij sommige firmwares met ingebouwde TerminalCLI';
+      'Berichten naar de vermelde kanalen worden verzonden zonder op de bevestiging van de node te wachten en zonder herhalingen.';
 
   @override
   String get channels_publicChannelAdded => 'Open kanaal toegevoegd';

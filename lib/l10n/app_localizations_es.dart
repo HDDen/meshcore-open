@@ -1475,11 +1475,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'No filtrar los paquetes de mensajes propios en estos canales y considerar los mensajes como entregados incondicionalmente';
+      'Considerar los mensajes de estos canales como entregados con seguridad';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Por defecto, se ignoran los mensajes propios de tu nodo. Esto causa problemas en algunos firmwares con TerminalCLI integrado';
+      'Los mensajes a los canales indicados se envían sin esperar la confirmación del nodo y sin reintentos.';
 
   @override
   String get channels_publicChannelAdded => 'Canal público añadido';

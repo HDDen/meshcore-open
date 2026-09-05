@@ -1464,11 +1464,11 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_doNotFilterMessagesOnChannels =>
-      'Nefiltrovať vlastné pakety správ v týchto kanáloch a považovať správy za bezpodmienečne doručené';
+      'Považovať správy v týchto kanáloch za určite doručené';
 
   @override
   String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      'Predvolene sa vlastné správy z vášho uzla ignorujú. To spôsobuje problémy v niektorých firmvéroch so vstavaným TerminalCLI';
+      'Správy do uvedených kanálov sa odosielajú bez čakania na potvrdenie uzla a bez opakovaní.';
 
   @override
   String get channels_publicChannelAdded => 'Veľký kanál pridaný';

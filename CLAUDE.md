@@ -373,7 +373,12 @@ The app names itself `MeshCoreOpen;cap=mctxt` in `CMD_APP_START`
 (`buildMeshCoreOpenAppName`, with `cap=frmfrg1` in front when framed packets are on). A South
 Edition node reads that token: without it, and with its **MCOtxt conversion** setting on, the
 node hands incoming MCOtxt to the app already decoded, in numbered `[i/n]` parts when long. The
-app decodes for itself, so the token is always sent.
+app decodes for itself, so the token is always sent. The reverse also happens: a node whose
+**MCOtxt coding** covers the channel (or `mcotxt.contacts` for a contact) re-encodes plain text
+the app sends when that packet is smaller, as the same binary `0x0120` envelope this app uses in
+channels and as `mct:` to contacts. The app is not told, and does not need to be: the node's echo
+map puts the app's own plain GRP_TXT packet into `PUSH_CODE_LOG_RX_DATA`, payload type included,
+so `ChannelEchoRecovery` and repeat counting keep matching what the app wrote.
 
 Two rules that are easy to break. `DecodedMCOtxtAppMessage.senderName` is set **only** from a
 name embedded in the body, as `DecodedMcmpAppMessage.senderName` is; the outer `Name: text`
@@ -395,6 +400,10 @@ is accepted only when it matches that displayed name. A room body embeds the sig
 room post supplies the original author's four-byte public-key prefix; verification resolves that
 prefix to full contact keys and also requires the signed name to match the contact. Direct-contact
 MCMP v3 messages are not Ed25519-signed and use the authenticated contact transport status.
+The South Edition companion firmware reads the v3 header — flags, timestamp, embedded sender,
+signature presence, reply anchor — without decompressing or verifying, to show a placeholder
+with the sender on the node's display; the header must therefore stay parseable on its own,
+ahead of the compressed text.
 
 `McmpSignatureStatus`, the verbatim container metadata, the MCMP-only signature fields
 (`mcmpIsSigned`, `mcmpSignature`), the verified full key and the name-collision flag are persisted
@@ -469,6 +478,25 @@ second, and collapsing them would delete somebody's message. When the contact is
 comparison therefore also requires an equal `fourByteRoomContactKey`, the author prefix the room
 server stamps on every post. Only incoming messages are considered, and the check runs before the
 message is stored, so nothing has to be undone afterwards.
+
+### Channel messages under our own name
+
+An incoming channel message whose sender is this node's own name is **not**
+filtered. Upstream drops one whose frame carries no path bytes
+(`_shouldDropSelfChannelMessage`, written to catch our own echo heard directly),
+but companion firmware never puts path bytes into a channel frame, so the rule
+dropped every message under our name: a reply from a node-side TerminalCLI, a
+message typed on the node's own keyboard, a second node carrying the same name.
+The duplicate it was written for is handled elsewhere, `_isChannelRepeat` merging
+an incoming copy of our own text into the outgoing message as a repeat, so the
+rule is gone from all three receive paths: channel frames, channel-data frames
+and the raw RX log, where the packet does carry its path and the rule could only
+hide a same-named node heard directly. The
+`doNotFilterMessagesOnChannels` setting keeps its key and its per-channel list
+but now means one thing only: messages to the listed channels skip the
+acknowledgement wait and the retries. A V3 frame's raw path byte `0xFF` is read
+as `pathLength == -1`, no path, as the v1 frame and the channel-data frame
+already read it; unpacked as hash width and hop count it claimed 63 hops.
 
 ### Blocked senders
 
