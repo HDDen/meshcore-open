@@ -6692,4 +6692,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => 'Tamanho do texto';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return 'Recebido um pacote de subtipo desconhecido ($namespace, subtipo $subtype versão $version); pode ser necessário atualizar a aplicação';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return 'Recebido um pacote num formato que esta aplicação não consegue ler ($namespace); pode ser necessário atualizar a aplicação';
+  }
 }

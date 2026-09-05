@@ -2852,5 +2852,7 @@
   "channels_mcotxtPlainWhenSmaller": "Отправлять обычное сообщение, если оно компактнее",
   "settings_modSettingsRecoverLongEchoes": "Восстанавливать ретрансляции длинных пакетов",
   "settings_modSettingsRecoverLongEchoesDscr": "Узнавать копию нашего сообщения в канале из RX-лога, обрезанную лимитом BLE-кадра",
-  "chat_canvasV4TextSize": "Размер текста"
+  "chat_canvasV4TextSize": "Размер текста",
+  "chat_unknownAppDataPlaceholder": "Получен пакет неизвестного подтипа ({namespace}, подтип {subtype} версия {version}); возможно, требуется обновить приложение",
+  "chat_unknownAppDataPlaceholderNamespace": "Получен пакет в формате, который это приложение не умеет читать ({namespace}); возможно, требуется обновить приложение"
 }

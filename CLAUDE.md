@@ -386,6 +386,35 @@ layer is the message's `senderName`, never container metadata. And the container
 `container*` model fields as MCMP v3 (see the signatures section), so anything that consumes a
 reply anchor or timestamp works for both codecs without asking which one filled them.
 
+### Unknown channel data packets from known namespaces
+
+A GROUP_DATA `data_type` is a registered application namespace (MeshCore's
+`docs/number_allocations.md`): `0x0120` is MCO Advanced, `0x0100` is MeshCore
+Open. A packet from either that this build cannot read is kept rather than
+dropped. After `tryDecodeInbound` and `tryDecodeAppData` both return null,
+`ChannelBinaryDataHelper.tryDescribeUnknownAppData` describes the packet when
+its data type is in `knownNamespaceOwners`: for `0x0120` it reads the outer
+sender name, the subtype id and the version when the envelope parses (a
+subtype this build does not know, an MCMP wire version it does not know, or a
+payload that is not an envelope at all, which keeps only the namespace); for
+`0x0100` it reads nothing, that layout belongs to MeshCore Open. The
+connector's `_addUnknownAppDataMessage` then stores an ordinary channel message
+whose text is the sentinel `mcoapp-unknown:0x0120:<subtype>.<version>` (or
+`mcoapp-unknown:0x0100` with nothing to add) and whose `rawPayload` is the
+whole payload, so a later build that knows the format has the bytes to decode
+from history. The screens never print the sentinel:
+`unknownAppDataPlaceholderText` (`widgets/unknown_app_data_placeholder.dart`)
+turns it into a localized line naming the namespace with its owner
+(`0x0120 MCO Advanced`) and, when known, subtype and version, in the bubble,
+the reply quote, the reply banner and the channels list preview, in the italic
+style the MCOimg unsupported-version placeholder uses (`_buildPlaceholderText`).
+No notification is raised for it, the unread count is enough, and the RX-log
+copy of such a packet is still ignored: the node hands every foreign packet
+over as a frame as well, so nothing is lost there. MCOimg and MCOtxt report
+their own unsupported versions before this point and keep their own texts;
+the message search still shows the sentinel, since it runs in an isolate
+without localization. Any other data type stays ignored, as before.
+
 ### MCMP v3 signatures (Ed25519, verified app-side)
 The node signs canonical message bytes via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer
 → serialize sessions). The canonical data contains the v3 signing domain, channel/room context,

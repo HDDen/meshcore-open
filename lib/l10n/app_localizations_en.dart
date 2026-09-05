@@ -6591,4 +6591,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => 'Text size';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return 'Received a packet of an unknown subtype ($namespace, subtype $subtype version $version); the app may need an update';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return 'Received a packet in a format this app cannot read ($namespace); the app may need an update';
+  }
 }

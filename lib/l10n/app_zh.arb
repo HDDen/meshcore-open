@@ -3554,5 +3554,7 @@
   "chat_canvasV4TextFontSize": "字号：{size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "普通消息更小时改为发送普通消息",
-  "chat_canvasV4TextSize": "文字大小"
+  "chat_canvasV4TextSize": "文字大小",
+  "chat_unknownAppDataPlaceholder": "收到未知子类型的数据包（{namespace}，子类型 {subtype} 版本 {version}），可能需要更新应用",
+  "chat_unknownAppDataPlaceholderNamespace": "收到此应用无法读取格式的数据包（{namespace}），可能需要更新应用"
 }

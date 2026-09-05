@@ -3549,5 +3549,7 @@
   "chat_canvasV4TextFontSize": "Velikost pisave: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "Pošlji navadno sporočilo, če je manjše",
-  "chat_canvasV4TextSize": "Velikost besedila"
+  "chat_canvasV4TextSize": "Velikost besedila",
+  "chat_unknownAppDataPlaceholder": "Prejet paket neznanega podtipa ({namespace}, podtip {subtype} različica {version}); morda je treba posodobiti aplikacijo",
+  "chat_unknownAppDataPlaceholderNamespace": "Prejet paket v obliki, ki je ta aplikacija ne zna prebrati ({namespace}); morda je treba posodobiti aplikacijo"
 }

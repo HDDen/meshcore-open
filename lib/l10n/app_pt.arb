@@ -3331,5 +3331,7 @@
   "chat_canvasV4TextFontSize": "Tamanho da fonte: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "Enviar uma mensagem normal se for mais compacta",
-  "chat_canvasV4TextSize": "Tamanho do texto"
+  "chat_canvasV4TextSize": "Tamanho do texto",
+  "chat_unknownAppDataPlaceholder": "Recebido um pacote de subtipo desconhecido ({namespace}, subtipo {subtype} versão {version}); pode ser necessário atualizar a aplicação",
+  "chat_unknownAppDataPlaceholderNamespace": "Recebido um pacote num formato que esta aplicação não consegue ler ({namespace}); pode ser necessário atualizar a aplicação"
 }

@@ -15,6 +15,80 @@ import 'shared_marker_deletions.dart';
 
 enum ChannelBinaryDataKind { mcoImage, mcoImageV3, mcoImageV4, mcmp, mcotxt }
 
+/// A channel data packet from a namespace this app knows the owner of but
+/// could not read: MCO Advanced's own `0x0120` with a subtype this build does
+/// not know (or a version of a known one that its codec refused), or MeshCore
+/// Open's `0x0100`, whose internal layout is that app's business. What is
+/// readable is kept; the payload itself stays on the message as `rawPayload`
+/// for a build that can decode it.
+class UnknownChannelAppData {
+  /// The GROUP_DATA `data_type`, the packet's registered namespace.
+  final int dataType;
+
+  /// The envelope's outer name; null when the layout is not ours to read, and
+  /// when parsed back from a sentinel, where the message carries the name.
+  final String? senderName;
+
+  /// Subtype and version from the `0x0120` envelope; null for a namespace
+  /// whose layout this app does not read, and for a `0x0120` payload that is
+  /// not a well-formed envelope.
+  final int? subtypeId;
+  final int? version;
+
+  const UnknownChannelAppData({
+    required this.dataType,
+    required this.senderName,
+    this.subtypeId,
+    this.version,
+  });
+
+  /// `0x0120`, as the registry and the protocol documents write it.
+  String get namespaceHex =>
+      '0x${dataType.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+
+  /// The namespace with its registered owner: `0x0100 MeshCore Open`.
+  String get namespaceLabel {
+    final owner = ChannelBinaryDataHelper.knownNamespaceOwners[dataType];
+    return owner == null ? namespaceHex : '$namespaceHex $owner';
+  }
+
+  /// The stored message text. The screens recognise it and show a localized
+  /// placeholder instead, the way `mcoimg-unsupported:` works for images:
+  /// `mcoapp-unknown:0x0120:3.2`, or `mcoapp-unknown:0x0100` when there is
+  /// no subtype to name.
+  String get sentinelText {
+    final ids = subtypeId == null || version == null
+        ? ''
+        : ':$subtypeId.$version';
+    return '${ChannelBinaryDataHelper.unknownAppDataPrefix}$namespaceHex$ids';
+  }
+
+  static UnknownChannelAppData? parseSentinel(String text) {
+    const prefix = ChannelBinaryDataHelper.unknownAppDataPrefix;
+    final trimmed = text.trim();
+    if (!trimmed.startsWith(prefix)) return null;
+    final parts = trimmed.substring(prefix.length).split(':');
+    if (parts.length > 2 || !parts[0].startsWith('0x')) return null;
+    final dataType = int.tryParse(parts[0].substring(2), radix: 16);
+    if (dataType == null) return null;
+    int? subtypeId;
+    int? version;
+    if (parts.length == 2) {
+      final ids = parts[1].split('.');
+      if (ids.length != 2) return null;
+      subtypeId = int.tryParse(ids[0]);
+      version = int.tryParse(ids[1]);
+      if (subtypeId == null || version == null) return null;
+    }
+    return UnknownChannelAppData(
+      dataType: dataType,
+      senderName: null,
+      subtypeId: subtypeId,
+      version: version,
+    );
+  }
+}
+
 class ChannelBinaryDataOutbound {
   final int dataType;
   final Uint8List payload;
@@ -99,6 +173,17 @@ class ChannelBinaryDataHelper {
   ChannelBinaryDataHelper._();
 
   static const String unsupportedMcoImagePrefix = 'mcoimg-unsupported:';
+  static const String unknownAppDataPrefix = 'mcoapp-unknown:';
+
+  /// GROUP_DATA namespaces whose owner this app knows, from MeshCore's
+  /// `docs/number_allocations.md`. A packet from one of them that nothing
+  /// here can read gets a placeholder in the chat rather than silence; any
+  /// other data type stays ignored, as before.
+  static const int meshCoreOpenDataType = 0x0100;
+  static const Map<int, String> knownNamespaceOwners = {
+    meshCoreOpenDataType: 'MeshCore Open',
+    appDataType: 'MCO Advanced',
+  };
 
   // Legacy developer namespace from MeshCore's TxtDataHelpers.h. The official
   // app data_type path lives under [appDataType] and carries its own subtype
@@ -553,6 +638,30 @@ class ChannelBinaryDataHelper {
   }) {
     if (!enabled || dataType != appDataType) return null;
     return _tryDecodeAppData(payload);
+  }
+
+  /// Describes a packet from a namespace in [knownNamespaceOwners] after
+  /// [tryDecodeInbound] and [tryDecodeAppData] both returned null for it: the
+  /// packet comes from an app this one knows, so what it carries is worth a
+  /// placeholder in the chat rather than silence. For our own [appDataType]
+  /// the envelope's sender name, subtype and version are read when the
+  /// envelope parses; another owner's layout is not read at all. Null for
+  /// any other data type. MCOimg and MCOtxt report their own unsupported
+  /// versions before this point.
+  static UnknownChannelAppData? tryDescribeUnknownAppData({
+    required int dataType,
+    required Uint8List payload,
+  }) {
+    if (!enabled || !knownNamespaceOwners.containsKey(dataType)) return null;
+    final envelope = dataType == appDataType
+        ? ChannelAppDataHelper.tryDecodeEnvelope(payload)
+        : null;
+    return UnknownChannelAppData(
+      dataType: dataType,
+      senderName: envelope?.senderName,
+      subtypeId: envelope?.subtypeId,
+      version: envelope?.version,
+    );
   }
 
   static ChannelAppDataInbound? _tryDecodeAppData(Uint8List payload) {

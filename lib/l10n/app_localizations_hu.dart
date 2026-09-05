@@ -6693,4 +6693,18 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => 'Szövegméret';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return 'Ismeretlen altípusú csomag érkezett ($namespace, altípus $subtype, verzió $version); lehet, hogy frissíteni kell az alkalmazást';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return 'Olyan formátumú csomag érkezett, amelyet ez az alkalmazás nem tud olvasni ($namespace); lehet, hogy frissíteni kell az alkalmazást';
+  }
 }

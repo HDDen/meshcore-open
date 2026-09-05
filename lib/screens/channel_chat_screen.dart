@@ -93,6 +93,7 @@ import '../widgets/received_image_message.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
+import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import '../storage/mco_image_gallery_store.dart';
@@ -1402,6 +1403,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final unknownAppData = UnknownChannelAppData.parseSentinel(bodyText);
     final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
       metadata: mcoImageMetadata,
       sourceText: bodyText,
@@ -1414,7 +1416,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       binaryPacketBytes: message.binaryPacketBytes,
     );
     final isMediaMessage =
-        gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
+        gifId != null ||
+        mcoImage != null ||
+        unsupportedMcoImageVersion != null ||
+        unknownAppData != null;
     final poi = parseMarkerText(bodyText);
     // `del:m:...` matches the marker pattern as well, so the badge is told
     // which one it is rather than guessing from the payload.
@@ -1736,6 +1741,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             context,
                             unsupportedMcoImageVersion,
                             mcoImageMetadata.currentMaxSupportedVersion,
+                            textScale,
+                          )
+                        else if (unknownAppData != null)
+                          _buildUnknownAppDataMessage(
+                            context,
+                            unknownAppData,
                             textScale,
                           )
                         else if (gifId != null)
@@ -2310,12 +2321,38 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     int current,
     double textScale,
   ) {
-    return Text(
+    return _buildPlaceholderText(
+      context,
       MCOImageMessage.unsupportedFormatText(
         context,
         receivedVersion: received,
         currentMaxSupportedVersion: current,
       ),
+      textScale,
+    );
+  }
+
+  /// A packet from a known namespace that nothing in this build could read:
+  /// the message keeps the payload, the bubble says only that it arrived.
+  Widget _buildUnknownAppDataMessage(
+    BuildContext context,
+    UnknownChannelAppData data,
+    double textScale,
+  ) {
+    return _buildPlaceholderText(
+      context,
+      unknownAppDataPlaceholderText(context.l10n, data),
+      textScale,
+    );
+  }
+
+  Widget _buildPlaceholderText(
+    BuildContext context,
+    String text,
+    double textScale,
+  ) {
+    return Text(
+      text,
       style: TextStyle(
         fontSize: 12 * textScale,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
@@ -2459,6 +2496,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(replyText);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final unknownAppData = UnknownChannelAppData.parseSentinel(replyText);
 
     Widget contentPreview;
     if (quoteBlocked) {
@@ -2511,6 +2549,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         context,
         unsupportedMcoImageVersion,
         mcoImageMetadata.currentMaxSupportedVersion,
+        textScale,
+      );
+    } else if (unknownAppData != null) {
+      contentPreview = _buildUnknownAppDataMessage(
+        context,
+        unknownAppData,
         textScale,
       );
     } else {
@@ -3520,6 +3564,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
+    final unknownAppData = UnknownChannelAppData.parseSentinel(message.text);
     final previewTextColor = scheme.onSecondaryContainer.withValues(alpha: 0.7);
 
     Widget preview;
@@ -3566,6 +3611,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         mcoImageMetadata.currentMaxSupportedVersion,
         textScale,
       );
+    } else if (unknownAppData != null) {
+      preview = _buildUnknownAppDataMessage(context, unknownAppData, textScale);
     } else {
       preview = Text(
         message.text,

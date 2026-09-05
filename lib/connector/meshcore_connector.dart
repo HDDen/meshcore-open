@@ -11694,7 +11694,20 @@ class MeshCoreConnector extends ChangeNotifier {
             payload: dataFrame.payload,
           )
         : null;
-    if (decoded == null && appDecoded == null) return;
+    if (decoded == null && appDecoded == null) {
+      final unknown = ChannelBinaryDataHelper.tryDescribeUnknownAppData(
+        dataType: dataFrame.dataType,
+        payload: dataFrame.payload,
+      );
+      if (unknown != null) {
+        _addUnknownAppDataMessage(
+          unknown,
+          dataFrame,
+          localSourceLabel: localSourceLabel,
+        );
+      }
+      return;
+    }
     final appData = appDecoded;
 
     final channelName = _channelDisplayName(dataFrame.channelIndex);
@@ -11790,6 +11803,53 @@ class MeshCoreConnector extends ChangeNotifier {
         );
       }());
     }
+  }
+
+  /// A channel data packet from a namespace this app knows, MCO Advanced's
+  /// `0x0120` or MeshCore Open's `0x0100`, that nothing in this build could
+  /// read is kept as a message rather than dropped: its text is the sentinel
+  /// the screens render as a placeholder (see
+  /// [ChannelBinaryDataHelper.unknownAppDataPrefix]) and its `rawPayload` is
+  /// the whole payload, so a later build that knows the format has the bytes
+  /// to decode from history. No notification is raised: its text would be
+  /// the sentinel, and the unread count already says something arrived. The
+  /// RX-log copy of such a packet is still ignored, the node hands every
+  /// foreign packet over as a frame as well.
+  void _addUnknownAppDataMessage(
+    UnknownChannelAppData unknown,
+    ChannelDataReceivedFrame dataFrame, {
+    String? localSourceLabel,
+  }) {
+    final receivedAt = DateTime.now();
+    _lastChannelMsgRxTime = receivedAt;
+    final message = ChannelMessage(
+      senderName: unknown.senderName ?? 'Unknown',
+      text: unknown.sentinelText,
+      wasBinaryTransport: true,
+      binaryPacketBytes: dataFrame.payload.length,
+      rawPayload: dataFrame.payload,
+      timestamp: receivedAt,
+      receivedAt: _channelMessageReceivedAt(receivedAt),
+      isOutgoing: localSourceLabel != null,
+      status: ChannelMessageStatus.sent,
+      pathLength: dataFrame.pathLength,
+      snr: dataFrame.snr,
+      channelIndex: dataFrame.channelIndex,
+      packetHash: _computeChannelDataHash(
+        dataFrame.channelIndex,
+        dataFrame.dataType,
+        dataFrame.payload,
+      ),
+      sourceLabel: localSourceLabel,
+    );
+    _updateContactLastMessageAtByName(
+      message.senderName,
+      message.receivedAt,
+      pathHashWidth: message.pathHashWidth,
+    );
+    final isNew = _addChannelMessage(dataFrame.channelIndex, message);
+    _maybeIncrementChannelUnread(message, isNew: isNew);
+    notifyListeners();
   }
 
   /// Expected MAC and ciphertext of our recent channel sends, so an echo the

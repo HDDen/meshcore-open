@@ -3684,5 +3684,9 @@
   "channels_mcotxtPlainWhenSmaller": "Send a plain message when it is smaller",
   "settings_modSettingsRecoverLongEchoes": "Recover repeats of long packets",
   "settings_modSettingsRecoverLongEchoesDscr": "Recognise an RX-log copy of our own channel message that the BLE frame limit cut short",
-  "chat_canvasV4TextSize": "Text size"
+  "chat_canvasV4TextSize": "Text size",
+  "chat_unknownAppDataPlaceholder": "Received a packet of an unknown subtype ({namespace}, subtype {subtype} version {version}); the app may need an update",
+  "@chat_unknownAppDataPlaceholder": {"placeholders": {"namespace": {"type": "String"}, "subtype": {"type": "int"}, "version": {"type": "int"}}},
+  "chat_unknownAppDataPlaceholderNamespace": "Received a packet in a format this app cannot read ({namespace}); the app may need an update",
+  "@chat_unknownAppDataPlaceholderNamespace": {"placeholders": {"namespace": {"type": "String"}}}
 }

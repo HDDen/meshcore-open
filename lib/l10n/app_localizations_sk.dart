@@ -6659,4 +6659,18 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => 'Veľkosť textu';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return 'Prijatý paket neznámeho podtypu ($namespace, podtyp $subtype verzia $version); možno treba aktualizovať aplikáciu';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return 'Prijatý paket vo formáte, ktorý táto aplikácia nevie prečítať ($namespace); možno treba aktualizovať aplikáciu';
+  }
 }

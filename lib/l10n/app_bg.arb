@@ -3549,5 +3549,7 @@
   "chat_canvasV4TextFontSize": "Размер на шрифта: {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "Изпращане на обикновено съобщение, ако е по-компактно",
-  "chat_canvasV4TextSize": "Размер на текста"
+  "chat_canvasV4TextSize": "Размер на текста",
+  "chat_unknownAppDataPlaceholder": "Получен е пакет с неизвестен подтип ({namespace}, подтип {subtype} версия {version}); може да е нужно да обновите приложението",
+  "chat_unknownAppDataPlaceholderNamespace": "Получен е пакет във формат, който това приложение не може да прочете ({namespace}); може да е нужно да обновите приложението"
 }

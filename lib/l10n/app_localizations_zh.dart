@@ -6238,4 +6238,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => '文字大小';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return '收到未知子类型的数据包（$namespace，子类型 $subtype 版本 $version），可能需要更新应用';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return '收到此应用无法读取格式的数据包（$namespace），可能需要更新应用';
+  }
 }

@@ -6645,4 +6645,18 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => 'Textstorlek';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return 'Tog emot ett paket av okänd undertyp ($namespace, undertyp $subtype version $version); appen kan behöva uppdateras';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return 'Tog emot ett paket i ett format som den här appen inte kan läsa ($namespace); appen kan behöva uppdateras';
+  }
 }

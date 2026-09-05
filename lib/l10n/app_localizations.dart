@@ -11403,6 +11403,22 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text size'**
   String get chat_canvasV4TextSize;
+
+  /// No description provided for @chat_unknownAppDataPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Received a packet of an unknown subtype ({namespace}, subtype {subtype} version {version}); the app may need an update'**
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  );
+
+  /// No description provided for @chat_unknownAppDataPlaceholderNamespace.
+  ///
+  /// In en, this message translates to:
+  /// **'Received a packet in a format this app cannot read ({namespace}); the app may need an update'**
+  String chat_unknownAppDataPlaceholderNamespace(String namespace);
 }
 
 class _AppLocalizationsDelegate

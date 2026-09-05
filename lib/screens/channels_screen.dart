@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../l10n/l10n.dart';
@@ -41,6 +42,7 @@ import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
 import '../helpers/gif_helper.dart';
@@ -654,12 +656,20 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               connector.channelDisplayName(channel.index),
             ));
     final lastMessageText = lastBlocked ? '' : (lastMessage?.text ?? '');
+    final lastUnknownAppData = lastMessageText.isEmpty
+        ? null
+        : UnknownChannelAppData.parseSentinel(lastMessageText);
     final String lastPreview;
     if (lastBlocked) {
       lastPreview = context.l10n.chat_senderBlocked;
     } else if (lastMessageText.isNotEmpty &&
         GifHelper.parseGif(lastMessageText) != null) {
       lastPreview = context.l10n.chat_receivedGif;
+    } else if (lastUnknownAppData != null) {
+      lastPreview = unknownAppDataPlaceholderText(
+        context.l10n,
+        lastUnknownAppData,
+      );
     } else {
       lastPreview = lastMessageText;
     }

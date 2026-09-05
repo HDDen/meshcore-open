@@ -3648,5 +3648,7 @@
   "chat_canvasV4TextFontSize": "Taille de police : {size}",
   "@chat_canvasV4TextFontSize": {"placeholders": {"size": {"type": "int"}}},
   "channels_mcotxtPlainWhenSmaller": "Envoyer un message normal s'il est plus compact",
-  "chat_canvasV4TextSize": "Taille du texte"
+  "chat_canvasV4TextSize": "Taille du texte",
+  "chat_unknownAppDataPlaceholder": "Paquet reçu d'un sous-type inconnu ({namespace}, sous-type {subtype} version {version}) ; l'application doit peut-être être mise à jour",
+  "chat_unknownAppDataPlaceholderNamespace": "Paquet reçu dans un format que cette application ne peut pas lire ({namespace}) ; l'application doit peut-être être mise à jour"
 }

@@ -6378,4 +6378,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_canvasV4TextSize => '텍스트 크기';
+
+  @override
+  String chat_unknownAppDataPlaceholder(
+    String namespace,
+    int subtype,
+    int version,
+  ) {
+    return '알 수 없는 하위 유형의 패킷을 받았습니다($namespace, 하위 유형 $subtype 버전 $version). 앱 업데이트가 필요할 수 있습니다';
+  }
+
+  @override
+  String chat_unknownAppDataPlaceholderNamespace(String namespace) {
+    return '이 앱이 읽을 수 없는 형식의 패킷을 받았습니다($namespace). 앱 업데이트가 필요할 수 있습니다';
+  }
 }
