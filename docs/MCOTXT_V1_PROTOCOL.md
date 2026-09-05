@@ -667,3 +667,15 @@ carry the same wire hashes and that the manifest's `modelGeneration` has a
 registered set; `tools/MCOtxt/freeze_model_manifest.py` freezes the
 manifest once every reserved language has tables. The trainer and its
 README live in `tools/MCOtxt/`.
+
+## Implementations
+
+- **MeshCore Open Advanced** (this repository): `lib/MCOtxt/` and
+  `lib/helpers/mcotxt_app_codec.dart`, the reference. The app announces the
+  codec to South Edition nodes as `cap=mctxt` in the `CMD_APP_START` name.
+- **South Edition companion firmware** (Luchik, `src/helpers/mcotxt/` in that
+  fork of MeshCore): a full v1 decoder for the node's display and for handing
+  the text, as plain-text parts, to a connected app without the codec; a
+  greedy encoder for a fixed language pair, which produces a valid stream that
+  may be a few bits longer than this reference's search. Its C tables are the
+  generated headers from `tools/MCOtxt/generated/`.

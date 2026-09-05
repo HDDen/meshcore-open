@@ -54,10 +54,13 @@ Compression is chosen per contact and per channel:
   On typical chat text it reaches up to ~70% compression, so
   a message roughly three times longer than usual still fits into a single packet.
 - **MCOtxt** — the fork's own codec: a static per-language TOP-4 letter-prediction table
-  (English, Russian and French so far) drives a variable-length token stream, with a UTF-8
-  escape for anything outside the tables. It needs no arithmetic coder and a whole model is a
-  few hundred bytes, so the same tables also fit a microcontroller; on chat text it spends
-  just over 5 bits per character. The wire format is documented in
+  (English, Russian, French, German, Italian, Ukrainian and Belarusian) drives a
+  variable-length token stream, with a UTF-8 escape for anything outside the tables. It needs
+  no arithmetic coder and a whole model is a few hundred bytes, so the same tables also fit a
+  microcontroller: the South Edition companion firmware decodes MCOtxt on the node's own
+  display and hands the text to clients without the codec as plain messages, while this app
+  tells such a node it decodes itself with `cap=mctxt` in `CMD_APP_START`. On chat text the
+  codec spends just over 5 bits per character. The wire format is documented in
   [`docs/MCOTXT_V1_PROTOCOL.md`](docs/MCOTXT_V1_PROTOCOL.md) and its
   [`Russian translation`](docs/MCOTXT_V1_PROTOCOL_RU.md).
 
