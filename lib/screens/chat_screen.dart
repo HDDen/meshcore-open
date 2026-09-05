@@ -20,6 +20,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/message_markup.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/inserted_text_limiter.dart';
@@ -129,6 +130,10 @@ class _ChatScreenState extends State<ChatScreen> {
   /// (the default is "show pack original" when the mod setting is enabled,
   /// otherwise "show received LoRa version").
   final Set<String> _mcoVariantOverridden = {};
+
+  /// Messages the user asked to see as typed, markup markers and all. Session
+  /// only: leaving the chat restores the formatted view.
+  final Set<String> _rawMarkupMessageIds = {};
 
   /// Blocked bodies the user tapped to read. Display only — a revealed body is
   /// still never parsed — and forgotten whenever the block table changes, so a
@@ -964,6 +969,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       sourceId: widget.contact.publicKeyHex,
                       isRoomChat: resolvedContact.type == advTypeRoom,
                       mcoVariantOverridden: _mcoVariantOverridden.contains(
+                        message.messageId,
+                      ),
+                      markupEnabled: !_rawMarkupMessageIds.contains(
                         message.messageId,
                       ),
                       blockedRevealed: _revealedBlockedMessages.contains(
@@ -2303,6 +2311,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     _copyMessageText(message.text);
                   },
                 ),
+                if (MessageMarkup.has(message.text))
+                  ListTile(
+                    leading: const Icon(Icons.text_format),
+                    title: Text(
+                      _rawMarkupMessageIds.contains(message.messageId)
+                          ? context.l10n.chat_showWithMarkdown
+                          : context.l10n.chat_showWithoutMarkdown,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMessageMarkup(message.messageId);
+                    },
+                  ),
                 if (hasMcoOriginal)
                   ListTile(
                     leading: const Icon(Icons.swap_horiz),
@@ -2519,6 +2540,14 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _toggleMessageMarkup(String messageId) {
+    setState(() {
+      if (!_rawMarkupMessageIds.add(messageId)) {
+        _rawMarkupMessageIds.remove(messageId);
+      }
+    });
+  }
+
   Future<void> _saveMcoImageToGallery(String text) async {
     try {
       await MCOImageGalleryStore().addFromText(text);
@@ -2689,6 +2718,9 @@ class _MessageBubble extends StatelessWidget {
   /// chosen by the mod setting.
   final bool mcoVariantOverridden;
 
+  /// False shows the body as typed, markup markers included.
+  final bool markupEnabled;
+
   /// The user tapped this blocked body to read it. Display only — a revealed
   /// body is still never parsed.
   final bool blockedRevealed;
@@ -2702,6 +2734,7 @@ class _MessageBubble extends StatelessWidget {
     this.isHighlighted = false,
     this.isRoomChat = false,
     this.mcoVariantOverridden = false,
+    this.markupEnabled = true,
     this.blockedRevealed = false,
     this.onToggleBlocked,
     this.onTap,
@@ -3172,6 +3205,7 @@ class _MessageBubble extends StatelessWidget {
                                   onSecondaryTap: PlatformInfo.isDesktop
                                       ? onLongPress
                                       : null,
+                                  markupEnabled: markupEnabled,
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[

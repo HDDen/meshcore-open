@@ -36,6 +36,7 @@ import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
+import '../helpers/message_markup.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
@@ -147,6 +148,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// (the default is "show pack original" when the mod setting is enabled,
   /// otherwise "show received LoRa version").
   final Set<String> _mcoVariantOverridden = {};
+
+  /// Messages the user asked to see as typed, markup markers and all. Session
+  /// only: leaving the channel restores the formatted view.
+  final Set<String> _rawMarkupMessageIds = {};
 
   /// Blocked bodies the user tapped to read. Display only — a revealed body is
   /// still never parsed — and forgotten whenever the block list changes, so a
@@ -2386,6 +2391,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         onSecondaryTap: PlatformInfo.isDesktop
             ? () => unawaited(_showMessageActions(message))
             : null,
+        markupEnabled: !_rawMarkupMessageIds.contains(message.messageId),
       );
     }
 
@@ -2440,6 +2446,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       style: style,
       textScale: textScale,
       simplified: simplifiedMention,
+      markupEnabled: !_rawMarkupMessageIds.contains(message.messageId),
       leadingSpans: [
         WidgetSpan(
           alignment: chip.alignment,
@@ -4609,6 +4616,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     unawaited(_copyMessagePath(message, extended: true));
                   },
                 ),
+                if (MessageMarkup.has(message.text))
+                  ListTile(
+                    leading: const Icon(Icons.text_format),
+                    title: Text(
+                      _rawMarkupMessageIds.contains(message.messageId)
+                          ? context.l10n.chat_showWithMarkdown
+                          : context.l10n.chat_showWithoutMarkdown,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMessageMarkup(message.messageId);
+                    },
+                  ),
                 if (hasMcoOriginal)
                   ListTile(
                     leading: const Icon(Icons.swap_horiz),
@@ -4751,6 +4771,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       if (!_mcoVariantOverridden.add(messageId)) {
         _mcoVariantOverridden.remove(messageId);
+      }
+    });
+  }
+
+  void _toggleMessageMarkup(String messageId) {
+    setState(() {
+      if (!_rawMarkupMessageIds.add(messageId)) {
+        _rawMarkupMessageIds.remove(messageId);
       }
     });
   }

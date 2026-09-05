@@ -11419,6 +11419,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Received a packet in a format this app cannot read ({namespace}); the app may need an update'**
   String chat_unknownAppDataPlaceholderNamespace(String namespace);
+
+  /// No description provided for @chat_showWithoutMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Show without Markdown'**
+  String get chat_showWithoutMarkdown;
+
+  /// No description provided for @chat_showWithMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Show with Markdown'**
+  String get chat_showWithMarkdown;
 }
 
 class _AppLocalizationsDelegate

@@ -6673,4 +6673,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Prijatý paket vo formáte, ktorý táto aplikácia nevie prečítať ($namespace); možno treba aktualizovať aplikáciu';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Zobraziť bez Markdownu';
+
+  @override
+  String get chat_showWithMarkdown => 'Zobraziť s Markdownom';
 }

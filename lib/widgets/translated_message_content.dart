@@ -21,6 +21,10 @@ class TranslatedMessageContent extends StatelessWidget {
   /// ambient MediaQuery scaler); used to apply the global UI scale.
   final TextScaler? textScaler;
 
+  /// False renders the markup markers as literal text; see
+  /// [FormattedMessageText.markupEnabled].
+  final bool markupEnabled;
+
   const TranslatedMessageContent({
     super.key,
     required this.displayText,
@@ -30,6 +34,7 @@ class TranslatedMessageContent extends StatelessWidget {
     this.showOriginalFirst = true,
     this.textScaler,
     this.onSecondaryTap,
+    this.markupEnabled = true,
   });
 
   /// Mentions need widget spans, markup needs per-run styles and a `lat,lon`
@@ -42,7 +47,7 @@ class TranslatedMessageContent extends StatelessWidget {
     required TextStyle style,
   }) {
     if (!MentionText.has(text) &&
-        !MessageMarkup.has(text) &&
+        (!markupEnabled || !MessageMarkup.has(text)) &&
         !CoordinateText.has(text)) {
       return LinkHandler.buildLinkifyText(
         context: context,
@@ -62,6 +67,7 @@ class TranslatedMessageContent extends StatelessWidget {
           .simplifiedMentions,
       textScaler: textScaler,
       onSecondaryTap: onSecondaryTap,
+      markupEnabled: markupEnabled,
     );
   }
 

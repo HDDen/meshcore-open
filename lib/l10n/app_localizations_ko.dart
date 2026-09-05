@@ -6392,4 +6392,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return '이 앱이 읽을 수 없는 형식의 패킷을 받았습니다($namespace). 앱 업데이트가 필요할 수 있습니다';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Markdown 없이 표시';
+
+  @override
+  String get chat_showWithMarkdown => 'Markdown 적용해 표시';
 }

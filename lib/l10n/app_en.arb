@@ -3688,5 +3688,7 @@
   "chat_unknownAppDataPlaceholder": "Received a packet of an unknown subtype ({namespace}, subtype {subtype} version {version}); the app may need an update",
   "@chat_unknownAppDataPlaceholder": {"placeholders": {"namespace": {"type": "String"}, "subtype": {"type": "int"}, "version": {"type": "int"}}},
   "chat_unknownAppDataPlaceholderNamespace": "Received a packet in a format this app cannot read ({namespace}); the app may need an update",
-  "@chat_unknownAppDataPlaceholderNamespace": {"placeholders": {"namespace": {"type": "String"}}}
+  "@chat_unknownAppDataPlaceholderNamespace": {"placeholders": {"namespace": {"type": "String"}}},
+  "chat_showWithoutMarkdown": "Show without Markdown",
+  "chat_showWithMarkdown": "Show with Markdown"
 }

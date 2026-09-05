@@ -3333,5 +3333,7 @@
   "channels_mcotxtPlainWhenSmaller": "Skicka vanligt meddelande om det är mindre",
   "chat_canvasV4TextSize": "Textstorlek",
   "chat_unknownAppDataPlaceholder": "Tog emot ett paket av okänd undertyp ({namespace}, undertyp {subtype} version {version}); appen kan behöva uppdateras",
-  "chat_unknownAppDataPlaceholderNamespace": "Tog emot ett paket i ett format som den här appen inte kan läsa ({namespace}); appen kan behöva uppdateras"
+  "chat_unknownAppDataPlaceholderNamespace": "Tog emot ett paket i ett format som den här appen inte kan läsa ({namespace}); appen kan behöva uppdateras",
+  "chat_showWithoutMarkdown": "Visa utan Markdown",
+  "chat_showWithMarkdown": "Visa med Markdown"
 }

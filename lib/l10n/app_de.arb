@@ -3678,5 +3678,7 @@
   "channels_mcotxtPlainWhenSmaller": "Normale Nachricht senden, wenn sie kleiner ist",
   "chat_canvasV4TextSize": "Textgröße",
   "chat_unknownAppDataPlaceholder": "Paket mit unbekanntem Subtyp empfangen ({namespace}, Subtyp {subtype} Version {version}); möglicherweise muss die App aktualisiert werden",
-  "chat_unknownAppDataPlaceholderNamespace": "Paket in einem Format empfangen, das diese App nicht lesen kann ({namespace}); möglicherweise muss die App aktualisiert werden"
+  "chat_unknownAppDataPlaceholderNamespace": "Paket in einem Format empfangen, das diese App nicht lesen kann ({namespace}); möglicherweise muss die App aktualisiert werden",
+  "chat_showWithoutMarkdown": "Ohne Markdown anzeigen",
+  "chat_showWithMarkdown": "Mit Markdown anzeigen"
 }

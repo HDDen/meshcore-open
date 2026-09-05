@@ -6747,4 +6747,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Paquet reçu dans un format que cette application ne peut pas lire ($namespace) ; l\'application doit peut-être être mise à jour';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Afficher sans Markdown';
+
+  @override
+  String get chat_showWithMarkdown => 'Afficher avec Markdown';
 }

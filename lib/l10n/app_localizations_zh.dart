@@ -6252,4 +6252,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return '收到此应用无法读取格式的数据包（$namespace），可能需要更新应用';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => '不使用 Markdown 显示';
+
+  @override
+  String get chat_showWithMarkdown => '使用 Markdown 显示';
 }

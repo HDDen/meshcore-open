@@ -31,10 +31,16 @@ class FormattedMessageText extends StatefulWidget {
     this.textScaler,
     this.leadingSpans = const [],
     this.onSecondaryTap,
+    this.markupEnabled = true,
   });
 
   final String text;
   final TextStyle style;
+
+  /// False shows the markup markers as the literal text they are, the way the
+  /// author typed them; mentions, links and coordinates are still resolved.
+  /// A per-message choice from the bubble's action menu.
+  final bool markupEnabled;
 
   /// Chat text zoom, applied to the chip's own sizing.
   final double textScale;
@@ -92,6 +98,7 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
     final key = Object.hash(
       widget.text,
       widget.simplified,
+      widget.markupEnabled,
       widget.textScale,
       widget.style,
       widget.leadingSpans.length,
@@ -111,7 +118,10 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
 
     // Markup is the outer layer: it decides how a run looks, and mentions and
     // links are resolved inside each run.
-    for (final block in MessageMarkup.parse(widget.text)) {
+    final blocks = widget.markupEnabled
+        ? MessageMarkup.parse(widget.text)
+        : [MarkupSegment(widget.text, MarkupStyles.none)];
+    for (final block in blocks) {
       final blockStyle = _applyMarkup(widget.style, block.styles);
       for (final segment in MentionText.split(block.text)) {
         if (segment.isMention) {

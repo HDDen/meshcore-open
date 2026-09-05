@@ -6691,4 +6691,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Pakket ontvangen in een indeling die deze app niet kan lezen ($namespace); mogelijk moet de app worden bijgewerkt';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Weergeven zonder Markdown';
+
+  @override
+  String get chat_showWithMarkdown => 'Weergeven met Markdown';
 }

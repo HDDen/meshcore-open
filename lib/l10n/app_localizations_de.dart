@@ -6720,4 +6720,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Paket in einem Format empfangen, das diese App nicht lesen kann ($namespace); möglicherweise muss die App aktualisiert werden';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Ohne Markdown anzeigen';
+
+  @override
+  String get chat_showWithMarkdown => 'Mit Markdown anzeigen';
 }

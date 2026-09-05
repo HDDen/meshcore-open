@@ -3656,5 +3656,7 @@
   "channels_mcotxtPlainWhenSmaller": "通常のメッセージの方が小さければそれを送信",
   "chat_canvasV4TextSize": "文字サイズ",
   "chat_unknownAppDataPlaceholder": "不明なサブタイプのパケットを受信しました（{namespace}、サブタイプ {subtype} バージョン {version}）。アプリの更新が必要かもしれません",
-  "chat_unknownAppDataPlaceholderNamespace": "このアプリが読めない形式のパケットを受信しました（{namespace}）。アプリの更新が必要かもしれません"
+  "chat_unknownAppDataPlaceholderNamespace": "このアプリが読めない形式のパケットを受信しました（{namespace}）。アプリの更新が必要かもしれません",
+  "chat_showWithoutMarkdown": "Markdownなしで表示",
+  "chat_showWithMarkdown": "Markdownありで表示"
 }

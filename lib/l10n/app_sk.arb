@@ -3551,5 +3551,7 @@
   "channels_mcotxtPlainWhenSmaller": "Poslať bežnú správu, ak je menšia",
   "chat_canvasV4TextSize": "Veľkosť textu",
   "chat_unknownAppDataPlaceholder": "Prijatý paket neznámeho podtypu ({namespace}, podtyp {subtype} verzia {version}); možno treba aktualizovať aplikáciu",
-  "chat_unknownAppDataPlaceholderNamespace": "Prijatý paket vo formáte, ktorý táto aplikácia nevie prečítať ({namespace}); možno treba aktualizovať aplikáciu"
+  "chat_unknownAppDataPlaceholderNamespace": "Prijatý paket vo formáte, ktorý táto aplikácia nevie prečítať ({namespace}); možno treba aktualizovať aplikáciu",
+  "chat_showWithoutMarkdown": "Zobraziť bez Markdownu",
+  "chat_showWithMarkdown": "Zobraziť s Markdownom"
 }

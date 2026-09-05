@@ -748,6 +748,8 @@ Three call sites. **Rendering**: `widgets/formatted_message_text.dart` treats ma
 
 The edits themselves are pure transforms in `helpers/markup_editing.dart` (`wrap`, `stripFormatting`), shared by all three entry points so they cannot drift apart; each caller applies the UTF-8 limiter afterwards, so a tag can never push a message past the payload budget. Wrapping an empty selection leaves the caret between a fresh pair. `stripFormatting` removes markers inside the selection or, failing that, the pair immediately around it — colour tags included, via `_surroundingPairs`.
 
+A reader can switch one message back to the text as typed: the bubble's action menu offers **Show without Markdown** for any message `MessageMarkup.has` (after the copy-path entries in a channel, after Copy in a direct or room chat), and **Show with Markdown** on a message already switched. Both chat screens keep the choice in a session set of message ids (`_rawMarkupMessageIds`, toggled by `_toggleMessageMarkup`) and hand it down as `markupEnabled` on `TranslatedMessageContent` and `FormattedMessageText`, which then renders the whole body as one unstyled run while still resolving mentions, links and coordinates. Nothing is stored: leaving the chat restores the formatted view. The flag is part of the span cache key, or the toggle would not redraw.
+
 ### Last-hop signal in the hop list
 
 The tracing row of a channel bubble ends its hop list with the SNR and RSSI our own radio measured

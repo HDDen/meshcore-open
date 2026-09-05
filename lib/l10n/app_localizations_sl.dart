@@ -6684,4 +6684,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Prejet paket v obliki, ki je ta aplikacija ne zna prebrati ($namespace); morda je treba posodobiti aplikacijo';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Prikaži brez Markdowna';
+
+  @override
+  String get chat_showWithMarkdown => 'Prikaži z Markdownom';
 }

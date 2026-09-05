@@ -6719,4 +6719,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Получен е пакет във формат, който това приложение не може да прочете ($namespace); може да е нужно да обновите приложението';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Показване без Markdown';
+
+  @override
+  String get chat_showWithMarkdown => 'Показване с Markdown';
 }

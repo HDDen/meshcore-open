@@ -3333,5 +3333,7 @@
   "channels_mcotxtPlainWhenSmaller": "Gewoon bericht sturen als het kleiner is",
   "chat_canvasV4TextSize": "Tekstgrootte",
   "chat_unknownAppDataPlaceholder": "Pakket met onbekend subtype ontvangen ({namespace}, subtype {subtype} versie {version}); mogelijk moet de app worden bijgewerkt",
-  "chat_unknownAppDataPlaceholderNamespace": "Pakket ontvangen in een indeling die deze app niet kan lezen ({namespace}); mogelijk moet de app worden bijgewerkt"
+  "chat_unknownAppDataPlaceholderNamespace": "Pakket ontvangen in een indeling die deze app niet kan lezen ({namespace}); mogelijk moet de app worden bijgewerkt",
+  "chat_showWithoutMarkdown": "Weergeven zonder Markdown",
+  "chat_showWithMarkdown": "Weergeven met Markdown"
 }

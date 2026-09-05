@@ -6707,4 +6707,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String chat_unknownAppDataPlaceholderNamespace(String namespace) {
     return 'Olyan formátumú csomag érkezett, amelyet ez az alkalmazás nem tud olvasni ($namespace); lehet, hogy frissíteni kell az alkalmazást';
   }
+
+  @override
+  String get chat_showWithoutMarkdown => 'Megjelenítés Markdown nélkül';
+
+  @override
+  String get chat_showWithMarkdown => 'Megjelenítés Markdownnal';
 }

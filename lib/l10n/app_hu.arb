@@ -3554,5 +3554,7 @@
   "channels_mcotxtPlainWhenSmaller": "Sima üzenet küldése, ha az kisebb",
   "chat_canvasV4TextSize": "Szövegméret",
   "chat_unknownAppDataPlaceholder": "Ismeretlen altípusú csomag érkezett ({namespace}, altípus {subtype}, verzió {version}); lehet, hogy frissíteni kell az alkalmazást",
-  "chat_unknownAppDataPlaceholderNamespace": "Olyan formátumú csomag érkezett, amelyet ez az alkalmazás nem tud olvasni ({namespace}); lehet, hogy frissíteni kell az alkalmazást"
+  "chat_unknownAppDataPlaceholderNamespace": "Olyan formátumú csomag érkezett, amelyet ez az alkalmazás nem tud olvasni ({namespace}); lehet, hogy frissíteni kell az alkalmazást",
+  "chat_showWithoutMarkdown": "Megjelenítés Markdown nélkül",
+  "chat_showWithMarkdown": "Megjelenítés Markdownnal"
 }
