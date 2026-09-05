@@ -527,6 +527,13 @@ acknowledgement wait and the retries. A V3 frame's raw path byte `0xFF` is read
 as `pathLength == -1`, no path, as the v1 frame and the channel-data frame
 already read it; unpacked as hash width and hop count it claimed 63 hops.
 
+This is also what lets a message typed on a South Edition node's own keyboard
+reach this app: the node puts a copy into the app queue under its own name with
+path byte `0xFF`, exactly the shape the rule dropped. When merging from the
+upstream `meshcore_open` branch, expect `_shouldDropSelfChannelMessage` and its
+call sites to come back in the conflict and drop them again; the removal is
+deliberate, not an oversight.
+
 ### Blocked senders
 
 A sender muted from a message's long-press menu keeps arriving — nothing is dropped on receipt or
