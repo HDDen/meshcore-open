@@ -1,8 +1,15 @@
 # MCOimg v4 reference
 
-Status: experimental pre-release implementation. V4 may still change without
-backward compatibility. This document describes the format as implemented in
-`lib/helpers/mcoimg_v4_codec.dart`; where the two disagree, the code wins.
+Status: released. The reference implementation is the Dart code at tag
+`9.5.1-mod-1.9.0` of this repository: `lib/helpers/mcoimg_v4_codec.dart`,
+`lib/helpers/mcoimg_v4_model.dart` and, for the normative parts of rendering,
+`lib/widgets/mco_image_v4_view.dart`. This document describes that code; where
+the two disagree, the code wins and the document is corrected. The wire format
+is fixed: an incompatible change takes a new version nibble (`0x05`), and
+additions go only through the reserved extension points, the mode codes `2`
+and `3`, the second-escape commands `1`–`15` and the transport-tail flag bits
+`2`–`7`, all of which today's decoders reject as an unsupported format rather
+than as damage.
 
 ## Purpose
 
@@ -103,13 +110,15 @@ zero padding to byte boundary
 ```text
 0 vector     no raster layers
 1 mixed      at least one raster layer in the stream
-2 raster     reserved, rejected on decode
-3 reserved   rejected on decode
+2 raster     not implemented and not supported today; reserved for a future mode
+3 reserved   not implemented and not supported today; reserved for a future mode
 ```
 
 The encoder derives the mode from the document: `mixed` when a visible raster
-layer is present at the top level, `vector` otherwise. A decoder that meets mode
-`2` or `3` reports an unsupported format rather than a damaged payload.
+layer is present at the top level, `vector` otherwise. Modes `2` and `3` are not
+implemented and not supported in the current form and are reserved for future
+modes; a decoder that meets one of them reports an unsupported format rather
+than a damaged payload, so the reader gets the update-the-app placeholder.
 
 There is **no palette table on the wire and no initial-style block**. Colors are
 written as profile color references; the document-local palette is a decoder-side
@@ -393,6 +402,16 @@ midpoint `mid` and `n = (-axis.y, axis.x) / |axis|`, the third point is
 exactly by that reconstruction; the decoder rejects a depth that does not land on
 an integer point.
 
+In integer arithmetic, with `axis = (dx, dy)` and `L² = dx² + dy²`, the point is
+an integer point exactly when `L` is an integer and both
+`(first.x + second.x) * L - 2 * dy * depth` and
+`(first.y + second.y) * L + 2 * dx * depth` are divisible by `2L`; the third
+point is then those two quotients. A port should use this test. The reference
+implementation computes the point in double precision and accepts it when each
+coordinate is within `1e-9` of an integer, which within this format's
+coordinate range accepts exactly the same streams: when `L²` is not a perfect
+square, no such coordinate comes closer than `3e-9` to an integer.
+
 ## Paths
 
 `pointCount` stores `actualCount - minimum`, with minimum 2 for open paths and 3
@@ -633,10 +652,14 @@ last field. Partially damaged drawings are not rendered.
 The Dart codec, vector renderer and editor, text figures over MCOtxt, raster
 layers with v3-encoded payloads, compression-level selection, the binary send
 and receive path, replies, stable identity, gallery, and BIN/PNG import and
-export are implemented.
+export are implemented and released as tag `9.5.1-mod-1.9.0`.
 
-A dedicated pure-raster mode (`mode = 2`), optional overlap removal between
-layers, the JavaScript port, and cross-runtime fixtures remain follow-up phases.
-There are no golden v4 vectors yet: the only v4-specific tests,
+Modes `2` and `3` are not implemented and not supported in the current form;
+they are reserved for future modes. Overlap removal between raster layers would
+be an encoder-side optimization and would not touch the wire. The JavaScript
+and C++ ports and their cross-runtime fixtures are the next phases; the steps,
+and what has to be in place before they start, are in
+[`mcoimg_v4_porting_plan.md`](mcoimg_v4_porting_plan.md). There are no golden
+v4 vectors yet: the only v4-specific tests,
 `test/helpers/mcoimg_v4_text_test.dart`, cover the text figure, and no
 automated test covers the other commands.
