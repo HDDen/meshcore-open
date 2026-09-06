@@ -23,6 +23,85 @@ where the two disagree, the code wins. The most relevant files are:
 - `lib/connector/meshcore_protocol.dart` — frame builders and size limits
 - `tools/MCOtxt/` — model trainer, manifest and verification scripts
 
+## How the compression works, in plain words
+
+MCOtxt makes a text message smaller before it goes over the radio, so that
+more words fit into one LoRa packet. It works the way a phone keyboard guesses
+your next letter.
+
+- **Both sides carry the same small table for each language.** For every
+  letter it lists the four letters most likely to follow: after `q` in English
+  the first guess is `u`; after `ч` in Russian the guesses are `е`, `т`, `а`
+  and `и`. A whole table is a few hundred bytes, it is built once and frozen,
+  and nothing about it travels with the message.
+- **The encoder walks through the text one letter at a time.** When the next
+  letter is the table's first guess it writes a very short code, two bits; the
+  second guess costs three bits, the third and fourth four. A letter the table
+  did not guess is spelled out in full, seven bits, and punctuation costs
+  eight. In ordinary text most letters are among the four guesses, so on
+  average a character costs a little over five bits, where plain UTF-8 spends
+  eight bits on a Latin letter and sixteen on a Cyrillic one. On a message of
+  a couple of lines an English text loses about a third of its size and a
+  Russian one about two thirds; a few bytes of header come on top.
+- **Capital letters, digits, emoji and other rare characters still work.** A
+  short marker flips the case of one letter or of a whole run, and a character
+  the table does not know at all is inserted as ordinary UTF-8 bytes, at a
+  higher cost than a predicted letter.
+- **A message may mix languages.** The short header at the start names the
+  two languages the text is mostly in, and the encoder switches between
+  their tables whenever that is cheaper. They are not a limit: a word from a
+  third language is written by switching to any of the seven tables in the
+  middle of the message, at a slightly higher cost, and a character that no
+  table knows goes as plain UTF-8 bytes.
+- **The codec does not decide what goes on the air.** It hands back one
+  encoded stream together with the text it was given and the size of both
+  candidates. When the coded form would come out longer than the text, as
+  with a very short message or one made of symbols, that stream carries the
+  text as plain bytes behind a two-byte header, so the stream itself is never
+  much bigger than the text. Whether the message goes out as MCOtxt at all is
+  decided by the sender that asked for the encoding: the app, and the node
+  when it encodes for itself, price the whole MCOtxt packet against the
+  ordinary text message and send the shorter one, the plain one on a tie
+  (the setting шт MCOa *Send a plain message when it is smaller*, on by default).
+- **Nothing is lost.** The reader runs the same steps backwards with the same
+  table and gets the same text. Only technical details change: Windows line
+  endings become plain ones, and a few accented letters typed as two pieces
+  are stored as one character that looks the same. That only works because
+  the tables are final: once built they are frozen, with a fingerprint of
+  every table recorded, and a changed table can only ship as a new
+  generation. Every message says which codec version and which table
+  generation it was written with, and the container has a revision of its
+  own, so an older reader recognises a newer message and shows "update the
+  app" instead of garbage, while a message carried as plain bytes stays
+  readable by anyone.
+
+**It fits on the node itself.** The decoder and the encoder are small enough
+to live on the node's microcontroller next to the radio code, and the South
+Edition companion firmware for nRF52840 boards decoder (and "Luchik" device boards coder): 
+the node shows a
+decoded message on its own display and can encode what is typed on it.
+Measured on that firmware's C++ port, compiled for the Cortex-M4 with size
+optimisation, the cost is roughly:
+
+- **Flash**: about 6.6 KB for the decoder with all seven language tables, of
+  which the tables themselves are about 3 KB, some 400–500 bytes per language;
+  the encoder adds about 2.3 KB. About 10 KB all told, including the helpers
+  that hand text to an app, or about one percent of the nRF52840's 1 MB.
+- **RAM**: the decoder itself keeps nothing between messages; a shared 1.3 KB
+  scratch buffer holds decoded text, and the encoder keeps about 1.6 KB of
+  fixed buffers for a message of up to 160 characters. Both together take
+  about 3 KB, a little over one percent of the chip's 256 KB, plus a few
+  hundred bytes of stack while a message is being processed.
+- **CPU**, an estimate rather than a measurement: each character costs a
+  handful of small table lookups, with no floating point, no memory
+  allocation and no tables built at run time. Decoding a full packet should
+  take well under a millisecond at 64 MHz and encoding one a few
+  milliseconds, next to the hundreds of milliseconds to seconds of LoRa
+  airtime the same packet needs.
+
+The rest of this document is the exact wire specification, written for people
+implementing the codec elsewhere.
+
 ## Status and version history
 
 MCOtxt v1 is the current and only version. Unlike MCMP, which compresses with

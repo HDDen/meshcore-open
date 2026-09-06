@@ -18,6 +18,62 @@ The most relevant files are:
 - `lib/connector/meshcore_protocol.dart`
 - `lib/connector/meshcore_connector.dart`
 
+## How the compression works, in plain words
+
+MCMP makes a chat message much shorter before it goes over the radio: on
+ordinary chat text it saves up to about 70 percent, so a message roughly three
+times longer than usual still fits into one LoRa packet. Where MCOtxt keeps a
+tiny table of four guesses per letter, MCMP carries a large statistical model
+of the language and guesses far better in return; the price is a model too big
+for a node's microcontroller, which is why, f.e., a South Edition node reads 
+only the header and shows a placeholder instead of the text.
+
+- **A large model instead of a small table.** Both sides ship the same file,
+  about 3.4 MB, built from a large amount of English and Russian text. For any
+  run of up to eleven preceding characters it remembers which character came
+  next and how often. Nothing from the model travels with the message: only
+  the message itself is sent, and only a client with the very same file can
+  read it.
+- **Every character costs as much as it was unexpected.** The encoder reads
+  the text one character at a time, looks at what came before, asks the model
+  how likely each possible next character is, and blends the answers from the
+  longest matching context down to plain letter frequencies, trusting the
+  longer matches more. An expected character costs a fraction of a bit, a
+  surprising one several. This is arithmetic coding: the whole message becomes
+  one long binary number whose length depends only on how predictable the text
+  was, rather than one code per character.
+- **Emoji and rare characters still work.** The model knows 672 symbols;
+  anything else is announced with an escape mark and written out by its
+  Unicode number, at a higher cost.
+- **The compressor and the sender decide different things.** The compressor
+  itself has a plain mode: when arithmetic coding would come out longer than
+  the text, as with a very short or an unusual message, it stores the text as
+  plain bytes inside the compressed segment, so that segment is never bigger
+  than the text itself. Whether a message goes out as MCMP at all is the
+  sender's decision, made per channel and per contact. With MCMP v3 selected
+  every ordinary text message goes inside the container whatever its size,
+  because the container is wanted for its timestamp, reply anchor and
+  signature and not only for compression, so a short message can come out
+  longer than the plain text; the older MCMP v2 is sent only when it is
+  smaller than the plain text; and structured payloads such as map markers,
+  shared contacts and images stay plain so that every client can read them.
+- **The container around the text.** MCMP v3 adds a byte of flags and the
+  time of the message; when needed it also carries the sender's name, a
+  precise pointer to the message being replied to (its author and time), and a
+  64-byte signature that the node computes with its private key and that
+  receiving apps check against their contacts, so nobody can post under
+  somebody else's name unnoticed.
+- **Two ways to travel.** In a text message the result is written as `mcmp3:`
+  followed by letters, digits and punctuation (Base91), so that any client can
+  carry it; in a channel it can also go as raw bytes inside the MCO Advanced
+  binary envelope, without the growth Base91 adds.
+- **Nothing is lost.** The decoder undoes the same steps with the same model
+  and returns exactly the text that was typed.
+
+The rest of this document is the exact specification of the body, the model,
+the coder, the transports and the signature, written for people implementing
+MCMP elsewhere.
+
 ## Status and version history
 
 MCMP v3 is the current format for new implementations. It adds a structured
