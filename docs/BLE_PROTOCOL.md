@@ -257,6 +257,29 @@ Sends a message to a channel (broadcast group).
 
 **Max text length**: Depends on sender name prefix (see `maxChannelMessageBytes()`)
 
+### CMD_SEND_CHANNEL_DATA (0x3E)
+
+Sends a typed `GROUP_DATA` datagram to a channel.
+
+**Format**:
+```
+[0x3E][channel_idx][path_len][path...][data_type x2 LE][data...]
+```
+
+**Fields**:
+- `channel_idx` (1 byte): Channel index
+- `path_len` (1 byte): 0xFF = unknown path, send as flood, no path bytes
+  follow; otherwise the length of `path`
+- `path` (`path_len` bytes): route to send along, absent for 0xFF
+- `data_type` (2 bytes LE): registered application namespace, `0x0120` for
+  MCO Advanced (namespaces and the envelope: `CHANNEL_APP_DATA.md`)
+- `data` (variable): the application payload, at most 165 bytes
+  (`maxChannelDataLength`); there is no length byte, the node takes it to the
+  end of the frame
+
+Built by `buildSendChannelDataFrame`. A datagram received from the mesh
+arrives as `RESP_CODE_CHANNEL_DATA_RECV` (0x1B) below.
+
 ### CMD_GET_CONTACTS (0x04)
 
 Requests contact list from device.
@@ -642,7 +665,7 @@ Carries an incoming typed channel `GROUP_DATA` payload.
   hash width minus one, bits 5-0 the hop count, 0xFF no path. No path bytes
   follow.
 - `data_type` (2 bytes LE): registered application namespace, `0x0120` for
-  MCO Advanced
+  MCO Advanced (namespaces and the envelope: `CHANNEL_APP_DATA.md`)
 - `data_len` (1 byte): length of `data`, at most 165
 - `data`: the application payload
 

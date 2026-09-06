@@ -417,6 +417,14 @@ their own unsupported versions before this point and keep their own texts;
 the message search still shows the sentinel, since it runs in an isolate
 without localization. Any other data type stays ignored, as before.
 
+The transport, the namespace registry, the `0x0120` envelope grammar and the
+receiver rules other implementations are expected to follow are specified in
+[`docs/CHANNEL_APP_DATA.md`](docs/CHANNEL_APP_DATA.md) (Russian:
+`docs/CHANNEL_APP_DATA_RU.md`). It is the common document of every binary
+channel format: the MCMP, MCOtxt and MCOimg documents cover their own bodies
+only and point there, so a change to the envelope or to the placeholder rules
+goes into the common document, not into a codec's.
+
 ### MCMP v3 signatures (Ed25519, verified app-side)
 The node signs canonical message bytes via `CMD_SIGN_START/DATA/FINISH` (single global sign buffer
 → serialize sessions). The canonical data contains the v3 signing domain, channel/room context,

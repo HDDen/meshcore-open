@@ -545,12 +545,10 @@ and the node reports a received datagram as response `27`:
 [27][snr × 4, int8][2 reserved][channelIndex][pathLength][dataType u16 LE][dataLength u8][payload]
 ```
 
-`pathLength` in the response is the packet's packed path byte: bits 7–6 hold
-the hash width minus one, bits 5–0 the hop count, and `0xFF` means no path; a
-client unpacks it rather than reading it as a count.
-
 `dataType` is `0x0120`, the registered MeshCore GROUP_DATA namespace of MCO
-Advanced; `payload` is the application envelope, at most 165 bytes:
+Advanced; `payload` is the application envelope specified in
+[`CHANNEL_APP_DATA.md`](CHANNEL_APP_DATA.md), at most 165 bytes, which MCOtxt
+fills as follows:
 
 | Field | Size | Value for MCOtxt |
 |---|---:|---|
@@ -562,12 +560,7 @@ Advanced; `payload` is the application envelope, at most 165 bytes:
 A receiver takes the sender name from the container when flag `0x02` is set
 and falls back to the envelope name otherwise. A revision other than `0x01`
 under subtype `0x03` is displayed as an unsupported-version placeholder rather
-than dropped, so a newer client's messages stay visible. The same holds one
-level up: an envelope whose subtype the receiver does not know is kept and
-shown as a placeholder naming the namespace, the subtype and the revision, with
-the payload stored for a later version. MCO Advanced also keeps packets under
-MeshCore Open's namespace `0x0100`, naming only the namespace, and ignores
-every other `data_type`.
+than dropped, so a newer client's messages stay visible.
 
 ### Byte layout of a channel message
 
@@ -622,10 +615,6 @@ How MeshCore Open Advanced applies the codec; other clients may differ.
   `MCOtxt v<N> не поддерживается: приложение поддерживает MCOtxt v1`, and a
   body that fails to decode as `MCOtxt v<N> не удалось раскодировать`. Both
   strings are currently hard-coded in Russian.
-- An envelope under `0x0120` whose subtype this build does not know is kept as
-  a message showing the localized placeholder `Received a packet of an unknown
-  subtype (0x0120 MCO Advanced, subtype <s> version <v>); the app may need an
-  update`, with the payload stored for a later build.
 
 ## Size overhead
 
@@ -668,9 +657,7 @@ A conforming decoder should:
 - require reply author and reply timestamp as one pair;
 - report a sender name only when the container carries one;
 - display an unsupported revision as a placeholder rather than dropping the
-  message;
-- keep an envelope with an unknown subtype and show it as a placeholder naming
-  the namespace, subtype and revision.
+  message.
 
 ## Conformance references
 

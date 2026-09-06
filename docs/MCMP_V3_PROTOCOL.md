@@ -541,12 +541,11 @@ At the radio-protocol level the binary form uses `PAYLOAD_TYPE_GRP_DATA`
 | `data_len` | 1 byte | Number of bytes in `application_data`. |
 | `application_data` | `data_len` bytes | MCO Advanced application envelope described below. |
 
-`0x0120` is the registered MeshCore GROUP_DATA namespace for **MCO Advanced**.
-The allocation is published in the official
-[`MeshCore number allocations`](https://github.com/meshcore-dev/MeshCore/blob/main/docs/number_allocations.md)
-table. Applications should preserve this value so MCMP v3 packets remain
-compatible across clients. Development-only identifiers from `0xFF00` through
-`0xFFFF` are not used by the current MCMP v3 transport.
+`0x0120` is the registered MeshCore GROUP_DATA namespace of **MCO Advanced**.
+The namespace registry, the envelope grammar shared by every format under
+that namespace and what a receiver does with a subtype or revision it cannot
+read are specified in [`CHANNEL_APP_DATA.md`](CHANNEL_APP_DATA.md); this
+document covers only how MCMP v3 fills that envelope.
 
 Inside `application_data`, the MCO Advanced envelope is:
 
@@ -573,17 +572,6 @@ nibble of `subtypeVersion` then tells MCO Advanced that this application packet
 contains MCMP rather than another supported format. Finally, the MCMP body
 carries the flags, timestamp, optional sender/signature/reply fields, and
 compressed message text described earlier in this document.
-
-A receiver that knows the `0x0120` namespace but not the subtype in the high
-nibble, or not the revision in the low nibble, should keep the packet and show
-a placeholder that names the namespace, the subtype and the revision, rather
-than drop it: a newer client's messages then stay visible as messages, and a
-stored copy of the payload lets a later version decode them. MCO Advanced
-stores such a packet as an ordinary channel message with the whole
-`application_data` attached and shows the placeholder in its place; it does the
-same for MeshCore Open's namespace `0x0100`, whose internal layout it does not
-read, naming only the namespace. Packets under any other `data_type` are
-ignored.
 
 The MCO Advanced application envelope, including its MCMP body, is limited to
 165 bytes by the current end-to-end radio path. Channel encryption, the channel
@@ -839,8 +827,6 @@ radio payload space. The signature itself always consumes 64 body bytes.
 A conforming decoder should:
 
 - reject unknown flag bits;
-- keep a `0x0120` envelope whose subtype or revision it does not know and show
-  it as a placeholder naming both, rather than drop it;
 - reject truncated fixed-width integers and signatures;
 - reject a varuint that is truncated or continues beyond five bytes;
 - reject lengths that exceed the remaining body;

@@ -71,10 +71,10 @@ senderNameLength(varuint) | senderName(UTF-8) | subtypeVersion(u8) | v4Body
 
 A client must inspect subtype and version before decoding. Unknown MCOimg
 versions should produce an unsupported-image placeholder, not enter the v3
-decoder. An envelope whose subtype the client does not know at all is kept as
-well, shown as a placeholder naming the namespace, subtype and version, with
-the payload stored for a later build. Stored text uses `im4:` followed by
-Base91 of `v4Body`.
+decoder. The namespace registry, the envelope itself and what a client does
+with a subtype it does not know at all are specified in
+[`CHANNEL_APP_DATA.md`](CHANNEL_APP_DATA.md). Stored text uses `im4:`
+followed by Base91 of `v4Body`.
 
 ## V4 body
 

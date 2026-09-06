@@ -112,6 +112,10 @@ MCOimg v3 использует официальный app data type MCO Advanced
 data_type = 0x0120
 ```
 
+Реестр пространств, грамматика конверта и действия клиента с незнакомым ему
+подтипом заданы в [`CHANNEL_APP_DATA_RU.md`](CHANNEL_APP_DATA_RU.md); этот
+раздел описывает только то, как MCOimg v3 заполняет конверт.
+
 Channel app payload внутри этого data type:
 
 ```text

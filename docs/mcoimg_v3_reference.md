@@ -111,6 +111,11 @@ MCOimg v3 uses the official MCO Advanced app data type:
 data_type = 0x0120
 ```
 
+The namespace registry, the envelope grammar and what a client does with a
+subtype it does not know are specified in
+[`CHANNEL_APP_DATA.md`](CHANNEL_APP_DATA.md); this section covers only how
+MCOimg v3 fills the envelope.
+
 The channel app payload under this data type is:
 
 ```text
