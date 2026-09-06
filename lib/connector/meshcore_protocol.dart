@@ -667,7 +667,13 @@ Uint8List buildSendChannelDataFrame(
 
 class ChannelDataReceivedFrame {
   final int channelIndex;
+
+  /// Hop count, or -1 when the packet carried no path.
   final int pathLength;
+
+  /// Bytes per path hash the packet was routed with; null when it carried
+  /// no path.
+  final int? pathHashWidth;
   final int dataType;
   final Uint8List payload;
   final double snr;
@@ -675,6 +681,7 @@ class ChannelDataReceivedFrame {
   const ChannelDataReceivedFrame({
     required this.channelIndex,
     required this.pathLength,
+    required this.pathHashWidth,
     required this.dataType,
     required this.payload,
     required this.snr,
@@ -694,9 +701,15 @@ ChannelDataReceivedFrame? parseChannelDataReceivedFrame(Uint8List frame) {
     final dataLength = reader.readByte();
     if (dataLength > frame.length - 9) return null;
     final payload = reader.readBytes(dataLength);
+    // The firmware writes the packet's packed path byte here, as it does in
+    // the V3 text frame: the top two bits are the hash width less one, the
+    // low six the hop count, and 0xFF means no path. Stored raw, as it once
+    // was, a five-hop packet under two-byte hashes read as 69 hops.
+    final hasPath = pathLengthRaw != 0xFF;
     return ChannelDataReceivedFrame(
       channelIndex: channelIndex,
-      pathLength: pathLengthRaw == 0xFF ? -1 : pathLengthRaw,
+      pathLength: hasPath ? pathLengthRaw & 0x3F : -1,
+      pathHashWidth: hasPath ? ((pathLengthRaw & 0xC0) >> 6) + 1 : null,
       dataType: dataType,
       payload: payload,
       snr: snr,

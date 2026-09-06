@@ -11767,6 +11767,7 @@ class MeshCoreConnector extends ChangeNotifier {
       isOutgoing: localSourceLabel != null,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
+      pathHashWidth: dataFrame.pathHashWidth,
       snr: dataFrame.snr,
       channelIndex: dataFrame.channelIndex,
       packetHash: contentHash,
@@ -11833,6 +11834,7 @@ class MeshCoreConnector extends ChangeNotifier {
       isOutgoing: localSourceLabel != null,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
+      pathHashWidth: dataFrame.pathHashWidth,
       snr: dataFrame.snr,
       channelIndex: dataFrame.channelIndex,
       packetHash: _computeChannelDataHash(

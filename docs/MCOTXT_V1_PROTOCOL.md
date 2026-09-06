@@ -545,6 +545,10 @@ and the node reports a received datagram as response `27`:
 [27][snr × 4, int8][2 reserved][channelIndex][pathLength][dataType u16 LE][dataLength u8][payload]
 ```
 
+`pathLength` in the response is the packet's packed path byte: bits 7–6 hold
+the hash width minus one, bits 5–0 the hop count, and `0xFF` means no path; a
+client unpacks it rather than reading it as a count.
+
 `dataType` is `0x0120`, the registered MeshCore GROUP_DATA namespace of MCO
 Advanced; `payload` is the application envelope, at most 165 bytes:
 

@@ -527,7 +527,11 @@ hide a same-named node heard directly. The
 but now means one thing only: messages to the listed channels skip the
 acknowledgement wait and the retries. A V3 frame's raw path byte `0xFF` is read
 as `pathLength == -1`, no path, as the v1 frame and the channel-data frame
-already read it; unpacked as hash width and hop count it claimed 63 hops.
+already read it; unpacked as hash width and hop count it claimed 63 hops. The
+channel-data frame carries the same packed byte, and
+`parseChannelDataReceivedFrame` unpacks it the same way into `pathLength` and
+`pathHashWidth`; stored raw, as it once was, a five-hop packet under two-byte
+hashes read as 69 hops whenever no RX-log route arrived to override it.
 
 This is also what lets a message typed on a South Edition node's own keyboard
 reach this app: the node puts a copy into the app queue under its own name with

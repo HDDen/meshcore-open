@@ -544,6 +544,10 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?
 [27][snr × 4, int8][2 резерв][channelIndex][pathLength][dataType u16 LE][dataLength u8][payload]
 ```
 
+`pathLength` в ответе — упакованный байт пути пакета: биты 7–6 хранят ширину
+хеша минус один, биты 5–0 число хопов, а `0xFF` означает отсутствие пути;
+клиент распаковывает его, а не читает как число.
+
 `dataType` — `0x0120`, зарегистрированное пространство GROUP_DATA MCO Advanced
 в MeshCore; `payload` — прикладной конверт, не более 165 байт:
 

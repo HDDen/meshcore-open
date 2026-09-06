@@ -485,7 +485,9 @@ Received direct message (protocol version 3).
 - `snr` (1 byte): Signal-to-noise ratio
 - `res` (2 bytes): Reserved
 - `prefix` (6 bytes): Sender's public key prefix
-- `path_len` (1 byte): Path length (0xFF = direct)
+- `path_len` (1 byte): the packet's packed path byte: bits 7-6 hold the hash
+  width minus one (1-4 bytes per hop), bits 5-0 the hop count; 0xFF = direct
+  route, no path. No path bytes follow.
 - `txt_type` (1 byte): Text type (bits 7-2: type, bits 1-0: flags)
   - Type 0: Plain text
   - Type 1: CLI data
@@ -512,7 +514,11 @@ Received channel message (protocol version 3).
 - `snr` (1 byte): Signal-to-noise ratio
 - `res` (2 bytes): Reserved
 - `channel_idx` (1 byte): Channel index
-- `path_len` (1 byte): Path length
+- `path_len` (1 byte): the packet's packed path byte: bits 7-6 hold the hash
+  width minus one (1-4 bytes per hop), bits 5-0 the hop count; 0xFF means no
+  path (a direct route, or a message the node put into the queue itself). No
+  path bytes follow; the route itself reaches the app only through
+  `PUSH_CODE_LOG_RX_DATA`.
 - `txt_type` (1 byte): Text type
 - `timestamp` (4 bytes LE): Message timestamp
 - Combined text format: `"[sender_name]: [message_text]"`
@@ -622,6 +628,29 @@ firmware, not from the numeric code alone.
 ### RESP_CODE_CHANNEL_DATA_RECV (0x1B)
 
 Carries an incoming typed channel `GROUP_DATA` payload.
+
+**Format**:
+```
+[0x1B][snr][res x2][channel_idx][path_len][data_type x2 LE][data_len][data...]
+```
+
+**Fields**:
+- `snr` (1 byte): Signal-to-noise ratio × 4, signed
+- `res` (2 bytes): Reserved
+- `channel_idx` (1 byte): Channel index
+- `path_len` (1 byte): the same packed path byte as in `0x11`: bits 7-6 the
+  hash width minus one, bits 5-0 the hop count, 0xFF no path. No path bytes
+  follow.
+- `data_type` (2 bytes LE): registered application namespace, `0x0120` for
+  MCO Advanced
+- `data_len` (1 byte): length of `data`, at most 165
+- `data`: the application payload
+
+`parseChannelDataReceivedFrame` unpacks `path_len` into `pathLength` (hop
+count, -1 for 0xFF) and `pathHashWidth`, exactly as `ChannelMessage.fromFrame`
+does for `0x11`. It once stored the byte raw, so a five-hop packet under
+two-byte hashes showed "69 hops" whenever no RX-log route arrived to override
+the count.
 
 ### RESP_CODE_DEFAULT_FLOOD_SCOPE (0x1C)
 
@@ -900,14 +929,16 @@ timeout = 500 + ((50×6 + 250) × 3) = 500 + (550 × 3) = 2150 ms
 
 ### Path Format
 
-Paths are sequences of 1-byte public key prefixes:
+Paths are sequences of public-key hash prefixes, 1 to 4 bytes per hop
+depending on the node's path-hash mode; the packed path byte of a received
+frame says which width the packet travelled with.
 
-**Example path** (3 hops):
+**Example path** (3 hops, 1-byte hashes):
 ```
 [0xAB][0xCD][0xEF]  // Route through nodes AB... → CD... → EF...
 ```
 
-**Max path size**: 64 bytes = 64 hops maximum
+**Max path size**: 64 bytes: 64 hops with 1-byte hashes, 16 with 4-byte ones
 
 ### Path Modes
 
