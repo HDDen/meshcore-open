@@ -55,8 +55,11 @@ only the header and shows a placeholder instead of the text.
   because the container is wanted for its timestamp, reply anchor and
   signature and not only for compression, so a short message can come out
   longer than the plain text; the older MCMP v2 is sent only when it is
-  smaller than the plain text; and structured payloads such as map markers,
-  shared contacts and images stay plain so that every client can read them.
+  smaller than the plain text. Structured payloads such as shared contacts and
+  images stay plain. Channel map markers and `del:` commands are the exception:
+  when signing is enabled they use MCMP v3 only after the node returns a valid
+  signature, so the app can verify who changed the marker; if signing fails,
+  the payload is sent as plain text.
 - **The container around the text.** MCMP v3 adds a byte of flags and the
   time of the message; when needed it also carries the sender's name, a
   precise pointer to the message being replied to (its author and time), and a

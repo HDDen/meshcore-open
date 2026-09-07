@@ -50,7 +50,7 @@ Compression is chosen per contact and per channel:
   it needs no decompression on the receiving side; the caveat is that it only applies to
   non-English messages (Cyrillic, for example).
 - **MCMP** — the [mesh-compressor](https://dimapanov.github.io/mesh-compressor/) algorithm by
-  dimapanov: an arithmetic coder driven by a bundled statistical 9-gram language model. 
+  dimapanov: an arithmetic coder driven by a bundled statistical order-11 language model.
   On typical chat text it reaches up to ~70% compression, so
   a message roughly three times longer than usual still fits into a single packet. A South
   Edition node cannot decompress it, but recognises MCMP messages and shows their kind,
@@ -133,8 +133,9 @@ message on a line of its own:
 да, и тебе доброго утра
 ```
 
-The excerpt is budgeted in **wire bytes** — up to 15, counted *after* cyr2lat transliteration when
-the channel uses it, so a Cyrillic quote buys as many characters as a Latin one. It is cut on
+The excerpt is budgeted in **wire bytes** — 30 by default, configurable up to 100, and counted
+*after* cyr2lat transliteration when the channel uses it, so a Cyrillic quote buys as many
+characters as a Latin one. It is cut on
 character boundaries, stripped of trailing spaces and punctuation (a question mark is kept — it
 identifies the message too well to lose), and marked with an ellipsis when it is shorter than the
 message it came from. If the quoted message itself began with a quote or a mention of somebody
@@ -149,9 +150,11 @@ starts with the excerpt, retried through every known cyr2lat table when the repl
 transliterated. A hit makes the quote tappable and scrolls to the original; a miss still displays
 the excerpt, so the reader sees what was answered even when the original never reached them.
 
-The quote line adds at most 20 bytes — the marker, up to 15 bytes of text, the ellipsis and the
-line break — and needs no support on the other end: the excerpt is plain text, so clients that
-know nothing about the convention simply show it as written.
+With the default setting the quote line adds at most 35 bytes — the marker, up
+to 30 bytes of text, the ellipsis and the line break. A larger configured limit
+raises that bound accordingly. It needs no support on the other end: the
+excerpt is plain text, so clients that know nothing about the convention simply
+show it as written.
 
 ### Text formatting
 
@@ -215,11 +218,13 @@ any other messenger.
 
 ### MCOimg — small images over LoRa, in one packet payload
 
-A purpose-built lossless raster format that squeezes a very small but recognisable picture 
-(mainly pixel art) into a LoRa-sized (~160 bytes) payload:
-quantisation to fixed or dynamic palettes (up to 512 colours) and a brute-force search across
-many encoders, keeping whichever output is smallest. A typical image size is 30x30 px with 
-6 different colours, or up to around 40x40 px with a monochrome palette
+A purpose-built family of compact image formats. Raster v3 squeezes a very
+small but recognisable picture (mainly pixel art) into a LoRa-sized (~160-byte)
+payload by quantising it to a fixed or dynamic palette (up to 512 colours) and
+searching many encoders for the shortest result. Object-based v4 can combine
+editable vector figures, MCOtxt text and independently compressed v3 raster
+layers in the same document. A typical v3 image is 30x30 px with six colours,
+or up to around 40x40 px with a monochrome palette.
 
 Around it:
 
@@ -228,10 +233,11 @@ Around it:
 - **original-quality playback**: when a received image's identity hash matches an installed pack,
   the app shows the original file instead of the degraded transmitted copy.
 
-The format is documented in [docs/mcoimg_v3_reference.md](docs/mcoimg_v3_reference.md)
-(Russian version: [docs/mcoimg_v3_reference_RU.md](docs/mcoimg_v3_reference_RU.md)), with a
-reference JavaScript decoder in [docs/mcoimg-js](docs/mcoimg-js) so other clients can display
-MCOa images too.
+The common overview is [docs/mcoimg_codec.md](docs/mcoimg_codec.md). The wire
+formats are documented in [the v3 reference](docs/mcoimg_v3_reference.md) and
+[the v4 reference](docs/mcoimg_v4_reference.md), with Russian editions beside
+them. A reference JavaScript v3 decoder lives in [docs/mcoimg-js](docs/mcoimg-js)
+so other clients can display MCOa images too.
 
 ### Built-in wardriving / coverage mapping
 

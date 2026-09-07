@@ -13,15 +13,25 @@ asset:
 remains part of the app because it is used by message compression, not by LLM
 translation.
 
-## Default build
+## Current checkout
 
-By default, translation support is enabled:
+The checked-in `pubspec.yaml` currently matches the `lite-aeic` profile:
+on-device LLM translation is disabled, while the ONNX-backed AEIC image codec
+remains enabled. A normal build therefore does not enable translation:
 
 ```powershell
 flutter build apk --release
 ```
 
-## Lite build without LLM translation on Android
+To enable translation, switch to the full profile before resolving dependencies:
+
+```powershell
+dart run tool/use_translation_profile.dart full
+flutter pub get
+flutter build apk --release
+```
+
+## Build without LLM translation on Android
 
 Use:
 
@@ -51,16 +61,23 @@ or build an app bundle:
 flutter build appbundle --release --dart-define=MESHCORE_ENABLE_TRANSLATION=false
 ```
 
-## Cross-platform lite dependency profile
+## Cross-platform dependency profiles
 
-To remove `llamadart` and `flutter_langdetect` from the dependency graph
-entirely, switch the checkout to the lite profile before running `flutter pub
-get`.
+The profile switcher supports three variants:
+
+| Profile | LLM translation | AEIC ONNX codec | Minimum iOS |
+|---|---|---|---:|
+| `lite` | disabled | disabled | 13.0 |
+| `lite-aeic` | disabled | enabled | 16.0 |
+| `full` | enabled | enabled | 16.0 |
+
+To remove `llamadart` and `flutter_langdetect` from the dependency graph,
+switch to either lite profile before running `flutter pub get`.
 
 Cross-platform command for Windows, Linux, and macOS:
 
 ```powershell
-dart run tool/use_translation_profile.dart lite
+dart run tool/use_translation_profile.dart lite-aeic
 flutter pub get
 ```
 
@@ -74,11 +91,14 @@ flutter build linux --release --dart-define=MESHCORE_ENABLE_TRANSLATION=false
 flutter build macos --release --dart-define=MESHCORE_ENABLE_TRANSLATION=false
 ```
 
-The lite profile replaces:
+The selected profile replaces:
 
-- `pubspec.yaml` with `pubspec.lite.yaml`
+- `pubspec.yaml` with `pubspec.<profile>.yaml`
 - `lib/services/translation_service.dart` with a disabled implementation that
-  has the same public API but does not import LLM packages
+  has the same public API but does not import LLM packages for `lite` and
+  `lite-aeic`
+- `lib/services/image_codec_backend.dart` with the disabled backend for `lite`
+  or the ONNX backend for `lite-aeic` and `full`
 
 To restore the full translation profile:
 

@@ -5,16 +5,19 @@ codec is lossless relative to the prepared palette-index array: it compresses
 indexes, dimensions, transparency metadata and layout information, but it does
 not resize or dither an arbitrary bitmap by itself.
 
-The repository contains three wire versions:
+The repository contains four wire versions:
 
 | Version | Status | Text prefix | Binary/channel route | Maximum size |
 | --- | --- | --- | --- | --- |
 | v1 | legacy read compatibility | `im:` | legacy `0xFFF0` route | `85×85` |
 | v2 | legacy compatibility | `im:` | legacy `0xFFF0` route | `256×256` |
-| v3 | current | `im3:` | official MCO Advanced `0x0120`, subtype/version `0x13` | `256×256` |
+| v3 | current raster format | `im3:` | official MCO Advanced `0x0120`, subtype/version `0x13` | `256×256` |
+| v4 | current object format: vector, text and raster layers | `im4:` | official MCO Advanced `0x0120`, subtype/version `0x14` | `256×256` |
 
-New messages should use v3. v1/v2 decoding remains useful for stored messages
-and older clients.
+Use v3 for a single raster image and v4 for an editable object document with
+vector figures, MCOtxt text, or embedded raster layers. v1/v2 decoding remains
+for stored messages and older clients. The complete v4 format is specified in
+[`mcoimg_v4_reference.md`](mcoimg_v4_reference.md).
 
 ## Text and binary representations
 
@@ -51,9 +54,22 @@ senderNameLength(varuint) | senderName(UTF-8) | 0x13 | v3 body
 A `.bin` file produced by the version-neutral JavaScript helper is the canonical
 app payload including `0x13`. The bare body is a low-level codec representation.
 
-## Common image model
+### v4
 
-An image has:
+The canonical v4 app payload is `0x14 | v4 body`. Unlike v3 text, the v4 text
+representation encodes the body alone because the `im4:` prefix already
+identifies the version:
+
+```text
+im4:<base91 of v4 body>
+```
+
+The `0x0120` channel envelope uses the same sender-name prefix as v3 followed
+by `0x14` and the v4 body.
+
+## Raster image model
+
+The v1-v3 raster formats, and raster layers embedded in v4, use an image with:
 
 - `width` and `height`;
 - `paletteProfile`;

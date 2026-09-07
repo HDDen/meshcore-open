@@ -21,12 +21,10 @@ The MeshCore BLE protocol implements a binary frame-based communication system u
 
 ### Connection Flow
 
-1. **Scan** for devices with known name prefixes (defined in `MeshCoreUuids.deviceNamePrefixes`):
-    - `MeshCore-`
-    - `Whisper-`
-    - `WisCore-`
-    - `HT-`
-    - `LowMesh_MC_`
+1. **Scan** for devices advertising the Nordic UART Service UUID. Known names
+   from `MeshCoreUuids.deviceNamePrefixes` remain display/reference hints and
+   are not the scan filter, so compatible community firmware may use another
+   device name.
 2. **Connect** with 15-second timeout
 3. **Request MTU** of 185 bytes (falls back to default if unsupported)
 4. **Discover services** and locate NUS characteristics
@@ -246,14 +244,15 @@ Sends a message to a channel (broadcast group).
 
 **Format**:
 ```
-[0x03][txt_type][channel_idx][timestamp x4][text...]\0
+[0x03][txt_type][channel_idx][timestamp x4][text...]
 ```
 
 **Fields**:
 - `txt_type` (1 byte): Message type (0=plain)
 - `channel_idx` (1 byte): Channel index (0-7 typically)
 - `timestamp` (4 bytes LE): Unix timestamp in seconds
-- `text` (variable): UTF-8 message text, null-terminated
+- `text` (variable): UTF-8 message text, length-delimited by the frame; no
+  trailing null byte is written
 
 **Max text length**: Depends on sender name prefix (see `maxChannelMessageBytes()`)
 

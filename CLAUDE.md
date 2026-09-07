@@ -1253,7 +1253,9 @@ Recoverable BLE loss does not navigate away from the current chat/canvas. The co
 ### USB Serial (flserial)
 - Default baud rate: `115200`
 - Port enumeration: `MeshCoreConnector.listUsbPorts()`
-- COBS-framed packets via `usb_serial_frame_codec.dart`
+- Marker-and-length framed packets via `usb_serial_frame_codec.dart`: `0x3C`
+  for host-to-device, `0x3E` for device-to-host, then a two-byte little-endian
+  payload length
 - macOS device-name resolution via `ioreg` (`utils/macos_usb_device_names.dart`)
 - API: `MeshCoreConnector.connectUsb(portName: ..., baudRate: 115200)`
 

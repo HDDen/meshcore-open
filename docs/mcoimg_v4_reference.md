@@ -655,11 +655,17 @@ and receive path, replies, stable identity, gallery, and BIN/PNG import and
 export are implemented and released as tag `9.5.1-mod-1.9.0`.
 
 Modes `2` and `3` are not implemented and not supported in the current form;
-they are reserved for future modes. Overlap removal between raster layers would
-be an encoder-side optimization and would not touch the wire. The JavaScript
-and C++ ports and their cross-runtime fixtures are the next phases; the steps,
-and what has to be in place before they start, are in
-[`mcoimg_v4_porting_plan.md`](mcoimg_v4_porting_plan.md). There are no golden
-v4 vectors yet: the only v4-specific tests,
-`test/helpers/mcoimg_v4_text_test.dart`, cover the text figure, and no
-automated test covers the other commands.
+they are reserved for future modes. The universal editor has an optional final
+payload calculation. It can test removing invisible parts of lower raster
+layers, dropping a fully covered layer, and replacing individual vector figures
+with raster layers. A candidate is accepted only when it reduces the final
+payload; calculation uses a copy and does not alter the editable document. This
+is an encoder-side optimization and does not change the wire format.
+
+The JavaScript and C++ ports and their cross-runtime fixtures are the next
+phases; the steps, and what has to be in place before they start, are in
+[`mcoimg_v4_porting_plan.md`](mcoimg_v4_porting_plan.md). The v4 command set is
+covered by `test/helpers/mcoimg_v4_codec_test.dart`: it independently assembles
+bit streams and checks exact canonical bytes, every decoder command,
+round-trips, and error classes. The text figure has additional coverage in
+`test/helpers/mcoimg_v4_text_test.dart`.

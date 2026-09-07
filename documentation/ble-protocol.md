@@ -48,15 +48,9 @@ enum MeshCoreConnectionState {
 
 ## BLE Connection Lifecycle
 
-1. **Scan** with known name prefixes (defined in `MeshCoreUuids.deviceNamePrefixes`):
-    - `MeshCore-`
-    - `Whisper-`
-    - `WisCore-`
-    - `Seeed`
-    - `Lilygo`
-    - `HT-`
-    - `LowMesh_MC_`
-    - `NRF52`
+1. **Scan** for devices advertising the Nordic UART Service UUID. Known names
+   from `MeshCoreUuids.deviceNamePrefixes` are retained as display/reference
+   hints, not as the scan filter.
 2. **Connect** with 15-second timeout (6 seconds on Linux)
 3. **Request MTU** 185 bytes (non-web only)
 4. **Discover services** and locate NUS
@@ -204,13 +198,16 @@ UUID, name, 32-byte secret, hashtag channel list. Shared via QR code.
 
 ## Persistence
 
-All data is stored via `SharedPreferences` (JSON-serialized). No SQLite or other database.
+Most settings and small stores use `SharedPreferences`. Message history is the
+exception: native platforms store direct and channel messages in the Drift
+SQLite database `message_history.sqlite` and migrate legacy preference history
+into it once. Web keeps the SharedPreferences implementation.
 
 | Data | Storage Key Pattern | Scope |
 |---|---|---|
 | Contacts | `contacts<pubKey10>` | Per device identity |
-| Messages | `messages_<pubKey10><contactKey>` | Per device + contact |
-| Channel Messages | `channel_messages_<pubKey10><index>` | Per device + channel |
+| Messages | SQLite rows keyed by `messages_<pubKey10><contactKey>`; preferences on web | Per device + contact |
+| Channel Messages | SQLite rows keyed by `channel_messages_<pubKey10><channel identity>`; preferences on web | Per device + channel |
 | Channels | `channels<pubKey10>` | Per device identity |
 | Channel Order | `channel_order_<pubKey10>` | Per device identity |
 | Contact Groups | `contact_groups<pubKey10>` | Per device identity |

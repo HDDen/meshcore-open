@@ -62,7 +62,7 @@ your next letter.
   decided by the sender that asked for the encoding: the app, and the node
   when it encodes for itself, price the whole MCOtxt packet against the
   ordinary text message and send the shorter one, the plain one on a tie
-  (the setting шт MCOa *Send a plain message when it is smaller*, on by default).
+  (the MCOa setting *Send a plain message when it is smaller*, on by default).
 - **Nothing is lost.** The reader runs the same steps backwards with the same
   table and gets the same text. Only technical details change: Windows line
   endings become plain ones, and a few accented letters typed as two pieces
@@ -378,14 +378,14 @@ The error codes are `MCOtxtCodecError` in `lib/MCOtxt/mcotxt_errors.dart`.
 
 ### Model generations
 
-The `generation` header field names the complete set of tables a stream was
-encoded with, all seven language ids at once rather than a single language.
+The `generation` header field names the complete registry of model tables a
+stream was encoded with, rather than a single language.
 The rules that move it:
 
 - regenerating a table that already exists changes its wire hash and starts a
   new generation;
-- adding tables to a reserved language (German, Italian, Ukrainian,
-  Belarusian) keeps the generation, since no existing stream changes meaning;
+- adding a table under a previously unused global language id keeps the
+  generation, since no existing stream changes meaning;
 - changing the punctuation page, the token tree, the prediction contexts or
   the table limits is a new codec version, not a new generation. Generations
   are numbered within a version, and the pair (version, generation) identifies
@@ -406,10 +406,10 @@ The current generation is recorded as `modelGeneration` in the model manifest.
 | 0 | English | yes |
 | 1 | Russian | yes |
 | 2 | French | yes |
-| 3 | German | reserved, none |
-| 4 | Italian | reserved, none |
-| 5 | Ukrainian | reserved, none |
-| 6 | Belarusian | reserved, none |
+| 3 | German | yes |
+| 4 | Italian | yes |
+| 5 | Ukrainian | yes |
+| 6 | Belarusian | yes |
 | 7 | — | inline header: extended header / no language B |
 | 255 | — | global id: no language B |
 
@@ -473,11 +473,11 @@ AFTER_PUNCT ␠ a e n
 uppercase  A–Z and À Â Æ Ç É È Ê Ë Î Ï Ô Œ Ù Û Ü Ÿ → lowercase
 ```
 
-The reserved languages are defined in the trainer with these lowercase
-alphabets (plus SPACE and digits) and will get tables under their reserved
-ids: German `a–z ä ö ü ß`, Italian `a–z à è é ì í ò ó ù ú`, Ukrainian
+The other four bundled tables use these lowercase alphabets (plus SPACE and
+digits): German `a–z ä ö ü ß`, Italian `a–z à è é ì í ò ó ù ú`, Ukrainian
 `абвгґдеєжзиіїйклмнопрстуфхцчшщьюя`, Belarusian
-`абвгдеёжзійклмнопрстуўфхцчшыьэюя`.
+`абвгдеёжзійклмнопрстуўфхцчшыьэюя`. Their generated tables and wire hashes are
+stored alongside EN, RU and FR under ids `3`–`6`.
 
 ### Wire hash and manifest
 
@@ -672,9 +672,12 @@ How MeshCore Open Advanced applies the codec; other clients may differ.
 - MCOtxt is switched on per channel and per contact, in the same place that
   picks MCMP, SMAZ or cyr2lat, and the four schemes are mutually exclusive.
   The stored keys are `channel_mcotxt_<node>` and `contact_mcotxt_<node>`.
-- When selected, every eligible message uses the container; there is no
-  "only if smaller" gate at this level. The codec's own `RAW_UTF8` mode is the
-  size fallback.
+- Inside the container, the codec compares the normal MCOtxt stream with its
+  own `RAW_UTF8` mode. A separate "Send a plain message when it is smaller"
+  setting compares the complete MCOtxt and plain-text packets. It is enabled
+  by default for channels and contacts; plain text wins when smaller and on a
+  tie. When the setting is off, every eligible message uses the MCOtxt
+  container.
 - Structured payloads never enter the container: MCOimg text payloads (`im:`,
   v3 and v4 prefixes), GIF references `g:`, map markers `m:` and their `del:`
   commands, `V1|` payloads, shared contacts `<pubkey:type:name>`, and text that
