@@ -371,11 +371,13 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   **empty** outer name and subtype byte `0x31`, the name travelling inside the body. A revision
   other than `1` is shown as a placeholder text rather than dropped.
 
-The app names itself `MeshCoreOpen;cap=mctxt` in `CMD_APP_START`
-(`buildMeshCoreOpenAppName`, with `cap=frmfrg1` in front when framed packets are on). A South
-Edition node reads that token: without it, and with its **MCOtxt conversion** setting on, the
+The app names itself `MeshCoreOpen;cap=mctxt,mcmp,aeic` in `CMD_APP_START`
+(`buildMeshCoreOpenAppName`, with `frmfrg1` added to the comma-separated `cap=` list when framed packets are on). A South
+Edition node reads those capabilities: without `mctxt`, and with its **MCOtxt conversion** setting on, the
 node hands incoming MCOtxt to the app already decoded, in numbered `[i/n]` parts when long. The
-app decodes for itself, so the token is always sent. The reverse also happens: a node whose
+app decodes for itself, so `mctxt` is always sent. `mcmp` signals generic MCMP support
+without pinning the capability to a specific MCMP version. `aeic` signals ФУШС-images support. 
+The reverse also happens: a node whose
 **MCOtxt coding** covers the channel (or `mcotxt.contacts` for a contact) re-encodes plain text
 the app sends when that packet is smaller, as the same binary `0x0120` envelope this app uses in
 channels and as `mct:` to contacts. The app is not told, and does not need to be: the node's echo

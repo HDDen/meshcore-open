@@ -61,7 +61,8 @@ Compression is chosen per contact and per channel:
   no arithmetic coder and a whole model is a few hundred bytes, so the same tables also fit a
   microcontroller: the South Edition companion firmware decodes MCOtxt on the node's own
   display and hands the text to clients without the codec as plain messages, while this app
-  tells such a node it decodes itself with `cap=mctxt` in `CMD_APP_START`. On chat text the
+  tells such a node it decodes itself and supports MCMP through the comma-separated
+  `CMD_APP_START` capability list `cap=mctxt,mcmp,aeic`. On chat text the
   codec spends just over 5 bits per character. The wire format is documented in
   [`docs/MCOTXT_V1_PROTOCOL.md`](docs/MCOTXT_V1_PROTOCOL.md) and its
   [`Russian translation`](docs/MCOTXT_V1_PROTOCOL_RU.md).

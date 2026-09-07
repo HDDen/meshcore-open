@@ -755,7 +755,9 @@ README live in `tools/MCOtxt/`.
 
 - **MeshCore Open Advanced** (this repository): `lib/MCOtxt/` and
   `lib/helpers/mcotxt_app_codec.dart`, the reference. The app announces the
-  codec to South Edition nodes as `cap=mctxt` in the `CMD_APP_START` name.
+  codec to South Edition nodes as `mctxt` in the comma-separated `cap=` list of
+  the `CMD_APP_START` name; the same list also announces generic MCMP support
+  as `mcmp` and AEIC-images as `aeic`.
 - **South Edition companion firmware** (Luchik, `src/helpers/mcotxt/` in that
   fork of MeshCore): a full v1 decoder for the node's display and for handing
   the text, as plain-text parts, to a connected app without the codec; a

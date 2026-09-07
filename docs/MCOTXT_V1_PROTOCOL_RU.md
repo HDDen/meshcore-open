@@ -754,7 +754,9 @@ wire-хэши, а у `modelGeneration` из манифеста есть заре
 
 - **MeshCore Open Advanced** (этот репозиторий): `lib/MCOtxt/` и
   `lib/helpers/mcotxt_app_codec.dart`, эталон. Приложение объявляет кодек
-  нодам South Edition токеном `cap=mctxt` в имени `CMD_APP_START`.
+  нодам South Edition возможностью `mctxt` в разделённом запятыми списке
+  `cap=` имени `CMD_APP_START`; этим же списком оно сообщает общую поддержку
+  MCMP возможностью `mcmp` и AEIC возможностью `aeic`.
 - **Прошивка companion South Edition** (Luchik, `src/helpers/mcotxt/` в этом
   форке MeshCore): полный декодер v1 для экрана ноды и для передачи текста
   частями подключённому приложению без кодека; жадный кодер с фиксированной
