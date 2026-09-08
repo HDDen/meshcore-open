@@ -15,6 +15,7 @@ cmake_policy(SET CMP0063 NEW)
 
 # Load bundled libraries from the lib/ directory relative to the binary.
 set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+set(CMAKE_BUILD_RPATH "$ORIGIN/lib")
 
 # Root filesystem for cross-building.
 if(FLUTTER_TARGET_PLATFORM_SYSROOT)
@@ -67,6 +68,8 @@ add_dependencies(${BINARY_NAME} flutter_assemble)
 set_target_properties(${BINARY_NAME}
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/intermediates_do_not_run"
+  BUILD_RPATH "$ORIGIN/lib"
+  INSTALL_RPATH "$ORIGIN/lib"
 )
 
 
@@ -85,6 +88,7 @@ include(flutter/generated_plugins.cmake)
 # dependencies.
 if(TARGET flutter_onnxruntime_plugin)
   set_target_properties(flutter_onnxruntime_plugin PROPERTIES
+    BUILD_RPATH "$ORIGIN"
     INSTALL_RPATH "$ORIGIN")
 endif()
 
