@@ -7453,20 +7453,64 @@ MarkerPayload? parseMarkerText(String text) {
   return MarkerPayload(position: LatLng(lat, lon), label: label, flags: flags);
 }
 
-/// Parse a plain coordinate message of the form `<lat>,<lon>`.
+final RegExp _coordinatePairPattern = RegExp(
+  r'([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*'
+  r'([+-]?(?:\d+(?:\.\d*)?|\.\d+))',
+);
+
+bool _couldContainCoordinatePair(String text) {
+  var searchFrom = 0;
+  while (searchFrom < text.length) {
+    final comma = text.indexOf(',', searchFrom);
+    if (comma < 0) return false;
+
+    var before = comma - 1;
+    while (before >= 0 && _isAsciiWhitespace(text.codeUnitAt(before))) {
+      before--;
+    }
+    var after = comma + 1;
+    while (after < text.length && _isAsciiWhitespace(text.codeUnitAt(after))) {
+      after++;
+    }
+    if (before >= 0 &&
+        after < text.length &&
+        _isCoordinateNumberPart(text.codeUnitAt(before)) &&
+        _isCoordinateNumberStart(text.codeUnitAt(after))) {
+      return true;
+    }
+    searchFrom = comma + 1;
+  }
+  return false;
+}
+
+bool _isAsciiWhitespace(int codeUnit) =>
+    codeUnit == 0x20 || (codeUnit >= 0x09 && codeUnit <= 0x0D);
+
+bool _isCoordinateNumberPart(int codeUnit) =>
+    (codeUnit >= 0x30 && codeUnit <= 0x39) || codeUnit == 0x2E;
+
+bool _isCoordinateNumberStart(int codeUnit) =>
+    _isCoordinateNumberPart(codeUnit) || codeUnit == 0x2B || codeUnit == 0x2D;
+
+/// Find the first valid `<lat>,<lon>` pair anywhere in a text message.
 MarkerPayload? parseCoordinateText(String text) {
   final trimmed = text.trim();
-  final match = RegExp(
-    r'^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$',
-  ).firstMatch(trimmed);
-  if (match == null) return null;
-  final lat = double.tryParse(match.group(1) ?? '');
-  final lon = double.tryParse(match.group(2) ?? '');
-  if (lat == null || lon == null) return null;
-  if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
-    return null;
+  if (!_couldContainCoordinatePair(trimmed)) return null;
+
+  for (final match in _coordinatePairPattern.allMatches(trimmed)) {
+    final lat = double.tryParse(match.group(1) ?? '');
+    final lon = double.tryParse(match.group(2) ?? '');
+    if (lat == null || lon == null) continue;
+    if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+      continue;
+    }
+    return MarkerPayload(
+      position: LatLng(lat, lon),
+      label: match.group(0)!.trim(),
+      flags: '',
+    );
   }
-  return MarkerPayload(position: LatLng(lat, lon), label: trimmed, flags: '');
+  return null;
 }
 
 /// Build a normalized dedupe key for shared markers.
