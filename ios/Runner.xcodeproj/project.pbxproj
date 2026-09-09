@@ -277,9 +277,25 @@
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
+						SystemCapabilities = {
+							com.apple.AccessWiFiInformation = {
+								enabled = 1;
+							};
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+							com.apple.NetworkExtensions = {
+								enabled = 1;
+							};
+						};
 					};
 					AA000000000000000000000A = {
 						CreatedOnToolsVersion = 15.0;
+						SystemCapabilities = {
+							com.apple.NetworkExtensions = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
