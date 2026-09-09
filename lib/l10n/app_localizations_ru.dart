@@ -1162,6 +1162,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contacts_manageRepeater => 'Управление репитером';
 
   @override
+  String get contacts_requestRegions => 'Запросить регионы';
+
+  @override
   String get contacts_manageRoom => 'Управление сервером комнат';
 
   @override
@@ -2191,6 +2194,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Отмена трассировки пути';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'Маршрут должен оканчиваться целевым репитером';
 
   @override
   String get map_wardrive => 'Wardrive';

@@ -5,24 +5,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/region_request_progress_helper.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
+import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:provider/provider.dart';
 
-Future<void> pushRegionManagementScreen(BuildContext context) {
+Future<void> pushRegionManagementScreen(
+  BuildContext context, {
+  Contact? initialFetchRepeater,
+  Uint8List? initialFetchPath,
+  int? initialFetchHopCount,
+  int? initialFetchPathHashByteWidth,
+}) {
   return Navigator.push(
     context,
     MaterialPageRoute<void>(
-      builder: (context) => const RegionManagementScreen(),
+      builder: (context) => RegionManagementScreen(
+        initialFetchRepeater: initialFetchRepeater,
+        initialFetchPath: initialFetchPath,
+        initialFetchHopCount: initialFetchHopCount,
+        initialFetchPathHashByteWidth: initialFetchPathHashByteWidth,
+      ),
     ),
   );
 }
 
 class RegionManagementScreen extends StatefulWidget {
-  const RegionManagementScreen({super.key});
+  final Contact? initialFetchRepeater;
+  final Uint8List? initialFetchPath;
+  final int? initialFetchHopCount;
+  final int? initialFetchPathHashByteWidth;
+
+  const RegionManagementScreen({
+    super.key,
+    this.initialFetchRepeater,
+    this.initialFetchPath,
+    this.initialFetchHopCount,
+    this.initialFetchPathHashByteWidth,
+  });
 
   @override
   State<RegionManagementScreen> createState() => _RegionManagementScreenState();
@@ -30,11 +54,15 @@ class RegionManagementScreen extends StatefulWidget {
 
 class _RegionManagementScreenState extends State<RegionManagementScreen> {
   static const Duration _repeaterDiscoveryTimeout = Duration(seconds: 15);
+  static const Duration _regionRequestAckTimeout = Duration(seconds: 10);
+  static const Duration _regionResponseFallbackTimeout = Duration(seconds: 30);
+  static const int _regionResponseMarginMs = 3000;
 
   final RegionStore _regionStore = RegionStore();
   final TextEditingController _defaultScopeController = TextEditingController();
   List<Region> _regions = [];
   bool _isFetchingRegions = false;
+  RegionRequestProgress? _regionRequestProgress;
   bool _isDefaultScopeBusy = false;
   bool _hasLoadedDefaultScope = false;
 
@@ -45,6 +73,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     _regionStore.setPublicKeyHex = connector.selfPublicKeyHex;
     _loadRegions();
     unawaited(_loadDefaultRegionScope());
+    if (widget.initialFetchRepeater != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_showInitialRepeaterFetchDialog());
+      });
+    }
   }
 
   @override
@@ -104,11 +137,67 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       body: ListView(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         children: [
+          if (_regionRequestProgress != null) ...[
+            _buildRegionRequestProgress(_regionRequestProgress!),
+            const SizedBox(height: 20),
+          ],
           for (final region in _regions) _buildRegionTile(context, region),
           const SizedBox(height: 16),
           _buildDefaultRegionScopeSection(
             context,
             isWaitingForSync: isWaitingForDefaultScopeSync,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegionRequestProgress(RegionRequestProgress progress) {
+    final textStyle = Theme.of(context).textTheme.bodySmall;
+    final hopLabel = context.l10n.pathMap_hopOf(
+      progress.completedHops,
+      progress.totalHops,
+    );
+    return Semantics(
+      label: context.l10n.settings_regionFetchRegions,
+      value: hopLabel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.settings_regionFetchRegions,
+            style: textStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hopLabel,
+            textAlign: TextAlign.center,
+            style: MeshTheme.mono(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: progress.fraction),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.call_made, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '${progress.outboundTraversedHops}/'
+                '${progress.outboundTotalHops}',
+                style: textStyle,
+              ),
+              const SizedBox(width: 20),
+              const Icon(Icons.call_received, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '${progress.inboundTraversedHops}/'
+                '${progress.inboundTotalHops}',
+                style: textStyle,
+              ),
+            ],
           ),
         ],
       ),
@@ -319,15 +408,38 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   Future<void> _showFetchRegionsDialog() async {
+    await _fetchAndShowRegions(_fetchRegionsFromRepeaters);
+  }
+
+  Future<void> _showInitialRepeaterFetchDialog() async {
+    final repeater = widget.initialFetchRepeater;
+    final path = widget.initialFetchPath;
+    final hopCount = widget.initialFetchHopCount;
+    if (repeater == null || path == null || hopCount == null) return;
+    await _fetchAndShowRegions(
+      () => _requestRegionsFromRepeater(
+        context.read<MeshCoreConnector>(),
+        repeater,
+        requestPath: path,
+        requestHopCount: hopCount,
+        requestPathHashByteWidth: widget.initialFetchPathHashByteWidth,
+      ),
+    );
+  }
+
+  Future<void> _fetchAndShowRegions(
+    Future<Set<Region>> Function() fetchRegions,
+  ) async {
     if (_isFetchingRegions) return;
 
     setState(() {
       _isFetchingRegions = true;
+      _regionRequestProgress = null;
     });
 
     Set<Region> fetchedRegions = {};
     try {
-      fetchedRegions = await _fetchRegionsFromRepeaters();
+      fetchedRegions = await fetchRegions();
     } finally {
       if (mounted) {
         setState(() {
@@ -412,6 +524,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         ],
       ),
     );
+    if (mounted) {
+      setState(() {
+        _regionRequestProgress = null;
+      });
+    }
   }
 
   void _showDialogSnackBar(BuildContext context, String message) {
@@ -546,8 +663,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
 
   Future<Set<Region>> _requestRegionsFromRepeater(
     MeshCoreConnector connector,
-    Contact repeater,
-  ) async {
+    Contact repeater, {
+    Uint8List? requestPath,
+    int? requestHopCount,
+    int? requestPathHashByteWidth,
+  }) async {
     StreamSubscription<Uint8List>? subscription;
     Timer? timeout;
     final completer = Completer<Set<Region>>();
@@ -559,6 +679,27 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     );
     var pathChangedForRequest = false;
     var awaitingSentResponse = false;
+    RegionRequestProgressTracker? progressTracker;
+
+    void updateProgress(RegionRequestProgress progress) {
+      if (!mounted) return;
+      final current = _regionRequestProgress;
+      if (current != null &&
+          progress.completedHops <= current.completedHops) {
+        return;
+      }
+      setState(() {
+        _regionRequestProgress = progress;
+      });
+      appLogger.info(
+        'Region request progress: '
+        '${progress.completedHops}/${progress.totalHops} hops '
+        'out=${progress.outboundCompletedHops}/${progress.hopCount} '
+        'in=${progress.inboundCompletedHops}/${progress.hopCount}',
+        tag: 'Regions',
+        noNotify: true,
+      );
+    }
 
     void complete(Set<Region> regions) {
       if (completer.isCompleted) return;
@@ -567,21 +708,84 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       completer.complete(regions);
     }
 
-    void restartTimeout(Duration duration) {
+    void restartTimeout(Duration duration, {required String stage}) {
       timeout?.cancel();
-      timeout = Timer(duration, () => complete(<Region>{}));
+      timeout = Timer(duration, () {
+        appLogger.warn(
+          'Region request timed out: stage=$stage '
+          'tag=${expectedTag ?? '-'} waitMs=${duration.inMilliseconds}',
+          tag: 'Regions',
+          noNotify: true,
+        );
+        complete(<Region>{});
+      });
     }
 
     try {
-      final replyPath = Uint8List(0);
-      const replyHopCount = 0;
-      if (isKnownRepeater) {
-        await connector.setContactPath(repeater, replyPath, replyHopCount);
+      final explicitPath = requestPath != null && requestHopCount != null;
+      final Uint8List replyPath;
+      final int replyHopCount;
+      if (explicitPath) {
+        replyPath = Uint8List.fromList(requestPath);
+        replyHopCount = requestHopCount;
+      } else {
+        replyPath = Uint8List(0);
+        replyHopCount = 0;
+      }
+      final selfPublicKey = connector.selfPublicKey;
+      final pathWidth = (requestPathHashByteWidth ?? connector.pathHashByteWidth)
+          .clamp(1, 3)
+          .toInt();
+      if (explicitPath &&
+          replyHopCount > 0 &&
+          replyPath.length == replyHopCount * pathWidth &&
+          selfPublicKey != null &&
+          selfPublicKey.length == pubKeySize &&
+          repeater.publicKey.length == pubKeySize) {
+        final tracker = RegionRequestProgressTracker(
+          targetPublicKey: repeater.publicKey,
+          senderPublicKey: selfPublicKey,
+          outboundPath: replyPath,
+          pathHashWidth: pathWidth,
+        );
+        progressTracker = tracker;
+        updateProgress(tracker.progress);
+      }
+      if (isKnownRepeater || explicitPath) {
+        final pathHops = <String>[];
+        for (var offset = 0;
+            offset + pathWidth <= replyPath.length;
+            offset += pathWidth) {
+          pathHops.add(
+            replyPath
+                .sublist(offset, offset + pathWidth)
+                .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+                .join()
+                .toUpperCase(),
+          );
+        }
+        appLogger.info(
+          'Preparing region request path to ${repeater.name}: '
+          'hops=$replyHopCount bytes=${replyPath.length} '
+          'forward=${pathHops.join(',')} '
+          'reply=${pathHops.reversed.join(',')}',
+          tag: 'Regions',
+          noNotify: true,
+        );
+        await connector.setContactPath(
+          repeater,
+          replyPath,
+          replyHopCount,
+          waitForAck: true,
+        );
         pathChangedForRequest = true;
       }
 
       subscription = connector.receivedFrames.listen((frame) {
         if (frame.isEmpty || completer.isCompleted) return;
+
+        final observedProgress = progressTracker?.observe(frame);
+        if (observedProgress != null) updateProgress(observedProgress);
 
         final reader = BufferReader(frame);
         try {
@@ -607,16 +811,26 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
             final sentAsFlood = reader.readByte() != 0;
             expectedTag = reader.readUInt32LE();
             final estimatedTimeoutMs = reader.readUInt32LE();
+            appLogger.info(
+              'Region request sent: '
+              'route=${sentAsFlood ? 'flood' : 'direct'} '
+              'tag=$expectedTag timeoutMs=$estimatedTimeoutMs',
+              tag: 'Regions',
+              noNotify: true,
+            );
             if (sentAsFlood) {
               complete(<Region>{});
               return;
             }
+            // Firmware's estimate covers one direct traversal. A region
+            // request needs both the outbound request and the direct reply,
+            // plus the repeater's response delay.
+            final responseTimeoutMs = estimatedTimeoutMs > 0
+                ? estimatedTimeoutMs * 2 + _regionResponseMarginMs
+                : _regionResponseFallbackTimeout.inMilliseconds;
             restartTimeout(
-              Duration(
-                milliseconds: estimatedTimeoutMs > 0
-                    ? estimatedTimeoutMs + 2000
-                    : 10000,
-              ),
+              Duration(milliseconds: responseTimeoutMs),
+              stage: 'response',
             );
             return;
           }
@@ -627,17 +841,25 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           final tag = reader.readUInt32LE();
           if (tag != expectedTag) return;
 
-          complete(_parseRegionsResponse(reader.readRemainingBytes()));
+          final payload = reader.readRemainingBytes();
+          appLogger.info(
+            'Region response received: bytes=${payload.length}',
+            tag: 'Regions',
+            noNotify: true,
+          );
+          final completedProgress = progressTracker?.markCompleted();
+          if (completedProgress != null) updateProgress(completedProgress);
+          complete(_parseRegionsResponse(payload));
         } catch (_) {}
       });
 
-      restartTimeout(const Duration(seconds: 10));
+      restartTimeout(_regionRequestAckTimeout, stage: 'sent-ack');
       final frame = buildSendAnonReqFrame(
         repeater.publicKey,
         requestType: anonReqTypeRegions,
         replyPath: replyPath,
         replyHopCount: replyHopCount,
-        pathHashWidth: connector.pathHashByteWidth,
+        pathHashWidth: requestPathHashByteWidth ?? connector.pathHashByteWidth,
       );
       awaitingSentResponse = true;
       await connector.sendFrame(frame);

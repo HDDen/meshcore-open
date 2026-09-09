@@ -6215,8 +6215,9 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setContactPath(
     Contact contact,
     Uint8List customPath,
-    int pathLen,
-  ) async {
+    int pathLen, {
+    bool waitForAck = false,
+  }) async {
     // Serialize path operations to prevent interleaved async calls from
     // leaving in-memory state inconsistent with the device.
     final prev = _pathOpLock;
@@ -6239,6 +6240,7 @@ class MeshCoreConnector extends ChangeNotifier {
           flags: contact.flags,
           name: contact.name,
         ),
+        waitForGenericAck: waitForAck,
       );
       // USB writes return instantly (no BLE flow control), so give the firmware
       // time to persist the path change before subsequent commands.

@@ -1,5 +1,7 @@
 {
   "bg": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -47,6 +49,8 @@
   ],
 
   "de": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -94,6 +98,8 @@
   ],
 
   "es": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -141,6 +147,8 @@
   ],
 
   "fr": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -188,6 +196,8 @@
   ],
 
   "hu": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -235,6 +245,8 @@
   ],
 
   "it": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -282,6 +294,8 @@
   ],
 
   "ja": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -329,6 +343,8 @@
   ],
 
   "ko": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -376,6 +392,8 @@
   ],
 
   "nl": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -423,6 +441,8 @@
   ],
 
   "pl": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -470,6 +490,8 @@
   ],
 
   "pt": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -517,6 +539,8 @@
   ],
 
   "sk": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -564,6 +588,8 @@
   ],
 
   "sl": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -611,6 +637,8 @@
   ],
 
   "sv": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -658,6 +686,8 @@
   ],
 
   "uk": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",
@@ -705,6 +735,8 @@
   ],
 
   "zh": [
+    "contacts_requestRegions",
+    "map_regionRequestPathMustEndWithTarget",
     "chat_canvasV4Title",
     "chat_canvasV4SetupTitle",
     "chat_canvasV4Grid",

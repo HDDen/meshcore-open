@@ -498,6 +498,7 @@
     }
   },
   "contacts_manageRepeater": "Manage Repeater",
+  "contacts_requestRegions": "Request regions",
   "contacts_manageRoom": "Manage Room Server",
   "contacts_roomLogin": "Room Server Login",
   "contacts_openChat": "Open Chat",
@@ -1082,6 +1083,7 @@
   "map_runTraceWithReturnPath": "Return back on the same path.",
   "map_removeLast": "Remove Last",
   "map_pathTraceCancelled": "Path trace cancelled.",
+  "map_regionRequestPathMustEndWithTarget": "The route must end with the target repeater.",
   "map_wardrive": "Wardrive",
   "map_wardriveStart": "Start",
   "map_wardriveStop": "Stop",

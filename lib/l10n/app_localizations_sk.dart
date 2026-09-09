@@ -1150,6 +1150,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contacts_manageRepeater => 'Spravovať opakované zoznamy';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => 'Spravovať server miestnosti';
 
   @override
@@ -2182,6 +2185,10 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Zrušenie stopáže cesty bolo zrušené.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

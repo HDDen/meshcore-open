@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/app_settings.dart';
 import 'app_settings_service.dart';
@@ -571,6 +572,11 @@ class MapTileCacheService extends ChangeNotifier {
       tileBuilder: tileBuilder,
       userAgentPackageName: userAgentPackageName,
       maxZoom: 19,
+      // Keep the last successful bitmap visible when flutter_map reloads a
+      // tile after a map rebuild. Its default reload opacity is zero, which
+      // briefly exposes the grey map background even though the old bitmap is
+      // still available.
+      tileDisplay: const TileDisplay.fadeIn(reloadStartOpacity: 1),
       // Flutter caches failed image loads too, and the default strategy keeps
       // them forever: one tile lost to a rate limit or a dropped connection
       // stays a grey square for the rest of the session. Dropping error tiles
@@ -1014,7 +1020,7 @@ class ForcedFreshnessFileService extends FileService {
   ForcedFreshnessFileService({
     required this.lifetime,
     FileService? inner,
-  }) : _inner = inner ?? HttpFileService();
+  }) : _inner = inner ?? _RetryingHttpFileService();
 
   final Duration lifetime;
   final FileService _inner;
@@ -1026,6 +1032,46 @@ class ForcedFreshnessFileService extends FileService {
   }) async {
     final response = await _inner.get(url, headers: headers);
     return _ForcedFreshnessResponse(response, lifetime);
+  }
+}
+
+/// Downloads each attempt through a fresh client so a failed TLS session is
+/// never reused for the retry.
+class _RetryingHttpFileService extends FileService {
+  static const int _maxAttempts = 3;
+  static const Duration _retryDelay = Duration(milliseconds: 300);
+
+  @override
+  Future<FileServiceResponse> get(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    for (var attempt = 0; attempt < _maxAttempts; attempt++) {
+      try {
+        final response = await http.get(Uri.parse(url), headers: headers);
+        final bytes = response.bodyBytes;
+        return HttpGetResponse(
+          http.StreamedResponse(
+            Stream<List<int>>.value(bytes),
+            response.statusCode,
+            contentLength: bytes.length,
+            request: response.request,
+            headers: response.headers,
+            isRedirect: response.isRedirect,
+            persistentConnection: false,
+            reasonPhrase: response.reasonPhrase,
+          ),
+        );
+      } catch (_) {
+        if (attempt == _maxAttempts - 1) rethrow;
+        await Future<void>.delayed(
+          Duration(
+            milliseconds: _retryDelay.inMilliseconds * (attempt + 1),
+          ),
+        );
+      }
+    }
+    throw StateError('Tile download attempts exhausted');
   }
 }
 

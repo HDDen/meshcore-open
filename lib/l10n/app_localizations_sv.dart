@@ -1144,6 +1144,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contacts_manageRepeater => 'Hantera Upprepare';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => 'Hantera Rumserver';
 
   @override
@@ -2168,6 +2171,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Sökvägsspårning avbruten.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

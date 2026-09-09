@@ -1160,6 +1160,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contacts_manageRepeater => 'Gestisci ripetitore';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => 'Gestisci server stanza';
 
   @override
@@ -2189,6 +2192,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Tracciamento del percorso annullato.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

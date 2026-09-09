@@ -1081,6 +1081,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_manageRepeater => '管理转发节点';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => '管理房间服务器';
 
   @override
@@ -2070,6 +2073,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => '路径追踪已取消';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

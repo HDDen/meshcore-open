@@ -1100,6 +1100,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_manageRepeater => '리피터 관리';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => '방 서버 관리';
 
   @override
@@ -2098,6 +2101,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => '경로 추적 기능이 취소되었습니다.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

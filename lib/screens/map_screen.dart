@@ -66,6 +66,7 @@ import '../widgets/room_login_dialog.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 import 'line_of_sight_map_screen.dart';
+import 'region_management_screen.dart';
 
 class MapScreen extends StatefulWidget {
   final LatLng? highlightPosition;
@@ -77,6 +78,7 @@ class MapScreen extends StatefulWidget {
   final List<LatLng> highlightLinks;
   final Uint8List? initialTracePath;
   final int? initialTraceHashByteWidth;
+  final Contact? regionRequestTarget;
 
   /// Resolves a local trace origin and fits the initially supplied route.
   final bool initializeInitialTraceViewport;
@@ -99,6 +101,7 @@ class MapScreen extends StatefulWidget {
     this.highlightLinks = const [],
     this.initialTracePath,
     this.initialTraceHashByteWidth,
+    this.regionRequestTarget,
     this.initializeInitialTraceViewport = false,
     this.showHighlightPin = true,
     this.hideBackButton = false,
@@ -153,6 +156,7 @@ class _MapScreenState extends State<MapScreen>
   final Map<String, DateTime> _hiddenMarkerIds = {};
   Map<String, DateTime> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
+  Contact? _regionRequestTarget;
   bool _isSelectingPoi = false;
   bool _hasInitializedMap = false;
   bool _removedMarkersLoaded = false;
@@ -212,6 +216,7 @@ class _MapScreenState extends State<MapScreen>
   @override
   void initState() {
     super.initState();
+    _regionRequestTarget = widget.regionRequestTarget;
     _nodeFiltersExpanded =
         PrefsManager.instance.getBool(_nodeFiltersExpandedKey) ?? true;
     _loadRemovedMarkers();
@@ -5056,6 +5061,8 @@ class _MapScreenState extends State<MapScreen>
         }
         _showRepeaterLogin(context, repeater);
       },
+      onRequestRegions: () =>
+          _openRepeaterRegionRequestTrace(context, connector, repeater),
       onToggleFavorite: () => unawaited(
         connector.setContactFlags(
           repeater,
@@ -5106,6 +5113,28 @@ class _MapScreenState extends State<MapScreen>
         .clamp(1, contact.publicKey.length)
         .toInt();
     return Uint8List.fromList(contact.publicKey.sublist(0, width));
+  }
+
+  void _openRepeaterRegionRequestTrace(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Contact repeater,
+  ) {
+    if (!repeater.isActive) {
+      unawaited(connector.importDiscoveredContact(repeater));
+    }
+    final hashByteWidth = connector.pathHashByteWidth;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialTracePath: _contactPathPrefix(repeater, hashByteWidth),
+          initialTraceHashByteWidth: hashByteWidth,
+          initializeInitialTraceViewport: true,
+          regionRequestTarget: repeater,
+        ),
+      ),
+    );
   }
 
   Future<void> _openServiceTrace(
@@ -6408,6 +6437,29 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  bool get _isRegionRequestTrace => _regionRequestTarget != null;
+
+  Uint8List _targetPathPrefix(MeshCoreConnector connector) {
+    final target = _regionRequestTarget;
+    if (target == null || target.publicKey.isEmpty) return Uint8List(0);
+    final width = _activePathHashWidth(connector)
+        .clamp(1, target.publicKey.length)
+        .toInt();
+    return Uint8List.fromList(target.publicKey.sublist(0, width));
+  }
+
+  bool _pathEndsWithRegionRequestTarget(MeshCoreConnector connector) {
+    final targetPrefix = _targetPathPrefix(connector);
+    if (targetPrefix.isEmpty || _pathTrace.length < targetPrefix.length) {
+      return false;
+    }
+    final start = _pathTrace.length - targetPrefix.length;
+    for (var index = 0; index < targetPrefix.length; index++) {
+      if (_pathTrace[start + index] != targetPrefix[index]) return false;
+    }
+    return true;
+  }
+
   void _addToPath(BuildContext context, Contact contact, {LatLng? position}) {
     // Commit any pending manual edit first so a tapped hop is appended to the
     // typed path rather than overwritten when the field later loses focus.
@@ -6427,12 +6479,29 @@ class _MapScreenState extends State<MapScreen>
         return;
       }
     }
+    final keepTargetLast =
+        _isRegionRequestTrace && _pathEndsWithRegionRequestTarget(connector);
+    final targetPrefix = keepTargetLast ? _targetPathPrefix(connector) : null;
+    final targetWidth = targetPrefix?.length ?? 0;
     setState(() {
+      if (keepTargetLast && targetWidth > 0) {
+        _pathTrace.removeRange(
+          _pathTrace.length - targetWidth,
+          _pathTrace.length,
+        );
+        if (_pathTraceHopWidths.isNotEmpty) {
+          _pathTraceHopWidths.removeLast();
+        }
+      }
       _pathTrace.addAll(hopPrefix); // Add the hop-width pubkey prefix.
       _pathTraceHopWidths.add(hopWidth);
       if (position != null) {
         _pathTracePositionOverrides[PathHelper.formatHopHex(hopPrefix)] =
             position;
+      }
+      if (targetPrefix != null && targetPrefix.isNotEmpty) {
+        _pathTrace.addAll(targetPrefix);
+        _pathTraceHopWidths.add(targetWidth);
       }
       _rebuildPathTraceAuxiliary();
       _syncPathEditText();
@@ -6442,6 +6511,7 @@ class _MapScreenState extends State<MapScreen>
   void _startPath(LatLng position) {
     setState(() {
       _isBuildingPathTrace = true;
+      _regionRequestTarget = null;
       _pathTraceStart = position;
       _pathTrace.clear();
       _pathTraceHopWidths.clear();
@@ -6757,6 +6827,53 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  void _openRegionRequestResult() {
+    final connector = context.read<MeshCoreConnector>();
+    final target = _regionRequestTarget;
+    if (target == null) return;
+    if (_pathEditFocus.hasFocus) _pathEditFocus.unfocus();
+    _commitPathEdit();
+    if (!_pathEndsWithRegionRequestTarget(connector)) {
+      _showMapSnackBar(
+        content: Text(context.l10n.map_regionRequestPathMustEndWithTarget),
+      );
+      return;
+    }
+
+    final hashW = _activePathHashWidth(connector);
+    final recordedBytes = _pathTraceHopWidths.fold<int>(
+      0,
+      (total, width) => total + width,
+    );
+    final hopCount =
+        _pathTraceHopWidths.isNotEmpty && recordedBytes == _pathTrace.length
+        ? _pathTraceHopWidths.length
+        : PathHelper.splitPathBytes(_pathTrace, hashW).length;
+    final requestHopCount = hopCount;
+    final targetHopWidth = _pathTraceHopWidths.isNotEmpty
+        ? _pathTraceHopWidths.last.clamp(1, _pathTrace.length).toInt()
+        : hashW.clamp(1, _pathTrace.length).toInt();
+    // The map route includes the target as its last visual hop. The firmware
+    // already receives the target's full public key, so direct delivery and
+    // the anonymous reply path must contain only intermediate hops.
+    final requestPath = Uint8List.fromList(
+      _pathTrace.sublist(0, _pathTrace.length - targetHopWidth),
+    );
+    final transportHopCount = requestHopCount > 0 ? requestHopCount - 1 : 0;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => RegionManagementScreen(
+          initialFetchRepeater: target,
+          initialFetchPath: requestPath,
+          initialFetchHopCount: transportHopCount,
+          initialFetchPathHashByteWidth: hashW,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPathTraceOverlay() {
     final l10n = context.l10n;
     final brightness = Theme.of(context).brightness;
@@ -6847,12 +6964,15 @@ class _MapScreenState extends State<MapScreen>
                   children: [
                     if (_pathTrace.isNotEmpty)
                       IconButton(
-                        onPressed: () =>
-                            _openPathTraceResult(flipPathAround: false),
+                        onPressed: _isRegionRequestTrace
+                            ? _openRegionRequestResult
+                            : () => _openPathTraceResult(
+                                flipPathAround: false,
+                              ),
                         tooltip: l10n.map_runTrace,
                         icon: const Icon(Icons.arrow_forward_outlined),
                       ),
-                    if (_pathTrace.isNotEmpty)
+                    if (_pathTrace.isNotEmpty && !_isRegionRequestTrace)
                       IconButton(
                         onPressed: () =>
                             _openPathTraceResult(flipPathAround: true),
@@ -6870,6 +6990,7 @@ class _MapScreenState extends State<MapScreen>
                         onPressed: () {
                           setState(() {
                             _isBuildingPathTrace = false;
+                            _regionRequestTarget = null;
                             _pathTrace.clear();
                             _pathTraceHopWidths.clear();
                             _pathTraceContacts.clear();

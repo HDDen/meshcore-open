@@ -2170,6 +2170,12 @@ abstract class AppLocalizations {
   /// **'Manage Repeater'**
   String get contacts_manageRepeater;
 
+  /// No description provided for @contacts_requestRegions.
+  ///
+  /// In en, this message translates to:
+  /// **'Request regions'**
+  String get contacts_requestRegions;
+
   /// No description provided for @contacts_manageRoom.
   ///
   /// In en, this message translates to:
@@ -3987,6 +3993,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Path trace cancelled.'**
   String get map_pathTraceCancelled;
+
+  /// No description provided for @map_regionRequestPathMustEndWithTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'The route must end with the target repeater.'**
+  String get map_regionRequestPathMustEndWithTarget;
 
   /// No description provided for @map_wardrive.
   ///

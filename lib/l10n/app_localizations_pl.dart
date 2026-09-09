@@ -1172,6 +1172,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get contacts_manageRepeater => 'Zarządzaj przekaźnikiem';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => 'Zarządzaj Serwerem Pokoju';
 
   @override
@@ -2206,6 +2209,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Śledzenie ścieżki anulowano.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

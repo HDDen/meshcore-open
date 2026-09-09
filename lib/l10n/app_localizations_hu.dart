@@ -1156,6 +1156,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_manageRepeater => 'Repeater kezelése';
 
   @override
+  String get contacts_requestRegions => 'Request regions';
+
+  @override
   String get contacts_manageRoom => 'Szobaszerver kezelése';
 
   @override
@@ -2187,6 +2190,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_pathTraceCancelled => 'Útvonal nyomkövetés törölve.';
+
+  @override
+  String get map_regionRequestPathMustEndWithTarget =>
+      'The route must end with the target repeater.';
 
   @override
   String get map_wardrive => 'Wardrive';

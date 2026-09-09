@@ -14,6 +14,7 @@ void showRepeaterOptionsSheet({
   required Contact repeater,
   required VoidCallback onPing,
   required VoidCallback onManage,
+  VoidCallback? onRequestRegions,
   required VoidCallback onToggleFavorite,
   required RepeaterExtraTilesBuilder extraTilesBuilder,
   required bool ignoredInWardrive,
@@ -50,6 +51,15 @@ void showRepeaterOptionsSheet({
                   onManage();
                 },
               ),
+              if (onRequestRegions != null)
+                ListTile(
+                  leading: Icon(Icons.travel_explore, color: MeshPalette.blue),
+                  title: Text(context.l10n.contacts_requestRegions),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    onRequestRegions();
+                  },
+                ),
               ListTile(
                 leading: Icon(
                   repeater.isFavorite ? Icons.star : Icons.star_border,

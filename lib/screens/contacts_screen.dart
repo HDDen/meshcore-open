@@ -2230,6 +2230,8 @@ class _ContactsScreenState extends State<ContactsScreen>
         );
       },
       onManage: () => _showRepeaterLogin(context, repeater),
+      onRequestRegions: () =>
+          _openRepeaterRegionRequestTrace(context, connector, repeater),
       onToggleFavorite: () => unawaited(
         connector.setContactFlags(
           repeater,
@@ -2790,6 +2792,25 @@ class _ContactsScreenState extends State<ContactsScreen>
         .clamp(1, contact.publicKey.length)
         .toInt();
     return Uint8List.fromList(contact.publicKey.sublist(0, width));
+  }
+
+  void _openRepeaterRegionRequestTrace(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Contact repeater,
+  ) {
+    final hashByteWidth = connector.pathHashByteWidth;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialTracePath: _contactPathPrefix(repeater, hashByteWidth),
+          initialTraceHashByteWidth: hashByteWidth,
+          initializeInitialTraceViewport: true,
+          regionRequestTarget: repeater,
+        ),
+      ),
+    );
   }
 
   void _confirmDelete(
