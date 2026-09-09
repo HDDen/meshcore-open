@@ -592,9 +592,18 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(tcpServerPort: value));
   }
 
-  Future<void> recordTcpConnection(String host, int port) async {
+  Future<void> setTcpServerWifiSsid(String value) async {
+    await updateSettings(_settings.copyWith(tcpServerWifiSsid: value.trim()));
+  }
+
+  Future<void> recordTcpConnection(
+    String host,
+    int port, {
+    String? wifiSsid,
+  }) async {
     final normalizedHost = host.trim();
     if (normalizedHost.isEmpty || port <= 0) return;
+    final normalizedWifiSsid = wifiSsid?.trim() ?? '';
     final existing = _settings.tcpConnectionBookmarks
         .cast<TcpConnectionBookmark?>()
         .firstWhere(
@@ -610,6 +619,9 @@ class AppSettingsService extends ChangeNotifier {
       lastConnectedAt: DateTime.now(),
       name: existing?.name ?? '',
       isFavorite: existing?.isFavorite ?? false,
+      wifiSsid: normalizedWifiSsid.isNotEmpty
+          ? normalizedWifiSsid
+          : existing?.wifiSsid ?? '',
     );
 
     // Move this endpoint to the top, drop duplicates, and keep only recent ones.
@@ -626,6 +638,7 @@ class AppSettingsService extends ChangeNotifier {
       _settings.copyWith(
         tcpServerAddress: normalizedHost,
         tcpServerPort: port,
+        tcpServerWifiSsid: normalizedWifiSsid,
         tcpConnectionBookmarks: bookmarks.take(5).toList(),
       ),
     );
@@ -646,11 +659,16 @@ class AppSettingsService extends ChangeNotifier {
     TcpConnectionBookmark bookmark, {
     required String name,
     required bool isFavorite,
+    String? wifiSsid,
   }) async {
     final bookmarks = _settings.tcpConnectionBookmarks.map((item) {
       if (item.host.toLowerCase() == bookmark.host.toLowerCase() &&
           item.port == bookmark.port) {
-        return item.copyWith(name: name.trim(), isFavorite: isFavorite);
+        return item.copyWith(
+          name: name.trim(),
+          isFavorite: isFavorite,
+          wifiSsid: wifiSsid?.trim(),
+        );
       }
       return item;
     }).toList();

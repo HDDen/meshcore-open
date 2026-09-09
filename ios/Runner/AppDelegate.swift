@@ -1,4 +1,5 @@
 import Flutter
+import NetworkExtension
 import UIKit
 import UserNotifications
 
@@ -12,6 +13,23 @@ import UserNotifications
     // forwarded to Dart, including taps that launch the app from a cold start.
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     GeneratedPluginRegistrant.register(with: self)
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let channel = FlutterMethodChannel(
+        name: "mco_advanced/ios_wifi_ssid",
+        binaryMessenger: controller.binaryMessenger
+      )
+      channel.setMethodCallHandler { call, result in
+        guard call.method == "currentSsid" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        NEHotspotNetwork.fetchCurrent { network in
+          DispatchQueue.main.async {
+            result(network?.ssid)
+          }
+        }
+      }
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

@@ -439,7 +439,7 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setRecoverLongPacketEchoes,
                   ),
                 ),
-                if (PlatformInfo.isAndroid)
+                if (PlatformInfo.isAndroid || PlatformInfo.isIOS)
                   MeshCard(
                     padding: EdgeInsets.zero,
                     child: SwitchListTile(
