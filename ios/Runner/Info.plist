@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -22,6 +24,11 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>http</string>
+		<string>https</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -30,6 +37,10 @@
 	<string>This app uses Bluetooth to communicate with MeshCore devices.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to scan QR codes for joining communities.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app connects to MeshCore nodes on your local network.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses your location to tag wardrive discovery requests and update your MeshCore node position.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app lets you pick a photo to compress and send over the mesh.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -58,6 +69,8 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>
+		<string>fetch</string>
+		<string>processing</string>
 		<string>voip</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
@@ -76,30 +89,6 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>bluetooth-central</string>
-		<string>voip</string>
-	</array>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>This app uses Bluetooth to communicate with MeshCore devices.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>This app uses Bluetooth to communicate with MeshCore devices.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>This app uses the camera to scan QR codes for joining communities.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app uses your location to tag wardrive discovery requests and update your MeshCore node position.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>This app connects to MeshCore nodes on your local network.</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>http</string>
-		<string>https</string>
 	</array>
 </dict>
 </plist>
