@@ -41,8 +41,8 @@ dependencies:
   # TODO: Switch to official flserial repo once changes are upstreamed
   flserial:
     git:
-      url: https://github.com/MeshEnvy/flserial.git
-      ref: 48216310061efc8d5d217cc18014fc2cb501646e
+      url: https://github.com/HDDen/flserial.git
+      ref: 3af455745826f2fcc94f4522be14d47e86c8a527
   provider: ^6.1.5+1
   mco_service:
     path: packages/mco_service_stub
