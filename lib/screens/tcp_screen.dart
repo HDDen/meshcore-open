@@ -8,6 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
+import '../services/ios_background_tcp_service.dart';
 import '../services/ios_wifi_ssid_service.dart';
 import '../storage/connection_transport_preference_store.dart';
 import '../theme/mesh_theme.dart';
@@ -103,11 +104,26 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     _navigatedToChannels = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
+    final resolvedWifiSsid = (wifiSsid ?? _wifiSsidController.text).trim();
     await _settingsService.recordTcpConnection(
       host,
       port,
-      wifiSsid: wifiSsid ?? _wifiSsidController.text,
+      wifiSsid: resolvedWifiSsid,
     );
+    if (PlatformInfo.isIOS &&
+        _settingsService.settings.backgroundTcpEnabled &&
+        resolvedWifiSsid.isNotEmpty) {
+      try {
+        await const IosBackgroundTcpService().configure(
+          host: host,
+          port: port,
+          wifiSsid: resolvedWifiSsid,
+          enabled: true,
+        );
+      } catch (error) {
+        debugPrint('Could not configure iOS background TCP receiver: $error');
+      }
+    }
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
