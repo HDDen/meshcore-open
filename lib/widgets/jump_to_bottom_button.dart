@@ -5,13 +5,6 @@ import '../helpers/chat_scroll_controller.dart';
 import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
 
-typedef ChatMessageListBuilder =
-    Widget Function(
-      BuildContext context,
-      EdgeInsets padding,
-      double bottomReservedExtent,
-    );
-
 class JumpToBottomButton extends StatefulWidget {
   final ChatScrollController scrollController;
   final VoidCallback? onJumpToBottom;
@@ -149,25 +142,22 @@ class _JumpToBottomButtonState extends State<JumpToBottomButton>
   }
 }
 
-class JumpToBottomReservedPadding extends StatefulWidget {
+/// Reserves room inside the reversed list without rebuilding the list itself.
+class JumpToBottomReservedSpacer extends StatefulWidget {
   final ChatScrollController scrollController;
-  final EdgeInsets basePadding;
-  final ChatMessageListBuilder builder;
 
-  const JumpToBottomReservedPadding({
+  const JumpToBottomReservedSpacer({
     super.key,
     required this.scrollController,
-    required this.basePadding,
-    required this.builder,
   });
 
   @override
-  State<JumpToBottomReservedPadding> createState() =>
-      _JumpToBottomReservedPaddingState();
+  State<JumpToBottomReservedSpacer> createState() =>
+      _JumpToBottomReservedSpacerState();
 }
 
-class _JumpToBottomReservedPaddingState
-    extends State<JumpToBottomReservedPadding>
+class _JumpToBottomReservedSpacerState
+    extends State<JumpToBottomReservedSpacer>
     with WidgetsBindingObserver {
   bool _keyboardVisible = false;
 
@@ -212,7 +202,7 @@ class _JumpToBottomReservedPaddingState
           showJumpToBottomButton: showJumpToBottomButton,
           showHideKeyboardButton: showHideKeyboardButton,
         );
-        return widget.builder(context, widget.basePadding, reservedPadding);
+        return SizedBox(height: reservedPadding);
       },
     );
   }

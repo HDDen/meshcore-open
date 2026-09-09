@@ -1142,31 +1142,24 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
                     return Stack(
                       children: [
-                        JumpToBottomReservedPadding(
-                          scrollController: _scrollController,
-                          basePadding: const EdgeInsets.all(8),
-                          builder: (context, padding, bottomReservedExtent) {
-                            final hasBottomSpacer = bottomReservedExtent > 0;
-                            final spacerItemCount = hasBottomSpacer ? 1 : 0;
-                            return Listener(
-                              onPointerDown: (_) =>
-                                  _cancelMessageScrollStabilization(),
-                              onPointerSignal: (_) =>
-                                  _cancelMessageScrollStabilization(),
-                              child: ChatZoomWrapper(
-                                child: ListView.builder(
+                        Listener(
+                          onPointerDown: (_) =>
+                              _cancelMessageScrollStabilization(),
+                          onPointerSignal: (_) =>
+                              _cancelMessageScrollStabilization(),
+                          child: ChatZoomWrapper(
+                            child: ListView.builder(
                                   reverse: true, // List grows from bottom up
                                   controller: _scrollController,
-                                  padding: padding,
-                                  itemCount: itemCount + spacerItemCount,
+                                  padding: const EdgeInsets.all(8),
+                                  itemCount: itemCount + 1,
                                   itemBuilder: (context, index) {
-                                    if (hasBottomSpacer && index == 0) {
-                                      return SizedBox(
-                                        height: bottomReservedExtent,
+                                    if (index == 0) {
+                                      return JumpToBottomReservedSpacer(
+                                        scrollController: _scrollController,
                                       );
                                     }
-                                    final adjustedIndex =
-                                        index - spacerItemCount;
+                                    final adjustedIndex = index - 1;
 
                                     // Loading indicator now appears at end (bottom) of reversed list
                                     if (_isLoadingOlder &&
@@ -1232,10 +1225,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     );
                                   },
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                            ),
+                          ),
                         JumpToBottomButton(
                           scrollController: _scrollController,
                           onJumpToBottom: () =>
@@ -1246,7 +1237,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   },
                 ),
               ),
-              _buildMessageComposer(),
+              Builder(
+                builder: (context) => _buildMessageComposer(context),
+              ),
             ],
           ),
         ),
@@ -3726,7 +3719,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Widget _buildMessageComposer() {
+  Widget _buildMessageComposer(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final settings = context.watch<AppSettingsService>().settings;
     final scheme = Theme.of(context).colorScheme;

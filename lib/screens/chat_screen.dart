@@ -769,7 +769,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           onSelected: _applyMentionSuggestion,
                         ),
                 ),
-                _buildInputBar(connector),
+                Builder(
+                  builder: (context) => _buildInputBar(context, connector),
+                ),
               ],
             );
           },
@@ -890,26 +892,25 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollController.scrollToBottomIfAtBottom();
     });
 
-    return JumpToBottomReservedPadding(
-      scrollController: _scrollController,
-      basePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      builder: (context, padding, bottomReservedExtent) {
-        final hasBottomSpacer = bottomReservedExtent > 0;
-        final spacerItemCount = hasBottomSpacer ? 1 : 0;
-        return Listener(
-          onPointerDown: (_) => _cancelMessageScrollStabilization(),
-          onPointerSignal: (_) => _cancelMessageScrollStabilization(),
-          child: ChatZoomWrapper(
-            child: ListView.builder(
+    return Listener(
+      onPointerDown: (_) => _cancelMessageScrollStabilization(),
+      onPointerSignal: (_) => _cancelMessageScrollStabilization(),
+      child: ChatZoomWrapper(
+        child: ListView.builder(
               reverse: true, // List grows from bottom up
               controller: _scrollController,
-              padding: padding,
-              itemCount: itemCount + spacerItemCount,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 16,
+              ),
+              itemCount: itemCount + 1,
               itemBuilder: (context, index) {
-                if (hasBottomSpacer && index == 0) {
-                  return SizedBox(height: bottomReservedExtent);
+                if (index == 0) {
+                  return JumpToBottomReservedSpacer(
+                    scrollController: _scrollController,
+                  );
                 }
-                final adjustedIndex = index - spacerItemCount;
+                final adjustedIndex = index - 1;
 
                 // Loading indicator now appears at end (bottom) of reversed list
                 if (_isLoadingOlder && adjustedIndex == itemCount - 1) {
@@ -1019,8 +1020,6 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-        );
-      },
     );
   }
 
@@ -1062,7 +1061,7 @@ class _ChatScreenState extends State<ChatScreen> {
         connector.prepareContactOutboundText(widget.contact, text);
   }
 
-  Widget _buildInputBar(MeshCoreConnector connector) {
+  Widget _buildInputBar(BuildContext context, MeshCoreConnector connector) {
     final maxBytes = _maxContactInputBytes(connector);
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
@@ -2907,9 +2906,9 @@ class _MessageBubble extends StatelessWidget {
                         : const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
-                          ),
+                    ),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.72,
+                      maxWidth: MediaQuery.sizeOf(context).width * 0.72,
                     ),
                     decoration: BoxDecoration(
                       color: isHighlighted
