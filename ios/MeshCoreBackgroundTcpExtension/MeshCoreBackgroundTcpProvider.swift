@@ -22,6 +22,8 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
   private let respCodeChannelMsgRecvV3: UInt8 = 17
   private let respCodeChannelDataRecv: UInt8 = 27
   private let pushCodeMsgWaiting: UInt8 = 0x83
+  private let pushCodeLoginSuccess: UInt8 = 0x85
+  private let pushCodeLoginFail: UInt8 = 0x86
   private let txtTypePlain: UInt8 = 0
   private let txtTypeSigned: UInt8 = 2
 
@@ -61,18 +63,22 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
     self.connection = connection
     startCompletion = completionHandler
     startCompletionFinished = false
+    NSLog("MCO background TCP: provider starting endpoint=\(host):\(portValue)")
 
     connection.stateUpdateHandler = { [weak self] state in
       guard let self = self else { return }
       switch state {
       case .ready:
+        NSLog("MCO background TCP: provider ready")
         self.finishStart(nil)
         self.sendAppStart()
         self.receiveLoop()
       case .failed(let error):
+        NSLog("MCO background TCP: provider failed: \(error.localizedDescription)")
         self.finishStart(error)
         self.connection?.cancel()
       case .cancelled:
+        NSLog("MCO background TCP: provider cancelled")
         self.finishStart(nil)
       default:
         break
@@ -151,14 +157,30 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
 
   private func handlePayload(_ payload: [UInt8]) {
     guard let code = payload.first else { return }
+    NSLog("MCO background TCP: RX code=\(code) len=\(payload.count)")
     if code == pushCodeMsgWaiting {
       sendSyncNextMessage()
+      return
+    }
+    if code == pushCodeLoginSuccess || code == pushCodeLoginFail {
       return
     }
     if let notification = parseContactMessage(payload) ?? parseChannelMessage(payload) ?? parseChannelData(payload) {
       showNotification(title: notification.title, body: notification.body)
       sendSyncNextMessage()
+    } else if isLikelyMessagePayload(payload) {
+      showNotification(title: "MeshCore", body: "New MeshCore message")
+      sendSyncNextMessage()
     }
+  }
+
+  private func isLikelyMessagePayload(_ payload: [UInt8]) -> Bool {
+    guard let code = payload.first else { return false }
+    return code == respCodeContactMsgRecv ||
+      code == respCodeChannelMsgRecv ||
+      code == respCodeContactMsgRecvV3 ||
+      code == respCodeChannelMsgRecvV3 ||
+      code == respCodeChannelDataRecv
   }
 
   private func parseContactMessage(_ frame: [UInt8]) -> (title: String, body: String)? {
@@ -279,6 +301,21 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
       content: content,
       trigger: nil
     )
-    UNUserNotificationCenter.current().add(request)
+    UNUserNotificationCenter.current().add(request) { [weak self] error in
+      if let error = error {
+        NSLog("MCO background TCP: failed to show extension notification: \(error.localizedDescription)")
+        self?.reportNotificationToManager(title: title, body: body)
+      } else {
+        NSLog("MCO background TCP: extension notification scheduled")
+      }
+    }
+  }
+
+  private func reportNotificationToManager(title: String, body: String) {
+    reportIncomingCall(userInfo: [
+      "kind": "meshcore.background.tcp.message",
+      "title": title,
+      "body": body
+    ])
   }
 }

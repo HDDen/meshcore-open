@@ -4,8 +4,9 @@ import UIKit
 import UserNotifications
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, NEAppPushDelegate {
   private let backgroundTcpManagerName = "MCO Advanced Background TCP"
+  private var backgroundTcpManagers: [NEAppPushManager] = []
 
   override func application(
     _ application: UIApplication,
@@ -44,7 +45,26 @@ import UserNotifications
         self?.configureBackgroundTcp(call: call, result: result)
       }
     }
+    loadBackgroundTcpManagers()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  private func loadBackgroundTcpManagers() {
+    NEAppPushManager.loadAllFromPreferences { [weak self] managers, error in
+      guard let self = self else { return }
+      if let error = error {
+        NSLog("MCO background TCP: failed to load managers: \(error.localizedDescription)")
+        return
+      }
+      DispatchQueue.main.async {
+        let loaded = managers ?? []
+        for manager in loaded {
+          manager.delegate = self
+        }
+        self.backgroundTcpManagers = loaded
+        NSLog("MCO background TCP: loaded \(loaded.count) manager(s)")
+      }
+    }
   }
 
   private func configureBackgroundTcp(call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -91,6 +111,7 @@ import UserNotifications
 
       manager.localizedDescription = self.backgroundTcpManagerName
       manager.providerBundleIdentifier = providerBundleIdentifier
+      manager.delegate = self
       manager.matchSSIDs = enabled ? [wifiSsid.trimmingCharacters(in: .whitespacesAndNewlines)] : []
       manager.providerConfiguration = [
         "host": host.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -103,9 +124,39 @@ import UserNotifications
           if let saveError = saveError {
             result(FlutterError(code: "save_failed", message: saveError.localizedDescription, details: nil))
           } else {
+            NSLog(
+              "MCO background TCP: saved enabled=\(manager.isEnabled) active=\(manager.isActive) ssid=\(manager.matchSSIDs.joined(separator: ",")) endpoint=\(host):\(port)"
+            )
+            self.loadBackgroundTcpManagers()
             result(nil)
           }
         }
+      }
+    }
+  }
+
+  func appPushManager(
+    _ manager: NEAppPushManager,
+    didReceiveIncomingCallWithUserInfo userInfo: [AnyHashable: Any] = [:]
+  ) {
+    let title = userInfo["title"] as? String ?? "MeshCore"
+    let body = userInfo["body"] as? String ?? "New MeshCore message"
+    showBackgroundTcpNotification(title: title, body: body)
+  }
+
+  private func showBackgroundTcpNotification(title: String, body: String) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+    let request = UNNotificationRequest(
+      identifier: "mco.background.tcp.delegate.\(UUID().uuidString)",
+      content: content,
+      trigger: nil
+    )
+    UNUserNotificationCenter.current().add(request) { error in
+      if let error = error {
+        NSLog("MCO background TCP: failed to show delegate notification: \(error.localizedDescription)")
       }
     }
   }
