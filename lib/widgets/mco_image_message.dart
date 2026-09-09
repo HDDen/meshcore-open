@@ -31,6 +31,13 @@ class MCOImageDecodeMetadata {
 }
 
 class MCOImageMessage extends StatelessWidget {
+  static const _notImage = MCOImageDecodeMetadata(
+    image: null,
+    unsupportedVersion: null,
+    currentMaxSupportedVersion: 4,
+    payloadInfo: null,
+  );
+
   final MCOImage image;
   final double maxSize;
 
@@ -39,6 +46,12 @@ class MCOImageMessage extends StatelessWidget {
   static MCOImageDecodeMetadata decodeMetadata(String text) {
     const current = 4;
     final trimmed = text.trimLeft();
+    if (!trimmed.startsWith('im') &&
+        !trimmed.startsWith(
+          ChannelBinaryDataHelper.unsupportedMcoImagePrefix,
+        )) {
+      return _notImage;
+    }
     if (trimmed.startsWith(ChannelBinaryDataHelper.unsupportedMcoImagePrefix)) {
       final version = int.tryParse(
         trimmed.substring(
@@ -65,9 +78,8 @@ class MCOImageMessage extends StatelessWidget {
     }
     if (MCOImageV4Codec.isTextPayload(text)) {
       try {
-        final body = const MCOImageV4Codec().bodyFromText(text);
-        final decoded = const MCOImageV4Codec().decodeBody(body);
-        final document = decoded.document;
+        final payload = const MCOImageV4Codec().decodeTextWithBody(text);
+        final document = payload.decoded.document;
         final background = document.backgroundColor == null
             ? -1
             : document.palette[document.backgroundColor!];
@@ -86,7 +98,7 @@ class MCOImageMessage extends StatelessWidget {
           payloadInfo: MCOImagePayloadInfo(
             version: 4,
             algorithm: 'vector',
-            binaryLength: body.length,
+            binaryLength: payload.body.length,
           ),
         );
       } on MCOImageUnsupportedFormatException catch (error) {
@@ -123,15 +135,10 @@ class MCOImageMessage extends StatelessWidget {
         );
       }
     }
-    final payloadInfo = MCOImageCodec.inspectPayload(text);
     if (!text.startsWith(MCOImageCodec.prefix)) {
-      return MCOImageDecodeMetadata(
-        image: null,
-        unsupportedVersion: null,
-        currentMaxSupportedVersion: current,
-        payloadInfo: null,
-      );
+      return _notImage;
     }
+    final payloadInfo = MCOImageCodec.inspectPayload(text);
 
     final received = MCOImageCodec.decodeHeaderVersion(text);
     if (received != null && received > current) {

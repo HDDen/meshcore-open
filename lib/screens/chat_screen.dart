@@ -2786,6 +2786,7 @@ class _MessageBubble extends StatelessWidget {
     // afterwards.
     final blockedBody = message.wasBlocked ? message.text : null;
     final bodyText = blockedBody == null ? message.text : '';
+    final trimmedBodyText = bodyText.trim();
     final gifId = GifHelper.parseGif(bodyText);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
     final mcoImage = mcoImageMetadata.image;
@@ -2801,12 +2802,25 @@ class _MessageBubble extends StatelessWidget {
     );
     final isMediaMessage =
         gifId != null || mcoImage != null || unsupportedMcoImageVersion != null;
-    final poi = parseMarkerText(bodyText);
+    final isMarker = trimmedBodyText.startsWith(
+      SharedMarkerDeletion.markerPrefix,
+    );
+    final isMarkerDeletion = trimmedBodyText.startsWith(
+      SharedMarkerDeletion.markerDeletionPrefix,
+    );
+    final poi = isMarker || isMarkerDeletion
+        ? parseMarkerText(trimmedBodyText)
+        : null;
     // `del:m:...` matches the marker pattern as well, so the badge is told
     // which one it is rather than guessing from the payload.
-    final poiRemoved = SharedMarkerDeletion.targetOf(bodyText) != null;
-    final coordinate = parseCoordinateText(bodyText);
-    final sharedContact = parseSharedContactText(bodyText);
+    final poiRemoved = isMarkerDeletion;
+    final coordinate = trimmedBodyText.contains(',')
+        ? parseCoordinateText(trimmedBodyText)
+        : null;
+    final sharedContact =
+        trimmedBodyText.startsWith('<') && trimmedBodyText.endsWith('>')
+        ? parseSharedContactText(trimmedBodyText)
+        : null;
     final isFailed = message.status == MessageStatus.failed;
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.

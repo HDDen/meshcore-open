@@ -13,6 +13,7 @@ class SharedMarkerDeletion {
 
   static const String prefix = 'del:';
   static const String markerPrefix = 'm:';
+  static const String markerDeletionPrefix = '$prefix$markerPrefix';
 
   static String commandFor(String markerText) => '$prefix${markerText.trim()}';
 

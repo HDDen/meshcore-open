@@ -30,26 +30,31 @@ class MessageTextCodec {
     String text, {
     int? inheritedTimestamp,
   }) {
-    final mcmpMessage = McmpAppCodec.tryDecodeTextPayloadMessage(text);
-    if (mcmpMessage != null) {
-      return DecodedMessageText(
-        text: mcmpMessage.text,
-        mcmpMessage: mcmpMessage,
-      );
+    final trimmedLeft = text.trimLeft();
+    if (trimmedLeft.startsWith(McmpAppCodec.textPrefix)) {
+      final message = McmpAppCodec.tryDecodeTextPayloadMessage(text);
+      return message == null
+          ? null
+          : DecodedMessageText(text: message.text, mcmpMessage: message);
     }
-    final mcotxtMessage = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
-      text,
-      inheritedTimestamp: inheritedTimestamp,
-    );
-    if (mcotxtMessage != null) {
-      return DecodedMessageText(
-        text: mcotxtMessage.text,
-        mcotxtMessage: mcotxtMessage,
+
+    if (trimmedLeft.startsWith(MCOtxtAppCodec.textPrefix)) {
+      final message = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+        text,
+        inheritedTimestamp: inheritedTimestamp,
       );
+      return message == null
+          ? null
+          : DecodedMessageText(text: message.text, mcotxtMessage: message);
     }
-    final decodedText =
-        MeshCompressor.instance.tryDecodePrefixed(text) ??
-        Smaz.tryDecodePrefixed(text);
+
+    String? decodedText;
+    if (trimmedLeft.startsWith(MeshCompressor.prefix) ||
+        trimmedLeft.startsWith(MeshCompressor.legacyPrefix)) {
+      decodedText = MeshCompressor.instance.tryDecodePrefixed(text);
+    } else if (trimmedLeft.startsWith('s:')) {
+      decodedText = Smaz.tryDecodePrefixed(text);
+    }
     if (decodedText == null) return null;
     return DecodedMessageText(text: decodedText);
   }

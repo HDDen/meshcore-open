@@ -221,16 +221,22 @@ class MCOImageV4Codec {
   }
 
   Uint8List bodyFromText(String text) {
+    return decodeTextWithBody(text).body;
+  }
+
+  /// Decodes an `im4:` transport once while retaining its exact body bytes.
+  ({Uint8List body, DecodedMCOImageV4 decoded}) decodeTextWithBody(
+    String text,
+  ) {
     final trimmed = text.trimLeft();
     if (!trimmed.startsWith(textPrefix)) {
       throw const MCOImageInvalidPayloadException('Not an MCOimg v4 text');
     }
     final body = _V4Base91.decode(trimmed.substring(textPrefix.length));
-    decodeBody(body);
-    return body;
+    return (body: body, decoded: decodeBody(body));
   }
 
-  DecodedMCOImageV4 decodeText(String text) => decodeBody(bodyFromText(text));
+  DecodedMCOImageV4 decodeText(String text) => decodeTextWithBody(text).decoded;
 
   static bool isTextPayload(String text) => text.trimLeft().startsWith(
     textPrefix,

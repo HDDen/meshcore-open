@@ -17,6 +17,10 @@ class ReactionInfo {
 }
 
 class ReactionHelper {
+  static final RegExp _reactionPattern = RegExp(
+    r'^r:([0-9a-f]{4}):([0-9a-f]{2})$',
+  );
+
   /// Apply a reaction to a list of messages by matching the reaction hash.
   ///
   /// [messages] - the message list to search
@@ -115,8 +119,8 @@ class ReactionHelper {
   /// Parse reaction format: r:HASH:INDEX (where INDEX is 2-char hex emoji index)
   /// Returns null if text is not a valid reaction format
   static ReactionInfo? parseReaction(String text) {
-    final regex = RegExp(r'^r:([0-9a-f]{4}):([0-9a-f]{2})$');
-    final match = regex.firstMatch(text);
+    if (!text.startsWith('r:')) return null;
+    final match = _reactionPattern.firstMatch(text);
     if (match == null) return null;
 
     final emoji = indexToEmoji(match.group(2)!);

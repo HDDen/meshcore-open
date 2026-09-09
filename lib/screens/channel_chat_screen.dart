@@ -126,6 +126,8 @@ class ChannelChatScreen extends StatefulWidget {
 }
 
 class _ChannelChatScreenState extends State<ChannelChatScreen> {
+  static final RegExp _replyWhitespacePattern = RegExp(r'\s+');
+
   final MarkupTextEditingController _textController =
       MarkupTextEditingController();
   final ChatScrollController _scrollController = ChatScrollController();
@@ -530,7 +532,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   String _normalizeReplyLookupText(String text) {
-    return text.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+    return text.trim().replaceAll(_replyWhitespacePattern, ' ').toLowerCase();
   }
 
   String? _findReplyFallbackMessageId(
@@ -5549,14 +5551,25 @@ class _ParsedChannelMessageContent {
   });
 
   factory _ParsedChannelMessageContent.parse(String text) {
+    final trimmed = text.trim();
+    final isMarker = trimmed.startsWith(SharedMarkerDeletion.markerPrefix);
+    final isMarkerDeletion = trimmed.startsWith(
+      SharedMarkerDeletion.markerDeletionPrefix,
+    );
     return _ParsedChannelMessageContent(
       gifId: GifHelper.parseGif(text),
       mcoImageMetadata: MCOImageMessage.decodeMetadata(text),
-      unknownAppData: UnknownChannelAppData.parseSentinel(text),
-      poi: parseMarkerText(text),
-      poiRemoved: SharedMarkerDeletion.targetOf(text) != null,
-      coordinate: parseCoordinateText(text),
-      sharedContact: parseSharedContactText(text),
+      unknownAppData: trimmed.startsWith(
+        ChannelBinaryDataHelper.unknownAppDataPrefix,
+      )
+          ? UnknownChannelAppData.parseSentinel(trimmed)
+          : null,
+      poi: isMarker || isMarkerDeletion ? parseMarkerText(trimmed) : null,
+      poiRemoved: isMarkerDeletion,
+      coordinate: trimmed.contains(',') ? parseCoordinateText(trimmed) : null,
+      sharedContact: trimmed.startsWith('<') && trimmed.endsWith('>')
+          ? parseSharedContactText(trimmed)
+          : null,
     );
   }
 
