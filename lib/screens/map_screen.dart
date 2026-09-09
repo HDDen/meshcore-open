@@ -6439,17 +6439,29 @@ class _MapScreenState extends State<MapScreen>
 
   bool get _isRegionRequestTrace => _regionRequestTarget != null;
 
-  Uint8List _targetPathPrefix(MeshCoreConnector connector) {
-    final target = _regionRequestTarget;
-    if (target == null || target.publicKey.isEmpty) return Uint8List(0);
+  Uint8List _pathPrefixForContact(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) {
+    if (contact.publicKey.isEmpty) return Uint8List(0);
     final width = _activePathHashWidth(connector)
-        .clamp(1, target.publicKey.length)
+        .clamp(1, contact.publicKey.length)
         .toInt();
-    return Uint8List.fromList(target.publicKey.sublist(0, width));
+    return Uint8List.fromList(contact.publicKey.sublist(0, width));
   }
 
-  bool _pathEndsWithRegionRequestTarget(MeshCoreConnector connector) {
-    final targetPrefix = _targetPathPrefix(connector);
+  Uint8List _targetPathPrefix(MeshCoreConnector connector) {
+    final target = _regionRequestTarget;
+    return target == null
+        ? Uint8List(0)
+        : _pathPrefixForContact(connector, target);
+  }
+
+  bool _pathEndsWithContact(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) {
+    final targetPrefix = _pathPrefixForContact(connector, contact);
     if (targetPrefix.isEmpty || _pathTrace.length < targetPrefix.length) {
       return false;
     }
@@ -6458,6 +6470,11 @@ class _MapScreenState extends State<MapScreen>
       if (_pathTrace[start + index] != targetPrefix[index]) return false;
     }
     return true;
+  }
+
+  bool _pathEndsWithRegionRequestTarget(MeshCoreConnector connector) {
+    final target = _regionRequestTarget;
+    return target != null && _pathEndsWithContact(connector, target);
   }
 
   void _addToPath(BuildContext context, Contact contact, {LatLng? position}) {
@@ -6827,13 +6844,43 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  void _openRegionRequestResult() {
+  Contact? _lastPathRepeater(MeshCoreConnector connector) {
+    if (_pathTrace.isEmpty) return null;
+    final recordedBytes = _pathTraceHopWidths.fold<int>(
+      0,
+      (total, width) => total + width,
+    );
+    final lastHopWidth =
+        _pathTraceHopWidths.isNotEmpty && recordedBytes == _pathTrace.length
+        ? _pathTraceHopWidths.last
+        : _activePathHashWidth(connector);
+    if (lastHopWidth <= 0 || lastHopWidth > _pathTrace.length) return null;
+    final prefix = _pathTrace.sublist(_pathTrace.length - lastHopWidth);
+    final contact = _contactForHopPrefix(connector, prefix);
+    return contact?.type == advTypeRepeater ? contact : null;
+  }
+
+  void _openCurrentPathRegionRequest() {
+    if (_pathEditFocus.hasFocus) _pathEditFocus.unfocus();
+    _commitPathEdit();
     final connector = context.read<MeshCoreConnector>();
-    final target = _regionRequestTarget;
+    final target = _lastPathRepeater(connector);
+    if (target == null) {
+      _showMapSnackBar(
+        content: Text(context.l10n.map_regionRequestPathMustEndWithTarget),
+      );
+      return;
+    }
+    _openRegionRequestResult(targetOverride: target);
+  }
+
+  void _openRegionRequestResult({Contact? targetOverride}) {
+    final connector = context.read<MeshCoreConnector>();
+    final target = targetOverride ?? _regionRequestTarget;
     if (target == null) return;
     if (_pathEditFocus.hasFocus) _pathEditFocus.unfocus();
     _commitPathEdit();
-    if (!_pathEndsWithRegionRequestTarget(connector)) {
+    if (!_pathEndsWithContact(connector, target)) {
       _showMapSnackBar(
         content: Text(context.l10n.map_regionRequestPathMustEndWithTarget),
       );
@@ -6965,7 +7012,7 @@ class _MapScreenState extends State<MapScreen>
                     if (_pathTrace.isNotEmpty)
                       IconButton(
                         onPressed: _isRegionRequestTrace
-                            ? _openRegionRequestResult
+                            ? () => _openRegionRequestResult()
                             : () => _openPathTraceResult(
                                 flipPathAround: false,
                               ),
@@ -6984,6 +7031,12 @@ class _MapScreenState extends State<MapScreen>
                         onPressed: _removePath,
                         tooltip: l10n.map_removeLast,
                         icon: const Icon(Icons.undo),
+                      ),
+                    if (_pathTrace.isNotEmpty && !_isRegionRequestTrace)
+                      IconButton(
+                        onPressed: _openCurrentPathRegionRequest,
+                        tooltip: l10n.contacts_requestRegions,
+                        icon: const Icon(Icons.travel_explore),
                       ),
                     if (_pathTrace.isEmpty)
                       IconButton(
