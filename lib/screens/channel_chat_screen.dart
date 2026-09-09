@@ -572,15 +572,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
-    return [
-      ...connector.getChannelMessages(widget.channel).where(
-        (message) => !connector.hidesChannelMessageWidget(
-          message,
-          widget.channel.index,
-        ),
-      ),
-      ...connector.getPendingChannelMessages(widget.channel.index),
-    ];
+    return connector.getChannelMessageTimeline(widget.channel);
   }
 
   _ParsedChannelMessageContent _parsedMessageContent({
@@ -1060,9 +1052,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           child: Column(
             children: [
               Expanded(
-                child: Consumer<MeshCoreConnector>(
-                  builder: (context, connector, child) {
-                    final messages = _messagesForDisplay(connector);
+                child: Selector<
+                  MeshCoreConnector,
+                  ({List<ChannelMessage> messages, int pathHashByteWidth})
+                >(
+                  selector: (context, connector) => (
+                    messages: _messagesForDisplay(connector),
+                    pathHashByteWidth: connector.pathHashByteWidth,
+                  ),
+                  shouldRebuild: (previous, next) =>
+                      !identical(previous.messages, next.messages) ||
+                      previous.pathHashByteWidth != next.pathHashByteWidth,
+                  builder: (context, timeline, child) {
+                    final connector = context.read<MeshCoreConnector>();
+                    final settingsService = context
+                        .watch<AppSettingsService>();
+                    final messages = timeline.messages;
                     final imageRows = _receivedImageRows(context);
 
                     if (messages.isEmpty && imageRows.isEmpty) {
@@ -1205,10 +1210,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                               ? _buildMessageBubble(
                                                   message,
                                                   textScale,
+                                                  connector,
+                                                  settingsService,
                                                 )
                                               : _buildImageBubble(
                                                   row.image!,
                                                   textScale,
+                                                  settingsService,
                                                 );
                                           if (isUnreadAnchor) {
                                             return Column(
@@ -1361,9 +1369,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChannelMessage message, double textScale) {
-    final connector = context.watch<MeshCoreConnector>();
-    final settingsService = context.watch<AppSettingsService>();
+  Widget _buildMessageBubble(
+    ChannelMessage message,
+    double textScale,
+    MeshCoreConnector connector,
+    AppSettingsService settingsService,
+  ) {
     final enableTracing = settingsService.settings.enableMessageTracing;
     final noRetransmissionWarningsEnabled =
         settingsService.settings.noRetransmissionWarningSeconds > 0;
@@ -1503,8 +1514,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     final outgoingRadioWaitSeconds = _outgoingRadioWaitSeconds(message);
     final displayPathHashWidth =
-        message.pathHashWidth ??
-        context.read<MeshCoreConnector>().pathHashByteWidth;
+        message.pathHashWidth ?? connector.pathHashByteWidth;
     final displayHopCount = _displayHopCount(
       displayPath,
       displayPathHashWidth,
@@ -3157,9 +3167,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// Bubble for one AEIC image, following the GIF-message precedent: minimal
   /// chrome, the renderer owns every state (receiving / decoding / failed) and
   /// the mandatory AI-reconstruction label.
-  Widget _buildImageBubble(ReceivedImageEntry entry, double textScale) {
+  Widget _buildImageBubble(
+    ReceivedImageEntry entry,
+    double textScale,
+    AppSettingsService settingsService,
+  ) {
     final scheme = Theme.of(context).colorScheme;
-    final settings = context.watch<AppSettingsService>().settings;
+    final settings = settingsService.settings;
     final enableTimeSeconds = settings.enableTimeSeconds;
     final isOutgoing = entry.isOutgoing;
     final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;

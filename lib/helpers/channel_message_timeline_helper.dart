@@ -47,3 +47,83 @@ abstract final class ChannelMessageTimelineHelper {
     );
   }
 }
+
+typedef ChannelMessageMerger =
+    List<ChannelMessage> Function(
+      List<ChannelMessage> primary,
+      List<ChannelMessage> secondary,
+    );
+
+/// Keeps the display timeline stable while unrelated connector state changes.
+class ChannelMessageTimelineCache {
+  final Map<int, _ChannelMessageTimelineEntry> _entries = {};
+
+  List<ChannelMessage> resolve({
+    required int channelIndex,
+    required List<ChannelMessage> primary,
+    required List<ChannelMessage> secondary,
+    required List<ChannelMessage> pending,
+    required int filterRevision,
+    required String filterKey,
+    required ChannelMessageMerger merge,
+    required bool Function(ChannelMessage message) include,
+  }) {
+    final cached = _entries[channelIndex];
+    if (cached != null &&
+        cached.filterRevision == filterRevision &&
+        cached.filterKey == filterKey &&
+        _sameMessages(cached.primary, primary) &&
+        _sameMessages(cached.secondary, secondary) &&
+        _sameMessages(cached.pending, pending)) {
+      return cached.timeline;
+    }
+
+    final historical = secondary.isEmpty
+        ? primary
+        : merge(primary, secondary);
+    final timeline = <ChannelMessage>[
+      for (final message in historical)
+        if (include(message)) message,
+      ...pending,
+    ]..sort(ChannelMessageTimelineHelper.compare);
+    final result = List<ChannelMessage>.unmodifiable(timeline);
+    _entries[channelIndex] = _ChannelMessageTimelineEntry(
+      primary: List<ChannelMessage>.of(primary),
+      secondary: List<ChannelMessage>.of(secondary),
+      pending: List<ChannelMessage>.of(pending),
+      filterRevision: filterRevision,
+      filterKey: filterKey,
+      timeline: result,
+    );
+    return result;
+  }
+
+  static bool _sameMessages(
+    List<ChannelMessage> previous,
+    List<ChannelMessage> current,
+  ) {
+    if (previous.length != current.length) return false;
+    for (var index = 0; index < current.length; index++) {
+      if (!identical(previous[index], current[index])) return false;
+    }
+    return true;
+  }
+}
+
+class _ChannelMessageTimelineEntry {
+  const _ChannelMessageTimelineEntry({
+    required this.primary,
+    required this.secondary,
+    required this.pending,
+    required this.filterRevision,
+    required this.filterKey,
+    required this.timeline,
+  });
+
+  final List<ChannelMessage> primary;
+  final List<ChannelMessage> secondary;
+  final List<ChannelMessage> pending;
+  final int filterRevision;
+  final String filterKey;
+  final List<ChannelMessage> timeline;
+}

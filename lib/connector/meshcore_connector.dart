@@ -245,6 +245,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final List<Channel> _channels = [];
   final Map<String, List<Message>> _conversations = {};
   final Map<int, List<ChannelMessage>> _channelMessages = {};
+  final ChannelMessageTimelineCache _channelMessageTimelineCache =
+      ChannelMessageTimelineCache();
   final List<String> _pendingChannelSentQueue = [];
   final List<_PendingCommandAck> _pendingGenericAckQueue = [];
   static const String _reactionSendQueuePrefix = '__reaction_send__';
@@ -1855,6 +1857,35 @@ class MeshCoreConnector extends ChangeNotifier {
     return _mergeChannelMessages(
       primary,
       _sharedChannelSecondaryMessages[channel.index] ?? const [],
+    );
+  }
+
+  /// Stable, filtered timeline for one channel's transcript.
+  ///
+  /// The source lists contain immutable message snapshots. Comparing their
+  /// identities is enough to detect a real history change without rebuilding
+  /// the merged and sorted view for unrelated connector notifications.
+  List<ChannelMessage> getChannelMessageTimeline(Channel channel) {
+    final primary = _channelMessages[channel.index] ?? const <ChannelMessage>[];
+    var secondary = const <ChannelMessage>[];
+    if (!isOfflineMode && _sharedChannelsEnabled) {
+      _ensureSharedChannelHistory(channel);
+      secondary =
+          _sharedChannelSecondaryMessages[channel.index] ??
+          const <ChannelMessage>[];
+    }
+    final pending = getPendingChannelMessages(channel.index);
+    final channelName = _channelDisplayName(channel.index);
+    return _channelMessageTimelineCache.resolve(
+      channelIndex: channel.index,
+      primary: primary,
+      secondary: secondary,
+      pending: pending,
+      filterRevision: BlockedSenders.instance.revision,
+      filterKey: channelName,
+      merge: _mergeChannelMessages,
+      include: (message) =>
+          !BlockedSenders.instance.hidesMessageWidget(message, channelName),
     );
   }
 
