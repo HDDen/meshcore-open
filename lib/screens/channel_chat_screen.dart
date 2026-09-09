@@ -34,6 +34,7 @@ import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
+import '../helpers/message_content_cache.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/message_markup.dart';
@@ -143,6 +144,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
+  final _messageContentCache =
+      MessageContentCache<_ParsedChannelMessageContent>();
 
   /// Message ids whose MCOimg variant the user flipped away from the default
   /// (the default is "show pack original" when the mod setting is enabled,
@@ -576,6 +579,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       ),
       ...connector.getPendingChannelMessages(widget.channel.index),
     ];
+  }
+
+  _ParsedChannelMessageContent _parsedMessageContent({
+    required String cacheKey,
+    required String text,
+  }) {
+    return _messageContentCache.resolve(
+      key: cacheKey,
+      text: text,
+      build: () => _ParsedChannelMessageContent.parse(text),
+    );
   }
 
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
@@ -1404,11 +1418,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : '$compressionRatioPrefix$compressionTypeLabel'
               '${message.wasBinaryTransport ? ' bin' : ''}';
     final scheme = Theme.of(context).colorScheme;
-    final gifId = GifHelper.parseGif(bodyText);
-    final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
+    final parsedContent = _parsedMessageContent(
+      cacheKey: 'body:${message.messageId}',
+      text: bodyText,
+    );
+    final gifId = parsedContent.gifId;
+    final mcoImageMetadata = parsedContent.mcoImageMetadata;
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
-    final unknownAppData = UnknownChannelAppData.parseSentinel(bodyText);
+    final unknownAppData = parsedContent.unknownAppData;
     final mcoImageBadgeLabel = MCOImageMessage.buildBadgeLabel(
       metadata: mcoImageMetadata,
       sourceText: bodyText,
@@ -1425,12 +1443,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         mcoImage != null ||
         unsupportedMcoImageVersion != null ||
         unknownAppData != null;
-    final poi = parseMarkerText(bodyText);
+    final poi = parsedContent.poi;
     // `del:m:...` matches the marker pattern as well, so the badge is told
     // which one it is rather than guessing from the payload.
-    final poiRemoved = SharedMarkerDeletion.targetOf(bodyText) != null;
-    final coordinate = parseCoordinateText(bodyText);
-    final sharedContact = parseSharedContactText(bodyText);
+    final poiRemoved = parsedContent.poiRemoved;
+    final coordinate = parsedContent.coordinate;
+    final sharedContact = parsedContent.sharedContact;
     final isPlainTextMessage =
         poi == null &&
         coordinate == null &&
@@ -2498,12 +2516,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
 
-    final gifId = GifHelper.parseGif(replyText);
-    final poi = parseMarkerText(replyText);
-    final mcoImageMetadata = MCOImageMessage.decodeMetadata(replyText);
+    final parsedContent = _parsedMessageContent(
+      cacheKey: 'reply:${message.messageId}',
+      text: replyText,
+    );
+    final gifId = parsedContent.gifId;
+    final poi = parsedContent.poi;
+    final mcoImageMetadata = parsedContent.mcoImageMetadata;
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
-    final unknownAppData = UnknownChannelAppData.parseSentinel(replyText);
+    final unknownAppData = parsedContent.unknownAppData;
 
     Widget contentPreview;
     if (quoteBlocked) {
@@ -3568,10 +3590,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildReplyBanner(double textScale) {
     final message = _replyingToMessage!;
     final scheme = Theme.of(context).colorScheme;
-    final mcoImageMetadata = MCOImageMessage.decodeMetadata(message.text);
+    final parsedContent = _parsedMessageContent(
+      cacheKey: 'body:${message.messageId}',
+      text: message.text,
+    );
+    final mcoImageMetadata = parsedContent.mcoImageMetadata;
     final mcoImage = mcoImageMetadata.image;
     final unsupportedMcoImageVersion = mcoImageMetadata.unsupportedVersion;
-    final unknownAppData = UnknownChannelAppData.parseSentinel(message.text);
+    final unknownAppData = parsedContent.unknownAppData;
     final previewTextColor = scheme.onSecondaryContainer.withValues(alpha: 0.7);
 
     Widget preview;
@@ -3707,7 +3733,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showsReplyBanner =
         _replyingToMessage != null && _plainReplyComposerPrefix == null;
     final replyBannerHeight = showsReplyBanner
-        ? (MCOImageMessage.decodeMetadata(_replyingToMessage!.text).image !=
+        ? (_parsedMessageContent(
+                    cacheKey: 'body:${_replyingToMessage!.messageId}',
+                    text: _replyingToMessage!.text,
+                  ).mcoImageMetadata.image !=
                   null
               ? 106.0
               : 64.0)
@@ -5505,6 +5534,39 @@ class _ChannelChatRow {
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.
   String get id => message?.messageId ?? 'aeic:${image!.streamId}';
+}
+
+@immutable
+class _ParsedChannelMessageContent {
+  const _ParsedChannelMessageContent({
+    required this.gifId,
+    required this.mcoImageMetadata,
+    required this.unknownAppData,
+    required this.poi,
+    required this.poiRemoved,
+    required this.coordinate,
+    required this.sharedContact,
+  });
+
+  factory _ParsedChannelMessageContent.parse(String text) {
+    return _ParsedChannelMessageContent(
+      gifId: GifHelper.parseGif(text),
+      mcoImageMetadata: MCOImageMessage.decodeMetadata(text),
+      unknownAppData: UnknownChannelAppData.parseSentinel(text),
+      poi: parseMarkerText(text),
+      poiRemoved: SharedMarkerDeletion.targetOf(text) != null,
+      coordinate: parseCoordinateText(text),
+      sharedContact: parseSharedContactText(text),
+    );
+  }
+
+  final String? gifId;
+  final MCOImageDecodeMetadata mcoImageMetadata;
+  final UnknownChannelAppData? unknownAppData;
+  final MarkerPayload? poi;
+  final bool poiRemoved;
+  final MarkerPayload? coordinate;
+  final SharedContactInfo? sharedContact;
 }
 
 /// [ReceivedImageStrings] built from the app's localizations.
