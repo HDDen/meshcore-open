@@ -624,6 +624,58 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  Contact? _findContactByPubKeyHex(
+    String contactPubKeyHex, {
+    bool includeDiscoveredFallback = false,
+  }) {
+    final contact = getContactByPubKeyHex(contactPubKeyHex);
+    if (contact != null || !includeDiscoveredFallback) return contact;
+    return _discoveredContacts.cast<Contact?>().firstWhere(
+      (c) => c?.publicKeyHex == contactPubKeyHex,
+      orElse: () => null,
+    );
+  }
+
+  Contact? _findContactByPrefix(
+    Uint8List prefix, {
+    bool includeDiscoveredFallback = false,
+  }) {
+    final contact = _contacts.cast<Contact?>().firstWhere(
+      (c) => c != null && _matchesPrefix(c.publicKey, prefix),
+      orElse: () => null,
+    );
+    if (contact != null || !includeDiscoveredFallback) return contact;
+    return _discoveredContacts.cast<Contact?>().firstWhere(
+      (c) => c != null && _matchesPrefix(c.publicKey, prefix),
+      orElse: () => null,
+    );
+  }
+
+  Contact _restoreDiscoveredContact(Contact contact) {
+    final existing = getContactByPubKeyHex(contact.publicKeyHex);
+    if (existing != null) return existing;
+
+    final restored = contact.copyWith(isActive: true);
+    _contacts.add(restored);
+    _knownContactKeys.add(restored.publicKeyHex);
+
+    final discoveredIndex = _discoveredContacts.indexWhere(
+      (c) => c.publicKeyHex == restored.publicKeyHex,
+    );
+    if (discoveredIndex >= 0) {
+      _discoveredContacts[discoveredIndex] =
+          _discoveredContacts[discoveredIndex].copyWith(isActive: true);
+    }
+
+    appLogger.info(
+      'Restored contact ${restored.name} from local discovery cache',
+      tag: 'Connector',
+    );
+    unawaited(_persistContacts());
+    unawaited(_persistDiscoveredContacts());
+    return restored;
+  }
+
   List<Contact> get allContacts => List.unmodifiable([
     ..._contacts,
     ..._discoveredContacts.where(
@@ -9403,7 +9455,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!_deferQueuedContactMessagesUntilContacts) return;
     if (_pendingInitialContactsSync && isConnected) {
       _pendingInitialContactsSync = false;
-      unawaited(getContacts());
+      unawaited(getContacts(preserveExisting: true));
       return;
     }
     unawaited(_processDeferredQueuedContactMessages());
@@ -10036,9 +10088,12 @@ class MeshCoreConnector extends ChangeNotifier {
     if (message == null && !_isLoadingContacts) {
       final senderPrefix = _extractSenderPrefix(frame);
       if (senderPrefix != null) {
-        final hasContact = _contacts.any(
-          (c) => _matchesPrefix(c.publicKey, senderPrefix),
-        );
+        final hasContact =
+            _findContactByPrefix(
+              senderPrefix,
+              includeDiscoveredFallback: true,
+            ) !=
+            null;
         if (!hasContact) {
           debugPrint(
             'Received message from unknown contact, refreshing contacts...',
@@ -10075,11 +10130,14 @@ class MeshCoreConnector extends ChangeNotifier {
         return;
       }
 
-      final contact = _contacts.cast<Contact?>().firstWhere(
-        (c) => c?.publicKeyHex == message!.senderKeyHex,
-        orElse: () => null,
+      var contact = _findContactByPubKeyHex(
+        message.senderKeyHex,
+        includeDiscoveredFallback: true,
       );
       if (contact != null) {
+        if (getContactByPubKeyHex(contact.publicKeyHex) == null) {
+          contact = _restoreDiscoveredContact(contact);
+        }
         message = message.copyWith(
           pathLength: contact.pathLength < 0 ? -1 : contact.pathLength,
           pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
@@ -10259,9 +10317,9 @@ class MeshCoreConnector extends ChangeNotifier {
               decodedText: decodedText,
             );
 
-      final contact = _contacts.cast<Contact?>().firstWhere(
-        (c) => c != null && _matchesPrefix(c.publicKey, senderPrefix),
-        orElse: () => null,
+      final contact = _findContactByPrefix(
+        senderPrefix,
+        includeDiscoveredFallback: true,
       );
       if (contact == null) {
         appLogger.warn(

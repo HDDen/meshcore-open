@@ -1569,7 +1569,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () => connector.getContacts(),
+            onRefresh: () => connector.refreshContacts(),
             child: filteredAndSorted.isEmpty
                 ? LayoutBuilder(
                     builder: (context, constraints) => ListView(
