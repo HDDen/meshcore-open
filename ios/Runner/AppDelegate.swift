@@ -16,8 +16,11 @@ import UserNotifications
     // forwarded to Dart, including taps that launch the app from a cold start.
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     GeneratedPluginRegistrant.register(with: self)
-    let registrar = self.registrar(forPlugin: "McoAdvancedNativeChannels")
-    registerNativeChannels(binaryMessenger: registrar.messenger())
+    if let registrar = self.registrar(forPlugin: "McoAdvancedNativeChannels") {
+      registerNativeChannels(binaryMessenger: registrar.messenger())
+    } else {
+      NSLog("MCO background TCP: native channel registrar is unavailable")
+    }
     loadBackgroundTcpManagers()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
