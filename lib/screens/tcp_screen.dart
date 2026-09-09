@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
+import '../services/app_debug_log_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/ios_background_tcp_service.dart';
 import '../services/ios_wifi_ssid_service.dart';
@@ -35,6 +36,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   late final TextEditingController _wifiSsidController;
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
+  late final AppDebugLogService _appDebugLogService;
   late final VoidCallback _connectionListener;
   bool _navigatedToChannels = false;
   bool _autoconnectEnabled = false;
@@ -59,6 +61,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
       text: _settingsService.settings.tcpServerWifiSsid,
     );
     _connector = context.read<MeshCoreConnector>();
+    _appDebugLogService = context.read<AppDebugLogService>();
 
     _connectionListener = () {
       if (!mounted) return;
@@ -114,13 +117,32 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
         _settingsService.settings.backgroundTcpEnabled &&
         resolvedWifiSsid.isNotEmpty) {
       try {
-        await const IosBackgroundTcpService().configure(
+        _appDebugLogService.info(
+          'Configuring iOS background TCP endpoint=$host:$port ssid=$resolvedWifiSsid',
+          tag: 'iOS TCP',
+        );
+        final configResult = await const IosBackgroundTcpService().configure(
           host: host,
           port: port,
           wifiSsid: resolvedWifiSsid,
           enabled: true,
         );
+        if (configResult == null) {
+          _appDebugLogService.warn(
+            'iOS background TCP receiver was not configured',
+            tag: 'iOS TCP',
+          );
+        } else {
+          _appDebugLogService.info(
+            'iOS background TCP saved enabled=${configResult.enabled} active=${configResult.active} endpoint=${configResult.host}:${configResult.port} ssid=${configResult.wifiSsid}',
+            tag: 'iOS TCP',
+          );
+        }
       } catch (error) {
+        _appDebugLogService.warn(
+          'Could not configure iOS background TCP receiver: $error',
+          tag: 'iOS TCP',
+        );
         debugPrint('Could not configure iOS background TCP receiver: $error');
       }
     }

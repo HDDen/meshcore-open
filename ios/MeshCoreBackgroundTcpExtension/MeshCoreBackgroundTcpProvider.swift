@@ -16,6 +16,8 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
 
   private let cmdAppStart: UInt8 = 1
   private let cmdSyncNextMessage: UInt8 = 10
+  private let cmdDeviceQuery: UInt8 = 22
+  private let appProtocolVersion: UInt8 = 4
   private let respCodeContactMsgRecv: UInt8 = 7
   private let respCodeChannelMsgRecv: UInt8 = 8
   private let respCodeContactMsgRecvV3: UInt8 = 16
@@ -71,6 +73,7 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
       case .ready:
         NSLog("MCO background TCP: provider ready")
         self.finishStart(nil)
+        self.sendDeviceQuery()
         self.sendAppStart()
         self.receiveLoop()
       case .failed(let error):
@@ -100,6 +103,10 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
     payload.append(contentsOf: appName.utf8)
     payload.append(0)
     sendFrame(payload)
+  }
+
+  private func sendDeviceQuery() {
+    sendFrame([cmdDeviceQuery, appProtocolVersion])
   }
 
   private func sendSyncNextMessage() {

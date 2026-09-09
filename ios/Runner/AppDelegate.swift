@@ -120,15 +120,31 @@ import UserNotifications
       ]
       manager.isEnabled = enabled
       manager.saveToPreferences { saveError in
-        DispatchQueue.main.async {
-          if let saveError = saveError {
+        if let saveError = saveError {
+          DispatchQueue.main.async {
             result(FlutterError(code: "save_failed", message: saveError.localizedDescription, details: nil))
-          } else {
+          }
+          return
+        }
+
+        manager.loadFromPreferences { loadError in
+          DispatchQueue.main.async {
+            if let loadError = loadError {
+              result(FlutterError(code: "reload_failed", message: loadError.localizedDescription, details: nil))
+              return
+            }
+            manager.delegate = self
             NSLog(
               "MCO background TCP: saved enabled=\(manager.isEnabled) active=\(manager.isActive) ssid=\(manager.matchSSIDs.joined(separator: ",")) endpoint=\(host):\(port)"
             )
             self.loadBackgroundTcpManagers()
-            result(nil)
+            result([
+              "enabled": manager.isEnabled,
+              "active": manager.isActive,
+              "host": host.trimmingCharacters(in: .whitespacesAndNewlines),
+              "port": port,
+              "wifiSsid": manager.matchSSIDs.first ?? ""
+            ])
           }
         }
       }
