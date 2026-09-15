@@ -644,7 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.refresh,
           title: l10n.settings_refreshContacts,
           subtitle: l10n.settings_refreshContactsSubtitle,
-          onTap: () => connector.getContacts(),
+          onTap: () => connector.refreshContacts(),
         ),
         const Divider(height: 1, indent: 16),
         _tappableTile(

@@ -3499,6 +3499,33 @@ class MeshCoreConnector extends ChangeNotifier {
     _discoveredContacts
       ..clear()
       ..addAll(cached);
+    var contactsChanged = false;
+    for (final contact in cached) {
+      if (!(contact.isActive || contact.isFavorite || contact.hasMessages)) {
+        continue;
+      }
+      if (listEquals(contact.publicKey, _selfPublicKey)) {
+        continue;
+      }
+      final existingIndex = _contacts.indexWhere(
+        (c) => c.publicKeyHex == contact.publicKeyHex,
+      );
+      if (existingIndex >= 0) {
+        _contacts[existingIndex] = mergeDuplicateContacts(
+          _contacts[existingIndex],
+          contact.copyWith(isActive: true),
+        );
+        _knownContactKeys.add(contact.publicKeyHex);
+        contactsChanged = true;
+        continue;
+      }
+      _contacts.add(contact.copyWith(isActive: true));
+      _knownContactKeys.add(contact.publicKeyHex);
+      contactsChanged = true;
+    }
+    if (contactsChanged) {
+      unawaited(_persistContacts());
+    }
     await _refreshContactMessageSummaries();
   }
 
@@ -6392,20 +6419,39 @@ class MeshCoreConnector extends ChangeNotifier {
       ),
     );
 
+    final updatedContact = latestContact.copyWith(flags: updatedFlags);
     final index = _contacts.indexWhere(
       (c) => c.publicKeyHex == contact.publicKeyHex,
     );
     if (index >= 0) {
-      _contacts[index] = _contacts[index].copyWith(
+      _contacts[index] = mergeDuplicateContacts(
+        _contacts[index],
+        updatedContact.copyWith(
+          isActive: true,
+        ),
+      ).copyWith(
         type: latestContact.type,
         name: latestContact.name,
         pathLength: latestContact.pathLength,
         path: latestContact.path,
         flags: updatedFlags,
       );
-      notifyListeners();
-      unawaited(_persistContacts());
+    } else {
+      _contacts.add(updatedContact.copyWith(isActive: true));
+      _knownContactKeys.add(updatedContact.publicKeyHex);
     }
+    final discoveredIndex = _discoveredContacts.indexWhere(
+      (c) => c.publicKeyHex == contact.publicKeyHex,
+    );
+    if (discoveredIndex >= 0) {
+      _discoveredContacts[discoveredIndex] = mergeDuplicateContacts(
+        _discoveredContacts[discoveredIndex],
+        updatedContact.copyWith(isActive: true),
+      ).copyWith(flags: updatedFlags, isActive: true);
+    }
+    notifyListeners();
+    unawaited(_persistContacts());
+    unawaited(_persistDiscoveredContacts());
   }
 
   Future<Contact?> _fetchContactSnapshotFromDevice(

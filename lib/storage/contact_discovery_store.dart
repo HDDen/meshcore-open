@@ -46,6 +46,7 @@ class ContactDiscoveryStore {
       'lastModified': contact.lastModified?.millisecondsSinceEpoch,
       'lastMessageAt': contact.lastMessageAt.millisecondsSinceEpoch,
       'hasMessages': contact.hasMessages,
+      'isActive': contact.isActive,
       'rawPacket': contact.rawPacket != null
           ? base64Encode(contact.rawPacket!)
           : null,
@@ -106,7 +107,7 @@ class ContactDiscoveryStore {
         lastMessageMs ?? lastSeenMs,
       ),
       hasMessages: json['hasMessages'] as bool? ?? false,
-      isActive: false,
+      isActive: json['isActive'] as bool? ?? false,
       rawPacket: json['rawPacket'] != null
           ? Uint8List.fromList(base64Decode(json['rawPacket'] as String))
           : null,
