@@ -616,7 +616,7 @@ class AppSettings {
     this.canvasActive = true,
     this.canvasShowLockButton = true,
     this.showHops = true,
-    this.hideChannelIndexIndicator = false,
+    this.hideChannelIndexIndicator = true,
     this.hideRadioStatsButton = false,
     this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
@@ -919,7 +919,7 @@ class AppSettings {
       canvasShowLockButton: json['canvas_show_lock_button'] as bool? ?? true,
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
-          json['hide_channel_index_indicator'] as bool? ?? false,
+          json['hide_channel_index_indicator'] as bool? ?? true,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
       snrIndicatorAllRepActivity:
           json['snr_indicator_all_rep_activity'] as bool? ?? true,
