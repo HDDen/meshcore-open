@@ -392,7 +392,7 @@
   "channels_public": "Public",
   "channels_private": "Privé",
   "channels_editChannel": "Modifier le canal",
-  "channels_muteChannel": "Désactiver les notifications du canal",
+  "channels_muteChannel": "Désactiver, sauf les mentions",
   "channels_unmuteChannel": "Réactiver les notifications du canal",
   "channels_deleteChannel": "Supprimer le canal",
   "channels_deleteChannelConfirm": "Supprimer \"{name}\" ? Cette action est irréversible.",

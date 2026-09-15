@@ -523,7 +523,7 @@
   "channels_public": "대중의",
   "channels_private": "사립",
   "channels_editChannel": "채널 편집",
-  "channels_muteChannel": "음소거 채널",
+  "channels_muteChannel": "멘션을 제외하고 음소거",
   "channels_unmuteChannel": "채널 음소거 해제",
   "channels_deleteChannel": "채널 삭제",
   "channels_deleteChannelConfirm": "{name} 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",

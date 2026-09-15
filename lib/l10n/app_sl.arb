@@ -382,7 +382,7 @@
   "channels_public": "Javni",
   "channels_private": "Zasebni",
   "channels_editChannel": "Uredi kanal",
-  "channels_muteChannel": "Utišaj kanal",
+  "channels_muteChannel": "Utišaj, razen omemb",
   "channels_unmuteChannel": "Vklopi obvestila kanala",
   "channels_deleteChannel": "Pošlji kanal",
   "channels_deleteChannelConfirm": "Izbrišem \"{name}\"? To se ne da povrniti.",

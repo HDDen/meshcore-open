@@ -382,7 +382,7 @@
   "channels_public": "Público",
   "channels_private": "Privado",
   "channels_editChannel": "Editar canal",
-  "channels_muteChannel": "Silenciar canal",
+  "channels_muteChannel": "Silenciar, exceto menções",
   "channels_unmuteChannel": "Ativar canal",
   "channels_deleteChannel": "Excluir canal",
   "channels_deleteChannelConfirm": "Excluir \"{name}\"? Não pode ser desfeito.",

@@ -1321,7 +1321,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channels_editChannel => 'Kanal bearbeiten';
 
   @override
-  String get channels_muteChannel => 'Kanal stummschalten';
+  String get channels_muteChannel => 'Stummschalten, außer Erwähnungen';
 
   @override
   String get channels_unmuteChannel => 'Kanal Stummschaltung aufheben';

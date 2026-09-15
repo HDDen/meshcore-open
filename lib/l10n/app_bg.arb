@@ -382,7 +382,7 @@
   "channels_public": "Публично",
   "channels_private": "Частен",
   "channels_editChannel": "Редактирай канал",
-  "channels_muteChannel": "Заглуши канала",
+  "channels_muteChannel": "Заглуши, освен споменавания",
   "channels_unmuteChannel": "Включи известията на канала",
   "channels_deleteChannel": "Изтрий канала",
   "channels_deleteChannelConfirm": "Изтрий \"{name}\"? Това не може да бъде отменено.",

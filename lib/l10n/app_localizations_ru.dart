@@ -1322,7 +1322,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_editChannel => 'Изменить канал';
 
   @override
-  String get channels_muteChannel => 'Отключить уведомления канала';
+  String get channels_muteChannel => 'Заглушить, кроме упоминаний';
 
   @override
   String get channels_unmuteChannel => 'Включить уведомления канала';

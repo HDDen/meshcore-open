@@ -529,7 +529,7 @@
   "channels_public": "公開",
   "channels_private": "非公開",
   "channels_editChannel": "チャンネルを編集",
-  "channels_muteChannel": "チャンネルをミュート",
+  "channels_muteChannel": "メンション以外をミュート",
   "channels_unmuteChannel": "チャンネルのミュートを解除",
   "channels_deleteChannel": "チャンネルを削除",
   "channels_deleteChannelConfirm": "{name} を削除しますか？ これは取り消すことができません。",

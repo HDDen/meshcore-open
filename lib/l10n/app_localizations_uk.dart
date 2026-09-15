@@ -1317,7 +1317,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_editChannel => 'Редагувати канал';
 
   @override
-  String get channels_muteChannel => 'Вимкнути сповіщення каналу';
+  String get channels_muteChannel => 'Заглушити, крім згадок';
 
   @override
   String get channels_unmuteChannel => 'Увімкнути сповіщення каналу';

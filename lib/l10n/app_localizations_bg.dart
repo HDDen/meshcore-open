@@ -1328,7 +1328,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_editChannel => 'Редактирай канал';
 
   @override
-  String get channels_muteChannel => 'Заглуши канала';
+  String get channels_muteChannel => 'Заглуши, освен споменавания';
 
   @override
   String get channels_unmuteChannel => 'Включи известията на канала';

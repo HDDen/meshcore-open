@@ -1325,7 +1325,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channels_editChannel => 'Modifier le canal';
 
   @override
-  String get channels_muteChannel => 'Désactiver les notifications du canal';
+  String get channels_muteChannel => 'Désactiver, sauf les mentions';
 
   @override
   String get channels_unmuteChannel => 'Réactiver les notifications du canal';

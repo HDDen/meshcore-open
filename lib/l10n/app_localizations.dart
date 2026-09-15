@@ -2455,7 +2455,7 @@ abstract class AppLocalizations {
   /// No description provided for @channels_muteChannel.
   ///
   /// In en, this message translates to:
-  /// **'Mute channel'**
+  /// **'Mute except mentions'**
   String get channels_muteChannel;
 
   /// No description provided for @channels_unmuteChannel.

@@ -1302,7 +1302,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_editChannel => 'Redigera kanal';
 
   @override
-  String get channels_muteChannel => 'Tysta kanal';
+  String get channels_muteChannel => 'Tysta, utom omnämnanden';
 
   @override
   String get channels_unmuteChannel => 'Slå på ljud för kanal';

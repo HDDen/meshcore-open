@@ -1317,7 +1317,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_editChannel => 'Csatorna szerkesztése';
 
   @override
-  String get channels_muteChannel => 'Csatorna némítása';
+  String get channels_muteChannel => 'Némítás, kivéve említések';
 
   @override
   String get channels_unmuteChannel => 'Csatorna némításának feloldása';

@@ -436,7 +436,7 @@
   "channels_public": "Pubblico",
   "channels_private": "Privato",
   "channels_editChannel": "Modifica canale",
-  "channels_muteChannel": "Silenzia canale",
+  "channels_muteChannel": "Silenzia, tranne menzioni",
   "channels_unmuteChannel": "Attiva notifiche canale",
   "channels_deleteChannel": "Elimina canale",
   "channels_deleteChannelConfirm": "Eliminare \"{name}\"? Non può essere annullato.",

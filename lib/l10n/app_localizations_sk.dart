@@ -1311,7 +1311,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_editChannel => 'Upraviť kanál';
 
   @override
-  String get channels_muteChannel => 'Stlmiť kanál';
+  String get channels_muteChannel => 'Stlmiť, okrem zmienok';
 
   @override
   String get channels_unmuteChannel => 'Zrušiť stlmenie kanála';

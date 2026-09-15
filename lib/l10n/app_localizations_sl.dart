@@ -1309,7 +1309,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_editChannel => 'Uredi kanal';
 
   @override
-  String get channels_muteChannel => 'Utišaj kanal';
+  String get channels_muteChannel => 'Utišaj, razen omemb';
 
   @override
   String get channels_unmuteChannel => 'Vklopi obvestila kanala';

@@ -1252,7 +1252,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_editChannel => 'チャンネルを編集';
 
   @override
-  String get channels_muteChannel => 'チャンネルをミュート';
+  String get channels_muteChannel => 'メンション以外をミュート';
 
   @override
   String get channels_unmuteChannel => 'チャンネルのミュートを解除';

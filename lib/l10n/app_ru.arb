@@ -279,7 +279,7 @@
   "channels_public": "Публичный",
   "channels_private": "Приватный",
   "channels_editChannel": "Изменить канал",
-  "channels_muteChannel": "Отключить уведомления канала",
+  "channels_muteChannel": "Заглушить, кроме упоминаний",
   "channels_unmuteChannel": "Включить уведомления канала",
   "channels_deleteChannel": "Удалить канал",
   "channels_deleteChannelConfirm": "Удалить \"{name}\"? Это действие нельзя отменить.",

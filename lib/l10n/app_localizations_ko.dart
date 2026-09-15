@@ -1255,7 +1255,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_editChannel => '채널 편집';
 
   @override
-  String get channels_muteChannel => '음소거 채널';
+  String get channels_muteChannel => '멘션을 제외하고 음소거';
 
   @override
   String get channels_unmuteChannel => '채널 음소거 해제';

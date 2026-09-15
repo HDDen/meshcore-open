@@ -385,7 +385,7 @@
   "channels_via": "через {path}",
   "channels_private": "Приватний",
   "channels_editChannel": "Редагувати канал",
-  "channels_muteChannel": "Вимкнути сповіщення каналу",
+  "channels_muteChannel": "Заглушити, крім згадок",
   "channels_unmuteChannel": "Увімкнути сповіщення каналу",
   "channels_deleteChannel": "Видалити канал",
   "channels_deleteChannelConfirm": "Видалити {name}? Це не можна скасувати.",

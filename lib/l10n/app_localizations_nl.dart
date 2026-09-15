@@ -1312,7 +1312,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_editChannel => 'Kanaal bewerken';
 
   @override
-  String get channels_muteChannel => 'Kanaal dempen';
+  String get channels_muteChannel => 'Dempen, behalve vermeldingen';
 
   @override
   String get channels_unmuteChannel => 'Kanaal dempen opheffen';

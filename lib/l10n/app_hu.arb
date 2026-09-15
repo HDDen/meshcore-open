@@ -498,7 +498,7 @@
   "channels_public": "Nyilvános",
   "channels_private": "Magán",
   "channels_editChannel": "Csatorna szerkesztése",
-  "channels_muteChannel": "Csatorna némítása",
+  "channels_muteChannel": "Némítás, kivéve említések",
   "channels_unmuteChannel": "Csatorna némításának feloldása",
   "channels_deleteChannel": "Csatorna törlése",
   "channels_deleteChannelConfirm": "Törli a következőt: \"{name}\"? Ezt nem lehet visszavonni.",

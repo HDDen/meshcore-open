@@ -1331,7 +1331,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get channels_editChannel => 'Edytuj kanał';
 
   @override
-  String get channels_muteChannel => 'Wycisz kanał';
+  String get channels_muteChannel => 'Wycisz, oprócz wzmianek';
 
   @override
   String get channels_unmuteChannel => 'Wyłącz wyciszenie kanału';

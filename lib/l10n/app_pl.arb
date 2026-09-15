@@ -392,7 +392,7 @@
   "channels_public": "Publiczny",
   "channels_private": "Prywatny",
   "channels_editChannel": "Edytuj kanał",
-  "channels_muteChannel": "Wycisz kanał",
+  "channels_muteChannel": "Wycisz, oprócz wzmianek",
   "channels_unmuteChannel": "Wyłącz wyciszenie kanału",
   "channels_deleteChannel": "Usuń kanał",
   "channels_deleteChannelConfirm": "Usuń \"{name}\"? Nie można tego cofnąć.",

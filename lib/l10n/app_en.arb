@@ -594,7 +594,7 @@
   },
   "channels_private": "Private",
   "channels_editChannel": "Edit channel",
-  "channels_muteChannel": "Mute channel",
+  "channels_muteChannel": "Mute except mentions",
   "channels_unmuteChannel": "Unmute channel",
   "channels_deleteChannel": "Delete channel",
   "channels_deleteChannelConfirm": "Delete \"{name}\"? This cannot be undone.",

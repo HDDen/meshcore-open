@@ -1298,7 +1298,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channels_editChannel => 'Edit channel';
 
   @override
-  String get channels_muteChannel => 'Mute channel';
+  String get channels_muteChannel => 'Mute except mentions';
 
   @override
   String get channels_unmuteChannel => 'Unmute channel';

@@ -382,7 +382,7 @@
   "channels_public": "Openbaar",
   "channels_private": "Privé",
   "channels_editChannel": "Kanaal bewerken",
-  "channels_muteChannel": "Kanaal dempen",
+  "channels_muteChannel": "Dempen, behalve vermeldingen",
   "channels_unmuteChannel": "Kanaal dempen opheffen",
   "channels_deleteChannel": "Kanaal verwijderen",
   "channels_deleteChannelConfirm": "Verwijderen \"{name}\"? Dit kan niet worden teruggedraaid.",
