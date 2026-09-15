@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'MCOtxt/mcotxt.dart';
@@ -61,6 +62,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    if (PlatformInfo.isIOS) {
+      await FlutterBluePlus.setOptions(restoreState: true);
+    }
     await _startApplication();
   } catch (error, stackTrace) {
     String? dataPath;
@@ -714,6 +718,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     }
     if (state == AppLifecycleState.resumed) {
       _refreshNotificationPermissionState();
+      unawaited(widget.connector.resumeQueuedMessageSyncAfterForeground());
     }
     widget.receivedImageStore.setForeground(state == AppLifecycleState.resumed);
     // The neural codec has a very high memory peak, so release its native

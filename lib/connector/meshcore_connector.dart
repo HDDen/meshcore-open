@@ -423,8 +423,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final List<Uint8List> _deferredQueuedContactMessageFrames = [];
   bool _pendingQueueSync = false;
   Timer? _queueSyncTimeout;
-  int _queueSyncRetries = 0;
-  static const int _maxQueueSyncRetries = 3;
+  bool _resumeQueueSyncScheduled = false;
   static const int _queueSyncTimeoutMs = 5000; // 5 second timeout
   // Serializes path operations (setContactPath/clearContactPath) to prevent
   // interleaved async calls from leaving in-memory state inconsistent with device.
@@ -4918,6 +4917,12 @@ class MeshCoreConnector extends ChangeNotifier {
         tag: 'BLE Connect',
       );
 
+      // Attach before enabling notifications so a fast tickle or response
+      // cannot arrive in the gap between the CCCD write and Dart listening.
+      _notifySubscription = _txCharacteristic!.onValueReceived.listen(
+        _handleFrame,
+      );
+
       if (PlatformInfo.isWeb) {
         _appDebugLogService?.info(
           'Starting setNotifyValue(true)',
@@ -4977,10 +4982,6 @@ class MeshCoreConnector extends ChangeNotifier {
           }
         }
       }
-      _notifySubscription = _txCharacteristic!.onValueReceived.listen(
-        _handleFrame,
-      );
-
       _setState(MeshCoreConnectionState.connected);
       _rxSilenceAnchor = DateTime.now();
       _startRxWatchdog();
@@ -5370,7 +5371,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingQueueSync = false;
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
-    _queueSyncRetries = 0;
     _isSyncingChannels = false;
     _channelSyncInFlight = false;
     _channelSyncTimeout?.cancel();
@@ -5522,7 +5522,6 @@ class MeshCoreConnector extends ChangeNotifier {
     _selfInfoRetryTimer = null;
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
-    _queueSyncRetries = 0;
     _channelSyncTimeout?.cancel();
     _channelSyncTimeout = null;
     _channelSyncRetries = 0;
@@ -5713,9 +5712,14 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!canWriteWithoutResponse && !canWriteWithResponse) {
       throw Exception("MeshCore RX characteristic does not support write");
     }
+    final isDestructiveQueueRead =
+        data.isNotEmpty && data.first == cmdSyncNextMessage;
+    final useWriteWithoutResponse =
+        canWriteWithoutResponse &&
+        (!isDestructiveQueueRead || !canWriteWithResponse);
     await _rxCharacteristic!.write(
       data.toList(),
-      withoutResponse: canWriteWithoutResponse,
+      withoutResponse: useWriteWithoutResponse,
     );
   }
 
@@ -6090,9 +6094,8 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       if (_deferQueuedContactMessagesUntilContacts) {
         unawaited(_processDeferredQueuedContactMessages());
-      } else if (_pendingQueueSync) {
-        _pendingQueueSync = false;
-        unawaited(syncQueuedMessages(force: true));
+      } else {
+        _startPostChannelInitialQueuedMessageSync();
       }
     });
   }
@@ -6166,7 +6169,7 @@ class MeshCoreConnector extends ChangeNotifier {
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
       );
-      _addMessage(contact.publicKeyHex, signingPlaceholder);
+      unawaited(_addMessage(contact.publicKeyHex, signingPlaceholder));
       notifyListeners();
     }
 
@@ -6318,7 +6321,9 @@ class MeshCoreConnector extends ChangeNotifier {
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
       );
-      _addMessage(contact.publicKeyHex, message); // recipient as "sender"
+      unawaited(
+        _addMessage(contact.publicKeyHex, message),
+      ); // recipient as "sender"
       notifyListeners();
       final sentByRadioAt = DateTime.now();
       final waitSeconds = sentByRadioAt.difference(message.timestamp).inSeconds;
@@ -6855,7 +6860,7 @@ class MeshCoreConnector extends ChangeNotifier {
           packetRegion: _displayPacketRegion(outgoingRegion),
           packetRegionInfoAvailable: true,
         );
-        _addChannelMessage(channel.index, signingPlaceholder);
+        await _addChannelMessage(channel.index, signingPlaceholder);
         notifyListeners();
       }
 
@@ -7050,7 +7055,7 @@ class MeshCoreConnector extends ChangeNotifier {
     final message = packetHash == null
         ? baseMessage
         : baseMessage.copyWith(packetHash: packetHash);
-    _addChannelMessage(channel.index, message);
+    await _addChannelMessage(channel.index, message);
     if (!isBinaryTransport &&
         utf8.encode(outboundText).length > maxChannelMessageBytes(_selfName)) {
       // Belt-and-suspenders: the composer counter should prevent this, but a
@@ -8108,7 +8113,7 @@ class MeshCoreConnector extends ChangeNotifier {
     );
     if (liveChannelIndex < 0) {
       _pendingChannelSends.remove(messageId);
-      _addChannelMessage(
+      await _addChannelMessage(
         pending.channel.index,
         pending.message.copyWith(status: ChannelMessageStatus.failed),
       );
@@ -8504,12 +8509,43 @@ class MeshCoreConnector extends ChangeNotifier {
     await _requestNextQueuedMessage();
   }
 
+  Future<void> resumeQueuedMessageSyncAfterForeground() async {
+    if (!PlatformInfo.isIOS || !isConnected || _resumeQueueSyncScheduled) {
+      return;
+    }
+    _resumeQueueSyncScheduled = true;
+    try {
+      // A command sent just before suspension may still own the next queue
+      // item. Let its response or timeout settle before issuing another
+      // destructive read after foregrounding.
+      if (_isSyncingQueuedMessages || _queuedMessageSyncInFlight) {
+        _appDebugLogService?.info(
+          'Foreground queue recovery is waiting for the active request',
+          tag: 'QueueSync',
+        );
+        await Future<void>.delayed(
+          const Duration(milliseconds: _queueSyncTimeoutMs + 250),
+        );
+      }
+      if (isConnected &&
+          !_isSyncingQueuedMessages &&
+          !_queuedMessageSyncInFlight) {
+        _appDebugLogService?.info(
+          'Foreground queue recovery is requesting remaining messages',
+          tag: 'QueueSync',
+        );
+        await syncQueuedMessages();
+      }
+    } finally {
+      _resumeQueueSyncScheduled = false;
+    }
+  }
+
   Future<void> _requestNextQueuedMessage() async {
     if (!isConnected) {
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
       _queuedMessageSyncInFlight = false;
-      _queueSyncRetries = 0;
       return;
     }
     if (_queuedMessageSyncInFlight) return;
@@ -8523,8 +8559,10 @@ class MeshCoreConnector extends ChangeNotifier {
       _handleQueueSyncTimeout();
     });
 
-    debugPrint(
-      '[QueueSync] Requesting next message (retry: $_queueSyncRetries/$_maxQueueSyncRetries)',
+    debugPrint('[QueueSync] Requesting next message');
+    _appDebugLogService?.info(
+      'Requesting next queued message',
+      tag: 'QueueSync',
     );
 
     try {
@@ -8542,34 +8580,25 @@ class MeshCoreConnector extends ChangeNotifier {
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
       _queueSyncTimeout?.cancel();
-      _queueSyncRetries = 0;
       notifyListeners();
       _continueAfterQueuedMessageSync();
     }
   }
 
   void _handleQueueSyncTimeout() {
-    debugPrint(
-      '[QueueSync] Timeout waiting for message (retry: $_queueSyncRetries/$_maxQueueSyncRetries)',
+    debugPrint('[QueueSync] Timeout waiting for message; stopping sync');
+    _queueSyncTimeout = null;
+    _appDebugLogService?.warn(
+      'Timed out waiting for queued message; not retrying because firmware '
+      'may already have removed it from its queue',
+      tag: 'QueueSync',
     );
-
-    if (_queueSyncRetries < _maxQueueSyncRetries) {
-      // Retry
-      _queueSyncRetries++;
-      _queuedMessageSyncInFlight = false;
-      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
-      _requestNextQueuedMessage();
-    } else {
-      // Max retries reached, give up
-      debugPrint('[QueueSync] Max retries reached, stopping sync');
-      _queuedMessageSyncInFlight = false;
-      _isSyncingQueuedMessages = false;
-      _isInitialBacklogDrain = false;
-      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
-      _queueSyncRetries = 0;
-      notifyListeners();
-      _continueAfterQueuedMessageSync();
-    }
+    _queuedMessageSyncInFlight = false;
+    _isSyncingQueuedMessages = false;
+    _isInitialBacklogDrain = false;
+    _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
+    notifyListeners();
+    _continueAfterQueuedMessageSync();
   }
 
   Future<void> sendCliCommand(String command) async {
@@ -8867,6 +8896,14 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _startPostChannelInitialQueuedMessageSync() {
+    // On iOS, resolve contacts before draining the destructive firmware queue.
+    // This avoids keeping the entire direct-message backlog only in RAM while
+    // the app has a limited background execution window.
+    if (PlatformInfo.isIOS && _pendingInitialContactsSync && isConnected) {
+      _pendingInitialContactsSync = false;
+      unawaited(getContacts(preserveExisting: true));
+      return;
+    }
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
       _deferQueuedContactMessagesUntilContacts = _pendingInitialContactsSync;
       // This drain replays the backlog accumulated before we connected.
@@ -9057,9 +9094,8 @@ class MeshCoreConnector extends ChangeNotifier {
         }
         if (_deferQueuedContactMessagesUntilContacts) {
           unawaited(_processDeferredQueuedContactMessages());
-        } else if (_pendingQueueSync) {
-          _pendingQueueSync = false;
-          unawaited(syncQueuedMessages(force: true));
+        } else {
+          _startPostChannelInitialQueuedMessageSync();
         }
         break;
       case respCodeContactMsgRecv:
@@ -9076,13 +9112,20 @@ class MeshCoreConnector extends ChangeNotifier {
         break;
       case respCodeChannelMsgRecv:
       case respCodeChannelMsgRecvV3:
-        _handleIncomingChannelMessage(
-          frame,
-          localSourceLabel: localSourceLabel,
+        unawaited(
+          _handleIncomingChannelMessage(
+            frame,
+            localSourceLabel: localSourceLabel,
+          ),
         );
         break;
       case respCodeChannelDataRecv:
-        _handleIncomingChannelData(frame, localSourceLabel: localSourceLabel);
+        unawaited(
+          _handleIncomingChannelData(
+            frame,
+            localSourceLabel: localSourceLabel,
+          ),
+        );
         break;
       case respCodeDefaultFloodScope:
         // Feature-specific callers listen to receivedFrames for this response.
@@ -9477,10 +9520,10 @@ class MeshCoreConnector extends ChangeNotifier {
   void _handleNoMoreMessages() {
     debugPrint('[QueueSync] No more messages, sync complete');
     _queueSyncTimeout?.cancel();
+    _queueSyncTimeout = null;
     _isSyncingQueuedMessages = false;
     _isInitialBacklogDrain = false;
     _queuedMessageSyncInFlight = false;
-    _queueSyncRetries = 0; // Reset retry counter on successful completion
     notifyListeners();
     _continueAfterQueuedMessageSync();
   }
@@ -9561,10 +9604,67 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _handleQueuedMessageReceived() {
     if (!_isSyncingQueuedMessages) return;
-    debugPrint('[QueueSync] Message received, requesting next');
+    debugPrint('[QueueSync] Queued frame fragment received, requesting next');
     _queueSyncTimeout?.cancel(); // Cancel timeout - message arrived
+    _queueSyncTimeout = null;
     _queuedMessageSyncInFlight = false;
-    _queueSyncRetries = 0; // Reset retry counter on successful message
+    notifyListeners();
+    unawaited(_requestNextQueuedMessage());
+  }
+
+  Future<void> _processPotentialQueuedMessage({
+    required String? localSourceLabel,
+    required String frameType,
+    required Future<void> Function() process,
+  }) async {
+    final completesQueuedRequest =
+        localSourceLabel == null &&
+        _isSyncingQueuedMessages &&
+        _queuedMessageSyncInFlight;
+    if (!completesQueuedRequest) {
+      await process();
+      return;
+    }
+
+    // The response arrived, so the transport timeout must no longer run while
+    // parsing, signature verification, and durable history storage complete.
+    // Keep _queuedMessageSyncInFlight set until then so a simultaneous tickle
+    // cannot start another destructive queue request.
+    _queueSyncTimeout?.cancel();
+    _queueSyncTimeout = null;
+    _appDebugLogService?.info(
+      'Queued $frameType frame received; processing before next request',
+      tag: 'QueueSync',
+    );
+
+    try {
+      await process();
+    } catch (error, stackTrace) {
+      _appDebugLogService?.error(
+        'Could not process or persist queued $frameType frame; '
+        'queue sync stopped: '
+        '$error\n$stackTrace',
+        tag: 'QueueSync',
+      );
+      _queuedMessageSyncInFlight = false;
+      _isSyncingQueuedMessages = false;
+      _isInitialBacklogDrain = false;
+      _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
+      notifyListeners();
+      _continueAfterQueuedMessageSync();
+      return;
+    }
+
+    if (!_isSyncingQueuedMessages || !isConnected) {
+      _queuedMessageSyncInFlight = false;
+      return;
+    }
+    _queuedMessageSyncInFlight = false;
+    _appDebugLogService?.info(
+      'Queued $frameType frame processed; history write completed when '
+      'applicable; requesting next',
+      tag: 'QueueSync',
+    );
     notifyListeners();
     unawaited(_requestNextQueuedMessage());
   }
@@ -10129,14 +10229,24 @@ class MeshCoreConnector extends ChangeNotifier {
     Uint8List frame, {
     DateTime? receivedAt,
     String? localSourceLabel,
+  }) {
+    return _processPotentialQueuedMessage(
+      localSourceLabel: localSourceLabel,
+      frameType: 'contact message',
+      process: () => _processIncomingMessage(
+        frame,
+        receivedAt: receivedAt,
+        localSourceLabel: localSourceLabel,
+      ),
+    );
+  }
+
+  Future<void> _processIncomingMessage(
+    Uint8List frame, {
+    DateTime? receivedAt,
+    String? localSourceLabel,
   }) async {
     if (_selfPublicKey == null) return;
-
-    // If we're syncing the queued messages, advance the queue immediately
-    // before any potentially long async work (like translation/notifications).
-    if (_isSyncingQueuedMessages) {
-      _handleQueuedMessageReceived();
-    }
 
     var message = _parseContactMessage(frame);
 
@@ -10240,11 +10350,12 @@ class MeshCoreConnector extends ChangeNotifier {
       // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
       if (blockedNow) message = message.copyWith(wasBlocked: true);
-      _addMessage(message.senderKeyHex, message);
+      await _addMessage(message.senderKeyHex, message);
       if (!blockedNow) _maybeIncrementContactUnread(message);
       notifyListeners();
 
-      // Show notification for new incoming message (run async with translation)
+      // Persist first, then enqueue the notification before advancing a
+      // destructive firmware queue read.
       // A muted room author raises none: it would put the hidden text straight
       // back on screen.
       if (!message.isOutgoing &&
@@ -10255,41 +10366,39 @@ class MeshCoreConnector extends ChangeNotifier {
         if (settings.notificationsEnabled && settings.notifyOnNewMessage) {
           final msg = message; // capture for closure
           final c = contact; // capture contact reference
-          unawaited(() async {
-            final translationResult = await translateContactMessage(
-              msg.senderKeyHex,
-              msg,
+          final translationResult = await translateContactMessage(
+            msg.senderKeyHex,
+            msg,
+          );
+          if (c?.type == advTypeChat) {
+            final resolvedText =
+                (translationResult != null &&
+                    translationResult.status ==
+                        MessageTranslationStatus.completed &&
+                    translationResult.translatedText.trim().isNotEmpty)
+                ? translationResult.translatedText.trim()
+                : msg.text.trim();
+            await _notificationService.showMessageNotification(
+              contactName: c?.name ?? 'Unknown',
+              message: resolvedText,
+              contactId: msg.senderKeyHex,
+              badgeCount: getTotalUnreadCount(),
             );
-            if (c?.type == advTypeChat) {
-              final resolvedText =
-                  (translationResult != null &&
-                      translationResult.status ==
-                          MessageTranslationStatus.completed &&
-                      translationResult.translatedText.trim().isNotEmpty)
-                  ? translationResult.translatedText.trim()
-                  : msg.text.trim();
-              await _notificationService.showMessageNotification(
-                contactName: c?.name ?? 'Unknown',
-                message: resolvedText,
-                contactId: msg.senderKeyHex,
-                badgeCount: getTotalUnreadCount(),
-              );
-            } else if (c?.type == advTypeRoom) {
-              final resolvedText =
-                  (translationResult != null &&
-                      translationResult.status ==
-                          MessageTranslationStatus.completed &&
-                      translationResult.translatedText.trim().isNotEmpty)
-                  ? translationResult.translatedText.trim()
-                  : msg.text.trim();
-              await _notificationService.showMessageNotification(
-                contactName: c?.name ?? 'Unknown Room',
-                message: resolvedText,
-                contactId: msg.senderKeyHex,
-                badgeCount: getTotalUnreadCount(),
-              );
-            }
-          }());
+          } else if (c?.type == advTypeRoom) {
+            final resolvedText =
+                (translationResult != null &&
+                    translationResult.status ==
+                        MessageTranslationStatus.completed &&
+                    translationResult.translatedText.trim().isNotEmpty)
+                ? translationResult.translatedText.trim()
+                : msg.text.trim();
+            await _notificationService.showMessageNotification(
+              contactName: c?.name ?? 'Unknown Room',
+              message: resolvedText,
+              contactId: msg.senderKeyHex,
+              badgeCount: getTotalUnreadCount(),
+            );
+          }
         }
       }
     }
@@ -11700,11 +11809,11 @@ class MeshCoreConnector extends ChangeNotifier {
     ).hasMatch(text);
   }
 
-  void _maybeNotifyChannelMessage(
+  Future<void> _maybeNotifyChannelMessage(
     ChannelMessage message, {
     String? channelName,
     TranslationResult? translationResult,
-  }) {
+  }) async {
     if (message.isOutgoing || _appSettingsService == null) return;
     final channelIndex = message.channelIndex;
     if (channelIndex == null) return;
@@ -11728,26 +11837,33 @@ class MeshCoreConnector extends ChangeNotifier {
             translationResult.translatedText.trim().isNotEmpty)
         ? translationResult.translatedText.trim()
         : message.text.trim();
-    unawaited(() async {
-      await _notificationService.showChannelMessageNotification(
-        channelName: label,
-        senderName: message.senderName,
-        message: resolvedText,
-        channelIndex: message.channelIndex,
-        badgeCount: getTotalUnreadCount(),
-      );
-    }());
+    await _notificationService.showChannelMessageNotification(
+      channelName: label,
+      senderName: message.senderName,
+      message: resolvedText,
+      channelIndex: message.channelIndex,
+      badgeCount: getTotalUnreadCount(),
+    );
   }
 
-  void _handleIncomingChannelMessage(
+  Future<void> _handleIncomingChannelMessage(
+    Uint8List frame, {
+    String? localSourceLabel,
+  }) {
+    return _processPotentialQueuedMessage(
+      localSourceLabel: localSourceLabel,
+      frameType: 'channel message',
+      process: () => _processIncomingChannelMessage(
+        frame,
+        localSourceLabel: localSourceLabel,
+      ),
+    );
+  }
+
+  Future<void> _processIncomingChannelMessage(
     Uint8List frame, {
     String? localSourceLabel,
   }) async {
-    // If we're syncing the queued messages, advance the queue immediately
-    // before any potentially long async work (like translation/notifications).
-    if (_isSyncingQueuedMessages) {
-      _handleQueuedMessageReceived();
-    }
     final parsed = ChannelMessage.fromFrame(
       frame,
       includeSenderNameInCompressionRatio:
@@ -11791,29 +11907,40 @@ class MeshCoreConnector extends ChangeNotifier {
         pathBytes: message.pathBytes,
         pathHashWidth: message.pathHashWidth,
       );
-      final isNew = _addChannelMessage(message.channelIndex!, message);
+      final isNew = await _addChannelMessage(message.channelIndex!, message);
       _maybeIncrementChannelUnread(message, isNew: isNew);
       notifyListeners();
       if (isNew && !message.isOutgoing) {
-        final msg = message; // capture for closure
-        unawaited(() async {
-          final translationResult = await translateChannelMessage(
-            msg.channelIndex!,
-            msg,
-          );
-          _maybeNotifyChannelMessage(msg, translationResult: translationResult);
-        }());
+        final translationResult = await translateChannelMessage(
+          message.channelIndex!,
+          message,
+        );
+        await _maybeNotifyChannelMessage(
+          message,
+          translationResult: translationResult,
+        );
       }
     }
   }
 
-  void _handleIncomingChannelData(
+  Future<void> _handleIncomingChannelData(
+    Uint8List frame, {
+    String? localSourceLabel,
+  }) {
+    return _processPotentialQueuedMessage(
+      localSourceLabel: localSourceLabel,
+      frameType: 'channel data',
+      process: () => _processIncomingChannelData(
+        frame,
+        localSourceLabel: localSourceLabel,
+      ),
+    );
+  }
+
+  Future<void> _processIncomingChannelData(
     Uint8List frame, {
     String? localSourceLabel,
   }) async {
-    if (_isSyncingQueuedMessages) {
-      _handleQueuedMessageReceived();
-    }
 
     // AEIC and MCOimg both use GRP_DATA but have distinct content types. Give
     // AEIC first refusal; a null outcome means this frame belongs to the
@@ -11847,7 +11974,7 @@ class MeshCoreConnector extends ChangeNotifier {
         payload: dataFrame.payload,
       );
       if (unknown != null) {
-        _addUnknownAppDataMessage(
+        await _addUnknownAppDataMessage(
           unknown,
           dataFrame,
           localSourceLabel: localSourceLabel,
@@ -11934,22 +12061,19 @@ class MeshCoreConnector extends ChangeNotifier {
           : null,
       pathHashWidth: message.pathHashWidth,
     );
-    final isNew = _addChannelMessage(dataFrame.channelIndex, message);
+    final isNew = await _addChannelMessage(dataFrame.channelIndex, message);
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
     if (isNew && !message.isOutgoing) {
-      final msg = message;
-      unawaited(() async {
-        final translationResult = await translateChannelMessage(
-          msg.channelIndex!,
-          msg,
-        );
-        _maybeNotifyChannelMessage(
-          msg,
-          channelName: channelName,
-          translationResult: translationResult,
-        );
-      }());
+      final translationResult = await translateChannelMessage(
+        message.channelIndex!,
+        message,
+      );
+      await _maybeNotifyChannelMessage(
+        message,
+        channelName: channelName,
+        translationResult: translationResult,
+      );
     }
   }
 
@@ -11963,11 +12087,11 @@ class MeshCoreConnector extends ChangeNotifier {
   /// the sentinel, and the unread count already says something arrived. The
   /// RX-log copy of such a packet is still ignored, the node hands every
   /// foreign packet over as a frame as well.
-  void _addUnknownAppDataMessage(
+  Future<void> _addUnknownAppDataMessage(
     UnknownChannelAppData unknown,
     ChannelDataReceivedFrame dataFrame, {
     String? localSourceLabel,
-  }) {
+  }) async {
     final receivedAt = DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
     final message = ChannelMessage(
@@ -11996,7 +12120,7 @@ class MeshCoreConnector extends ChangeNotifier {
       message.receivedAt,
       pathHashWidth: message.pathHashWidth,
     );
-    final isNew = _addChannelMessage(dataFrame.channelIndex, message);
+    final isNew = await _addChannelMessage(dataFrame.channelIndex, message);
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
   }
@@ -12124,24 +12248,22 @@ class MeshCoreConnector extends ChangeNotifier {
               pathBytes: message.pathBytes,
               pathHashWidth: message.pathHashWidth,
             );
-            final isNew = _addChannelMessage(channel.index, message);
+            final isNew = await _addChannelMessage(channel.index, message);
             _maybeIncrementChannelUnread(message, isNew: isNew);
             notifyListeners();
             if (isNew) {
-              unawaited(() async {
-                final translationResult = await translateChannelMessage(
-                  channel.index,
-                  message,
-                );
-                final label = channel.name.isEmpty
-                    ? 'Channel ${channel.index}'
-                    : channel.name;
-                _maybeNotifyChannelMessage(
-                  message,
-                  channelName: label,
-                  translationResult: translationResult,
-                );
-              }());
+              final translationResult = await translateChannelMessage(
+                channel.index,
+                message,
+              );
+              final label = channel.name.isEmpty
+                  ? 'Channel ${channel.index}'
+                  : channel.name;
+              await _maybeNotifyChannelMessage(
+                message,
+                channelName: label,
+                translationResult: translationResult,
+              );
             }
             return;
           }
@@ -12234,25 +12356,22 @@ class MeshCoreConnector extends ChangeNotifier {
             pathBytes: message.pathBytes,
             pathHashWidth: message.pathHashWidth,
           );
-          final isNew = _addChannelMessage(channel.index, message);
+          final isNew = await _addChannelMessage(channel.index, message);
           _maybeIncrementChannelUnread(message, isNew: isNew);
           notifyListeners();
           if (isNew) {
-            // Run translation + notification asynchronously to avoid blocking
-            unawaited(() async {
-              final translationResult = await translateChannelMessage(
-                channel.index,
-                message,
-              );
-              final label = channel.name.isEmpty
-                  ? 'Channel ${channel.index}'
-                  : channel.name;
-              _maybeNotifyChannelMessage(
-                message,
-                channelName: label,
-                translationResult: translationResult,
-              );
-            }());
+            final translationResult = await translateChannelMessage(
+              channel.index,
+              message,
+            );
+            final label = channel.name.isEmpty
+                ? 'Channel ${channel.index}'
+                : channel.name;
+            await _maybeNotifyChannelMessage(
+              message,
+              channelName: label,
+              translationResult: translationResult,
+            );
           }
           return;
         } catch (e) {
@@ -12988,7 +13107,7 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
-  void _addMessage(String pubKeyHex, Message message) {
+  Future<void> _addMessage(String pubKeyHex, Message message) async {
     if (!message.isCli) {
       _updateContactLastMessageAt(
         pubKeyHex,
@@ -13028,7 +13147,7 @@ class MeshCoreConnector extends ChangeNotifier {
           pubKeyHex,
         );
         if (changedMessage != null) {
-          _messageStore.saveMessage(pubKeyHex, changedMessage);
+          await _messageStore.saveMessage(pubKeyHex, changedMessage);
         }
 
         // Mark as processed
@@ -13046,7 +13165,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_activeContactKey != pubKeyHex) {
       _trimContactHistoryWindow(pubKeyHex);
     }
-    _messageStore.saveMessage(pubKeyHex, message);
+    await _messageStore.saveMessage(pubKeyHex, message);
     notifyListeners();
   }
 
@@ -13323,7 +13442,10 @@ class MeshCoreConnector extends ChangeNotifier {
     return _ParsedText(senderName: 'Unknown', text: text);
   }
 
-  bool _addChannelMessage(int channelIndex, ChannelMessage message) {
+  Future<bool> _addChannelMessage(
+    int channelIndex,
+    ChannelMessage message,
+  ) async {
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 
@@ -13352,7 +13474,10 @@ class MeshCoreConnector extends ChangeNotifier {
         appLogger.info('Adding channel reaction, id: $reactionIdentifier');
         final changedMessage = _processReaction(messages, reactionInfo);
         if (changedMessage != null) {
-          _channelMessageStore.saveChannelMessage(channelIndex, changedMessage);
+          await _channelMessageStore.saveChannelMessage(
+            channelIndex,
+            changedMessage,
+          );
         }
 
         // Mark as processed
@@ -13571,7 +13696,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     // Save only the row that was inserted or merged.
-    _channelMessageStore.saveChannelMessage(channelIndex, storedMessage);
+    await _channelMessageStore.saveChannelMessage(channelIndex, storedMessage);
     return isNew;
   }
 

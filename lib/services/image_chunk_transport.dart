@@ -1355,9 +1355,8 @@ class ImageChunkTransport {
 
   /// Feeds a raw inbound companion frame. Non-image frames are ignored.
   ///
-  /// NOTE: the queued-message sync advance (`_handleQueuedMessageReceived`)
-  /// still has to happen inside `_handleFrame`; a `receivedFrames` listener
-  /// alone will not prevent the 5 s CMD_SYNC_NEXT_MESSAGE stall.
+  /// The connector still owns queued-message synchronization and must only
+  /// request the next firmware item after this outcome has been accepted.
   ImageChunkOutcome? handleFrame(Uint8List frame) {
     final parsed = parseChannelDataFrame(frame);
     if (parsed == null) return null;

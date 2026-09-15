@@ -712,7 +712,7 @@ class NotificationService {
   }) async {
     if (_suppressNotifications) return;
 
-    _queueNotification(
+    await _queueNotification(
       _PendingNotification(
         type: _NotificationType.message,
         title: contactName,
@@ -730,7 +730,7 @@ class NotificationService {
   }) async {
     if (_suppressNotifications) return;
 
-    _queueNotification(
+    await _queueNotification(
       _PendingNotification(
         type: _NotificationType.advert,
         title: contactType,
@@ -749,7 +749,7 @@ class NotificationService {
   }) async {
     if (_suppressNotifications) return;
 
-    _queueNotification(
+    await _queueNotification(
       _PendingNotification(
         type: _NotificationType.channelMessage,
         title: channelName,
@@ -760,7 +760,7 @@ class NotificationService {
     );
   }
 
-  void _queueNotification(_PendingNotification notification) {
+  Future<void> _queueNotification(_PendingNotification notification) async {
     final now = DateTime.now();
 
     // If we recently showed a notification, start batching
@@ -783,8 +783,8 @@ class NotificationService {
     debugPrint(
       '[Notification] sent immediately: ${notification.type.name} (${_getNotificationIdentifier(notification)})',
     );
-    _showNotificationImmediately(notification);
     _lastNotificationTime = now;
+    await _showNotificationImmediately(notification);
   }
 
   Future<void> _processBatch() async {
@@ -797,7 +797,7 @@ class NotificationService {
 
     if (batch.length == 1) {
       // Single notification, show normally
-      _showNotificationImmediately(batch.first);
+      await _showNotificationImmediately(batch.first);
     } else {
       // Multiple notifications, show summary
       await _showBatchSummary(batch);
