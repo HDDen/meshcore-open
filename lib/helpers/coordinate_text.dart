@@ -21,7 +21,8 @@ class CoordinateText {
   /// longer number on either side, which keeps version strings out — but a
   /// sentence-ending dot right after it is fine.
   static final RegExp pattern = RegExp(
-    r'(?<![\w.])([+-]?\d{1,3}\.\d+)\s*,\s*([+-]?\d{1,3}\.\d+)(?!\d)(?!\.\d)',
+    r'(?<![\w.+-])(-?\d{1,3}\.\d+)\s*,\s*'
+    r'(-?\d{1,3}\.\d+)(?![\w+-])(?!\.\d)',
   );
 
   /// Cheap pre-check before the full scan: a pair needs both a dot and a

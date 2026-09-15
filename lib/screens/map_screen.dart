@@ -7472,8 +7472,8 @@ MarkerPayload? parseMarkerText(String text) {
 }
 
 final RegExp _coordinatePairPattern = RegExp(
-  r'([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*'
-  r'([+-]?(?:\d+(?:\.\d*)?|\.\d+))',
+  r'(?<![\w.+-])(-?\d{1,3}(?:\.\d+)?)\s*,\s*'
+  r'(-?\d{1,3}(?:\.\d+)?)(?![\w+-])(?!\.\d)',
 );
 
 bool _couldContainCoordinatePair(String text) {
