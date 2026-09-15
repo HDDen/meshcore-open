@@ -2219,12 +2219,11 @@ class _ContactsScreenState extends State<ContactsScreen>
           MaterialPageRoute(
             builder: (_) => PathTraceMapScreen(
               title: context.l10n.contacts_repeaterPing,
-              path: repeater.pathBytesForDisplay.isNotEmpty
-                  ? repeater.pathBytesForDisplay
-                  : _contactPathPrefix(repeater, hashByteWidth),
+              path: Uint8List(0),
               flipPathAround: true,
               targetContact: repeater,
               pathHashByteWidth: hashByteWidth,
+              useLiveTargetPath: false,
             ),
           ),
         );

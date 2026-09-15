@@ -67,6 +67,9 @@ class PathTraceMapScreen extends StatefulWidget {
   final int pathHashByteWidth;
   final List<Contact>? pathContacts;
   final bool revealMapManually;
+  /// When false, a target trace uses [path] exactly as supplied instead of
+  /// refreshing the target contact's saved route from the connector.
+  final bool useLiveTargetPath;
 
   const PathTraceMapScreen({
     super.key,
@@ -79,6 +82,7 @@ class PathTraceMapScreen extends StatefulWidget {
     this.pathHashByteWidth = pathHashSize,
     this.pathContacts,
     this.revealMapManually = false,
+    this.useLiveTargetPath = true,
   });
 
   @override
@@ -504,7 +508,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   /// this screen was first pushed.
   Uint8List _resolveLivePath(MeshCoreConnector connector) {
     final target = widget.targetContact;
-    if (!widget.flipPathAround || target == null) {
+    if (!widget.flipPathAround || target == null || !widget.useLiveTargetPath) {
       return widget.path;
     }
     final live = connector.allContactsUnfiltered.firstWhere(
