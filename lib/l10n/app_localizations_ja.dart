@@ -2805,6 +2805,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_duplicates => '重複';
 
   @override
+  String get repeater_packetErrors => 'Packet Errors';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,

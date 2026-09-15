@@ -2929,6 +2929,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_duplicates => 'Ismétlődések';
 
   @override
+  String get repeater_packetErrors => 'Packet Errors';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,

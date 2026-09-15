@@ -2946,6 +2946,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get repeater_duplicates => 'Powtórzenia';
 
   @override
+  String get repeater_packetErrors => 'Packet Errors';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,

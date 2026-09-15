@@ -2915,6 +2915,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get repeater_duplicates => 'Duplicaat';
 
   @override
+  String get repeater_packetErrors => 'Packet Errors';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,

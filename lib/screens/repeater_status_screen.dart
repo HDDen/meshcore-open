@@ -33,9 +33,12 @@ class RepeaterStatusScreen extends StatefulWidget {
 
 class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
   static const int _statusPayloadOffset = 8;
-  static const int _statusStatsSize = 52;
-  static const int _statusResponseBytes =
-      _statusPayloadOffset + _statusStatsSize;
+  static const int _statusStatsBaseSize = 52;
+  static const int _statusStatsWithErrorsSize = 56;
+  static const int _statusResponseBaseBytes =
+      _statusPayloadOffset + _statusStatsBaseSize;
+  static const int _statusResponseWithErrorsBytes =
+      _statusPayloadOffset + _statusStatsWithErrorsSize;
 
   bool _isLoading = false;
   StreamSubscription<Uint8List>? _frameSubscription;
@@ -58,6 +61,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
   int? _directRx;
   int? _dupFlood;
   int? _dupDirect;
+  int? _recvErrors;
   double? _chanUtil;
   PathSelection? _pendingStatusSelection;
 
@@ -124,12 +128,14 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     if (frame.length < 8) return;
     final prefix = frame.sublist(2, 8);
     if (!_matchesRepeaterPrefix(prefix)) return;
-    if (frame.length < _statusResponseBytes) return;
+    if (frame.length < _statusResponseBaseBytes) return;
 
     final data = ByteData.sublistView(
       frame,
       _statusPayloadOffset,
-      _statusResponseBytes,
+      frame.length >= _statusResponseWithErrorsBytes
+          ? _statusResponseWithErrorsBytes
+          : _statusResponseBaseBytes,
     );
     int offset = 0;
 
@@ -166,6 +172,10 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final floodDups = data.getUint16(offset, Endian.little);
     offset += 2;
     final rxAirSecs = data.getUint32(offset, Endian.little);
+    offset += 4;
+    final recvErrors = data.lengthInBytes >= offset + 4
+        ? data.getUint32(offset, Endian.little)
+        : null;
 
     _statusTimeout?.cancel();
     if (!mounted) return;
@@ -188,6 +198,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       _lastSnr = lastSnrRaw / 4.0;
       _dupDirect = directDups;
       _dupFlood = floodDups;
+      _recvErrors = recvErrors;
       _chanUtil = ((txAirSecs + rxAirSecs) / uptimeSecs) * 100;
     });
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
@@ -245,6 +256,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
           _directRx = _asInt(data['direct_rx']);
           _dupFlood = _asInt(data['dup_flood']);
           _dupDirect = _asInt(data['dup_direct']);
+          _recvErrors = _asInt(data['recv_errors']);
         }
       } catch (_) {}
     }
@@ -274,6 +286,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       _directRx = null;
       _dupFlood = null;
       _dupDirect = null;
+      _recvErrors = null;
       _chanUtil = null;
     });
 
@@ -286,9 +299,9 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       await connector.sendFrame(frame);
 
       final pathLengthValue = selection.useFlood ? -1 : selection.hopCount;
-      var messageBytes = frame.length >= _statusResponseBytes
+      var messageBytes = frame.length >= _statusResponseWithErrorsBytes
           ? frame.length
-          : _statusResponseBytes;
+          : _statusResponseWithErrorsBytes;
       if (messageBytes < maxFrameSize) messageBytes = maxFrameSize;
       final timeoutMs = connector.calculateTimeout(
         pathLength: pathLengthValue,
@@ -582,6 +595,14 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
               label: l10n.repeater_duplicates,
               value: _duplicateText(),
               color: scheme.onSurfaceVariant,
+            ),
+            _StatItem(
+              icon: Icons.error_outline,
+              label: l10n.repeater_packetErrors,
+              value: _formatValue(_recvErrors),
+              color: _recvErrors != null && _recvErrors! > 0
+                  ? MeshPalette.warn
+                  : scheme.onSurfaceVariant,
             ),
             _StatItem(
               icon: Icons.percent,

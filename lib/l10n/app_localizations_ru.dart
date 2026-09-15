@@ -2923,6 +2923,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get repeater_duplicates => 'Дубликаты';
 
   @override
+  String get repeater_packetErrors => 'Ошибки пакетов';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,

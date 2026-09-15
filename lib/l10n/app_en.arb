@@ -1626,6 +1626,7 @@
   "repeater_sent": "Sent",
   "repeater_received": "Received",
   "repeater_duplicates": "Duplicates",
+  "repeater_packetErrors": "Packet Errors",
   "repeater_daysHoursMinsSecs": "{days} days {hours}h {minutes}m {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {

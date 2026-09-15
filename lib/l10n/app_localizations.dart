@@ -5211,6 +5211,12 @@ abstract class AppLocalizations {
   /// **'Duplicates'**
   String get repeater_duplicates;
 
+  /// No description provided for @repeater_packetErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet Errors'**
+  String get repeater_packetErrors;
+
   /// No description provided for @repeater_daysHoursMinsSecs.
   ///
   /// In en, this message translates to:

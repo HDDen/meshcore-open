@@ -2906,6 +2906,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_duplicates => 'Dubbletter';
 
   @override
+  String get repeater_packetErrors => 'Packet Errors';
+
+  @override
   String repeater_daysHoursMinsSecs(
     int days,
     int hours,
