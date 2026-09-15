@@ -175,6 +175,7 @@ class MessageStore {
     String contactKeyHex, {
     bool includeLegacyUnscoped = false,
     String? normalizedQuery,
+    List<String>? normalizedQueries,
   }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
@@ -182,26 +183,59 @@ class MessageStore {
     }
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
-    var jsonString = normalizedQuery == null
+    final queries = _searchQueries(normalizedQuery, normalizedQueries);
+    var jsonString = queries == null
         ? await history.getString(MessageHistoryKind.direct, key)
-        : await history.searchString(
-            MessageHistoryKind.direct,
-            key,
-            normalizedQuery,
-          );
+        : await _searchHistoryString(history, key, queries);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyUnscoped &&
         !history.getKeys(MessageHistoryKind.direct).contains(key)) {
       final legacyKey = '$_keyPrefix$contactKeyHex';
-      jsonString = normalizedQuery == null
+      jsonString = queries == null
           ? await history.getString(MessageHistoryKind.direct, legacyKey)
-          : await history.searchString(
-              MessageHistoryKind.direct,
-              legacyKey,
-              normalizedQuery,
-            );
+          : await _searchHistoryString(history, legacyKey, queries);
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
+  }
+
+  List<String>? _searchQueries(
+    String? normalizedQuery,
+    List<String>? normalizedQueries,
+  ) {
+    final result = <String>{};
+    for (final query in normalizedQueries ?? const <String>[]) {
+      final normalized = query.trim();
+      if (normalized.isNotEmpty) result.add(normalized);
+    }
+    final normalized = normalizedQuery?.trim();
+    if (normalized != null && normalized.isNotEmpty) result.add(normalized);
+    return result.isEmpty ? null : result.toList(growable: false);
+  }
+
+  Future<String?> _searchHistoryString(
+    MessageHistoryStorage history,
+    String key,
+    List<String> normalizedQueries,
+  ) async {
+    final entries = <String>{};
+    for (final query in normalizedQueries) {
+      final jsonString = await history.searchString(
+        MessageHistoryKind.direct,
+        key,
+        query,
+      );
+      if (jsonString == null || jsonString.isEmpty) continue;
+      try {
+        final decoded = jsonDecode(jsonString);
+        if (decoded is! List<dynamic>) continue;
+        for (final entry in decoded) {
+          entries.add(jsonEncode(entry));
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+    return entries.isEmpty ? null : '[${entries.join(',')}]';
   }
 
   Future<String?> _loadMessagesJson(String contactKeyHex) async {

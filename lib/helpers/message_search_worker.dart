@@ -23,15 +23,25 @@ class StoredMessageSearchSource {
 }
 
 class StoredMessageSearchRequest {
-  final String normalizedQuery;
+  final String? normalizedQuery;
+  final List<String> normalizedQueries;
   final List<StoredMessageSearchSource> sources;
   final Map<String, String> roomSenderNamesByPrefix;
 
   const StoredMessageSearchRequest({
-    required this.normalizedQuery,
+    this.normalizedQuery,
+    this.normalizedQueries = const [],
     required this.sources,
     this.roomSenderNamesByPrefix = const {},
   });
+
+  List<String> get effectiveNormalizedQueries {
+    final queries = <String>{};
+    final query = normalizedQuery;
+    if (query != null && query.isNotEmpty) queries.add(query);
+    queries.addAll(normalizedQueries.where((query) => query.isNotEmpty));
+    return queries.toList(growable: false);
+  }
 }
 
 class StoredMessageSearchHit {
@@ -56,10 +66,11 @@ List<StoredMessageSearchHit> searchStoredMessageBatch(
   StoredMessageSearchRequest request,
 ) {
   final results = <StoredMessageSearchHit>[];
+  final normalizedQueries = request.effectiveNormalizedQueries;
   for (final source in request.sources) {
     _searchStoredMessages(
       source: source,
-      normalizedQuery: request.normalizedQuery,
+      normalizedQueries: normalizedQueries,
       roomSenderNamesByPrefix: request.roomSenderNamesByPrefix,
       results: results,
     );
@@ -69,7 +80,7 @@ List<StoredMessageSearchHit> searchStoredMessageBatch(
 
 void _searchStoredMessages({
   required StoredMessageSearchSource source,
-  required String normalizedQuery,
+  required List<String> normalizedQueries,
   required Map<String, String> roomSenderNamesByPrefix,
   required List<StoredMessageSearchHit> results,
 }) {
@@ -95,7 +106,8 @@ void _searchStoredMessages({
         source.contactName,
         roomSenderNamesByPrefix,
       );
-      if (!'$senderName: $text'.toLowerCase().contains(normalizedQuery)) {
+      final searchableText = '$senderName: $text'.toLowerCase();
+      if (!normalizedQueries.any(searchableText.contains)) {
         continue;
       }
 

@@ -13369,7 +13369,12 @@ class MeshCoreConnector extends ChangeNotifier {
         ? message.copyWith(wasBlocked: true)
         : message;
 
-    if (replyInfo != null) {
+    final hasExplicitReplyContext =
+        message.replyToMessageId != null ||
+        message.replyToSenderName != null ||
+        message.replyToText != null ||
+        message.containerReplyTimestamp != null;
+    if (replyInfo != null && (!message.isOutgoing || hasExplicitReplyContext)) {
       var replyToMessageId = message.replyToMessageId;
       var replyToSenderName = message.replyToSenderName;
       var replyToText = message.replyToText;

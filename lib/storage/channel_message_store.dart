@@ -218,6 +218,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     int channelIndex, {
     bool includeLegacyIndexFallback = false,
     String? normalizedQuery,
+    List<String>? normalizedQueries,
   }) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
@@ -228,13 +229,10 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final history = MessageHistoryStorage.instance;
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return null;
-    var jsonString = normalizedQuery == null
+    final queries = _searchQueries(normalizedQuery, normalizedQueries);
+    var jsonString = queries == null
         ? await history.getString(MessageHistoryKind.channel, key)
-        : await history.searchString(
-            MessageHistoryKind.channel,
-            key,
-            normalizedQuery,
-          );
+        : await _searchHistoryString(history, key, queries);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyIndexFallback &&
         !history.getKeys(MessageHistoryKind.channel).contains(key)) {
@@ -242,12 +240,12 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           await _historyStringForSearch(
             history,
             '$keyFor$channelIndex',
-            normalizedQuery,
+            queries,
           ) ??
           await _historyStringForSearch(
             history,
             '$_keyPrefix$channelIndex',
-            normalizedQuery,
+            queries,
           );
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
@@ -256,15 +254,51 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   Future<String?> _historyStringForSearch(
     MessageHistoryStorage history,
     String key,
-    String? normalizedQuery,
+    List<String>? normalizedQueries,
   ) {
-    return normalizedQuery == null
+    return normalizedQueries == null
         ? history.getString(MessageHistoryKind.channel, key)
-        : history.searchString(
-            MessageHistoryKind.channel,
-            key,
-            normalizedQuery,
-          );
+        : _searchHistoryString(history, key, normalizedQueries);
+  }
+
+  List<String>? _searchQueries(
+    String? normalizedQuery,
+    List<String>? normalizedQueries,
+  ) {
+    final result = <String>{};
+    for (final query in normalizedQueries ?? const <String>[]) {
+      final normalized = query.trim();
+      if (normalized.isNotEmpty) result.add(normalized);
+    }
+    final normalized = normalizedQuery?.trim();
+    if (normalized != null && normalized.isNotEmpty) result.add(normalized);
+    return result.isEmpty ? null : result.toList(growable: false);
+  }
+
+  Future<String?> _searchHistoryString(
+    MessageHistoryStorage history,
+    String key,
+    List<String> normalizedQueries,
+  ) async {
+    final entries = <String>{};
+    for (final query in normalizedQueries) {
+      final jsonString = await history.searchString(
+        MessageHistoryKind.channel,
+        key,
+        query,
+      );
+      if (jsonString == null || jsonString.isEmpty) continue;
+      try {
+        final decoded = jsonDecode(jsonString);
+        if (decoded is! List<dynamic>) continue;
+        for (final entry in decoded) {
+          entries.add(jsonEncode(entry));
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+    return entries.isEmpty ? null : '[${entries.join(',')}]';
   }
 
   Future<String?> _loadChannelMessagesJson(
