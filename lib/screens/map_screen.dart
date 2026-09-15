@@ -1522,6 +1522,7 @@ class _MapScreenState extends State<MapScreen>
         startWardrive: wardrive.isRunning,
       );
       if (!mounted) return;
+      _centerMapOnWardriveDiscoveryLocation(wardrive);
       setState(() {
         _wardriveDiscoveryRetryAt = DateTime.now().add(
           _wardriveDiscoveryRetryDelay,
@@ -1531,6 +1532,24 @@ class _MapScreenState extends State<MapScreen>
     } catch (error) {
       debugPrint('[Wardrive] Discovery request failed: $error');
     }
+  }
+
+  void _centerMapOnWardriveDiscoveryLocation(WardriveService wardrive) {
+    var latitude = wardrive.lastPhoneLatitude;
+    var longitude = wardrive.lastPhoneLongitude;
+    if (latitude == null || longitude == null) {
+      final connector = context.read<MeshCoreConnector>();
+      final nodeUsesGps = connector.currentCustomVars?['gps'] == '1';
+      if (nodeUsesGps) {
+        latitude = connector.selfLatitude;
+        longitude = connector.selfLongitude;
+      }
+    }
+    if (latitude == null || longitude == null) return;
+    _mapController.move(
+      LatLng(latitude, longitude),
+      _mapController.camera.zoom,
+    );
   }
 
   int? _wardriveDiscoveryWaitSeconds() {
