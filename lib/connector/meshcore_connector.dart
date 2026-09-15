@@ -3475,6 +3475,10 @@ class MeshCoreConnector extends ChangeNotifier {
         publicKeyHex: publicKeyHex,
         loadGeneration: loadGeneration,
       );
+      await _loadDiscoveredContactCache(
+        publicKeyHex: publicKeyHex,
+        loadGeneration: loadGeneration,
+      );
     } catch (error, stackTrace) {
       _appDebugLogService?.error(
         'Failed to load contact cache: $error',
@@ -3487,8 +3491,17 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadDiscoveredContactCache() async {
+  Future<void> _loadDiscoveredContactCache({
+    String? publicKeyHex,
+    int? loadGeneration,
+  }) async {
+    final expectedPublicKeyHex = publicKeyHex ?? selfPublicKeyHex;
     final cached = await _discoveryContactStore.loadContacts();
+    if (expectedPublicKeyHex != selfPublicKeyHex ||
+        (loadGeneration != null &&
+            loadGeneration != _contactCacheLoadGeneration)) {
+      return;
+    }
     // Trim a previously-saved oversized list down to the freshest entries so a
     // device that grew unbounded before the cap existed recovers on load.
     if (cached.length > _maxDiscoveredContacts) {
@@ -6013,8 +6026,6 @@ class MeshCoreConnector extends ChangeNotifier {
           );
     return contact.copyWith(
       rawPacket: tmp.rawPacket,
-      latitude: tmp.latitude,
-      longitude: tmp.longitude,
     );
   }
 
@@ -9334,7 +9345,6 @@ class MeshCoreConnector extends ChangeNotifier {
     );
     unawaited(_prepareCachedChannelStorage(storagePublicKeyHex));
     loadUnreadState();
-    _loadDiscoveredContactCache();
 
     _awaitingSelfInfo = false;
     _hasCompletedSelfInfoHandshake = parsedSelfInfo;
