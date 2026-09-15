@@ -5907,6 +5907,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => 'Применять к иконкам';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Монохромные имена отправителей';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Открыть галерею MCOimg';
 
   @override

@@ -5891,6 +5891,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toepassen op pictogrammen';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => 'MCOimg-galerij openen';
 
   @override

@@ -5810,6 +5810,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => 'Apply to icons';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Open MCOimg gallery';
 
   @override

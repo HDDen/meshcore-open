@@ -5876,6 +5876,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => 'Použiť na ikony';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => 'Otvoriť galériu MCOimg';
 
   @override

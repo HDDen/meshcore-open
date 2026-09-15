@@ -1565,6 +1565,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : isOutgoing
         ? MeshPalette.meInk
         : scheme.onSurface;
+    final senderNameColor = settingsService.settings.monochromeSenderNames
+        ? scheme.onSurface
+        : _colorForName(message.senderName);
     final metaColor = textColor.withValues(alpha: 0.65);
     final borderRadius = isOutgoing
         ? const BorderRadius.only(
@@ -1659,9 +1662,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       style: MeshTheme.mono(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: _colorForName(
-                                          message.senderName,
-                                        ),
+                                        color: senderNameColor,
                                       ),
                                     ),
                                   ),

@@ -5905,6 +5905,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => 'Alkalmazás az ikonokra';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => 'MCOimg galéria megnyitása';
 
   @override

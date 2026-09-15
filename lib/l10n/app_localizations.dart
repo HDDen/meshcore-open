@@ -10114,6 +10114,12 @@ abstract class AppLocalizations {
   /// **'Apply to icons'**
   String get settings_modSettingsDPIchangeToIcons;
 
+  /// No description provided for @settings_modSettingsMonochromeSenderNames.
+  ///
+  /// In en, this message translates to:
+  /// **'Monochrome sender names'**
+  String get settings_modSettingsMonochromeSenderNames;
+
   /// No description provided for @chat_MCOimgOpenGallery.
   ///
   /// In en, this message translates to:

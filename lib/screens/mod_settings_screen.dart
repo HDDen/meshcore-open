@@ -203,6 +203,21 @@ class ModSettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.format_color_text, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsMonochromeSenderNames,
+                    ),
+                    value: settings.monochromeSenderNames,
+                    onChanged: settingsService.setMonochromeSenderNames,
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
                 MeshCard(
                   padding: EdgeInsets.zero,

@@ -5623,6 +5623,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => '아이콘에도 적용';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => 'MCOimg 갤러리 열기';
 
   @override

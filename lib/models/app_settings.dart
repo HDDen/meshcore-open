@@ -212,6 +212,7 @@ class AppSettings {
   final bool uiScaleApplyToIcons;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
+  final bool monochromeSenderNames;
   final bool showMessageRegion;
   final bool channelsUnreadSorting;
   final bool incomingQuoteAsMentions;
@@ -633,6 +634,7 @@ class AppSettings {
     this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
+    this.monochromeSenderNames = true,
     this.showMessageRegion = false,
     this.channelsUnreadSorting = false,
     this.incomingQuoteAsMentions = false,
@@ -775,6 +777,7 @@ class AppSettings {
       'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
+      'monochrome_sender_names': monochromeSenderNames,
       'show_message_region': showMessageRegion,
       'channels_unread_sorting': channelsUnreadSorting,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
@@ -947,6 +950,8 @@ class AppSettings {
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
+      monochromeSenderNames:
+          json['monochrome_sender_names'] as bool? ?? true,
       showMessageRegion: json['show_message_region'] as bool? ?? false,
       channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? false,
       incomingQuoteAsMentions:
@@ -1162,6 +1167,7 @@ class AppSettings {
     bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
+    bool? monochromeSenderNames,
     bool? showMessageRegion,
     bool? channelsUnreadSorting,
     bool? incomingQuoteAsMentions,
@@ -1288,6 +1294,8 @@ class AppSettings {
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:
           compressionRatioWithSenderName ?? this.compressionRatioWithSenderName,
+      monochromeSenderNames:
+          monochromeSenderNames ?? this.monochromeSenderNames,
       showMessageRegion: showMessageRegion ?? this.showMessageRegion,
       channelsUnreadSorting:
           channelsUnreadSorting ?? this.channelsUnreadSorting,

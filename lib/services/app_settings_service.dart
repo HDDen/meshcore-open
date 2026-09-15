@@ -293,6 +293,10 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setMonochromeSenderNames(bool value) async {
+    await updateSettings(_settings.copyWith(monochromeSenderNames: value));
+  }
+
   Future<void> setShowMessageRegion(bool value) async {
     await updateSettings(_settings.copyWith(showMessageRegion: value));
   }

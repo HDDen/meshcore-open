@@ -2409,6 +2409,7 @@
   "settings_modSettingsMessagingBackgroundTCP": "Удерживать TCP-соединение в фоне",
   "settings_modSettingsDPIchange": "Регулировка DPI",
   "settings_modSettingsDPIchangeToIcons": "Применять к иконкам",
+  "settings_modSettingsMonochromeSenderNames": "Монохромные имена отправителей",
   "chat_MCOimgOpenGallery": "Открыть галерею MCOimg",
   "chat_additionalActions": "Меню действий",
   "mcogallery_common": "Общее",

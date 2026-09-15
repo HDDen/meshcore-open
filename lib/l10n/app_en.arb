@@ -3283,6 +3283,7 @@
   "settings_modSettingsMessagingBackgroundTCP": "Keep TCP-connection alive in background",
   "settings_modSettingsDPIchange": "DPI change",
   "settings_modSettingsDPIchangeToIcons": "Apply to icons",
+  "settings_modSettingsMonochromeSenderNames": "Monochrome sender names",
   "chat_MCOimgOpenGallery": "Open MCOimg gallery",
   "chat_additionalActions": "Chat actions menu",
   "mcogallery_common": "Common",

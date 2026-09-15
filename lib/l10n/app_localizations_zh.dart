@@ -5496,6 +5496,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => '同时应用于图标';
 
   @override
+  String get settings_modSettingsMonochromeSenderNames =>
+      'Monochrome sender names';
+
+  @override
   String get chat_MCOimgOpenGallery => '打开 MCOimg 图库';
 
   @override

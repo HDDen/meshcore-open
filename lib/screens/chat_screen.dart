@@ -2795,6 +2795,9 @@ class _MessageBubble extends StatelessWidget {
         ? null
         : '$compressionRatioPrefix$compressionTypeLabel';
     final scheme = Theme.of(context).colorScheme;
+    final senderNameColor = settingsService.settings.monochromeSenderNames
+        ? scheme.onSurface
+        : _colorForName(senderName);
     // A body that arrived while its author was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link. Everything below
     // reads `bodyText`, so revealing the text cannot bring those handlers
@@ -2958,7 +2961,7 @@ class _MessageBubble extends StatelessWidget {
                               style: MeshTheme.mono(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: _colorForName(senderName),
+                                color: senderNameColor,
                               ),
                             ),
                           ),
