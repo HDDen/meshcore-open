@@ -264,15 +264,28 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final scheme = theme.colorScheme;
+    final background = MeshPalette.bgOn(brightness);
+    final panel = MeshPalette.bg1On(brightness);
+    final inputBackground = MeshPalette.bg2On(brightness);
+    final line = MeshPalette.lineOn(brightness);
+    final line2 = MeshPalette.line2On(brightness);
+    final ink = MeshPalette.inkOn(brightness);
+    final ink4 = MeshPalette.ink4On(brightness);
+    final accent = scheme.primary;
+    final accentLine = accent.withValues(alpha: 0.50);
+    final accentBackground = accent.withValues(alpha: 0.14);
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
 
     return Scaffold(
-      backgroundColor: MeshPalette.bg,
+      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: MeshPalette.bg1,
+        backgroundColor: panel,
+        foregroundColor: scheme.onSurface,
         title: Text(l10n.repeater_cliTitle),
         centerTitle: true,
         actions: [
@@ -337,7 +350,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         children: [
           // Quick commands bar
           Container(
-            color: MeshPalette.bg1,
+            color: panel,
             padding: EdgeInsets.fromLTRB(
               8,
               6,
@@ -364,11 +377,11 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                           style: MeshTheme.mono(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: MeshPalette.blue,
+                            color: accent,
                           ),
                         ),
-                        backgroundColor: MeshPalette.blueBg,
-                        side: const BorderSide(color: MeshPalette.blueLine),
+                        backgroundColor: accentBackground,
+                        side: BorderSide(color: accentLine),
                         visualDensity: VisualDensity.compact,
                         onPressed: () => _useQuickCommand(cmd['command']!),
                       ),
@@ -378,7 +391,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
               ),
             ),
           ),
-          Divider(height: 1, color: MeshPalette.line),
+          Divider(height: 1, color: line),
 
           // Output area
           Expanded(
@@ -387,11 +400,11 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                 : _buildCommandHistory(),
           ),
 
-          Divider(height: 1, color: MeshPalette.line),
+          Divider(height: 1, color: line),
 
           // Command input
           Container(
-            color: MeshPalette.bg1,
+            color: panel,
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
             child: SafeArea(
               child: Row(
@@ -423,42 +436,38 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                       focusNode: _commandFocusNode,
                       style: MeshTheme.mono(
                         fontSize: 13,
-                        color: MeshPalette.ink,
+                        color: ink,
                       ),
                       decoration: InputDecoration(
                         hintText: context.l10n.repeater_enterCommandHint,
                         hintStyle: MeshTheme.mono(
                           fontSize: 13,
-                          color: MeshPalette.ink4,
+                          color: ink4,
                         ),
                         prefixText: '> ',
                         prefixStyle: MeshTheme.mono(
                           fontSize: 13,
-                          color: MeshPalette.blue,
+                          color: accent,
                           fontWeight: FontWeight.w700,
                         ),
                         filled: true,
-                        fillColor: MeshPalette.bg2,
+                        fillColor: inputBackground,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: const BorderSide(
-                            color: MeshPalette.line2,
-                          ),
+                          borderSide: BorderSide(color: line2),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: const BorderSide(
-                            color: MeshPalette.line2,
-                          ),
+                          borderSide: BorderSide(color: line2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(MeshRadii.pill),
-                          borderSide: const BorderSide(
-                            color: MeshPalette.blue,
+                          borderSide: BorderSide(
+                            color: accent,
                             width: 1.5,
                           ),
                         ),
@@ -469,9 +478,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   ),
                   const SizedBox(width: 6),
                   Material(
-                    color: MeshPalette.blue.withValues(alpha: 0.15),
-                    shape: const CircleBorder(
-                      side: BorderSide(color: MeshPalette.blueLine),
+                    color: accentBackground,
+                    shape: CircleBorder(
+                      side: BorderSide(color: accentLine),
                     ),
                     child: InkWell(
                       customBorder: const CircleBorder(),
@@ -479,12 +488,12 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                         HapticFeedback.lightImpact();
                         _sendCommand();
                       },
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
                         child: Icon(
                           Icons.send,
                           size: 18,
-                          color: MeshPalette.blue,
+                          color: accent,
                         ),
                       ),
                     ),
@@ -500,20 +509,23 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
 
   Widget _buildEmptyState() {
     final l10n = context.l10n;
+    final brightness = Theme.of(context).brightness;
+    final ink3 = MeshPalette.ink3On(brightness);
+    final ink4 = MeshPalette.ink4On(brightness);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.terminal, size: 48, color: MeshPalette.ink4),
+          Icon(Icons.terminal, size: 48, color: ink4),
           const SizedBox(height: 12),
           Text(
             l10n.repeater_noCommandsSent,
-            style: MeshTheme.mono(fontSize: 13, color: MeshPalette.ink3),
+            style: MeshTheme.mono(fontSize: 13, color: ink3),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.repeater_typeCommandOrUseQuick,
-            style: const TextStyle(fontSize: 12, color: MeshPalette.ink4),
+            style: TextStyle(fontSize: 12, color: ink4),
           ),
         ],
       ),
@@ -521,6 +533,11 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   }
 
   Widget _buildCommandHistory() {
+    final brightness = Theme.of(context).brightness;
+    final scheme = Theme.of(context).colorScheme;
+    final ink = MeshPalette.inkOn(brightness);
+    final ink3 = MeshPalette.ink3On(brightness);
+    final accent = scheme.primary;
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -542,7 +559,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   style: MeshTheme.mono(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isCommand ? MeshPalette.blue : MeshPalette.ink3,
+                    color: isCommand ? accent : ink3,
                   ),
                 ),
               ),
@@ -552,7 +569,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   entry['text']!,
                   style: MeshTheme.mono(
                     fontSize: 12.5,
-                    color: isCommand ? MeshPalette.blue : MeshPalette.ink,
+                    color: isCommand ? accent : ink,
                   ),
                 ),
               ),
@@ -1227,7 +1244,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                 style: MeshTheme.mono(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: MeshPalette.blue,
+                  color: scheme.primary,
                 ),
               ),
               const SizedBox(height: 4),
