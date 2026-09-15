@@ -712,6 +712,7 @@
   "channels_scanQrCodeComingSoon": "Coming soon",
   "channels_enterHashtag": "Enter hashtag",
   "channels_hashtagHint": "e.g. #team",
+  "channels_hashtagMcoaHint": "Uppercase letters and “_” are supported only in MCOa",
   "channels_regionSetTo": "Region: {region}",
   "@channels_regionSetTo": {
     "placeholders": {

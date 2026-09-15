@@ -3314,6 +3314,37 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           prefixIcon: const Icon(Icons.tag),
                         ),
                         maxLength: 31,
+                        buildCounter:
+                            (
+                              context, {
+                              required currentLength,
+                              required isFocused,
+                              required maxLength,
+                            }) {
+                              final style = TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              );
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      sheetContext
+                                          .l10n
+                                          .channels_hashtagMcoaHint,
+                                      style: style,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$currentLength/$maxLength',
+                                    style: style,
+                                  ),
+                                ],
+                              );
+                            },
                       ),
                     ),
                     // Privacy hint for community hashtags

@@ -1445,6 +1445,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_hashtagHint => '例如：#团队';
 
   @override
+  String get channels_hashtagMcoaHint =>
+      'Uppercase letters and “_” are supported only in MCOa';
+
+  @override
   String channels_regionSetTo(String region) {
     return '区域：$region';
   }

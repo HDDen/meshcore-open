@@ -1548,6 +1548,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_hashtagHint => 'напр. #отбор';
 
   @override
+  String get channels_hashtagMcoaHint =>
+      'Uppercase letters and “_” are supported only in MCOa';
+
+  @override
   String channels_regionSetTo(String region) {
     return 'Регион: $region';
   }

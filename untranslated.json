@@ -1,6 +1,7 @@
 {
   "bg": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -51,6 +52,7 @@
 
   "de": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -101,6 +103,7 @@
 
   "es": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -151,6 +154,7 @@
 
   "fr": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -201,6 +205,7 @@
 
   "hu": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -251,6 +256,7 @@
 
   "it": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -301,6 +307,7 @@
 
   "ja": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -351,6 +358,7 @@
 
   "ko": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -401,6 +409,7 @@
 
   "nl": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -451,6 +460,7 @@
 
   "pl": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -501,6 +511,7 @@
 
   "pt": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -551,6 +562,7 @@
 
   "sk": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -601,6 +613,7 @@
 
   "sl": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -651,6 +664,7 @@
 
   "sv": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -701,6 +715,7 @@
 
   "uk": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",
@@ -751,6 +766,7 @@
 
   "zh": [
     "contacts_requestRegions",
+    "channels_hashtagMcoaHint",
     "map_regionRequestPathMustEndWithTarget",
     "repeater_packetErrors",
     "chat_canvasV4Title",

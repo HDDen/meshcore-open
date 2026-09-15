@@ -1531,6 +1531,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_hashtagHint => 'napr. #tím';
 
   @override
+  String get channels_hashtagMcoaHint =>
+      'Uppercase letters and “_” are supported only in MCOa';
+
+  @override
   String channels_regionSetTo(String region) {
     return 'Región: $region';
   }

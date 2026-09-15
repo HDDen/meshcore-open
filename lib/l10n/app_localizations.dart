@@ -2836,6 +2836,12 @@ abstract class AppLocalizations {
   /// **'e.g. #team'**
   String get channels_hashtagHint;
 
+  /// No description provided for @channels_hashtagMcoaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase letters and “_” are supported only in MCOa'**
+  String get channels_hashtagMcoaHint;
+
   /// No description provided for @channels_regionSetTo.
   ///
   /// In en, this message translates to:

@@ -1462,6 +1462,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_hashtagHint => '例：#チーム';
 
   @override
+  String get channels_hashtagMcoaHint =>
+      'Uppercase letters and “_” are supported only in MCOa';
+
+  @override
   String channels_regionSetTo(String region) {
     return 'リージョン: $region';
   }

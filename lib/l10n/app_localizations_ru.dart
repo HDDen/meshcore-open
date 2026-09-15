@@ -1542,6 +1542,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channels_hashtagHint => 'например, #команда';
 
   @override
+  String get channels_hashtagMcoaHint =>
+      'Заглавные буквы и «_» поддерживаются только в MCOa';
+
+  @override
   String channels_regionSetTo(String region) {
     return 'Регион: $region';
   }
