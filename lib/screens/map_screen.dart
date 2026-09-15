@@ -6506,13 +6506,9 @@ class _MapScreenState extends State<MapScreen>
       contact.publicKey.length,
     ).toInt();
     final hopPrefix = contact.publicKey.sublist(0, hopWidth);
-    for (final existingHop in PathHelper.splitPathBytes(
-      _pathTrace,
-      activeWidth,
-    )) {
-      if (listEquals(existingHop, hopPrefix)) {
-        return;
-      }
+    final currentTail = _lastPathTraceHopPrefix(connector);
+    if (currentTail != null && listEquals(currentTail, hopPrefix)) {
+      return;
     }
     final keepTargetLast =
         _isRegionRequestTrace && _pathEndsWithRegionRequestTarget(connector);
@@ -6541,6 +6537,20 @@ class _MapScreenState extends State<MapScreen>
       _rebuildPathTraceAuxiliary();
       _syncPathEditText();
     });
+  }
+
+  List<int>? _lastPathTraceHopPrefix(MeshCoreConnector connector) {
+    if (_pathTrace.isEmpty) return null;
+    final recordedBytes = _pathTraceHopWidths.fold<int>(
+      0,
+      (total, width) => total + width,
+    );
+    final width = _pathTraceHopWidths.isNotEmpty &&
+            recordedBytes == _pathTrace.length
+        ? _pathTraceHopWidths.last
+        : _activePathHashWidth(connector);
+    if (width <= 0 || width > _pathTrace.length) return null;
+    return _pathTrace.sublist(_pathTrace.length - width);
   }
 
   void _startPath(LatLng position) {
