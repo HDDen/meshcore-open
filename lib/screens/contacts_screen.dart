@@ -1688,6 +1688,12 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
       case ContactSortOption.recentMessages:
         filtered.sort((a, b) {
+          final aUnread = connector.getUnreadCountForContact(a) > 0;
+          final bUnread = connector.getUnreadCountForContact(b) > 0;
+          if (aUnread != bUnread) {
+            return aUnread ? -1 : 1;
+          }
+
           final aAt = _resolveLastDirectMessageAt(a, connector);
           final bAt = _resolveLastDirectMessageAt(b, connector);
           // Contacts without direct history sort below the ones that have it,
