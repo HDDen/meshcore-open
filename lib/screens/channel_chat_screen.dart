@@ -26,6 +26,7 @@ import '../helpers/channel_echo_recovery.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/composer_draft_cache.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
@@ -200,9 +201,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   late DateFormat _hmsFormat;
   late DateFormat _mdFormat;
 
+  String get _composerDraftKey =>
+      ComposerDraftCache.channelKey(widget.channel.index);
+
   @override
   void initState() {
     super.initState();
+    _restoreComposerDraft();
     _textController.addListener(_onTextFieldTextChange);
     _textController.addListener(_updateMentionSuggestions);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
@@ -393,9 +398,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         _replyingToMessage = null;
       });
     }
+    ComposerDraftCache.write(_composerDraftKey, _composerBodyText(text));
     if (_textFieldFocusNode.hasFocus) {
       _keyboardNavigationActive = false;
     }
+  }
+
+  void _restoreComposerDraft() {
+    final draft = ComposerDraftCache.read(_composerDraftKey);
+    if (draft == null) return;
+    _textController.value = TextEditingValue(
+      text: draft,
+      selection: TextSelection.collapsed(offset: draft.length),
+    );
+    _lastTextFieldText = draft;
   }
 
   Future<void> _loadOlderMessages() async {
@@ -4212,6 +4228,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ? embeddedReplyTarget
         : _replyingToMessage;
     if (quickAnswerText == null) {
+      ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
       _textFieldFocusNode.requestFocus();
     }

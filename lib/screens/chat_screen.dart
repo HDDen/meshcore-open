@@ -19,6 +19,7 @@ import '../config/build_features.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/composer_draft_cache.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/reaction_helper.dart';
@@ -126,6 +127,9 @@ class _ChatScreenState extends State<ChatScreen> {
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
 
+  String get _composerDraftKey =>
+      ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
+
   /// Message ids whose MCOimg variant the user flipped away from the default
   /// (the default is "show pack original" when the mod setting is enabled,
   /// otherwise "show received LoRa version").
@@ -151,6 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _restoreComposerDraft();
     _textController.addListener(_onTextFieldTextChange);
     _textController.addListener(_updateMentionSuggestions);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
@@ -562,9 +567,20 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
     _lastTextFieldText = text;
+    ComposerDraftCache.write(_composerDraftKey, text);
     if (_textFieldFocusNode.hasFocus) {
       _keyboardNavigationActive = false;
     }
+  }
+
+  void _restoreComposerDraft() {
+    final draft = ComposerDraftCache.read(_composerDraftKey);
+    if (draft == null) return;
+    _textController.value = TextEditingValue(
+      text: draft,
+      selection: TextSelection.collapsed(offset: draft.length),
+    );
+    _lastTextFieldText = draft;
   }
 
   Future<void> _loadOlderMessages() async {
@@ -1523,6 +1539,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // end transform
 
     if (quickAnswerText == null) {
+      ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
       _textFieldFocusNode.requestFocus();
     }
