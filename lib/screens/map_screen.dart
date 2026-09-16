@@ -42,6 +42,7 @@ import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/contact_action_data_helper.dart';
+import '../helpers/coordinate_text.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
@@ -7695,60 +7696,13 @@ MarkerPayload? parseMarkerText(String text) {
   return MarkerPayload(position: LatLng(lat, lon), label: label, flags: flags);
 }
 
-final RegExp _coordinatePairPattern = RegExp(
-  r'(?<![\w.+-])(-?\d{1,3}(?:\.\d+)?)\s*,\s*'
-  r'(-?\d{1,3}(?:\.\d+)?)(?![\w+-])(?!\.\d)',
-);
-
-bool _couldContainCoordinatePair(String text) {
-  var searchFrom = 0;
-  while (searchFrom < text.length) {
-    final comma = text.indexOf(',', searchFrom);
-    if (comma < 0) return false;
-
-    var before = comma - 1;
-    while (before >= 0 && _isAsciiWhitespace(text.codeUnitAt(before))) {
-      before--;
-    }
-    var after = comma + 1;
-    while (after < text.length && _isAsciiWhitespace(text.codeUnitAt(after))) {
-      after++;
-    }
-    if (before >= 0 &&
-        after < text.length &&
-        _isCoordinateNumberPart(text.codeUnitAt(before)) &&
-        _isCoordinateNumberStart(text.codeUnitAt(after))) {
-      return true;
-    }
-    searchFrom = comma + 1;
-  }
-  return false;
-}
-
-bool _isAsciiWhitespace(int codeUnit) =>
-    codeUnit == 0x20 || (codeUnit >= 0x09 && codeUnit <= 0x0D);
-
-bool _isCoordinateNumberPart(int codeUnit) =>
-    (codeUnit >= 0x30 && codeUnit <= 0x39) || codeUnit == 0x2E;
-
-bool _isCoordinateNumberStart(int codeUnit) =>
-    _isCoordinateNumberPart(codeUnit) || codeUnit == 0x2B || codeUnit == 0x2D;
-
 /// Find the first valid `<lat>,<lon>` pair anywhere in a text message.
 MarkerPayload? parseCoordinateText(String text) {
-  final trimmed = text.trim();
-  if (!_couldContainCoordinatePair(trimmed)) return null;
-
-  for (final match in _coordinatePairPattern.allMatches(trimmed)) {
-    final lat = double.tryParse(match.group(1) ?? '');
-    final lon = double.tryParse(match.group(2) ?? '');
-    if (lat == null || lon == null) continue;
-    if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
-      continue;
-    }
+  for (final segment in CoordinateText.split(text)) {
+    if (!segment.isCoordinate) continue;
     return MarkerPayload(
-      position: LatLng(lat, lon),
-      label: match.group(0)!.trim(),
+      position: LatLng(segment.latitude!, segment.longitude!),
+      label: segment.text.trim(),
       flags: '',
     );
   }

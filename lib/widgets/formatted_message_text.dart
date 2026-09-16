@@ -110,10 +110,6 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
     final linkStyle = LinkHandler.defaultLinkStyle(context, widget.style);
     // A coordinate keeps the body colour and is marked by an underline alone —
     // the look a message that is nothing but coordinates already has.
-    final coordinateStyle = widget.style.copyWith(
-      decoration: TextDecoration.underline,
-      decorationColor: widget.style.color,
-    );
     final spans = <InlineSpan>[...widget.leadingSpans];
 
     // Markup is the outer layer: it decides how a run looks, and mentions and
@@ -123,6 +119,15 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
         : [MarkupSegment(widget.text, MarkupStyles.none)];
     for (final block in blocks) {
       final blockStyle = _applyMarkup(widget.style, block.styles);
+      final coordinateStyle = blockStyle.copyWith(
+        decoration: TextDecoration.combine([
+          if (blockStyle.decoration != null &&
+              blockStyle.decoration != TextDecoration.none)
+            blockStyle.decoration!,
+          TextDecoration.underline,
+        ]),
+        decorationColor: blockStyle.color,
+      );
       for (final segment in MentionText.split(block.text)) {
         if (segment.isMention) {
           final chip = MentionChip(
@@ -168,7 +173,7 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
               spans.add(
                 TextSpan(
                   text: part.text,
-                  style: _applyMarkup(coordinateStyle, block.styles),
+                  style: coordinateStyle,
                   recognizer: recognizer,
                 ),
               );

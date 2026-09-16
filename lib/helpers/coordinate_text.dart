@@ -17,12 +17,14 @@ class CoordinateText {
   CoordinateText._();
 
   /// Both halves must carry a decimal point, or "1,5" written as a price and
-  /// "steps 1,2" would read as coordinates. The pair may not continue into a
-  /// longer number on either side, which keeps version strings out — but a
-  /// sentence-ending dot right after it is fine.
+  /// "steps 1,2" would read as coordinates. Explicit ASCII digits and
+  /// explicit surrounding boundaries keep hexadecimal dumps, versions,
+  /// paths, and values embedded in words out of the parser.
   static final RegExp pattern = RegExp(
-    r'(?<![\w.+-])(-?\d{1,3}\.\d+)\s*,\s*'
-    r'(-?\d{1,3}\.\d+)(?![\w+-])(?!\.\d)',
+    r'(?<![A-Za-zА-Яа-яЁё0-9_./+-])'
+    r'(-?[0-9]{1,3}\.[0-9]+)\s*,\s*'
+    r'(-?[0-9]{1,3}\.[0-9]+)'
+    r'(?![A-Za-zА-Яа-яЁё0-9_+/-]|\.[0-9])',
   );
 
   /// Cheap pre-check before the full scan: a pair needs both a dot and a
