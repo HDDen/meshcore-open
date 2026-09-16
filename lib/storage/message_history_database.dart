@@ -236,11 +236,121 @@ class MessageHistoryState {
   final bool containsMarker;
 }
 
+class ContactLocationCacheRecord {
+  const ContactLocationCacheRecord({
+    required this.publicKeyHex,
+    required this.name,
+    required this.contactType,
+    required this.realLatitude,
+    required this.realLongitude,
+    required this.estimatedLatitude,
+    required this.estimatedLongitude,
+    required this.anchorPublicKeysJson,
+    required this.anchorLatitudesJson,
+    required this.anchorLongitudesJson,
+    required this.highConfidence,
+    required this.updatedAtMs,
+  });
+
+  final String publicKeyHex;
+  final String name;
+  final int contactType;
+  final double? realLatitude;
+  final double? realLongitude;
+  final double? estimatedLatitude;
+  final double? estimatedLongitude;
+  final String anchorPublicKeysJson;
+  final String anchorLatitudesJson;
+  final String anchorLongitudesJson;
+  final bool highConfidence;
+  final int updatedAtMs;
+}
+
+class ContactLocationCacheUpsert {
+  const ContactLocationCacheUpsert({
+    required this.publicKeyHex,
+    required this.name,
+    required this.contactType,
+    required this.realLatitude,
+    required this.realLongitude,
+    required this.estimatedLatitude,
+    required this.estimatedLongitude,
+    required this.anchorPublicKeysJson,
+    required this.anchorLatitudesJson,
+    required this.anchorLongitudesJson,
+    required this.highConfidence,
+    required this.updatedAtMs,
+  });
+
+  final String publicKeyHex;
+  final String name;
+  final int contactType;
+  final double? realLatitude;
+  final double? realLongitude;
+  final double? estimatedLatitude;
+  final double? estimatedLongitude;
+  final String anchorPublicKeysJson;
+  final String anchorLatitudesJson;
+  final String anchorLongitudesJson;
+  final bool highConfidence;
+  final int updatedAtMs;
+}
+
+class HeardPacketRecord {
+  const HeardPacketRecord({
+    required this.id,
+    required this.heardAtMs,
+    required this.packetType,
+    required this.initialHop,
+    required this.lastHop,
+    required this.regionHash,
+    required this.pathHashSize,
+    required this.snr,
+    required this.rssi,
+    required this.payload,
+  });
+
+  final int id;
+  final int heardAtMs;
+  final int packetType;
+  final Uint8List? initialHop;
+  final Uint8List? lastHop;
+  final Uint8List? regionHash;
+  final int pathHashSize;
+  final double? snr;
+  final int? rssi;
+  final Uint8List payload;
+}
+
+class HeardPacketInsert {
+  const HeardPacketInsert({
+    required this.heardAtMs,
+    required this.packetType,
+    required this.initialHop,
+    required this.lastHop,
+    required this.regionHash,
+    required this.pathHashSize,
+    required this.snr,
+    required this.rssi,
+    required this.payload,
+  });
+
+  final int heardAtMs;
+  final int packetType;
+  final Uint8List? initialHop;
+  final Uint8List? lastHop;
+  final Uint8List? regionHash;
+  final int pathHashSize;
+  final double? snr;
+  final int? rssi;
+  final Uint8List payload;
+}
+
 @DriftDatabase(
   tables: [HistoryMessages, HistoryMetadata, LegacyRejectedMessages],
 )
 class MessageHistoryDatabase extends _$MessageHistoryDatabase {
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
   static const String _legacyMigrationKey = 'legacy_migration_complete';
   static const String _legacySkippedHistoriesKey =
       'legacy_migration_skipped_histories';
@@ -271,11 +381,23 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     onCreate: (migrator) async {
       await customStatement('PRAGMA auto_vacuum = INCREMENTAL');
       await migrator.createAll();
+      await _ensureAuxiliaryTables();
     },
-    beforeOpen: (_) => _ensurePreReleaseAuxiliaryTables(),
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await _ensureAuxiliaryTables();
+      }
+    },
+    beforeOpen: (_) => _ensureAuxiliaryTables(),
   );
 
-  Future<void> _ensurePreReleaseAuxiliaryTables() async {
+  Future<void> _ensureAuxiliaryTables() async {
+    await _ensureLegacyRejectedMessagesTable();
+    await _ensureContactLocationCacheTable();
+    await _ensureHeardPacketsTable();
+  }
+
+  Future<void> _ensureLegacyRejectedMessagesTable() async {
     // Pre-release builds already used schema version 1 before quarantine was
     // added. Keep that version, but repair those local databases in place.
     await customStatement('''
@@ -295,6 +417,59 @@ CREATE TABLE IF NOT EXISTS legacy_rejected_messages (
     await customStatement('''
 CREATE INDEX IF NOT EXISTS legacy_rejected_location
 ON legacy_rejected_messages (kind, storage_key, message_index)
+''');
+  }
+
+  Future<void> _ensureContactLocationCacheTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS contact_location_cache (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  public_key_hex TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  contact_type INTEGER NOT NULL,
+  real_latitude REAL NULL,
+  real_longitude REAL NULL,
+  estimated_latitude REAL NULL,
+  estimated_longitude REAL NULL,
+  anchor_public_keys_json TEXT NOT NULL DEFAULT '[]',
+  anchor_latitudes_json TEXT NOT NULL DEFAULT '[]',
+  anchor_longitudes_json TEXT NOT NULL DEFAULT '[]',
+  high_confidence INTEGER NOT NULL DEFAULT 0,
+  updated_at_ms INTEGER NOT NULL
+)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS contact_location_cache_type_estimated
+ON contact_location_cache (contact_type, estimated_latitude, estimated_longitude)
+''');
+  }
+
+  Future<void> _ensureHeardPacketsTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS heard_packets (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  heard_at_ms INTEGER NOT NULL,
+  packet_type INTEGER NOT NULL,
+  initial_hop BLOB NULL,
+  last_hop BLOB NULL,
+  region_hash BLOB NULL,
+  path_hash_size INTEGER NOT NULL,
+  snr REAL NULL,
+  rssi INTEGER NULL,
+  payload BLOB NOT NULL
+)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS heard_packets_time
+ON heard_packets (heard_at_ms)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS heard_packets_type_time
+ON heard_packets (packet_type, heard_at_ms)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS heard_packets_region_time
+ON heard_packets (region_hash, heard_at_ms)
 ''');
   }
 
@@ -456,6 +631,202 @@ ON legacy_rejected_messages (kind, storage_key, message_index)
         (row) => OrderingTerm.asc(row.messageId),
       ]);
     return (await query.get()).map((row) => row.messageJson).toList();
+  }
+
+  Future<List<ContactLocationCacheRecord>> readContactLocationCache() async {
+    final rows = await customSelect('''
+SELECT public_key_hex,
+       name,
+       contact_type,
+       real_latitude,
+       real_longitude,
+       estimated_latitude,
+       estimated_longitude,
+       anchor_public_keys_json,
+       anchor_latitudes_json,
+       anchor_longitudes_json,
+       high_confidence,
+       updated_at_ms
+FROM contact_location_cache
+''').get();
+    return rows.map((row) {
+      return ContactLocationCacheRecord(
+        publicKeyHex: row.read<String>('public_key_hex'),
+        name: row.read<String>('name'),
+        contactType: row.read<int>('contact_type'),
+        realLatitude: row.readNullable<double>('real_latitude'),
+        realLongitude: row.readNullable<double>('real_longitude'),
+        estimatedLatitude: row.readNullable<double>('estimated_latitude'),
+        estimatedLongitude: row.readNullable<double>('estimated_longitude'),
+        anchorPublicKeysJson: row.read<String>('anchor_public_keys_json'),
+        anchorLatitudesJson: row.read<String>('anchor_latitudes_json'),
+        anchorLongitudesJson: row.read<String>('anchor_longitudes_json'),
+        highConfidence: row.read<int>('high_confidence') != 0,
+        updatedAtMs: row.read<int>('updated_at_ms'),
+      );
+    }).toList();
+  }
+
+  Future<void> upsertContactLocationCache(
+    List<ContactLocationCacheUpsert> rows,
+  ) async {
+    if (rows.isEmpty) return;
+    await transaction(() async {
+      for (final row in rows) {
+        await customInsert(
+          '''
+INSERT INTO contact_location_cache (
+  public_key_hex,
+  name,
+  contact_type,
+  real_latitude,
+  real_longitude,
+  estimated_latitude,
+  estimated_longitude,
+  anchor_public_keys_json,
+  anchor_latitudes_json,
+  anchor_longitudes_json,
+  high_confidence,
+  updated_at_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(public_key_hex) DO UPDATE SET
+  name = excluded.name,
+  contact_type = excluded.contact_type,
+  real_latitude = excluded.real_latitude,
+  real_longitude = excluded.real_longitude,
+  estimated_latitude = excluded.estimated_latitude,
+  estimated_longitude = excluded.estimated_longitude,
+  anchor_public_keys_json = excluded.anchor_public_keys_json,
+  anchor_latitudes_json = excluded.anchor_latitudes_json,
+  anchor_longitudes_json = excluded.anchor_longitudes_json,
+  high_confidence = excluded.high_confidence,
+  updated_at_ms = excluded.updated_at_ms
+''',
+          variables: [
+            Variable<String>(row.publicKeyHex),
+            Variable<String>(row.name),
+            Variable<int>(row.contactType),
+            Variable<double>(row.realLatitude),
+            Variable<double>(row.realLongitude),
+            Variable<double>(row.estimatedLatitude),
+            Variable<double>(row.estimatedLongitude),
+            Variable<String>(row.anchorPublicKeysJson),
+            Variable<String>(row.anchorLatitudesJson),
+            Variable<String>(row.anchorLongitudesJson),
+            Variable<int>(row.highConfidence ? 1 : 0),
+            Variable<int>(row.updatedAtMs),
+          ],
+        );
+      }
+    });
+  }
+
+  Future<void> clearContactLocationEstimatesForKeys(
+    Iterable<String> publicKeyHexes,
+  ) async {
+    final keys = publicKeyHexes
+        .map((key) => key.toLowerCase())
+        .where((key) => key.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (keys.isEmpty) return;
+    const chunkSize = 400;
+    for (var offset = 0; offset < keys.length; offset += chunkSize) {
+      final end = offset + chunkSize < keys.length
+          ? offset + chunkSize
+          : keys.length;
+      final chunk = keys.sublist(offset, end);
+      final placeholders = List.filled(chunk.length, '?').join(',');
+      await customUpdate(
+        '''
+UPDATE contact_location_cache
+SET estimated_latitude = NULL,
+    estimated_longitude = NULL,
+    anchor_public_keys_json = '[]',
+    anchor_latitudes_json = '[]',
+    anchor_longitudes_json = '[]',
+    high_confidence = 0,
+    updated_at_ms = ?
+WHERE public_key_hex IN ($placeholders)
+''',
+        variables: [
+          Variable<int>(DateTime.now().millisecondsSinceEpoch),
+          for (final key in chunk) Variable<String>(key),
+        ],
+      );
+    }
+  }
+
+  Future<void> insertHeardPackets(List<HeardPacketInsert> packets) async {
+    if (packets.isEmpty) return;
+    await transaction(() async {
+      for (final packet in packets) {
+        await customInsert(
+          '''
+INSERT INTO heard_packets (
+  heard_at_ms,
+  packet_type,
+  initial_hop,
+  last_hop,
+  region_hash,
+  path_hash_size,
+  snr,
+  rssi,
+  payload
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+''',
+          variables: [
+            Variable<int>(packet.heardAtMs),
+            Variable<int>(packet.packetType),
+            Variable<Uint8List>(packet.initialHop),
+            Variable<Uint8List>(packet.lastHop),
+            Variable<Uint8List>(packet.regionHash),
+            Variable<int>(packet.pathHashSize),
+            Variable<double>(packet.snr),
+            Variable<int>(packet.rssi),
+            Variable<Uint8List>(packet.payload),
+          ],
+        );
+      }
+    });
+  }
+
+  Future<List<HeardPacketRecord>> readLatestHeardPackets({
+    required int limit,
+  }) async {
+    if (limit <= 0) return const [];
+    final rows = await customSelect(
+      '''
+SELECT id,
+       heard_at_ms,
+       packet_type,
+       initial_hop,
+       last_hop,
+       region_hash,
+       path_hash_size,
+       snr,
+       rssi,
+       payload
+FROM heard_packets
+ORDER BY heard_at_ms DESC, id DESC
+LIMIT ?
+''',
+      variables: [Variable<int>(limit)],
+    ).get();
+    return rows.map((row) {
+      return HeardPacketRecord(
+        id: row.read<int>('id'),
+        heardAtMs: row.read<int>('heard_at_ms'),
+        packetType: row.read<int>('packet_type'),
+        initialHop: row.readNullable<Uint8List>('initial_hop'),
+        lastHop: row.readNullable<Uint8List>('last_hop'),
+        regionHash: row.readNullable<Uint8List>('region_hash'),
+        pathHashSize: row.read<int>('path_hash_size'),
+        snr: row.readNullable<double>('snr'),
+        rssi: row.readNullable<int>('rssi'),
+        payload: row.read<Uint8List>('payload'),
+      );
+    }).toList();
   }
 
   Future<MessageHistorySummaryRow?> readDirectSummary(String storageKey) async {

@@ -70,6 +70,7 @@ import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/connection_transport_preference_store.dart';
+import '../storage/contact_location_estimate_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
@@ -481,6 +482,8 @@ class MeshCoreConnector extends ChangeNotifier {
   final ContactSettingsStore _contactSettingsStore = ContactSettingsStore();
   final ContactStore _contactStore = ContactStore();
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
+  final ContactLocationEstimateStore _contactLocationEstimateStore =
+      ContactLocationEstimateStore();
   final ChannelStore _channelStore = ChannelStore();
   final ConnectionTransportPreferenceStore _transportPreferenceStore =
       ConnectionTransportPreferenceStore();
@@ -10079,10 +10082,24 @@ class MeshCoreConnector extends ChangeNotifier {
         ..clear()
         ..addAll(_contacts.map((contact) => contact.publicKeyHex));
     }
+    unawaited(
+      _contactLocationEstimateStore.clearEstimatesForKeys(
+        _contacts
+            .where((contact) => contact.hasLocation)
+            .map((contact) => contact.publicKeyHex),
+      ),
+    );
     await _contactStore.saveContacts(_contacts);
   }
 
   Future<void> _persistDiscoveredContacts() async {
+    unawaited(
+      _contactLocationEstimateStore.clearEstimatesForKeys(
+        _discoveredContacts
+            .where((contact) => contact.hasLocation)
+            .map((contact) => contact.publicKeyHex),
+      ),
+    );
     await _discoveryContactStore.saveContacts(_discoveredContacts);
   }
 

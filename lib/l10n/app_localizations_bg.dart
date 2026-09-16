@@ -822,16 +822,16 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageUk => 'Украински';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 байт';
+  String get repeater_pathHashModeOption0 => '1 байт';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 байта';
+  String get repeater_pathHashModeOption1 => '2 байта';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 байта';
+  String get repeater_pathHashModeOption2 => '3 байта';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 байта';
+  String get repeater_pathHashModeOption3 => '4 байта';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -1167,7 +1167,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_manageRepeater => 'Управление на повторителя';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Заяви регионите';
 
   @override
   String get contacts_manageRoom => 'Управление на сървър за стая';
@@ -1549,7 +1549,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'Главни букви и „_“ се поддържат само в MCOa';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2207,7 +2207,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Маршрутът трябва да завършва с целевия ретранслатор.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2943,7 +2943,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get repeater_duplicates => 'Дубликати';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Грешки в пакетите';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5389,137 +5389,139 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_canvas => 'Платно MCOimg';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'Векторно платно MCOimg v4';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Ново векторно платно';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Координатна мрежа';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'По-малката мрежа намалява payload, по-голямата повишава точността при разполагането на фигурите.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Фон';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => 'Прозрачен';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Запълване';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Контур';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Дебелина на контура';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Затвори фигурата';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Скрий фигурата';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Покажи фигурата';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Премести нагоре';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Премести надолу';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Фигури';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => 'На платното още няма фигури';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Изчисли крайното изображение';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Повтори';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Настройки на платното';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'От 1 до 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Зареди референтно изображение';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Скрий референтното изображение';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Покажи референтното изображение';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference =>
+      'Премахни референтното изображение';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'Референтното изображение не влиза в payload';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'Документът вече използва 64 цвята';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Payload: $bytes байта';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'Payload превишава наличния размер с $bytes байта';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Приложи стила';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint =>
+      'Посочете началото, края и дълбочината на вълната';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Избор и преместване';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Точка';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Молив';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Линия';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Начупена линия';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Поставяйте върховете на контура. Докоснете първия връх или изберете начин на завършване.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Завърши отворена';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Затвори';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Правоъгълник';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Елипса';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Кръг';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Вълна';
 
   @override
   String get chat_canvasCrop => 'Изрязване/разширяване';
@@ -5910,7 +5912,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Едноцветни имена на подателите';
 
   @override
   String get chat_MCOimgOpenGallery => 'Отваряне на галерията MCOimg';
@@ -6715,11 +6717,11 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Възстановявай повторенията на дълги пакети';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Разпознаване на копие от RX-дневника на наше съобщение в канал, отрязано от лимита на BLE кадъра';
 
   @override
   String get chat_canvasV4TextSize => 'Размер на текста';

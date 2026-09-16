@@ -807,16 +807,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainska';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 — 1 byte';
+  String get repeater_pathHashModeOption0 => '1 byte';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 — 2 byte';
+  String get repeater_pathHashModeOption1 => '2 byte';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 — 3 byte';
+  String get repeater_pathHashModeOption2 => '3 byte';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 — 4 byte';
+  String get repeater_pathHashModeOption3 => '4 byte';
 
   @override
   String get appSettings_enableMessageTracing => 'Aktivera meddelandespårning';
@@ -1144,7 +1144,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contacts_manageRepeater => 'Hantera Upprepare';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Begär regioner';
 
   @override
   String get contacts_manageRoom => 'Hantera Rumserver';
@@ -1521,8 +1521,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_hashtagHint => 't.ex. #team';
 
   @override
-  String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+  String get channels_hashtagMcoaHint => 'Versaler och ”_” stöds endast i MCOa';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2178,7 +2177,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Rutten måste sluta vid målrepeatern.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2910,7 +2909,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get repeater_duplicates => 'Dubbletter';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Paketfel';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5343,137 +5342,138 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_canvas => 'MCOimg-canvas';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 vektorcanvas';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Ny vektorcanvas';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Koordinatrutnät';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'Ett mindre rutnät minskar payloaden, ett större ökar precisionen när figurer placeras ut.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Bakgrund';
 
   @override
   String get chat_canvasV4Transparent => 'Transparent';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Fyllning';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Kontur';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Konturtjocklek';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Slut figuren';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Dölj figur';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Visa figur';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Flytta upp';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Flytta ned';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Figurer';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects =>
+      'Det finns inga figurer på canvasen ännu';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Beräkna slutbilden';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Gör om';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Canvasinställningar';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'Från 1 till 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Läs in referensbild';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Dölj referensbild';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Visa referensbild';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Ta bort referensbild';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'Referensbilden ingår inte i payloaden';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'Dokumentet använder redan 64 färger';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Payload: $bytes byte';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'Payloaden överskrider tillgänglig storlek med $bytes byte';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Använd stil';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint => 'Ange vågens början, slut och djup';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Markera och flytta';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Punkt';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Penna';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Linje';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Polylinje';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Placera konturens punkter. Tryck på den första punkten eller välj hur du avslutar.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Avsluta öppen';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Slut formen';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Rektangel';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Ellips';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Cirkel';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Våg';
 
   @override
   String get chat_canvasCrop => 'Beskär/utöka';
@@ -5862,7 +5862,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Enfärgade avsändarnamn';
 
   @override
   String get chat_MCOimgOpenGallery => 'Öppna MCOimg-galleriet';
@@ -6655,11 +6655,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Återskapa upprepningar av långa paket';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Känn igen en RX-loggkopia av vårt eget kanalmeddelande som BLE-ramgränsen kapat';
 
   @override
   String get chat_canvasV4TextSize => 'Textstorlek';

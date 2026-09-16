@@ -1603,25 +1603,25 @@ abstract class AppLocalizations {
   /// No description provided for @repeater_pathHashModeOption0.
   ///
   /// In en, this message translates to:
-  /// **'0 - 1 byte'**
+  /// **'1 byte'**
   String get repeater_pathHashModeOption0;
 
   /// No description provided for @repeater_pathHashModeOption1.
   ///
   /// In en, this message translates to:
-  /// **'1 - 2 bytes'**
+  /// **'2 bytes'**
   String get repeater_pathHashModeOption1;
 
   /// No description provided for @repeater_pathHashModeOption2.
   ///
   /// In en, this message translates to:
-  /// **'2 - 3 bytes'**
+  /// **'3 bytes'**
   String get repeater_pathHashModeOption2;
 
   /// No description provided for @repeater_pathHashModeOption3.
   ///
   /// In en, this message translates to:
-  /// **'3 - 4 bytes'**
+  /// **'4 bytes'**
   String get repeater_pathHashModeOption3;
 
   /// No description provided for @appSettings_enableMessageTracing.

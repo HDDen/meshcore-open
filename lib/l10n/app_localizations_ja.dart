@@ -783,16 +783,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_languageUk => 'ウクライナ語';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 バイト';
+  String get repeater_pathHashModeOption0 => '1 バイト';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 バイト';
+  String get repeater_pathHashModeOption1 => '2 バイト';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 バイト';
+  String get repeater_pathHashModeOption2 => '3 バイト';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 バイト';
+  String get repeater_pathHashModeOption3 => '4 バイト';
 
   @override
   String get appSettings_enableMessageTracing => 'メッセージ追跡を有効にする';
@@ -1097,7 +1097,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get contacts_manageRepeater => 'リピータの管理';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => '地域を要求';
 
   @override
   String get contacts_manageRoom => 'ルームサーバーを管理';
@@ -1462,8 +1462,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_hashtagHint => '例：#チーム';
 
   @override
-  String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+  String get channels_hashtagMcoaHint => '大文字と「_」は MCOa でのみ使用できます';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2104,7 +2103,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      '経路は対象のリピーターで終わる必要があります。';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2809,7 +2808,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_duplicates => '重複';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'パケットエラー';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5115,137 +5114,136 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_canvas => 'MCOimg キャンバス';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 ベクターキャンバス';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => '新しいベクターキャンバス';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => '座標グリッド';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'グリッドが小さいほどペイロードが減り、大きいほど図形を正確に配置できます。';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => '背景';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => '透明';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => '塗りつぶし';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => '輪郭';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => '輪郭の太さ';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => '図形を閉じる';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => '図形を非表示';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => '図形を表示';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => '上へ移動';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => '下へ移動';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => '図形';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => 'キャンバスにはまだ図形がありません';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => '最終画像を計算';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'やり直す';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'キャンバス設定';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => '1 から 256 まで';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => '下絵を読み込む';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => '下絵を非表示';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => '下絵を表示';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => '下絵を削除';
 
   @override
-  String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+  String get chat_canvasV4ReferenceNotEncoded => '下絵はペイロードに含まれません';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'ドキュメントはすでに 64 色を使用しています';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'ペイロード: $bytes バイト';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'ペイロードが利用可能なサイズを $bytes バイト超えています';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'スタイルを適用';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint => '波の始点・終点・深さを指定してください';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => '選択して移動';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => '点';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => '鉛筆';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => '直線';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => '折れ線';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      '輪郭の頂点を配置します。最初の頂点をタップするか、終了方法を選択してください。';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => '開いたまま終了';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => '閉じる';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => '長方形';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => '楕円';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => '円';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => '波';
 
   @override
   String get chat_canvasCrop => '切り抜き／拡張';
@@ -5617,8 +5615,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => 'アイコンにも適用';
 
   @override
-  String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+  String get settings_modSettingsMonochromeSenderNames => '送信者名を単色で表示';
 
   @override
   String get chat_MCOimgOpenGallery => 'MCOimg ギャラリーを開く';
@@ -6380,12 +6377,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_mcotxtPlainWhenSmaller => '通常のメッセージの方が小さければそれを送信';
 
   @override
-  String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+  String get settings_modSettingsRecoverLongEchoes => '長いパケットの再送を復元する';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'BLE フレーム制限で切られた自分のチャンネルメッセージの RX ログのコピーを認識します';
 
   @override
   String get chat_canvasV4TextSize => '文字サイズ';

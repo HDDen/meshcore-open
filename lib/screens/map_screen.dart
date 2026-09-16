@@ -33,6 +33,7 @@ import '../services/wardrive_foreground_service.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_upload_service.dart';
+import '../storage/contact_location_estimate_store.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
@@ -140,6 +141,8 @@ class _MapScreenState extends State<MapScreen>
   final GlobalKey _wardrivePanelKey = GlobalKey();
   final GlobalKey _pathTracePanelKey = GlobalKey();
   final MapMarkerService _markerService = MapMarkerService();
+  final ContactLocationEstimateStore _contactLocationEstimateStore =
+      ContactLocationEstimateStore();
   late final ChannelMarkerStyles _channelMarkerStyles = ChannelMarkerStyles(
     onChanged: () {
       if (mounted) setState(() {});
@@ -195,6 +198,10 @@ class _MapScreenState extends State<MapScreen>
   bool _wardrivePanelCollapsed = false;
   List<_GuessedLocation> _cachedGuessedLocations = [];
   String _guessedLocationsCacheKey = '';
+  bool _locatedRepeaterRefreshBusy = false;
+  String _locatedRepeaterRefreshKey = '';
+  int _seenLocatedRepeaterRecalculateRequest = 0;
+  List<McoEstimatedContactLocation> _locatedRepeaterEstimates = const [];
   int? _sharedMarkersCacheSignature;
   Locale? _sharedMarkersCacheLocale;
   List<_SharedMarker> _cachedSharedMarkers = const [];
@@ -584,11 +591,19 @@ class _MapScreenState extends State<MapScreen>
         final tileCache = context.read<MapTileCacheService>();
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
         final settings = settingsService.settings;
+        final servSettings = context.watch<SettingsSectionsService>();
         final connectorSnapshot = _MapConnectorSnapshot.fromConnector(
           connector,
         );
         final pathHistoryVersion = pathHistory.version;
         final allContacts = connector.allContacts;
+        final locateRepeaterCandidates = _locateRepeaterCandidates(allContacts);
+        _maybeRefreshLocatedRepeaters(
+          connector: connector,
+          settings: settings,
+          service: servSettings,
+          candidates: locateRepeaterCandidates,
+        );
         _channelMarkerStyles.syncTo(connector.selfPublicKeyHex);
         _channelMarkerStyles.trackChannels(connector.channels);
         connector.ensureSharedChannelHistoryLoaded();
@@ -701,6 +716,21 @@ class _MapScreenState extends State<MapScreen>
         final guessedLocations = settings.mapShowGuessedLocations
             ? _cachedGuessedLocations
             : <_GuessedLocation>[];
+        final locatedRepeaterGuesses = _locatedRepeaterGuesses(
+          guessCandidates,
+          servSettings,
+        );
+        final locatedRepeaterGuessKeys = locatedRepeaterGuesses
+            .map((guess) => guess.contact.publicKeyHex.toLowerCase())
+            .toSet();
+        final allGuessedLocations = <_GuessedLocation>[
+          ...guessedLocations.where(
+            (guess) => !locatedRepeaterGuessKeys.contains(
+              guess.contact.publicKeyHex.toLowerCase(),
+            ),
+          ),
+          ...locatedRepeaterGuesses,
+        ];
 
         _polylines
           ..clear()
@@ -801,6 +831,7 @@ class _MapScreenState extends State<MapScreen>
         final hasMapContent =
             contactsWithLocation.isNotEmpty ||
             sharedMarkers.isNotEmpty ||
+            locatedRepeaterGuesses.isNotEmpty ||
             wardriveSamplePoints.isNotEmpty ||
             selfDisplayPosition != null ||
             _points.isNotEmpty ||
@@ -815,6 +846,7 @@ class _MapScreenState extends State<MapScreen>
               (c) => LatLng(c.latitude!, c.longitude!),
             ),
             ...sharedMarkers.map((m) => m.position),
+            ...locatedRepeaterGuesses.map((guess) => guess.position),
             ...wardriveSamplePoints,
             ?selfDisplayPosition,
           ];
@@ -1292,7 +1324,7 @@ class _MapScreenState extends State<MapScreen>
                             (_zoom >= _guessedZoomThreshold ||
                                 _isBuildingPathTrace))
                           ..._buildGuessedMarker(
-                            guessedLocations,
+                            allGuessedLocations,
                             showLabels: _showNodeLabels,
                             wardriveHighlightActive: wardriveHighlightActive,
                             wardriveAnsweredKeys: wardriveAnsweredKeys,
@@ -1395,12 +1427,13 @@ class _MapScreenState extends State<MapScreen>
                     connector: connector,
                     settingsService: settingsService,
                     allContacts: allContacts,
-                    guessedLocations: guessedLocations,
+                    guessedLocations: allGuessedLocations,
                     visibleCount:
                         visibleContacts.length +
-                        ((settings.mapShowGuessedLocations &&
+                        (((settings.mapShowGuessedLocations ||
+                                    locatedRepeaterGuesses.isNotEmpty) &&
                                 _zoom >= _guessedZoomThreshold)
-                            ? guessedLocations.length
+                            ? allGuessedLocations.length
                             : 0),
                     onlineCount: onlineCount,
                     repeaterCount: repeaterCount,
@@ -2667,6 +2700,187 @@ class _MapScreenState extends State<MapScreen>
 
     return result;
   }
+
+  List<McoContactLocationCandidate> _locateRepeaterCandidates(
+    List<Contact> contacts,
+  ) => [
+    for (final contact in contacts)
+      if (contact.type == advTypeRepeater)
+        McoContactLocationCandidate(
+          publicKey: List<int>.unmodifiable(contact.publicKey),
+          name: contact.name,
+          contactType: contact.type,
+          pathBytes: List<int>.unmodifiable(contact.path),
+          pathHashByteWidth:
+              contact.pathLength > 0 &&
+                  contact.path.length >= contact.pathLength &&
+                  contact.path.length % contact.pathLength == 0
+              ? (contact.path.length ~/ contact.pathLength)
+                    .clamp(1, 4)
+                    .toInt()
+              : null,
+          lastSeen: contact.lastSeen,
+          latitude: contact.latitude,
+          longitude: contact.longitude,
+        ),
+  ];
+
+  List<_GuessedLocation> _locatedRepeaterGuesses(
+    List<Contact> contacts,
+    SettingsSectionsService service,
+  ) {
+    if (!service.locateUnknownRepeatersEnabled) {
+      return const <_GuessedLocation>[];
+    }
+    final contactsByKey = {
+      for (final contact in contacts) contact.publicKeyHex.toLowerCase(): contact,
+    };
+    final result = <_GuessedLocation>[];
+    for (final estimate in _locatedRepeaterEstimates) {
+      final contact = contactsByKey[estimate.publicKeyHex.toLowerCase()];
+      if (contact == null || contact.hasLocation) continue;
+      if (contact.type != advTypeRepeater) continue;
+      result.add(
+        _GuessedLocation(
+          contact: contact,
+          position: LatLng(estimate.latitude, estimate.longitude),
+          highConfidence: estimate.highConfidence,
+        ),
+      );
+    }
+    return result;
+  }
+
+  void _maybeRefreshLocatedRepeaters({
+    required MeshCoreConnector connector,
+    required AppSettings settings,
+    required SettingsSectionsService service,
+    required List<McoContactLocationCandidate> candidates,
+  }) {
+    if (!service.locateUnknownRepeatersEnabled) {
+      if (_locatedRepeaterEstimates.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() => _locatedRepeaterEstimates = const []);
+          }
+        });
+      }
+      return;
+    }
+    final requestId = service.locateRepeaterRecalculateRequests;
+    final force = requestId != _seenLocatedRepeaterRecalculateRequest;
+    final candidateKey = candidates
+        .map(
+          (candidate) =>
+              '${_hex(candidate.publicKey)}:${candidate.pathBytes.join('-')}:'
+              '${candidate.latitude}:${candidate.longitude}',
+        )
+        .join(',');
+    final refreshKey = [
+      requestId,
+      connector.pathHashByteWidth,
+      settings.sharedMessageHistoryMode.value,
+      candidateKey,
+    ].join('|');
+    if (_locatedRepeaterRefreshBusy ||
+        (!force && refreshKey == _locatedRepeaterRefreshKey)) {
+      return;
+    }
+    _locatedRepeaterRefreshBusy = true;
+    _locatedRepeaterRefreshKey = refreshKey;
+    _seenLocatedRepeaterRecalculateRequest = requestId;
+    unawaited(
+      _refreshLocatedRepeaters(
+        connector: connector,
+        settings: settings,
+        service: service,
+        candidates: candidates,
+        force: force,
+      ),
+    );
+  }
+
+  Future<void> _refreshLocatedRepeaters({
+    required MeshCoreConnector connector,
+    required AppSettings settings,
+    required SettingsSectionsService service,
+    required List<McoContactLocationCandidate> candidates,
+    required bool force,
+  }) async {
+    try {
+      final candidateKeys = candidates
+          .where((candidate) => !candidate.hasRealLocation)
+          .map((candidate) => _hex(candidate.publicKey).toLowerCase())
+          .toSet();
+      final stored = await _contactLocationEstimateStore.loadEstimates();
+      if (!mounted) return;
+      final visibleStored = stored
+          .where(
+            (estimate) =>
+                candidateKeys.contains(estimate.publicKeyHex.toLowerCase()),
+          )
+          .toList(growable: false);
+      final storedKeys = visibleStored
+          .map((estimate) => estimate.publicKeyHex.toLowerCase())
+          .toSet();
+      final missingKeys = candidateKeys.difference(storedKeys);
+      if (!force && missingKeys.isEmpty) {
+        if (!listEquals(_locatedRepeaterEstimates, visibleStored)) {
+          setState(() => _locatedRepeaterEstimates = visibleStored);
+        }
+        return;
+      }
+      if (!force && visibleStored.isNotEmpty) {
+        setState(() => _locatedRepeaterEstimates = visibleStored);
+      }
+
+      final targetCandidates = force
+          ? candidates.where((candidate) => !candidate.hasRealLocation).toList()
+          : candidates
+                .where(
+                  (candidate) => missingKeys.contains(
+                    _hex(candidate.publicKey).toLowerCase(),
+                  ),
+                )
+                .toList();
+      final targetKeys = targetCandidates
+          .map((candidate) => _hex(candidate.publicKey).toLowerCase())
+          .toSet();
+      final records = await ContactActionDataHelper.loadChannelRecords(
+        connector,
+        includeSharedHistory: settings.sharedMessageHistoryMode.includesChannels,
+      );
+      if (!mounted) return;
+      final calculated = await service.calculateLocatedRepeaterEstimates(
+        candidates: targetCandidates,
+        records: records,
+        nodes: ContactActionDataHelper.nodes(connector),
+        isCancelled: () => !mounted,
+      );
+      if (!mounted) return;
+      await _contactLocationEstimateStore.saveContactLocations(
+        candidates: candidates,
+        estimates: calculated,
+        clearEstimateKeys: targetKeys,
+      );
+      if (!mounted) return;
+      final refreshed = await _contactLocationEstimateStore.loadEstimates();
+      final visibleRefreshed = refreshed
+          .where(
+            (estimate) =>
+                candidateKeys.contains(estimate.publicKeyHex.toLowerCase()),
+          )
+          .toList(growable: false);
+      if (mounted) {
+        setState(() => _locatedRepeaterEstimates = visibleRefreshed);
+      }
+    } finally {
+      _locatedRepeaterRefreshBusy = false;
+    }
+  }
+
+  String _hex(Iterable<int> bytes) =>
+      bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
 
   LatLng _offsetGuessedPosition(
     LatLng anchor,
@@ -4427,7 +4641,7 @@ class _MapScreenState extends State<MapScreen>
             context.l10n.map_pinDm,
             MapPalette.shared,
           ),
-          if (settings.mapShowGuessedLocations && guessedCount > 0)
+          if (guessedCount > 0)
             _buildLegendItem(
               Icons.not_listed_location,
               context.l10n.map_guessedLocation,

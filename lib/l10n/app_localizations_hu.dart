@@ -816,16 +816,16 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appSettings_languageUk => 'Українська';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 bájt';
+  String get repeater_pathHashModeOption0 => '1 bájt';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bájt';
+  String get repeater_pathHashModeOption1 => '2 bájt';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bájt';
+  String get repeater_pathHashModeOption2 => '3 bájt';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bájt';
+  String get repeater_pathHashModeOption3 => '4 bájt';
 
   @override
   String get appSettings_enableMessageTracing => 'Üzenetkövetés engedélyezése';
@@ -1156,7 +1156,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_manageRepeater => 'Repeater kezelése';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Régiók lekérése';
 
   @override
   String get contacts_manageRoom => 'Szobaszerver kezelése';
@@ -1317,7 +1317,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_editChannel => 'Csatorna szerkesztése';
 
   @override
-  String get channels_muteChannel => 'Némítás, kivéve említések';
+  String get channels_muteChannel => 'Némítás, kivéve az említéseket';
 
   @override
   String get channels_unmuteChannel => 'Csatorna némításának feloldása';
@@ -1539,7 +1539,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'A nagybetűk és a „_” csak MCOa-ban támogatottak';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2197,7 +2197,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Az útvonalnak a cél-ismétlővel kell végződnie.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2933,7 +2933,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get repeater_duplicates => 'Ismétlődések';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Csomaghibák';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5386,137 +5386,138 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_canvas => 'MCOimg vászon';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 vektoros vászon';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Új vektoros vászon';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Koordinátarács';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'A kisebb rács csökkenti a payloadot, a nagyobb pontosabbá teszi az alakzatok elhelyezését.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Háttér';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => 'Átlátszó';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Kitöltés';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Körvonal';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Körvonal vastagsága';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Alakzat lezárása';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Alakzat elrejtése';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Alakzat megjelenítése';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Mozgatás felfelé';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Mozgatás lefelé';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Alakzatok';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => 'A vásznon még nincsenek alakzatok';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Végső kép kiszámítása';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Újra';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Vászon beállításai';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => '1-től 256-ig';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Referenciakép betöltése';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Referenciakép elrejtése';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Referenciakép megjelenítése';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Referenciakép eltávolítása';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'A referenciakép nem része a payloadnak';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'A dokumentum már 64 színt használ';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Payload: $bytes bájt';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'A payload $bytes bájttal meghaladja a rendelkezésre álló méretet';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Stílus alkalmazása';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint =>
+      'Adja meg a hullám kezdetét, végét és mélységét';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Kijelölés és mozgatás';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Pont';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Ceruza';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Vonal';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Töröttvonal';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Helyezze el a körvonal csúcsait. Koppintson az első csúcsra, vagy válassza ki a befejezés módját.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Befejezés nyitottan';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Lezárás';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Téglalap';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Ellipszis';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Kör';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Hullám';
 
   @override
   String get chat_canvasCrop => 'Vágás/bővítés';
@@ -5906,7 +5907,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Egyszínű feladónevek';
 
   @override
   String get chat_MCOimgOpenGallery => 'MCOimg galéria megnyitása';
@@ -6703,11 +6704,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Hosszú csomagok ismétléseinek helyreállítása';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'A saját csatornaüzenetünk RX-naplóbeli másolatának felismerése, amelyet a BLE-keret korlátja levágott';
 
   @override
   String get chat_canvasV4TextSize => 'Szövegméret';

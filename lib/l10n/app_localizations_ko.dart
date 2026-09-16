@@ -784,16 +784,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_languageUk => '우크라이나어';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1바이트';
+  String get repeater_pathHashModeOption0 => '1바이트';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2바이트';
+  String get repeater_pathHashModeOption1 => '2바이트';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3바이트';
+  String get repeater_pathHashModeOption2 => '3바이트';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4바이트';
+  String get repeater_pathHashModeOption3 => '4바이트';
 
   @override
   String get appSettings_enableMessageTracing => '메시지 추적 기능 활성화';
@@ -1100,7 +1100,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_manageRepeater => '리피터 관리';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => '지역 요청';
 
   @override
   String get contacts_manageRoom => '방 서버 관리';
@@ -1465,8 +1465,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_hashtagHint => '예: #팀';
 
   @override
-  String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+  String get channels_hashtagMcoaHint => '대문자와 “_”는 MCOa에서만 지원됩니다';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2107,8 +2106,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_pathTraceCancelled => '경로 추적 기능이 취소되었습니다.';
 
   @override
-  String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+  String get map_regionRequestPathMustEndWithTarget => '경로는 대상 중계기로 끝나야 합니다.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2811,7 +2809,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_duplicates => '중복';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => '패킷 오류';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5120,137 +5118,136 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_canvas => 'MCOimg 캔버스';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 벡터 캔버스';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => '새 벡터 캔버스';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => '좌표 격자';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      '격자가 작을수록 페이로드가 줄고, 클수록 도형 배치가 정밀해집니다.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => '배경';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => '투명';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => '채우기';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => '윤곽선';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => '윤곽선 두께';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => '도형 닫기';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => '도형 숨기기';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => '도형 표시';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => '위로 이동';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => '아래로 이동';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => '도형';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => '캔버스에 아직 도형이 없습니다';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => '최종 이미지 계산';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => '다시 실행';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => '캔버스 설정';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => '1부터 256까지';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => '참조 이미지 불러오기';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => '참조 이미지 숨기기';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => '참조 이미지 표시';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => '참조 이미지 삭제';
 
   @override
-  String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+  String get chat_canvasV4ReferenceNotEncoded => '참조 이미지는 페이로드에 포함되지 않습니다';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => '문서에서 이미 64색을 사용하고 있습니다';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return '페이로드: $bytes바이트';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return '페이로드가 사용 가능한 크기를 $bytes바이트 초과합니다';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => '스타일 적용';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint => '물결의 시작, 끝, 깊이를 지정하세요';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => '선택 및 이동';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => '점';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => '연필';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => '선';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => '다중선';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      '윤곽선의 꼭짓점을 찍으세요. 첫 꼭짓점을 누르거나 마무리 방법을 선택하세요.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => '열린 채로 끝내기';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => '닫기';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => '직사각형';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => '타원';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => '원';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => '물결';
 
   @override
   String get chat_canvasCrop => '자르기/확장';
@@ -5623,8 +5620,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsDPIchangeToIcons => '아이콘에도 적용';
 
   @override
-  String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+  String get settings_modSettingsMonochromeSenderNames => '단색 보낸 사람 이름';
 
   @override
   String get chat_MCOimgOpenGallery => 'MCOimg 갤러리 열기';
@@ -6387,12 +6383,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_mcotxtPlainWhenSmaller => '일반 메시지가 더 작으면 일반 메시지로 전송';
 
   @override
-  String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+  String get settings_modSettingsRecoverLongEchoes => '긴 패킷의 반복 복구';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'BLE 프레임 한계로 잘린 우리 채널 메시지의 RX 로그 사본을 인식합니다';
 
   @override
   String get chat_canvasV4TextSize => '텍스트 크기';

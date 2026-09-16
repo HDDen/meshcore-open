@@ -813,16 +813,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get appSettings_languageUk => 'Oekraïens';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 — 1 byte';
+  String get repeater_pathHashModeOption0 => '1 byte';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 — 2 bytes';
+  String get repeater_pathHashModeOption1 => '2 bytes';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 — 3 bytes';
+  String get repeater_pathHashModeOption2 => '3 bytes';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 — 4 bytes';
+  String get repeater_pathHashModeOption3 => '4 bytes';
 
   @override
   String get appSettings_enableMessageTracing => 'Berichttracking inschakelen';
@@ -1154,7 +1154,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get contacts_manageRepeater => 'Beheer Repeater';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Regio\'s opvragen';
 
   @override
   String get contacts_manageRoom => 'Beheer Ruimte Server';
@@ -1533,7 +1533,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'Hoofdletters en “_” worden alleen in MCOa ondersteund';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2189,7 +2189,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'De route moet eindigen bij de doelrepeater.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2919,7 +2919,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get repeater_duplicates => 'Duplicaat';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Pakketfouten';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5370,84 +5370,85 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chat_canvas => 'MCOimg-canvas';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 vectorcanvas';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Nieuw vectorcanvas';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Coördinatenraster';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'Een kleiner raster verkleint de payload, een groter raster verhoogt de nauwkeurigheid waarmee figuren worden geplaatst.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Achtergrond';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => 'Transparant';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Vulling';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Contour';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Contourdikte';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Figuur sluiten';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Figuur verbergen';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Figuur tonen';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Omhoog';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Omlaag';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Figuren';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects =>
+      'Er staan nog geen figuren op het canvas';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Eindafbeelding berekenen';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Opnieuw';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Canvasinstellingen';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'Van 1 tot 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Referentieafbeelding laden';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Referentieafbeelding verbergen';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Referentieafbeelding tonen';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Referentieafbeelding verwijderen';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'De referentieafbeelding hoort niet bij de payload';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'Het document gebruikt al 64 kleuren';
 
   @override
   String chat_canvasV4Payload(int bytes) {
@@ -5456,51 +5457,52 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'De payload overschrijdt de beschikbare grootte met $bytes bytes';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Stijl toepassen';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint =>
+      'Geef het begin, het einde en de diepte van de golf aan';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Selecteren en verplaatsen';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Punt';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Potlood';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Lijn';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Polylijn';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Plaats de punten van de contour. Tik op het eerste punt of kies hoe u afsluit.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Open afsluiten';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Sluiten';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Rechthoek';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Ellips';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Cirkel';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Golf';
 
   @override
   String get chat_canvasCrop => 'Bijsnijden/uitbreiden';
@@ -5892,7 +5894,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Eenkleurige afzendernamen';
 
   @override
   String get chat_MCOimgOpenGallery => 'MCOimg-galerij openen';
@@ -6687,11 +6689,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Herhalingen van lange pakketten herstellen';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Een door de BLE-framelimiet afgekapte RX-logkopie van ons eigen kanaalbericht herkennen';
 
   @override
   String get chat_canvasV4TextSize => 'Tekstgrootte';

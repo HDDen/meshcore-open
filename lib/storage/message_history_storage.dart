@@ -352,6 +352,42 @@ class MessageHistoryStorage {
     return _database!.readDirectSummaries(keys);
   }
 
+  Future<List<ContactLocationCacheRecord>> loadContactLocationCache() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readContactLocationCache();
+  }
+
+  Future<void> upsertContactLocationCache(
+    List<ContactLocationCacheUpsert> rows,
+  ) async {
+    _requireInitialized();
+    if (kIsWeb || rows.isEmpty) return;
+    await _database!.upsertContactLocationCache(rows);
+  }
+
+  Future<void> clearContactLocationEstimatesForKeys(
+    Iterable<String> publicKeyHexes,
+  ) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.clearContactLocationEstimatesForKeys(publicKeyHexes);
+  }
+
+  Future<void> insertHeardPackets(List<HeardPacketInsert> packets) async {
+    _requireInitialized();
+    if (kIsWeb || packets.isEmpty) return;
+    await _database!.insertHeardPackets(packets);
+  }
+
+  Future<List<HeardPacketRecord>> latestHeardPackets({
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readLatestHeardPackets(limit: limit);
+  }
+
   Set<String> getKeys(MessageHistoryKind kind) {
     _requireInitialized();
     return Set.unmodifiable(_keys[kind]!);

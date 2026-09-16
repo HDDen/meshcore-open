@@ -810,16 +810,16 @@ class AppLocalizationsSl extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrajinsko';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 bajt';
+  String get repeater_pathHashModeOption0 => '1 bajt';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bajta';
+  String get repeater_pathHashModeOption1 => '2 bajta';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bajti';
+  String get repeater_pathHashModeOption2 => '3 bajti';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bajti';
+  String get repeater_pathHashModeOption3 => '4 bajti';
 
   @override
   String get appSettings_enableMessageTracing => 'Omogoči sledenje sporočilom';
@@ -1150,7 +1150,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get contacts_manageRepeater => 'Upravljaj Ponovitve';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Zahtevaj regije';
 
   @override
   String get contacts_manageRoom => 'Upravljajte strežnik sobe';
@@ -1315,7 +1315,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channels_unmuteChannel => 'Vklopi obvestila kanala';
 
   @override
-  String get channels_deleteChannel => 'Pošlji kanal';
+  String get channels_deleteChannel => 'Izbriši kanal';
 
   @override
   String channels_deleteChannelConfirm(String name) {
@@ -1530,7 +1530,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'Velike črke in »_« so podprte samo v MCOa';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2185,7 +2185,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Pot se mora končati s ciljnim repetitorjem.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2917,7 +2917,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get repeater_duplicates => 'Duplikati';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Napake paketov';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5365,137 +5365,137 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_canvas => 'Platno MCOimg';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'Vektorsko platno MCOimg v4';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Novo vektorsko platno';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Koordinatna mreža';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'Manjša mreža zmanjša payload, večja poveča natančnost postavitve likov.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Ozadje';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => 'Prosojno';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Polnilo';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Obris';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Debelina obrisa';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Zapri lik';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Skrij lik';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Pokaži lik';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Premakni navzgor';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Premakni navzdol';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Liki';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => 'Na platnu še ni likov';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Izračunaj končno sliko';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Ponovi';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Nastavitve platna';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'Od 1 do 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Naloži referenčno sliko';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Skrij referenčno sliko';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Pokaži referenčno sliko';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Odstrani referenčno sliko';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'Referenčna slika ni vključena v payload';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'Dokument že uporablja 64 barv';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Payload: $bytes bajtov';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'Payload presega razpoložljivo velikost za $bytes bajtov';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Uporabi slog';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint => 'Določite začetek, konec in globino vala';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Izberi in premakni';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Točka';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Svinčnik';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Črta';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Lomljena črta';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Postavljajte oglišča obrisa. Tapnite prvo oglišče ali izberite način zaključka.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Zaključi odprto';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Zapri';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Pravokotnik';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Elipsa';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Krog';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Val';
 
   @override
   String get chat_canvasCrop => 'Obreži/razširi';
@@ -5884,7 +5884,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Enobarvna imena pošiljateljev';
 
   @override
   String get chat_MCOimgOpenGallery => 'Odpri galerijo MCOimg';
@@ -6680,11 +6680,11 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Obnavljaj ponovitve dolgih paketov';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Prepoznaj kopijo našega kanalskega sporočila iz dnevnika RX, ki jo je odrezala omejitev okvirja BLE';
 
   @override
   String get chat_canvasV4TextSize => 'Velikost besedila';

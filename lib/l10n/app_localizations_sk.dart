@@ -812,16 +812,16 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrajinská';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 bajt';
+  String get repeater_pathHashModeOption0 => '1 bajt';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 bajty';
+  String get repeater_pathHashModeOption1 => '2 bajty';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 bajty';
+  String get repeater_pathHashModeOption2 => '3 bajty';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 bajty';
+  String get repeater_pathHashModeOption3 => '4 bajty';
 
   @override
   String get appSettings_enableMessageTracing => 'Povoliť sledovanie správ';
@@ -1150,7 +1150,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contacts_manageRepeater => 'Spravovať opakované zoznamy';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Vyžiadať regióny';
 
   @override
   String get contacts_manageRoom => 'Spravovať server miestnosti';
@@ -1532,7 +1532,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'Veľké písmená a „_“ sú podporované len v MCOa';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2192,7 +2192,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Trasa musí končiť cieľovým opakovačom.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2918,7 +2918,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get repeater_duplicates => 'Duplikáty';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Chyby paketov';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5360,137 +5360,137 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_canvas => 'Plátno MCOimg';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'Vektorové plátno MCOimg v4';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Nové vektorové plátno';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Súradnicová mriežka';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'Menšia mriežka zmenšuje payload, väčšia zvyšuje presnosť umiestnenia figúr.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Pozadie';
 
   @override
-  String get chat_canvasV4Transparent => 'Transparent';
+  String get chat_canvasV4Transparent => 'Priehľadné';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Výplň';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Obrys';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Hrúbka obrysu';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Uzavrieť figúru';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Skryť figúru';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Zobraziť figúru';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Posunúť nahor';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Posunúť nadol';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Figúry';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects => 'Na plátne zatiaľ nie sú žiadne figúry';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Vypočítať výsledný obrázok';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Znova';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Nastavenia plátna';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'Od 1 do 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Načítať referenčný obrázok';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Skryť referenčný obrázok';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Zobraziť referenčný obrázok';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Odstrániť referenčný obrázok';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'Referenčný obrázok nie je súčasťou payloadu';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull => 'Dokument už používa 64 farieb';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Payload: $bytes bajtov';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'Payload prekračuje dostupnú veľkosť o $bytes bajtov';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Použiť štýl';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint => 'Určte začiatok, koniec a hĺbku vlny';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Vybrať a presunúť';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Bod';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Ceruzka';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Čiara';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Lomená čiara';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Umiestňujte vrcholy obrysu. Ťuknite na prvý vrchol alebo vyberte spôsob ukončenia.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Ukončiť otvorenú';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Uzavrieť';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Obdĺžnik';
 
   @override
-  String get chat_canvasV4ToolEllipse => 'Ellipse';
+  String get chat_canvasV4ToolEllipse => 'Elipsa';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Kruh';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Vlna';
 
   @override
   String get chat_canvasCrop => 'Orezať/rozšíriť';
@@ -5877,7 +5877,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Jednofarebné mená odosielateľov';
 
   @override
   String get chat_MCOimgOpenGallery => 'Otvoriť galériu MCOimg';
@@ -6669,11 +6669,11 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Obnovovať opakovania dlhých paketov';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Rozpoznať kópiu našej kanálovej správy z RX záznamu, skrátenú limitom BLE rámca';
 
   @override
   String get chat_canvasV4TextSize => 'Veľkosť textu';

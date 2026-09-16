@@ -29,6 +29,24 @@ class SettingsSectionsService extends ChangeNotifier {
 
   bool get allowsRestrictedMapBulkDownload => false;
 
+  bool get allowsLocateRepeaters => false;
+
+  bool get locateUnknownRepeatersEnabled => false;
+
+  int get locateRepeaterRecalculateRequests => 0;
+
+  Future<void> setLocateUnknownRepeatersEnabled(bool value) async {}
+
+  void requestLocateRepeaterRecalculation() {}
+
+  Future<List<McoEstimatedContactLocation>> calculateLocatedRepeaterEstimates({
+    required Iterable<McoContactLocationCandidate> candidates,
+    required List<McoContactActionMessage> records,
+    required List<McoContactActionNode> nodes,
+    bool Function()? isCancelled,
+  }) async =>
+      const [];
+
   void mcoX0({
     required Future<void> Function(Uint8List) a,
     required void Function(Uint8List, String?) b,

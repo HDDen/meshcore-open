@@ -819,16 +819,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_languageUk => 'Українська';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 — 1 байт';
+  String get repeater_pathHashModeOption0 => '1 байт';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 — 2 байта';
+  String get repeater_pathHashModeOption1 => '2 байта';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 — 3 байта';
+  String get repeater_pathHashModeOption2 => '3 байта';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 — 4 байта';
+  String get repeater_pathHashModeOption3 => '4 байта';
 
   @override
   String get appSettings_enableMessageTracing =>

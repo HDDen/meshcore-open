@@ -817,16 +817,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainisch';
 
   @override
-  String get repeater_pathHashModeOption0 => '0 - 1 Byte';
+  String get repeater_pathHashModeOption0 => '1 Byte';
 
   @override
-  String get repeater_pathHashModeOption1 => '1 - 2 Bytes';
+  String get repeater_pathHashModeOption1 => '2 Bytes';
 
   @override
-  String get repeater_pathHashModeOption2 => '2 - 3 Bytes';
+  String get repeater_pathHashModeOption2 => '3 Bytes';
 
   @override
-  String get repeater_pathHashModeOption3 => '3 - 4 Bytes';
+  String get repeater_pathHashModeOption3 => '4 Bytes';
 
   @override
   String get appSettings_enableMessageTracing =>
@@ -1162,7 +1162,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contacts_manageRepeater => 'Repeater verwalten';
 
   @override
-  String get contacts_requestRegions => 'Request regions';
+  String get contacts_requestRegions => 'Regionen anfordern';
 
   @override
   String get contacts_manageRoom => 'Raumserver verwalten';
@@ -1546,7 +1546,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get channels_hashtagMcoaHint =>
-      'Uppercase letters and “_” are supported only in MCOa';
+      'Großbuchstaben und „_“ werden nur in MCOa unterstützt';
 
   @override
   String channels_regionSetTo(String region) {
@@ -2204,7 +2204,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get map_regionRequestPathMustEndWithTarget =>
-      'The route must end with the target repeater.';
+      'Die Route muss beim Ziel-Repeater enden.';
 
   @override
   String get map_wardrive => 'Wardrive';
@@ -2935,7 +2935,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get repeater_duplicates => 'Duplikate';
 
   @override
-  String get repeater_packetErrors => 'Packet Errors';
+  String get repeater_packetErrors => 'Paketfehler';
 
   @override
   String repeater_daysHoursMinsSecs(
@@ -5396,137 +5396,140 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat_canvas => 'MCOimg-Leinwand';
 
   @override
-  String get chat_canvasV4Title => 'MCOimg v4 vector canvas';
+  String get chat_canvasV4Title => 'MCOimg v4 Vektor-Leinwand';
 
   @override
-  String get chat_canvasV4SetupTitle => 'New vector canvas';
+  String get chat_canvasV4SetupTitle => 'Neue Vektor-Leinwand';
 
   @override
-  String get chat_canvasV4Grid => 'Coordinate grid';
+  String get chat_canvasV4Grid => 'Koordinatengitter';
 
   @override
   String get chat_canvasV4GridDescription =>
-      'A smaller grid reduces payload size; a larger grid improves figure placement precision.';
+      'Ein kleineres Gitter verringert die Nutzlast, ein größeres erhöht die Genauigkeit beim Platzieren der Figuren.';
 
   @override
-  String get chat_canvasV4Background => 'Background';
+  String get chat_canvasV4Background => 'Hintergrund';
 
   @override
   String get chat_canvasV4Transparent => 'Transparent';
 
   @override
-  String get chat_canvasV4Fill => 'Fill';
+  String get chat_canvasV4Fill => 'Füllung';
 
   @override
-  String get chat_canvasV4Stroke => 'Stroke';
+  String get chat_canvasV4Stroke => 'Kontur';
 
   @override
-  String get chat_canvasV4StrokeWidth => 'Stroke width';
+  String get chat_canvasV4StrokeWidth => 'Konturstärke';
 
   @override
-  String get chat_canvasV4Closed => 'Close figure';
+  String get chat_canvasV4Closed => 'Figur schließen';
 
   @override
-  String get chat_canvasV4HideFigure => 'Hide figure';
+  String get chat_canvasV4HideFigure => 'Figur ausblenden';
 
   @override
-  String get chat_canvasV4ShowFigure => 'Show figure';
+  String get chat_canvasV4ShowFigure => 'Figur einblenden';
 
   @override
-  String get chat_canvasV4MoveUp => 'Move up';
+  String get chat_canvasV4MoveUp => 'Nach oben';
 
   @override
-  String get chat_canvasV4MoveDown => 'Move down';
+  String get chat_canvasV4MoveDown => 'Nach unten';
 
   @override
-  String get chat_canvasV4Objects => 'Figures';
+  String get chat_canvasV4Objects => 'Figuren';
 
   @override
-  String get chat_canvasV4NoObjects => 'There are no figures on the canvas yet';
+  String get chat_canvasV4NoObjects =>
+      'Auf der Leinwand sind noch keine Figuren';
 
   @override
-  String get chat_canvasV4Calculate => 'Calculate final image';
+  String get chat_canvasV4Calculate => 'Endbild berechnen';
 
   @override
-  String get chat_canvasV4Redo => 'Redo';
+  String get chat_canvasV4Redo => 'Wiederholen';
 
   @override
-  String get chat_canvasV4CanvasSettings => 'Canvas settings';
+  String get chat_canvasV4CanvasSettings => 'Leinwandeinstellungen';
 
   @override
-  String get chat_canvasV4InvalidSize => 'From 1 to 256';
+  String get chat_canvasV4InvalidSize => 'Von 1 bis 256';
 
   @override
-  String get chat_canvasV4LoadReference => 'Load reference image';
+  String get chat_canvasV4LoadReference => 'Vorlagebild laden';
 
   @override
-  String get chat_canvasV4HideReference => 'Hide reference image';
+  String get chat_canvasV4HideReference => 'Vorlagebild ausblenden';
 
   @override
-  String get chat_canvasV4ShowReference => 'Show reference image';
+  String get chat_canvasV4ShowReference => 'Vorlagebild einblenden';
 
   @override
-  String get chat_canvasV4RemoveReference => 'Remove reference image';
+  String get chat_canvasV4RemoveReference => 'Vorlagebild entfernen';
 
   @override
   String get chat_canvasV4ReferenceNotEncoded =>
-      'Reference image is not included in payload';
+      'Das Vorlagebild gehört nicht zur Nutzlast';
 
   @override
-  String get chat_canvasV4PaletteFull => 'The document already uses 64 colors';
+  String get chat_canvasV4PaletteFull =>
+      'Das Dokument verwendet bereits 64 Farben';
 
   @override
   String chat_canvasV4Payload(int bytes) {
-    return 'Payload: $bytes bytes';
+    return 'Nutzlast: $bytes Bytes';
   }
 
   @override
   String chat_canvasV4PayloadTooLarge(int bytes) {
-    return 'Payload exceeds the available size by $bytes bytes';
+    return 'Die Nutzlast überschreitet die verfügbare Größe um $bytes Bytes';
   }
 
   @override
-  String get chat_canvasV4ApplyStyle => 'Apply style';
+  String get chat_canvasV4ApplyStyle => 'Stil anwenden';
 
   @override
-  String get chat_canvasV4WaveHint => 'Select the wave start, end, and depth';
+  String get chat_canvasV4WaveHint =>
+      'Anfang, Ende und Tiefe der Welle festlegen';
 
   @override
-  String get chat_canvasV4ToolSelect => 'Select and move';
+  String get chat_canvasV4ToolSelect => 'Auswählen und verschieben';
 
   @override
-  String get chat_canvasV4ToolDot => 'Dot';
+  String get chat_canvasV4ToolDot => 'Punkt';
 
   @override
-  String get chat_canvasV4ToolPencil => 'Pencil';
+  String get chat_canvasV4ToolPencil => 'Stift';
 
   @override
-  String get chat_canvasV4ToolLine => 'Line';
+  String get chat_canvasV4ToolLine => 'Linie';
 
   @override
-  String get chat_canvasV4ToolPolyline => 'Polyline';
+  String get chat_canvasV4ToolPolyline => 'Polylinie';
 
   @override
   String get chat_canvasV4PolylineHint =>
-      'Place contour vertices. Tap the first vertex or choose how to finish.';
+      'Setzen Sie die Konturpunkte. Tippen Sie auf den ersten Punkt oder wählen Sie, wie abgeschlossen wird.';
 
   @override
-  String get chat_canvasV4FinishOpen => 'Finish open';
+  String get chat_canvasV4FinishOpen => 'Offen abschließen';
 
   @override
-  String get chat_canvasV4FinishClosed => 'Close shape';
+  String get chat_canvasV4FinishClosed => 'Schließen';
 
   @override
-  String get chat_canvasV4ToolRect => 'Rectangle';
+  String get chat_canvasV4ToolRect => 'Rechteck';
 
   @override
   String get chat_canvasV4ToolEllipse => 'Ellipse';
 
   @override
-  String get chat_canvasV4ToolCircle => 'Circle';
+  String get chat_canvasV4ToolCircle => 'Kreis';
 
   @override
-  String get chat_canvasV4ToolWave => 'Wave';
+  String get chat_canvasV4ToolWave => 'Welle';
 
   @override
   String get chat_canvasCrop => 'Zuschneiden/erweitern';
@@ -5917,7 +5920,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_modSettingsMonochromeSenderNames =>
-      'Monochrome sender names';
+      'Einfarbige Absendernamen';
 
   @override
   String get chat_MCOimgOpenGallery => 'MCOimg-Galerie öffnen';
@@ -6716,11 +6719,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_modSettingsRecoverLongEchoes =>
-      'Recover repeats of long packets';
+      'Wiederholungen langer Pakete wiederherstellen';
 
   @override
   String get settings_modSettingsRecoverLongEchoesDscr =>
-      'Recognise an RX-log copy of our own channel message that the BLE frame limit cut short';
+      'Eine vom BLE-Frame-Limit abgeschnittene RX-Log-Kopie der eigenen Kanalnachricht erkennen';
 
   @override
   String get chat_canvasV4TextSize => 'Textgröße';
