@@ -3235,6 +3235,10 @@ class MeshCoreConnector extends ChangeNotifier {
       e: () => this,
       f: (a, b) =>
           ChannelBinaryDataHelper.tryDecodeAppData(dataType: a, payload: b),
+      g: (text, timestamp) => MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+        text,
+        inheritedTimestamp: timestamp,
+      ),
     );
     settingsSectionsService?.setDeviceVarsRequester(() async {
       if (!isConnected) return;
