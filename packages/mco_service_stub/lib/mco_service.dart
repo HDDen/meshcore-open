@@ -23,15 +23,32 @@ class McoBatteryChemistryProfile {
 class SettingsSectionsService extends ChangeNotifier {
   Future<void> initialize() async {}
 
+  String? licenseManagementTitle(BuildContext context) => null;
+
+  void openLicenseManagement(BuildContext context) {}
+
+  Future<void> resetLicenseIdentity() async {}
+
   bool get useMService => false;
 
   bool get applyMService => false;
 
   bool get allowsRestrictedMapBulkDownload => false;
 
+  Future<bool> authorizeRestrictedMapBulkDownload() async => false;
+
+  void setLicenseExpiryNotifier({
+    required Locale Function() locale,
+    required Future<bool> Function(String title, String body) notify,
+  }) {}
+
   bool get allowsLocateRepeaters => false;
 
+  Future<bool> authorizeLocateRepeaters() async => false;
+
   bool get locateUnknownRepeatersEnabled => false;
+
+  int get licenseStatusRevision => 0;
 
   int get locateRepeaterRecalculateRequests => 0;
 

@@ -180,6 +180,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showChevron: false,
                   ),
                 ),
+                if (context.read<SettingsSectionsService>()
+                        .licenseManagementTitle(context)
+                    case final String licenseTitle)
+                  MeshCard(
+                    onTap: () => context
+                        .read<SettingsSectionsService>()
+                        .openLicenseManagement(context),
+                    child: _buildNavTileContent(
+                      context,
+                      icon: Icons.verified_user_outlined,
+                      title: licenseTitle,
+                    ),
+                  ),
                 MeshCard(
                   onTap: () => Navigator.push(
                     context,

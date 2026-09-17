@@ -7556,7 +7556,17 @@ class MeshCoreConnector extends ChangeNotifier {
   /// attempt gets [_signAttemptTimeout] counted from the moment its first
   /// frame is handed to the transport; time spent waiting in the queue does
   /// not count.
-  Future<Uint8List?> signWithNode(Uint8List data) async {
+  Future<Uint8List?> signWithNode(Uint8List data) =>
+      _signWithNode(data, attempts: _signAttempts, timeout: _signAttemptTimeout);
+
+  Future<Uint8List?> signLicenseChallenge(Uint8List data) =>
+      _signWithNode(data, attempts: 1, timeout: _signAttemptTimeout);
+
+  Future<Uint8List?> _signWithNode(
+    Uint8List data, {
+    required int attempts,
+    required Duration timeout,
+  }) async {
     if (data.isEmpty || data.length > maxSignDataTotalBytes) {
       appLogger.warn(
         'MCMP sign request of ${data.length} bytes is out of range',
@@ -7568,13 +7578,13 @@ class MeshCoreConnector extends ChangeNotifier {
     _signSessionTail = sessionDone.future;
     await previous;
     try {
-      for (var attempt = 1; attempt <= _signAttempts; attempt++) {
+      for (var attempt = 1; attempt <= attempts; attempt++) {
         if (!isConnected) return null;
         try {
-          return await _runSignAttempt(data);
+          return await _runSignAttempt(data, timeout);
         } catch (e) {
           appLogger.warn(
-            'MCMP sign attempt $attempt/$_signAttempts failed: $e',
+            'Node sign attempt $attempt/$attempts failed: $e',
           );
         }
       }
@@ -7584,7 +7594,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
-  Future<Uint8List> _runSignAttempt(Uint8List data) async {
+  Future<Uint8List> _runSignAttempt(Uint8List data, Duration timeout) async {
     // Signing shares the broadcast frame stream with all other command
     // traffic (battery/stats polling, flood-scope, channel-data sends, the
     // channel sync loop) and RESP_CODE_OK is emitted by many of those. So we
@@ -7615,7 +7625,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
     });
 
-    final deadline = DateTime.now().add(_signAttemptTimeout);
+    final deadline = DateTime.now().add(timeout);
 
     // Waits for the next frame whose code is in [codes], discarding any other
     // (foreign) frames. Throws on timeout.

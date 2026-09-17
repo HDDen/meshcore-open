@@ -2759,6 +2759,7 @@ class _MapScreenState extends State<MapScreen>
     required List<McoContactLocationCandidate> candidates,
   }) {
     if (!service.locateUnknownRepeatersEnabled) {
+      _locatedRepeaterRefreshKey = '';
       if (_locatedRepeaterEstimates.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -2779,6 +2780,7 @@ class _MapScreenState extends State<MapScreen>
         .join(',');
     final refreshKey = [
       requestId,
+      service.licenseStatusRevision,
       connector.pathHashByteWidth,
       settings.sharedMessageHistoryMode.value,
       candidateKey,
@@ -2790,6 +2792,7 @@ class _MapScreenState extends State<MapScreen>
     _locatedRepeaterRefreshBusy = true;
     _locatedRepeaterRefreshKey = refreshKey;
     _seenLocatedRepeaterRecalculateRequest = requestId;
+    _locatedRepeaterEstimates = const [];
     unawaited(
       _refreshLocatedRepeaters(
         connector: connector,
@@ -2809,6 +2812,7 @@ class _MapScreenState extends State<MapScreen>
     required bool force,
   }) async {
     try {
+      if (!await service.authorizeLocateRepeaters() || !mounted) return;
       final candidateKeys = candidates
           .where((candidate) => !candidate.hasRealLocation)
           .map((candidate) => _hex(candidate.publicKey).toLowerCase())
@@ -2858,7 +2862,7 @@ class _MapScreenState extends State<MapScreen>
         nodes: ContactActionDataHelper.nodes(connector),
         isCancelled: () => !mounted,
       );
-      if (!mounted) return;
+      if (!mounted || !service.locateUnknownRepeatersEnabled) return;
       await _contactLocationEstimateStore.saveContactLocations(
         candidates: candidates,
         estimates: calculated,
@@ -2877,6 +2881,12 @@ class _MapScreenState extends State<MapScreen>
       }
     } finally {
       _locatedRepeaterRefreshBusy = false;
+      if (mounted &&
+          service.locateUnknownRepeatersEnabled &&
+          service.locateRepeaterRecalculateRequests !=
+              _seenLocatedRepeaterRecalculateRequest) {
+        setState(() {});
+      }
     }
   }
 

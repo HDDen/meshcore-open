@@ -157,6 +157,8 @@ Future<void> _startApplication() async {
   _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
   await settingsSectionsService.initialize();
+  mapTileCacheService.restrictedBulkDownloadAuthorizer =
+      settingsSectionsService.authorizeRestrictedMapBulkDownload;
   appSettingsService.setExtraBatteryProfilesProvider(
     (deviceId) =>
         settingsSectionsService.batteryChemistryProfilesForDevice(deviceId),
@@ -229,6 +231,18 @@ Future<void> _startApplication() async {
   _setStartupStage('MCO-STARTUP-104', 'Desktop services');
   final notificationService = NotificationService();
   await notificationService.initialize();
+  settingsSectionsService.setLicenseExpiryNotifier(
+    locale: () {
+      final override = appSettingsService.settings.languageOverride;
+      return override == null
+          ? WidgetsBinding.instance.platformDispatcher.locale
+          : Locale(override);
+    },
+    notify: (title, body) => notificationService.showLicenseExpiryNotification(
+      title: title,
+      body: body,
+    ),
+  );
   if (PlatformInfo.isAndroid &&
       appSettingsService.settings.notificationsEnabled &&
       (appSettingsService.settings.notifyOnNewMessage ||

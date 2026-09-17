@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="mco_license_keys_v1.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage:mco_license_keys_v1.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureStorageConfiguration:mco_license_keys_v1.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="mco_license_keys_v1.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage:mco_license_keys_v1.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureStorageConfiguration:mco_license_keys_v1.xml" />
+    </device-transfer>
+</data-extraction-rules>

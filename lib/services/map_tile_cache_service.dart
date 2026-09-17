@@ -332,6 +332,10 @@ class MapTileCacheResult {
   });
 }
 
+class MapBulkDownloadNotAllowed implements Exception {
+  const MapBulkDownloadNotAllowed();
+}
+
 class CachedTileInfo {
   final String key;
   final String host;
@@ -398,6 +402,7 @@ class MapTileCacheService extends ChangeNotifier {
   final AppSettingsService appSettingsService;
   final BaseCacheManager cacheManager;
   late final TileProvider tileProvider;
+  Future<bool> Function()? restrictedBulkDownloadAuthorizer;
 
   MapTileCacheService({
     required this.appSettingsService,
@@ -734,6 +739,11 @@ class MapTileCacheService extends ChangeNotifier {
     Map<String, String>? headers,
     void Function(MapTileCacheProgress progress)? onProgress,
   }) async {
+    final authorize = restrictedBulkDownloadAuthorizer;
+    if (!source.allowsBulkDownload &&
+        (authorize == null || !(await authorize()))) {
+      throw const MapBulkDownloadNotAllowed();
+    }
     final safeMin = math.min(minZoom, maxZoom);
     final safeMax = math.max(minZoom, maxZoom);
     final total = estimateTileCount(bounds, safeMin, safeMax);

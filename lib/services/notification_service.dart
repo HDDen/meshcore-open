@@ -645,6 +645,37 @@ class NotificationService {
     await _notifications.cancel(id: id);
   }
 
+  Future<bool> showLicenseExpiryNotification({
+    required String title,
+    required String body,
+  }) async {
+    if (!await _ensureCanNotify()) return false;
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'license_expiry',
+        'License expiry',
+        channelDescription: 'License expiration reminders',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        icon: '@mipmap/ic_launcher',
+      ),
+      iOS: DarwinNotificationDetails(presentAlert: true),
+      macOS: DarwinNotificationDetails(presentAlert: true),
+    );
+    try {
+      await _notifications.show(
+        id: 0x4d434f4c,
+        title: title,
+        body: body,
+        notificationDetails: details,
+      );
+      return true;
+    } catch (error) {
+      debugPrint('Failed to show license expiry notification: $error');
+      return false;
+    }
+  }
+
   /// Cancel the notification for a specific contact and update the app badge.
   Future<void> clearContactNotification(
     String contactId,

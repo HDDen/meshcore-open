@@ -250,18 +250,33 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
       _failedTiles = 0;
     });
 
-    final result = await cacheService.downloadRegion(
-      bounds: bounds,
-      minZoom: _minZoom,
-      maxZoom: _maxZoom,
-      onProgress: (progress) {
-        if (!mounted) return;
-        setState(() {
-          _completedTiles = progress.completed;
-          _failedTiles = progress.failed;
-        });
-      },
-    );
+    final MapTileCacheResult result;
+    try {
+      result = await cacheService.downloadRegion(
+        bounds: bounds,
+        minZoom: _minZoom,
+        maxZoom: _maxZoom,
+        onProgress: (progress) {
+          if (!mounted) return;
+          setState(() {
+            _completedTiles = progress.completed;
+            _failedTiles = progress.failed;
+          });
+        },
+      );
+    } on MapBulkDownloadNotAllowed {
+      if (!mounted) return;
+      setState(() => _isDownloading = false);
+      showDismissibleSnackBar(
+        context,
+        content: Text(
+          context.l10n.mapCache_bulkDownloadDisabledInConfig(
+            cacheService.source.label,
+          ),
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
 

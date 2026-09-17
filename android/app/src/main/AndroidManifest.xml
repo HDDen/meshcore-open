@@ -28,7 +28,9 @@
     <application
         android:label="MCO Advanced"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:fullBackupContent="@xml/mco_backup_rules"
+        android:dataExtractionRules="@xml/mco_data_extraction_rules">
         <!-- Keep the common companion service BLE-only; wardrive background is
              gated in Dart so normal BLE users do not inherit location FGS. -->
         <service
