@@ -32,6 +32,12 @@ class BackgroundService {
   String? Function()? _languageOverrideProvider;
   bool _connectionLost = false;
   int _notificationRevision = 0;
+
+  // While the link stays down, every failed reconnect attempt reports the loss
+  // again, seconds apart. The "connection lost" text is posted once per outage
+  // and stays in the notification until the link is back; a restored
+  // connection re-arms it, so the next loss is always announced.
+  bool _connectionLostPosted = false;
   final Set<String> _batteryOptimizationPromptReasons = {};
   static const String _batteryOptimizationAskedKey =
       'background_battery_exemption_asked_v1';
@@ -228,11 +234,17 @@ class BackgroundService {
   Future<void> setConnectionLost(bool connectionLost) async {
     if (!PlatformInfo.isAndroid) return;
     _connectionLost = connectionLost;
+    if (!connectionLost) {
+      _connectionLostPosted = false;
+    } else if (_connectionLostPosted) {
+      return;
+    }
     final revision = ++_notificationRevision;
     final running = await FlutterForegroundTask.isRunningService;
     if (!running) return;
     final l10n = await _loadLocalizations();
     if (revision != _notificationRevision) return;
+    if (connectionLost) _connectionLostPosted = true;
     await FlutterForegroundTask.updateService(
       notificationTitle: l10n.background_serviceTitle,
       notificationText: connectionLost
@@ -357,6 +369,7 @@ class BackgroundService {
             reason == _tcpConnectionKeepAliveReason) &&
         !_monitorsConnection) {
       _connectionLost = false;
+      _connectionLostPosted = false;
       _notificationRevision++;
     }
     await _syncConnectionMonitor();
