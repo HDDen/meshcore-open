@@ -6774,4 +6774,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get channels_shareQrImageFailed =>
       'Não foi possível preparar a imagem do código QR';
+
+  @override
+  String channels_qrUpdateExisting(String name) {
+    return 'Channel $name already exists. Update its properties?';
+  }
 }

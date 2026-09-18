@@ -6789,4 +6789,9 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get channels_shareQrImageFailed =>
       'Изображението с QR кода не можа да бъде подготвено';
+
+  @override
+  String channels_qrUpdateExisting(String name) {
+    return 'Channel $name already exists. Update its properties?';
+  }
 }

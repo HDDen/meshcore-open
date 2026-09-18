@@ -36,10 +36,14 @@ class ChannelQrLink {
   /// The node stores a channel name in 32 bytes, terminator included.
   static const int maxNameLength = 31;
 
+  /// What a region name holds, the limit the region screen types under.
+  static const int maxRegionLength = 30;
+
   final String name;
   final Uint8List psk;
 
-  /// Region the channel floods in; null when the link names none.
+  /// Region the channel floods in, the way the app keeps regions, without
+  /// the leading `#`; null when the link names none.
   final String? regionScope;
 
   bool get isHashtag => name.startsWith('#');
@@ -96,12 +100,72 @@ class ChannelQrLink {
       psk = Channel.parsePskHex(secret);
     }
 
-    final region = (query['region_scope'] ?? '').trim();
+    final region = _regionOf(query['region_scope'] ?? '');
+    if (region == null) return null;
     return ChannelQrLink(
       name: _fitName(fullName),
       psk: psk,
       regionScope: region.isEmpty ? null : region,
     );
+  }
+
+  /// What scanning this link should do to [channels], the node's current ones.
+  /// [regionOf] tells the region a channel has now, empty for none.
+  ///
+  /// The key is the channel, so a key the node already holds under another
+  /// name is never written a second time. A name the node already holds is
+  /// offered an update instead of a second slot: the link replaces the key
+  /// and the region of that channel. Names are compared the way
+  /// `ChannelIdentityMatcher` compares them, trimmed and without case.
+  ChannelQrImport importInto(
+    List<Channel> channels, {
+    required String Function(int channelIndex) regionOf,
+  }) {
+    final pskHex = Channel.formatPskHex(psk).toLowerCase();
+    final nameKey = name.trim().toLowerCase();
+    Channel? sameKey;
+    Channel? sameName;
+    for (final channel in channels) {
+      if (channel.isEmpty) continue;
+      if (channel.pskHex.toLowerCase() == pskHex) sameKey ??= channel;
+      if (channel.name.trim().toLowerCase() == nameKey) sameName ??= channel;
+    }
+    if (sameKey != null && sameKey.index != sameName?.index) {
+      return ChannelQrImport(ChannelQrImportAction.alreadyAdded, sameKey);
+    }
+    if (sameName == null) {
+      return const ChannelQrImport(ChannelQrImportAction.add, null);
+    }
+    final nothingToChange =
+        sameKey != null &&
+        regionOf(sameName.index).trim() == (regionScope ?? '');
+    return ChannelQrImport(
+      nothingToChange
+          ? ChannelQrImportAction.alreadyAdded
+          : ChannelQrImportAction.update,
+      sameName,
+    );
+  }
+
+  /// The scope a link names, without the leading `#` the hash adds back by
+  /// itself. Empty when the link names none; null when it names one the app
+  /// could not use: longer than a region name gets, a private `$` region
+  /// whose key lives on a repeater, or characters no region name has. The
+  /// byte rule is the one regions fetched from a repeater are held to. A link
+  /// like that is refused whole, because an update takes "no region" as an
+  /// order to clear the one the channel has.
+  static String? _regionOf(String raw) {
+    var region = raw.trim();
+    if (region.startsWith('#')) region = region.substring(1).trim();
+    if (region.isEmpty) return '';
+    if (region.startsWith(r'$')) return null;
+    final bytes = utf8.encode(region);
+    if (bytes.length > maxRegionLength) return null;
+    final usable = bytes.every(
+      (byte) =>
+          byte == 0x2D || (byte >= 0x30 && byte <= 0x39) || byte >= 0x41,
+    );
+    return usable ? region : null;
   }
 
   /// The secret is what identifies a channel, the name is only a label, so an
@@ -120,4 +184,15 @@ class ChannelQrLink {
     }
     return buffer.toString().trimRight();
   }
+}
+
+enum ChannelQrImportAction { add, update, alreadyAdded }
+
+/// The verdict of [ChannelQrLink.importInto]: what to do, and for anything
+/// but [ChannelQrImportAction.add] the channel it is about.
+class ChannelQrImport {
+  const ChannelQrImport(this.action, this.existing);
+
+  final ChannelQrImportAction action;
+  final Channel? existing;
 }

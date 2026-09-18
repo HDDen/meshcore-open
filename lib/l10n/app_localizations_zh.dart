@@ -6307,4 +6307,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channels_shareQrImageFailed => '无法生成二维码图片';
+
+  @override
+  String channels_qrUpdateExisting(String name) {
+    return 'Channel $name already exists. Update its properties?';
+  }
 }

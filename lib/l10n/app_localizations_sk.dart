@@ -6738,4 +6738,9 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get channels_shareQrImageFailed =>
       'Obrázok s QR kódom sa nepodarilo pripraviť';
+
+  @override
+  String channels_qrUpdateExisting(String name) {
+    return 'Channel $name already exists. Update its properties?';
+  }
 }

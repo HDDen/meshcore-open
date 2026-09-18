@@ -11533,6 +11533,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not prepare the QR code image'**
   String get channels_shareQrImageFailed;
+
+  /// No description provided for @channels_qrUpdateExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {name} already exists. Update its properties?'**
+  String channels_qrUpdateExisting(String name);
 }
 
 class _AppLocalizationsDelegate

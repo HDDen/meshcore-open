@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/channel_qr_link.dart';
 import 'package:meshcore_open/models/channel.dart';
@@ -111,6 +113,36 @@ void main() {
       expect(link.psk, Channel.derivePskFromHashtag(name));
     });
 
+    test('keeps a region without the # the hash adds back', () {
+      const secret = '8b3387e9c5cdea6ac9e5edbaa115cd72';
+      String? regionOf(String value) => ChannelQrLink.tryParse(
+        'meshcore://channel/add?name=A&secret=$secret&region_scope=$value',
+      )?.regionScope;
+      expect(regionOf('%23bots'), 'bots');
+      expect(regionOf('%20ru-south%20'), 'ru-south');
+      expect(regionOf('%23'), isNull);
+      expect(regionOf('Europe'), 'Europe');
+      expect(regionOf('a' * ChannelQrLink.maxRegionLength), hasLength(30));
+    });
+
+    test('refuses a link whose region the app could not use', () {
+      const secret = '8b3387e9c5cdea6ac9e5edbaa115cd72';
+      for (final region in [
+        '%24private', // a private region: its key lives on a repeater
+        'a' * (ChannelQrLink.maxRegionLength + 1),
+        'two%20words',
+        'a.b',
+      ]) {
+        expect(
+          ChannelQrLink.tryParse(
+            'meshcore://channel/add?name=A&secret=$secret&region_scope=$region',
+          ),
+          isNull,
+          reason: region,
+        );
+      }
+    });
+
     test('rejects everything that is not a channel link', () {
       const secret = '8b3387e9c5cdea6ac9e5edbaa115cd72';
       for (final raw in [
@@ -129,6 +161,91 @@ void main() {
         expect(ChannelQrLink.tryParse(raw), isNull, reason: raw);
         expect(ChannelQrLink.isValid(raw), isFalse, reason: raw);
       }
+    });
+  });
+
+  group('ChannelQrLink.importInto', () {
+    const linkSecret = '3cae16fd067ba9c32a98be22e9b98525';
+    const otherSecret = '8b3387e9c5cdea6ac9e5edbaa115cd72';
+
+    Channel channel(int index, String name, String secret) =>
+        Channel(index: index, name: name, psk: Channel.parsePskHex(secret));
+    final empty = Channel(index: 3, name: '', psk: Uint8List(16));
+
+    ChannelQrLink link({String name = '#ping', String? region}) =>
+        ChannelQrLink(
+          name: name,
+          psk: Channel.parsePskHex(linkSecret),
+          regionScope: region,
+        );
+
+    ChannelQrImport importInto(
+      ChannelQrLink link,
+      List<Channel> channels, {
+      Map<int, String> regions = const {},
+    }) => link.importInto(
+      channels,
+      regionOf: (index) => regions[index] ?? '',
+    );
+
+    test('a new name and a new key take a free slot', () {
+      final result = importInto(link(), [
+        channel(0, 'Public', otherSecret),
+        empty,
+      ]);
+      expect(result.action, ChannelQrImportAction.add);
+      expect(result.existing, isNull);
+    });
+
+    test('a name the node holds under another key is offered an update', () {
+      final result = importInto(link(), [
+        channel(0, 'Public', otherSecret),
+        channel(2, ' #Ping ', otherSecret.replaceFirst('8b', '9c')),
+      ]);
+      expect(result.action, ChannelQrImportAction.update);
+      expect(result.existing!.index, 2);
+    });
+
+    test('the same name and key still update when the region differs', () {
+      final channels = [channel(1, '#ping', linkSecret)];
+      expect(
+        importInto(link(region: 'bots'), channels).action,
+        ChannelQrImportAction.update,
+      );
+      // No region in the link clears the one the channel has.
+      expect(
+        importInto(link(), channels, regions: {1: 'bots'}).action,
+        ChannelQrImportAction.update,
+      );
+    });
+
+    test('nothing to change is a channel that is already added', () {
+      final channels = [channel(1, '#ping', linkSecret)];
+      expect(
+        importInto(link(), channels).action,
+        ChannelQrImportAction.alreadyAdded,
+      );
+      final withRegion = importInto(
+        link(region: 'bots'),
+        channels,
+        regions: {1: 'bots'},
+      );
+      expect(withRegion.action, ChannelQrImportAction.alreadyAdded);
+    });
+
+    test('a key held under another name is never written twice', () {
+      final elsewhere = importInto(link(), [channel(4, 'Pings', linkSecret)]);
+      expect(elsewhere.action, ChannelQrImportAction.alreadyAdded);
+      expect(elsewhere.existing!.name, 'Pings');
+
+      // Even when the name is taken too: updating that channel would leave
+      // the node with the same key in two slots.
+      final both = importInto(link(), [
+        channel(1, '#ping', otherSecret),
+        channel(4, 'Pings', linkSecret),
+      ]);
+      expect(both.action, ChannelQrImportAction.alreadyAdded);
+      expect(both.existing!.index, 4);
     });
   });
 }

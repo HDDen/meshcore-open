@@ -34,6 +34,27 @@ void main() {
     expect(await store.loadRegion(1), isEmpty);
   });
 
+  test('a region saved for a name is found by a store that learns the '
+      'name later', () async {
+    // What adding a channel by QR relies on: the region is written before
+    // the connector's own store knows the new slot.
+    final psk = Uint8List(16)..[0] = 1;
+    final early = ChannelRegionStore()
+      ..setPublicKeyHex = '00112233445566778899'
+      ..registerChannel(Channel(index: 5, name: '#ping', psk: psk));
+    expect(await early.saveRegion(5, 'bots'), 'bots');
+
+    final connectorStore = createStore();
+    // No name for slot 5 yet: nothing to load, and nothing can be saved.
+    expect(await connectorStore.loadRegion(5), isEmpty);
+    expect(await connectorStore.saveRegion(5, 'other'), isEmpty);
+
+    connectorStore.registerChannel(
+      Channel(index: 5, name: '#ping', psk: psk),
+    );
+    expect(await connectorStore.loadRegion(5), 'bots');
+  });
+
   test('load removes legacy empty stored region', () async {
     final store = createStore();
     final prefs = PrefsManager.instance;

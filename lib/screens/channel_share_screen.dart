@@ -204,6 +204,14 @@ class _ChannelShareScreenState extends State<ChannelShareScreen> {
               controller: _regionController,
               autocorrect: false,
               enableSuggestions: false,
+              // What the region screen lets a name be made of, so the link
+              // is one the scanner on the other side accepts.
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[a-z0-9-]')),
+                LengthLimitingTextInputFormatter(
+                  ChannelQrLink.maxRegionLength,
+                ),
+              ],
               textInputAction: TextInputAction.done,
               // The QR code and the link follow the field as it is typed.
               onChanged: (_) => setState(() {}),
