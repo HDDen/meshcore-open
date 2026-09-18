@@ -6764,4 +6764,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Il canale \"$name\" è già stato aggiunto';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Scansiona il codice QR per aggiungere il canale.';
+
+  @override
+  String get channels_shareSecretKey => 'Chiave segreta';
+
+  @override
+  String get channels_shareRegionScope => 'Regione del canale';
+
+  @override
+  String get channels_shareKeyCopied => 'Chiave segreta copiata';
+
+  @override
+  String get channels_shareLinkCopied => 'Link copiato';
 }

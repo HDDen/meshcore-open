@@ -6708,4 +6708,19 @@ class AppLocalizationsSk extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Kanál \"$name\" je už pridaný';
   }
+
+  @override
+  String get channels_shareQrHint => 'Naskenujte QR kód a pridajte kanál.';
+
+  @override
+  String get channels_shareSecretKey => 'Tajný kľúč';
+
+  @override
+  String get channels_shareRegionScope => 'Región kanála';
+
+  @override
+  String get channels_shareKeyCopied => 'Tajný kľúč skopírovaný';
+
+  @override
+  String get channels_shareLinkCopied => 'Odkaz skopírovaný';
 }

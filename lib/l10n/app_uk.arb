@@ -3585,5 +3585,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Розпізнавати копію нашого повідомлення в каналі з RX-журналу, обрізану лімітом BLE-кадру",
   "channels_scanQrInstructions": "Наведіть камеру на QR-код каналу",
   "channels_invalidQrCode": "Це не QR-код каналу",
-  "channels_qrAlreadyAdded": "Канал «{name}» уже додано"
+  "channels_qrAlreadyAdded": "Канал «{name}» уже додано",
+  "channels_shareQrHint": "Відскануйте QR-код, щоб додати канал.",
+  "channels_shareSecretKey": "Секретний ключ",
+  "channels_shareRegionScope": "Регіон каналу",
+  "channels_shareKeyCopied": "Секретний ключ скопійовано",
+  "channels_shareLinkCopied": "Посилання скопійовано"
 }

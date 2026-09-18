@@ -3643,5 +3643,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznawaj kopię naszej wiadomości kanałowej z dziennika RX, uciętą przez limit ramki BLE",
   "channels_scanQrInstructions": "Skieruj kamerę na kod QR kanału",
   "channels_invalidQrCode": "To nie jest kod QR kanału",
-  "channels_qrAlreadyAdded": "Kanał \"{name}\" jest już dodany"
+  "channels_qrAlreadyAdded": "Kanał \"{name}\" jest już dodany",
+  "channels_shareQrHint": "Zeskanuj kod QR, aby dodać kanał.",
+  "channels_shareSecretKey": "Tajny klucz",
+  "channels_shareRegionScope": "Region kanału",
+  "channels_shareKeyCopied": "Skopiowano tajny klucz",
+  "channels_shareLinkCopied": "Skopiowano link"
 }

@@ -3605,5 +3605,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Prepoznaj kopijo našega kanalskega sporočila iz dnevnika RX, ki jo je odrezala omejitev okvirja BLE",
   "channels_scanQrInstructions": "Usmerite kamero v QR kodo kanala",
   "channels_invalidQrCode": "To ni QR koda kanala",
-  "channels_qrAlreadyAdded": "Kanal \"{name}\" je že dodan"
+  "channels_qrAlreadyAdded": "Kanal \"{name}\" je že dodan",
+  "channels_shareQrHint": "Skenirajte QR kodo, da dodate kanal.",
+  "channels_shareSecretKey": "Skrivni ključ",
+  "channels_shareRegionScope": "Regija kanala",
+  "channels_shareKeyCopied": "Skrivni ključ kopiran",
+  "channels_shareLinkCopied": "Povezava kopirana"
 }

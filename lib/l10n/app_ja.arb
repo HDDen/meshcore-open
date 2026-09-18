@@ -3710,5 +3710,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "BLE フレーム制限で切られた自分のチャンネルメッセージの RX ログのコピーを認識します",
   "channels_scanQrInstructions": "カメラをチャンネルの QR コードに向けてください",
   "channels_invalidQrCode": "これはチャンネルの QR コードではありません",
-  "channels_qrAlreadyAdded": "チャンネル「{name}」はすでに追加されています"
+  "channels_qrAlreadyAdded": "チャンネル「{name}」はすでに追加されています",
+  "channels_shareQrHint": "QR コードをスキャンしてチャンネルを追加します。",
+  "channels_shareSecretKey": "シークレットキー",
+  "channels_shareRegionScope": "チャンネルのリージョン",
+  "channels_shareKeyCopied": "シークレットキーをコピーしました",
+  "channels_shareLinkCopied": "リンクをコピーしました"
 }

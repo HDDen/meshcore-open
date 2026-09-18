@@ -3705,5 +3705,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "channels_shareQrHint": "Scan the QR code to add the channel.",
+  "channels_shareSecretKey": "Secret key",
+  "channels_shareRegionScope": "Region scope",
+  "channels_shareKeyCopied": "Secret key copied",
+  "channels_shareLinkCopied": "Link copied"
 }

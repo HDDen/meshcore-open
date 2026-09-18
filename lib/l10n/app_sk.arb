@@ -3605,5 +3605,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznať kópiu našej kanálovej správy z RX záznamu, skrátenú limitom BLE rámca",
   "channels_scanQrInstructions": "Zamerte kameru na QR kód kanála",
   "channels_invalidQrCode": "Toto nie je QR kód kanála",
-  "channels_qrAlreadyAdded": "Kanál \"{name}\" je už pridaný"
+  "channels_qrAlreadyAdded": "Kanál \"{name}\" je už pridaný",
+  "channels_shareQrHint": "Naskenujte QR kód a pridajte kanál.",
+  "channels_shareSecretKey": "Tajný kľúč",
+  "channels_shareRegionScope": "Región kanála",
+  "channels_shareKeyCopied": "Tajný kľúč skopírovaný",
+  "channels_shareLinkCopied": "Odkaz skopírovaný"
 }

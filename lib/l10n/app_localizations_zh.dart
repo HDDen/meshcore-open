@@ -6280,4 +6280,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return '频道 \"$name\" 已添加';
   }
+
+  @override
+  String get channels_shareQrHint => '扫描二维码即可添加频道。';
+
+  @override
+  String get channels_shareSecretKey => '密钥';
+
+  @override
+  String get channels_shareRegionScope => '频道区域';
+
+  @override
+  String get channels_shareKeyCopied => '已复制密钥';
+
+  @override
+  String get channels_shareLinkCopied => '已复制链接';
 }

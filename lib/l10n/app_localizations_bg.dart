@@ -6757,4 +6757,20 @@ class AppLocalizationsBg extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Каналът \"$name\" вече е добавен';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Сканирайте QR кода, за да добавите канала.';
+
+  @override
+  String get channels_shareSecretKey => 'Таен ключ';
+
+  @override
+  String get channels_shareRegionScope => 'Регион на канала';
+
+  @override
+  String get channels_shareKeyCopied => 'Тайният ключ е копиран';
+
+  @override
+  String get channels_shareLinkCopied => 'Връзката е копирана';
 }

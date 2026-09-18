@@ -6745,4 +6745,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Канал \"$name\" уже добавлен';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Отсканируйте QR-код, чтобы добавить канал.';
+
+  @override
+  String get channels_shareSecretKey => 'Секретный ключ';
+
+  @override
+  String get channels_shareRegionScope => 'Регион канала';
+
+  @override
+  String get channels_shareKeyCopied => 'Секретный ключ скопирован';
+
+  @override
+  String get channels_shareLinkCopied => 'Ссылка скопирована';
 }

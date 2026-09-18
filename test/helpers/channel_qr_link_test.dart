@@ -3,6 +3,40 @@ import 'package:meshcore_open/helpers/channel_qr_link.dart';
 import 'package:meshcore_open/models/channel.dart';
 
 void main() {
+  group('ChannelQrLink.toLink', () {
+    final psk = Channel.parsePskHex('3cae16fd067ba9c32a98be22e9b98525');
+
+    test('writes the name URL-encoded and the secret in lower case', () {
+      expect(
+        ChannelQrLink(name: '#ping', psk: psk).toLink(),
+        'meshcore://channel/add?name=%23ping&secret=3cae16fd067ba9c32a98be22e9b98525',
+      );
+    });
+
+    test('adds region_scope only when a region is given', () {
+      expect(
+        ChannelQrLink(name: '#ping', psk: psk, regionScope: ' bots ').toLink(),
+        'meshcore://channel/add?name=%23ping&secret=3cae16fd067ba9c32a98be22e9b98525&region_scope=bots',
+      );
+      expect(
+        ChannelQrLink(name: '#ping', psk: psk, regionScope: '  ').toLink(),
+        isNot(contains('region_scope')),
+      );
+    });
+
+    test('a written link reads back the same', () {
+      final link = ChannelQrLink(
+        name: 'My канал & co',
+        psk: psk,
+        regionScope: 'ru-south',
+      );
+      final parsed = ChannelQrLink.tryParse(link.toLink());
+      expect(parsed!.name, link.name);
+      expect(parsed.psk, link.psk);
+      expect(parsed.regionScope, 'ru-south');
+    });
+  });
+
   group('ChannelQrLink.tryParse', () {
     test('reads the example from MeshCore docs/qr_codes.md', () {
       final link = ChannelQrLink.tryParse(

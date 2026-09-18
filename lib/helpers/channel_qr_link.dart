@@ -16,9 +16,11 @@ import '../models/channel.dart';
 /// is the usual SHA-256 derivation. A hashtag link that carries no secret is
 /// still accepted, because the key follows from the name.
 ///
-/// Fork-only for now. Everything about scanning a channel QR lives in this file,
-/// in `screens/channel_qr_scanner_screen.dart` and behind the `channel-qr-scan`
-/// marks in `screens/channels_screen.dart`, so it can be dropped in one go if
+/// Fork-only for now. Everything about channel QR codes lives in this file, in
+/// `screens/channel_qr_scanner_screen.dart` (scanning) and
+/// `screens/channel_share_screen.dart` (showing), and behind the
+/// `channel-qr-scan` / `channel-qr-share` marks in `screens/channels_screen.dart`
+/// and `screens/channel_chat_screen.dart`, so it can be dropped in one go if
 /// upstream ships its own version.
 class ChannelQrLink {
   const ChannelQrLink({
@@ -40,6 +42,21 @@ class ChannelQrLink {
   final String? regionScope;
 
   bool get isHashtag => name.startsWith('#');
+
+  /// The link for this channel, the way the MeshCore app writes it: the name
+  /// URL-encoded, the secret as 32 lower-case hex characters, and
+  /// `region_scope` only when a region is given.
+  String toLink() => Uri(
+    scheme: 'meshcore',
+    host: 'channel',
+    path: '/add',
+    queryParameters: {
+      'name': name,
+      'secret': Channel.formatPskHex(psk).toLowerCase(),
+      if ((regionScope ?? '').trim().isNotEmpty)
+        'region_scope': regionScope!.trim(),
+    },
+  ).toString();
 
   static bool isValid(String raw) => tryParse(raw) != null;
 

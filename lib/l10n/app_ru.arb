@@ -2864,5 +2864,10 @@
   "chat_showWithMarkdown": "Отобразить с Markdown",
   "channels_scanQrInstructions": "Наведите камеру на QR-код канала",
   "channels_invalidQrCode": "Это не QR-код канала",
-  "channels_qrAlreadyAdded": "Канал \"{name}\" уже добавлен"
+  "channels_qrAlreadyAdded": "Канал \"{name}\" уже добавлен",
+  "channels_shareQrHint": "Отсканируйте QR-код, чтобы добавить канал.",
+  "channels_shareSecretKey": "Секретный ключ",
+  "channels_shareRegionScope": "Регион канала",
+  "channels_shareKeyCopied": "Секретный ключ скопирован",
+  "channels_shareLinkCopied": "Ссылка скопирована"
 }

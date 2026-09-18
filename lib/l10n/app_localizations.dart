@@ -11479,6 +11479,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Channel \"{name}\" is already added'**
   String channels_qrAlreadyAdded(String name);
+
+  /// No description provided for @channels_shareQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code to add the channel.'**
+  String get channels_shareQrHint;
+
+  /// No description provided for @channels_shareSecretKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret key'**
+  String get channels_shareSecretKey;
+
+  /// No description provided for @channels_shareRegionScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Region scope'**
+  String get channels_shareRegionScope;
+
+  /// No description provided for @channels_shareKeyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret key copied'**
+  String get channels_shareKeyCopied;
+
+  /// No description provided for @channels_shareLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get channels_shareLinkCopied;
 }
 
 class _AppLocalizationsDelegate

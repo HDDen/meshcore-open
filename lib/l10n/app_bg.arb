@@ -3605,5 +3605,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Разпознаване на копие от RX-дневника на наше съобщение в канал, отрязано от лимита на BLE кадъра",
   "channels_scanQrInstructions": "Насочете камерата към QR код на канал",
   "channels_invalidQrCode": "Това не е QR код на канал",
-  "channels_qrAlreadyAdded": "Каналът \"{name}\" вече е добавен"
+  "channels_qrAlreadyAdded": "Каналът \"{name}\" вече е добавен",
+  "channels_shareQrHint": "Сканирайте QR кода, за да добавите канала.",
+  "channels_shareSecretKey": "Таен ключ",
+  "channels_shareRegionScope": "Регион на канала",
+  "channels_shareKeyCopied": "Тайният ключ е копиран",
+  "channels_shareLinkCopied": "Връзката е копирана"
 }

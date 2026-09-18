@@ -6759,4 +6759,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Kanal \"$name\" ist bereits hinzugefügt';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Scannen Sie den QR-Code, um den Kanal hinzuzufügen.';
+
+  @override
+  String get channels_shareSecretKey => 'Geheimer Schlüssel';
+
+  @override
+  String get channels_shareRegionScope => 'Region des Kanals';
+
+  @override
+  String get channels_shareKeyCopied => 'Geheimer Schlüssel kopiert';
+
+  @override
+  String get channels_shareLinkCopied => 'Link kopiert';
 }

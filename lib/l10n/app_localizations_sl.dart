@@ -6719,4 +6719,19 @@ class AppLocalizationsSl extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Kanal \"$name\" je že dodan';
   }
+
+  @override
+  String get channels_shareQrHint => 'Skenirajte QR kodo, da dodate kanal.';
+
+  @override
+  String get channels_shareSecretKey => 'Skrivni ključ';
+
+  @override
+  String get channels_shareRegionScope => 'Regija kanala';
+
+  @override
+  String get channels_shareKeyCopied => 'Skrivni ključ kopiran';
+
+  @override
+  String get channels_shareLinkCopied => 'Povezava kopirana';
 }

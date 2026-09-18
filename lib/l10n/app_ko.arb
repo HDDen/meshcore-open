@@ -3742,5 +3742,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "BLE 프레임 한계로 잘린 우리 채널 메시지의 RX 로그 사본을 인식합니다",
   "channels_scanQrInstructions": "카메라를 채널 QR 코드 쪽으로 향하게 하세요",
   "channels_invalidQrCode": "채널 QR 코드가 아닙니다",
-  "channels_qrAlreadyAdded": "채널 \"{name}\"은(는) 이미 추가되어 있습니다"
+  "channels_qrAlreadyAdded": "채널 \"{name}\"은(는) 이미 추가되어 있습니다",
+  "channels_shareQrHint": "QR 코드를 스캔하여 채널을 추가하세요.",
+  "channels_shareSecretKey": "비밀 키",
+  "channels_shareRegionScope": "채널 지역",
+  "channels_shareKeyCopied": "비밀 키를 복사했습니다",
+  "channels_shareLinkCopied": "링크를 복사했습니다"
 }

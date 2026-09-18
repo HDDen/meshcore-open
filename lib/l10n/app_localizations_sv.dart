@@ -6695,4 +6695,20 @@ class AppLocalizationsSv extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'Kanalen \"$name\" är redan tillagd';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Skanna QR-koden för att lägga till kanalen.';
+
+  @override
+  String get channels_shareSecretKey => 'Hemlig nyckel';
+
+  @override
+  String get channels_shareRegionScope => 'Kanalens region';
+
+  @override
+  String get channels_shareKeyCopied => 'Hemlig nyckel kopierad';
+
+  @override
+  String get channels_shareLinkCopied => 'Länk kopierad';
 }

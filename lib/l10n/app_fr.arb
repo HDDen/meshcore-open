@@ -3704,5 +3704,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "Reconnaître une copie du journal RX de notre propre message de canal tronquée par la limite de trame BLE",
   "channels_scanQrInstructions": "Pointez l'appareil photo vers le QR code d'un canal",
   "channels_invalidQrCode": "Ce n'est pas un QR code de canal",
-  "channels_qrAlreadyAdded": "Le canal \"{name}\" est déjà ajouté"
+  "channels_qrAlreadyAdded": "Le canal \"{name}\" est déjà ajouté",
+  "channels_shareQrHint": "Scannez le QR code pour ajouter le canal.",
+  "channels_shareSecretKey": "Clé secrète",
+  "channels_shareRegionScope": "Région du canal",
+  "channels_shareKeyCopied": "Clé secrète copiée",
+  "channels_shareLinkCopied": "Lien copié"
 }

@@ -6744,4 +6744,20 @@ class AppLocalizationsHu extends AppLocalizations {
   String channels_qrAlreadyAdded(String name) {
     return 'A \"$name\" csatorna már hozzá van adva';
   }
+
+  @override
+  String get channels_shareQrHint =>
+      'Olvassa be a QR-kódot a csatorna hozzáadásához.';
+
+  @override
+  String get channels_shareSecretKey => 'Titkos kulcs';
+
+  @override
+  String get channels_shareRegionScope => 'A csatorna régiója';
+
+  @override
+  String get channels_shareKeyCopied => 'Titkos kulcs kimásolva';
+
+  @override
+  String get channels_shareLinkCopied => 'Hivatkozás kimásolva';
 }

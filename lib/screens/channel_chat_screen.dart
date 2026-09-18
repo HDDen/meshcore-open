@@ -23,6 +23,7 @@ import '../utils/platform_info.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
+import '../helpers/channel_qr_link.dart'; // channel-qr-share
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
@@ -105,6 +106,7 @@ import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'canvas_editor_screen.dart';
+import 'channel_share_screen.dart'; // channel-qr-share
 import 'channels_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
@@ -1016,6 +1018,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   case 'editChannel':
                     final connector = context.read<MeshCoreConnector>();
                     showChannelEditSheet(context, connector, widget.channel);
+                  case 'shareChannel': // channel-qr-share
+                    final channel = widget.channel;
+                    final shareConnector = context.read<MeshCoreConnector>();
+                    unawaited(
+                      ChannelShareScreen.open(
+                        context,
+                        channel: channel,
+                        displayName: channel.name.isEmpty
+                            ? shareConnector.channelDisplayName(channel.index)
+                            : channel.name,
+                        initialRegion: shareConnector.getChannelRegion(
+                          channel.index,
+                        ),
+                      ),
+                    );
                   case 'blockedSenders':
                     unawaited(BlockedSendersSheet.show(context));
                   case 'clearChat':
@@ -1036,6 +1053,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     child: PopupMenuRow(
                       icon: Icons.edit_outlined,
                       text: context.l10n.channels_editChannel,
+                    ),
+                  ),
+                // channel-qr-share: fork-only, see helpers/channel_qr_link.dart
+                if (ChannelQrLink.enabled)
+                  PopupMenuItem(
+                    value: 'shareChannel',
+                    child: PopupMenuRow(
+                      icon: Icons.qr_code_2,
+                      text: context.l10n.common_share,
                     ),
                   ),
                 // Not gated on offline mode: the block list is local data

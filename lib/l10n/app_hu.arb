@@ -3608,5 +3608,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "A saját csatornaüzenetünk RX-naplóbeli másolatának felismerése, amelyet a BLE-keret korlátja levágott",
   "channels_scanQrInstructions": "Irányítsa a kamerát egy csatorna QR-kódjára",
   "channels_invalidQrCode": "Ez nem csatorna QR-kód",
-  "channels_qrAlreadyAdded": "A \"{name}\" csatorna már hozzá van adva"
+  "channels_qrAlreadyAdded": "A \"{name}\" csatorna már hozzá van adva",
+  "channels_shareQrHint": "Olvassa be a QR-kódot a csatorna hozzáadásához.",
+  "channels_shareSecretKey": "Titkos kulcs",
+  "channels_shareRegionScope": "A csatorna régiója",
+  "channels_shareKeyCopied": "Titkos kulcs kimásolva",
+  "channels_shareLinkCopied": "Hivatkozás kimásolva"
 }

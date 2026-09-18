@@ -3610,5 +3610,10 @@
   "settings_modSettingsRecoverLongEchoesDscr": "识别被 BLE 帧长度限制截断的本机频道消息 RX 日志副本",
   "channels_scanQrInstructions": "将摄像头对准频道的二维码",
   "channels_invalidQrCode": "这不是频道二维码",
-  "channels_qrAlreadyAdded": "频道 \"{name}\" 已添加"
+  "channels_qrAlreadyAdded": "频道 \"{name}\" 已添加",
+  "channels_shareQrHint": "扫描二维码即可添加频道。",
+  "channels_shareSecretKey": "密钥",
+  "channels_shareRegionScope": "频道区域",
+  "channels_shareKeyCopied": "已复制密钥",
+  "channels_shareLinkCopied": "已复制链接"
 }

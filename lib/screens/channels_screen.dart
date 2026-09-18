@@ -52,6 +52,7 @@ import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'chat_screen.dart';
 import 'channel_qr_scanner_screen.dart'; // channel-qr-scan
+import 'channel_share_screen.dart'; // channel-qr-share
 import 'community_qr_scanner_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
@@ -1113,6 +1114,25 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     }
                   },
                 ),
+                // channel-qr-share: fork-only, see helpers/channel_qr_link.dart
+                if (ChannelQrLink.enabled)
+                  ListTile(
+                    leading: const Icon(Icons.qr_code_2),
+                    title: Text(sheetContext.l10n.common_share),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await Future.delayed(const Duration(milliseconds: 100));
+                      if (!parentContext.mounted) return;
+                      await ChannelShareScreen.open(
+                        parentContext,
+                        channel: channel,
+                        displayName: channel.name.isEmpty
+                            ? connector.channelDisplayName(channel.index)
+                            : channel.name,
+                        initialRegion: connector.getChannelRegion(channel.index),
+                      );
+                    },
+                  ),
                 ListTile(
                   leading: Icon(
                     isMuted
