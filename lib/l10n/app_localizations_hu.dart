@@ -622,7 +622,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Kiadások a Githubon: \nhttps://github.com/HDDen/meshcore-open/releases \nA módosítás csoportja Telegramon: \nhttps://t.me/mcoadvanced';
+      'Kiadások a Githubon: \nhttps://github.com/HDDen/meshcore-open/releases \nA módosítás csoportja Telegramon: \nhttps://t.me/mcoadvanced \nA módosítás webhelye: \nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>

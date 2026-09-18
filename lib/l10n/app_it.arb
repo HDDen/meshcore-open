@@ -2754,7 +2754,7 @@
   "settings_deleteRegion": "Elimina regione",
   "settings_deleteRegionConfirm": "Rimuovere \"{region}\" dall'elenco delle regioni?",
   "settings_aboutModDescription": "La modifica «Advanced» si basa sull'originale meshcore_open e introduce modifiche proposte nel repository dell'applicazione originale oppure specifiche per l'area di utilizzo e quindi non presentate come pull request.",
-  "settings_aboutModLink": "Release su Github: \nhttps://github.com/HDDen/meshcore-open/releases \nGruppo della modifica su Telegram: \nhttps://t.me/mcoadvanced",
+  "settings_aboutModLink": "Release su Github: \nhttps://github.com/HDDen/meshcore-open/releases \nGruppo della modifica su Telegram: \nhttps://t.me/mcoadvanced \nSito della modifica: \nhttps://mcoadvanced.ru",
   "settings_infoFirmware": "Versione del firmware",
   "settings_quickAnswersSendAtSelect": "Invia alla selezione",
   "repeater_pathHashModeOption0": "1 byte",

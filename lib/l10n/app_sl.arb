@@ -2871,7 +2871,7 @@
   "settings_deleteRegion": "Izbriši regijo",
   "settings_deleteRegionConfirm": "Ali naj se \"{region}\" odstrani s seznama regij?",
   "settings_aboutModDescription": "Modifikacija «Advanced» temelji na izvirnem meshcore_open in vsebuje spremembe, predlagane v repozitoriju izvirne aplikacije ali specifične za območje uporabe, zato niso bile oddane kot pull request.",
-  "settings_aboutModLink": "Izdaje na Githubu: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikacije na Telegramu: \nhttps://t.me/mcoadvanced",
+  "settings_aboutModLink": "Izdaje na Githubu: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikacije na Telegramu: \nhttps://t.me/mcoadvanced \nSpletna stran modifikacije: \nhttps://mcoadvanced.ru",
   "settings_infoFirmware": "Različica vdelane programske opreme",
   "contact_clearChatConfirm": "Ali naj se sporočila izbrišejo iz klepeta?",
   "channels_regionSetTo": "Regija: {region}",

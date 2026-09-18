@@ -630,7 +630,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Wydania na Githubie: \nhttps://github.com/HDDen/meshcore-open/releases \nGrupa modyfikacji na Telegramie: \nhttps://t.me/mcoadvanced';
+      'Wydania na Githubie: \nhttps://github.com/HDDen/meshcore-open/releases \nGrupa modyfikacji na Telegramie: \nhttps://t.me/mcoadvanced \nStrona modyfikacji: \nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>

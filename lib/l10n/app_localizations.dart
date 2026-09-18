@@ -1243,7 +1243,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_aboutModLink.
   ///
   /// In en, this message translates to:
-  /// **'Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced'**
+  /// **'Releases on Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod group on Telegram: \nhttps://t.me/mcoadvanced \nMod website: \nhttps://mcoadvanced.ru'**
   String get settings_aboutModLink;
 
   /// No description provided for @settings_aboutOpenMeteoAttribution.

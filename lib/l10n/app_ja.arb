@@ -2976,7 +2976,7 @@
   "settings_deleteRegion": "リージョンを削除",
   "settings_deleteRegionConfirm": "「{region}」をリージョン一覧から削除しますか？",
   "settings_aboutModDescription": "「Advanced」改造版はオリジナルの meshcore_open をベースに、オリジナルアプリのリポジトリに提案された変更や利用地域に固有の変更を取り込んでおり、そのため PR としては提出されていません。",
-  "settings_aboutModLink": "Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced",
+  "settings_aboutModLink": "Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced \n改造版のウェブサイト: \nhttps://mcoadvanced.ru",
   "settings_infoFirmware": "ファームウェアのバージョン",
   "contact_clearChatConfirm": "チャットからメッセージを削除しますか？",
   "channels_regionSetTo": "リージョン: {region}",

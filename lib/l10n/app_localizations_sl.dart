@@ -619,7 +619,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Izdaje na Githubu: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikacije na Telegramu: \nhttps://t.me/mcoadvanced';
+      'Izdaje na Githubu: \nhttps://github.com/HDDen/meshcore-open/releases \nSkupina modifikacije na Telegramu: \nhttps://t.me/mcoadvanced \nSpletna stran modifikacije: \nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>

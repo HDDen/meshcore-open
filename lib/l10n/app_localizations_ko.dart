@@ -596,7 +596,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Github 릴리스: \nhttps://github.com/HDDen/meshcore-open/releases \n수정판 텔레그램 그룹: \nhttps://t.me/mcoadvanced';
+      'Github 릴리스: \nhttps://github.com/HDDen/meshcore-open/releases \n수정판 텔레그램 그룹: \nhttps://t.me/mcoadvanced \n수정판 웹사이트: \nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>

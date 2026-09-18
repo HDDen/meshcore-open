@@ -3018,7 +3018,7 @@
   "settings_regionFetchRegionsFail": "Keine Regionen gefunden",
   "settings_regionFetchRegionsAlreadyExists": "Diese Region wurde bereits hinzugefügt",
   "settings_aboutModDescription": "Die «Advanced»-Modifikation basiert auf dem ursprünglichen meshcore_open und enthält Änderungen, die im Repository der Originalanwendung vorgeschlagen wurden oder speziell auf das Einsatzgebiet zugeschnitten sind und daher nicht als Pull Request eingereicht wurden.",
-  "settings_aboutModLink": "Releases auf Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod-Gruppe auf Telegram: \nhttps://t.me/mcoadvanced",
+  "settings_aboutModLink": "Releases auf Github: \nhttps://github.com/HDDen/meshcore-open/releases \nMod-Gruppe auf Telegram: \nhttps://t.me/mcoadvanced \nWebsite der Mod: \nhttps://mcoadvanced.ru",
   "settings_infoFirmware": "Firmware-Version",
   "contact_clearChatConfirm": "Chat wirklich leeren?",
   "chat_receivedGif": "GIF empfangen",

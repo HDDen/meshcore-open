@@ -588,7 +588,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced';
+      'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced \n修改版网站：\nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>

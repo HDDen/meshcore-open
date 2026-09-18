@@ -595,7 +595,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_aboutModLink =>
-      'Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced';
+      'Github のリリース: \nhttps://github.com/HDDen/meshcore-open/releases \n改造版の Telegram グループ: \nhttps://t.me/mcoadvanced \n改造版のウェブサイト: \nhttps://mcoadvanced.ru';
 
   @override
   String get settings_aboutOpenMeteoAttribution =>
