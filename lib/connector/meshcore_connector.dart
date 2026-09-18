@@ -1477,9 +1477,11 @@ class MeshCoreConnector extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final allMessages = await _messageStore.loadLatestMessages(
-      contactKeyHex,
-      limit: _initialContactHistorySize,
+    final allMessages = List<Message>.of(
+      await _messageStore.loadLatestMessages(
+        contactKeyHex,
+        limit: _initialContactHistorySize,
+      ),
     );
     if (generation != _conversationLoadGeneration) return;
     if (_isRoomConversation(contactKeyHex)) {
