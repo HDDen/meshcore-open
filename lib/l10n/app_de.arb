@@ -3729,5 +3729,8 @@
   "chat_canvasV4ToolWave": "Welle",
   "settings_modSettingsMonochromeSenderNames": "Einfarbige Absendernamen",
   "settings_modSettingsRecoverLongEchoes": "Wiederholungen langer Pakete wiederherstellen",
-  "settings_modSettingsRecoverLongEchoesDscr": "Eine vom BLE-Frame-Limit abgeschnittene RX-Log-Kopie der eigenen Kanalnachricht erkennen"
+  "settings_modSettingsRecoverLongEchoesDscr": "Eine vom BLE-Frame-Limit abgeschnittene RX-Log-Kopie der eigenen Kanalnachricht erkennen",
+  "channels_scanQrInstructions": "Richten Sie die Kamera auf einen Kanal-QR-Code",
+  "channels_invalidQrCode": "Das ist kein Kanal-QR-Code",
+  "channels_qrAlreadyAdded": "Kanal \"{name}\" ist bereits hinzugefügt"
 }

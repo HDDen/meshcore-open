@@ -3384,5 +3384,8 @@
   "chat_canvasV4ToolWave": "Våg",
   "settings_modSettingsMonochromeSenderNames": "Enfärgade avsändarnamn",
   "settings_modSettingsRecoverLongEchoes": "Återskapa upprepningar av långa paket",
-  "settings_modSettingsRecoverLongEchoesDscr": "Känn igen en RX-loggkopia av vårt eget kanalmeddelande som BLE-ramgränsen kapat"
+  "settings_modSettingsRecoverLongEchoesDscr": "Känn igen en RX-loggkopia av vårt eget kanalmeddelande som BLE-ramgränsen kapat",
+  "channels_scanQrInstructions": "Rikta kameran mot en kanals QR-kod",
+  "channels_invalidQrCode": "Det här är ingen QR-kod för en kanal",
+  "channels_qrAlreadyAdded": "Kanalen \"{name}\" är redan tillagd"
 }

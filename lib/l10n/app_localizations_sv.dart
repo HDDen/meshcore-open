@@ -6683,4 +6683,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Visa med Markdown';
+
+  @override
+  String get channels_scanQrInstructions =>
+      'Rikta kameran mot en kanals QR-kod';
+
+  @override
+  String get channels_invalidQrCode => 'Det här är ingen QR-kod för en kanal';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'Kanalen \"$name\" är redan tillagd';
+  }
 }

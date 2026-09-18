@@ -3707,5 +3707,8 @@
   "chat_canvasV4ToolWave": "波",
   "settings_modSettingsMonochromeSenderNames": "送信者名を単色で表示",
   "settings_modSettingsRecoverLongEchoes": "長いパケットの再送を復元する",
-  "settings_modSettingsRecoverLongEchoesDscr": "BLE フレーム制限で切られた自分のチャンネルメッセージの RX ログのコピーを認識します"
+  "settings_modSettingsRecoverLongEchoesDscr": "BLE フレーム制限で切られた自分のチャンネルメッセージの RX ログのコピーを認識します",
+  "channels_scanQrInstructions": "カメラをチャンネルの QR コードに向けてください",
+  "channels_invalidQrCode": "これはチャンネルの QR コードではありません",
+  "channels_qrAlreadyAdded": "チャンネル「{name}」はすでに追加されています"
 }

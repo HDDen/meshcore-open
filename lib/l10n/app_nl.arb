@@ -3384,5 +3384,8 @@
   "chat_canvasV4ToolWave": "Golf",
   "settings_modSettingsMonochromeSenderNames": "Eenkleurige afzendernamen",
   "settings_modSettingsRecoverLongEchoes": "Herhalingen van lange pakketten herstellen",
-  "settings_modSettingsRecoverLongEchoesDscr": "Een door de BLE-framelimiet afgekapte RX-logkopie van ons eigen kanaalbericht herkennen"
+  "settings_modSettingsRecoverLongEchoesDscr": "Een door de BLE-framelimiet afgekapte RX-logkopie van ons eigen kanaalbericht herkennen",
+  "channels_scanQrInstructions": "Richt de camera op de QR-code van een kanaal",
+  "channels_invalidQrCode": "Dit is geen QR-code van een kanaal",
+  "channels_qrAlreadyAdded": "Kanaal \"{name}\" is al toegevoegd"
 }

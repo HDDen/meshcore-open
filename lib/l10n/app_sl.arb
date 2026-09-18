@@ -3602,5 +3602,8 @@
   "chat_canvasV4ToolWave": "Val",
   "settings_modSettingsMonochromeSenderNames": "Enobarvna imena pošiljateljev",
   "settings_modSettingsRecoverLongEchoes": "Obnavljaj ponovitve dolgih paketov",
-  "settings_modSettingsRecoverLongEchoesDscr": "Prepoznaj kopijo našega kanalskega sporočila iz dnevnika RX, ki jo je odrezala omejitev okvirja BLE"
+  "settings_modSettingsRecoverLongEchoesDscr": "Prepoznaj kopijo našega kanalskega sporočila iz dnevnika RX, ki jo je odrezala omejitev okvirja BLE",
+  "channels_scanQrInstructions": "Usmerite kamero v QR kodo kanala",
+  "channels_invalidQrCode": "To ni QR koda kanala",
+  "channels_qrAlreadyAdded": "Kanal \"{name}\" je že dodan"
 }

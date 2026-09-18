@@ -3739,5 +3739,8 @@
   "chat_canvasV4ToolWave": "물결",
   "settings_modSettingsMonochromeSenderNames": "단색 보낸 사람 이름",
   "settings_modSettingsRecoverLongEchoes": "긴 패킷의 반복 복구",
-  "settings_modSettingsRecoverLongEchoesDscr": "BLE 프레임 한계로 잘린 우리 채널 메시지의 RX 로그 사본을 인식합니다"
+  "settings_modSettingsRecoverLongEchoesDscr": "BLE 프레임 한계로 잘린 우리 채널 메시지의 RX 로그 사본을 인식합니다",
+  "channels_scanQrInstructions": "카메라를 채널 QR 코드 쪽으로 향하게 하세요",
+  "channels_invalidQrCode": "채널 QR 코드가 아닙니다",
+  "channels_qrAlreadyAdded": "채널 \"{name}\"은(는) 이미 추가되어 있습니다"
 }

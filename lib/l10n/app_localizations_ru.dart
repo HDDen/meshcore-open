@@ -6734,4 +6734,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Отобразить с Markdown';
+
+  @override
+  String get channels_scanQrInstructions => 'Наведите камеру на QR-код канала';
+
+  @override
+  String get channels_invalidQrCode => 'Это не QR-код канала';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'Канал \"$name\" уже добавлен';
+  }
 }

@@ -3602,5 +3602,8 @@
   "chat_canvasV4ToolWave": "Вълна",
   "settings_modSettingsMonochromeSenderNames": "Едноцветни имена на подателите",
   "settings_modSettingsRecoverLongEchoes": "Възстановявай повторенията на дълги пакети",
-  "settings_modSettingsRecoverLongEchoesDscr": "Разпознаване на копие от RX-дневника на наше съобщение в канал, отрязано от лимита на BLE кадъра"
+  "settings_modSettingsRecoverLongEchoesDscr": "Разпознаване на копие от RX-дневника на наше съобщение в канал, отрязано от лимита на BLE кадъра",
+  "channels_scanQrInstructions": "Насочете камерата към QR код на канал",
+  "channels_invalidQrCode": "Това не е QR код на канал",
+  "channels_qrAlreadyAdded": "Каналът \"{name}\" вече е добавен"
 }

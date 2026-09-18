@@ -6708,4 +6708,15 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Prikaži z Markdownom';
+
+  @override
+  String get channels_scanQrInstructions => 'Usmerite kamero v QR kodo kanala';
+
+  @override
+  String get channels_invalidQrCode => 'To ni QR koda kanala';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'Kanal \"$name\" je že dodan';
+  }
 }

@@ -3605,5 +3605,8 @@
   "chat_canvasV4ToolWave": "Hullám",
   "settings_modSettingsMonochromeSenderNames": "Egyszínű feladónevek",
   "settings_modSettingsRecoverLongEchoes": "Hosszú csomagok ismétléseinek helyreállítása",
-  "settings_modSettingsRecoverLongEchoesDscr": "A saját csatornaüzenetünk RX-naplóbeli másolatának felismerése, amelyet a BLE-keret korlátja levágott"
+  "settings_modSettingsRecoverLongEchoesDscr": "A saját csatornaüzenetünk RX-naplóbeli másolatának felismerése, amelyet a BLE-keret korlátja levágott",
+  "channels_scanQrInstructions": "Irányítsa a kamerát egy csatorna QR-kódjára",
+  "channels_invalidQrCode": "Ez nem csatorna QR-kód",
+  "channels_qrAlreadyAdded": "A \"{name}\" csatorna már hozzá van adva"
 }

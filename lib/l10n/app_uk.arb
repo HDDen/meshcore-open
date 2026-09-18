@@ -3582,5 +3582,8 @@
   "chat_canvasV4ToolWave": "Хвиля",
   "settings_modSettingsMonochromeSenderNames": "Монохромні імена відправників",
   "settings_modSettingsRecoverLongEchoes": "Відновлювати ретрансляції довгих пакетів",
-  "settings_modSettingsRecoverLongEchoesDscr": "Розпізнавати копію нашого повідомлення в каналі з RX-журналу, обрізану лімітом BLE-кадру"
+  "settings_modSettingsRecoverLongEchoesDscr": "Розпізнавати копію нашого повідомлення в каналі з RX-журналу, обрізану лімітом BLE-кадру",
+  "channels_scanQrInstructions": "Наведіть камеру на QR-код каналу",
+  "channels_invalidQrCode": "Це не QR-код каналу",
+  "channels_qrAlreadyAdded": "Канал «{name}» уже додано"
 }

@@ -3607,5 +3607,8 @@
   "chat_canvasV4ToolWave": "波浪",
   "settings_modSettingsMonochromeSenderNames": "单色发送者名称",
   "settings_modSettingsRecoverLongEchoes": "恢复长数据包的转发副本",
-  "settings_modSettingsRecoverLongEchoesDscr": "识别被 BLE 帧长度限制截断的本机频道消息 RX 日志副本"
+  "settings_modSettingsRecoverLongEchoesDscr": "识别被 BLE 帧长度限制截断的本机频道消息 RX 日志副本",
+  "channels_scanQrInstructions": "将摄像头对准频道的二维码",
+  "channels_invalidQrCode": "这不是频道二维码",
+  "channels_qrAlreadyAdded": "频道 \"{name}\" 已添加"
 }

@@ -6732,4 +6732,16 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Megjelenítés Markdownnal';
+
+  @override
+  String get channels_scanQrInstructions =>
+      'Irányítsa a kamerát egy csatorna QR-kódjára';
+
+  @override
+  String get channels_invalidQrCode => 'Ez nem csatorna QR-kód';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'A \"$name\" csatorna már hozzá van adva';
+  }
 }

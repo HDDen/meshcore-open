@@ -6745,4 +6745,16 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Показване с Markdown';
+
+  @override
+  String get channels_scanQrInstructions =>
+      'Насочете камерата към QR код на канал';
+
+  @override
+  String get channels_invalidQrCode => 'Това не е QR код на канал';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'Каналът \"$name\" вече е добавен';
+  }
 }

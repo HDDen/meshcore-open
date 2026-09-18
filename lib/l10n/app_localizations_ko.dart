@@ -6411,4 +6411,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Markdown 적용해 표시';
+
+  @override
+  String get channels_scanQrInstructions => '카메라를 채널 QR 코드 쪽으로 향하게 하세요';
+
+  @override
+  String get channels_invalidQrCode => '채널 QR 코드가 아닙니다';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return '채널 \"$name\"은(는) 이미 추가되어 있습니다';
+  }
 }

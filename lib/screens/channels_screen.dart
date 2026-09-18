@@ -45,11 +45,13 @@ import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/channel_group_helper.dart';
+import '../helpers/channel_qr_link.dart'; // channel-qr-scan
 import '../helpers/gif_helper.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channel_chat_screen.dart';
 import 'chat_screen.dart';
+import 'channel_qr_scanner_screen.dart'; // channel-qr-scan
 import 'community_qr_scanner_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
@@ -3449,6 +3451,34 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ],
                 );
 
+              case 6: // channel-qr-scan: QR of an ordinary channel
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(sheetContext);
+                            if (context.mounted) {
+                              await ChannelQrScannerScreen.scanAndAdd(
+                                context,
+                                connector: connector,
+                                index: nextIndex,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: Text(sheetContext.l10n.channels_scanQrCode),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
               case 4: // Scan Community QR
                 return Padding(
                   padding: const EdgeInsets.symmetric(
@@ -3665,6 +3695,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                       if (selectedOption == 3)
                         buildExpandedContent(_channelMessageStore)!,
+                      // channel-qr-scan: fork-only, see helpers/channel_qr_link.dart
+                      if (ChannelQrLink.enabled) ...[
+                        buildOptionCard(
+                          optionIndex: 6,
+                          icon: Icons.qr_code_2,
+                          title: sheetContext.l10n.channels_scanQrCode,
+                          subtitle: sheetContext.l10n.community_join,
+                        ),
+                        if (selectedOption == 6)
+                          buildExpandedContent(_channelMessageStore)!,
+                      ],
                       buildOptionCard(
                         optionIndex: 4,
                         icon: Icons.qr_code_scanner,

@@ -6747,4 +6747,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => 'Mit Markdown anzeigen';
+
+  @override
+  String get channels_scanQrInstructions =>
+      'Richten Sie die Kamera auf einen Kanal-QR-Code';
+
+  @override
+  String get channels_invalidQrCode => 'Das ist kein Kanal-QR-Code';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return 'Kanal \"$name\" ist bereits hinzugefügt';
+  }
 }

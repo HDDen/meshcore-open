@@ -3602,5 +3602,8 @@
   "chat_canvasV4ToolWave": "Vlna",
   "settings_modSettingsMonochromeSenderNames": "Jednofarebné mená odosielateľov",
   "settings_modSettingsRecoverLongEchoes": "Obnovovať opakovania dlhých paketov",
-  "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznať kópiu našej kanálovej správy z RX záznamu, skrátenú limitom BLE rámca"
+  "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznať kópiu našej kanálovej správy z RX záznamu, skrátenú limitom BLE rámca",
+  "channels_scanQrInstructions": "Zamerte kameru na QR kód kanála",
+  "channels_invalidQrCode": "Toto nie je QR kód kanála",
+  "channels_qrAlreadyAdded": "Kanál \"{name}\" je už pridaný"
 }

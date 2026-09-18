@@ -3640,5 +3640,8 @@
   "chat_canvasV4ToolWave": "Fala",
   "settings_modSettingsMonochromeSenderNames": "Monochromatyczne nazwy nadawców",
   "settings_modSettingsRecoverLongEchoes": "Odzyskuj powtórzenia długich pakietów",
-  "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznawaj kopię naszej wiadomości kanałowej z dziennika RX, uciętą przez limit ramki BLE"
+  "settings_modSettingsRecoverLongEchoesDscr": "Rozpoznawaj kopię naszej wiadomości kanałowej z dziennika RX, uciętą przez limit ramki BLE",
+  "channels_scanQrInstructions": "Skieruj kamerę na kod QR kanału",
+  "channels_invalidQrCode": "To nie jest kod QR kanału",
+  "channels_qrAlreadyAdded": "Kanał \"{name}\" jest już dodany"
 }

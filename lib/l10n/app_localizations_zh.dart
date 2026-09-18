@@ -6269,4 +6269,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_showWithMarkdown => '使用 Markdown 显示';
+
+  @override
+  String get channels_scanQrInstructions => '将摄像头对准频道的二维码';
+
+  @override
+  String get channels_invalidQrCode => '这不是频道二维码';
+
+  @override
+  String channels_qrAlreadyAdded(String name) {
+    return '频道 \"$name\" 已添加';
+  }
 }

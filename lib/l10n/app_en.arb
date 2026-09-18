@@ -3695,5 +3695,15 @@
   "chat_unknownAppDataPlaceholderNamespace": "Received a packet in a format this app cannot read ({namespace}); the app may need an update",
   "@chat_unknownAppDataPlaceholderNamespace": {"placeholders": {"namespace": {"type": "String"}}},
   "chat_showWithoutMarkdown": "Show without Markdown",
-  "chat_showWithMarkdown": "Show with Markdown"
+  "chat_showWithMarkdown": "Show with Markdown",
+  "channels_scanQrInstructions": "Point the camera at a channel QR code",
+  "channels_invalidQrCode": "This is not a channel QR code",
+  "channels_qrAlreadyAdded": "Channel \"{name}\" is already added",
+  "@channels_qrAlreadyAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

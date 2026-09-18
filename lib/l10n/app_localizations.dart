@@ -11461,6 +11461,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show with Markdown'**
   String get chat_showWithMarkdown;
+
+  /// No description provided for @channels_scanQrInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a channel QR code'**
+  String get channels_scanQrInstructions;
+
+  /// No description provided for @channels_invalidQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a channel QR code'**
+  String get channels_invalidQrCode;
+
+  /// No description provided for @channels_qrAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel \"{name}\" is already added'**
+  String channels_qrAlreadyAdded(String name);
 }
 
 class _AppLocalizationsDelegate

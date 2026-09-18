@@ -3384,5 +3384,8 @@
   "chat_canvasV4ToolWave": "Onda",
   "settings_modSettingsMonochromeSenderNames": "Nomes de remetente monocromáticos",
   "settings_modSettingsRecoverLongEchoes": "Recuperar repetições de pacotes longos",
-  "settings_modSettingsRecoverLongEchoesDscr": "Reconhecer uma cópia do registro RX da nossa própria mensagem de canal cortada pelo limite de quadro BLE"
+  "settings_modSettingsRecoverLongEchoesDscr": "Reconhecer uma cópia do registro RX da nossa própria mensagem de canal cortada pelo limite de quadro BLE",
+  "channels_scanQrInstructions": "Aponte a câmera para o código QR de um canal",
+  "channels_invalidQrCode": "Este não é um código QR de canal",
+  "channels_qrAlreadyAdded": "O canal \"{name}\" já foi adicionado"
 }
