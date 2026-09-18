@@ -2869,5 +2869,9 @@
   "channels_shareSecretKey": "Секретный ключ",
   "channels_shareRegionScope": "Регион канала",
   "channels_shareKeyCopied": "Секретный ключ скопирован",
-  "channels_shareLinkCopied": "Ссылка скопирована"
+  "channels_shareLinkCopied": "Ссылка скопирована",
+  "channels_shareQrTapToCopy": "Нажмите на QR-код, чтобы скопировать его как картинку.",
+  "channels_shareQrTapToShare": "Нажмите на QR-код, чтобы сохранить его или поделиться им как картинкой.",
+  "channels_shareQrImageCopied": "QR-код скопирован как картинка",
+  "channels_shareQrImageFailed": "Не удалось подготовить картинку с QR-кодом"
 }

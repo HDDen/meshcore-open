@@ -21,7 +21,8 @@ import '../models/channel.dart';
 /// `screens/channel_share_screen.dart` (showing), and behind the
 /// `channel-qr-scan` / `channel-qr-share` marks in `screens/channels_screen.dart`
 /// and `screens/channel_chat_screen.dart`, so it can be dropped in one go if
-/// upstream ships its own version.
+/// upstream ships its own version. The share screen is also the only caller of
+/// `qr_bitmap.dart` and `image_clipboard.dart`, which are generic on purpose.
 class ChannelQrLink {
   const ChannelQrLink({
     required this.name,

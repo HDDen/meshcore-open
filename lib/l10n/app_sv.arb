@@ -3392,5 +3392,9 @@
   "channels_shareSecretKey": "Hemlig nyckel",
   "channels_shareRegionScope": "Kanalens region",
   "channels_shareKeyCopied": "Hemlig nyckel kopierad",
-  "channels_shareLinkCopied": "Länk kopierad"
+  "channels_shareLinkCopied": "Länk kopierad",
+  "channels_shareQrTapToCopy": "Tryck på QR-koden för att kopiera den som en bild.",
+  "channels_shareQrTapToShare": "Tryck på QR-koden för att spara eller dela den som en bild.",
+  "channels_shareQrImageCopied": "QR-koden kopierad som bild",
+  "channels_shareQrImageFailed": "Det gick inte att skapa bilden med QR-koden"
 }

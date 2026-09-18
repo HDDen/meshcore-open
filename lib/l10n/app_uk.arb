@@ -3590,5 +3590,9 @@
   "channels_shareSecretKey": "Секретний ключ",
   "channels_shareRegionScope": "Регіон каналу",
   "channels_shareKeyCopied": "Секретний ключ скопійовано",
-  "channels_shareLinkCopied": "Посилання скопійовано"
+  "channels_shareLinkCopied": "Посилання скопійовано",
+  "channels_shareQrTapToCopy": "Натисніть на QR-код, щоб скопіювати його як зображення.",
+  "channels_shareQrTapToShare": "Натисніть на QR-код, щоб зберегти його або поділитися ним як зображенням.",
+  "channels_shareQrImageCopied": "QR-код скопійовано як зображення",
+  "channels_shareQrImageFailed": "Не вдалося підготувати зображення з QR-кодом"
 }

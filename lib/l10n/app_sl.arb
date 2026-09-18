@@ -3610,5 +3610,9 @@
   "channels_shareSecretKey": "Skrivni ključ",
   "channels_shareRegionScope": "Regija kanala",
   "channels_shareKeyCopied": "Skrivni ključ kopiran",
-  "channels_shareLinkCopied": "Povezava kopirana"
+  "channels_shareLinkCopied": "Povezava kopirana",
+  "channels_shareQrTapToCopy": "Tapnite QR kodo, da jo kopirate kot sliko.",
+  "channels_shareQrTapToShare": "Tapnite QR kodo, da jo shranite ali delite kot sliko.",
+  "channels_shareQrImageCopied": "QR koda kopirana kot slika",
+  "channels_shareQrImageFailed": "Slike s QR kodo ni bilo mogoče pripraviti"
 }

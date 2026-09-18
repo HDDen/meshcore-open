@@ -6775,4 +6775,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => 'Link kopiert';
+
+  @override
+  String get channels_shareQrTapToCopy =>
+      'Tippen Sie auf den QR-Code, um ihn als Bild zu kopieren.';
+
+  @override
+  String get channels_shareQrTapToShare =>
+      'Tippen Sie auf den QR-Code, um ihn als Bild zu speichern oder zu teilen.';
+
+  @override
+  String get channels_shareQrImageCopied => 'QR-Code als Bild kopiert';
+
+  @override
+  String get channels_shareQrImageFailed =>
+      'Das Bild mit dem QR-Code konnte nicht erstellt werden';
 }

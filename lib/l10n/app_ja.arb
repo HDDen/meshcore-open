@@ -3715,5 +3715,9 @@
   "channels_shareSecretKey": "シークレットキー",
   "channels_shareRegionScope": "チャンネルのリージョン",
   "channels_shareKeyCopied": "シークレットキーをコピーしました",
-  "channels_shareLinkCopied": "リンクをコピーしました"
+  "channels_shareLinkCopied": "リンクをコピーしました",
+  "channels_shareQrTapToCopy": "QR コードをタップすると、画像としてコピーします。",
+  "channels_shareQrTapToShare": "QR コードをタップすると、画像として保存または共有できます。",
+  "channels_shareQrImageCopied": "QR コードを画像としてコピーしました",
+  "channels_shareQrImageFailed": "QR コードの画像を作成できませんでした"
 }

@@ -3392,5 +3392,9 @@
   "channels_shareSecretKey": "Chave secreta",
   "channels_shareRegionScope": "Região do canal",
   "channels_shareKeyCopied": "Chave secreta copiada",
-  "channels_shareLinkCopied": "Link copiado"
+  "channels_shareLinkCopied": "Link copiado",
+  "channels_shareQrTapToCopy": "Toque no código QR para copiá-lo como imagem.",
+  "channels_shareQrTapToShare": "Toque no código QR para salvá-lo ou compartilhá-lo como imagem.",
+  "channels_shareQrImageCopied": "Código QR copiado como imagem",
+  "channels_shareQrImageFailed": "Não foi possível preparar a imagem do código QR"
 }

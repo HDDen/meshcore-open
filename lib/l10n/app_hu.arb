@@ -3613,5 +3613,9 @@
   "channels_shareSecretKey": "Titkos kulcs",
   "channels_shareRegionScope": "A csatorna régiója",
   "channels_shareKeyCopied": "Titkos kulcs kimásolva",
-  "channels_shareLinkCopied": "Hivatkozás kimásolva"
+  "channels_shareLinkCopied": "Hivatkozás kimásolva",
+  "channels_shareQrTapToCopy": "Koppintson a QR-kódra, hogy képként másolja.",
+  "channels_shareQrTapToShare": "Koppintson a QR-kódra, hogy képként mentse vagy megossza.",
+  "channels_shareQrImageCopied": "QR-kód képként kimásolva",
+  "channels_shareQrImageFailed": "Nem sikerült elkészíteni a QR-kód képét"
 }

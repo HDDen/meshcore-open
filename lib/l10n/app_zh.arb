@@ -3615,5 +3615,9 @@
   "channels_shareSecretKey": "密钥",
   "channels_shareRegionScope": "频道区域",
   "channels_shareKeyCopied": "已复制密钥",
-  "channels_shareLinkCopied": "已复制链接"
+  "channels_shareLinkCopied": "已复制链接",
+  "channels_shareQrTapToCopy": "点击二维码即可将其复制为图片。",
+  "channels_shareQrTapToShare": "点击二维码即可将其保存或分享为图片。",
+  "channels_shareQrImageCopied": "已将二维码复制为图片",
+  "channels_shareQrImageFailed": "无法生成二维码图片"
 }

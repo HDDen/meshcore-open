@@ -3610,5 +3610,9 @@
   "channels_shareSecretKey": "Tajný kľúč",
   "channels_shareRegionScope": "Región kanála",
   "channels_shareKeyCopied": "Tajný kľúč skopírovaný",
-  "channels_shareLinkCopied": "Odkaz skopírovaný"
+  "channels_shareLinkCopied": "Odkaz skopírovaný",
+  "channels_shareQrTapToCopy": "Ťuknutím na QR kód ho skopírujete ako obrázok.",
+  "channels_shareQrTapToShare": "Ťuknutím na QR kód ho uložíte alebo zdieľate ako obrázok.",
+  "channels_shareQrImageCopied": "QR kód skopírovaný ako obrázok",
+  "channels_shareQrImageFailed": "Obrázok s QR kódom sa nepodarilo pripraviť"
 }

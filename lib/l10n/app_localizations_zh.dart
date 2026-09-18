@@ -6295,4 +6295,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => '已复制链接';
+
+  @override
+  String get channels_shareQrTapToCopy => '点击二维码即可将其复制为图片。';
+
+  @override
+  String get channels_shareQrTapToShare => '点击二维码即可将其保存或分享为图片。';
+
+  @override
+  String get channels_shareQrImageCopied => '已将二维码复制为图片';
+
+  @override
+  String get channels_shareQrImageFailed => '无法生成二维码图片';
 }

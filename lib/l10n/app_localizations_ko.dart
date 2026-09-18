@@ -6437,4 +6437,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => '링크를 복사했습니다';
+
+  @override
+  String get channels_shareQrTapToCopy => 'QR 코드를 탭하면 이미지로 복사됩니다.';
+
+  @override
+  String get channels_shareQrTapToShare => 'QR 코드를 탭하면 이미지로 저장하거나 공유할 수 있습니다.';
+
+  @override
+  String get channels_shareQrImageCopied => 'QR 코드를 이미지로 복사했습니다';
+
+  @override
+  String get channels_shareQrImageFailed => 'QR 코드 이미지를 준비하지 못했습니다';
 }

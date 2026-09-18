@@ -11509,6 +11509,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Link copied'**
   String get channels_shareLinkCopied;
+
+  /// No description provided for @channels_shareQrTapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the QR code to copy it as an image.'**
+  String get channels_shareQrTapToCopy;
+
+  /// No description provided for @channels_shareQrTapToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the QR code to save or share it as an image.'**
+  String get channels_shareQrTapToShare;
+
+  /// No description provided for @channels_shareQrImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code copied as an image'**
+  String get channels_shareQrImageCopied;
+
+  /// No description provided for @channels_shareQrImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare the QR code image'**
+  String get channels_shareQrImageFailed;
 }
 
 class _AppLocalizationsDelegate

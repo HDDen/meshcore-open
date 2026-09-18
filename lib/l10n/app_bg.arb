@@ -3610,5 +3610,9 @@
   "channels_shareSecretKey": "Таен ключ",
   "channels_shareRegionScope": "Регион на канала",
   "channels_shareKeyCopied": "Тайният ключ е копиран",
-  "channels_shareLinkCopied": "Връзката е копирана"
+  "channels_shareLinkCopied": "Връзката е копирана",
+  "channels_shareQrTapToCopy": "Докоснете QR кода, за да го копирате като изображение.",
+  "channels_shareQrTapToShare": "Докоснете QR кода, за да го запазите или споделите като изображение.",
+  "channels_shareQrImageCopied": "QR кодът е копиран като изображение",
+  "channels_shareQrImageFailed": "Изображението с QR кода не можа да бъде подготвено"
 }

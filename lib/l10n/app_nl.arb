@@ -3392,5 +3392,9 @@
   "channels_shareSecretKey": "Geheime sleutel",
   "channels_shareRegionScope": "Regio van het kanaal",
   "channels_shareKeyCopied": "Geheime sleutel gekopieerd",
-  "channels_shareLinkCopied": "Link gekopieerd"
+  "channels_shareLinkCopied": "Link gekopieerd",
+  "channels_shareQrTapToCopy": "Tik op de QR-code om deze als afbeelding te kopiëren.",
+  "channels_shareQrTapToShare": "Tik op de QR-code om deze als afbeelding op te slaan of te delen.",
+  "channels_shareQrImageCopied": "QR-code gekopieerd als afbeelding",
+  "channels_shareQrImageFailed": "De afbeelding met de QR-code kon niet worden gemaakt"
 }

@@ -6773,4 +6773,20 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => 'Връзката е копирана';
+
+  @override
+  String get channels_shareQrTapToCopy =>
+      'Докоснете QR кода, за да го копирате като изображение.';
+
+  @override
+  String get channels_shareQrTapToShare =>
+      'Докоснете QR кода, за да го запазите или споделите като изображение.';
+
+  @override
+  String get channels_shareQrImageCopied =>
+      'QR кодът е копиран като изображение';
+
+  @override
+  String get channels_shareQrImageFailed =>
+      'Изображението с QR кода не можа да бъде подготвено';
 }

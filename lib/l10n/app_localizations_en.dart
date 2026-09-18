@@ -6656,4 +6656,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => 'Link copied';
+
+  @override
+  String get channels_shareQrTapToCopy =>
+      'Tap the QR code to copy it as an image.';
+
+  @override
+  String get channels_shareQrTapToShare =>
+      'Tap the QR code to save or share it as an image.';
+
+  @override
+  String get channels_shareQrImageCopied => 'QR code copied as an image';
+
+  @override
+  String get channels_shareQrImageFailed =>
+      'Could not prepare the QR code image';
 }

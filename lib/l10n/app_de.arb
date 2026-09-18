@@ -3737,5 +3737,9 @@
   "channels_shareSecretKey": "Geheimer Schlüssel",
   "channels_shareRegionScope": "Region des Kanals",
   "channels_shareKeyCopied": "Geheimer Schlüssel kopiert",
-  "channels_shareLinkCopied": "Link kopiert"
+  "channels_shareLinkCopied": "Link kopiert",
+  "channels_shareQrTapToCopy": "Tippen Sie auf den QR-Code, um ihn als Bild zu kopieren.",
+  "channels_shareQrTapToShare": "Tippen Sie auf den QR-Code, um ihn als Bild zu speichern oder zu teilen.",
+  "channels_shareQrImageCopied": "QR-Code als Bild kopiert",
+  "channels_shareQrImageFailed": "Das Bild mit dem QR-Code konnte nicht erstellt werden"
 }

@@ -19,8 +19,13 @@ class MCOImageFileSaver {
     return savePngBytes(bytes);
   }
 
-  static Future<bool> savePngBytes(Uint8List bytes) async {
-    final fileName = _fileName();
+  /// [suggestedName] is for a picture that is not an MCO image, which the
+  /// default `.mcoimg.png` name would mislabel.
+  static Future<bool> savePngBytes(
+    Uint8List bytes, {
+    String? suggestedName,
+  }) async {
+    final fileName = suggestedName ?? _fileName();
     try {
       final location = await file_selector.getSaveLocation(
         suggestedName: fileName,

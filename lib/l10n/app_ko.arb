@@ -3747,5 +3747,9 @@
   "channels_shareSecretKey": "비밀 키",
   "channels_shareRegionScope": "채널 지역",
   "channels_shareKeyCopied": "비밀 키를 복사했습니다",
-  "channels_shareLinkCopied": "링크를 복사했습니다"
+  "channels_shareLinkCopied": "링크를 복사했습니다",
+  "channels_shareQrTapToCopy": "QR 코드를 탭하면 이미지로 복사됩니다.",
+  "channels_shareQrTapToShare": "QR 코드를 탭하면 이미지로 저장하거나 공유할 수 있습니다.",
+  "channels_shareQrImageCopied": "QR 코드를 이미지로 복사했습니다",
+  "channels_shareQrImageFailed": "QR 코드 이미지를 준비하지 못했습니다"
 }

@@ -6734,4 +6734,19 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => 'Povezava kopirana';
+
+  @override
+  String get channels_shareQrTapToCopy =>
+      'Tapnite QR kodo, da jo kopirate kot sliko.';
+
+  @override
+  String get channels_shareQrTapToShare =>
+      'Tapnite QR kodo, da jo shranite ali delite kot sliko.';
+
+  @override
+  String get channels_shareQrImageCopied => 'QR koda kopirana kot slika';
+
+  @override
+  String get channels_shareQrImageFailed =>
+      'Slike s QR kodo ni bilo mogoče pripraviti';
 }

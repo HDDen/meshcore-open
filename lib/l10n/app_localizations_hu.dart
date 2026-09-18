@@ -6760,4 +6760,19 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channels_shareLinkCopied => 'Hivatkozás kimásolva';
+
+  @override
+  String get channels_shareQrTapToCopy =>
+      'Koppintson a QR-kódra, hogy képként másolja.';
+
+  @override
+  String get channels_shareQrTapToShare =>
+      'Koppintson a QR-kódra, hogy képként mentse vagy megossza.';
+
+  @override
+  String get channels_shareQrImageCopied => 'QR-kód képként kimásolva';
+
+  @override
+  String get channels_shareQrImageFailed =>
+      'Nem sikerült elkészíteni a QR-kód képét';
 }
