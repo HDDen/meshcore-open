@@ -105,6 +105,11 @@ class McoEstimatedContactLocation {
   final List<double> anchorLongitudes;
   final bool highConfidence;
 
+  /// An estimate for a repeater nobody has named: [publicKeyHex] holds the hop
+  /// prefix it left in message routes, at most the four bytes of the widest
+  /// path hash, and [name] the same prefix as hop lists print it.
+  bool get isPrefixOnly => publicKeyHex.length <= 8;
+
   Map<String, Object?> toJson() => {
     'publicKeyHex': publicKeyHex,
     'name': name,

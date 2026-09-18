@@ -110,3 +110,4 @@ pubspec_overrides.yaml
 !docs/mcoimg-js
 !docs/mcoimg-js/mcoimg-codec.global.js
 tools/MCOtxt/MCOtxt-independent-benchmark.jsonl
+test/helpers/estimated_repeater_map_test.dart

@@ -67,6 +67,52 @@ class ContactLocationEstimateStore {
     await _upsertNativeRows(rows);
   }
 
+  /// Replaces the whole set of prefix-only estimates, the repeaters nobody has
+  /// named (`McoEstimatedContactLocation.isPrefixOnly`). They share the table
+  /// with the contacts', keyed by the prefix where a public key would be, but
+  /// have no candidate behind them, so [saveContactLocations] never sees them.
+  /// A prefix that was not found again loses its estimate rather than its row,
+  /// as a contact does.
+  Future<void> replacePrefixEstimates(
+    Iterable<McoEstimatedContactLocation> estimates,
+  ) async {
+    final fresh = [
+      for (final estimate in estimates)
+        if (estimate.isPrefixOnly) estimate,
+    ];
+    final freshKeys = {
+      for (final estimate in fresh) estimate.publicKeyHex.toLowerCase(),
+    };
+    final staleKeys = [
+      for (final estimate in await loadEstimates())
+        if (estimate.isPrefixOnly &&
+            !freshKeys.contains(estimate.publicKeyHex.toLowerCase()))
+          estimate.publicKeyHex,
+    ];
+    if (kIsWeb) {
+      await _saveWebEstimates(fresh, staleKeys);
+      return;
+    }
+    await clearEstimatesForKeys(staleKeys);
+    await _upsertNativeRows([
+      for (final estimate in fresh)
+        ContactLocationCacheUpsert(
+          publicKeyHex: estimate.publicKeyHex.toLowerCase(),
+          name: estimate.name,
+          contactType: estimate.contactType,
+          realLatitude: null,
+          realLongitude: null,
+          estimatedLatitude: estimate.latitude,
+          estimatedLongitude: estimate.longitude,
+          anchorPublicKeysJson: jsonEncode(estimate.anchorPublicKeys),
+          anchorLatitudesJson: jsonEncode(estimate.anchorLatitudes),
+          anchorLongitudesJson: jsonEncode(estimate.anchorLongitudes),
+          highConfidence: estimate.highConfidence,
+          updatedAtMs: estimate.updatedAt.millisecondsSinceEpoch,
+        ),
+    ]);
+  }
+
   Future<void> clearEstimatesForKeys(Iterable<String> publicKeyHexes) async {
     final keys = publicKeyHexes
         .map((key) => key.toLowerCase())

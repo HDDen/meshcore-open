@@ -64,6 +64,20 @@ class SettingsSectionsService extends ChangeNotifier {
   }) async =>
       const [];
 
+  Duration get unknownRepeaterLookback => Duration.zero;
+
+  Future<List<McoEstimatedContactLocation>?> calculateUnknownRepeaterEstimates({
+    required List<McoContactActionMessage> records,
+    required List<McoContactActionNode> nodes,
+    required Iterable<List<int>> knownPublicKeys,
+    required int contactType,
+    bool Function()? isCancelled,
+  }) async =>
+      null;
+
+  String? unknownRepeaterDescription(BuildContext context, String prefix) =>
+      null;
+
   void mcoX0({
     required Future<void> Function(Uint8List) a,
     required void Function(Uint8List, String?) b,

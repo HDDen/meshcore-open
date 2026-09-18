@@ -43,6 +43,7 @@ import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/coordinate_text.dart';
+import '../helpers/estimated_repeater_map.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
@@ -203,6 +204,13 @@ class _MapScreenState extends State<MapScreen>
   String _locatedRepeaterRefreshKey = '';
   int _seenLocatedRepeaterRecalculateRequest = 0;
   List<McoEstimatedContactLocation> _locatedRepeaterEstimates = const [];
+  List<McoEstimatedContactLocation> _prefixRepeaterEstimates = const [];
+  // A press of "recalculate" starts one search for prefix-only repeaters in the
+  // whole app, not one per map screen that is opened afterwards.
+  static int _handledPrefixRepeaterSearchRequest = 0;
+  // The estimated repeater whose links are drawn, by the key its estimate is
+  // stored under. Kept as a key so the rays follow a recalculation.
+  String? _estimateLinksKey;
   int? _sharedMarkersCacheSignature;
   Locale? _sharedMarkersCacheLocale;
   List<_SharedMarker> _cachedSharedMarkers = const [];
@@ -732,6 +740,27 @@ class _MapScreenState extends State<MapScreen>
           ),
           ...locatedRepeaterGuesses,
         ];
+        final estimatedMarkersVisible =
+            !settings.mapShowOverlaps &&
+            (_zoom >= _guessedZoomThreshold || _isBuildingPathTrace);
+        final prefixRepeaters =
+            _prefixRepeaterEstimates.isNotEmpty &&
+                servSettings.locateUnknownRepeatersEnabled &&
+                (settings.mapShowRepeaters || _isBuildingPathTrace)
+            ? EstimatedRepeaterMap.visiblePrefixRepeaters(
+                _prefixRepeaterEstimates,
+                knownNodes: connector.allContactsUnfiltered,
+                keyPrefixFilter: settings.mapKeyPrefixEnabled
+                    ? settings.mapKeyPrefix
+                    : '',
+              )
+            : const <McoEstimatedContactLocation>[];
+        final estimateLinkPolylines = estimatedMarkersVisible
+            ? _buildEstimateLinkPolylines(
+                namedKeys: locatedRepeaterGuessKeys,
+                prefixRepeaters: prefixRepeaters,
+              )
+            : const <Polyline>[];
 
         _polylines
           ..clear()
@@ -782,6 +811,18 @@ class _MapScreenState extends State<MapScreen>
                 wardriveAnsweredKeys,
                 wardrive,
               );
+        final estimatedResponderPolylines = estimatedMarkersVisible
+            ? _buildEstimatedResponderPolylines(
+                origins: _estimatedResponderOrigins(
+                  selectedCoverageSamples,
+                  selfDisplayPosition,
+                  wardriveAnsweredKeys,
+                ),
+                guessedLocations: allGuessedLocations,
+                prefixRepeaters: prefixRepeaters,
+                wardrive: hasSelectedCoverage ? null : wardrive,
+              )
+            : const <Polyline>[];
         final wardriveCoveragePolygons = wardrive.hasMapState
             ? WardriveCoverageHelper.buildPolygons(
                 wardrive.recentSamples,
@@ -1201,6 +1242,7 @@ class _MapScreenState extends State<MapScreen>
                         return;
                       }
 
+                      _clearEstimateLinks();
                       _selectWardriveCoverageAt(wardrive, latLng);
                     },
                     onSecondaryTap: (tapPosition, latLng) {
@@ -1271,6 +1313,10 @@ class _MapScreenState extends State<MapScreen>
                       PolygonLayer(polygons: repeaterCoveragePolygons),
                     if (wardriveDiscoveryPolylines.isNotEmpty)
                       PolylineLayer(polylines: wardriveDiscoveryPolylines),
+                    if (estimatedResponderPolylines.isNotEmpty)
+                      PolylineLayer(polylines: estimatedResponderPolylines),
+                    if (estimateLinkPolylines.isNotEmpty)
+                      PolylineLayer(polylines: estimateLinkPolylines),
                     if (repeaterCoveragePolylines.isNotEmpty)
                       PolylineLayer(polylines: repeaterCoveragePolylines),
                     if (neighborFocusPolylines.isNotEmpty)
@@ -1326,6 +1372,14 @@ class _MapScreenState extends State<MapScreen>
                                 _isBuildingPathTrace))
                           ..._buildGuessedMarker(
                             allGuessedLocations,
+                            showLabels: _showNodeLabels,
+                            wardriveHighlightActive: wardriveHighlightActive,
+                            wardriveAnsweredKeys: wardriveAnsweredKeys,
+                          ),
+                        if (estimatedMarkersVisible)
+                          ..._buildPrefixRepeaterMarkers(
+                            prefixRepeaters,
+                            servSettings,
                             showLabels: _showNodeLabels,
                             wardriveHighlightActive: wardriveHighlightActive,
                             wardriveAnsweredKeys: wardriveAnsweredKeys,
@@ -2752,6 +2806,153 @@ class _MapScreenState extends State<MapScreen>
     return result;
   }
 
+  List<Marker> _buildPrefixRepeaterMarkers(
+    List<McoEstimatedContactLocation> repeaters,
+    SettingsSectionsService service, {
+    required bool showLabels,
+    required bool wardriveHighlightActive,
+    required Set<String> wardriveAnsweredKeys,
+  }) {
+    final markers = <Marker>[];
+    final foregroundMarkers = <Marker>[];
+    for (final repeater in repeaters) {
+      final answered = EstimatedRepeaterMap.prefixAnswered(
+        repeater,
+        wardriveAnsweredKeys,
+      );
+      final dimmed =
+          _neighborFocusActive || (wardriveHighlightActive && !answered);
+      final target = answered ? foregroundMarkers : markers;
+      target.add(
+        EstimatedRepeaterMap.prefixMarker(
+          repeater,
+          opacity: dimmed ? 0.3 : 1.0,
+          onTap: () {
+            _selectEstimateLinks(repeater.publicKeyHex);
+            final description = service.unknownRepeaterDescription(
+              context,
+              repeater.name,
+            );
+            if (description != null) {
+              _showMapSnackBar(content: Text(description));
+            }
+          },
+        ),
+      );
+      if (showLabels) {
+        target.add(
+          _buildNodeLabelMarker(
+            point: LatLng(repeater.latitude, repeater.longitude),
+            label: repeater.name,
+          ),
+        );
+      }
+    }
+    return [...markers, ...foregroundMarkers];
+  }
+
+  /// Where a responder's line starts: for a selected coverage cell the newest
+  /// sample of each responder, as [_buildWardriveCoveragePolylines] picks it,
+  /// and this node otherwise.
+  Map<String, LatLng> _estimatedResponderOrigins(
+    List<WardriveSample> selectedCoverageSamples,
+    LatLng? selfPoint,
+    Set<String> answeredKeys,
+  ) {
+    if (selectedCoverageSamples.isNotEmpty) {
+      final latest = <String, WardriveSample>{};
+      for (final sample in selectedCoverageSamples) {
+        if (sample.pingSuccess != true) continue;
+        final key = _wardriveResponderKeyFromSample(sample).toLowerCase();
+        if (key.isEmpty) continue;
+        final existing = latest[key];
+        if (existing == null ||
+            sample.timestamp.isAfter(existing.timestamp)) {
+          latest[key] = sample;
+        }
+      }
+      return {
+        for (final entry in latest.entries)
+          entry.key: LatLng(entry.value.latitude, entry.value.longitude),
+      };
+    }
+    if (selfPoint == null) return const {};
+    return {for (final key in answeredKeys) key: selfPoint};
+  }
+
+  /// Lines to the responders that stand on the map by estimate, named or
+  /// prefix-only; the ones with a position of their own keep their builders.
+  List<Polyline> _buildEstimatedResponderPolylines({
+    required Map<String, LatLng> origins,
+    required List<_GuessedLocation> guessedLocations,
+    required List<McoEstimatedContactLocation> prefixRepeaters,
+    required WardriveService? wardrive,
+  }) {
+    if (origins.isEmpty) return const <Polyline>[];
+    return [
+      for (final link in EstimatedRepeaterMap.responderLinks(
+        origins: origins,
+        named: [
+          for (final guess in guessedLocations)
+            (
+              publicKeyHex: guess.contact.publicKeyHex,
+              position: guess.position,
+            ),
+        ],
+        prefixOnly: prefixRepeaters,
+      ))
+        ..._buildWardriveResponderLine(
+          link.from,
+          link.to,
+          isIgnored: wardrive?.isRepeaterIgnored(link.responderKey) ?? false,
+        ),
+    ];
+  }
+
+  /// A tap on an estimated repeater also shows what its estimate rests on. A
+  /// guess of the map's own has no stored estimate, so it just moves the
+  /// selection away from whatever was shown.
+  void _showEstimatedNodeInfo(
+    BuildContext context,
+    Contact contact, {
+    required LatLng guessedPosition,
+  }) {
+    _selectEstimateLinks(contact.publicKeyHex);
+    _showNodeInfo(context, contact, guessedPosition: guessedPosition);
+  }
+
+  void _selectEstimateLinks(String publicKeyHex) {
+    final key = publicKeyHex.toLowerCase();
+    if (_estimateLinksKey == key) return;
+    setState(() => _estimateLinksKey = key);
+  }
+
+  void _clearEstimateLinks() {
+    if (_estimateLinksKey == null) return;
+    setState(() => _estimateLinksKey = null);
+  }
+
+  /// Rays of the selected estimate, as long as its marker is on the map.
+  List<Polyline> _buildEstimateLinkPolylines({
+    required Set<String> namedKeys,
+    required List<McoEstimatedContactLocation> prefixRepeaters,
+  }) {
+    final key = _estimateLinksKey;
+    if (key == null) return const <Polyline>[];
+    for (final estimate in _locatedRepeaterEstimates) {
+      final estimateKey = estimate.publicKeyHex.toLowerCase();
+      if (estimateKey == key && namedKeys.contains(estimateKey)) {
+        return EstimatedRepeaterMap.linkPolylines(estimate);
+      }
+    }
+    for (final estimate in prefixRepeaters) {
+      if (estimate.publicKeyHex.toLowerCase() == key) {
+        return EstimatedRepeaterMap.linkPolylines(estimate);
+      }
+    }
+    return const <Polyline>[];
+  }
+
   void _maybeRefreshLocatedRepeaters({
     required MeshCoreConnector connector,
     required AppSettings settings,
@@ -2760,10 +2961,14 @@ class _MapScreenState extends State<MapScreen>
   }) {
     if (!service.locateUnknownRepeatersEnabled) {
       _locatedRepeaterRefreshKey = '';
-      if (_locatedRepeaterEstimates.isNotEmpty) {
+      if (_locatedRepeaterEstimates.isNotEmpty ||
+          _prefixRepeaterEstimates.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            setState(() => _locatedRepeaterEstimates = const []);
+            setState(() {
+              _locatedRepeaterEstimates = const [];
+              _prefixRepeaterEstimates = const [];
+            });
           }
         });
       }
@@ -2793,6 +2998,11 @@ class _MapScreenState extends State<MapScreen>
     _locatedRepeaterRefreshKey = refreshKey;
     _seenLocatedRepeaterRecalculateRequest = requestId;
     _locatedRepeaterEstimates = const [];
+    final searchPrefixRepeaters =
+        force && requestId != _handledPrefixRepeaterSearchRequest;
+    if (searchPrefixRepeaters) {
+      _handledPrefixRepeaterSearchRequest = requestId;
+    }
     unawaited(
       _refreshLocatedRepeaters(
         connector: connector,
@@ -2800,6 +3010,7 @@ class _MapScreenState extends State<MapScreen>
         service: service,
         candidates: candidates,
         force: force,
+        searchPrefixRepeaters: searchPrefixRepeaters,
       ),
     );
   }
@@ -2810,6 +3021,7 @@ class _MapScreenState extends State<MapScreen>
     required SettingsSectionsService service,
     required List<McoContactLocationCandidate> candidates,
     required bool force,
+    required bool searchPrefixRepeaters,
   }) async {
     try {
       if (!await service.authorizeLocateRepeaters() || !mounted) return;
@@ -2819,6 +3031,14 @@ class _MapScreenState extends State<MapScreen>
           .toSet();
       final stored = await _contactLocationEstimateStore.loadEstimates();
       if (!mounted) return;
+      // Prefix-only repeaters are searched for on a manual recalculation alone;
+      // every other refresh just shows what the last search stored.
+      final storedPrefixRepeaters = stored
+          .where((estimate) => estimate.isPrefixOnly)
+          .toList(growable: false);
+      if (!listEquals(_prefixRepeaterEstimates, storedPrefixRepeaters)) {
+        setState(() => _prefixRepeaterEstimates = storedPrefixRepeaters);
+      }
       final visibleStored = stored
           .where(
             (estimate) =>
@@ -2869,6 +3089,32 @@ class _MapScreenState extends State<MapScreen>
         clearEstimateKeys: targetKeys,
       );
       if (!mounted) return;
+      if (searchPrefixRepeaters) {
+        // Only this search looks past the window of loaded messages. The named
+        // estimates above stay on [records] alone: older routes move them.
+        final storedRecords =
+            await ContactActionDataHelper.loadStoredChannelRecordsSince(
+              connector,
+              since: DateTime.now().subtract(service.unknownRepeaterLookback),
+              isCancelled: () => !mounted,
+            );
+        if (!mounted) return;
+        final prefixRepeaters = await service.calculateUnknownRepeaterEstimates(
+          records: [...records, ...storedRecords],
+          nodes: ContactActionDataHelper.nodes(connector, repeatersOnly: true),
+          knownPublicKeys: ContactActionDataHelper.knownHopKeys(connector),
+          contactType: advTypeRepeater,
+          isCancelled: () => !mounted,
+        );
+        if (!mounted || !service.locateUnknownRepeatersEnabled) return;
+        // Null is a search that did not finish: what is stored stays.
+        if (prefixRepeaters != null) {
+          await _contactLocationEstimateStore.replacePrefixEstimates(
+            prefixRepeaters,
+          );
+          if (!mounted) return;
+        }
+      }
       final refreshed = await _contactLocationEstimateStore.loadEstimates();
       final visibleRefreshed = refreshed
           .where(
@@ -2877,7 +3123,12 @@ class _MapScreenState extends State<MapScreen>
           )
           .toList(growable: false);
       if (mounted) {
-        setState(() => _locatedRepeaterEstimates = visibleRefreshed);
+        setState(() {
+          _locatedRepeaterEstimates = visibleRefreshed;
+          _prefixRepeaterEstimates = refreshed
+              .where((estimate) => estimate.isPrefixOnly)
+              .toList(growable: false);
+        });
       }
     } finally {
       _locatedRepeaterRefreshBusy = false;
@@ -3008,7 +3259,7 @@ class _MapScreenState extends State<MapScreen>
               : null,
           onTap: () => _isBuildingPathTrace
               ? _addToPath(context, guess.contact, position: guess.position)
-              : _showNodeInfo(
+              : _showEstimatedNodeInfo(
                   context,
                   guess.contact,
                   guessedPosition: guess.position,
