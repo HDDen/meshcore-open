@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -469,7 +468,18 @@ class MapTileCacheService extends ChangeNotifier {
 
   String get urlTemplate => _buildUrlTemplate(appSettingsService.settings);
 
-  TileBuilder? get tileBuilder => null;
+  TileBuilder tileBuilderFor(BuildContext context) {
+    final theme = Theme.of(context);
+    final placeholderColor = theme.brightness == Brightness.dark
+        ? theme.scaffoldBackgroundColor
+        : const Color(0xFFE0E0E0);
+    return (context, tileWidget, tile) {
+      return ColoredBox(
+        color: placeholderColor,
+        child: tileWidget,
+      );
+    };
+  }
 
   static bool shouldApplyDarkFilterForSettings(
     AppSettings settings,
@@ -574,7 +584,7 @@ class MapTileCacheService extends ChangeNotifier {
     Widget layer = TileLayer(
       urlTemplate: urlTemplate,
       tileProvider: tileProvider,
-      tileBuilder: tileBuilder,
+      tileBuilder: tileBuilderFor(context),
       userAgentPackageName: userAgentPackageName,
       maxZoom: 19,
       // Keep the last successful bitmap visible when flutter_map reloads a
@@ -1261,13 +1271,96 @@ class CachedNetworkTileProvider extends TileProvider {
   ImageProvider getImage(TileCoordinates coordinates, TileLayer options) {
     final url = getTileUrl(coordinates, options);
     final signedUrl = urlSigner?.call(url) ?? url;
-    return CachedNetworkImageProvider(
-      signedUrl,
+    return _CacheFirstTileImageProvider(
+      url: signedUrl,
       cacheKey: tileCacheKey(signedUrl),
       cacheManager: cacheManager,
       headers: headersFor?.call(signedUrl) ?? headers,
     );
   }
+}
+
+/// Image provider for map tiles with strict offline-cache semantics.
+///
+/// `flutter_cache_manager` normally emits a cached file and may then refresh a
+/// stale entry in the background. That is sensible for avatars and web images,
+/// but rough for a map: a dropped tile refresh can turn a tile that was already
+/// visible into flutter_map's error placeholder. For map rendering, any cached
+/// tile file is good enough for this frame; network is used only on a true miss.
+class _CacheFirstTileImageProvider
+    extends ImageProvider<_CacheFirstTileImageProvider> {
+  const _CacheFirstTileImageProvider({
+    required this.url,
+    required this.cacheKey,
+    required this.cacheManager,
+    this.headers,
+  });
+
+  final String url;
+  final String cacheKey;
+  final BaseCacheManager cacheManager;
+  final Map<String, String>? headers;
+
+  @override
+  Future<_CacheFirstTileImageProvider> obtainKey(
+    ImageConfiguration configuration,
+  ) =>
+      Future<_CacheFirstTileImageProvider>.value(this);
+
+  @override
+  ImageStreamCompleter loadImage(
+    _CacheFirstTileImageProvider key,
+    ImageDecoderCallback decode,
+  ) {
+    return MultiFrameImageStreamCompleter(
+      codec: _loadAsync(decode),
+      scale: 1,
+    );
+  }
+
+  Future<ui.Codec> _loadAsync(ImageDecoderCallback decode) async {
+    final cached = await cacheManager.getFileFromCache(cacheKey);
+    if (cached != null) {
+      try {
+        return await _decodeFile(cached, decode);
+      } catch (_) {
+        await cacheManager.removeFile(cacheKey);
+      }
+    }
+
+    await for (final response in cacheManager.getFileStream(
+      url,
+      key: cacheKey,
+      headers: headers,
+      withProgress: false,
+    )) {
+      if (response is FileInfo) {
+        return _decodeFile(response, decode);
+      }
+    }
+    throw StateError('Tile download produced no image');
+  }
+
+  Future<ui.Codec> _decodeFile(
+    FileInfo info,
+    ImageDecoderCallback decode,
+  ) async {
+    final bytes = await info.file.readAsBytes();
+    final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+    return decode(buffer);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is _CacheFirstTileImageProvider &&
+        other.cacheKey == cacheKey;
+  }
+
+  @override
+  int get hashCode => cacheKey.hashCode;
+
+  @override
+  String toString() => '_CacheFirstTileImageProvider("$url")';
 }
 
 class _TileBounds {
