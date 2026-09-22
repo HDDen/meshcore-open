@@ -1497,7 +1497,7 @@ Deployment target is owned by the build profile, not edited by hand: `tool/use_t
 PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmodified Flutter defaults). BLE is unsupported in browsers; TCP and Web Serial USB may work in Chrome only. `ChromeRequiredScreen` gates non-Chrome web users. Versioned releases are produced via `build_pipe` (`?v=<pubspec version>` cache busting, no service worker).
 
 ### Desktop
-`linux/`, `windows/`, and `macos/` directories are present as Flutter scaffolds. No app-specific native config has been added; BLE on desktop has not been validated.
+`linux/` and `windows/` are Flutter scaffolds with no app-specific native config. `macos/` is configured: both entitlement files grant Bluetooth, USB plus the `/dev/cu.*` / `/dev/tty.*` serial paths, network client, camera and user-selected files (AEIC image picking); `Info.plist` carries the Bluetooth, camera and photo-library usage strings; the deployment target is 14.0 and the Release configuration is ad-hoc signed (`CODE_SIGN_IDENTITY = "-"`), so the built `meshcore_open.app` runs where it was built and needs right-click → Open (or the quarantine attribute removed) elsewhere. BLE and USB on desktop have not been validated at runtime.
 
 ## Coding Conventions
 
