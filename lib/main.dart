@@ -227,6 +227,12 @@ Future<void> _startApplication() async {
     enabled: appSettingsService.settings.appDebugLogEnabled,
   );
 
+  // Let the optional service module record its unexpected errors into the app
+  // log the user can export; a no-op in the stub build.
+  settingsSectionsService.attachDiagnosticLogger(
+    (message) => appLogger.error(message, tag: 'License'),
+  );
+
   // Initialize notification service
   _setStartupStage('MCO-STARTUP-104', 'Desktop services');
   final notificationService = NotificationService();
