@@ -14,6 +14,7 @@ import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
+import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/app_settings.dart';
@@ -27,6 +28,9 @@ import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
+import '../helpers/direct_echo_crypto.dart';
+import '../helpers/direct_echo_recovery.dart';
+import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
@@ -528,6 +532,7 @@ class MeshCoreConnector extends ChangeNotifier {
   SharedMessageHistoryMode _lastSharedMessageHistoryMode =
       SharedMessageHistoryMode.disabled;
   int _lastNoRetransmissionWarningSeconds = 0;
+  bool _lastDirectEchoRecovery = false;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
   bool _isOfflineMode = false;
@@ -3217,6 +3222,8 @@ class MeshCoreConnector extends ChangeNotifier {
         SharedMessageHistoryMode.disabled;
     _lastNoRetransmissionWarningSeconds =
         appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
+    _lastDirectEchoRecovery =
+        appSettingsService?.settings.directEchoRecovery ?? false;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
     // The block table is app-wide and has no provider, so the screens cannot
     // watch it themselves. Re-emitting it here redraws the chat, the channels
@@ -3355,6 +3362,15 @@ class MeshCoreConnector extends ChangeNotifier {
       _lastNoRetransmissionWarningSeconds = noRetransmissionWarningSeconds;
       if (noRetransmissionWarningSeconds <= 0) {
         _cancelAllChannelNoRetransmissionTimers();
+      }
+    }
+    final directEchoRecovery = settings?.directEchoRecovery ?? false;
+    if (directEchoRecovery != _lastDirectEchoRecovery) {
+      _lastDirectEchoRecovery = directEchoRecovery;
+      if (directEchoRecovery) {
+        unawaited(_requestDirectEchoKey());
+      } else {
+        _clearDirectEchoKey('option switched off');
       }
     }
     final mode =
@@ -5328,6 +5344,8 @@ class MeshCoreConnector extends ChangeNotifier {
   void _resetConnectionHandshakeState() {
     _contactCacheLoadGeneration++;
     _contactCacheLoadFuture = null;
+    _clearDirectEchoKey('new session');
+    _directEchoAckUnsupported = false;
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
     _selfPublicKey = null;
@@ -5579,6 +5597,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _markerScannedContactKeys.clear();
     _conversationLoadGeneration++;
     _conversationLoadFutures.clear();
+    _clearDirectEchoKey('disconnect');
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -9149,6 +9168,10 @@ class MeshCoreConnector extends ChangeNotifier {
       case respCodeDefaultFloodScope:
         // Feature-specific callers listen to receivedFrames for this response.
         break;
+      case respCodePrivateKey:
+      case respCodeDisabled:
+        // Answers to CMD_EXPORT_PRIVATE_KEY; _requestDirectEchoKey listens.
+        break;
       case respCodeSent:
         _handleMessageSent(frame);
         break;
@@ -9375,6 +9398,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     if (previousSelfPublicKeyHex != selfPublicKeyHex) {
       _clearSharedMessageHistoryState();
+      _clearDirectEchoKey('node changed');
     }
 
     //set all the stores' public key so they can load the correct data
@@ -9413,6 +9437,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (parsedSelfInfo) {
       _reconnectAttempts = 0;
       unawaited(_backgroundService?.setConnectionLost(false));
+      unawaited(_requestDirectEchoKey());
     }
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
@@ -10278,6 +10303,7 @@ class MeshCoreConnector extends ChangeNotifier {
     Uint8List frame, {
     DateTime? receivedAt,
     String? localSourceLabel,
+    DirectEchoContext? echo,
   }) async {
     if (_selfPublicKey == null) return;
 
@@ -10364,7 +10390,7 @@ class MeshCoreConnector extends ChangeNotifier {
             incomingMessage.timestamp.millisecondsSinceEpoch;
         if (existing != null && existing.isNotEmpty) {
           final isRoomMessage = contact?.type == advTypeRoom;
-          final isDuplicate = existing.any(
+          final duplicateIndex = existing.indexWhere(
             (current) =>
                 !current.isOutgoing &&
                 current.timestamp.millisecondsSinceEpoch == incomingTimestamp &&
@@ -10375,10 +10401,18 @@ class MeshCoreConnector extends ChangeNotifier {
                       incomingMessage.fourByteRoomContactKey,
                     )),
           );
-          if (isDuplicate) {
+          if (duplicateIndex >= 0) {
+            _mergeDirectEcho(
+              incomingMessage.senderKeyHex,
+              existing[duplicateIndex],
+              echo?.observation,
+            );
             return;
           }
         }
+      }
+      if (echo != null) {
+        message = DirectEchoRecovery.stampFirstEcho(message, echo.observation);
       }
       // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
@@ -10386,6 +10420,7 @@ class MeshCoreConnector extends ChangeNotifier {
       await _addMessage(message.senderKeyHex, message);
       if (!blockedNow) _maybeIncrementContactUnread(message);
       notifyListeners();
+      if (echo != null) unawaited(_sendDirectEchoAck(echo));
 
       // Persist first, then enqueue the notification before advancing a
       // destructive firmware queue read.
@@ -12210,6 +12245,250 @@ class MeshCoreConnector extends ChangeNotifier {
     return recovered;
   }
 
+  // ---- Direct echo recovery (see DirectEchoRecovery) ----------------------
+
+  /// The node's private key, RAM only, for decrypting direct messages heard
+  /// before they finish their route. Cleared wherever a session ends.
+  final DirectEchoKeyStore _directEchoKeys = DirectEchoKeyStore();
+  Future<void>? _directEchoKeyRequest;
+
+  /// Set when the node answered CMD_SEND_RAW_PACKET with an error: firmware
+  /// older than that command cannot inject the ACK, so none is tried again
+  /// this session.
+  bool _directEchoAckUnsupported = false;
+
+  bool get _directEchoRecoveryEnabled =>
+      _appSettingsService?.settings.directEchoRecovery ?? false;
+
+  void _clearDirectEchoKey(String reason) {
+    if (!_directEchoKeys.hasKey) return;
+    _directEchoKeys.clear();
+    appLogger.info(
+      'Node private key wiped from RAM ($reason)',
+      tag: 'DirectEcho',
+    );
+  }
+
+  /// Asks the node for its private key (CMD_EXPORT_PRIVATE_KEY) and keeps
+  /// it in RAM. Firmware built without ENABLE_PRIVATE_KEY_EXPORT answers
+  /// RESP_CODE_DISABLED, and then the option quietly does nothing; the
+  /// ordinary receive path is untouched either way.
+  Future<void> _requestDirectEchoKey() {
+    if (!_directEchoRecoveryEnabled ||
+        !isConnected ||
+        !_hasCompletedSelfInfoHandshake ||
+        _directEchoKeys.hasKey) {
+      return Future.value();
+    }
+    final pending = _directEchoKeyRequest;
+    if (pending != null) return pending;
+    final request = _exportDirectEchoKey();
+    _directEchoKeyRequest = request;
+    return request.whenComplete(() {
+      if (identical(_directEchoKeyRequest, request)) {
+        _directEchoKeyRequest = null;
+      }
+    });
+  }
+
+  Future<void> _exportDirectEchoKey() async {
+    final completer = Completer<void>();
+    void finish() {
+      if (!completer.isCompleted) completer.complete();
+    }
+
+    final subscription = receivedFrames.listen((frame) {
+      if (frame.isEmpty || completer.isCompleted) return;
+      switch (frame[0]) {
+        case respCodePrivateKey:
+          if (frame.length < 1 + DirectEchoCrypto.privateKeyLength) {
+            appLogger.warn(
+              'Private key export answered with a short frame; '
+              'direct echo recovery stays off',
+              tag: 'DirectEcho',
+            );
+          } else {
+            _directEchoKeys.setPrivateKey(
+              Uint8List.fromList(
+                frame.sublist(1, 1 + DirectEchoCrypto.privateKeyLength),
+              ),
+            );
+            appLogger.info(
+              'Node private key exported to RAM for direct echo recovery',
+              tag: 'DirectEcho',
+            );
+          }
+          finish();
+        case respCodeDisabled:
+          appLogger.warn(
+            'Node refused to export its private key (disabled in firmware); '
+            'direct echo recovery stays off',
+            tag: 'DirectEcho',
+          );
+          finish();
+      }
+    });
+    final timer = Timer(const Duration(seconds: 5), () {
+      if (completer.isCompleted) return;
+      appLogger.warn(
+        'Private key export got no answer; direct echo recovery stays off',
+        tag: 'DirectEcho',
+      );
+      finish();
+    });
+    try {
+      await sendFrame(Uint8List.fromList([cmdExportPrivateKey]));
+      await completer.future;
+    } catch (error) {
+      appLogger.warn('Private key export failed: $error', tag: 'DirectEcho');
+    } finally {
+      timer.cancel();
+      await subscription.cancel();
+    }
+  }
+
+  /// A direct message to us heard on its way through the mesh: decrypted
+  /// with the node's key and handed to the ordinary receive path as the
+  /// frame the node would have queued at the end of the route, so decoding,
+  /// verification, storage, unread counts and notifications are the usual
+  /// ones. Repeats and the eventual delivery merge in [_mergeDirectEcho].
+  Future<void> _recoverDirectEcho(
+    Uint8List frame, {
+    required double snr,
+    required int rssi,
+  }) async {
+    if (!_directEchoRecoveryEnabled || !_directEchoKeys.hasKey) return;
+    final selfKey = _selfPublicKey;
+    if (selfKey == null) return;
+    final echo = DirectMessageEcho.tryParse(frame);
+    if (echo == null || !DirectEchoRecovery.isCandidate(echo, selfKey)) {
+      return;
+    }
+    final encrypted = DirectEchoRecovery.macAndCiphertext(echo);
+    final senders = DirectEchoRecovery.candidateSenders(
+      allContactsUnfiltered,
+      echo.sourceHash,
+    );
+    for (final contact in senders) {
+      final secret = _directEchoKeys.secretFor(contact);
+      if (secret == null) continue;
+      final decrypted = _decryptPayload(secret, encrypted);
+      if (decrypted == null) continue;
+      final plaintext = DirectEchoRecovery.parsePlaintext(decrypted);
+      if (plaintext == null) {
+        appLogger.info(
+          'Direct echo from ${contact.name} is not a plain text message; '
+          'left to the node',
+          tag: 'DirectEcho',
+        );
+        return;
+      }
+      appLogger.info(
+        'Direct echo from ${contact.name} decoded with '
+        '${echo.remainingHopCount} hop(s) still ahead',
+        tag: 'DirectEcho',
+      );
+      await _processIncomingMessage(
+        DirectEchoRecovery.buildContactMessageFrame(
+          contact.publicKey,
+          plaintext,
+          snr: snr,
+        ),
+        echo: DirectEchoContext(
+          contact: contact,
+          plaintext: plaintext,
+          observation: DirectEchoObservation(
+            remainingPath: echo.remainingPath,
+            pathHashWidth: echo.pathHashWidth,
+            snr: snr,
+            rssi: rssi,
+          ),
+        ),
+      );
+      return;
+    }
+    // No candidate verified the MAC: somebody else's message behind the same
+    // one-byte hash, or a sender we do not know. Nothing to report.
+  }
+
+  /// A further copy of a message the echo already showed, or its ordinary
+  /// delivery at the end of the route, folds into the stored message instead
+  /// of becoming another one. With no [observation] this is the delivery,
+  /// which completes the route bar.
+  void _mergeDirectEcho(
+    String contactKeyHex,
+    Message existing,
+    DirectEchoObservation? observation,
+  ) {
+    final merged = observation != null
+        ? DirectEchoRecovery.mergeRepeat(existing, observation)
+        : DirectEchoRecovery.completeOnDelivery(existing);
+    if (merged == null) return;
+    _updateStoredContactMessage(
+      contactKeyHex,
+      existing.messageId,
+      (_) => merged,
+    );
+  }
+
+  /// The ACK the node sends for a message it receives itself, built for the
+  /// one we decoded from its echo and injected through CMD_SEND_RAW_PACKET,
+  /// routed as `BaseChatMesh::sendAckTo` routes it. Sent once, for the copy
+  /// that created the message; repeats and the ordinary delivery send none
+  /// (the node still acknowledges the delivery on its own — that is
+  /// firmware behaviour and out of reach). Firmware without the command
+  /// answers with an error, after which no ACK is attempted this session.
+  Future<void> _sendDirectEchoAck(DirectEchoContext echo) async {
+    if (_directEchoAckUnsupported || !isConnected) return;
+    final contact =
+        getContactByPubKeyHex(echo.contact.publicKeyHex) ?? echo.contact;
+    final ack = DirectEchoCrypto.ackHash(
+      echo.plaintext.bytes,
+      echo.plaintext.textLength,
+      contact.publicKey,
+      randomByte: math.Random.secure().nextInt(256),
+    );
+    final route = resolvePathSelection(contact);
+    int? transportCode;
+    final scope = _defaultRegionScope?.trim() ?? '';
+    if (route.useFlood && scope.isNotEmpty && !scope.startsWith(r'$')) {
+      transportCode = _computeRegionTransportCode(scope, payloadTypeACK, ack);
+    }
+    final packet = DirectEchoRecovery.buildAckPacket(
+      ack: ack,
+      route: route,
+      pathHashWidth: _pathHashByteWidth,
+      transportCode: transportCode,
+    );
+    try {
+      await sendFrame(
+        DirectEchoRecovery.buildSendRawPacketFrame(packet),
+        waitForGenericAck: true,
+      );
+      appLogger.info(
+        'ACK for the echoed message from ${contact.name} sent '
+        '${route.useFlood ? 'by flood' : 'along ${route.hopCount} hop(s)'}',
+        tag: 'DirectEcho',
+      );
+    } on TimeoutException {
+      appLogger.warn(
+        'ACK for the echoed message from ${contact.name}: no answer from '
+        'the node',
+        tag: 'DirectEcho',
+      );
+    } catch (error) {
+      // RESP_CODE_ERR: the node has no CMD_SEND_RAW_PACKET (firmware before
+      // May 2026), so an echoed message is acknowledged only once it
+      // arrives in full and the node answers by itself.
+      _directEchoAckUnsupported = true;
+      appLogger.warn(
+        'ACK for echoed messages is not supported by this firmware '
+        '($error); none will be sent this session',
+        tag: 'DirectEcho',
+      );
+    }
+  }
+
   void _handleLogRxData(Uint8List frame) async {
     if (frame.length < 4) return;
     try {
@@ -12222,6 +12501,10 @@ class MeshCoreConnector extends ChangeNotifier {
 
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
+      if (packet?.payloadType == payloadTypeTXTMSG) {
+        await _recoverDirectEcho(frame, snr: snr, rssi: rssi);
+        return;
+      }
       if (packet == null ||
           (packet.payloadType != _payloadTypeGroupText &&
               packet.payloadType != _payloadTypeGroupData)) {
@@ -14109,6 +14392,7 @@ class MeshCoreConnector extends ChangeNotifier {
   void dispose() {
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
+    _clearDirectEchoKey('dispose');
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();

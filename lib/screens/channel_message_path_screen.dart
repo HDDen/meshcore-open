@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
@@ -13,6 +14,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/path_hop_resolver.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/signal_reading_text.dart';
+import '../helpers/snack_bar_builder.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/wardrive_service.dart';
@@ -24,6 +26,7 @@ import '../l10n/l10n.dart';
 import '../models/channel_message.dart';
 import '../models/app_settings.dart';
 import '../models/contact.dart';
+import '../models/direct_echo_observation.dart';
 import '../models/display_path.dart';
 import '../models/path_playback.dart';
 import '../theme/mesh_theme.dart';
@@ -34,10 +37,16 @@ import '../widgets/path_map_ui.dart';
 class ChannelMessagePathScreen extends StatelessWidget {
   final ChannelMessage message;
   final bool channelMessage;
+
+  /// Routes a direct message to us was heard on before it reached the node,
+  /// each the tail of the sender's route (see `DirectEchoRecovery`). Only a
+  /// direct chat passes them; a channel message has none.
+  final List<DirectEchoObservation> incompletePaths;
   const ChannelMessagePathScreen({
     super.key,
     required this.message,
     this.channelMessage = false,
+    this.incompletePaths = const [],
   });
 
   @override
@@ -134,6 +143,15 @@ class ChannelMessagePathScreen extends StatelessWidget {
                   effectiveHopCount: effectiveHopCount,
                 ),
                 const SizedBox(height: 16),
+                if (incompletePaths.isNotEmpty) ...[
+                  SectionHeader(
+                    l10n.channelPath_incompletePaths,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildIncompletePaths(context),
+                  const SizedBox(height: 16),
+                ],
                 if (extraPaths.isNotEmpty) ...[
                   SectionHeader(
                     l10n.channelPath_otherObservedPaths,
@@ -414,6 +432,128 @@ class ChannelMessagePathScreen extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  /// The incomplete routes, one card each, in the order they were heard. The
+  /// hops read sender-side first, as the packet travelled; the map opens the
+  /// same route, and the copy button hands over its reverse — from us towards
+  /// the sender — which is the shape a manual route for a reply takes.
+  Widget _buildIncompletePaths(BuildContext context) {
+    final l10n = context.l10n;
+    final settings = context.read<AppSettingsService>().settings;
+    final spreadingFactor = context.read<MeshCoreConnector>().currentSf;
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < incompletePaths.length; i++)
+          MeshCard(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            onTap: () => _openIncompletePathMap(context, incompletePaths[i]),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.channelPath_incompletePathTitle(
+                          i + 1,
+                          _formatHopCount(
+                            incompletePaths[i].remainingPath.length,
+                            incompletePaths[i].pathHashWidth,
+                            l10n,
+                          ),
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: _formatPathPrefixes(
+                                incompletePaths[i].remainingPath,
+                                incompletePaths[i].pathHashWidth,
+                              ),
+                            ),
+                            if (settings.showLastHopSignal)
+                              ...signalReadingSpans(
+                                snr: incompletePaths[i].snr,
+                                rssi: incompletePaths[i].rssi,
+                                spreadingFactor: spreadingFactor,
+                                afterHopList: true,
+                              ),
+                          ],
+                        ),
+                        style: MeshTheme.mono(
+                          fontSize: 11,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.map_outlined, size: 20),
+                  tooltip: l10n.channelPath_viewMap,
+                  color: scheme.onSurfaceVariant,
+                  onPressed: () =>
+                      _openIncompletePathMap(context, incompletePaths[i]),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.swap_horiz, size: 20),
+                  tooltip: l10n.channelPath_copyInvertedPath,
+                  color: scheme.onSurfaceVariant,
+                  onPressed: () => _copyInvertedPath(context, incompletePaths[i]),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// The map draws a direct message's stored route from our end, so the
+  /// inverted route is what it expects; the observation's own width wins
+  /// over the message's.
+  void _openIncompletePathMap(
+    BuildContext context,
+    DirectEchoObservation observation,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChannelMessagePathMapScreen(
+          message: message.copyWith(
+            pathBytes: observation.invertedPath,
+            pathVariants: const [],
+            pathHashWidth: observation.pathHashWidth,
+          ),
+          channelMessage: channelMessage,
+        ),
+      ),
+    );
+  }
+
+  /// Hop hex joined by commas, the form the path editor's hex field reads.
+  Future<void> _copyInvertedPath(
+    BuildContext context,
+    DirectEchoObservation observation,
+  ) async {
+    final text = PathHelper.splitPathBytes(
+      observation.invertedPath,
+      observation.pathHashWidth,
+    ).map(PathHelper.formatHopHex).join(',');
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!context.mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.channelPath_invertedPathCopied),
     );
   }
 

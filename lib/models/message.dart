@@ -4,6 +4,7 @@ import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/reaction_helper.dart';
+import 'direct_echo_observation.dart';
 import 'message_compression.dart';
 import 'translation_support.dart';
 
@@ -78,6 +79,11 @@ class Message {
   final Uint8List pathBytes;
   final int deliveryProgressTotalSteps;
   final int deliveryProgressCompletedSteps;
+
+  /// Raw copies of this incoming message heard before it finished its route
+  /// (see `DirectEchoRecovery`); empty for everything else. The delivery
+  /// progress fields above double as its route bar while it is non-empty.
+  final List<DirectEchoObservation> directEchoObservations;
   final Map<String, List<String?>> reactions;
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
@@ -136,6 +142,7 @@ class Message {
     Uint8List? pathBytes,
     this.deliveryProgressTotalSteps = 0,
     this.deliveryProgressCompletedSteps = 0,
+    List<DirectEchoObservation>? directEchoObservations,
     Uint8List? fourByteRoomContactKey,
     this.wasBlocked = false,
     Map<String, List<String?>>? reactions,
@@ -145,6 +152,7 @@ class Message {
            '${timestamp.millisecondsSinceEpoch}_${pubKeyToHex(senderKey)}_${text.hashCode}',
        sentByRadioWaitSeconds = sentByRadioWaitSeconds ?? const [],
        pathBytes = pathBytes ?? Uint8List(0),
+       directEchoObservations = directEchoObservations ?? const [],
        fourByteRoomContactKey = fourByteRoomContactKey ?? Uint8List(0),
        reactions = reactions ?? {},
        reactionStatuses = reactionStatuses ?? {};
@@ -166,6 +174,7 @@ class Message {
     Uint8List? pathBytes,
     int? deliveryProgressTotalSteps,
     int? deliveryProgressCompletedSteps,
+    List<DirectEchoObservation>? directEchoObservations,
     bool? isCli,
     Object? originalText = _unset,
     Object? translatedText = _unset,
@@ -287,6 +296,8 @@ class Message {
       deliveryProgressCompletedSteps:
           deliveryProgressCompletedSteps ??
           this.deliveryProgressCompletedSteps,
+      directEchoObservations:
+          directEchoObservations ?? this.directEchoObservations,
       reactions: reactions ?? this.reactions,
       reactionStatuses: reactionStatuses ?? this.reactionStatuses,
       fourByteRoomContactKey:

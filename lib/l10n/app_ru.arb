@@ -2874,5 +2874,11 @@
   "channels_shareQrTapToShare": "Нажмите на QR-код, чтобы сохранить его или поделиться им как картинкой.",
   "channels_shareQrImageCopied": "QR-код скопирован как картинка",
   "channels_shareQrImageFailed": "Не удалось подготовить картинку с QR-кодом",
-  "channels_qrUpdateExisting": "Канал {name} уже существует, обновить его свойства?"
+  "channels_qrUpdateExisting": "Канал {name} уже существует, обновить его свойства?",
+  "settings_modSettingsDirectEchoRecovery": "Получать личные сообщения, не дожидаясь полного прохождения маршрута",
+  "settings_modSettingsDirectEchoRecoveryDscr": "Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.",
+  "channelPath_incompletePaths": "Неполные пути",
+  "channelPath_incompletePathTitle": "Неполный путь {index} • {hops}",
+  "channelPath_copyInvertedPath": "Скопировать обратный маршрут",
+  "channelPath_invertedPathCopied": "Обратный маршрут скопирован"
 }

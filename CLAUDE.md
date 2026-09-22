@@ -895,6 +895,102 @@ per keystroke (`_composerEncoding`), so the compressor does not run twice. A pac
 and nothing here can help it; direct messages are out of reach too, their ciphertext needs the
 node's private key.
 
+### Direct echo recovery (experimental, off by default)
+
+The same RX log shows a direct message *to us* before it arrives: the
+companion logs every packet its radio hears and only then checks whether it
+is the next hop of a direct-routed packet, dropping it otherwise. A TXT_MSG
+addressed to our one-byte hash can therefore be heard from a repeater near us
+while it still has hops to travel, and the copy is the very packet that will
+reach the node later, minus the hops it has already shed. With the node's
+private key the app can decrypt it as the node would. `AppSettings.
+directEchoRecovery` (mod settings, **off** by default, under the long-echo
+toggle) turns that on, and the toggle's subtitle says why it is a decision:
+the key is exported into the app's memory.
+
+**The key lives in RAM and nowhere else.** After each SELF_INFO handshake the
+connector sends `CMD_EXPORT_PRIVATE_KEY` (23) and keeps only the X25519
+scalar — the first 32 of the 64 bytes — in `DirectEchoKeyStore`
+(`helpers/direct_echo_recovery.dart`), together with the shared secrets
+derived from it, one per sender. `RESP_CODE_DISABLED` (15, firmware built
+without `ENABLE_PRIVATE_KEY_EXPORT`), a short frame or no answer leave the
+option quietly inert. `_clearDirectEchoKey` zero-fills everything on
+disconnect, at the start of every new session, on a node change, when the
+option is switched off and in `dispose`. `BleDebugLogService.logFrame`
+withholds the payload of `RESP_CODE_PRIVATE_KEY` (14), since that log is
+exportable; the app log only ever records that the export succeeded, was
+refused or timed out.
+
+**The crypto repeats the firmware's.** `helpers/direct_echo_crypto.dart` is
+pure Dart so it can be checked outside the Flutter test runner: the shared
+secret is `ed25519_key_exchange` — the clamped scalar against the peer's
+Edwards y turned into Montgomery u = (1 + y) / (1 − y) — run through
+`DartX25519`, and the six ACK bytes are `BaseChatMesh::onPeerDataRecv`'s
+(SHA-256 over timestamp, flags and text plus the sender's key, truncated to
+four, then the extended attempt byte after the text's NUL, then one random
+byte). MAC-then-decrypt is the connector's existing `_decryptPayload`, which
+is already `Utils::MACThenDecrypt` for channels; the shared secret is simply
+the key. Verified against libsodium with the firmware's own test client
+keypair.
+
+**One branch in the receive path, not a second one.** `_handleLogRxData`
+hands a TXT_MSG frame to `_recoverDirectEcho`, which accepts only a direct-
+routed copy addressed to our hash with hops still ahead (a copy with none
+left is the one the node delivers itself), tries every contact whose key
+starts with the source hash — the firmware's `searchPeersByHash` loop — and
+accepts only `TXT_TYPE_PLAIN` (CLI replies and room posts stay the node's
+business). The plaintext is then rebuilt as the `CONTACT_MSG_RECV_V3` frame
+the node would have queued and fed to `_processIncomingMessage` with a
+`DirectEchoContext`, so decoding, verification, storage, unread counting,
+notification and translation are the ordinary ones. Only three things differ
+there: the duplicate check now finds the message instead of merely noticing
+it and calls `_mergeDirectEcho`; a new message from an echo is stamped by
+`DirectEchoRecovery.stampFirstEcho`; and after it is stored the ACK goes out.
+
+**Identity and progress.** The duplicate key is the one the receive path
+already uses — sender, packet timestamp in milliseconds, decoded text — so
+every later copy, a repeater's retransmission or the node's own delivery at
+the end of the route, merges into the message the echo created. The bar
+under the bubble reuses `deliveryProgressTotalSteps` /
+`deliveryProgressCompletedSteps`: the first echo sizes it to the hops still
+ahead plus the final leg (`remaining + 1`, none done), a later copy heard
+from further along advances it, a copy with more hops left than the bar was
+sized for widens it and keeps what was done — it never moves backwards —
+and the ordinary delivery fills it (`completeOnDelivery`), which is what
+hides it, since `chat_screen.dart` shows it for an incoming message while
+`completed < total`. A message the node delivered before any echo was heard
+keeps its bar off and only records the route. Every distinct route heard is
+kept as a `DirectEchoObservation` (`models/direct_echo_observation.dart`:
+remaining path in travel order, hash width, SNR, RSSI) on
+`Message.directEchoObservations`, persisted by `message_store`.
+
+**Incomplete paths.** The path screen opened from a direct chat receives
+those observations as `incompletePaths` and lists them under a section of
+that name ahead of *Other observed paths*, one card each in the order heard,
+hops sender-side first with the signal reading. The map button opens the
+route through `ChannelMessagePathMapScreen`, handing it the *inverted* path,
+because that screen draws a direct message's stored route from our end and
+reverses it for display. The copy button puts the inverted route on the
+clipboard as hop hex joined by commas — the form `PathEditorSheet`'s hex
+field parses — since read from our end it is the known tail of a route back
+to the sender.
+
+**The ACK is real, and only when the firmware can.** `CMD_SEND_RAW_PACKET`
+(65, stock MeshCore since May 2026) sends any parsed packet, so
+`_sendDirectEchoAck` builds a `PAYLOAD_TYPE_ACK` packet as
+`BaseChatMesh::sendAckTo` would route it — direct along
+`resolvePathSelection(contact)`, else a flood, scoped with the node's default
+region through `_computeRegionTransportCode` when there is one — with the
+path byte packed as the firmware packs it. It is sent once, for the copy that
+created the message; repeats and the delivery send none. A `RESP_CODE_ERR`
+answer means the firmware predates the command, sets
+`_directEchoAckUnsupported` for the session and is logged once; a timeout is
+logged and not held against the node. What the app cannot suppress is the
+node's own ACK when the packet finally arrives, so a sender may see two —
+that is firmware behaviour. With the option off nothing here runs: no
+command is sent, `_handleLogRxData` returns on a TXT_MSG as it did before,
+and the duplicate check is the same predicate returning through a new name.
+
 ### Map raster sources
 
 Sources live in `MapRasterSourceCatalog` (`services/map_tile_cache_service.dart`) and are picked in app settings. Two carry an API key: Stadia (`mapTileApiKey`, with a shared demo key as fallback) and **Yandex** (`mapYandexApiKey`, no demo — the map silently falls back to OpenStreetMap until the user pastes their own key from the Yandex developer dashboard).
@@ -1449,6 +1545,8 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/helpers/mcoimg_v3_codec.dart` | MCO image-over-LoRa codec (v3 binary container) |
 | `lib/helpers/path_trace_progress_helper.dart` | Matches overheard TRACE retransmissions to the running trace |
 | `lib/helpers/direct_message_progress_helper.dart` | Matches overheard message retransmissions to a pending direct message |
+| `lib/helpers/direct_echo_recovery.dart` | Decrypts a direct message to us from its RX-log echo before the route completes (opt-in); key store, merge rules, ACK packet |
+| `lib/helpers/direct_echo_crypto.dart` | Pure-Dart X25519 shared secret and ACK hash, as the firmware computes them |
 | `lib/storage/prefs_manager.dart` | SharedPreferences singleton initialized in `main()` |
 | `lib/storage/message_history_database.dart` | drift schema, queries, legacy import and quarantine (`.g.dart` is committed, see `.gitignore`) |
 | `lib/storage/message_history_storage.dart` | The only door to that database; holds the web fallback and the key caches |

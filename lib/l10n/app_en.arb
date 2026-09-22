@@ -3722,5 +3722,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settings_modSettingsDirectEchoRecovery": "Receive direct messages before the route completes",
+  "settings_modSettingsDirectEchoRecoveryDscr": "Warning! The node's private key will be exported into the app's memory, so the app decrypts the packet itself instead of the node.",
+  "channelPath_incompletePaths": "Incomplete paths",
+  "channelPath_incompletePathTitle": "Incomplete path {index} • {hops}",
+  "@channelPath_incompletePathTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "hops": {
+        "type": "String"
+      }
+    }
+  },
+  "channelPath_copyInvertedPath": "Copy inverted route",
+  "channelPath_invertedPathCopied": "Inverted route copied"
 }

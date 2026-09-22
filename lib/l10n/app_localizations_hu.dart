@@ -6780,4 +6780,26 @@ class AppLocalizationsHu extends AppLocalizations {
   String channels_qrUpdateExisting(String name) {
     return 'Channel $name already exists. Update its properties?';
   }
+
+  @override
+  String get settings_modSettingsDirectEchoRecovery =>
+      'Receive direct messages before the route completes';
+
+  @override
+  String get settings_modSettingsDirectEchoRecoveryDscr =>
+      'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.';
+
+  @override
+  String get channelPath_incompletePaths => 'Incomplete paths';
+
+  @override
+  String channelPath_incompletePathTitle(int index, String hops) {
+    return 'Incomplete path $index • $hops';
+  }
+
+  @override
+  String get channelPath_copyInvertedPath => 'Copy inverted route';
+
+  @override
+  String get channelPath_invertedPathCopied => 'Inverted route copied';
 }

@@ -2239,7 +2239,10 @@ class _ChatScreenState extends State<ChatScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChannelMessagePathScreen(message: pathMessage),
+        builder: (context) => ChannelMessagePathScreen(
+          message: pathMessage,
+          incompletePaths: message.directEchoObservations,
+        ),
       ),
     );
   }
@@ -2858,10 +2861,14 @@ class _MessageBubble extends StatelessWidget {
         : (isOutgoing ? MeshPalette.meInk : scheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.65);
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
+    // An incoming message decoded from its echo (DirectEchoRecovery) carries
+    // the same bar while the packet is still on its way to the node.
     final showDeliveryProgress =
-        isOutgoing &&
-        message.status != MessageStatus.delivered &&
-        message.deliveryProgressTotalSteps > 0;
+        message.deliveryProgressTotalSteps > 0 &&
+        (isOutgoing
+            ? message.status != MessageStatus.delivered
+            : message.deliveryProgressCompletedSteps <
+                  message.deliveryProgressTotalSteps);
     const bodyFontSize = 14.0;
 
     // Asymmetric radius: outgoing — top-left large, others also large; outgoing bottom-right tight.

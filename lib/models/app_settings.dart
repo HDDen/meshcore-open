@@ -231,6 +231,11 @@ class AppSettings {
   /// Recognises an RX-log copy of our own channel packet that the frame
   /// limit cut short, so the repeat of a long message is still counted.
   final bool recoverLongPacketEchoes;
+
+  /// Decrypts a direct message to us from its raw RX-log copy, heard before
+  /// the packet finished its route. Off by default: it exports the node's
+  /// private key into the app's memory.
+  final bool directEchoRecovery;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -642,6 +647,7 @@ class AppSettings {
     this.exactQuoteLimit = defaultExactQuoteLimit,
     this.showLastHopSignal = true,
     this.recoverLongPacketEchoes = true,
+    this.directEchoRecovery = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -785,6 +791,7 @@ class AppSettings {
       'exact_quote_limit': exactQuoteLimit,
       'show_last_hop_signal': showLastHopSignal,
       'recover_long_packet_echoes': recoverLongPacketEchoes,
+      'direct_echo_recovery': directEchoRecovery,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -961,6 +968,7 @@ class AppSettings {
       showLastHopSignal: json['show_last_hop_signal'] as bool? ?? true,
       recoverLongPacketEchoes:
           json['recover_long_packet_echoes'] as bool? ?? true,
+      directEchoRecovery: json['direct_echo_recovery'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1175,6 +1183,7 @@ class AppSettings {
     int? exactQuoteLimit,
     bool? showLastHopSignal,
     bool? recoverLongPacketEchoes,
+    bool? directEchoRecovery,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1306,6 +1315,7 @@ class AppSettings {
       showLastHopSignal: showLastHopSignal ?? this.showLastHopSignal,
       recoverLongPacketEchoes:
           recoverLongPacketEchoes ?? this.recoverLongPacketEchoes,
+      directEchoRecovery: directEchoRecovery ?? this.directEchoRecovery,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,

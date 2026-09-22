@@ -11539,6 +11539,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Channel {name} already exists. Update its properties?'**
   String channels_qrUpdateExisting(String name);
+
+  /// No description provided for @settings_modSettingsDirectEchoRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive direct messages before the route completes'**
+  String get settings_modSettingsDirectEchoRecovery;
+
+  /// No description provided for @settings_modSettingsDirectEchoRecoveryDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.'**
+  String get settings_modSettingsDirectEchoRecoveryDscr;
+
+  /// No description provided for @channelPath_incompletePaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete paths'**
+  String get channelPath_incompletePaths;
+
+  /// No description provided for @channelPath_incompletePathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete path {index} • {hops}'**
+  String channelPath_incompletePathTitle(int index, String hops);
+
+  /// No description provided for @channelPath_copyInvertedPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy inverted route'**
+  String get channelPath_copyInvertedPath;
+
+  /// No description provided for @channelPath_invertedPathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Inverted route copied'**
+  String get channelPath_invertedPathCopied;
 }
 
 class _AppLocalizationsDelegate

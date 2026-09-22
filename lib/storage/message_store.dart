@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
@@ -521,6 +522,9 @@ class MessageStore {
           : null,
       'deliveryProgressTotalSteps': msg.deliveryProgressTotalSteps,
       'deliveryProgressCompletedSteps': msg.deliveryProgressCompletedSteps,
+      'directEchoObservations': msg.directEchoObservations.isEmpty
+          ? null
+          : DirectEchoObservation.encodeList(msg.directEchoObservations),
       'reactions': msg.reactions,
       'reactionStatuses': msg.reactionStatuses.map(
         (key, value) => MapEntry(key, value.index),
@@ -655,6 +659,9 @@ class MessageStore {
           json['deliveryProgressTotalSteps'] as int? ?? 0,
       deliveryProgressCompletedSteps:
           json['deliveryProgressCompletedSteps'] as int? ?? 0,
+      directEchoObservations: DirectEchoObservation.decodeList(
+        json['directEchoObservations'],
+      ),
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(

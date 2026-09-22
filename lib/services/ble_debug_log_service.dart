@@ -54,6 +54,12 @@ class BleDebugLogService extends ChangeNotifier {
   void logFrame(Uint8List frame, {required bool outgoing, String? note}) {
     if (frame.isEmpty) return;
     final code = frame[0];
+    // The node's private key must never sit in a log anyone can export: the
+    // line stays, the bytes do not.
+    if (!outgoing && code == respCodePrivateKey) {
+      frame = Uint8List.fromList([code]);
+      note = 'payload withheld';
+    }
     final description = _describeFrame(code, frame, outgoing, note);
     _entries.add(
       BleDebugLogEntry(
@@ -184,6 +190,10 @@ class BleDebugLogService extends ChangeNotifier {
         return 'CMD_SEND_TRACE_PATH';
       case cmdSetFloodScope:
         return 'CMD_SET_FLOOD_SCOPE';
+      case cmdExportPrivateKey:
+        return 'CMD_EXPORT_PRIVATE_KEY';
+      case cmdSendRawPacket:
+        return 'CMD_SEND_RAW_PACKET';
       default:
         return null;
     }
@@ -215,6 +225,10 @@ class BleDebugLogService extends ChangeNotifier {
         return 'RESP_CODE_NO_MORE_MESSAGES';
       case respCodeBattAndStorage:
         return 'RESP_CODE_BATT_AND_STORAGE';
+      case respCodePrivateKey:
+        return 'RESP_CODE_PRIVATE_KEY';
+      case respCodeDisabled:
+        return 'RESP_CODE_DISABLED';
       case respCodeContactMsgRecvV3:
         return 'RESP_CODE_CONTACT_MSG_RECV_V3';
       case respCodeChannelMsgRecvV3:

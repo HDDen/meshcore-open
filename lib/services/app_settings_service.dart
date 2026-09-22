@@ -329,6 +329,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(recoverLongPacketEchoes: value));
   }
 
+  Future<void> setDirectEchoRecovery(bool value) async {
+    await updateSettings(_settings.copyWith(directEchoRecovery: value));
+  }
+
   Future<void> setSimplifiedMentions(bool value) async {
     await updateSettings(_settings.copyWith(simplifiedMentions: value));
   }

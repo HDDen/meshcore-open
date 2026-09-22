@@ -1,65 +1,161 @@
 {
   "bg": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "de": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "es": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "fr": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "hu": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "it": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "ja": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "ko": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "nl": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "pl": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "pt": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "sk": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "sl": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "sv": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "uk": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ],
 
   "zh": [
-    "channels_qrUpdateExisting"
+    "channels_qrUpdateExisting",
+    "settings_modSettingsDirectEchoRecovery",
+    "settings_modSettingsDirectEchoRecoveryDscr",
+    "channelPath_incompletePaths",
+    "channelPath_incompletePathTitle",
+    "channelPath_copyInvertedPath",
+    "channelPath_invertedPathCopied"
   ]
 }

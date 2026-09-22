@@ -6781,4 +6781,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String channels_qrUpdateExisting(String name) {
     return 'Канал $name уже существует, обновить его свойства?';
   }
+
+  @override
+  String get settings_modSettingsDirectEchoRecovery =>
+      'Получать личные сообщения, не дожидаясь полного прохождения маршрута';
+
+  @override
+  String get settings_modSettingsDirectEchoRecoveryDscr =>
+      'Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.';
+
+  @override
+  String get channelPath_incompletePaths => 'Неполные пути';
+
+  @override
+  String channelPath_incompletePathTitle(int index, String hops) {
+    return 'Неполный путь $index • $hops';
+  }
+
+  @override
+  String get channelPath_copyInvertedPath => 'Скопировать обратный маршрут';
+
+  @override
+  String get channelPath_invertedPathCopied => 'Обратный маршрут скопирован';
 }
