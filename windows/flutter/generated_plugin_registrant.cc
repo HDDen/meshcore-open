@@ -6,6 +6,7 @@
 
 #include "generated_plugin_registrant.h"
 
+#include <bluetooth_low_energy_windows/bluetooth_low_energy_windows_plugin_c_api.h>
 #include <file_selector_windows/file_selector_windows.h>
 #include <flutter_blue_plus_winrt/flutter_blue_plus_plugin.h>
 #include <flutter_onnxruntime/flutter_onnxruntime_plugin.h>
@@ -15,6 +16,8 @@
 #include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
+  BluetoothLowEnergyWindowsPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("BluetoothLowEnergyWindowsPluginCApi"));
   FileSelectorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   FlutterBluePlusPluginRegisterWithRegistrar(
