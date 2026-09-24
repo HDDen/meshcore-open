@@ -38,6 +38,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_blue_plus: ^2.1.0
+  bluetooth_low_energy: ^6.2.1
   # TODO: Switch to official flserial repo once changes are upstreamed
   flserial:
     git:
