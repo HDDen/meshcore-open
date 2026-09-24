@@ -16,6 +16,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/neighbor_map_focus.dart';
+import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
@@ -199,6 +200,9 @@ class _ContactsScreenState extends State<ContactsScreen>
         widget.selectionMode ||
         widget.batchOperationsMode ||
         event is! KeyDownEvent) {
+      return false;
+    }
+    if (isEditableTextFocused()) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {

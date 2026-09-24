@@ -14,6 +14,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_merge_helper.dart';
+import '../helpers/keyboard_focus_utils.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
@@ -231,6 +232,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop || event is! KeyDownEvent) {
+      return false;
+    }
+    if (isEditableTextFocused()) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {

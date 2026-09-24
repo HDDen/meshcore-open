@@ -28,6 +28,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/composer_draft_cache.dart';
+import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
@@ -1299,6 +1300,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   bool _handleDesktopKeyEvent(KeyEvent event) {
     if (!PlatformInfo.isDesktop) {
+      return false;
+    }
+    if (isEditableTextFocused()) {
       return false;
     }
     if (ModalRoute.of(context)?.isCurrent != true) {
