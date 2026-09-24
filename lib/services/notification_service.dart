@@ -872,8 +872,6 @@ class NotificationService {
   }
 
   Future<void> _showBatchSummary(List<_PendingNotification> batch) async {
-    if (!await _ensureCanNotify()) return;
-
     // Group by type
     final messages = batch
         .where((n) => n.type == _NotificationType.message)
@@ -885,23 +883,59 @@ class NotificationService {
         .where((n) => n.type == _NotificationType.channelMessage)
         .toList();
 
+    await _showActivitySummary(
+      messagesCount: messages.length,
+      channelMessagesCount: channelMsgs.length,
+      advertsCount: adverts.length,
+      advertNames: adverts.map((n) => n.body),
+    );
+  }
+
+  Future<void> showSyncSummaryNotification({
+    required int messagesCount,
+    required int channelMessagesCount,
+  }) async {
+    if (_suppressNotifications) return;
+
+    await _showActivitySummary(
+      messagesCount: messagesCount,
+      channelMessagesCount: channelMessagesCount,
+      advertsCount: 0,
+      advertNames: const [],
+    );
+  }
+
+  Future<void> _showActivitySummary({
+    required int messagesCount,
+    required int channelMessagesCount,
+    required int advertsCount,
+    required Iterable<String> advertNames,
+  }) async {
+    if (!await _ensureCanNotify()) return;
+
     // Build summary text using localized plurals
     final parts = <String>[];
-    if (messages.isNotEmpty) {
-      parts.add(_l10n.notification_messagesCount(messages.length));
+    if (messagesCount > 0) {
+      parts.add(_l10n.notification_messagesCount(messagesCount));
     }
-    if (channelMsgs.isNotEmpty) {
-      parts.add(_l10n.notification_channelMessagesCount(channelMsgs.length));
+    if (channelMessagesCount > 0) {
+      parts.add(
+        _l10n.notification_channelMessagesCount(channelMessagesCount),
+      );
     }
-    if (adverts.isNotEmpty) {
-      parts.add(_l10n.notification_newNodesCount(adverts.length));
+    if (advertsCount > 0) {
+      parts.add(_l10n.notification_newNodesCount(advertsCount));
     }
 
     if (parts.isEmpty) return;
 
     // Show first few device names in batch summary for debugging (only if adverts exist)
-    final deviceInfo = adverts.isNotEmpty
-        ? ' (${adverts.take(5).map((n) => _logSafe(n.body)).join(', ')}${adverts.length > 5 ? ', ...' : ''})'
+    final advertNamesList = advertNames.toList();
+    final deviceInfo = advertNamesList.isNotEmpty
+        ? ' ('
+              '${advertNamesList.take(5).map(_logSafe).join(', ')}'
+              '${advertNamesList.length > 5 ? ', ...' : ''}'
+              ')'
         : '';
     debugPrint('[Notification] batch summary: ${parts.join(", ")}$deviceInfo');
 

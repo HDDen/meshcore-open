@@ -422,6 +422,9 @@ class MeshCoreConnector extends ChangeNotifier {
   /// sender timestamp, so channel messages receive a monotonic local time.
   bool _isInitialBacklogDrain = false;
   DateTime? _lastInitialBacklogChannelReceivedAt;
+  bool _initialSyncNotificationSummaryActive = false;
+  int _initialSyncMessageNotifications = 0;
+  int _initialSyncChannelMessageNotifications = 0;
   bool _deferQueuedContactMessagesUntilContacts = false;
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
@@ -5377,6 +5380,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _pendingInitialChannelSync = false;
     _pendingInitialContactsSync = false;
     _pendingInitialQueuedMessageSync = false;
+    _discardInitialSyncNotificationSummary();
     _contactSyncTotal = null;
     _contactSyncReceived = 0;
     _contactSyncUsesSinceFilter = false;
@@ -8583,6 +8587,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (!isConnected) {
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
+      _discardInitialSyncNotificationSummary();
       _queuedMessageSyncInFlight = false;
       return;
     }
@@ -8620,6 +8625,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _queueSyncTimeout?.cancel();
       notifyListeners();
       _continueAfterQueuedMessageSync();
+      _maybeFlushInitialSyncNotificationSummary();
     }
   }
 
@@ -8637,6 +8643,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
     notifyListeners();
     _continueAfterQueuedMessageSync();
+    _maybeFlushInitialSyncNotificationSummary();
   }
 
   Future<void> sendCliCommand(String command) async {
@@ -8943,9 +8950,13 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
+      final isInitialDrain = _pendingInitialQueuedMessageSync;
+      if (isInitialDrain) {
+        _beginInitialSyncNotificationSummary();
+      }
       _deferQueuedContactMessagesUntilContacts = _pendingInitialContactsSync;
       // This drain replays the backlog accumulated before we connected.
-      _isInitialBacklogDrain = _pendingInitialQueuedMessageSync;
+      _isInitialBacklogDrain = isInitialDrain;
       _lastInitialBacklogChannelReceivedAt = null;
       _pendingInitialQueuedMessageSync = false;
       _pendingQueueSync = false;
@@ -9570,6 +9581,49 @@ class MeshCoreConnector extends ChangeNotifier {
     _queuedMessageSyncInFlight = false;
     notifyListeners();
     _continueAfterQueuedMessageSync();
+    _maybeFlushInitialSyncNotificationSummary();
+  }
+
+  void _beginInitialSyncNotificationSummary() {
+    _initialSyncNotificationSummaryActive = true;
+    _initialSyncMessageNotifications = 0;
+    _initialSyncChannelMessageNotifications = 0;
+  }
+
+  bool _recordInitialSyncMessageNotification() {
+    if (!_initialSyncNotificationSummaryActive) return false;
+    _initialSyncMessageNotifications++;
+    return true;
+  }
+
+  bool _recordInitialSyncChannelMessageNotification() {
+    if (!_initialSyncNotificationSummaryActive) return false;
+    _initialSyncChannelMessageNotifications++;
+    return true;
+  }
+
+  void _maybeFlushInitialSyncNotificationSummary() {
+    if (!_initialSyncNotificationSummaryActive ||
+        _deferQueuedContactMessagesUntilContacts ||
+        _isProcessingDeferredQueuedContactMessages) {
+      return;
+    }
+    final messageCount = _initialSyncMessageNotifications;
+    final channelMessageCount = _initialSyncChannelMessageNotifications;
+    _discardInitialSyncNotificationSummary();
+    if (messageCount == 0 && channelMessageCount == 0) return;
+    unawaited(
+      _notificationService.showSyncSummaryNotification(
+        messagesCount: messageCount,
+        channelMessagesCount: channelMessageCount,
+      ),
+    );
+  }
+
+  void _discardInitialSyncNotificationSummary() {
+    _initialSyncNotificationSummaryActive = false;
+    _initialSyncMessageNotifications = 0;
+    _initialSyncChannelMessageNotifications = 0;
   }
 
   /// The node's queued-message frame only carries the sender-controlled packet
@@ -9612,6 +9666,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (_deferredQueuedContactMessageFrames.isEmpty) {
       _deferQueuedContactMessagesUntilContacts = false;
       notifyListeners();
+      _maybeFlushInitialSyncNotificationSummary();
       if (_pendingQueueSync && isConnected) {
         _pendingQueueSync = false;
         unawaited(syncQueuedMessages(force: true));
@@ -9638,6 +9693,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _deferQueuedContactMessagesUntilContacts = false;
       _isProcessingDeferredQueuedContactMessages = false;
       notifyListeners();
+      _maybeFlushInitialSyncNotificationSummary();
     }
 
     if (_pendingQueueSync && isConnected) {
@@ -9696,6 +9752,7 @@ class MeshCoreConnector extends ChangeNotifier {
       _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
       notifyListeners();
       _continueAfterQueuedMessageSync();
+      _maybeFlushInitialSyncNotificationSummary();
       return;
     }
 
@@ -10432,6 +10489,7 @@ class MeshCoreConnector extends ChangeNotifier {
           _appSettingsService != null) {
         final settings = _appSettingsService!.settings;
         if (settings.notificationsEnabled && settings.notifyOnNewMessage) {
+          if (_recordInitialSyncMessageNotification()) return;
           final msg = message; // capture for closure
           final c = contact; // capture contact reference
           final translationResult = await translateContactMessage(
@@ -11897,6 +11955,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (BlockedSenders.instance.isSenderBlocked(message, label)) return;
     final isMuted = _appSettingsService!.isChannelMuted(label);
     if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
+    if (_recordInitialSyncChannelMessageNotification()) return;
 
     // Reuse translation result only if completed and non-empty; else use original text
     final resolvedText =
