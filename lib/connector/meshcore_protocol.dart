@@ -736,12 +736,13 @@ Uint8List buildRemoveContactFrame(Uint8List pubKey) {
 //
 // A South Edition node reads a comma-separated `cap=` list out of the name:
 // `frmfrg1` when the app reassembles FR01 fragments, `mctxt` because the app
-// decodes MCOtxt itself, `mcmp` to signal generic MCMP support, and `aeic`
-// because the app accepts AEIC image chunks.
+// decodes MCOtxt itself, `mcmp` to signal generic MCMP support, `mcimg`
+// because the app accepts MCOimg image payloads, and `aeic` because the app
+// accepts AEIC image chunks.
 String buildMeshCoreOpenAppName({required bool enableSouthFrameFragments}) {
   return enableSouthFrameFragments
-      ? 'MeshCoreOpen;cap=frmfrg1,mctxt,mcmp,aeic'
-      : 'MeshCoreOpen;cap=mctxt,mcmp,aeic';
+      ? 'MeshCoreOpen;cap=frmfrg1,mctxt,mcmp,mcimg,aeic'
+      : 'MeshCoreOpen;cap=mctxt,mcmp,mcimg,aeic';
 }
 
 Uint8List buildAppStartFrame({
