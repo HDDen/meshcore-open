@@ -1441,6 +1441,25 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  void _loadMessagesForContactInBackground(String contactKeyHex) {
+    if (_activeContactKey != contactKeyHex) {
+      return;
+    }
+    if (_loadedConversationKeys.contains(contactKeyHex) ||
+        _conversationLoadFutures.containsKey(contactKeyHex)) {
+      return;
+    }
+
+    unawaited(
+      _loadMessagesForContact(contactKeyHex).catchError((error, stackTrace) {
+        appLogger.error(
+          'Failed to warm contact messages for $contactKeyHex: $error\n$stackTrace',
+          tag: 'Connector',
+        );
+      }),
+    );
+  }
+
   Future<void> _loadMessagesForContactInternal(
     String contactKeyHex,
     int generation,
@@ -6180,7 +6199,7 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       return;
     }
-    await _loadMessagesForContact(contact.publicKeyHex);
+    _loadMessagesForContactInBackground(contact.publicKeyHex);
 
     // Room-server messages sign via the node (a few seconds). Show a pending
     // placeholder while signing so the message does not visually disappear;
