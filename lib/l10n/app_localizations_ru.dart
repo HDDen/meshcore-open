@@ -6807,4 +6807,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channelPath_invertedPathCopied => 'Обратный маршрут скопирован';
+
+  @override
+  String get discoveredContacts_alreadyAdded => 'Узел уже добавлен в контакты';
 }

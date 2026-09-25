@@ -3739,5 +3739,6 @@
     }
   },
   "channelPath_copyInvertedPath": "Copy inverted route",
-  "channelPath_invertedPathCopied": "Inverted route copied"
+  "channelPath_invertedPathCopied": "Inverted route copied",
+  "discoveredContacts_alreadyAdded": "Node already in contacts"
 }

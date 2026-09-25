@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -15,6 +16,14 @@ class ZeroHopDeviceDiscovery {
 
   final MeshCoreConnector connector;
   final Random _random = Random();
+  final Set<String> _responderKeys = <String>{};
+
+  /// Public keys (hex) of every node that answered this request, known
+  /// contacts included. The connector records those replies in its discovery
+  /// list too, but once there a reply cannot be told from a heard advert, and
+  /// the discovery screen shows a known contact only when it answered. A live
+  /// view: it fills in while the request runs.
+  Set<String> get responderKeys => UnmodifiableSetView(_responderKeys);
 
   StreamSubscription<Uint8List>? _framesSubscription;
   Timer? _responseTimer;
@@ -98,6 +107,7 @@ class ZeroHopDeviceDiscovery {
     final publicKey = Uint8List.fromList(
       frame.sublist(publicKeyOffset, publicKeyOffset + pubKeySize),
     );
+    _responderKeys.add(pubKeyToHex(publicKey));
     connector.recordZeroHopDiscoveredContact(
       publicKey: publicKey,
       type: flags & 0x0F,

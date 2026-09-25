@@ -11581,6 +11581,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inverted route copied'**
   String get channelPath_invertedPathCopied;
+
+  /// No description provided for @discoveredContacts_alreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Node already in contacts'**
+  String get discoveredContacts_alreadyAdded;
 }
 
 class _AppLocalizationsDelegate

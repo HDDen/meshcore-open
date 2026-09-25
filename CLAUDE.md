@@ -65,7 +65,7 @@ All screens are fully implemented (no remaining placeholders).
 | `scanner_screen.dart` | BLE device scan and connect — main entry point |
 | `tcp_screen.dart` | Connect to a MeshCore device over TCP/IP |
 | `usb_screen.dart` | Connect to a MeshCore device over USB serial |
-| `discovery_screen.dart` | Browse all discovered (non-contact) mesh nodes |
+| `discovery_screen.dart` | Browse discovered mesh nodes not yet in contacts; a contact that answered the last discovery request is listed dimmed, without actions |
 | `chrome_required_screen.dart` | Web gate for non-Chrome browsers (BLE unavailable) |
 
 ### Chat / Messaging

@@ -39,6 +39,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   ZeroHopDeviceDiscovery? _deviceDiscovery;
   bool _isDiscoveringDevices = false;
 
+  /// Who answered the last discovery request: the live view the request
+  /// fills in, kept after it ends. A node in here that is already a contact
+  /// is shown dimmed instead of hidden, so the screen lists everything the
+  /// request reached.
+  Set<String> _discoveryResponders = const <String>{};
+
   @override
   void dispose() {
     _deviceDiscovery?.cancel();
@@ -88,9 +94,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     final connector = context.watch<MeshCoreConnector>();
 
     final discoveredContacts = connector.discoveredContacts;
+    final knownKeys = connector.knownContactKeys;
     final filteredAndSorted = _filterAndSortContacts(
       discoveredContacts,
       connector,
+      knownKeys,
     );
 
     return Scaffold(
@@ -167,6 +175,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                           contact,
                           connector,
                           index,
+                          alreadyAdded: knownKeys.contains(
+                            contact.publicKeyHex,
+                          ),
                         );
                         return tile;
                       },
@@ -182,121 +193,144 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     BuildContext context,
     Contact contact,
     MeshCoreConnector connector,
-    int index,
-  ) {
+    int index, {
+    required bool alreadyAdded,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final isChat = contact.type == advTypeChat;
     final displayName = contact.name.trim().isEmpty
         ? context.l10n.common_unknownDevice
         : contact.name;
 
-    return ListEntrance(
-      index: index,
-      child: MeshCard(
-        // A tap opens the menu, and adding the contact is the first entry in
-        // it. Importing straight from the tap made the most consequential
-        // action of the screen the easiest one to trigger by accident, on a
-        // list whose rows are the width of the screen.
-        onTap: () => _showContactContextMenu(contact, connector),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Row(
-          children: [
-            AvatarCircle(
-              name: displayName,
-              size: 42,
-              color: isChat ? null : _avatarColor(contact.type),
-              icon: _avatarIcon(contact.type),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. Name, on a line of its own
-                  Text(
-                    displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 15,
-                    ),
+    // A node that is already a contact is listed only because it answered
+    // the discovery request: there is nothing to do with it here, so the
+    // card says so, takes no tap and fades back.
+    final card = MeshCard(
+      // A tap opens the menu, and adding the contact is the first entry in
+      // it. Importing straight from the tap made the most consequential
+      // action of the screen the easiest one to trigger by accident, on a
+      // list whose rows are the width of the screen.
+      onTap: alreadyAdded
+          ? null
+          : () => _showContactContextMenu(contact, connector),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          AvatarCircle(
+            name: displayName,
+            size: 42,
+            color: isChat ? null : _avatarColor(contact.type),
+            icon: _avatarIcon(contact.type),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1. Name, on a line of its own
+                Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
                   ),
-                  const SizedBox(height: 3),
-                  // 2. Full public key, shortened only as far as the row
-                  // actually forces — same widget, font and size the contacts
-                  // list uses, so the two screens show a key the same way.
-                  MiddleEllipsisText(
-                    text: contact.publicKeyHex.toUpperCase(),
-                    style: MeshTheme.mono(
-                      fontSize: 9,
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
+                ),
+                const SizedBox(height: 3),
+                // 2. Full public key, shortened only as far as the row
+                // actually forces — same widget, font and size the contacts
+                // list uses, so the two screens show a key the same way.
+                MiddleEllipsisText(
+                  text: contact.publicKeyHex.toUpperCase(),
+                  style: MeshTheme.mono(
+                    fontSize: 9,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(height: 5),
-                  // 3. Type, the two advert markers, and when it was heard.
-                  // The chip and the icons take their intrinsic width and the
-                  // date takes what is left, right-aligned inside it: a long
-                  // type label then squeezes the date rather than overflowing
-                  // the row.
-                  Row(
-                    children: [
-                      StatusChip(
-                        label: contact.typeLabel(context.l10n).toUpperCase(),
-                        color: _avatarColor(contact.type),
-                        icon: _avatarIcon(contact.type),
-                      ),
-                      if (contact.hasLocation) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.location_on,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
-                        ),
-                      ],
-                      if (contact.rawPacket != null) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.cell_tower,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: MediaQuery(
-                          data: MediaQuery.of(context).copyWith(
-                            textScaler: TextScaler.linear(
-                              MediaQuery.textScalerOf(
-                                context,
-                              ).scale(1.0).clamp(1.0, 1.3),
-                            ),
-                          ),
-                          child: Text(
-                            _formatLastSeen(context, _resolveLastSeen(contact)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.right,
-                            style: MeshTheme.mono(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
+                ),
+                const SizedBox(height: 5),
+                // 3. Type, the two advert markers, and when it was heard.
+                // The chip and the icons take their intrinsic width and the
+                // date takes what is left, right-aligned inside it: a long
+                // type label then squeezes the date rather than overflowing
+                // the row.
+                Row(
+                  children: [
+                    StatusChip(
+                      label: contact.typeLabel(context.l10n).toUpperCase(),
+                      color: _avatarColor(contact.type),
+                      icon: _avatarIcon(contact.type),
+                    ),
+                    if (contact.hasLocation) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.location_on,
+                        size: 13,
+                        color: scheme.onSurfaceVariant.withValues(
+                          alpha: 0.55,
                         ),
                       ),
                     ],
+                    if (contact.rawPacket != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.cell_tower,
+                        size: 13,
+                        color: scheme.onSurfaceVariant.withValues(
+                          alpha: 0.55,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          textScaler: TextScaler.linear(
+                            MediaQuery.textScalerOf(
+                              context,
+                            ).scale(1.0).clamp(1.0, 1.3),
+                          ),
+                        ),
+                        child: Text(
+                          _formatLastSeen(context, _resolveLastSeen(contact)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: MeshTheme.mono(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // 4. Only for a node that is already a contact: why it is
+                // listed at all, since nothing here applies to it.
+                if (alreadyAdded) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    context.l10n.discoveredContacts_alreadyAdded,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+
+    return ListEntrance(
+      index: index,
+      child: alreadyAdded ? Opacity(opacity: 0.45, child: card) : card,
     );
   }
 
@@ -305,7 +339,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
     final discovery = ZeroHopDeviceDiscovery(connector);
     _deviceDiscovery = discovery;
-    setState(() => _isDiscoveringDevices = true);
+    setState(() {
+      _isDiscoveringDevices = true;
+      // A new request starts an empty answer list. It is read live: the
+      // connector notifies on every reply and the screen watches it.
+      _discoveryResponders = discovery.responderKeys;
+    });
     try {
       await discovery.run();
     } catch (error) {
@@ -588,14 +627,19 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   List<Contact> _filterAndSortContacts(
     List<Contact> contacts,
     MeshCoreConnector connector,
+    Set<String> knownKeys,
   ) {
     var filtered = contacts.where((contact) {
       if (searchQuery.isEmpty) return true;
       return matchesDiscoveryContactQuery(contact, searchQuery);
     }).toList();
 
+    // The discovery list holds every advert heard, known contacts included;
+    // those belong to the contacts list and are hidden here, unless they
+    // answered the last discovery request.
     filtered = filtered.where((contact) {
-      return !connector.knownContactKeys.contains(contact.publicKeyHex);
+      return !knownKeys.contains(contact.publicKeyHex) ||
+          _discoveryResponders.contains(contact.publicKeyHex);
     }).toList();
 
     // Filter out own node from the list

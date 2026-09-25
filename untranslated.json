@@ -7,7 +7,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "de": [
@@ -18,7 +19,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "es": [
@@ -29,7 +31,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "fr": [
@@ -40,7 +43,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "hu": [
@@ -51,7 +55,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "it": [
@@ -62,7 +67,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "ja": [
@@ -73,7 +79,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "ko": [
@@ -84,7 +91,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "nl": [
@@ -95,7 +103,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "pl": [
@@ -106,7 +115,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "pt": [
@@ -117,7 +127,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "sk": [
@@ -128,7 +139,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "sl": [
@@ -139,7 +151,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "sv": [
@@ -150,7 +163,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "uk": [
@@ -161,7 +175,8 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ],
 
   "zh": [
@@ -172,6 +187,7 @@
     "channelPath_incompletePaths",
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
-    "channelPath_invertedPathCopied"
+    "channelPath_invertedPathCopied",
+    "discoveredContacts_alreadyAdded"
   ]
 }

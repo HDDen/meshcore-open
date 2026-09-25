@@ -6821,4 +6821,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get channelPath_invertedPathCopied => 'Inverted route copied';
+
+  @override
+  String get discoveredContacts_alreadyAdded => 'Node already in contacts';
 }
