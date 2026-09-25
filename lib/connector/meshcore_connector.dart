@@ -32,6 +32,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
+import '../helpers/direct_flood_repeats.dart';
 import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
@@ -3923,11 +3924,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (m) => m.messageId == message.messageId,
       );
       if (index != -1) {
-        messages[index] = message;
+        // The retry service writes back its own copy of a pending message,
+        // which never sees the flood relays counted meanwhile. That count
+        // only grows, so the stored one is kept when it is ahead.
+        final stored = messages[index];
+        final updated = message.repeatCount < stored.repeatCount
+            ? message.copyWith(repeatCount: stored.repeatCount)
+            : message;
+        messages[index] = updated;
         if (_isRoomConversation(contactKey)) {
           messages.sort(RoomMessageTimelineHelper.compare);
         }
-        _messageStore.saveMessage(contactKey, message);
+        _messageStore.saveMessage(contactKey, updated);
         notifyListeners();
       }
     }
@@ -5569,6 +5577,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactCacheLoadGeneration++;
     _contactCacheLoadFuture = null;
     _clearDirectEchoKey('new session');
+    _directFloodRepeats.clear();
     _directEchoAckUnsupported = false;
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
@@ -5842,6 +5851,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _conversationLoadGeneration++;
     _conversationLoadFutures.clear();
     _clearDirectEchoKey('disconnect');
+    _directFloodRepeats.clear();
     _selfPublicKey = null;
     _selfName = null;
     _selfLatitude = null;
@@ -9711,6 +9721,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (previousSelfPublicKeyHex != selfPublicKeyHex) {
       _clearSharedMessageHistoryState();
       _clearDirectEchoKey('node changed');
+      _directFloodRepeats.clear();
     }
 
     //set all the stores' public key so they can load the correct data
@@ -10693,6 +10704,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     if (message != null) {
       final effectiveReceivedAt = receivedAt ?? DateTime.now();
+      // Read off the frame now: the message's own path is replaced by the
+      // contact's route below.
+      final floodHops = echo == null ? _floodHopCountOf(frame) : null;
       if (localSourceLabel != null) {
         message = message.copyWith(
           isOutgoing: true,
@@ -10765,12 +10779,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               existing[duplicateIndex],
               echo?.observation,
             );
+            // The sender's retry is a packet of its own; its relays count
+            // for the message it repeats.
+            if (floodHops != null && contact != null) {
+              final original = existing[duplicateIndex];
+              _addDirectFloodRepeats(
+                (
+                  conversationKey: incomingMessage.senderKeyHex,
+                  messageId: original.messageId,
+                ),
+                _bindDirectFloodDelivery(original, contact, floodHops),
+              );
+            }
             return;
           }
         }
       }
       if (echo != null) {
         message = DirectEchoRecovery.stampFirstEcho(message, echo.observation);
+      }
+      if (floodHops != null && contact != null && !message.isOutgoing) {
+        final relays = _bindDirectFloodDelivery(message, contact, floodHops);
+        if (relays > 0) message = message.copyWith(repeatCount: relays);
       }
       // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
@@ -12851,6 +12881,137 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  // ---- Flood retransmissions of direct messages (see DirectFloodRepeats) --
+
+  /// Relayed copies of flood-routed direct messages, tied to the messages
+  /// they carry, so that every further copy counts as one retransmission.
+  final DirectFloodRepeats _directFloodRepeats = DirectFloodRepeats();
+
+  /// A flood copy of a TXT_MSG heard in the RX log: one more retransmission
+  /// of the direct message it is tied to, if it is tied to one.
+  void _countDirectFloodCopy(_RawPacket packet) {
+    final target = _directFloodRepeats.observe(
+      payload: packet.payload,
+      hopCount: packet.hopCount,
+      at: DateTime.now(),
+      identity: _directFloodIdentity(packet.payload),
+    );
+    if (target != null) _addDirectFloodRepeats(target, 1);
+  }
+
+  /// Who a flood copy is between and when it was sent, read with the node's
+  /// key while direct echo recovery keeps one; null otherwise. Our own copy
+  /// is addressed to a contact and a copy to us comes from one, and the
+  /// shared secret is the same in both directions.
+  String? _directFloodIdentity(Uint8List payload) {
+    if (!_directEchoRecoveryEnabled || !_directEchoKeys.hasKey) return null;
+    final self = _selfPublicKey;
+    if (self == null || self.isEmpty || payload.length < 4) return null;
+    final destinationHash = payload[0];
+    final sourceHash = payload[1];
+    final peerHashes = [
+      if (sourceHash == self[0]) destinationHash,
+      if (destinationHash == self[0]) sourceHash,
+    ];
+    if (peerHashes.isEmpty) return null;
+    final encrypted = Uint8List.fromList(payload.sublist(2));
+    for (final peerHash in peerHashes) {
+      final peers = DirectEchoRecovery.candidateSenders(
+        allContactsUnfiltered,
+        peerHash,
+      );
+      for (final peer in peers) {
+        final secret = _directEchoKeys.secretFor(peer);
+        if (secret == null) continue;
+        final plaintext = _decryptPayload(secret, encrypted);
+        // The MAC is two bytes long, so a text type out of range means the
+        // wrong peer passed it by chance.
+        if (plaintext == null ||
+            plaintext.length < 5 ||
+            (plaintext[4] >> 2) > txtTypeSigned) {
+          continue;
+        }
+        final timestamp =
+            plaintext[0] |
+            (plaintext[1] << 8) |
+            (plaintext[2] << 16) |
+            (plaintext[3] << 24);
+        return DirectFloodRepeats.identityOf(peer.publicKeyHex, timestamp);
+      }
+    }
+    return null;
+  }
+
+  /// A flood send the node confirmed: its relays will reach the RX log.
+  void _expectDirectFloodRelays(({Message message, Contact contact})? sent) {
+    final self = _selfPublicKey;
+    if (sent == null ||
+        self == null ||
+        self.isEmpty ||
+        sent.contact.publicKey.isEmpty) {
+      return;
+    }
+    final contactKeyHex = sent.contact.publicKeyHex;
+    _directFloodRepeats.expectOutgoing(
+      target: (
+        conversationKey: contactKeyHex,
+        messageId: sent.message.messageId,
+      ),
+      destinationHash: sent.contact.publicKey[0],
+      sourceHash: self[0],
+      identity: DirectFloodRepeats.identityOf(
+        contactKeyHex,
+        sent.message.timestamp.millisecondsSinceEpoch ~/ 1000,
+      ),
+      at: DateTime.now(),
+    );
+  }
+
+  /// Ties a message the node delivered by flood to the copies of it already
+  /// heard, and returns how many of those were relays.
+  int _bindDirectFloodDelivery(Message message, Contact contact, int hops) {
+    final self = _selfPublicKey;
+    if (self == null || self.isEmpty || contact.publicKey.isEmpty) return 0;
+    return _directFloodRepeats.bindIncoming(
+          target: (
+            conversationKey: message.senderKeyHex,
+            messageId: message.messageId,
+          ),
+          sourceHash: contact.publicKey[0],
+          destinationHash: self[0],
+          hopCount: hops,
+          identity: DirectFloodRepeats.identityOf(
+            contact.publicKeyHex,
+            message.timestamp.millisecondsSinceEpoch ~/ 1000,
+          ),
+          at: DateTime.now(),
+        ) ??
+        0;
+  }
+
+  void _addDirectFloodRepeats(DirectFloodTarget target, int count) {
+    if (count <= 0) return;
+    _updateStoredContactMessage(
+      target.conversationKey,
+      target.messageId,
+      (current) => current.copyWith(repeatCount: current.repeatCount + count),
+    );
+  }
+
+  /// The hops a CONTACT_MSG_RECV frame reports for a message that came by
+  /// flood, or null for one that came along a direct route (path byte 0xFF).
+  static int? _floodHopCountOf(Uint8List frame) {
+    if (frame.isEmpty) return null;
+    final pathOffset = switch (frame[0]) {
+      respCodeContactMsgRecvV3 => 10,
+      respCodeContactMsgRecv => 7,
+      _ => -1,
+    };
+    if (pathOffset < 0 || frame.length <= pathOffset) return null;
+    final pathLength = frame[pathOffset];
+    return pathLength == 0xFF ? null : pathLength & 0x3F;
+  }
+
   void _handleLogRxData(Uint8List frame) async {
     if (frame.length < 4) return;
     try {
@@ -12864,6 +13025,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
       if (packet?.payloadType == payloadTypeTXTMSG) {
+        if (packet!.isFlood) _countDirectFloodCopy(packet);
         await _recoverDirectEcho(frame, snr: snr, rssi: rssi);
         return;
       }
@@ -13190,7 +13352,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     try {
       final reader = BufferReader(frame);
-      reader.skipBytes(2); //Skip code and is_flood
+      reader.skipBytes(1); // code
+      final isFlood = reader.readByte() != 0;
       final ackHash = reader.readUInt32LE();
       final timeoutMs = reader.readUInt32LE();
 
@@ -13209,6 +13372,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final retryService = _retryService;
       if (retryService != null &&
           retryService.updateMessageFromSent(ackHash, timeoutMs)) {
+        if (isFlood) {
+          _expectDirectFloodRelays(retryService.sentMessageForAck(ackHash));
+        }
         return;
       }
 

@@ -999,6 +999,17 @@ that is firmware behaviour. With the option off nothing here runs: no
 command is sent, `_handleLogRxData` returns on a TXT_MSG as it did before,
 and the duplicate check is the same predicate returning through a new name.
 
+### Flood retransmissions of direct messages
+
+A direct message that travels by flood shows the relay counter channel messages have: the repeat icon and a number in the bubble's meta row, which message tracing gates as it does in channels, and the Repeats row of its path screen. `Message.repeatCount` holds it, persisted by `message_store` and 0 for older records. An outgoing message counts every relayed copy our radio hears, since our own transmission never reaches the RX log; an incoming one counts the copies after the one the node delivered.
+
+`helpers/direct_flood_repeats.dart` does the counting. A flood copy keeps its payload byte for byte at every hop, so once a message is tied to a payload, each further copy with that payload is one more relay. The tie is the hard part, the payload being encrypted:
+
+- **With direct echo recovery on**, `_directFloodIdentity` decrypts every flood TXT_MSG copy that involves our hash with the key the option keeps in RAM. The shared secret works both ways, so our own copies decrypt as well as copies addressed to us. A decrypted copy is named by the other party's key and the sender timestamp and binds only to the message with that identity.
+- **Without the key**, an outgoing message binds the first unclaimed copy from our one-byte hash to its recipient's once `RESP_CODE_SENT` said flood. `_handleMessageSent` reads that `is_flood` byte, and `MessageRetryService.sentMessageForAck` names the message it matched. Two different messages waiting on one pair of hashes are refused, while the attempts of one message count as one. An incoming message binds, at delivery, the earliest unclaimed copy from its sender's hash to ours that took the hop count the CONTACT_MSG_RECV frame reports, since the node hands messages over in the order it heard them.
+
+Heard packets are remembered for ten minutes and a flood send waits two for its first copy; all of it is dropped with the session. `_processIncomingMessage` reads the frame's path byte before the message's path is replaced by the contact's route, and a sender's retry, being a packet of its own, binds to the message it repeats. The retry service writes back its own stale copy of a pending message, so `_updateMessage` keeps the stored count when that one is ahead: the count only grows.
+
 ### Map raster sources
 
 Sources live in `MapRasterSourceCatalog` (`services/map_tile_cache_service.dart`) and are picked in app settings. Two carry an API key: Stadia (`mapTileApiKey`, with a shared demo key as fallback) and **Yandex** (`mapYandexApiKey`, no demo — the map silently falls back to OpenStreetMap until the user pastes their own key from the Yandex developer dashboard).

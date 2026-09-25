@@ -84,6 +84,12 @@ class Message {
   /// (see `DirectEchoRecovery`); empty for everything else. The delivery
   /// progress fields above double as its route bar while it is non-empty.
   final List<DirectEchoObservation> directEchoObservations;
+
+  /// Flood retransmissions of this message heard in the RX log (see
+  /// `DirectFloodRepeats`): every relayed copy of an outgoing one, the copies
+  /// after the delivered one of an incoming one. Zero for a message that
+  /// travelled a known route or was never heard relayed.
+  final int repeatCount;
   final Map<String, List<String?>> reactions;
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
@@ -143,6 +149,7 @@ class Message {
     this.deliveryProgressTotalSteps = 0,
     this.deliveryProgressCompletedSteps = 0,
     List<DirectEchoObservation>? directEchoObservations,
+    this.repeatCount = 0,
     Uint8List? fourByteRoomContactKey,
     this.wasBlocked = false,
     Map<String, List<String?>>? reactions,
@@ -175,6 +182,7 @@ class Message {
     int? deliveryProgressTotalSteps,
     int? deliveryProgressCompletedSteps,
     List<DirectEchoObservation>? directEchoObservations,
+    int? repeatCount,
     bool? isCli,
     Object? originalText = _unset,
     Object? translatedText = _unset,
@@ -298,6 +306,7 @@ class Message {
           this.deliveryProgressCompletedSteps,
       directEchoObservations:
           directEchoObservations ?? this.directEchoObservations,
+      repeatCount: repeatCount ?? this.repeatCount,
       reactions: reactions ?? this.reactions,
       reactionStatuses: reactionStatuses ?? this.reactionStatuses,
       fourByteRoomContactKey:

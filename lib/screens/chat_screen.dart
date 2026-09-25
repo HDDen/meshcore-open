@@ -2312,7 +2312,7 @@ class _ChatScreenState extends State<ChatScreen> {
       sentByRadioWaitSeconds: message.sentByRadioWaitSeconds,
       isOutgoing: message.isOutgoing,
       status: ChannelMessageStatus.sent,
-      repeatCount: 0,
+      repeatCount: message.repeatCount,
       pathLength: message.pathLength,
       pathBytes: message.pathBytes,
     );
@@ -3491,6 +3491,27 @@ class _MessageBubble extends StatelessWidget {
                                       fontSize: 10 * textScale,
                                       color: metaColor,
                                     ),
+                                  ),
+                                // Flood relays heard, drawn as channel
+                                // bubbles draw theirs.
+                                if (message.repeatCount > 0)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.repeat,
+                                        size: 11 * textScale,
+                                        color: metaColor,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '${message.repeatCount}',
+                                        style: MeshTheme.mono(
+                                          fontSize: 10 * textScale,
+                                          color: metaColor,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 4),

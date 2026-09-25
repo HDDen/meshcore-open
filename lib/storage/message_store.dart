@@ -525,6 +525,7 @@ class MessageStore {
       'directEchoObservations': msg.directEchoObservations.isEmpty
           ? null
           : DirectEchoObservation.encodeList(msg.directEchoObservations),
+      'repeatCount': msg.repeatCount,
       'reactions': msg.reactions,
       'reactionStatuses': msg.reactionStatuses.map(
         (key, value) => MapEntry(key, value.index),
@@ -662,6 +663,7 @@ class MessageStore {
       directEchoObservations: DirectEchoObservation.decodeList(
         json['directEchoObservations'],
       ),
+      repeatCount: json['repeatCount'] as int? ?? 0,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(

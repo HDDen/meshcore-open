@@ -710,6 +710,20 @@ class MessageRetryService extends ChangeNotifier {
 
   bool get hasPendingMessages => _pendingMessages.isNotEmpty;
 
+  /// The pending message and recipient a RESP_CODE_SENT with [ackHash] was
+  /// matched to by [updateMessageFromSent], or null. The connector follows
+  /// the relays of a flood send from here, since only the node's answer says
+  /// the packet went out by flood.
+  ({Message message, Contact contact})? sentMessageForAck(int ackHash) {
+    final ackHashHex = ackHash.toRadixString(16).padLeft(8, '0');
+    final messageId = _ackHashToMessageId[ackHashHex]?.messageId;
+    if (messageId == null) return null;
+    final message = _pendingMessages[messageId];
+    final contact = _pendingContacts[messageId];
+    if (message == null || contact == null) return null;
+    return (message: message, contact: contact);
+  }
+
   void handleRxLogFrame(Uint8List frame) {
     final echo = DirectMessageEcho.tryParse(frame);
     if (echo == null || _progressTrackers.isEmpty) return;
