@@ -12,6 +12,9 @@ import UserNotifications
     // forwarded to Dart, including taps that launch the app from a cold start.
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     GeneratedPluginRegistrant.register(with: self)
+    if let registrar = self.registrar(forPlugin: "IosBleProxyAdapter") {
+      IosBleProxyAdapter.register(with: registrar)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
