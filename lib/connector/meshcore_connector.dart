@@ -544,6 +544,7 @@ class MeshCoreConnector extends ChangeNotifier {
   String? _offlinePublicKeyHex;
   List<String> _offlineSharedScopes = const [];
   bool _isFlushingPendingOutgoingMessages = false;
+  final Set<String> _committingPendingChannelSends = {};
   final Map<String, Timer> _channelNoRetransmissionTimers = {};
   final List<_DeferredChannelMessageSend> _deferredChannelMessageSends = [];
   final Map<String, _DeferredChannelMessageSend> _retriableChannelMessageSends =
@@ -5716,7 +5717,7 @@ class MeshCoreConnector extends ChangeNotifier {
     );
 
     try {
-      await _writeFrameToActiveTransport(data);
+      await _writeFrameToActiveTransport(data).timeout(_commandAckTimeout);
     } catch (_) {
       if (pendingAck != null) {
         _pendingGenericAckQueue.remove(pendingAck);
@@ -6794,6 +6795,9 @@ class MeshCoreConnector extends ChangeNotifier {
         ? null
         : ReactionHelper.parseReaction(text);
     if (reactionInfo != null) {
+      if (pendingMessageId != null) {
+        _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
+      }
       reactionInfo.senderName = selfName;
       // Check if we've already processed this reaction
       _processedChannelReactions.putIfAbsent(channel.index, () => {});
@@ -7106,7 +7110,11 @@ class MeshCoreConnector extends ChangeNotifier {
     final message = packetHash == null
         ? baseMessage
         : baseMessage.copyWith(packetHash: packetHash);
-    await _addChannelMessage(channel.index, message);
+    await _addChannelMessage(
+      channel.index,
+      message,
+      awaitPersistence: false,
+    );
     if (!isBinaryTransport &&
         utf8.encode(outboundText).length > maxChannelMessageBytes(_selfName)) {
       // Belt-and-suspenders: the composer counter should prevent this, but a
@@ -7500,37 +7508,41 @@ class MeshCoreConnector extends ChangeNotifier {
     Future<void> Function() action, {
     required String region,
     bool waitForScopeReset = true,
-  }) async {
+  }) => _runChannelCommandLocked(() async {
+    // An empty channel region deliberately clears any previous app override,
+    // handing scope selection back to the node's default-region setting.
+    // This must happen for unscoped channels too: otherwise a stale scope
+    // left by another client can leak into the outgoing packet.
+    await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
+    try {
+      await action();
+    } finally {
+      if (isConnected) {
+        final clearScopeFrame = buildSetFloodScopeFrame('');
+        if (waitForScopeReset) {
+          await _sendFrameAndWaitForCommandAck(clearScopeFrame);
+        } else {
+          unawaited(
+            sendFrame(clearScopeFrame).catchError((error) {
+              appLogger.warn(
+                'Best-effort flood scope reset failed: $error',
+                tag: 'Channel Send',
+              );
+            }),
+          );
+        }
+      }
+    }
+  });
+
+  Future<T> _runChannelCommandLocked<T>(Future<T> Function() action) async {
     final prev = _channelScopedSendLock;
     final completer = Completer<void>();
     _channelScopedSendLock = completer.future;
     await prev;
 
     try {
-      // An empty channel region deliberately clears any previous app override,
-      // handing scope selection back to the node's default-region setting.
-      // This must happen for unscoped channels too: otherwise a stale scope
-      // left by another client can leak into the outgoing packet.
-      await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
-      try {
-        await action();
-      } finally {
-        if (isConnected) {
-          final clearScopeFrame = buildSetFloodScopeFrame('');
-          if (waitForScopeReset) {
-            await _sendFrameAndWaitForCommandAck(clearScopeFrame);
-          } else {
-            unawaited(
-              sendFrame(clearScopeFrame).catchError((error) {
-                appLogger.warn(
-                  'Best-effort flood scope reset failed: $error',
-                  tag: 'Channel Send',
-                );
-              }),
-            );
-          }
-        }
-      }
+      return await action();
     } finally {
       completer.complete();
     }
@@ -7817,7 +7829,7 @@ class MeshCoreConnector extends ChangeNotifier {
           pending.timer?.cancel();
           pending.timer = Timer(
             pending.sendAt.difference(now),
-            () => _commitPendingChannelSend(messageId),
+            () => unawaited(_commitPendingChannelSend(messageId)),
           );
           continue;
         }
@@ -8110,7 +8122,7 @@ class MeshCoreConnector extends ChangeNotifier {
     if (delaySeconds > 0) {
       pending.timer = Timer(
         Duration(seconds: delaySeconds),
-        () => _commitPendingChannelSend(message.messageId),
+        () => unawaited(_commitPendingChannelSend(message.messageId)),
       );
     }
     _pendingChannelSends[message.messageId] = pending;
@@ -8167,44 +8179,71 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> _commitPendingChannelSend(String messageId) async {
     final pending = _pendingChannelSends[messageId];
     if (pending == null) return;
-    if (!isSessionReady) return;
-    pending.timer?.cancel();
-    final liveChannelIndex = _channels.indexWhere(
-      (channel) => channel.index == pending.channel.index,
-    );
-    if (liveChannelIndex < 0) {
-      _pendingChannelSends.remove(messageId);
-      await _addChannelMessage(
-        pending.channel.index,
-        pending.message.copyWith(status: ChannelMessageStatus.failed),
-      );
-      return;
-    }
-    final channel = _channels[liveChannelIndex];
+    if (!_committingPendingChannelSends.add(messageId)) return;
     try {
-      await sendChannelMessage(
-        channel,
-        pending.text,
-        mcoImageV3: pending.mcoImageV3,
-        uncompressedText: pending.uncompressedText,
-        originalText: pending.originalText,
-        translatedLanguageCode: pending.translatedLanguageCode,
-        translationModelId: pending.translationModelId,
-        replyToMessageId: pending.replyToMessageId,
-        replyToSenderName: pending.replyToSenderName,
-        replyToText: pending.replyToText,
-        replyToTimestamp: pending.replyToTimestamp,
-        preparedMcoImageV3Outbound: pending.mcoImageV3Outbound,
-        pendingMessageId: pending.message.messageId,
-        pendingTimestamp: pending.message.timestamp,
-        pendingReceivedAt: pending.message.receivedAt,
+      if (!isSessionReady) return;
+      pending.timer?.cancel();
+      final liveChannelIndex = _channels.indexWhere(
+        (channel) => channel.index == pending.channel.index,
       );
-    } catch (error) {
-      appLogger.warn('Deferred channel send failed: $error', tag: 'Connector');
-      if (!_pendingChannelSends.containsKey(messageId)) {
-        _markPendingChannelMessageFailedById(messageId);
+      if (liveChannelIndex < 0) {
+        _pendingChannelSends.remove(messageId);
+        await _addChannelMessage(
+          pending.channel.index,
+          pending.message.copyWith(status: ChannelMessageStatus.failed),
+        );
+        return;
       }
+      final channel = _channels[liveChannelIndex];
+      try {
+        await sendChannelMessage(
+          channel,
+          pending.text,
+          mcoImageV3: pending.mcoImageV3,
+          uncompressedText: pending.uncompressedText,
+          originalText: pending.originalText,
+          translatedLanguageCode: pending.translatedLanguageCode,
+          translationModelId: pending.translationModelId,
+          replyToMessageId: pending.replyToMessageId,
+          replyToSenderName: pending.replyToSenderName,
+          replyToText: pending.replyToText,
+          replyToTimestamp: pending.replyToTimestamp,
+          preparedMcoImageV3Outbound: pending.mcoImageV3Outbound,
+          pendingMessageId: pending.message.messageId,
+          pendingTimestamp: pending.message.timestamp,
+          pendingReceivedAt: pending.message.receivedAt,
+        );
+        if (_pendingChannelSends.containsKey(messageId) && isSessionReady) {
+          await _failPendingChannelSend(pending);
+        }
+      } catch (error, stackTrace) {
+        appLogger.warn(
+          'Deferred channel send failed: $error\n$stackTrace',
+          tag: 'Connector',
+        );
+        if (_pendingChannelSends.containsKey(messageId)) {
+          if (isSessionReady) {
+            await _failPendingChannelSend(pending);
+          }
+        } else {
+          _markPendingChannelMessageFailedById(messageId);
+        }
+      }
+    } finally {
+      _committingPendingChannelSends.remove(messageId);
     }
+  }
+
+  Future<void> _failPendingChannelSend(_PendingChannelSend pending) async {
+    final removed = _pendingChannelSends.remove(pending.message.messageId);
+    if (removed == null) return;
+    removed.timer?.cancel();
+    await _addChannelMessage(
+      pending.channel.index,
+      pending.message.copyWith(status: ChannelMessageStatus.failed),
+      awaitPersistence: false,
+    );
+    notifyListeners();
   }
 
   void _markChannelMessageSentByRadio(
@@ -12539,9 +12578,11 @@ class MeshCoreConnector extends ChangeNotifier {
       transportCode: transportCode,
     );
     try {
-      await sendFrame(
-        DirectEchoRecovery.buildSendRawPacketFrame(packet),
-        waitForGenericAck: true,
+      await _runChannelCommandLocked(
+        () => sendFrame(
+          DirectEchoRecovery.buildSendRawPacketFrame(packet),
+          waitForGenericAck: true,
+        ),
       );
       appLogger.info(
         'ACK for the echoed message from ${contact.name} sent '
@@ -12950,6 +12991,12 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _markNextPendingChannelMessageSent() {
     while (_pendingChannelSentQueue.isNotEmpty) {
       final queuedMessageId = _pendingChannelSentQueue.removeAt(0);
+      _pendingGenericAckQueue.removeWhere(
+        (pending) =>
+            pending.channelSendQueueId == queuedMessageId &&
+            (pending.commandCode == cmdSendChannelTxtMsg ||
+                pending.commandCode == cmdSendChannelData),
+      );
       if (_isReactionSendQueueId(queuedMessageId)) {
         return true;
       }
@@ -13838,8 +13885,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<bool> _addChannelMessage(
     int channelIndex,
-    ChannelMessage message,
-  ) async {
+    ChannelMessage message, {
+    bool awaitPersistence = true,
+  }) async {
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 
@@ -14089,8 +14137,27 @@ class MeshCoreConnector extends ChangeNotifier {
       _trimChannelHistoryWindow(channelIndex);
     }
 
-    // Save only the row that was inserted or merged.
-    await _channelMessageStore.saveChannelMessage(channelIndex, storedMessage);
+    // Save only the row that was inserted or merged. An outgoing radio send
+    // must not wait behind an unrelated history-write backlog: its in-memory
+    // state is already complete, so persist it in the background and let the
+    // send path continue.
+    final persistence = _channelMessageStore.saveChannelMessage(
+      channelIndex,
+      storedMessage,
+    );
+    if (awaitPersistence) {
+      await persistence;
+    } else {
+      unawaited(
+        persistence.catchError((error, stackTrace) {
+          appLogger.warn(
+            'Could not persist outgoing channel message: '
+            '$error\n$stackTrace',
+            tag: 'MessageHistory',
+          );
+        }),
+      );
+    }
     return isNew;
   }
 
