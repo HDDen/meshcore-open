@@ -297,6 +297,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       ValueNotifier<CompanionRadioStats?>(null);
   int _reconnectAttempts = 0;
   bool _notifyListenersDirty = false;
+  int _uiRevision = 0;
   static const Duration _notifyListenersDebounce = Duration(milliseconds: 50);
 
   final StreamController<Uint8List> _receivedFramesController =
@@ -644,6 +645,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   List<ScanResult> get scanResults => List.unmodifiable(_scanResults);
+
+  /// Increases once for each actual batched UI notification. Screens can use
+  /// it to refresh derived view data without repeating the work on layout-only
+  /// rebuilds, such as window resizing.
+  int get uiRevision => _uiRevision;
+
   List<Contact> get contacts {
     final selfKey = _selfPublicKey;
     if (selfKey == null) {
@@ -1410,29 +1417,51 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final messages = _conversations[contactKeyHex];
     if (messages != null && messages.remove(message)) {
       _retryService?.untrack(message.messageId);
-      await _messageStore.deleteMessage(contactKeyHex, message.messageId);
+      unawaited(
+        _messageStore
+            .deleteMessage(contactKeyHex, message.messageId)
+            .catchError((error, stackTrace) {
+              appLogger.warn(
+                'Could not delete contact message ${message.messageId}: '
+                '$error\n$stackTrace',
+                tag: 'MessageHistory',
+              );
+            }),
+      );
       changed = true;
     }
-    if (await _deleteSharedContactMessage(contactKeyHex, message)) {
+    if (_deleteSharedContactMessage(contactKeyHex, message)) {
       changed = true;
     }
     if (changed) notifyListeners();
   }
 
   /// Contact-chat counterpart of [_deleteSharedChannelMessage].
-  Future<bool> _deleteSharedContactMessage(
+  bool _deleteSharedContactMessage(
     String contactKeyHex,
     Message message,
-  ) async {
+  ) {
     final secondary = _sharedContactSecondaryMessages[contactKeyHex];
     if (secondary == null || secondary.isEmpty) return false;
     final before = secondary.length;
     secondary.removeWhere((current) => current.messageId == message.messageId);
     if (secondary.length == before) return false;
-    await _sharedMessageHistoryHelper.deleteSecondaryContactMessage(
-      currentPublicKeyHex: selfPublicKeyHex,
-      contactKeyHex: contactKeyHex,
-      messageId: message.messageId,
+    unawaited(
+      () async {
+        try {
+          await _sharedMessageHistoryHelper.deleteSecondaryContactMessage(
+            currentPublicKeyHex: selfPublicKeyHex,
+            contactKeyHex: contactKeyHex,
+            messageId: message.messageId,
+          );
+        } catch (error, stackTrace) {
+          appLogger.warn(
+            'Could not delete shared contact message ${message.messageId}: '
+            '$error\n$stackTrace',
+            tag: 'MessageHistory',
+          );
+        }
+      }(),
     );
     return true;
   }
@@ -2160,13 +2189,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final messages = _channelMessages[channelIndex];
     if (messages != null && messages.remove(message)) {
       _cancelChannelNoRetransmissionWarning(message.messageId);
-      await _channelMessageStore.deleteChannelMessage(
-        channelIndex,
-        message.messageId,
+      unawaited(
+        _channelMessageStore
+            .deleteChannelMessage(
+              channelIndex,
+              message.messageId,
+            )
+            .catchError((error, stackTrace) {
+              appLogger.warn(
+                'Could not delete channel message ${message.messageId}: '
+                '$error\n$stackTrace',
+                tag: 'MessageHistory',
+              );
+            }),
       );
       changed = true;
     }
-    if (await _deleteSharedChannelMessage(channel, message)) {
+    if (_deleteSharedChannelMessage(channel, message)) {
       changed = true;
     }
     if (changed) notifyListeners();
@@ -2307,19 +2346,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// and the other node's store it was read from. Matching by message id also
   /// catches the copy the merge hid when the same message exists in both
   /// scopes — otherwise deleting the local one just uncovers it again.
-  Future<bool> _deleteSharedChannelMessage(
+  bool _deleteSharedChannelMessage(
     Channel channel,
     ChannelMessage message,
-  ) async {
+  ) {
     final secondary = _sharedChannelSecondaryMessages[channel.index];
     if (secondary == null || secondary.isEmpty) return false;
     final before = secondary.length;
     secondary.removeWhere((current) => current.messageId == message.messageId);
     if (secondary.length == before) return false;
-    await _sharedMessageHistoryHelper.deleteSecondaryChannelMessage(
-      currentPublicKeyHex: selfPublicKeyHex,
-      channel: channel,
-      messageId: message.messageId,
+    unawaited(
+      () async {
+        try {
+          await _sharedMessageHistoryHelper.deleteSecondaryChannelMessage(
+            currentPublicKeyHex: selfPublicKeyHex,
+            channel: channel,
+            messageId: message.messageId,
+          );
+        } catch (error, stackTrace) {
+          appLogger.warn(
+            'Could not delete shared channel message ${message.messageId}: '
+            '$error\n$stackTrace',
+            tag: 'MessageHistory',
+          );
+        }
+      }(),
     );
     return true;
   }
@@ -14700,6 +14751,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     _notifyListenersDirty = false;
+    _uiRevision++;
     super.notifyListeners();
 
     if (_notifyListenersDirty && _notifyListenersTimer == null) {

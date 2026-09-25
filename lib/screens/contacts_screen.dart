@@ -119,6 +119,13 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<ContactGroup> _groups = [];
   String _loadedGroupScopeKeyHex = '';
   Timer? _searchDebounce;
+  int _contactsDerivedRevision = -1;
+  String _contactsDerivedKey = '';
+  int _contactsSnapshotRevision = -1;
+  List<Contact> _contactsSnapshot = const [];
+  List<Contact> _derivedFilteredContacts = const [];
+  List<Contact> _derivedBatchSelectableContacts = const [];
+  List<ContactGroup> _derivedSortedGroups = const [];
 
   final List<ContactOperationType> _pendingOperations = [];
   final Set<String> _selectedBatchContactKeys = {};
@@ -1335,7 +1342,11 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
     final viewState = context.watch<UiViewStateService>();
-    final contacts = connector.contacts;
+    if (_contactsSnapshotRevision != connector.uiRevision) {
+      _contactsSnapshot = connector.contacts;
+      _contactsSnapshotRevision = connector.uiRevision;
+    }
+    final contacts = _contactsSnapshot;
     final waitingForInitialContacts =
         connector.isConnected &&
         !connector.hasLoadedContacts &&
@@ -1363,16 +1374,34 @@ class _ContactsScreenState extends State<ContactsScreen>
       );
     }
 
-    final filteredAndSorted = _filterAndSortContacts(
-      contacts,
+    final groupsByName = <String, ContactGroup>{};
+    for (final group in _groups) {
+      groupsByName.putIfAbsent(group.name, () => group);
+    }
+    final derivedKey = _contactsDerivedKeyFor(
       connector,
       viewState,
+      groupsByName,
     );
-    final batchSelectableContacts = _contactsMatchingBatchFilter(
-      contacts,
-      connector,
-      viewState,
-    );
+    if (_contactsDerivedRevision != connector.uiRevision ||
+        _contactsDerivedKey != derivedKey) {
+      _derivedFilteredContacts = _filterAndSortContacts(
+        contacts,
+        connector,
+        viewState,
+      );
+      _derivedBatchSelectableContacts = _contactsMatchingBatchFilter(
+        contacts,
+        connector,
+        viewState,
+      );
+      _derivedSortedGroups = groupsByName.values.toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      _contactsDerivedRevision = connector.uiRevision;
+      _contactsDerivedKey = derivedKey;
+    }
+    final filteredAndSorted = _derivedFilteredContacts;
+    final batchSelectableContacts = _derivedBatchSelectableContacts;
     final allFilteredBatchContactsSelected =
         batchSelectableContacts.isNotEmpty &&
         batchSelectableContacts.every(
@@ -1424,12 +1453,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
     }
 
-    final groupsByName = <String, ContactGroup>{};
-    for (final group in _groups) {
-      groupsByName.putIfAbsent(group.name, () => group);
-    }
-    final sortedGroups = groupsByName.values.toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final sortedGroups = _derivedSortedGroups;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final searchControlsMinWidth = widget.batchOperationsMode ? 146.0 : 97.0;
@@ -1641,6 +1665,27 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
+  String _contactsDerivedKeyFor(
+    MeshCoreConnector connector,
+    UiViewStateService viewState,
+    Map<String, ContactGroup> groupsByName,
+  ) {
+    final groupsKey = groupsByName.values
+        .map((group) => '${group.name}\u0000${group.memberKeys.join(',')}')
+        .join('|');
+    return [
+      viewState.contactsSelectedGroupName,
+      viewState.contactsSearchText,
+      viewState.contactsSortOption.name,
+      viewState.contactsTypeFilter.name,
+      viewState.contactsShowUnreadOnly,
+      widget.batchOperationsMode,
+      widget.selectionMode,
+      connector.selfPublicKeyHex,
+      groupsKey,
+    ].join('\u0001');
+  }
+
   List<Contact> _filterAndSortContacts(
     List<Contact> contacts,
     MeshCoreConnector connector,
@@ -1678,28 +1723,50 @@ class _ContactsScreenState extends State<ContactsScreen>
           .toList();
     }
 
+    final unreadByKey = <String, bool>{};
+    if (viewState.contactsShowUnreadOnly ||
+        viewState.contactsSortOption == ContactSortOption.recentMessages) {
+      for (final contact in filtered) {
+        unreadByKey[contact.publicKeyHex] =
+            connector.getUnreadCountForContact(contact) > 0;
+      }
+    }
+
     if (viewState.contactsShowUnreadOnly) {
       filtered = filtered.where((contact) {
-        return connector.getUnreadCountForContact(contact) > 0;
+        return unreadByKey[contact.publicKeyHex] ?? false;
       }).toList();
     }
 
     switch (viewState.contactsSortOption) {
       case ContactSortOption.lastSeen:
-        filtered.sort(
-          (a, b) => _resolveLastSeen(b).compareTo(_resolveLastSeen(a)),
-        );
+        final lastSeenByKey = <String, DateTime>{
+          for (final contact in filtered)
+            contact.publicKeyHex: _resolveLastSeen(contact),
+        };
+        filtered.sort((a, b) {
+          return lastSeenByKey[b.publicKeyHex]!.compareTo(
+            lastSeenByKey[a.publicKeyHex]!,
+          );
+        });
         break;
       case ContactSortOption.recentMessages:
+        final lastMessageAtByKey = <String, DateTime?>{
+          for (final contact in filtered)
+            contact.publicKeyHex: _resolveLastDirectMessageAt(
+              contact,
+              connector,
+            ),
+        };
         filtered.sort((a, b) {
-          final aUnread = connector.getUnreadCountForContact(a) > 0;
-          final bUnread = connector.getUnreadCountForContact(b) > 0;
+          final aUnread = unreadByKey[a.publicKeyHex] ?? false;
+          final bUnread = unreadByKey[b.publicKeyHex] ?? false;
           if (aUnread != bUnread) {
             return aUnread ? -1 : 1;
           }
 
-          final aAt = _resolveLastDirectMessageAt(a, connector);
-          final bAt = _resolveLastDirectMessageAt(b, connector);
+          final aAt = lastMessageAtByKey[a.publicKeyHex];
+          final bAt = lastMessageAtByKey[b.publicKeyHex];
           // Contacts without direct history sort below the ones that have it,
           // whatever their advert activity says.
           if (aAt == null || bAt == null) {

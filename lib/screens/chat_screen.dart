@@ -124,6 +124,12 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _highlightedMessageId;
   int _highlightSequence = 0;
   int _messageScrollGeneration = 0;
+  int _displayMessagesRevision = -1;
+  List<Message> _displayMessagesCache = const [];
+  int _messageListRevision = -1;
+  List<Message>? _messageListSource;
+  _ChatMessageListData? _messageListDataCache;
+  int _autoScrollScheduledRevision = -1;
   List<Contact> _mentionSuggestions = const [];
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
@@ -239,10 +245,18 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   List<Message> _messagesForDisplay(MeshCoreConnector connector) {
-    return [
+    final revision = connector.uiRevision;
+    if (_displayMessagesRevision == revision) {
+      return _displayMessagesCache;
+    }
+
+    _displayMessagesRevision = revision;
+    _displayMessagesCache = [
       ...connector.getMessages(widget.contact),
       ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
     ];
+    _messageListDataCache = null;
+    return _displayMessagesCache;
   }
 
   Future<BuildContext?> _materializeMessageContext(String messageId) async {
@@ -883,34 +897,14 @@ class _ChatScreenState extends State<ChatScreen> {
     List<Message> messages,
     MeshCoreConnector connector,
   ) {
-    // Reverse messages so newest appear at bottom with reverse: true
-    final reversedMessages = messages.reversed.toList();
+    final listData = _prepareMessageListData(messages, connector.uiRevision);
+    final reversedMessages = listData.reversedMessages;
     final itemCount = reversedMessages.length + (_isLoadingOlder ? 1 : 0);
-    final liveIds = reversedMessages
-        .map((message) => message.messageId)
-        .toSet();
-    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
-    final keyedIndices = <int>{};
-    final duplicateKeys = <int, ValueKey<String>>{};
-    final occurrencesById = <String, int>{};
-    for (var i = 0; i < reversedMessages.length; i++) {
-      final messageId = reversedMessages[i].messageId;
-      final occurrence = occurrencesById[messageId] ?? 0;
-      occurrencesById[messageId] = occurrence + 1;
-      if (occurrence == 0) {
-        keyedIndices.add(i);
-      } else {
-        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
-      }
-    }
 
-    // Auto-scroll to bottom if user is already at bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (_pendingUnreadScrollTarget != null) return;
-      if (_bottomSnapGuard.isSuppressed) return;
-      _scrollController.scrollToBottomIfAtBottom();
-    });
+    // Auto-scroll to bottom if user is already at bottom. Schedule it once
+    // per data revision so layout-only rebuilds do not create a callback
+    // chain while the window is being resized.
+    _scheduleAutoScrollIfNeeded(connector.uiRevision);
 
     return Listener(
       onPointerDown: (_) => _cancelMessageScrollStabilization(),
@@ -948,9 +942,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 final messageIndex = adjustedIndex;
                 Contact contact = _resolveContact(connector);
                 final message = reversedMessages[messageIndex];
-                final Key messageKey = keyedIndices.contains(messageIndex)
+                final Key messageKey =
+                    listData.keyedIndices.contains(messageIndex)
                     ? _messageKeys.putIfAbsent(message.messageId, GlobalKey.new)
-                    : duplicateKeys[messageIndex]!;
+                    : listData.duplicateKeys[messageIndex]!;
                 String fourByteHex = '';
                 if (contact.type == advTypeRoom) {
                   // Room-server messages carry the original author's 4-byte prefix
@@ -1041,6 +1036,60 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
     );
+  }
+
+  void _scheduleAutoScrollIfNeeded(int revision) {
+    if (_autoScrollScheduledRevision == revision) return;
+    _autoScrollScheduledRevision = revision;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_pendingUnreadScrollTarget != null ||
+          _bottomSnapGuard.isSuppressed) {
+        _autoScrollScheduledRevision = -1;
+        return;
+      }
+      _scrollController.scrollToBottomIfAtBottom();
+    });
+  }
+
+  _ChatMessageListData _prepareMessageListData(
+    List<Message> messages,
+    int revision,
+  ) {
+    final cached = _messageListDataCache;
+    if (cached != null &&
+        _messageListRevision == revision &&
+        identical(_messageListSource, messages)) {
+      return cached;
+    }
+
+    // Reverse messages so newest appear at bottom with reverse: true.
+    final reversedMessages = List<Message>.unmodifiable(messages.reversed);
+    final liveIds = reversedMessages.map((message) => message.messageId).toSet();
+    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+    final keyedIndices = <int>{};
+    final duplicateKeys = <int, ValueKey<String>>{};
+    final occurrencesById = <String, int>{};
+    for (var i = 0; i < reversedMessages.length; i++) {
+      final messageId = reversedMessages[i].messageId;
+      final occurrence = occurrencesById[messageId] ?? 0;
+      occurrencesById[messageId] = occurrence + 1;
+      if (occurrence == 0) {
+        keyedIndices.add(i);
+      } else {
+        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
+      }
+    }
+
+    final data = _ChatMessageListData(
+      reversedMessages: reversedMessages,
+      keyedIndices: Set<int>.unmodifiable(keyedIndices),
+      duplicateKeys: Map<int, ValueKey<String>>.unmodifiable(duplicateKeys),
+    );
+    _messageListRevision = revision;
+    _messageListSource = messages;
+    _messageListDataCache = data;
+    return data;
   }
 
   Future<void> _handleEscapeNavigation() async {
@@ -3851,6 +3900,18 @@ class _MessageDeliveryProgressBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ChatMessageListData {
+  final List<Message> reversedMessages;
+  final Set<int> keyedIndices;
+  final Map<int, ValueKey<String>> duplicateKeys;
+
+  const _ChatMessageListData({
+    required this.reversedMessages,
+    required this.keyedIndices,
+    required this.duplicateKeys,
+  });
 }
 
 /// Deterministic name-to-hue mapping consistent with [AvatarCircle].
