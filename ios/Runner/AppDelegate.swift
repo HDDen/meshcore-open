@@ -15,6 +15,9 @@ import UserNotifications
     if let registrar = self.registrar(forPlugin: "IosBleProxyAdapter") {
       IosBleProxyAdapter.register(with: registrar)
     }
+    if let registrar = self.registrar(forPlugin: "IosBleCentralAdapter") {
+      IosBleCentralAdapter.register(with: registrar)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

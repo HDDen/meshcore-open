@@ -7,6 +7,8 @@ import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:pointycastle/export.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_interface.dart';
 
@@ -204,7 +206,7 @@ class MeshCoreRadioStateSnapshot {
   });
 }
 
-class MeshCoreConnector extends ChangeNotifier {
+class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Focused chats may grow past these windows while the user pages upward.
   // Once a chat is no longer active, older rows remain in SQLite and its
   // in-memory list is reduced to the most recent window.
@@ -277,6 +279,7 @@ class MeshCoreConnector extends ChangeNotifier {
   StreamSubscription<bool>? _isScanningSubscription;
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
   StreamSubscription<List<int>>? _notifySubscription;
+  StreamSubscription<dynamic>? _iosBleCentralSubscription;
   Timer? _notifyListenersTimer;
   Timer? _selfInfoRetryTimer;
   Timer? _reconnectTimer;
@@ -368,6 +371,13 @@ class MeshCoreConnector extends ChangeNotifier {
   DateTime _lastContactMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastChannelMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastZeroHopAdvertAt = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime? _lastBleConnectStartedAt;
+  DateTime? _lastBleConnectedAt;
+  DateTime? _lastBleRxAt;
+  DateTime? _lastBleTxAt;
+  AppLifecycleState? _lastAppLifecycleState;
+  DateTime? _lastAppLifecycleStateAt;
+  bool _iosBleResumeProbeInFlight = false;
   double? _lastZeroHopAdvertLatitude;
   double? _lastZeroHopAdvertLongitude;
   static const int _radioQuietMs = 3000;
@@ -476,6 +486,14 @@ class MeshCoreConnector extends ChangeNotifier {
   SettingsSectionsService? _settingsSectionsService;
   bool _lastSouthNodeEnableFragmentedFrames = false;
   BackgroundService? _backgroundService;
+  bool _usingIosNativeBleCentral = false;
+  static const bool _iosNativeBleCentralEnabled = true;
+  static const MethodChannel _iosBleCentralMethod = MethodChannel(
+    'mco_service/ios_ble_central',
+  );
+  static const EventChannel _iosBleCentralEvents = EventChannel(
+    'mco_service/ios_ble_central/events',
+  );
   final NotificationService _notificationService = NotificationService();
   BleDebugLogService? _bleDebugLogService;
   AppDebugLogService? _appDebugLogService;
@@ -567,6 +585,14 @@ class MeshCoreConnector extends ChangeNotifier {
 
   int _storageUsedKb = -1;
   int _storageTotalKb = -1;
+
+  MeshCoreConnector() {
+    if (PlatformInfo.isIOS) {
+      _lastAppLifecycleState = WidgetsBinding.instance.lifecycleState;
+      _lastAppLifecycleStateAt = DateTime.now();
+      WidgetsBinding.instance.addObserver(this);
+    }
+  }
 
   // Getters
   MeshCoreConnectionState get state => _state;
@@ -4576,6 +4602,87 @@ class MeshCoreConnector extends ChangeNotifier {
         !lowerErrorText.contains('timeout');
   }
 
+  bool get _shouldUseIosNativeBleCentral =>
+      PlatformInfo.isIOS && _iosNativeBleCentralEnabled;
+
+  Future<void> _connectIosNativeBleCentral(BluetoothDevice device) async {
+    await _iosBleCentralSubscription?.cancel();
+    _iosBleCentralSubscription = _iosBleCentralEvents
+        .receiveBroadcastStream()
+        .listen(_handleIosBleCentralEvent, onError: _handleIosBleCentralError);
+    _usingIosNativeBleCentral = true;
+    try {
+      await _iosBleCentralMethod.invokeMethod<void>('connect', {
+        'remoteId': device.remoteId.toString(),
+        'serviceUuid': MeshCoreUuids.service,
+        'rxUuid': MeshCoreUuids.rxCharacteristic,
+        'txUuid': MeshCoreUuids.txCharacteristic,
+        'restoreEnabled': true,
+        'reconnectOnRestore': true,
+      });
+    } catch (_) {
+      _usingIosNativeBleCentral = false;
+      await _iosBleCentralSubscription?.cancel();
+      _iosBleCentralSubscription = null;
+      rethrow;
+    }
+  }
+
+  void _handleIosBleCentralError(Object error) {
+    _appDebugLogService?.warn(
+      'iOS native BLE central event stream error: $error',
+      tag: 'BLE iOS',
+    );
+  }
+
+  void _handleIosBleCentralEvent(dynamic rawEvent) {
+    if (rawEvent is! Map) return;
+    final event = rawEvent.cast<dynamic, dynamic>();
+    final type = event['event']?.toString();
+    switch (type) {
+      case 'data':
+        final data = event['data'];
+        final frame = switch (data) {
+          Uint8List value => value,
+          List<int> value => Uint8List.fromList(value),
+          ByteData value => value.buffer.asUint8List(
+            value.offsetInBytes,
+            value.lengthInBytes,
+          ),
+          _ => null,
+        };
+        if (frame != null) {
+          _handleFrame(frame);
+        }
+        break;
+      case 'disconnected':
+        _appDebugLogService?.warn(
+          'iOS native BLE central disconnected: '
+          'remoteId=${event['remoteId'] ?? ''} error=${event['error'] ?? ''} '
+          '${_iosBleSessionSnapshot(DateTime.now())}',
+          tag: 'BLE iOS',
+        );
+        if (isConnected && _activeTransport == MeshCoreTransportType.bluetooth) {
+          _handleDisconnection();
+        }
+        break;
+      case 'ready':
+      case 'connected':
+      case 'restored':
+      case 'state':
+      case 'rx_error':
+        _appDebugLogService?.info(
+          'iOS native BLE central event: $type '
+          'remoteId=${event['remoteId'] ?? ''} state=${event['state'] ?? ''} '
+          'error=${event['error'] ?? ''}',
+          tag: 'BLE iOS',
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
   Future<void> _restartActiveTransport() async {
     if (_transportRestartInProgress || !isConnected) return;
 
@@ -4676,6 +4783,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     try {
       final connectLabel = _deviceDisplayName ?? _deviceId;
+      _lastBleConnectStartedAt = DateTime.now();
       _appDebugLogService?.info(
         'Starting connect to $connectLabel',
         tag: 'BLE Connect',
@@ -4684,7 +4792,27 @@ class MeshCoreConnector extends ChangeNotifier {
       _connectionSubscription = null;
       await _notifySubscription?.cancel();
       _notifySubscription = null;
+      if (_shouldUseIosNativeBleCentral) {
+        await _connectIosNativeBleCentral(device);
+        _setState(MeshCoreConnectionState.connected);
+        _lastBleConnectedAt = DateTime.now();
+        _rxSilenceAnchor = DateTime.now();
+        _startRxWatchdog();
+        if (_shouldGateInitialChannelSync) {
+          _hasReceivedDeviceInfo = false;
+          _pendingInitialChannelSync = true;
+        }
+        await _startBleInitialSync();
+        return;
+      }
       _connectionSubscription = device.connectionState.listen((state) {
+        if (PlatformInfo.isIOS) {
+          _appDebugLogService?.info(
+            'iOS plugin connectionState=${state.name} '
+            '${_iosBleSessionSnapshot(DateTime.now())}',
+            tag: 'BLE iOS',
+          );
+        }
         if (state == BluetoothConnectionState.disconnected && isConnected) {
           _handleDisconnection();
         }
@@ -5031,6 +5159,7 @@ class MeshCoreConnector extends ChangeNotifier {
         }
       }
       _setState(MeshCoreConnectionState.connected);
+      _lastBleConnectedAt = DateTime.now();
       _rxSilenceAnchor = DateTime.now();
       _startRxWatchdog();
       if (_shouldGateInitialChannelSync) {
@@ -5518,6 +5647,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
     if (_state == MeshCoreConnectionState.disconnecting) return;
     final transportAtDisconnect = _activeTransport;
+    final wasUsingIosNativeBleCentral = _usingIosNativeBleCentral;
     final transportLabel = switch (transportAtDisconnect) {
       MeshCoreTransportType.bluetooth => 'BLE',
       MeshCoreTransportType.usb => 'USB',
@@ -5569,6 +5699,19 @@ class MeshCoreConnector extends ChangeNotifier {
 
     await _connectionSubscription?.cancel();
     _connectionSubscription = null;
+    await _iosBleCentralSubscription?.cancel();
+    _iosBleCentralSubscription = null;
+    if (_usingIosNativeBleCentral) {
+      try {
+        await _iosBleCentralMethod.invokeMethod<void>('disconnect');
+      } catch (error) {
+        _appDebugLogService?.warn(
+          'iOS native BLE central disconnect failed: $error',
+          tag: 'BLE iOS',
+        );
+      }
+      _usingIosNativeBleCentral = false;
+    }
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
     _queueSyncTimeout?.cancel();
@@ -5591,13 +5734,18 @@ class MeshCoreConnector extends ChangeNotifier {
     // incomplete" failures into the store minutes after the radio went away.
     _imageTransport?.reassembler.clear();
 
-    if (!skipBleDeviceDisconnect) {
+    if (!skipBleDeviceDisconnect && !wasUsingIosNativeBleCentral) {
       try {
         // Skip queued BLE operations so disconnect doesn't get stuck behind them.
         await _device?.disconnect(queue: false);
       } catch (e) {
         _appDebugLogService?.warn('Disconnect error: $e', tag: 'BLE Connect');
       }
+    } else if (wasUsingIosNativeBleCentral) {
+      _appDebugLogService?.info(
+        'Skipping FlutterBluePlus disconnect for iOS native BLE central',
+        tag: 'BLE iOS',
+      );
     } else {
       _appDebugLogService?.info(
         'Skipping plugin BLE disconnect and continuing cleanup',
@@ -5755,8 +5903,16 @@ class MeshCoreConnector extends ChangeNotifier {
       await _tcpConnector.write(data);
       return;
     }
+    if (_usingIosNativeBleCentral) {
+      _lastBleTxAt = DateTime.now();
+      await _iosBleCentralMethod.invokeMethod<void>('send', {'data': data});
+      return;
+    }
     if (_rxCharacteristic == null) {
       throw Exception("MeshCore RX characteristic not available");
+    }
+    if (PlatformInfo.isIOS) {
+      _lastBleTxAt = DateTime.now();
     }
     final properties = _rxCharacteristic!.properties;
     final canWriteWithoutResponse = properties.writeWithoutResponse;
@@ -5852,10 +6008,14 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     _rxWatchdogReconnects++;
+    final iosBleSnapshot =
+        PlatformInfo.isIOS && _activeTransport == MeshCoreTransportType.bluetooth
+        ? ' ${_iosBleSessionSnapshot(now)}'
+        : '';
     _appDebugLogService?.warn(
       'RX watchdog: $_activeTransport connected but no inbound frames for '
       '${silence.inSeconds}s, forcing reconnect '
-      '($_rxWatchdogReconnects/$_rxWatchdogMaxConsecutive)',
+      '($_rxWatchdogReconnects/$_rxWatchdogMaxConsecutive)$iosBleSnapshot',
       tag: 'Watchdog',
     );
     unawaited(disconnect(manual: false));
@@ -9050,6 +9210,10 @@ class MeshCoreConnector extends ChangeNotifier {
     if (data.isEmpty) return;
     _lastRxBeforeFrame = _lastRxTime;
     _lastRxTime = DateTime.now();
+    if (_activeTransport == MeshCoreTransportType.bluetooth &&
+        PlatformInfo.isIOS) {
+      _lastBleRxAt = _lastRxTime;
+    }
     // Any inbound frame proves the notify stream is alive.
     if (_rxWatchdogReconnects != 0) {
       _rxWatchdogReconnects = 0;
@@ -14331,6 +14495,14 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _handleDisconnection() {
+    if (PlatformInfo.isIOS &&
+        _activeTransport == MeshCoreTransportType.bluetooth) {
+      _appDebugLogService?.warn(
+        'Unexpected iOS BLE disconnect: '
+        '${_iosBleSessionSnapshot(DateTime.now())}',
+        tag: 'BLE iOS',
+      );
+    }
     _isRecoveringConnection = _shouldAutoReconnect;
     if (_isRecoveringConnection) {
       unawaited(_backgroundService?.setConnectionLost(true));
@@ -14359,6 +14531,9 @@ class MeshCoreConnector extends ChangeNotifier {
     _notifySubscription = null;
     _connectionSubscription?.cancel();
     _connectionSubscription = null;
+    _iosBleCentralSubscription?.cancel();
+    _iosBleCentralSubscription = null;
+    _usingIosNativeBleCentral = false;
 
     _device = null;
     _rxCharacteristic = null;
@@ -14534,7 +14709,108 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!PlatformInfo.isIOS) return;
+    final now = DateTime.now();
+    final previous = _lastAppLifecycleState;
+    final elapsed = _lastAppLifecycleStateAt == null
+        ? null
+        : now.difference(_lastAppLifecycleStateAt!);
+    _lastAppLifecycleState = state;
+    _lastAppLifecycleStateAt = now;
+    if (_activeTransport == MeshCoreTransportType.bluetooth ||
+        _reconnectTransport == MeshCoreTransportType.bluetooth) {
+      _appDebugLogService?.info(
+        'iOS lifecycle ${previous?.name ?? 'unknown'} -> ${state.name}'
+        '${elapsed == null ? '' : ' after ${_formatDebugDuration(elapsed)}'} '
+        'state=${_state.name} reconnect=$_shouldAutoReconnect',
+        tag: 'BLE iOS',
+      );
+    }
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_probeIosBleAfterResume(now));
+    }
+  }
+
+  Future<void> _probeIosBleAfterResume(DateTime resumedAt) async {
+    if (!PlatformInfo.isIOS ||
+        !isConnected ||
+        _activeTransport != MeshCoreTransportType.bluetooth ||
+        _iosBleResumeProbeInFlight) {
+      return;
+    }
+    final lastRx = _lastBleRxAt ?? _lastRxTime;
+    if (resumedAt.difference(lastRx) < const Duration(seconds: 30)) {
+      return;
+    }
+    _iosBleResumeProbeInFlight = true;
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    try {
+      if (!isConnected || _activeTransport != MeshCoreTransportType.bluetooth) {
+        return;
+      }
+      final probeStartedAt = DateTime.now();
+      _appDebugLogService?.info(
+        'iOS BLE resume probe: ${_iosBleSessionSnapshot(probeStartedAt)}',
+        tag: 'BLE iOS',
+      );
+      await sendFrame(buildGetDeviceTimeFrame());
+      await Future<void>.delayed(const Duration(seconds: 5));
+      final lastRxAfterProbe = _lastBleRxAt ?? _lastRxTime;
+      if (isConnected &&
+          _activeTransport == MeshCoreTransportType.bluetooth &&
+          !lastRxAfterProbe.isAfter(probeStartedAt)) {
+        _appDebugLogService?.warn(
+          'iOS BLE resume probe got no RX, forcing reconnect: '
+          '${_iosBleSessionSnapshot(DateTime.now())}',
+          tag: 'BLE iOS',
+        );
+        unawaited(disconnect(manual: false));
+      }
+    } catch (error) {
+      _appDebugLogService?.warn(
+        'iOS BLE resume probe failed, forcing reconnect: $error '
+        '${_iosBleSessionSnapshot(DateTime.now())}',
+        tag: 'BLE iOS',
+      );
+      unawaited(disconnect(manual: false));
+    } finally {
+      _iosBleResumeProbeInFlight = false;
+    }
+  }
+
+  String _formatDebugDuration(Duration duration) {
+    if (duration.inMilliseconds < 1000) {
+      return '${duration.inMilliseconds}ms';
+    }
+    if (duration.inMinutes < 1) {
+      return '${duration.inSeconds}s';
+    }
+    if (duration.inHours < 1) {
+      return '${duration.inMinutes}m${duration.inSeconds.remainder(60)}s';
+    }
+    return '${duration.inHours}h${duration.inMinutes.remainder(60)}m';
+  }
+
+  String _formatDebugAge(DateTime? timestamp, DateTime now) {
+    if (timestamp == null) return 'never';
+    return _formatDebugDuration(now.difference(timestamp));
+  }
+
+  String _iosBleSessionSnapshot(DateTime now) {
+    return 'lifecycle=${_lastAppLifecycleState?.name ?? 'unknown'} '
+        'connectStarted=${_formatDebugAge(_lastBleConnectStartedAt, now)} '
+        'connected=${_formatDebugAge(_lastBleConnectedAt, now)} '
+        'lastRx=${_formatDebugAge(_lastBleRxAt, now)} '
+        'lastTx=${_formatDebugAge(_lastBleTxAt, now)} '
+        'autoReconnect=$_shouldAutoReconnect';
+  }
+
+  @override
   void dispose() {
+    if (PlatformInfo.isIOS) {
+      WidgetsBinding.instance.removeObserver(this);
+    }
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _clearDirectEchoKey('dispose');
@@ -14543,6 +14819,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _connectionSubscription?.cancel();
     _usbFrameSubscription?.cancel();
     _notifySubscription?.cancel();
+    _iosBleCentralSubscription?.cancel();
     _notifyListenersTimer?.cancel();
     _reconnectTimer?.cancel();
     _batteryPollTimer?.cancel();
