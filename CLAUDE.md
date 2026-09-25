@@ -1247,6 +1247,10 @@ Anything in a chat composer that reacts to the text controller must go through `
 
 Both chats draw a bubble's box with `ChatBubbleBox` (`widgets/chat_bubble_box.dart`), not `AnimatedContainer`. A bubble's maximum width is a share of the window, and `AnimatedContainer` animates every property that changes, so each step of a window resize restarted a one-second width animation in every visible bubble and laid their text out again on every frame of it. `ChatBubbleBox` takes the same parameters and builds the same layout, but the width limit and the padding apply at once; only the decoration fades, which is all the search highlight and the failed-status colours need. An upstream merge that brings `AnimatedContainer` back into a bubble should keep the swap.
 
+### List rows move by key
+
+The contacts list and both chat transcripts put each row's key on the widget the item builder returns and pass `findChildIndexCallback`, backed by a key-to-index map built with the rows. Without the callback a sliver list matches rows by index only, so anything that shifts indices, a new message at the bottom of a reversed transcript, a deleted one, a re-sort of the contacts, made every visible row either take its neighbour's subtree through the message `GlobalKey` or be recreated from scratch, replaying the contacts' entrance animation. Keys stay unique: a repeated message id or contact key gets a numbered key. A key moved back inside the row, or a builder that loses the callback, brings the old cost back.
+
 ### Keys cut in the middle
 
 `MiddleEllipsisText` (`widgets/middle_ellipsis_text.dart`) shows public keys in the contacts and discovery lists and needs a monospace style. It computes the cut from the width of one character cell instead of laying out candidate strings. The cell is measured once per effective style and text scaler and shared by every instance; the text scaler is where the app's DPI setting (`uiScale`) lands, on top of the system font size. Measuring without it, as the widget once did, under-measures whenever either is above 100%, and the key then loses its tail instead of its middle.

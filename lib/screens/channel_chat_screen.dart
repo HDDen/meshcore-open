@@ -1167,6 +1167,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     // GlobalKey in the list.
                     final keyedIndices = <int>{};
                     final duplicateKeys = <int, ValueKey<String>>{};
+                    final indexByKey = <Key, int>{};
                     final occurrencesById = <String, int>{};
                     for (var i = 0; i < reversedRows.length; i++) {
                       final messageId = reversedRows[i].id;
@@ -1174,8 +1175,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       occurrencesById[messageId] = occurrence + 1;
                       if (occurrence == 0) {
                         keyedIndices.add(i);
+                        final key = _messageKeys.putIfAbsent(
+                          messageId,
+                          GlobalKey.new,
+                        );
+                        indexByKey[key] = i;
                       } else {
-                        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
+                        final key = ValueKey('$messageId#$occurrence');
+                        duplicateKeys[i] = key;
+                        indexByKey[key] = i;
                       }
                     }
 
@@ -1202,6 +1210,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   controller: _scrollController,
                                   padding: const EdgeInsets.all(8),
                                   itemCount: itemCount + 1,
+                                  // Rows move by key: a new message shifts
+                                  // every index, and each visible row would
+                                  // otherwise take its neighbour's subtree.
+                                  findChildIndexCallback: (key) {
+                                    final i = indexByKey[key];
+                                    return i == null ? null : i + 1;
+                                  },
                                   itemBuilder: (context, index) {
                                     if (index == 0) {
                                       return JumpToBottomReservedSpacer(

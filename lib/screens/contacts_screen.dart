@@ -123,6 +123,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<Contact> _contactsSnapshot = const [];
   List<Contact> _derivedFilteredContacts = const [];
   List<_ContactListItemData> _derivedContactItems = const [];
+  List<Key> _derivedContactKeys = const [];
+  Map<Key, int> _derivedContactIndexByKey = const {};
   List<Contact> _derivedBatchSelectableContacts = const [];
   List<ContactGroup> _derivedSortedGroups = const [];
 
@@ -1398,6 +1400,11 @@ class _ContactsScreenState extends State<ContactsScreen>
         _derivedFilteredContacts,
         connector,
       );
+      _derivedContactKeys = _contactRowKeys(_derivedContactItems);
+      _derivedContactIndexByKey = {
+        for (var i = 0; i < _derivedContactKeys.length; i++)
+          _derivedContactKeys[i]: i,
+      };
       _derivedBatchSelectableContacts = _contactsMatchingBatchFilter(
         contacts,
         connector,
@@ -1409,6 +1416,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     final filteredAndSorted = _derivedFilteredContacts;
     final contactItems = _derivedContactItems;
+    final contactKeys = _derivedContactKeys;
+    final contactIndexByKey = _derivedContactIndexByKey;
     final batchSelectableContacts = _derivedBatchSelectableContacts;
     final allFilteredBatchContactsSelected =
         batchSelectableContacts.isNotEmpty &&
@@ -1626,10 +1635,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                 : ListView.builder(
                     padding: const EdgeInsets.only(bottom: 88),
                     itemCount: contactItems.length,
+                    // A re-sort moves each row's element to its new place
+                    // instead of recreating every row whose place changed.
+                    findChildIndexCallback: (key) => contactIndexByKey[key],
                     itemBuilder: (context, index) {
                       final item = contactItems[index];
                       final contact = item.contact;
                       return _ContactTileEntrance(
+                        key: contactKeys[index],
                         index: index,
                         item: item,
                         isSelected: widget.batchOperationsMode
@@ -1725,6 +1738,20 @@ class _ContactsScreenState extends State<ContactsScreen>
           ),
         ),
     ];
+  }
+
+  /// One key per row: the contact's key, numbered for a contact listed more
+  /// than once, which only a stray duplicate in the node's table can cause.
+  /// Two rows sharing a key would leave the list unable to tell them apart.
+  static List<Key> _contactRowKeys(List<_ContactListItemData> items) {
+    final seen = <String, int>{};
+    final keys = <Key>[];
+    for (final item in items) {
+      final hex = item.contact.publicKeyHex;
+      final count = seen[hex] = (seen[hex] ?? 0) + 1;
+      keys.add(count == 1 ? ValueKey(hex) : ValueKey('$hex#$count'));
+    }
+    return keys;
   }
 
   List<Contact> _filterAndSortContacts(
@@ -3228,6 +3255,7 @@ class _ContactTileEntrance extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _ContactTileEntrance({
+    super.key,
     required this.index,
     required this.item,
     this.isSelected,
@@ -3239,7 +3267,6 @@ class _ContactTileEntrance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListEntrance(
-      key: ValueKey('contact_entrance_${item.contact.publicKeyHex}'),
       index: index,
       child: _ContactTile(
         item: item,

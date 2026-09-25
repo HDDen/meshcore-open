@@ -919,6 +919,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 vertical: 16,
               ),
               itemCount: itemCount + 1,
+              // Rows move by key: a new or deleted message shifts every
+              // index, and each visible row would otherwise take its
+              // neighbour's subtree instead of just moving.
+              findChildIndexCallback: (key) =>
+                  _messageListIndexForKey(listData, key),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return JumpToBottomReservedSpacer(
@@ -971,6 +976,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 return Builder(
+                  key: identical(message, _pendingUnreadScrollTarget)
+                      ? _unreadScrollKey
+                      : messageKey,
                   builder: (context) {
                     final textScale = context
                         .select<ChatTextScaleService, double>(
@@ -1027,10 +1035,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             children: [const UnreadDivider(), bubble],
                           )
                         : bubble;
-                    if (identical(message, _pendingUnreadScrollTarget)) {
-                      return KeyedSubtree(key: _unreadScrollKey, child: child);
-                    }
-                    return KeyedSubtree(key: messageKey, child: child);
+                    return child;
                   },
                 );
               },
@@ -1070,6 +1075,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
     final keyedIndices = <int>{};
     final duplicateKeys = <int, ValueKey<String>>{};
+    final indexByKey = <Key, int>{};
     final occurrencesById = <String, int>{};
     for (var i = 0; i < reversedMessages.length; i++) {
       final messageId = reversedMessages[i].messageId;
@@ -1077,8 +1083,11 @@ class _ChatScreenState extends State<ChatScreen> {
       occurrencesById[messageId] = occurrence + 1;
       if (occurrence == 0) {
         keyedIndices.add(i);
+        indexByKey[_messageKeys.putIfAbsent(messageId, GlobalKey.new)] = i;
       } else {
-        duplicateKeys[i] = ValueKey('$messageId#$occurrence');
+        final key = ValueKey('$messageId#$occurrence');
+        duplicateKeys[i] = key;
+        indexByKey[key] = i;
       }
     }
 
@@ -1086,11 +1095,28 @@ class _ChatScreenState extends State<ChatScreen> {
       reversedMessages: reversedMessages,
       keyedIndices: Set<int>.unmodifiable(keyedIndices),
       duplicateKeys: Map<int, ValueKey<String>>.unmodifiable(duplicateKeys),
+      indexByKey: Map<Key, int>.unmodifiable(indexByKey),
     );
     _messageListRevision = revision;
     _messageListSource = messages;
     _messageListDataCache = data;
     return data;
+  }
+
+  /// Where the row with [key] sits now, so the list moves its element rather
+  /// than rebuilding every row that a new or deleted message shifted. Index 0
+  /// is the spacer under the newest message.
+  int? _messageListIndexForKey(_ChatMessageListData listData, Key key) {
+    if (key == _unreadScrollKey) {
+      final target = _pendingUnreadScrollTarget;
+      if (target == null) return null;
+      final index = listData.reversedMessages.indexWhere(
+        (message) => identical(message, target),
+      );
+      return index < 0 ? null : index + 1;
+    }
+    final index = listData.indexByKey[key];
+    return index == null ? null : index + 1;
   }
 
   Future<void> _handleEscapeNavigation() async {
@@ -3908,10 +3934,14 @@ class _ChatMessageListData {
   final Set<int> keyedIndices;
   final Map<int, ValueKey<String>> duplicateKeys;
 
+  /// The index in [reversedMessages] of every row key.
+  final Map<Key, int> indexByKey;
+
   const _ChatMessageListData({
     required this.reversedMessages,
     required this.keyedIndices,
     required this.duplicateKeys,
+    required this.indexByKey,
   });
 }
 
