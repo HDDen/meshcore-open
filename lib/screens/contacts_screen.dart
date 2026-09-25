@@ -3141,9 +3141,6 @@ class _ContactTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 1),
-                  // Public key of the contact, small monospace. When it does
-                  // not fit, the middle is elided (start…end) so both ends stay
-                  // visible.
                   MiddleEllipsisText(
                     text: item.publicKeyLabel,
                     style: MeshTheme.mono(
@@ -3221,7 +3218,6 @@ class _ContactTile extends StatelessWidget {
       ),
     );
   }
-
 }
 
 // Wrap each contact tile with staggered entrance.
@@ -3245,6 +3241,7 @@ class _ContactTileEntrance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListEntrance(
+      key: ValueKey('contact_entrance_${item.contact.publicKeyHex}'),
       index: index,
       child: _ContactTile(
         item: item,
