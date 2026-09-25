@@ -124,6 +124,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   int _contactsSnapshotRevision = -1;
   List<Contact> _contactsSnapshot = const [];
   List<Contact> _derivedFilteredContacts = const [];
+  List<_ContactListItemData> _derivedContactItems = const [];
   List<Contact> _derivedBatchSelectableContacts = const [];
   List<ContactGroup> _derivedSortedGroups = const [];
 
@@ -1382,6 +1383,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       connector,
       viewState,
       groupsByName,
+      context.l10n.localeName,
     );
     if (_contactsDerivedRevision != connector.uiRevision ||
         _contactsDerivedKey != derivedKey) {
@@ -1389,6 +1391,11 @@ class _ContactsScreenState extends State<ContactsScreen>
         contacts,
         connector,
         viewState,
+      );
+      _derivedContactItems = _buildContactListItems(
+        context,
+        _derivedFilteredContacts,
+        connector,
       );
       _derivedBatchSelectableContacts = _contactsMatchingBatchFilter(
         contacts,
@@ -1401,6 +1408,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       _contactsDerivedKey = derivedKey;
     }
     final filteredAndSorted = _derivedFilteredContacts;
+    final contactItems = _derivedContactItems;
     final batchSelectableContacts = _derivedBatchSelectableContacts;
     final allFilteredBatchContactsSelected =
         batchSelectableContacts.isNotEmpty &&
@@ -1484,9 +1492,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
+              SizedBox(
                 width: viewState.contactsSearchExpanded
                     ? searchExpandedWidth
                     : searchCollapsedWidth,
@@ -1619,19 +1625,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.only(bottom: 88),
-                    itemCount: filteredAndSorted.length,
+                    itemCount: contactItems.length,
                     itemBuilder: (context, index) {
-                      final contact = filteredAndSorted[index];
-                      final unreadCount = connector.getUnreadCountForContact(
-                        contact,
-                      );
+                      final item = contactItems[index];
+                      final contact = item.contact;
                       return _ContactTileEntrance(
                         index: index,
-                        contact: contact,
-                        pathHashByteWidth: connector.pathHashByteWidth,
-                        lastSeen: _resolveLastSeen(contact),
-                        unreadCount: unreadCount,
-                        isFavorite: contact.isFavorite,
+                        item: item,
                         isSelected: widget.batchOperationsMode
                             ? _selectedBatchContactKeys.contains(
                                 contact.publicKeyHex,
@@ -1669,10 +1669,14 @@ class _ContactsScreenState extends State<ContactsScreen>
     MeshCoreConnector connector,
     UiViewStateService viewState,
     Map<String, ContactGroup> groupsByName,
+    String localeName,
   ) {
     final groupsKey = groupsByName.values
         .map((group) => '${group.name}\u0000${group.memberKeys.join(',')}')
         .join('|');
+    final lastSeenMinuteBucket =
+        DateTime.now().millisecondsSinceEpoch ~/
+        const Duration(minutes: 1).inMilliseconds;
     return [
       viewState.contactsSelectedGroupName,
       viewState.contactsSearchText,
@@ -1682,8 +1686,33 @@ class _ContactsScreenState extends State<ContactsScreen>
       widget.batchOperationsMode,
       widget.selectionMode,
       connector.selfPublicKeyHex,
+      connector.pathHashByteWidth,
+      localeName,
+      lastSeenMinuteBucket,
       groupsKey,
     ].join('\u0001');
+  }
+
+  List<_ContactListItemData> _buildContactListItems(
+    BuildContext context,
+    List<Contact> contacts,
+    MeshCoreConnector connector,
+  ) {
+    final l10n = context.l10n;
+    final pathHashByteWidth = connector.pathHashByteWidth;
+    return [
+      for (final contact in contacts)
+        _ContactListItemData.fromContact(
+          contact: contact,
+          pathHashByteWidth: pathHashByteWidth,
+          unreadCount: connector.getUnreadCountForContact(contact),
+          lastSeenText: _formatLastSeen(context, _resolveLastSeen(contact)),
+          pathLabel: contact.pathLabel(
+            l10n,
+            pathHashByteWidth: pathHashByteWidth,
+          ),
+        ),
+    ];
   }
 
   List<Contact> _filterAndSortContacts(
@@ -1856,6 +1885,28 @@ class _ContactsScreenState extends State<ContactsScreen>
     return contact.lastMessageAt.isAfter(contact.lastSeen)
         ? contact.lastMessageAt
         : contact.lastSeen;
+  }
+
+  String _formatLastSeen(BuildContext context, DateTime lastSeen) {
+    final now = DateTime.now();
+    final diff = now.difference(lastSeen);
+
+    if (diff.isNegative || diff.inMinutes < 5) {
+      return context.l10n.contacts_lastSeenNow;
+    }
+    if (diff.inMinutes < 60) {
+      return context.l10n.contacts_lastSeenMinsAgo(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      final hours = diff.inHours;
+      return hours == 1
+          ? context.l10n.contacts_lastSeenHourAgo
+          : context.l10n.contacts_lastSeenHoursAgo(hours);
+    }
+    final days = diff.inDays;
+    return days == 1
+        ? context.l10n.contacts_lastSeenDayAgo
+        : context.l10n.contacts_lastSeenDaysAgo(days);
   }
 
   void _openChat(BuildContext context, Contact contact) {
@@ -2920,23 +2971,69 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 }
 
-class _ContactTile extends StatelessWidget {
+class _ContactListItemData {
   final Contact contact;
-  final int pathHashByteWidth;
-  final DateTime lastSeen;
   final int unreadCount;
   final bool isFavorite;
+  final String pathLabel;
+  final bool hasPath;
+  final bool isDirect;
+  final int? displayHopCount;
+  final String lastSeenText;
+  final String? emoji;
+  final String publicKeyLabel;
+
+  const _ContactListItemData({
+    required this.contact,
+    required this.unreadCount,
+    required this.isFavorite,
+    required this.pathLabel,
+    required this.hasPath,
+    required this.isDirect,
+    required this.displayHopCount,
+    required this.lastSeenText,
+    required this.emoji,
+    required this.publicKeyLabel,
+  });
+
+  factory _ContactListItemData.fromContact({
+    required Contact contact,
+    required int pathHashByteWidth,
+    required int unreadCount,
+    required String lastSeenText,
+    required String pathLabel,
+  }) {
+    final pathBytes = contact.pathBytesForDisplay;
+    final pathLen = pathBytes.length;
+    final hasPath = pathLen > 0 || contact.pathLength == 0;
+    final isDirect = contact.pathLength >= 0;
+    final displayHopCount = contact.pathLength == 0
+        ? 0
+        : PathHelper.splitPathBytes(pathBytes, pathHashByteWidth).length;
+    return _ContactListItemData(
+      contact: contact,
+      unreadCount: unreadCount,
+      isFavorite: contact.isFavorite,
+      pathLabel: pathLabel,
+      hasPath: hasPath,
+      isDirect: isDirect,
+      displayHopCount: displayHopCount,
+      lastSeenText: lastSeenText,
+      emoji: firstEmoji(contact.name),
+      publicKeyLabel: contact.publicKeyHex.toUpperCase(),
+    );
+  }
+}
+
+class _ContactTile extends StatelessWidget {
+  final _ContactListItemData item;
   final bool? isSelected;
   final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
   const _ContactTile({
-    required this.contact,
-    required this.pathHashByteWidth,
-    required this.lastSeen,
-    required this.unreadCount,
-    required this.isFavorite,
+    required this.item,
     this.isSelected,
     this.onSelectionChanged,
     required this.onTap,
@@ -2945,7 +3042,7 @@ class _ContactTile extends StatelessWidget {
 
   /// Node-type avatar color per design language.
   Color _avatarColor() {
-    switch (contact.type) {
+    switch (item.contact.type) {
       case advTypeRepeater:
         return MeshPalette.warn;
       case advTypeRoom:
@@ -2960,7 +3057,7 @@ class _ContactTile extends StatelessWidget {
 
   /// Node-type avatar icon. Returns null for chat nodes so AvatarCircle shows initials.
   IconData? _avatarIcon() {
-    switch (contact.type) {
+    switch (item.contact.type) {
       case advTypeRepeater:
         return Icons.cell_tower;
       case advTypeRoom:
@@ -2975,17 +3072,9 @@ class _ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final emoji = firstEmoji(contact.name);
+    final contact = item.contact;
+    final emoji = item.emoji;
     final isChat = contact.type == advTypeChat;
-    final pathLen = contact.pathBytesForDisplay.length;
-    final isDirect = contact.pathLength >= 0;
-    final hasPath = pathLen > 0 || contact.pathLength == 0;
-    final displayHopCount = contact.pathLength == 0
-        ? 0
-        : PathHelper.splitPathBytes(
-            contact.pathBytesForDisplay,
-            pathHashByteWidth,
-          ).length;
 
     return GestureDetector(
       onSecondaryTapUp: PlatformInfo.isDesktop && onLongPress != null
@@ -3033,7 +3122,7 @@ class _ContactTile extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight: unreadCount > 0
+                            fontWeight: item.unreadCount > 0
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                             fontSize: 15,
@@ -3041,13 +3130,13 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (isFavorite) ...[
+                      if (item.isFavorite) ...[
                         const SizedBox(width: 4),
                         Icon(Icons.star, size: 13, color: MeshPalette.warn),
                       ],
-                      if (unreadCount > 0) ...[
+                      if (item.unreadCount > 0) ...[
                         const SizedBox(width: 6),
-                        UnreadBadge(count: unreadCount),
+                        UnreadBadge(count: item.unreadCount),
                       ],
                     ],
                   ),
@@ -3056,7 +3145,7 @@ class _ContactTile extends StatelessWidget {
                   // not fit, the middle is elided (start…end) so both ends stay
                   // visible.
                   MiddleEllipsisText(
-                    text: contact.publicKeyHex.toUpperCase(),
+                    text: item.publicKeyLabel,
                     style: MeshTheme.mono(
                       fontSize: 9,
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -3072,10 +3161,7 @@ class _ContactTile extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                contact.pathLabel(
-                                  context.l10n,
-                                  pathHashByteWidth: pathHashByteWidth,
-                                ),
+                                item.pathLabel,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -3084,11 +3170,13 @@ class _ContactTile extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (hasPath) ...[
+                            if (item.hasPath) ...[
                               const SizedBox(width: 6),
                               RouteChip(
-                                isDirect: isDirect,
-                                hops: isDirect ? displayHopCount : null,
+                                isDirect: item.isDirect,
+                                hops: item.isDirect
+                                    ? item.displayHopCount
+                                    : null,
                               ),
                             ],
                           ],
@@ -3106,12 +3194,12 @@ class _ContactTile extends StatelessWidget {
                       ],
                       const SizedBox(width: 6),
                       Text(
-                        _formatLastSeen(context, lastSeen),
+                        item.lastSeenText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: MeshTheme.mono(
                           fontSize: 11,
-                          color: unreadCount > 0
+                          color: item.unreadCount > 0
                               ? MeshPalette.blue
                               : scheme.onSurfaceVariant,
                         ),
@@ -3134,37 +3222,12 @@ class _ContactTile extends StatelessWidget {
     );
   }
 
-  String _formatLastSeen(BuildContext context, DateTime lastSeen) {
-    final now = DateTime.now();
-    final diff = now.difference(lastSeen);
-
-    if (diff.isNegative || diff.inMinutes < 5) {
-      return context.l10n.contacts_lastSeenNow;
-    }
-    if (diff.inMinutes < 60) {
-      return context.l10n.contacts_lastSeenMinsAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      final hours = diff.inHours;
-      return hours == 1
-          ? context.l10n.contacts_lastSeenHourAgo
-          : context.l10n.contacts_lastSeenHoursAgo(hours);
-    }
-    final days = diff.inDays;
-    return days == 1
-        ? context.l10n.contacts_lastSeenDayAgo
-        : context.l10n.contacts_lastSeenDaysAgo(days);
-  }
 }
 
 // Wrap each contact tile with staggered entrance.
 class _ContactTileEntrance extends StatelessWidget {
   final int index;
-  final Contact contact;
-  final int pathHashByteWidth;
-  final DateTime lastSeen;
-  final int unreadCount;
-  final bool isFavorite;
+  final _ContactListItemData item;
   final bool? isSelected;
   final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
@@ -3172,11 +3235,7 @@ class _ContactTileEntrance extends StatelessWidget {
 
   const _ContactTileEntrance({
     required this.index,
-    required this.contact,
-    required this.pathHashByteWidth,
-    required this.lastSeen,
-    required this.unreadCount,
-    required this.isFavorite,
+    required this.item,
     this.isSelected,
     this.onSelectionChanged,
     required this.onTap,
@@ -3188,11 +3247,7 @@ class _ContactTileEntrance extends StatelessWidget {
     return ListEntrance(
       index: index,
       child: _ContactTile(
-        contact: contact,
-        pathHashByteWidth: pathHashByteWidth,
-        lastSeen: lastSeen,
-        unreadCount: unreadCount,
-        isFavorite: isFavorite,
+        item: item,
         isSelected: isSelected,
         onSelectionChanged: onSelectionChanged,
         onTap: onTap,
