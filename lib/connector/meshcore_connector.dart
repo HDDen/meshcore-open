@@ -6808,12 +6808,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final resolved = resolvePathSelection(contact, selection: autoSelection);
 
     if (resolved.useFlood) {
-      await clearContactPath(contact);
+      await clearContactPath(contact, waitForAck: true);
     } else {
       await setContactPath(
         contact,
         Uint8List.fromList(resolved.pathBytes),
         resolved.hopCount,
+        waitForAck: true,
       );
     }
 
@@ -8683,7 +8684,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> clearContactPath(Contact contact) async {
+  Future<void> clearContactPath(
+    Contact contact, {
+    bool waitForAck = false,
+  }) async {
     // Serialize path operations to prevent interleaved async calls.
     final prev = _pathOpLock;
     final completer = Completer<void>();
@@ -8701,7 +8705,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         'devicePath=${contact.pathLength}, override=${contact.pathOverride}',
         tag: 'Connector',
       );
-      await sendFrame(buildResetPathFrame(contact.publicKey));
+      await sendFrame(
+        buildResetPathFrame(contact.publicKey),
+        waitForGenericAck: waitForAck,
+      );
       if (_activeTransport == MeshCoreTransportType.usb) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
