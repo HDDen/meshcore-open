@@ -18,7 +18,6 @@ import '../helpers/contact_share_helper.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/offline_mode_helper.dart';
-import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
@@ -2976,9 +2975,6 @@ class _ContactListItemData {
   final int unreadCount;
   final bool isFavorite;
   final String pathLabel;
-  final bool hasPath;
-  final bool isDirect;
-  final int? displayHopCount;
   final String lastSeenText;
   final String? emoji;
   final String publicKeyLabel;
@@ -2988,9 +2984,6 @@ class _ContactListItemData {
     required this.unreadCount,
     required this.isFavorite,
     required this.pathLabel,
-    required this.hasPath,
-    required this.isDirect,
-    required this.displayHopCount,
     required this.lastSeenText,
     required this.emoji,
     required this.publicKeyLabel,
@@ -3003,21 +2996,11 @@ class _ContactListItemData {
     required String lastSeenText,
     required String pathLabel,
   }) {
-    final pathBytes = contact.pathBytesForDisplay;
-    final pathLen = pathBytes.length;
-    final hasPath = pathLen > 0 || contact.pathLength == 0;
-    final isDirect = contact.pathLength >= 0;
-    final displayHopCount = contact.pathLength == 0
-        ? 0
-        : PathHelper.splitPathBytes(pathBytes, pathHashByteWidth).length;
     return _ContactListItemData(
       contact: contact,
       unreadCount: unreadCount,
       isFavorite: contact.isFavorite,
       pathLabel: pathLabel,
-      hasPath: hasPath,
-      isDirect: isDirect,
-      displayHopCount: displayHopCount,
       lastSeenText: lastSeenText,
       emoji: firstEmoji(contact.name),
       publicKeyLabel: contact.publicKeyHex.toUpperCase(),
@@ -3149,34 +3132,19 @@ class _ContactTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  // Path / subtitle row: path label + route chip, then
-                  // location marker and last-seen time (right-aligned).
+                  // Path / subtitle row, then location marker and last-seen
+                  // time (right-aligned).
                   Row(
                     children: [
                       Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                item.pathLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                            if (item.hasPath) ...[
-                              const SizedBox(width: 6),
-                              RouteChip(
-                                isDirect: item.isDirect,
-                                hops: item.isDirect
-                                    ? item.displayHopCount
-                                    : null,
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          item.pathLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                       if (contact.hasLocation) ...[

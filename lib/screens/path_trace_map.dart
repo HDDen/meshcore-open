@@ -252,7 +252,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       connector: context.read<MeshCoreConnector>(),
     );
     _setupFrameListener();
-    _doPathTrace();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _doPathTrace();
+    });
   }
 
   @override
