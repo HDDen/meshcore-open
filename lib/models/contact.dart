@@ -43,7 +43,10 @@ class Contact {
     this.rawPacket,
   }) : lastMessageAt = lastMessageAt ?? lastSeen;
 
-  String get publicKeyHex => pubKeyToHex(publicKey);
+  /// Built once per instance. The key is compared and hashed constantly, in
+  /// sorts, lookups and every Set or Map of contacts, and rebuilding the
+  /// string on each access used to dominate the contacts screen.
+  late final String publicKeyHex = pubKeyToHex(publicKey);
 
   /// Non-localized type label, intended for logs and non-UI exports
   /// (e.g. GPX). For UI use the `typeLabel(l10n)` extension in

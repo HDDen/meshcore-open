@@ -36,6 +36,7 @@ import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
+import '../helpers/key_indexed_list.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/mesh_compressor.dart';
@@ -245,7 +246,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   final List<ScanResult> _scanResults = [];
   final List<ScanResult> _linuxSystemScanResults = [];
-  final List<Contact> _contacts = [];
+  // Indexed by key so the per-contact lookups the screens run on every
+  // rebuild do not scan the whole list; see _shouldTrackUnreadForContactKey.
+  final KeyIndexedList<Contact> _contacts = KeyIndexedList<Contact>(
+    (contact) => contact.publicKeyHex,
+  );
   final List<Contact> _discoveredContacts = [];
   Future<void>? _contactCacheLoadFuture;
   int _contactCacheLoadGeneration = 0;
@@ -13497,11 +13502,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     await _channelOrderStore.saveChannelOrder(_channelOrder);
   }
 
+  /// Reached for every contact on each rebuild of the contacts list, through
+  /// the unread counts, so it looks the key up instead of scanning.
   bool _shouldTrackUnreadForContactKey(String contactKeyHex) {
-    final contact = _contacts.cast<Contact?>().firstWhere(
-      (c) => c?.publicKeyHex == contactKeyHex,
-      orElse: () => null,
-    );
+    final contact = _contacts.byKey(contactKeyHex);
     if (contact == null) return true;
     return contact.type != advTypeRepeater;
   }

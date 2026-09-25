@@ -243,6 +243,12 @@ Shared history is read out of the *other* node scopes in the same database and m
 
 Clearing a whole conversation deliberately works the other way: `clearMessagesForContact` / `clearMessagesForChannel` only hide the shared scope for the session (`_hiddenSharedContactKeys` / `_hiddenSharedChannelIdentityKeys`) and leave the other node's data alone.
 
+### Contact keys and lookups
+
+`Contact.publicKeyHex` is computed once per instance (`late final`), not on every access. The key drives `==`, `hashCode` and every sort and lookup of contacts, and rebuilding the 64-character string each time used to be the main cost of the contacts screen. The cache is safe only because nothing writes into a contact's `publicKey` bytes; keep it that way.
+
+The connector's `_contacts` is a `KeyIndexedList` (`helpers/key_indexed_list.dart`), a list whose `byKey` answers in O(1) with `firstWhere` semantics. Call sites need no bookkeeping: any mutation, through any `List` method, marks the index stale and the next lookup rebuilds it, so the two dozen places that change `_contacts` stay plain list code. `_shouldTrackUnreadForContactKey` uses it. The unread counts reach that check once per contact on every rebuild of the contacts list, and its old linear scan made the rebuild quadratic: about 55 ms at 300 contacts on a desktop, 0.2 ms now. A new per-contact lookup on a hot path belongs on `byKey`, not on another `firstWhere`.
+
 ### Contact message summaries and channel-screen visibility
 
 `Contact.hasMessages` means that an actual direct-message history exists for the contact in either the current node's store or an enabled shared-history scope. Channel posts, adverts, and discovery activity must not set this flag. Missing `hasMessages` values in legacy `contact_store` / `contact_discovery_store` records are treated as `false`; `_refreshContactMessageSummaries()` rebuilds the flag from real local/shared message summaries and clears stale values. When summaries are merged, `lastMessageAt` remains monotonic and keeps the newest known timestamp.
