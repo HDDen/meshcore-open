@@ -53,6 +53,7 @@ import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
+import '../widgets/chat_bubble_box.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/composer_text_builder.dart';
@@ -2978,7 +2979,7 @@ class _MessageBubble extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 Flexible(
-                  child: AnimatedContainer(
+                  child: ChatBubbleBox(
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeInOut,
                     padding: isMediaMessage

@@ -24,6 +24,10 @@ class KeyIndexedList<E> extends ListBase<E> {
   int _version = 0;
   int _indexedVersion = -1;
 
+  /// Bumped by every change, whichever method makes it, so a consumer can
+  /// tell in O(1) whether the list changed since it last looked.
+  int get version => _version;
+
   /// The first element whose key is [key], or null when there is none.
   E? byKey(String key) {
     if (_indexedVersion != _version) {

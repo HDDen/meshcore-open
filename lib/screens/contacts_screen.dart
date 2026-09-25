@@ -118,9 +118,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<ContactGroup> _groups = [];
   String _loadedGroupScopeKeyHex = '';
   Timer? _searchDebounce;
-  int _contactsDerivedRevision = -1;
   String _contactsDerivedKey = '';
-  int _contactsSnapshotRevision = -1;
+  String _contactsSnapshotKey = '';
   List<Contact> _contactsSnapshot = const [];
   List<Contact> _derivedFilteredContacts = const [];
   List<_ContactListItemData> _derivedContactItems = const [];
@@ -1342,9 +1341,12 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
     final viewState = context.watch<UiViewStateService>();
-    if (_contactsSnapshotRevision != connector.uiRevision) {
+    // Copied again only when a contact changed, not on every notification.
+    final snapshotKey =
+        '${connector.contactsRevision}:${connector.selfPublicKeyHex}';
+    if (_contactsSnapshotKey != snapshotKey) {
       _contactsSnapshot = connector.contacts;
-      _contactsSnapshotRevision = connector.uiRevision;
+      _contactsSnapshotKey = snapshotKey;
     }
     final contacts = _contactsSnapshot;
     final waitingForInitialContacts =
@@ -1381,11 +1383,11 @@ class _ContactsScreenState extends State<ContactsScreen>
     final derivedKey = _contactsDerivedKeyFor(
       connector,
       viewState,
+      contacts,
       groupsByName,
       context.l10n.localeName,
     );
-    if (_contactsDerivedRevision != connector.uiRevision ||
-        _contactsDerivedKey != derivedKey) {
+    if (_contactsDerivedKey != derivedKey) {
       _derivedFilteredContacts = _filterAndSortContacts(
         contacts,
         connector,
@@ -1403,7 +1405,6 @@ class _ContactsScreenState extends State<ContactsScreen>
       );
       _derivedSortedGroups = groupsByName.values.toList()
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      _contactsDerivedRevision = connector.uiRevision;
       _contactsDerivedKey = derivedKey;
     }
     final filteredAndSorted = _derivedFilteredContacts;
@@ -1664,9 +1665,14 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
+  /// Everything the derived rows depend on. From the connector that is its
+  /// contacts and unread revisions, not [MeshCoreConnector.uiRevision]: that
+  /// one moves on every notification, radio traffic and battery readings
+  /// included, and made each of them recompute the whole list.
   String _contactsDerivedKeyFor(
     MeshCoreConnector connector,
     UiViewStateService viewState,
+    List<Contact> contacts,
     Map<String, ContactGroup> groupsByName,
     String localeName,
   ) {
@@ -1676,7 +1682,14 @@ class _ContactsScreenState extends State<ContactsScreen>
     final lastSeenMinuteBucket =
         DateTime.now().millisecondsSinceEpoch ~/
         const Duration(minutes: 1).inMilliseconds;
+    final sortsByRecentMessages =
+        viewState.contactsSortOption == ContactSortOption.recentMessages;
     return [
+      connector.contactsRevision,
+      connector.contactUnreadRevision,
+      sortsByRecentMessages
+          ? _lastDirectMessageFingerprint(contacts, connector)
+          : '',
       viewState.contactsSelectedGroupName,
       viewState.contactsSearchText,
       viewState.contactsSortOption.name,
@@ -1877,6 +1890,23 @@ class _ContactsScreenState extends State<ContactsScreen>
     if (cached == null) return live;
     if (live == null) return cached;
     return live.isAfter(cached) ? live : cached;
+  }
+
+  /// The recent-messages sort reads message timestamps, which can change
+  /// while the contacts and their unread counts stay the same, as when a
+  /// message is deleted or history is loaded.
+  int _lastDirectMessageFingerprint(
+    List<Contact> contacts,
+    MeshCoreConnector connector,
+  ) {
+    var fingerprint = 0;
+    for (final contact in contacts) {
+      fingerprint = Object.hash(
+        fingerprint,
+        _resolveLastDirectMessageAt(contact, connector),
+      );
+    }
+    return fingerprint;
   }
 
   DateTime _resolveLastSeen(Contact contact) {

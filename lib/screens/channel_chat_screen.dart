@@ -73,6 +73,7 @@ import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
+import '../widgets/chat_bubble_box.dart';
 import '../widgets/composer_text_builder.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
@@ -1640,7 +1641,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onSecondaryTapUp: PlatformInfo.isDesktop
                       ? (_) => unawaited(_showMessageActions(message))
                       : null,
-                  child: AnimatedContainer(
+                  child: ChatBubbleBox(
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeInOut,
                     padding: isMediaMessage

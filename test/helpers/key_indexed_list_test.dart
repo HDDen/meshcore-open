@@ -65,4 +65,28 @@ void main() {
       expect(list.byKey('k49')?.tag, 49);
     });
   });
+
+  group('KeyIndexedList.version', () {
+    test('moves on every change and not on lookups', () {
+      final list = _list();
+      var last = list.version;
+      void expectMoved() {
+        expect(list.version, greaterThan(last));
+        last = list.version;
+      }
+
+      list.add(_Item('a', 1));
+      expectMoved();
+      list[0] = _Item('a', 2);
+      expectMoved();
+      list.insert(0, _Item('b', 3));
+      expectMoved();
+      list.removeWhere((item) => item.key == 'b');
+      expectMoved();
+      list.clear();
+      expectMoved();
+      expect(list.byKey('a'), isNull);
+      expect(list.version, last);
+    });
+  });
 }

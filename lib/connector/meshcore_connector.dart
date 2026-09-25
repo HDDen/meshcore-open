@@ -37,6 +37,7 @@ import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/key_indexed_list.dart';
+import '../helpers/versioned_map.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/mesh_compressor.dart';
@@ -579,7 +580,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, bool> _channelSendingDelayEnabled = {};
   final Map<int, List<String>> _channelQuickAnswerIds = {};
   final Set<String> _knownContactKeys = {};
-  final Map<String, int> _contactUnreadCount = {};
+  // Versioned so a screen can tell whether any count changed without
+  // comparing them; see contactUnreadRevision.
+  final VersionedMap<String, int> _contactUnreadCount =
+      VersionedMap<String, int>();
   final Map<String, RepeaterBatterySnapshot> _repeaterBatterySnapshots = {};
   bool _unreadStateLoaded = false;
   int _cachedContactsUnreadTotal = 0;
@@ -655,6 +659,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// it to refresh derived view data without repeating the work on layout-only
   /// rebuilds, such as window resizing.
   int get uiRevision => _uiRevision;
+
+  /// Changes whenever the saved contacts change, whichever code path changes
+  /// them, and on nothing else. A screen deriving data from every contact
+  /// keys its cache on this rather than on [uiRevision], which also moves for
+  /// radio traffic, battery readings and every other notification.
+  int get contactsRevision => _contacts.version;
+
+  /// Changes whenever a contact's unread count may have changed, including
+  /// the unread state being loaded or dropped. It is -1 while that state is
+  /// not loaded, when every count reads as zero.
+  int get contactUnreadRevision =>
+      _unreadStateLoaded ? _contactUnreadCount.version : -1;
 
   List<Contact> get contacts {
     final selfKey = _selfPublicKey;
