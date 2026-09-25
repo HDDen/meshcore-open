@@ -6,7 +6,6 @@ import UIKit
 final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterStreamHandler {
   private static let methodChannelName = "mco_service/ios_ble_proxy"
   private static let eventChannelName = "mco_service/ios_ble_proxy/events"
-  private static let restoreIdentifier = "mco.advanced.ble_proxy.peripheral"
   private static var instance: IosBleProxyAdapter?
 
   static func register(with registrar: FlutterPluginRegistrar) {
@@ -128,11 +127,7 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
     rxWriteWithoutResponse = args["rxWriteWithoutResponse"] as? Bool ?? false
     pendingStart = result
 
-    peripheralManager = CBPeripheralManager(
-      delegate: self,
-      queue: DispatchQueue.main,
-      options: [CBPeripheralManagerOptionRestoreIdentifierKey: Self.restoreIdentifier]
-    )
+    peripheralManager = CBPeripheralManager(delegate: self, queue: DispatchQueue.main)
   }
 
   private func stop() {
