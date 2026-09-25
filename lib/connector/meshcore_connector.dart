@@ -3925,12 +3925,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       if (index != -1) {
         // The retry service writes back its own copy of a pending message,
-        // which never sees the flood relays counted meanwhile. That count
-        // only grows, so the stored one is kept when it is ahead.
+        // which never sees what the RX log added meanwhile: the flood relays
+        // counted, the flood routing and the packet's region. The count only
+        // grows and the other two are only ever set, so the stored ones are
+        // kept when the copy is behind.
         final stored = messages[index];
-        final updated = message.repeatCount < stored.repeatCount
-            ? message.copyWith(repeatCount: stored.repeatCount)
-            : message;
+        var updated = message;
+        if (message.repeatCount < stored.repeatCount) {
+          updated = updated.copyWith(repeatCount: stored.repeatCount);
+        }
+        if (stored.sentByFlood && !message.sentByFlood) {
+          updated = updated.copyWith(sentByFlood: true);
+        }
+        if (stored.packetRegionInfoAvailable &&
+            !message.packetRegionInfoAvailable) {
+          updated = updated.copyWith(
+            packetRegion: stored.packetRegion,
+            packetRegionInfoAvailable: true,
+            packetRegionNotMatched: stored.packetRegionNotMatched,
+          );
+        }
         messages[index] = updated;
         if (_isRoomConversation(contactKey)) {
           messages.sort(RoomMessageTimelineHelper.compare);
@@ -10780,16 +10794,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               echo?.observation,
             );
             // The sender's retry is a packet of its own; its relays count
-            // for the message it repeats.
+            // for the message it repeats, and its region is that message's.
             if (floodHops != null && contact != null) {
               final original = existing[duplicateIndex];
-              _addDirectFloodRepeats(
-                (
-                  conversationKey: incomingMessage.senderKeyHex,
-                  messageId: original.messageId,
-                ),
-                _bindDirectFloodDelivery(original, contact, floodHops),
+              final binding = _bindDirectFloodDelivery(
+                original,
+                contact,
+                floodHops,
               );
+              if (binding != null) {
+                _updateStoredContactMessage(
+                  incomingMessage.senderKeyHex,
+                  original.messageId,
+                  (current) => _withDirectFloodCopy(
+                    current,
+                    relays: binding.relays,
+                    transportCode: binding.transportCode,
+                    payload: binding.payload,
+                  ),
+                );
+              }
             }
             return;
           }
@@ -10798,9 +10822,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (echo != null) {
         message = DirectEchoRecovery.stampFirstEcho(message, echo.observation);
       }
-      if (floodHops != null && contact != null && !message.isOutgoing) {
-        final relays = _bindDirectFloodDelivery(message, contact, floodHops);
-        if (relays > 0) message = message.copyWith(repeatCount: relays);
+      if (floodHops != null && !message.isOutgoing) {
+        message = message.copyWith(sentByFlood: true);
+        final binding = contact == null
+            ? null
+            : _bindDirectFloodDelivery(message, contact, floodHops);
+        if (binding != null) {
+          message = _withDirectFloodCopy(
+            message,
+            relays: binding.relays,
+            transportCode: binding.transportCode,
+            payload: binding.payload,
+          );
+        }
       }
       // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
@@ -12888,15 +12922,27 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final DirectFloodRepeats _directFloodRepeats = DirectFloodRepeats();
 
   /// A flood copy of a TXT_MSG heard in the RX log: one more retransmission
-  /// of the direct message it is tied to, if it is tied to one.
+  /// of the direct message it is tied to, if it is tied to one, and that
+  /// message's region, read off the copy.
   void _countDirectFloodCopy(_RawPacket packet) {
     final target = _directFloodRepeats.observe(
       payload: packet.payload,
       hopCount: packet.hopCount,
       at: DateTime.now(),
+      transportCode: packet.transportCode1,
       identity: _directFloodIdentity(packet.payload),
     );
-    if (target != null) _addDirectFloodRepeats(target, 1);
+    if (target == null) return;
+    _updateStoredContactMessage(
+      target.conversationKey,
+      target.messageId,
+      (current) => _withDirectFloodCopy(
+        current,
+        relays: 1,
+        transportCode: packet.transportCode1,
+        payload: packet.payload,
+      ),
+    );
   }
 
   /// Who a flood copy is between and when it was sent, read with the node's
@@ -12967,34 +13013,80 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  /// Ties a message the node delivered by flood to the copies of it already
-  /// heard, and returns how many of those were relays.
-  int _bindDirectFloodDelivery(Message message, Contact contact, int hops) {
-    final self = _selfPublicKey;
-    if (self == null || self.isEmpty || contact.publicKey.isEmpty) return 0;
-    return _directFloodRepeats.bindIncoming(
-          target: (
-            conversationKey: message.senderKeyHex,
-            messageId: message.messageId,
-          ),
-          sourceHash: contact.publicKey[0],
-          destinationHash: self[0],
-          hopCount: hops,
-          identity: DirectFloodRepeats.identityOf(
-            contact.publicKeyHex,
-            message.timestamp.millisecondsSinceEpoch ~/ 1000,
-          ),
-          at: DateTime.now(),
-        ) ??
-        0;
+  /// A flood send the node confirmed goes out under the node's default scope,
+  /// the app setting no other for direct messages. That is the region the
+  /// message shows until a relayed copy of the packet says exactly; a region
+  /// already read off a copy is left alone.
+  Future<void> _stampDirectFloodSend(
+    ({Message message, Contact contact}) sent,
+  ) async {
+    if (sent.contact.publicKey.isEmpty) return;
+    if (!_hasLoadedDefaultRegionScope && isConnected) {
+      await _refreshDefaultRegionScope();
+    }
+    final scopeKnown = _hasLoadedDefaultRegionScope;
+    final region = _displayPacketRegion(_defaultRegionScope ?? '');
+    _updateStoredContactMessage(
+      sent.contact.publicKeyHex,
+      sent.message.messageId,
+      (current) {
+        final flooded = current.copyWith(sentByFlood: true);
+        if (!scopeKnown || current.packetRegionInfoAvailable) return flooded;
+        return flooded.copyWith(
+          packetRegion: region,
+          packetRegionInfoAvailable: true,
+          packetRegionNotMatched: false,
+        );
+      },
+    );
   }
 
-  void _addDirectFloodRepeats(DirectFloodTarget target, int count) {
-    if (count <= 0) return;
-    _updateStoredContactMessage(
-      target.conversationKey,
-      target.messageId,
-      (current) => current.copyWith(repeatCount: current.repeatCount + count),
+  /// Ties a message the node delivered by flood to the copies of it already
+  /// heard: the relays among them, and the packet's region.
+  DirectFloodBinding? _bindDirectFloodDelivery(
+    Message message,
+    Contact contact,
+    int hops,
+  ) {
+    final self = _selfPublicKey;
+    if (self == null || self.isEmpty || contact.publicKey.isEmpty) return null;
+    return _directFloodRepeats.bindIncoming(
+      target: (
+        conversationKey: message.senderKeyHex,
+        messageId: message.messageId,
+      ),
+      sourceHash: contact.publicKey[0],
+      destinationHash: self[0],
+      hopCount: hops,
+      identity: DirectFloodRepeats.identityOf(
+        contact.publicKeyHex,
+        message.timestamp.millisecondsSinceEpoch ~/ 1000,
+      ),
+      at: DateTime.now(),
+    );
+  }
+
+  /// [message] with [relays] more retransmissions and the region of a flood
+  /// copy of it, resolved from the copy's first transport code (null for a
+  /// plain flood) and the [payload] that code was computed over. The copy is
+  /// the packet itself, so its region replaces whatever the message assumed.
+  Message _withDirectFloodCopy(
+    Message message, {
+    required int relays,
+    required int? transportCode,
+    required Uint8List payload,
+  }) {
+    final region = _resolveTransportCodeRegion(
+      transportCode,
+      payloadTypeTXTMSG,
+      payload,
+    );
+    return message.copyWith(
+      sentByFlood: true,
+      repeatCount: message.repeatCount + relays,
+      packetRegion: region.region,
+      packetRegionInfoAvailable: true,
+      packetRegionNotMatched: region.notMatched,
     );
   }
 
@@ -13373,7 +13465,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (retryService != null &&
           retryService.updateMessageFromSent(ackHash, timeoutMs)) {
         if (isFlood) {
-          _expectDirectFloodRelays(retryService.sentMessageForAck(ackHash));
+          final sent = retryService.sentMessageForAck(ackHash);
+          _expectDirectFloodRelays(sent);
+          if (sent != null) unawaited(_stampDirectFloodSend(sent));
         }
         return;
       }
@@ -14157,19 +14251,36 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return digest[0];
   }
 
-  _PacketRegionResolution _resolvePacketRegion(_RawPacket packet) {
-    final transportCode = packet.transportCode1;
+  _PacketRegionResolution _resolvePacketRegion(_RawPacket packet) =>
+      _resolveTransportCodeRegion(
+        packet.transportCode1,
+        packet.payloadType,
+        packet.payload,
+      );
+
+  /// The region whose transport code for a packet of [payloadType] carrying
+  /// [payload] is [transportCode]: one of the known regions, or the node's
+  /// default scope, which need not be in that list and is what a flood direct
+  /// message goes out under.
+  _PacketRegionResolution _resolveTransportCodeRegion(
+    int? transportCode,
+    int payloadType,
+    Uint8List payload,
+  ) {
     if (transportCode == null || transportCode == 0) {
       return const _PacketRegionResolution();
     }
 
-    for (final region in RegionStore().loadRegions()) {
+    for (final region in [
+      ...RegionStore().loadRegions(),
+      ?_defaultRegionScope,
+    ]) {
       final normalized = region.trim();
       if (normalized.isEmpty || normalized.startsWith(r'$')) continue;
       final regionTransportCode = _computeRegionTransportCode(
         normalized,
-        packet.payloadType,
-        packet.payload,
+        payloadType,
+        payload,
       );
       if (regionTransportCode == transportCode) {
         return _PacketRegionResolution(

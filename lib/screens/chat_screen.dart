@@ -2980,6 +2980,22 @@ class _MessageBubble extends StatelessWidget {
         : (translatedDisplayText != messageText ? messageText : null);
     final sharedHistorySourceName = message.sharedHistorySourceName?.trim();
     final sourceLabel = message.sourceLabel?.trim();
+    // The region a flood packet was scoped to, worded as the channel
+    // bubble words it; a message that took a known route carries none.
+    final showMessageRegion =
+        settingsService.settings.showMessageRegion && message.sentByFlood;
+    final packetRegion = message.packetRegion?.trim();
+    final String packetRegionLabel;
+    if (packetRegion != null && packetRegion.isNotEmpty) {
+      packetRegionLabel = packetRegion;
+    } else if (message.packetRegionNotMatched) {
+      packetRegionLabel =
+          context.l10n.channels_messageRegionNotMatchesWithKnown;
+    } else if (message.packetRegionInfoAvailable) {
+      packetRegionLabel = context.l10n.channels_messageRegionEmpty;
+    } else {
+      packetRegionLabel = context.l10n.channels_messageRegionUnknown;
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -3405,6 +3421,25 @@ class _MessageBubble extends StatelessWidget {
                               textScale: textScale,
                               color: metaColor,
                               errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
+                        // The region line of a flood packet, on its own
+                        // line above the time as in a channel bubble.
+                        if (showMessageRegion) ...[
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: Text(
+                              context.l10n.channels_messageRegion(
+                                packetRegionLabel,
+                              ),
+                              style: MeshTheme.mono(
+                                fontSize: 10 * textScale,
+                                color: metaColor,
+                              ),
                             ),
                           ),
                         ],

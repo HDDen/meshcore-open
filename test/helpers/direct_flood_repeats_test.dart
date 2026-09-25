@@ -97,17 +97,47 @@ void main() {
       expect(repeats.observe(payload: packet, hopCount: 2, at: _at(0)), isNull);
       repeats.observe(payload: packet, hopCount: 3, at: _at(1));
       expect(
-        repeats.bindIncoming(
-          target: c,
-          sourceHash: 0x33,
-          destinationHash: _self,
-          hopCount: 2,
-          identity: 'cc:5',
-          at: _at(2),
-        ),
+        repeats
+            .bindIncoming(
+              target: c,
+              sourceHash: 0x33,
+              destinationHash: _self,
+              hopCount: 2,
+              identity: 'cc:5',
+              at: _at(2),
+            )
+            ?.relays,
         1,
       );
       expect(repeats.observe(payload: packet, hopCount: 4, at: _at(3)), c);
+    });
+
+    test('hands back the copy it bound and its transport code', () {
+      final repeats = DirectFloodRepeats();
+      final scoped = _payload(_self, 0x33, 1);
+      final plain = _payload(_self, 0x33, 9);
+      repeats.observe(
+        payload: scoped,
+        hopCount: 2,
+        at: _at(0),
+        transportCode: 0x1234,
+      );
+      repeats.observe(payload: plain, hopCount: 2, at: _at(1));
+      DirectFloodBinding? bind(DirectFloodTarget target) =>
+          repeats.bindIncoming(
+            target: target,
+            sourceHash: 0x33,
+            destinationHash: _self,
+            hopCount: 2,
+            identity: '${target.messageId}:1',
+            at: _at(2),
+          );
+      final first = bind(a);
+      expect(first?.transportCode, 0x1234);
+      expect(first?.payload, scoped);
+      final second = bind(b);
+      expect(second?.transportCode, isNull);
+      expect(second?.payload, plain);
     });
 
     test('binds the earliest packet with the reported hop count', () {
@@ -120,14 +150,16 @@ void main() {
       final second = _payload(_self, 0x33, 20);
       repeats.observe(payload: second, hopCount: 2, at: _at(1));
       repeats.observe(payload: second, hopCount: 3, at: _at(2));
-      int? bind(DirectFloodTarget target, int hops) => repeats.bindIncoming(
-        target: target,
-        sourceHash: 0x33,
-        destinationHash: _self,
-        hopCount: hops,
-        identity: '${target.messageId}:1',
-        at: _at(3),
-      );
+      int? bind(DirectFloodTarget target, int hops) => repeats
+          .bindIncoming(
+            target: target,
+            sourceHash: 0x33,
+            destinationHash: _self,
+            hopCount: hops,
+            identity: '${target.messageId}:1',
+            at: _at(3),
+          )
+          ?.relays;
       expect(bind(a, 4), isNull);
       expect(bind(a, 2), 0);
       expect(bind(b, 2), 1);
@@ -149,14 +181,16 @@ void main() {
         identity: 'p:2',
       );
       expect(
-        repeats.bindIncoming(
-          target: b,
-          sourceHash: 0x33,
-          destinationHash: _self,
-          hopCount: 2,
-          identity: 'p:2',
-          at: _at(2),
-        ),
+        repeats
+            .bindIncoming(
+              target: b,
+              sourceHash: 0x33,
+              destinationHash: _self,
+              hopCount: 2,
+              identity: 'p:2',
+              at: _at(2),
+            )
+            ?.relays,
         0,
       );
       expect(

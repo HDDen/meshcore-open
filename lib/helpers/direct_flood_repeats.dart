@@ -3,6 +3,17 @@ import 'dart:typed_data';
 /// The conversation and message a counted retransmission belongs to.
 typedef DirectFloodTarget = ({String conversationKey, String messageId});
 
+/// A delivered message tied to a heard copy: how many retransmissions of it
+/// were already heard, and the copy itself. Its transport code, the first of
+/// the two in front of the path, names the region the packet was scoped to
+/// and is null for a plain flood; the payload is what that code was computed
+/// over.
+typedef DirectFloodBinding = ({
+  int relays,
+  Uint8List payload,
+  int? transportCode,
+});
+
 /// Retransmissions of direct messages sent or received by flood, counted from
 /// the RX log the way channel repeats are.
 ///
@@ -69,13 +80,14 @@ class DirectFloodRepeats {
   }
 
   /// A flood TXT_MSG copy from the RX log: its payload, `[dest][src][mac]
-  /// [ciphertext]`, and the hops it had taken. [identity] is set when the
-  /// connector could decrypt it. Returns the message that just gained one
-  /// retransmission, or null.
+  /// [ciphertext]`, the hops it had taken and its first transport code, null
+  /// for a plain flood. [identity] is set when the connector could decrypt
+  /// it. Returns the message that just gained one retransmission, or null.
   DirectFloodTarget? observe({
     required Uint8List payload,
     required int hopCount,
     required DateTime at,
+    int? transportCode,
     String? identity,
   }) {
     if (payload.length < 4) return null;
@@ -88,9 +100,9 @@ class DirectFloodRepeats {
       return known.target;
     }
     final packet = _FloodPacket(
-      destinationHash: payload[0],
-      sourceHash: payload[1],
+      payload: Uint8List.fromList(payload),
       hopCount: hopCount,
+      transportCode: transportCode,
       firstHeardAt: at,
       identity: identity,
     );
@@ -105,9 +117,9 @@ class DirectFloodRepeats {
 
   /// A message the node delivered by flood after [hopCount] hops, sent from
   /// the peer whose key starts with [sourceHash] to ours, [destinationHash].
-  /// Returns how many retransmissions of it were already heard, or null when
-  /// no heard copy could be tied to it.
-  int? bindIncoming({
+  /// Returns the copy it was tied to, with the retransmissions of it already
+  /// heard, or null when no heard copy could be tied to it.
+  DirectFloodBinding? bindIncoming({
     required DirectFloodTarget target,
     required int sourceHash,
     required int destinationHash,
@@ -133,7 +145,11 @@ class DirectFloodRepeats {
         );
     if (chosen == null) return null;
     chosen.target = target;
-    return chosen.copies - 1;
+    return (
+      relays: chosen.copies - 1,
+      payload: chosen.payload,
+      transportCode: chosen.transportCode,
+    );
   }
 
   void clear() {
@@ -181,19 +197,21 @@ class DirectFloodRepeats {
 
 class _FloodPacket {
   _FloodPacket({
-    required this.destinationHash,
-    required this.sourceHash,
+    required this.payload,
     required this.hopCount,
+    required this.transportCode,
     required this.firstHeardAt,
     this.identity,
   });
 
-  final int destinationHash;
-  final int sourceHash;
+  final Uint8List payload;
+  int get destinationHash => payload[0];
+  int get sourceHash => payload[1];
 
   /// Hops taken by the first copy heard; for an incoming message that is the
   /// copy the node delivered.
   final int hopCount;
+  final int? transportCode;
   final DateTime firstHeardAt;
   String? identity;
   int copies = 1;

@@ -90,6 +90,20 @@ class Message {
   /// after the delivered one of an incoming one. Zero for a message that
   /// travelled a known route or was never heard relayed.
   final int repeatCount;
+
+  /// True when the packet travelled by flood: the node said so in
+  /// RESP_CODE_SENT for an outgoing message, the CONTACT_MSG_RECV path byte
+  /// for an incoming one. Only such a message carries a region, below.
+  final bool sentByFlood;
+
+  /// The region the flood packet was scoped to, held as `ChannelMessage`
+  /// holds it: the region name, or null with [packetRegionInfoAvailable] set
+  /// for a plain flood, or [packetRegionNotMatched] when the transport code
+  /// matched no region this app knows. With [packetRegionInfoAvailable]
+  /// unset nothing is known about it.
+  final String? packetRegion;
+  final bool packetRegionInfoAvailable;
+  final bool packetRegionNotMatched;
   final Map<String, List<String?>> reactions;
   final Map<String, MessageStatus> reactionStatuses;
   final Uint8List fourByteRoomContactKey;
@@ -150,6 +164,10 @@ class Message {
     this.deliveryProgressCompletedSteps = 0,
     List<DirectEchoObservation>? directEchoObservations,
     this.repeatCount = 0,
+    this.sentByFlood = false,
+    this.packetRegion,
+    this.packetRegionInfoAvailable = false,
+    this.packetRegionNotMatched = false,
     Uint8List? fourByteRoomContactKey,
     this.wasBlocked = false,
     Map<String, List<String?>>? reactions,
@@ -183,6 +201,10 @@ class Message {
     int? deliveryProgressCompletedSteps,
     List<DirectEchoObservation>? directEchoObservations,
     int? repeatCount,
+    bool? sentByFlood,
+    Object? packetRegion = _unset,
+    bool? packetRegionInfoAvailable,
+    bool? packetRegionNotMatched,
     bool? isCli,
     Object? originalText = _unset,
     Object? translatedText = _unset,
@@ -307,6 +329,14 @@ class Message {
       directEchoObservations:
           directEchoObservations ?? this.directEchoObservations,
       repeatCount: repeatCount ?? this.repeatCount,
+      sentByFlood: sentByFlood ?? this.sentByFlood,
+      packetRegion: packetRegion == _unset
+          ? this.packetRegion
+          : packetRegion as String?,
+      packetRegionInfoAvailable:
+          packetRegionInfoAvailable ?? this.packetRegionInfoAvailable,
+      packetRegionNotMatched:
+          packetRegionNotMatched ?? this.packetRegionNotMatched,
       reactions: reactions ?? this.reactions,
       reactionStatuses: reactionStatuses ?? this.reactionStatuses,
       fourByteRoomContactKey:

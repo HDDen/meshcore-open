@@ -526,6 +526,10 @@ class MessageStore {
           ? null
           : DirectEchoObservation.encodeList(msg.directEchoObservations),
       'repeatCount': msg.repeatCount,
+      'sentByFlood': msg.sentByFlood,
+      'packetRegion': msg.packetRegion,
+      'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
+      'packetRegionNotMatched': msg.packetRegionNotMatched,
       'reactions': msg.reactions,
       'reactionStatuses': msg.reactionStatuses.map(
         (key, value) => MapEntry(key, value.index),
@@ -664,6 +668,11 @@ class MessageStore {
         json['directEchoObservations'],
       ),
       repeatCount: json['repeatCount'] as int? ?? 0,
+      sentByFlood: json['sentByFlood'] as bool? ?? false,
+      packetRegion: json['packetRegion'] as String?,
+      packetRegionInfoAvailable:
+          json['packetRegionInfoAvailable'] as bool? ?? false,
+      packetRegionNotMatched: json['packetRegionNotMatched'] as bool? ?? false,
       reactions:
           (json['reactions'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(
