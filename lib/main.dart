@@ -721,11 +721,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        content: const Text(
-          'Включить ускоренное получение личных сообщений?\n'
-          'Для этого в оперативную память приложения будет извлекаться '
-          'приватный ключ ноды.',
-          style: TextStyle(fontSize: 13),
+        content: Text(
+          l10n.settings_modSettingsDirectEchoRecoveryPrompt,
+          style: const TextStyle(fontSize: 13),
         ),
         actions: [
           TextButton(

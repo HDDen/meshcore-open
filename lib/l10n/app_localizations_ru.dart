@@ -6791,6 +6791,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.';
 
   @override
+  String get settings_modSettingsDirectEchoRecoveryPrompt =>
+      'Включить ускоренное получение личных сообщений?\nДля этого в оперативную память приложения будет извлекаться приватный ключ ноды.';
+
+  @override
   String get channelPath_incompletePaths => 'Неполные пути';
 
   @override

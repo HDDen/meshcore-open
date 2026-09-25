@@ -11552,6 +11552,12 @@ abstract class AppLocalizations {
   /// **'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.'**
   String get settings_modSettingsDirectEchoRecoveryDscr;
 
+  /// No description provided for @settings_modSettingsDirectEchoRecoveryPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable faster direct message receiving?\nTo do this, the node\'s private key will be extracted into the app\'s RAM.'**
+  String get settings_modSettingsDirectEchoRecoveryPrompt;
+
   /// No description provided for @channelPath_incompletePaths.
   ///
   /// In en, this message translates to:

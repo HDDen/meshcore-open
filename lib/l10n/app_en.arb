@@ -3725,6 +3725,7 @@
   },
   "settings_modSettingsDirectEchoRecovery": "Receive direct messages before the route completes",
   "settings_modSettingsDirectEchoRecoveryDscr": "Warning! The node's private key will be exported into the app's memory, so the app decrypts the packet itself instead of the node.",
+  "settings_modSettingsDirectEchoRecoveryPrompt": "Enable faster direct message receiving?\nTo do this, the node's private key will be extracted into the app's RAM.",
   "channelPath_incompletePaths": "Incomplete paths",
   "channelPath_incompletePathTitle": "Incomplete path {index} • {hops}",
   "@channelPath_incompletePathTitle": {

@@ -6804,6 +6804,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.';
 
   @override
+  String get settings_modSettingsDirectEchoRecoveryPrompt =>
+      'Enable faster direct message receiving?\nTo do this, the node\'s private key will be extracted into the app\'s RAM.';
+
+  @override
   String get channelPath_incompletePaths => 'Incomplete paths';
 
   @override
