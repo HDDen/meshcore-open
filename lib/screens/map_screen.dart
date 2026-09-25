@@ -121,9 +121,6 @@ class _MapScreenState extends State<MapScreen>
   static const double _labelZoomThreshold = 14.0;
   // Below this zoom, nearby nodes collapse into clusters.
   static const double _clusterOffZoom = 12.5;
-  // Guessed (estimated) locations only render at closer zooms to avoid a
-  // carpet of approximate markers at city-wide scale.
-  static const double _guessedZoomThreshold = 12.0;
   static const double _mapMinZoom = 2.0;
   static const double _mapMaxZoom = 18.0;
   static LatLng? _sessionCenter;
@@ -740,9 +737,7 @@ class _MapScreenState extends State<MapScreen>
           ),
           ...locatedRepeaterGuesses,
         ];
-        final estimatedMarkersVisible =
-            !settings.mapShowOverlaps &&
-            (_zoom >= _guessedZoomThreshold || _isBuildingPathTrace);
+        final estimatedMarkersVisible = !settings.mapShowOverlaps;
         final prefixRepeaters =
             _prefixRepeaterEstimates.isNotEmpty &&
                 servSettings.locateUnknownRepeatersEnabled &&
@@ -1367,9 +1362,7 @@ class _MapScreenState extends State<MapScreen>
                             point: highlightPosition,
                             label: widget.highlightLabel!,
                           ),
-                        if (!settings.mapShowOverlaps &&
-                            (_zoom >= _guessedZoomThreshold ||
-                                _isBuildingPathTrace))
+                        if (estimatedMarkersVisible)
                           ..._buildGuessedMarker(
                             allGuessedLocations,
                             showLabels: _showNodeLabels,
@@ -1485,9 +1478,8 @@ class _MapScreenState extends State<MapScreen>
                     guessedLocations: allGuessedLocations,
                     visibleCount:
                         visibleContacts.length +
-                        (((settings.mapShowGuessedLocations ||
-                                    locatedRepeaterGuesses.isNotEmpty) &&
-                                _zoom >= _guessedZoomThreshold)
+                        ((settings.mapShowGuessedLocations ||
+                                locatedRepeaterGuesses.isNotEmpty)
                             ? allGuessedLocations.length
                             : 0),
                     onlineCount: onlineCount,

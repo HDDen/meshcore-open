@@ -532,6 +532,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
+  bool _directEchoRecoveryPromptScheduled = false;
+  bool _directEchoRecoveryPromptShowing = false;
 
   @override
   void initState() {
@@ -558,6 +560,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ),
       );
       unawaited(_showMessageHistoryMigrationWarning());
+      _maybeScheduleDirectEchoRecoveryPrompt();
     });
   }
 
@@ -676,7 +679,71 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     if (connector.isSessionReady) {
       _hadReadyConnection = true;
       unawaited(connector.resumePendingOutgoingMessages());
+      _maybeScheduleDirectEchoRecoveryPrompt();
     }
+  }
+
+  void _maybeScheduleDirectEchoRecoveryPrompt() {
+    if (_directEchoRecoveryPromptScheduled ||
+        _directEchoRecoveryPromptShowing ||
+        !widget.connector.isSessionReady) {
+      return;
+    }
+    final settings = widget.appSettingsService.settings;
+    if (settings.directEchoRecovery ||
+        settings.directEchoRecoveryPromptHandled) {
+      return;
+    }
+    _directEchoRecoveryPromptScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _directEchoRecoveryPromptScheduled = false;
+      unawaited(_showDirectEchoRecoveryPromptIfNeeded());
+    });
+  }
+
+  Future<void> _showDirectEchoRecoveryPromptIfNeeded() async {
+    if (_directEchoRecoveryPromptShowing ||
+        !mounted ||
+        !widget.connector.isSessionReady) {
+      return;
+    }
+    final settings = widget.appSettingsService.settings;
+    if (settings.directEchoRecovery ||
+        settings.directEchoRecoveryPromptHandled) {
+      return;
+    }
+    final context = MeshCoreApp._navigatorKey.currentContext;
+    if (context == null) return;
+
+    _directEchoRecoveryPromptShowing = true;
+    final l10n = AppLocalizations.of(context);
+    final enable = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: const Text(
+          'Включить ускоренное получение личных сообщений?\n'
+          'Для этого в оперативную память приложения будет извлекаться '
+          'приватный ключ ноды.',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.common_ok),
+          ),
+        ],
+      ),
+    );
+    _directEchoRecoveryPromptShowing = false;
+    if (enable == null || !mounted) return;
+    await widget.appSettingsService.handleDirectEchoRecoveryPrompt(
+      enable: enable,
+    );
   }
 
   void _scheduleScannerNavigation() {

@@ -333,6 +333,15 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(directEchoRecovery: value));
   }
 
+  Future<void> handleDirectEchoRecoveryPrompt({required bool enable}) async {
+    await updateSettings(
+      _settings.copyWith(
+        directEchoRecovery: enable ? true : _settings.directEchoRecovery,
+        directEchoRecoveryPromptHandled: true,
+      ),
+    );
+  }
+
   Future<void> setSimplifiedMentions(bool value) async {
     await updateSettings(_settings.copyWith(simplifiedMentions: value));
   }

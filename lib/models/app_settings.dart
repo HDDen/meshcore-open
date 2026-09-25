@@ -236,6 +236,9 @@ class AppSettings {
   /// the packet finished its route. Off by default: it exports the node's
   /// private key into the app's memory.
   final bool directEchoRecovery;
+
+  /// Whether the one-time direct echo recovery opt-in prompt was answered.
+  final bool directEchoRecoveryPromptHandled;
   final bool simplifiedMentions;
   final SharedMessageHistoryMode sharedMessageHistoryMode;
   final int noRetransmissionWarningSeconds;
@@ -648,6 +651,7 @@ class AppSettings {
     this.showLastHopSignal = true,
     this.recoverLongPacketEchoes = true,
     this.directEchoRecovery = false,
+    this.directEchoRecoveryPromptHandled = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
@@ -792,6 +796,7 @@ class AppSettings {
       'show_last_hop_signal': showLastHopSignal,
       'recover_long_packet_echoes': recoverLongPacketEchoes,
       'direct_echo_recovery': directEchoRecovery,
+      'direct_echo_recovery_prompt_handled': directEchoRecoveryPromptHandled,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
       'no_retransmission_warning_seconds': noRetransmissionWarningSeconds,
@@ -969,6 +974,8 @@ class AppSettings {
       recoverLongPacketEchoes:
           json['recover_long_packet_echoes'] as bool? ?? true,
       directEchoRecovery: json['direct_echo_recovery'] as bool? ?? false,
+      directEchoRecoveryPromptHandled:
+          json['direct_echo_recovery_prompt_handled'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
       sharedMessageHistoryMode: parseSharedMessageHistoryMode(
         json['shared_message_history_mode'],
@@ -1184,6 +1191,7 @@ class AppSettings {
     bool? showLastHopSignal,
     bool? recoverLongPacketEchoes,
     bool? directEchoRecovery,
+    bool? directEchoRecoveryPromptHandled,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
     int? noRetransmissionWarningSeconds,
@@ -1316,6 +1324,9 @@ class AppSettings {
       recoverLongPacketEchoes:
           recoverLongPacketEchoes ?? this.recoverLongPacketEchoes,
       directEchoRecovery: directEchoRecovery ?? this.directEchoRecovery,
+      directEchoRecoveryPromptHandled:
+          directEchoRecoveryPromptHandled ??
+          this.directEchoRecoveryPromptHandled,
       simplifiedMentions: simplifiedMentions ?? this.simplifiedMentions,
       sharedMessageHistoryMode:
           sharedMessageHistoryMode ?? this.sharedMessageHistoryMode,
