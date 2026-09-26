@@ -257,7 +257,7 @@ class MessageRetryService extends ChangeNotifier {
     int? pathLength,
   }) async {
     final resolvedMessageId = messageId ?? const Uuid().v4();
-    final resolved = _resolveContactSendPath(contact);
+    final resolved = resolvePathSelection(contact);
     final messagePathBytes =
         pathBytes ?? Uint8List.fromList(resolved.pathBytes);
     final messagePathLength =
@@ -379,32 +379,6 @@ class MessageRetryService extends ChangeNotifier {
     }
   }
 
-  PathSelection _resolveContactSendPath(Contact contact) {
-    return _roomPostPathWithoutFlood(contact, resolvePathSelection(contact));
-  }
-
-  PathSelection _roomPostPathWithoutFlood(
-    Contact contact,
-    PathSelection selection,
-  ) {
-    if (contact.type != advTypeRoom || !selection.useFlood) {
-      return selection;
-    }
-
-    // A room server may accept LOGIN via flood, but posts are normal contact
-    // sends to the room itself. Do not let a flood override reset the node path
-    // immediately before CMD_SEND_TXT_MSG; fall back to the known device route,
-    // or to direct delivery when no route is known.
-    if (contact.pathLength >= 0) {
-      return PathSelection(
-        pathBytes: contact.path,
-        hopCount: contact.pathLength,
-        useFlood: false,
-      );
-    }
-    return const PathSelection(pathBytes: [], hopCount: 0, useFlood: false);
-  }
-
   PathSelection? _selectPathForAttempt(Message message, Contact contact) {
     final config = _config;
     if (config == null) return null;
@@ -445,10 +419,7 @@ class MessageRetryService extends ChangeNotifier {
 
     if (message == null || contact == null || config == null) return;
 
-    final currentSelection = _selectPathForAttempt(message, contact);
-    final effectiveSelection = currentSelection == null
-        ? null
-        : _roomPostPathWithoutFlood(contact, currentSelection);
+    final effectiveSelection = _selectPathForAttempt(message, contact);
 
     if (effectiveSelection != null) {
       final updatedMessage = message.copyWith(
@@ -463,7 +434,7 @@ class MessageRetryService extends ChangeNotifier {
     } else if (message.retryCount > 0) {
       // No schedule entry for this retry — re-resolve path from current contact
       // state so user's path override changes are picked up between retries.
-      final resolved = _resolveContactSendPath(contact);
+      final resolved = resolvePathSelection(contact);
       final updatedMessage = message.copyWith(
         pathLength: resolved.useFlood ? -1 : resolved.hopCount,
         pathBytes: Uint8List.fromList(resolved.pathBytes),
