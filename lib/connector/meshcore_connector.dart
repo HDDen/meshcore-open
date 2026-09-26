@@ -3449,6 +3449,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         sendMessage: _sendMessageDirect,
         addMessage: _addMessage,
         updateMessage: _updateMessage,
+        findContact: getContactByPubKeyHex,
         clearContactPath: clearContactPath,
         setContactPath: setContactPath,
         calculateTimeout:

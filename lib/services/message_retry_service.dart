@@ -82,6 +82,11 @@ class RetryServiceConfig {
   )?
   selectRetryPath;
 
+  /// The contact as the connector holds it now. Each attempt re-reads it, so
+  /// a route pinned, changed or cleared since the message was queued belongs
+  /// to that attempt instead of the snapshot taken at queueing.
+  final Contact? Function(String publicKeyHex)? findContact;
+
   const RetryServiceConfig({
     required this.sendMessage,
     required this.addMessage,
@@ -97,6 +102,7 @@ class RetryServiceConfig {
     this.recordPathResult,
     this.onDeliveryObserved,
     this.selectRetryPath,
+    this.findContact,
   });
 }
 
@@ -414,10 +420,18 @@ class MessageRetryService extends ChangeNotifier {
     if (_sendingPaused) return;
     final sendingGeneration = _sendingGeneration;
     final message = _pendingMessages[messageId];
-    final contact = _pendingContacts[messageId];
+    final queuedContact = _pendingContacts[messageId];
     final config = _config;
 
-    if (message == null || contact == null || config == null) return;
+    if (message == null || queuedContact == null || config == null) return;
+
+    // The contact as it is now, not as it was queued: the route the user
+    // pinned or changed meanwhile, or the override they cleared, is this
+    // attempt's, and the path written to the node must carry the contact's
+    // current flags and name rather than a stale copy of them.
+    final contact =
+        config.findContact?.call(queuedContact.publicKeyHex) ?? queuedContact;
+    _pendingContacts[messageId] = contact;
 
     final effectiveSelection = _selectPathForAttempt(message, contact);
 
