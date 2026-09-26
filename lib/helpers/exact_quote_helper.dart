@@ -4,7 +4,7 @@ import '../models/channel_message.dart';
 import 'cyr2lat.dart';
 
 /// An incoming reply's quote line, with the message it was matched to.
-class ResolvedQuote {
+class ResolvedQuote<T> {
   /// Reply text with the quote line removed.
   final String text;
 
@@ -13,7 +13,7 @@ class ResolvedQuote {
   final String fragment;
 
   /// Local message the fragment was cut from, when one was found.
-  final ChannelMessage? quoted;
+  final T? quoted;
 
   const ResolvedQuote({
     required this.text,
@@ -155,6 +155,34 @@ class ExactQuoteHelper {
     required bool enabled,
     required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
+  }) => formatReplyWith(
+    senderName: senderName,
+    text: text,
+    quotedText: quotedText,
+    quotedMessageId: quotedMessageId,
+    history: history,
+    authorOf: (message) => message.senderName,
+    idOf: (message) => message.messageId,
+    enabled: enabled,
+    maxFragmentBytes: maxFragmentBytes,
+    outboundCharMap: outboundCharMap,
+  );
+
+  /// [formatReply] over any kind of message, for conversations whose
+  /// messages do not carry their author: [authorOf] names it the way a
+  /// reply's mention would, null when the conversation cannot, and [idOf]
+  /// identifies the message.
+  static String formatReplyWith<T>({
+    required String senderName,
+    required String text,
+    required String? quotedText,
+    required String? quotedMessageId,
+    required List<T> history,
+    required String? Function(T message) authorOf,
+    required String Function(T message) idOf,
+    required bool enabled,
+    required int maxFragmentBytes,
+    Map<String, String>? outboundCharMap,
   }) {
     final mention = '@[$senderName] ';
     final fragment = enabled
@@ -163,6 +191,8 @@ class ExactQuoteHelper {
             quotedText,
             quotedMessageId,
             history,
+            authorOf,
+            idOf,
             maxFragmentBytes,
             outboundCharMap,
           )
@@ -177,38 +207,73 @@ class ExactQuoteHelper {
   ///
   /// Returns null when [body] carries no quote line, which is the common case
   /// for messages from other clients.
-  static ResolvedQuote? resolveReply({
+  static ResolvedQuote<ChannelMessage>? resolveReply({
     required String body,
     required String mentionedNode,
     required List<ChannelMessage> history,
     List<Map<String, String>> extraCharMaps = const [],
-  }) {
-    if (!body.startsWith(_marker)) return null;
-    final newline = body.indexOf('\n');
-    if (newline <= _marker.length) return null;
-    final fragment = body.substring(_marker.length, newline);
-    if (fragment.isEmpty) return null;
+  }) => resolveReplyWith(
+    body: body,
+    mentionedNode: mentionedNode,
+    history: history,
+    authorOf: (message) => message.senderName,
+    textOf: (message) => message.text,
+    extraCharMaps: extraCharMaps,
+  );
 
+  /// [resolveReply] over any kind of message; see [formatReplyWith].
+  static ResolvedQuote<T>? resolveReplyWith<T>({
+    required String body,
+    required String mentionedNode,
+    required List<T> history,
+    required String? Function(T message) authorOf,
+    required String Function(T message) textOf,
+    List<Map<String, String>> extraCharMaps = const [],
+  }) {
+    final line = splitQuoteLine(body);
+    if (line == null) return null;
     return ResolvedQuote(
-      text: body.substring(newline + 1),
-      fragment: fragment,
-      quoted: _findQuoted(history, mentionedNode, fragment, extraCharMaps),
+      text: line.text,
+      fragment: line.fragment,
+      quoted: _findQuoted(
+        history,
+        mentionedNode,
+        line.fragment,
+        extraCharMaps,
+        authorOf,
+        textOf,
+      ),
     );
   }
 
-  static String? _fragmentFor(
+  /// The quote line [body] starts with, taken apart without matching it: the
+  /// fragment as written and the text after the line, or null when there is
+  /// none. [body] is what follows the reply's mention.
+  static ({String fragment, String text})? splitQuoteLine(String body) {
+    if (!body.startsWith(_marker)) return null;
+    final newline = body.indexOf('\n');
+    if (newline <= _marker.length) return null;
+    return (
+      fragment: body.substring(_marker.length, newline),
+      text: body.substring(newline + 1),
+    );
+  }
+
+  static String? _fragmentFor<T>(
     String senderName,
     String? quotedText,
     String? quotedMessageId,
-    List<ChannelMessage> history,
+    List<T> history,
+    String? Function(T message) authorOf,
+    String Function(T message) idOf,
     int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
   ) {
     if (quotedText == null || quotedText.isEmpty) return null;
     for (var i = history.length - 1; i >= 0; i--) {
       final candidate = history[i];
-      if (candidate.senderName != senderName) continue;
-      if (candidate.messageId == quotedMessageId) return null;
+      if (authorOf(candidate) != senderName) continue;
+      if (idOf(candidate) == quotedMessageId) return null;
       break;
     }
     return _buildFragment(quotedText, maxFragmentBytes, outboundCharMap);
@@ -247,16 +312,20 @@ class ExactQuoteHelper {
 
   /// The most recent message from [mentionedNode] that [fragment] was cut
   /// from.
-  static ChannelMessage? _findQuoted(
-    List<ChannelMessage> history,
+  static T? _findQuoted<T>(
+    List<T> history,
     String mentionedNode,
     String fragment,
     List<Map<String, String>> extraCharMaps,
+    String? Function(T message) authorOf,
+    String Function(T message) textOf,
   ) {
     for (var i = history.length - 1; i >= 0; i--) {
       final candidate = history[i];
-      if (candidate.senderName != mentionedNode) continue;
-      if (_matches(candidate.text, fragment, extraCharMaps)) return candidate;
+      if (authorOf(candidate) != mentionedNode) continue;
+      if (_matches(textOf(candidate), fragment, extraCharMaps)) {
+        return candidate;
+      }
     }
     return null;
   }

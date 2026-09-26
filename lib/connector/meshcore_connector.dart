@@ -6589,6 +6589,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? translationModelId,
     String? pendingMessageId,
     DateTime? pendingTimestamp,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
+    int? replyToTimestamp,
   }) async {
     // A marker is normalised before anything else: what is stored, what goes
     // on the wire and what a later `del:` command names have to be one string.
@@ -6611,11 +6615,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           originalText: originalText,
           translatedLanguageCode: translatedLanguageCode,
           translationModelId: translationModelId,
+          replyToMessageId: replyToMessageId,
+          replyToSenderName: replyToSenderName,
+          replyToText: replyToText,
+          replyToTimestamp: replyToTimestamp,
         );
       }
       return;
     }
     _loadMessagesForContactInBackground(contact.publicKeyHex);
+    final body = _contactReplyBody(contact, text, replyToSenderName);
 
     // Room-server messages sign via the node (a few seconds). Show a pending
     // placeholder while signing so the message does not visually disappear;
@@ -6631,16 +6640,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (willSignRoomMcmp && pendingMessageId == null) {
       signingPlaceholder = Message.outgoing(
         contact.publicKey,
-        text,
+        body,
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
       );
       unawaited(_addMessage(contact.publicKeyHex, signingPlaceholder));
       notifyListeners();
     }
 
-    final outboundText = await prepareContactOutboundTextAsync(contact, text);
+    final outboundText = await prepareContactOutboundTextAsync(
+      contact,
+      text,
+      replyAuthorName: replyToSenderName,
+      replyTimestamp: replyToTimestamp,
+      replyToText: replyToText,
+      replyToMessageId: replyToMessageId,
+    );
     if (signingPlaceholder != null) {
       _conversations[contact.publicKeyHex]?.removeWhere(
         (m) => m.messageId == signingPlaceholder!.messageId,
@@ -6671,14 +6690,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     // Meta as carried by compressed app payloads. MCMP signs the exact body;
-    // MCOtxt may inherit the timestamp from the outer text packet.
+    // MCOtxt may inherit the timestamp from the outer text packet, which is
+    // the message's own: both are read off one clock, or an anchor on this
+    // message taken from the container would miss the packet by a second.
+    final messageTimestamp = pendingTimestamp ?? DateTime.now();
     final mcmpMeta = McmpAppCodec.tryDecodeTextPayloadMessage(outboundText);
     final mcotxtMeta = MCOtxtAppCodec.tryDecodeTextPayloadMessage(
       outboundText,
-      inheritedTimestamp:
-          (pendingTimestamp?.millisecondsSinceEpoch ??
-              DateTime.now().millisecondsSinceEpoch) ~/
-          1000,
+      inheritedTimestamp: messageTimestamp.millisecondsSinceEpoch ~/ 1000,
     );
     final mcmpStatus = mcmpMeta == null
         ? McmpSignatureStatus.none
@@ -6738,9 +6757,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_retryService != null) {
       await _retryService!.sendMessageWithRetry(
         contact: contact,
-        text: text,
+        text: body,
         messageId: pendingMessageId,
-        timestamp: pendingTimestamp,
+        timestamp: messageTimestamp,
         preparedOutboundText: outboundText,
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
@@ -6758,16 +6777,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
       );
     } else {
       // Fallback to old behavior if retry service not initialized
       final resolved = resolvePathSelection(contact);
       final message = Message.outgoing(
         contact.publicKey,
-        text,
+        body,
         rawText: outboundText,
         messageId: pendingMessageId,
-        timestamp: pendingTimestamp,
+        timestamp: messageTimestamp,
         wasMcmpCompressed: _isMcmpEncodedText(outboundText),
         compressionType: compression?.type,
         compressionSavingsPercent: compression?.savingsPercent,
@@ -6787,6 +6809,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
+        replyToMessageId: replyToMessageId,
+        replyToSenderName: replyToSenderName,
+        replyToText: replyToText,
       );
       unawaited(
         _addMessage(contact.publicKeyHex, message),
@@ -8314,6 +8339,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? originalText,
     String? translatedLanguageCode,
     String? translationModelId,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
+    int? replyToTimestamp,
   }) {
     // Normalised here as well as in sendMessage: a queued message is drawn
     // from this text, and it should read the way it will be transmitted.
@@ -8323,7 +8352,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     final resolved = resolvePathSelection(contact);
     // Preview only: the real send re-prepares (and re-signs) at commit time.
-    final outboundText = prepareContactOutboundText(contact, text);
+    final outboundText = prepareContactOutboundText(
+      contact,
+      text,
+      replyAuthorName: replyToSenderName,
+      replyTimestamp: replyToTimestamp,
+      replyToText: replyToText,
+      replyToMessageId: replyToMessageId,
+    );
     final compression = _contactCompressionMetadata(
       contact,
       uncompressedText ?? text,
@@ -8335,7 +8371,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _isMcmpSignableText(text);
     final message = Message.outgoing(
       contact.publicKey,
-      text,
+      _contactReplyBody(contact, text, replyToSenderName),
       rawText: outboundText,
       wasMcmpCompressed: _isMcmpEncodedText(outboundText),
       compressionType: compression?.type,
@@ -8355,6 +8391,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
     );
     final pending = _PendingContactSend(
       contact: contact,
@@ -8365,6 +8404,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       originalText: originalText,
       translatedLanguageCode: translatedLanguageCode,
       translationModelId: translationModelId,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
+      replyToTimestamp: replyToTimestamp,
       delaySeconds: delaySeconds,
       sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
     );
@@ -8644,6 +8687,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         translationModelId: pending.translationModelId,
         pendingMessageId: pending.message.messageId,
         pendingTimestamp: pending.message.timestamp,
+        replyToMessageId: pending.replyToMessageId,
+        replyToSenderName: pending.replyToSenderName,
+        replyToText: pending.replyToText,
+        replyToTimestamp: pending.replyToTimestamp,
       );
     } catch (error) {
       appLogger.warn(
@@ -10998,6 +11045,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await _loadMessagesForContact(message.senderKeyHex);
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = _resolveContactReplyReference(message, contact);
+        message = _resolveContactTextReply(message, contact);
       }
       final incomingMessage = message;
       if (!incomingMessage.isOutgoing) {
@@ -11555,6 +11603,80 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : encoded;
   }
 
+  /// The plain form of a contact or room message that would otherwise go out
+  /// as MCOtxt. A reply gets back the quote line the composer leaves out
+  /// when the container carries an anchor, as [_channelPlainAlternative]
+  /// does for a channel.
+  String _contactPlainAlternative(
+    Contact contact,
+    String text, {
+    String? replyToSenderName,
+    String? replyToText,
+    String? replyToMessageId,
+  }) {
+    if (replyToSenderName == null) return text;
+    final mention = '@[$replyToSenderName] ';
+    if (!text.startsWith(mention)) return text;
+    final rest = text.substring(mention.length);
+    if (ExactQuoteHelper.splitQuoteLine(rest) != null) return text;
+    final settings = _appSettingsService?.settings;
+    return ExactQuoteHelper.formatReplyWith(
+      senderName: replyToSenderName,
+      text: rest,
+      quotedText: replyToText,
+      quotedMessageId: replyToMessageId,
+      history: getMessages(contact),
+      authorOf: (message) => contactMessageAuthorName(contact, message)?.trim(),
+      idOf: (message) => message.messageId,
+      enabled: settings?.exactQuote ?? false,
+      maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
+      outboundCharMap: contactCyr2LatCharMap(contact),
+    );
+  }
+
+  /// What a reply of ours shows: its text without the `@[author]` mention
+  /// it was written with and the quote line after it, which only the wire
+  /// needs. With a container anchor the composer writes no quote line, so a
+  /// leading `>` line there is the author's own.
+  String _contactReplyBody(
+    Contact contact,
+    String text,
+    String? replyToSenderName,
+  ) {
+    if (replyToSenderName == null) return text;
+    final replyInfo = ChannelMessage.parseReplyMention(text);
+    if (replyInfo == null || replyInfo.mentionedNode != replyToSenderName) {
+      return text;
+    }
+    if (contactReplyCarriesMcmpAnchor(contact, text)) {
+      return replyInfo.actualMessage;
+    }
+    return ExactQuoteHelper.splitQuoteLine(replyInfo.actualMessage)?.text ??
+        replyInfo.actualMessage;
+  }
+
+  /// Whether a reply in a direct or room chat travels with a container
+  /// anchor, which pins the quoted message and makes a quote line
+  /// redundant; see [channelReplyCarriesMcmpAnchor].
+  bool contactReplyCarriesMcmpAnchor(Contact contact, String text) {
+    final key = contact.publicKeyHex;
+    return _isMcmpSignableText(text) &&
+        ((isContactMcmpEnabled(key) && contactMcmpVersion(key) == 3) ||
+            isContactMCOtxtEnabled(key));
+  }
+
+  /// The cyr2lat table a message to [contact] is transliterated with, or null
+  /// when it goes out untransliterated; see [channelCyr2LatCharMap].
+  Map<String, String>? contactCyr2LatCharMap(Contact contact) {
+    if (!isContactCyr2LatEnabled(contact.publicKeyHex)) return null;
+    final profileId = getContactCyr2LatProfileId(contact.publicKeyHex);
+    final profile = profileId != null && _appSettingsService != null
+        ? _appSettingsService!.getCyr2LatProfileById(profileId)
+        : null;
+    return (profile ?? _appSettingsService?.getSelectedCyr2LatProfile())
+        ?.charMap;
+  }
+
   /// The composer's view of the channel rule: the plain text a message would
   /// go out as, or null when it goes out as MCOtxt (or MCOtxt does not apply).
   String? channelPlainIfSmallerThanMCOtxt(
@@ -11729,6 +11851,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String text, {
     String? replyAuthorName,
     int? replyTimestamp,
+    String? replyToText,
+    String? replyToMessageId,
   }) async {
     final hasReplyPair = replyAuthorName != null && replyTimestamp != null;
     final effectiveReplyName = hasReplyPair ? replyAuthorName : null;
@@ -11784,7 +11908,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       return _contactPlainIfSmallerThanMCOtxt(
         contact,
-        text,
+        _contactPlainAlternative(
+          contact,
+          text,
+          replyToSenderName: replyAuthorName,
+          replyToText: replyToText,
+          replyToMessageId: replyToMessageId,
+        ),
         MCOtxtAppCodec.encodeTextTransport(
           text: text,
           timestamp: timestamp,
@@ -11798,7 +11928,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ),
       );
     }
-    return prepareContactOutboundText(contact, text);
+    return prepareContactOutboundText(
+      contact,
+      text,
+      replyAuthorName: replyAuthorName,
+      replyTimestamp: replyTimestamp,
+      replyToText: replyToText,
+      replyToMessageId: replyToMessageId,
+    );
   }
 
   /// Prepares contact outbound text by applying SMAZ encoding if enabled.
@@ -11814,7 +11951,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Contact contact,
     String text, {
     bool estimateSignatureOverhead = true,
+    String? replyAuthorName,
+    int? replyTimestamp,
+    String? replyToText,
+    String? replyToMessageId,
   }) {
+    // A reply anchor names its author in a room; in a direct chat both ends
+    // are known and the author travels empty, as in the async variant.
+    final hasReplyPair = replyAuthorName != null && replyTimestamp != null;
+    final anchorAuthor = !hasReplyPair
+        ? null
+        : contact.type == advTypeRoom
+        ? replyAuthorName
+        : '';
+    final anchorTimestamp = hasReplyPair ? replyTimestamp : null;
     final trimmedLeft = text.trimLeft();
     final trimmed = text.trim();
     final isMarkerPayload = SharedMarkerDeletion.isMarkerPayload(trimmed);
@@ -11833,13 +11983,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (isContactMCOtxtEnabled(contact.publicKeyHex)) {
         return _contactPlainIfSmallerThanMCOtxt(
           contact,
-          text,
+          _contactPlainAlternative(
+            contact,
+            text,
+            replyToSenderName: replyAuthorName,
+            replyToText: replyToText,
+            replyToMessageId: replyToMessageId,
+          ),
           MCOtxtAppCodec.encodeTextTransport(
             text: text,
             timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
             senderName: contact.type == advTypeRoom
                 ? _selfName ?? 'Me'
                 : null,
+            replyAuthorName: anchorAuthor,
+            replyTimestamp: anchorTimestamp,
           ),
         );
       }
@@ -11859,11 +12017,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             timestamp: timestamp,
             senderName: _selfName ?? 'Me',
             signature: placeholderSignature,
+            replyAuthorName: anchorAuthor,
+            replyTimestamp: anchorTimestamp,
           );
         }
-        return McmpAppCodec.encodeDirectContactText(
+        return McmpAppCodec.encodeTextTransport(
           text: text,
           timestamp: timestamp,
+          replyAuthorName: anchorAuthor,
+          replyTimestamp: anchorTimestamp,
         );
       }
       if (isContactSmazEnabled(contact.publicKeyHex)) {
@@ -12302,20 +12464,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return message;
     }
 
-    String? authorNameFor(Message candidate) {
-      if (candidate.containerSenderName != null) return candidate.containerSenderName;
-      if (candidate.isOutgoing) return _selfName;
-      if (candidate.fourByteRoomContactKey.isNotEmpty) {
-        final author = _contacts.cast<Contact?>().firstWhere(
-          (c) =>
-              c != null &&
-              _matchesPrefix(c.publicKey, candidate.fourByteRoomContactKey),
-          orElse: () => null,
-        );
-        return author?.name;
-      }
-      return contact.name;
-    }
+    String? authorNameFor(Message candidate) =>
+        contactMessageAuthorName(contact, candidate);
 
     final messages = _conversations[contact.publicKeyHex] ?? const <Message>[];
     Message? closest;
@@ -12362,6 +12512,111 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return message.copyWith(replyToSenderName: replySender);
     }
     return message;
+  }
+
+  /// The author a direct or room conversation gives [message]: the name a
+  /// room post carries in its container, us for our own messages, the node
+  /// a room post's key prefix points at, saved or only discovered, as the
+  /// chat names it, or in a direct chat the contact itself. Reply mentions
+  /// and anchors name messages by it, so a reply resolves only while both
+  /// ends name the message alike.
+  String? contactMessageAuthorName(Contact conversation, Message message) {
+    final embedded = message.containerSenderName;
+    if (embedded != null) return embedded;
+    if (message.isOutgoing) return _selfName;
+    final prefix = message.fourByteRoomContactKey;
+    if (prefix.isEmpty) return conversation.name;
+    for (final contact in _contacts) {
+      if (_matchesPrefix(contact.publicKey, prefix)) return contact.name;
+    }
+    for (final contact in _discoveredContacts) {
+      if (_matchesPrefix(contact.publicKey, prefix)) return contact.name;
+    }
+    return null;
+  }
+
+  /// The reply an incoming direct or room message carries in its text,
+  /// taken apart as `_addChannelMessage` takes a channel reply apart: the
+  /// `@[author]` mention comes off the body, a quote line is matched against
+  /// the conversation, and the reply reference is filled from what it found.
+  /// A container anchor keeps the answer [_resolveContactReplyReference]
+  /// gave it and only loses the mention. A direct chat has two ends, so a
+  /// mention of anybody else is no reply there, just a message that starts
+  /// with a mention.
+  Message _resolveContactTextReply(Message message, Contact contact) {
+    final replyInfo = ChannelMessage.parseReplyMention(message.text);
+    if (replyInfo == null) return message;
+    final mentionedNode = replyInfo.mentionedNode.trim();
+    if (contact.type != advTypeRoom &&
+        mentionedNode != contact.name.trim() &&
+        mentionedNode != _selfName?.trim()) {
+      return message;
+    }
+    final settings = _appSettingsService?.settings;
+    final hasMcmpAnchor = message.containerReplyTimestamp != null;
+    final quotesAsMentions = settings?.incomingQuoteAsMentions ?? false;
+    final history = _conversations[contact.publicKeyHex] ?? const <Message>[];
+    String? authorOf(Message candidate) =>
+        contactMessageAuthorName(contact, candidate)?.trim();
+    final exactQuote =
+        ExactQuoteHelper.parsesFragment(
+          quotesAsMentions: quotesAsMentions,
+          exactQuoteEnabled: settings?.exactQuote ?? true,
+          hasMcmpAnchor: hasMcmpAnchor,
+        )
+        ? ExactQuoteHelper.resolveReplyWith(
+            body: replyInfo.actualMessage,
+            mentionedNode: mentionedNode,
+            history: history,
+            authorOf: authorOf,
+            textOf: (candidate) => candidate.text,
+            extraCharMaps: [
+              for (final profile
+                  in settings?.cyr2latProfiles ?? const <Cyr2LatProfile>[])
+                profile.charMap,
+            ],
+          )
+        : null;
+    final replyIsExact = exactQuote?.quoted != null;
+    final body =
+        (ExactQuoteHelper.stripsFragment(
+              quotesAsMentions: quotesAsMentions,
+              fragmentResolved: replyIsExact,
+            )
+            ? exactQuote?.text
+            : null) ??
+        replyInfo.actualMessage;
+
+    var replyToMessageId = message.replyToMessageId;
+    var replyToText = message.replyToText;
+    // Only a bare mention falls back to the author's newest message: an
+    // anchor that resolved to nothing stays a name, as in a channel.
+    if (!hasMcmpAnchor && replyToMessageId == null) {
+      var original = exactQuote?.quoted;
+      if (exactQuote == null) {
+        for (var i = history.length - 1; i >= 0; i--) {
+          if (authorOf(history[i]) == mentionedNode) {
+            original = history[i];
+            break;
+          }
+        }
+      }
+      if (original != null) {
+        replyToMessageId = original.messageId;
+        replyToText = original.text;
+      } else if (exactQuote != null) {
+        // The quoted message never reached us: the fragment that did stays
+        // visible, without an id to scroll to.
+        replyToText = exactQuote.fragment;
+      }
+    }
+    return message.copyWith(
+      text: body,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: message.replyToSenderName ?? mentionedNode,
+      replyToText: replyToText,
+      replyIsExact: replyIsExact,
+    );
   }
 
   MessageCompressionMetadata? _channelCompressionMetadata(
@@ -16367,6 +16622,10 @@ class _PendingContactSend {
   final String? originalText;
   final String? translatedLanguageCode;
   final String? translationModelId;
+  final String? replyToMessageId;
+  final String? replyToSenderName;
+  final String? replyToText;
+  final int? replyToTimestamp;
   final int delaySeconds;
   final DateTime sendAt;
   Timer? timer;
@@ -16380,6 +16639,10 @@ class _PendingContactSend {
     required this.originalText,
     required this.translatedLanguageCode,
     required this.translationModelId,
+    this.replyToMessageId,
+    this.replyToSenderName,
+    this.replyToText,
+    this.replyToTimestamp,
     required this.delaySeconds,
     required this.sendAt,
   });

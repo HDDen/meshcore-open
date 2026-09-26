@@ -22,6 +22,7 @@ import '../helpers/contact_share_helper.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/composer_draft_cache.dart';
 import '../helpers/cyr2lat.dart';
+import '../helpers/exact_quote_helper.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
@@ -92,6 +93,9 @@ import '../theme/mesh_theme.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
+import '../widgets/mention_chip.dart';
+import '../widgets/reply_quote_box.dart';
+import '../widgets/swipe_reply_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final Contact contact;
@@ -138,6 +142,13 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Contact> _mentionSuggestions = const [];
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
+
+  /// The message a reply is being written to, its author as the reply names
+  /// it, and the plain-text scaffolding the composer shows while no
+  /// container anchor would carry the reply.
+  Message? _replyingToMessage;
+  String? _replyingToAuthor;
+  String? _plainReplyComposerPrefix;
 
   String get _composerDraftKey =>
       ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
@@ -587,7 +598,16 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
     _lastTextFieldText = text;
-    ComposerDraftCache.write(_composerDraftKey, text);
+    // Deleting into the reply scaffolding drops the reply, as in a channel.
+    final replyPrefix = _plainReplyComposerPrefix;
+    if (replyPrefix != null && !text.startsWith(replyPrefix)) {
+      setState(() {
+        _plainReplyComposerPrefix = null;
+        _replyingToMessage = null;
+        _replyingToAuthor = null;
+      });
+    }
+    ComposerDraftCache.write(_composerDraftKey, _composerBodyText(text));
     if (_textFieldFocusNode.hasFocus) {
       _keyboardNavigationActive = false;
     }
@@ -601,6 +621,279 @@ class _ChatScreenState extends State<ChatScreen> {
       selection: TextSelection.collapsed(offset: draft.length),
     );
     _lastTextFieldText = draft;
+  }
+
+  /// The author a reply to [message] names, or null when the conversation
+  /// cannot name one: a CLI line, or a room post whose author is unknown.
+  String? _replyAuthorOf(MeshCoreConnector connector, Message message) {
+    if (message.isCli) return null;
+    final name = connector
+        .contactMessageAuthorName(_resolveContact(connector), message)
+        ?.trim();
+    return name == null || name.isEmpty ? null : name;
+  }
+
+  bool _canReplyTo(Message message) {
+    final connector = context.read<MeshCoreConnector>();
+    return !connector.isOfflineMode &&
+        _replyAuthorOf(connector, message) != null;
+  }
+
+  void _setReplyingTo(Message message) {
+    final connector = context.read<MeshCoreConnector>();
+    if (connector.isOfflineMode) return;
+    final authorName = _replyAuthorOf(connector, message);
+    if (authorName == null) return;
+    final settings = context.read<AppSettingsService>().settings;
+    final draft = _composerBodyText(_textController.text);
+    final showPlainReplyInComposer =
+        settings.exactQuote &&
+        !connector.contactReplyCarriesMcmpAnchor(
+          _resolveContact(connector),
+          draft.isEmpty ? 'x' : draft,
+        );
+    final prefix = showPlainReplyInComposer
+        ? _formatReply(
+            connector,
+            senderName: authorName,
+            text: '',
+            quotedText: message.text,
+            quotedMessageId: message.messageId,
+          )
+        : null;
+
+    setState(() {
+      _replyingToMessage = message;
+      _replyingToAuthor = authorName;
+      _plainReplyComposerPrefix = prefix;
+    });
+    if (prefix != null) {
+      final value = '$prefix$draft';
+      _textController.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+    } else if (_textController.text != draft) {
+      _textController.value = TextEditingValue(
+        text: draft,
+        selection: TextSelection.collapsed(offset: draft.length),
+      );
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _textFieldFocusNode.requestFocus();
+      unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
+    });
+  }
+
+  void _cancelReply() {
+    final draft = _composerBodyText(_textController.text);
+    setState(() {
+      _replyingToMessage = null;
+      _replyingToAuthor = null;
+      _plainReplyComposerPrefix = null;
+    });
+    if (_textController.text != draft) {
+      _textController.value = TextEditingValue(
+        text: draft,
+        selection: TextSelection.collapsed(offset: draft.length),
+      );
+    }
+  }
+
+  String _composerBodyText(String text) {
+    final prefix = _plainReplyComposerPrefix;
+    if (prefix != null && text.startsWith(prefix)) {
+      return text.substring(prefix.length);
+    }
+    return text;
+  }
+
+  String _composerWireText(MeshCoreConnector connector, String text) {
+    final prefix = _plainReplyComposerPrefix;
+    if (prefix != null && text.startsWith(prefix)) return text;
+    return _applyReplyMention(connector, text);
+  }
+
+  String _applyReplyMention(MeshCoreConnector connector, String text) {
+    final replyingTo = _replyingToMessage;
+    final authorName = _replyingToAuthor;
+    if (replyingTo == null || authorName == null) return text;
+    return _formatReply(
+      connector,
+      senderName: authorName,
+      text: text,
+      quotedText: replyingTo.text,
+      quotedMessageId: replyingTo.messageId,
+    );
+  }
+
+  /// The wire form of a channel reply (`ExactQuoteHelper`), over this
+  /// conversation, whose messages the connector names.
+  String _formatReply(
+    MeshCoreConnector connector, {
+    required String senderName,
+    required String text,
+    required String? quotedText,
+    required String? quotedMessageId,
+  }) {
+    final contact = _resolveContact(connector);
+    final settings = context.read<AppSettingsService>().settings;
+    return ExactQuoteHelper.formatReplyWith(
+      senderName: senderName,
+      text: text,
+      quotedText: quotedText,
+      quotedMessageId: quotedMessageId,
+      history: connector.getMessages(contact),
+      authorOf: (message) =>
+          connector.contactMessageAuthorName(contact, message)?.trim(),
+      idOf: (message) => message.messageId,
+      // A container anchor pins the quoted message exactly, so a text
+      // fragment would only cost payload.
+      enabled:
+          settings.exactQuote &&
+          !connector.contactReplyCarriesMcmpAnchor(
+            contact,
+            text.isEmpty ? 'x' : text,
+          ),
+      maxFragmentBytes: settings.exactQuoteLimit,
+      outboundCharMap: connector.contactCyr2LatCharMap(contact),
+    );
+  }
+
+  /// The timestamp a reply to [message] anchors on: the one its container
+  /// carried, else its packet's.
+  static int _replyAnchorTimestamp(Message message) =>
+      message.containerTimestamp ??
+      message.timestamp.millisecondsSinceEpoch ~/ 1000;
+
+  /// [messageId] in the transcript as drawn, which is cached per revision:
+  /// every bubble with a quote asks.
+  Message? _findLoadedMessage(MeshCoreConnector connector, String? messageId) {
+    if (messageId == null) return null;
+    final messages = _messagesForDisplay(connector);
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].messageId == messageId) return messages[i];
+    }
+    return null;
+  }
+
+  /// With replies drawn as mentions, the name an incoming reply shows as a
+  /// chip: its target is a guess, the author's newest message. A reply that
+  /// named its target exactly keeps its quote, as in a channel.
+  String? _replyMentionNameFor(Message message, bool quotesAsMentions) {
+    final authorName = message.replyToSenderName?.trim();
+    if (!quotesAsMentions ||
+        message.isOutgoing ||
+        message.wasBlocked ||
+        authorName == null ||
+        authorName.isEmpty) {
+      return null;
+    }
+    final exact = ExactQuoteHelper.rendersAsQuote(
+      containerReplyTimestamp: message.containerReplyTimestamp,
+      replyToMessageId: message.replyToMessageId,
+      replyIsExact: message.replyIsExact,
+    );
+    return exact ? null : authorName;
+  }
+
+  /// The quote a bubble shows for what [message] answers. A quoted room post
+  /// that is itself hidden behind a block keeps its words off the screen.
+  Widget? _replyQuoteFor(
+    MeshCoreConnector connector,
+    Message message,
+    double textScale,
+    bool showMcoReplacements,
+  ) {
+    final authorName = message.replyToSenderName?.trim();
+    if (message.wasBlocked || authorName == null || authorName.isEmpty) {
+      return null;
+    }
+    final quotedId = message.replyToMessageId;
+    final hidden = _findLoadedMessage(connector, quotedId)?.wasBlocked ?? false;
+    return ReplyQuoteBox(
+      authorName: authorName,
+      text: hidden ? '' : (message.replyToText ?? ''),
+      ownQuote: authorName == connector.selfName?.trim(),
+      hidden: hidden,
+      mcoForceLora: _mcoForceLora(
+        quotedId ?? '${message.messageId}:reply',
+        showMcoReplacements,
+      ),
+      textScale: textScale,
+      onTap: () => unawaited(_scrollToReplyTarget(message)),
+    );
+  }
+
+  Future<void> _scrollToReplyTarget(Message reply) async {
+    final connector = context.read<MeshCoreConnector>();
+    final targetId =
+        reply.replyToMessageId ?? _findReplyFallbackMessageId(connector, reply);
+    final found =
+        targetId != null &&
+        await _scrollToMessage(targetId, highlightOnSuccess: true);
+    if (found || !mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_originalMessageNotFound),
+    );
+  }
+
+  /// A quote that found no message on arrival, looked for again by its text
+  /// once older history may have loaded.
+  String? _findReplyFallbackMessageId(
+    MeshCoreConnector connector,
+    Message reply,
+  ) {
+    final author = reply.replyToSenderName?.trim();
+    final quoted = _normalizeReplyLookupText(reply.replyToText ?? '');
+    if (author == null || quoted.isEmpty) return null;
+    final contact = _resolveContact(connector);
+    final messages = connector.getMessages(contact);
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final candidate = messages[i];
+      if (candidate.messageId == reply.messageId) continue;
+      final candidateAuthor = connector
+          .contactMessageAuthorName(contact, candidate)
+          ?.trim();
+      if (candidateAuthor != author) continue;
+      final text = _normalizeReplyLookupText(candidate.text);
+      if (text.isEmpty) continue;
+      if (text.contains(quoted) || quoted.contains(text)) {
+        return candidate.messageId;
+      }
+    }
+    return null;
+  }
+
+  static final RegExp _replyLookupWhitespace = RegExp(r'\s+');
+
+  static String _normalizeReplyLookupText(String text) {
+    final normalized = text
+        .trim()
+        .replaceAll(_replyLookupWhitespace, ' ')
+        .toLowerCase();
+    return normalized.endsWith('...')
+        ? normalized.substring(0, normalized.length - 3).trimRight()
+        : normalized;
+  }
+
+  Widget _buildReplyBanner(BuildContext context) {
+    final message = _replyingToMessage!;
+    final textScale = context.select<ChatTextScaleService, double>(
+      (service) => service.scale,
+    );
+    final showMcoReplacements = context.select<AppSettingsService, bool>(
+      (service) => service.settings.showMcoImagePackReplacements,
+    );
+    return ReplyComposerBanner(
+      authorName: _replyingToAuthor ?? '',
+      text: message.text,
+      textScale: textScale,
+      mcoForceLora: _mcoForceLora(message.messageId, showMcoReplacements),
+      onCancel: _cancelReply,
+    );
   }
 
   Future<void> _loadOlderMessages() async {
@@ -828,6 +1121,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           onSelected: _applyMentionSuggestion,
                         ),
                 ),
+                if (_replyingToMessage != null &&
+                    _plainReplyComposerPrefix == null)
+                  Builder(builder: _buildReplyBanner),
                 Builder(
                   builder: (context) => _buildInputBar(context, connector),
                 ),
@@ -1012,6 +1308,17 @@ class _ChatScreenState extends State<ChatScreen> {
                           (service) => service.scale,
                         );
                     final resolvedContact = _resolveContact(connector);
+                    final replyMentionName = _replyMentionNameFor(
+                      message,
+                      context.select<AppSettingsService, bool>(
+                        (service) => service.settings.incomingQuoteAsMentions,
+                      ),
+                    );
+                    final showMcoReplacements = context
+                        .select<AppSettingsService, bool>(
+                          (service) =>
+                              service.settings.showMcoImagePackReplacements,
+                        );
                     final bubble = _MessageBubble(
                       message: message,
                       isHighlighted: _highlightedMessageId == message.messageId,
@@ -1058,16 +1365,39 @@ class _ChatScreenState extends State<ChatScreen> {
                               connector.stopSending(contact, message),
                             )
                           : null,
+                      replyQuote: replyMentionName == null
+                          ? _replyQuoteFor(
+                              connector,
+                              message,
+                              textScale,
+                              showMcoReplacements,
+                            )
+                          : null,
+                      replyMentionName: replyMentionName,
+                      onReplyMentionTap: () =>
+                          unawaited(_scrollToReplyTarget(message)),
                     );
+                    // Every bubble but a CLI line takes the reply swipe on a
+                    // phone; one whose author is unknown lets it go.
+                    final replyable =
+                        PlatformInfo.isDesktop ||
+                            connector.isOfflineMode ||
+                            message.isCli
+                        ? bubble
+                        : SwipeReplyBubble(
+                            onReply: () => _setReplyingTo(message),
+                            iconOnlyHint: message.isOutgoing,
+                            child: bubble,
+                          );
                     final isUnreadAnchor =
                         _unreadDividerMessageId != null &&
                         message.messageId == _unreadDividerMessageId;
                     final child = isUnreadAnchor
                         ? Column(
                             mainAxisSize: MainAxisSize.min,
-                            children: [const UnreadDivider(), bubble],
+                            children: [const UnreadDivider(), replyable],
                           )
-                        : bubble;
+                        : replyable;
                     return child;
                   },
                 );
@@ -1185,9 +1515,20 @@ class _ChatScreenState extends State<ChatScreen> {
         connector.isContactMCOtxtEnabled(key) ||
         connector.isContactSmazEnabled(key) ||
         connector.isContactCyr2LatEnabled(key);
-    if (!usesEncoding) return null;
-    return (text) =>
-        connector.prepareContactOutboundText(widget.contact, text);
+    final replyTarget = _replyingToMessage;
+    // A reply counts its mention, quote line or anchor as well.
+    if (!usesEncoding && replyTarget == null) return null;
+    final replyTimestamp = replyTarget == null
+        ? null
+        : _replyAnchorTimestamp(replyTarget);
+    return (text) => connector.prepareContactOutboundText(
+      widget.contact,
+      _composerWireText(connector, text),
+      replyAuthorName: replyTarget == null ? null : _replyingToAuthor,
+      replyTimestamp: replyTimestamp,
+      replyToText: replyTarget?.text,
+      replyToMessageId: replyTarget?.messageId,
+    );
   }
 
   Widget _buildInputBar(BuildContext context, MeshCoreConnector connector) {
@@ -1195,11 +1536,19 @@ class _ChatScreenState extends State<ChatScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
     final mediaQuery = MediaQuery.of(context);
+    final replyingTo = _replyingToMessage;
+    final replyBannerHeight =
+        replyingTo == null || _plainReplyComposerPrefix != null
+        ? 0.0
+        : ReplyComposerBanner.showsImage(replyingTo.text)
+        ? ReplyComposerBanner.imageHeight
+        : ReplyComposerBanner.height;
     final maxInputHeight =
         (mediaQuery.size.height -
                 mediaQuery.padding.top -
                 kToolbarHeight -
                 mediaQuery.viewInsets.bottom -
+                replyBannerHeight -
                 48)
             .clamp(56.0, 240.0)
             .toDouble();
@@ -1462,7 +1811,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.selection = TextSelection.collapsed(
       offset: encodedText.length,
     );
-    await _sendMessage(connector, skipTranslation: true);
+    await _sendMessage(
+      connector,
+      skipTranslation: true,
+      skipReplyContext: true,
+    );
   }
 
   Future<void> _showMcoImageGallery(
@@ -1525,7 +1878,11 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     _textController.text = text;
     _textController.selection = TextSelection.collapsed(offset: text.length);
-    await _sendMessage(connector, skipTranslation: true);
+    await _sendMessage(
+      connector,
+      skipTranslation: true,
+      skipReplyContext: true,
+    );
   }
 
   Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) async {
@@ -1569,8 +1926,10 @@ class _ChatScreenState extends State<ChatScreen> {
     MeshCoreConnector connector, {
     String? quickAnswerText,
     bool skipTranslation = false,
+    bool skipReplyContext = false,
   }) async {
-    final rawText = quickAnswerText ?? _textController.text;
+    final rawText =
+        quickAnswerText ?? _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
     if (text.trim().isEmpty) return;
     if (blockIfOffline(context, connector)) return;
@@ -1617,11 +1976,28 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
+    // A picture from the canvas or the gallery goes out without the reply,
+    // as in a channel.
+    final replyTarget = skipReplyContext
+        ? null
+        : _findLoadedMessage(connector, _replyingToMessage?.messageId) ??
+              _replyingToMessage;
+    final replyAuthor = replyTarget == null ? null : _replyingToAuthor;
+    final replyTimestamp = replyTarget == null
+        ? null
+        : _replyAnchorTimestamp(replyTarget);
+    if (replyTarget != null) {
+      outgoingText = _applyReplyMention(connector, outgoingText);
+    }
     final compressionSourceText = outgoingText;
     final maxBytes = _maxContactInputBytes(connector);
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
       outgoingText,
+      replyAuthorName: replyAuthor,
+      replyTimestamp: replyTimestamp,
+      replyToText: replyTarget?.text,
+      replyToMessageId: replyTarget?.messageId,
     );
     if (utf8.encode(outboundText).length > maxBytes) {
       showDismissibleSnackBar(
@@ -1656,6 +2032,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _textController.clear();
       _textFieldFocusNode.requestFocus();
     }
+    _cancelReply();
     final contact = _resolveContact(connector);
     final useSendingDelay =
         settings.sendingDelayForCancellationSeconds > 0 &&
@@ -1671,6 +2048,10 @@ class _ChatScreenState extends State<ChatScreen> {
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
+        replyToMessageId: replyTarget?.messageId,
+        replyToSenderName: replyAuthor,
+        replyToText: replyTarget?.text,
+        replyToTimestamp: replyTimestamp,
       );
     } else {
       connector.sendMessage(
@@ -1680,6 +2061,10 @@ class _ChatScreenState extends State<ChatScreen> {
         originalText: originalText,
         translatedLanguageCode: translatedLanguageCode,
         translationModelId: translationModelId,
+        replyToMessageId: replyTarget?.messageId,
+        replyToSenderName: replyAuthor,
+        replyToText: replyTarget?.text,
+        replyToTimestamp: replyTimestamp,
       );
     }
   }
@@ -2442,6 +2827,7 @@ class _ChatScreenState extends State<ChatScreen> {
         : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
     if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
+    final canReply = _canReplyTo(message);
     final canTranslateMessage =
         translationService.canTranslateIncoming(
           text: message.text,
@@ -2462,6 +2848,15 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (canReply)
+                  ListTile(
+                    leading: const Icon(Icons.reply),
+                    title: Text(context.l10n.chat_reply),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _setReplyingTo(message);
+                    },
+                  ),
                 // Can't react to your own messages
                 if (!message.isOutgoing)
                   ListTile(
@@ -2830,8 +3225,33 @@ class _ChatScreenState extends State<ChatScreen> {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     if (blockIfOffline(context, connector)) return;
     connector.cancelPendingContactSend(message.messageId);
-    // Retry using the contact's current path override setting
-    connector.sendMessage(_resolveContact(connector), message.text);
+    // Retry using the contact's current path override setting. A reply goes
+    // out as a reply again: the stored text is its body, so the mention and
+    // the quote line are written anew.
+    final replyAuthor = message.replyToSenderName?.trim() ?? '';
+    final isReply = replyAuthor.isNotEmpty;
+    final quoted = isReply
+        ? _findLoadedMessage(connector, message.replyToMessageId)
+        : null;
+    connector.sendMessage(
+      _resolveContact(connector),
+      isReply && ChannelMessage.parseReplyMention(message.text) == null
+          ? _formatReply(
+              connector,
+              senderName: replyAuthor,
+              text: message.text,
+              quotedText: message.replyToText,
+              quotedMessageId: message.replyToMessageId,
+            )
+          : message.text,
+      replyToMessageId: isReply ? message.replyToMessageId : null,
+      replyToSenderName: isReply ? replyAuthor : null,
+      replyToText: isReply ? message.replyToText : null,
+      replyToTimestamp: !isReply
+          ? null
+          : message.containerReplyTimestamp ??
+                (quoted == null ? null : _replyAnchorTimestamp(quoted)),
+    );
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.chat_retryingMessage),
@@ -2885,6 +3305,16 @@ class _MessageBubble extends StatelessWidget {
   final int? pendingSendDelaySeconds;
   final VoidCallback? onCancelPendingSend;
   final VoidCallback? onStopSending;
+
+  /// The quote above the text, built by the screen, which knows the quoted
+  /// message; null when the message answers nothing or draws its reply as a
+  /// mention.
+  final Widget? replyQuote;
+
+  /// With replies drawn as mentions, the chip's name: it leads a plain text
+  /// and stands above anything else.
+  final String? replyMentionName;
+  final VoidCallback? onReplyMentionTap;
   final double textScale;
   final String sourceId;
   final bool isHighlighted;
@@ -2924,6 +3354,9 @@ class _MessageBubble extends StatelessWidget {
     this.pendingSendDelaySeconds,
     this.onCancelPendingSend,
     this.onStopSending,
+    this.replyQuote,
+    this.replyMentionName,
+    this.onReplyMentionTap,
   });
 
   @override
@@ -3004,6 +3437,12 @@ class _MessageBubble extends StatelessWidget {
         trimmedBodyText.startsWith('<') && trimmedBodyText.endsWith('>')
         ? parseSharedContactText(trimmedBodyText)
         : null;
+    final isPlainTextMessage =
+        poi == null &&
+        coordinate == null &&
+        !isMediaMessage &&
+        sharedContact == null;
+    final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final isFailed = message.status == MessageStatus.failed;
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
@@ -3150,6 +3589,24 @@ class _MessageBubble extends StatelessWidget {
                             ),
                           ),
                           if (!isMediaMessage) const SizedBox(height: 2),
+                        ],
+                        if (replyQuote != null) ...[
+                          replyQuote!,
+                          const SizedBox(height: 8),
+                        ],
+                        if (replyMentionName != null &&
+                            !isPlainTextMessage) ...[
+                          MentionChip(
+                            senderName: replyMentionName!,
+                            textScale: textScale,
+                            simplified: simplifiedMentions,
+                            textStyle: TextStyle(
+                              color: textColor,
+                              fontSize: bodyFontSize * textScale,
+                            ),
+                            onTap: onReplyMentionTap,
+                          ),
+                          const SizedBox(height: 6),
                         ],
                         if (blockedBody != null)
                           BlockedMessageBody(
@@ -3407,23 +3864,49 @@ class _MessageBubble extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Flexible(
-                                child: TranslatedMessageContent(
-                                  displayText: translatedDisplayText,
-                                  originalText: originalDisplayText,
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: bodyFontSize * textScale,
-                                  ),
-                                  originalStyle: TextStyle(
-                                    color: textColor.withValues(alpha: 0.78),
-                                    fontSize: bodyFontSize * textScale,
-                                  ),
-                                  textScaler: bodyTextScaler,
-                                  onSecondaryTap: PlatformInfo.isDesktop
-                                      ? onLongPress
-                                      : null,
-                                  markupEnabled: markupEnabled,
-                                ),
+                                child: replyMentionName != null
+                                    ? ReplyMentionText(
+                                        mentionName: replyMentionName!,
+                                        text: translatedDisplayText,
+                                        originalText: originalDisplayText,
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: bodyFontSize * textScale,
+                                        ),
+                                        originalStyle: TextStyle(
+                                          color: textColor.withValues(
+                                            alpha: 0.78,
+                                          ),
+                                          fontSize: bodyFontSize * textScale,
+                                        ),
+                                        textScale: textScale,
+                                        textScaler: bodyTextScaler,
+                                        simplified: simplifiedMentions,
+                                        markupEnabled: markupEnabled,
+                                        onMentionTap: onReplyMentionTap,
+                                        onSecondaryTap: PlatformInfo.isDesktop
+                                            ? onLongPress
+                                            : null,
+                                      )
+                                    : TranslatedMessageContent(
+                                        displayText: translatedDisplayText,
+                                        originalText: originalDisplayText,
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: bodyFontSize * textScale,
+                                        ),
+                                        originalStyle: TextStyle(
+                                          color: textColor.withValues(
+                                            alpha: 0.78,
+                                          ),
+                                          fontSize: bodyFontSize * textScale,
+                                        ),
+                                        textScaler: bodyTextScaler,
+                                        onSecondaryTap: PlatformInfo.isDesktop
+                                            ? onLongPress
+                                            : null,
+                                        markupEnabled: markupEnabled,
+                                      ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
                                 const SizedBox(width: 4),

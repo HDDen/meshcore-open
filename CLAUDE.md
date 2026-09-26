@@ -717,8 +717,10 @@ move an existing moment backwards either. The dialog's controller is a `State` f
 
 **Quotes of a hidden message.** A reply carries a snapshot of what it answers, taken when the
 reply arrived, so a muted sender's words used to come back on screen through somebody else's quote.
-`hidesQuotedMessage` is the question that keeps them off it, asked by `_buildReplyPreview` — the
-only place a quote is drawn, since one-to-one and room conversations render no preview at all.
+`hidesQuotedMessage` is the question that keeps them off it, asked by `_buildReplyPreview`, the
+one place a channel draws a quote. A room chat draws its quotes with `ReplyQuoteBox` and can ask
+less: a room block is keyed by the author's key prefix, which a quote does not carry, so there a
+quote is hidden only while its original is loaded and flagged `wasBlocked`.
 
 It answers from the original message when that is still in the loaded conversation, so the quote
 mirrors the bubble a few rows up: nothing is hidden here that stays readable there, and nothing
@@ -754,7 +756,7 @@ Two non-obvious bits in `widgets/mention_suggestions_panel.dart` and its callers
 ### Exact quotes (plain-text replies)
 Plain-text replies carry only `@[sender]`, which the receiver resolves to that sender's *newest* message. `helpers/exact_quote_helper.dart` adds a quote fragment so the reply anchors to the message it was actually written for. Wire form is `@[sender] >fragment\ntext`; the whole mechanism (both directions) lives in that one file, exposed as `formatReply` / `resolveReply` — everything else is call sites.
 
-**Outbound** (`_applyReplyMention` → `_formatReply` in `channel_chat_screen.dart`, channels only). Budget is `AppSettings.exactQuoteLimit` (3–100, default 30) counted in **wire bytes**: the fragment is cut from the readable original, but each character is weighed after cyr2lat substitution, using the table `MeshCoreConnector.channelCyr2LatCharMap()` returns for that channel. Trailing `[\s.+,-]` is trimmed (a question mark is deliberately kept) and an ellipsis is appended only when the fragment is shorter than its source. No fragment is spent when the toggle is off, when the target is the sender's newest message, or when `MeshCoreConnector.channelReplyCarriesMcmpAnchor()` is true — MCMP v3 and MCOtxt v1 already ship an exact author+timestamp anchor.
+**Outbound** (`_applyReplyMention` → `_formatReply` in `channel_chat_screen.dart`; direct and room chats have their own, see below). Budget is `AppSettings.exactQuoteLimit` (3–100, default 30) counted in **wire bytes**: the fragment is cut from the readable original, but each character is weighed after cyr2lat substitution, using the table `MeshCoreConnector.channelCyr2LatCharMap()` returns for that channel. Trailing `[\s.+,-]` is trimmed (a question mark is deliberately kept) and an ellipsis is appended only when the fragment is shorter than its source. No fragment is spent when the toggle is off, when the target is the sender's newest message, or when `MeshCoreConnector.channelReplyCarriesMcmpAnchor()` is true — MCMP v3 and MCOtxt v1 already ship an exact author+timestamp anchor.
 
 **Inbound** (`_addChannelMessage`). Three predicates in the helper own the policy, so the connector and the chat screen cannot drift apart on it. `parsesFragment` refuses outright when `containerReplyTimestamp != null`: an MCMP or MCOtxt body never carries a fragment — it has an author+timestamp anchor and needs none — so a leading `>` line there is the author's own writing and stays in the message as ordinary text. Otherwise the fragment is parsed, except when replies are drawn as mentions *and* `AppSettings.exactQuote` is off. It is then cut off the body and matched backwards through history against messages from that author: prefix match first, then the candidate re-encoded through `extendedCharMap` → `defaultCharMap` → `transliterationCharMap` → the user's own cyr2lat profiles. Encoding the candidate rather than decoding the fragment is deliberate — several Cyrillic letters share one Latin look-alike, so the reverse is ambiguous. `stripsFragment` decides whether the line actually leaves the stored body, and it only does when something will display it back: with no bubble in front of the message and nothing matched, removing it would swallow the only excerpt the sender paid payload for.
 
@@ -765,6 +767,45 @@ Plain-text replies carry only `@[sender]`, which the receiver resolves to that s
 Both sides normalise identically before cutting or comparing: leading scaffolding (a quote line or a mention the quoted message itself began with) is stripped, whitespace collapsed, ends trimmed. A miss stores the received fragment as `replyToText` with no `replyToMessageId`, so the quote stays visible but untappable; `_findReplyFallbackMessageId` in the screen may still resolve it later by substring after older messages load. Parsing happens once on receipt and the processed text is what gets persisted — toggling the settings does not replay old messages.
 
 **Quoting our own messages.** A reply may target one of our own channel messages exactly as it targets anyone else's: the long-press menu always offered it, and on mobile the reply swipe now takes our own bubbles too (`_SwipeReplyBubble` keeps them at the inset they had without it, and their hint shows the icon alone, the only part the sliding bubble uncovers). Nothing downstream tells the two apart. The mention names us, under the name the message went out with, the fragment follows `exactQuote`, and MCMP v3 or MCOtxt carry their author-and-timestamp anchor instead. Two details keep that anchor equal to what the receivers hold. Our message learns its packet time only as it goes on the air (`_updateChannelMessagePacketTimestamp`), so `_sendMessage` reads the target back from the connector (`_currentCopyOf`) rather than from the snapshot the reply started with, which a quick answer can predate. And an MCOtxt text packet carries no timestamp of its own, its receivers giving the container the packet's, so the same alignment writes the packet time into our copy's `containerTimestamp` as well (`MCOtxtAppCodec.inheritsPacketTimestamp`). That field used to keep the moment the send began, up to a radio-quiet wait earlier, and an anchor taken from it missed on every receiver whenever the two fell in different seconds; messages stored before the fix keep the old value.
+
+### Replies in direct and room chats
+
+A direct or room message can be answered as a channel message can, under the same three settings
+(`exactQuote`, `exactQuoteLimit`, `incomingQuoteAsMentions`) and in the same wire form:
+`@[author]`, then a quote line while `exactQuote` is on and no container anchor carries the reply,
+and MCMP v3 or MCOtxt send their anchor, with an empty author in a direct chat, which resolves by
+timestamp alone as `docs/MCOTXT_V1_PROTOCOL.md` specifies, and the author's name in a room.
+Upstream has no replies there, so the pieces are the fork's own:
+`widgets/swipe_reply_bubble.dart`, a copy of the channel screen's private `_SwipeReplyBubble`
+that came from upstream, and `widgets/reply_quote_box.dart`, holding the quote in the bubble, the
+banner above the composer and the reply drawn as a mention.
+
+These messages carry no author, so `MeshCoreConnector.contactMessageAuthorName` names one for
+both ends of the mechanism: the name a room post embeds in its container, us for our own
+messages, the node a room post's key prefix points at, saved or only discovered, and the contact
+itself in a direct chat.
+`ExactQuoteHelper.formatReplyWith` / `resolveReplyWith` take that as an accessor, and the channel
+entry points are wrappers over them. A room post whose author is unknown cannot be answered, there
+being no name to mention: the menu offers no reply and the swipe lets it go.
+
+On the way out the screen writes the reply as the channel composer does, the quote line shown in
+the composer or the banner above it, and `_composerEncoder` counts the mention, quote line or
+anchor. `sendMessage` and `scheduleContactMessage` take the reply reference, and
+`prepareContactOutboundText(Async)` puts the anchor into the container; its MCOtxt "plain when
+smaller" candidate gets the quote line back (`_contactPlainAlternative`), as a channel's does.
+The stored message keeps only the body (`_contactReplyBody`): the wire text stays in `rawText` and
+in the retry service's prepared text, which is what goes out and what the ACK hash covers. A
+manual retry writes the mention and the quote line anew from the stored reference. `sendMessage`
+also reads the message's time once, before the MCOtxt meta, so an inherited container timestamp
+equals the packet's and an anchor on our own MCOtxt message does not miss by a second.
+
+On the way in `_resolveContactTextReply` follows `_resolveContactReplyReference`, which resolved
+any container anchor, and does what `_addChannelMessage` does for a channel: the mention comes off
+the body, a quote line goes through the same `parsesFragment` / `stripsFragment` rules, a bare
+mention falls back to the author's newest message, and an anchor that resolved to nothing stays a
+name. A direct chat has two ends, so there only a mention of one of them is a reply; a message
+that starts with anybody else's mention is left as it came. `Message.replyIsExact` is persisted
+by `message_store` and defaults to `false`.
 
 ### Inline text markup
 Chat-style formatting parsed by `helpers/message_markup.dart`: `**bold**`, `__italic__`, `_underline_`, `~~strike~~`, a monospace block fenced by triple backticks, and colour tags like `[r]red[/r]`. `parse()` returns styled runs and drops the markers; `parse(keepMarkers: true)` keeps them as their own segments, which the composer needs so caret offsets still line up with the raw text.

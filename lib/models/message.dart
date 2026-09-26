@@ -57,11 +57,15 @@ class Message {
   /// the signature was checked.
   final bool mcmpNameCollision;
 
-  // Resolved reply reference (from the container reply anchor), mirroring the
-  // ChannelMessage reply fields.
+  // Resolved reply reference (from the container reply anchor or the quote
+  // line), mirroring the ChannelMessage reply fields.
   final String? replyToMessageId;
   final String? replyToSenderName;
   final String? replyToText;
+
+  /// The quote line matched a message in local history on receipt; see
+  /// `ExactQuoteHelper.rendersAsQuote`.
+  final bool replyIsExact;
   final String? sharedHistorySourceName;
   final String? sourceLabel;
 
@@ -158,6 +162,7 @@ class Message {
     this.replyToMessageId,
     this.replyToSenderName,
     this.replyToText,
+    this.replyIsExact = false,
     this.sharedHistorySourceName,
     this.sourceLabel,
     this.retryCount = 0,
@@ -198,6 +203,7 @@ class Message {
   String get senderKeyHex => pubKeyToHex(senderKey);
 
   Message copyWith({
+    String? text,
     MessageStatus? status,
     DateTime? receivedAt,
     int? retryCount,
@@ -243,6 +249,7 @@ class Message {
     Object? replyToMessageId = _unset,
     Object? replyToSenderName = _unset,
     Object? replyToText = _unset,
+    bool? replyIsExact,
     Object? sharedHistorySourceName = _unset,
     Object? sourceLabel = _unset,
     bool? isOutgoing,
@@ -253,7 +260,7 @@ class Message {
   }) {
     return Message(
       senderKey: senderKey,
-      text: text,
+      text: text ?? this.text,
       rawText: rawText,
       timestamp: timestamp,
       receivedAt: receivedAt ?? this.receivedAt,
@@ -317,6 +324,7 @@ class Message {
       replyToText: replyToText == _unset
           ? this.replyToText
           : replyToText as String?,
+      replyIsExact: replyIsExact ?? this.replyIsExact,
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
@@ -450,6 +458,9 @@ class Message {
     Uint8List? mcmpSignature,
     String? containerReplyAuthorName,
     int? containerReplyTimestamp,
+    String? replyToMessageId,
+    String? replyToSenderName,
+    String? replyToText,
     int? pathLength,
     Uint8List? pathBytes,
   }) {
@@ -472,6 +483,9 @@ class Message {
       mcmpSignature: mcmpSignature,
       containerReplyAuthorName: containerReplyAuthorName,
       containerReplyTimestamp: containerReplyTimestamp,
+      replyToMessageId: replyToMessageId,
+      replyToSenderName: replyToSenderName,
+      replyToText: replyToText,
       timestamp: timestamp ?? DateTime.now(),
       isOutgoing: true,
       isCli: false,
