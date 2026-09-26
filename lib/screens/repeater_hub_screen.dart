@@ -33,6 +33,10 @@ class RepeaterHubScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final settingsService = context.watch<AppSettingsService>();
     final connector = context.watch<MeshCoreConnector>();
+    // The contact as the connector holds it now, not the copy this screen was
+    // opened with, which predates the login and any route chosen since.
+    final contact =
+        connector.getContactByPubKeyHex(repeater.publicKeyHex) ?? repeater;
     final chemistry = settingsService.batteryChemistryForRepeater(
       repeater.publicKeyHex,
     );
@@ -60,7 +64,7 @@ class RepeaterHubScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     AvatarCircle(
-                      name: repeater.name,
+                      name: contact.name,
                       size: 52,
                       color: MeshPalette.warn,
                       icon: Icons.cell_tower,
@@ -71,7 +75,7 @@ class RepeaterHubScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            repeater.name,
+                            contact.name,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                             maxLines: 1,
@@ -87,14 +91,14 @@ class RepeaterHubScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            repeater.pathLabel(
+                            contact.pathLabel(
                               l10n,
                               pathHashByteWidth: connector.pathHashByteWidth,
                             ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
-                          if (repeater.hasLocation) ...[
+                          if (contact.hasLocation) ...[
                             const SizedBox(height: 2),
                             Row(
                               children: [
@@ -106,8 +110,8 @@ class RepeaterHubScreen extends StatelessWidget {
                                 const SizedBox(width: 3),
                                 Expanded(
                                   child: Text(
-                                    '${repeater.latitude?.toStringAsFixed(4)}, '
-                                    '${repeater.longitude?.toStringAsFixed(4)}',
+                                    '${contact.latitude?.toStringAsFixed(4)}, '
+                                    '${contact.longitude?.toStringAsFixed(4)}',
                                     style: MeshTheme.mono(
                                       fontSize: 10,
                                       color: scheme.onSurfaceVariant,

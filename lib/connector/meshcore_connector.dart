@@ -7072,20 +7072,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Puts on the node the route a login, a status, telemetry or neighbour
+  /// request or a CLI command to [contact] goes by, and returns it: the
+  /// user's override, else the route the node holds, which is the one the
+  /// screens show. Route rotation stays with direct messages. Picked here,
+  /// it replaced the node's route with a path from the history on every
+  /// request, the next one each time and never a direct one, so a repeater
+  /// shown as direct was logged into over a stale hop and each command of a
+  /// settings refresh went its own way.
   Future<PathSelection> preparePathForContactSend(Contact contact) async {
-    PathSelection? autoSelection;
-    final autoRotationEnabled =
-        _appSettingsService?.settings.autoRouteRotationEnabled == true;
-    if (autoRotationEnabled && contact.pathOverride == null) {
-      final maxRetries = _appSettingsService?.settings.maxMessageRetries ?? 5;
-      autoSelection = _selectAutoPathForAttempt(
-        contact.publicKeyHex,
-        attemptIndex: 0,
-        maxRetries: maxRetries,
-      );
-    }
-
-    final resolved = resolvePathSelection(contact, selection: autoSelection);
+    final resolved = resolvePathSelection(contact);
 
     if (resolved.useFlood) {
       await clearContactPath(contact, waitForAck: true);
@@ -16031,28 +16027,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           ? DateTime.now()
           : existing.lastMessageAt;
 
-      appLogger.info(
-        'Refreshing contact ${existing.name}: devicePath=${existing.pathLength}, existingOverride=${existing.pathOverride}',
-        tag: 'Connector',
-      );
-
-      // CRITICAL: Preserve user's path override when contact is refreshed from device
+      // The route stays the node's. An advert never changes the path the
+      // node keeps for a contact (BaseChatMesh::onAdvertRecv), while every
+      // copy of it, relayed or heard directly, reaches this log: written
+      // here, the last copy heard became the route the contact was shown
+      // with and the one the next send put on the node, and a copy heard
+      // directly, having no path, turned a direct route into a flood. The
+      // path the advert came along is still offered in the path history.
       _contacts[existingIndex] = existing.copyWith(
         latitude: hasLocation ? latitude : existing.latitude,
         longitude: hasLocation ? longitude : existing.longitude,
         name: hasName ? name : existing.name,
-        path: _reversePathByHop(path, pathHashWidth),
-        pathLength: path.isEmpty ? -1 : (path.length ~/ pathHashWidth),
         lastMessageAt: mergedLastMessageAt,
         lastSeen: DateTime.fromMillisecondsSinceEpoch(timestamp * 1000),
-        pathOverride: existing.pathOverride, // Preserve user's path choice
-        pathOverrideBytes: existing.pathOverrideBytes,
       );
 
-      // Add path to history if we have a valid path
-      if (_pathHistoryService != null &&
-          _contacts[existingIndex].pathLength >= 0) {
-        _pathHistoryService!.handlePathUpdated(_contacts[existingIndex]);
+      if (_pathHistoryService != null && path.isNotEmpty) {
+        _pathHistoryService!.handlePathUpdated(
+          existing.copyWith(
+            path: _reversePathByHop(path, pathHashWidth),
+            pathLength: path.length ~/ pathHashWidth,
+          ),
+        );
       }
 
       _updateDirectRepeater(
@@ -16060,11 +16056,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         snr,
         path,
         pathHashWidth: pathHashWidth,
-      );
-
-      appLogger.info(
-        'After merge: pathOverride=${_contacts[existingIndex].pathOverride}, devicePath=${_contacts[existingIndex].pathLength}',
-        tag: 'Connector',
       );
     }
   }
