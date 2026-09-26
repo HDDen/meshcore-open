@@ -4063,11 +4063,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // The retry service writes back its own copy of a pending message,
         // which never sees what the RX log added meanwhile: the flood relays
         // counted and their routes, the flood routing and the packet's
-        // region. The count and the routes only grow and the other two are
-        // only ever set, so the stored ones are kept when the copy is behind.
+        // region. The routes only grow and the other two are only ever set,
+        // so the stored ones are kept when the copy is behind; the count
+        // grows within an attempt only. A copy with another attempt number
+        // is a retry being planned: its count starts from the copy's zero,
+        // and the helper stops counting the earlier attempt's copies now,
+        // not when the retry finally leaves the radio.
         final stored = messages[index];
         var updated = message;
-        if (message.repeatCount < stored.repeatCount) {
+        if (message.isOutgoing && message.retryCount != stored.retryCount) {
+          _directFloodRepeats.planAttempt(
+            target: (conversationKey: contactKey, messageId: message.messageId),
+            attempt: message.retryCount,
+          );
+        } else if (message.repeatCount < stored.repeatCount) {
           updated = updated.copyWith(repeatCount: stored.repeatCount);
         }
         if (message.floodPathObservations.length <
@@ -10940,8 +10949,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               existing[duplicateIndex],
               echo?.observation,
             );
-            // The sender's retry is a packet of its own; its relays count
-            // for the message it repeats, and its region is that message's.
+            // The sender's retry is a packet of its own: its region is that
+            // message's, and its relays are counted from zero, as a retry of
+            // our own is.
             if (floodHops != null && contact != null) {
               final original = existing[duplicateIndex];
               final binding = _bindDirectFloodDelivery(
@@ -10954,7 +10964,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   incomingMessage.senderKeyHex,
                   original.messageId,
                   (current) => _withDirectFloodCopy(
-                    current,
+                    current.copyWith(repeatCount: 0),
                     relays: binding.relays,
                     transportCode: binding.transportCode,
                     payload: binding.payload,
@@ -13091,21 +13101,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       snr: snr,
       rssi: rssi,
     );
-    final target = _directFloodRepeats.observe(
+    final decrypted = _directFloodIdentity(packet.payload);
+    final hit = _directFloodRepeats.observe(
       payload: packet.payload,
       hopCount: packet.hopCount,
       at: DateTime.now(),
       copy: copy,
       transportCode: packet.transportCode1,
-      identity: _directFloodIdentity(packet.payload),
+      identity: decrypted?.identity,
+      attempt: decrypted?.attempt,
     );
-    if (target == null) return;
+    if (hit == null) return;
+    // A copy of an earlier attempt still tells its route; only the latest
+    // attempt's copies are counted.
     _updateStoredContactMessage(
-      target.conversationKey,
-      target.messageId,
+      hit.target.conversationKey,
+      hit.target.messageId,
       (current) => _withDirectFloodCopy(
         current,
-        relays: 1,
+        relays: hit.currentAttempt ? 1 : 0,
         transportCode: packet.transportCode1,
         payload: packet.payload,
         copies: [copy],
@@ -13117,7 +13131,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// key while direct echo recovery keeps one; null otherwise. Our own copy
   /// is addressed to a contact and a copy to us comes from one, and the
   /// shared secret is the same in both directions.
-  String? _directFloodIdentity(Uint8List payload) {
+  ({String identity, int attempt})? _directFloodIdentity(Uint8List payload) {
     if (!_directEchoRecoveryEnabled || !_directEchoKeys.hasKey) return null;
     final self = _selfPublicKey;
     if (self == null || self.isEmpty || payload.length < 4) return null;
@@ -13150,10 +13164,27 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             (plaintext[1] << 8) |
             (plaintext[2] << 16) |
             (plaintext[3] << 24);
-        return DirectFloodRepeats.identityOf(peer.publicKeyHex, timestamp);
+        return (
+          identity: DirectFloodRepeats.identityOf(peer.publicKeyHex, timestamp),
+          attempt: _directFloodAttemptOf(plaintext),
+        );
       }
     }
     return null;
+  }
+
+  /// The attempt number `composeMsgPacket` wrote into a decrypted TXT_MSG:
+  /// the low two bits of the flags byte, or, past three, the whole number
+  /// the firmware appends after the text's terminator.
+  static int _directFloodAttemptOf(Uint8List plaintext) {
+    final attempt = plaintext[4] & 0x03;
+    final terminator = plaintext.indexOf(0, 5);
+    if (terminator >= 0 &&
+        terminator + 1 < plaintext.length &&
+        plaintext[terminator + 1] > 3) {
+      return plaintext[terminator + 1];
+    }
+    return attempt;
   }
 
   /// A flood send the node confirmed: its relays will reach the RX log.
@@ -13177,6 +13208,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         contactKeyHex,
         sent.message.timestamp.millisecondsSinceEpoch ~/ 1000,
       ),
+      attempt: sent.message.retryCount,
       at: DateTime.now(),
     );
   }

@@ -26,35 +26,44 @@ void main() {
   const b = (conversationKey: 'bb', messageId: 'B');
   const c = (conversationKey: 'cc', messageId: 'C');
 
+  void expectSend(
+    DirectFloodRepeats repeats,
+    DirectFloodTarget target, {
+    int attempt = 0,
+    String? identity,
+    int at = 0,
+  }) {
+    repeats.expectOutgoing(
+      target: target,
+      destinationHash: 0x11,
+      sourceHash: _self,
+      identity: identity ?? '${target.conversationKey}:100',
+      attempt: attempt,
+      at: _at(at),
+    );
+  }
+
   group('outgoing', () {
     test('every relayed copy of the sent packet counts', () {
-      final repeats = DirectFloodRepeats()
-        ..expectOutgoing(
-          target: a,
-          destinationHash: 0x11,
-          sourceHash: _self,
-          identity: 'aa:100',
-          at: _at(0),
-        );
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a);
       final packet = _payload(0x11, _self, 1);
-      expect(
-        repeats.observe(
-          payload: packet,
-          hopCount: 1,
-          at: _at(1),
-          copy: _heard(1),
-        ),
-        a,
+      final first = repeats.observe(
+        payload: packet,
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
       );
-      expect(
-        repeats.observe(
-          payload: packet,
-          hopCount: 2,
-          at: _at(2),
-          copy: _heard(2),
-        ),
-        a,
+      expect(first?.target, a);
+      expect(first?.currentAttempt, true);
+      final second = repeats.observe(
+        payload: packet,
+        hopCount: 2,
+        at: _at(2),
+        copy: _heard(2),
       );
+      expect(second?.target, a);
+      expect(second?.currentAttempt, true);
       expect(
         repeats.observe(
           payload: _payload(0x11, _self, 9),
@@ -66,16 +75,107 @@ void main() {
       );
     });
 
+    test('a new attempt starts the count over', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, attempt: 0);
+      final firstPacket = _payload(0x11, _self, 1);
+      repeats.observe(
+        payload: firstPacket,
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
+      );
+      expectSend(repeats, a, attempt: 1, at: 30);
+      // A late copy of the first attempt keeps its message but no longer
+      // counts.
+      final late = repeats.observe(
+        payload: firstPacket,
+        hopCount: 2,
+        at: _at(31),
+        copy: _heard(2),
+      );
+      expect(late?.target, a);
+      expect(late?.currentAttempt, false);
+      final retry = repeats.observe(
+        payload: _payload(0x11, _self, 2),
+        hopCount: 1,
+        at: _at(32),
+        copy: _heard(1),
+      );
+      expect(retry?.target, a);
+      expect(retry?.currentAttempt, true);
+    });
+
+    test('a planned retry stops the count before it is sent', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, attempt: 0);
+      final firstPacket = _payload(0x11, _self, 1);
+      repeats.observe(
+        payload: firstPacket,
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
+      );
+      repeats.planAttempt(target: a, attempt: 1);
+      final late = repeats.observe(
+        payload: firstPacket,
+        hopCount: 2,
+        at: _at(20),
+        copy: _heard(2),
+      );
+      expect(late?.target, a);
+      expect(late?.currentAttempt, false);
+      expectSend(repeats, a, attempt: 1, at: 30);
+      final retry = repeats.observe(
+        payload: _payload(0x11, _self, 2),
+        hopCount: 1,
+        at: _at(31),
+        copy: _heard(1),
+      );
+      expect(retry?.currentAttempt, true);
+    });
+
+    test('a restart at attempt zero does not revive the first packet', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, attempt: 0);
+      final firstPacket = _payload(0x11, _self, 1);
+      repeats.observe(
+        payload: firstPacket,
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
+      );
+      repeats.planAttempt(target: a, attempt: 1);
+      repeats.planAttempt(target: a, attempt: 0);
+      final late = repeats.observe(
+        payload: firstPacket,
+        hopCount: 2,
+        at: _at(40),
+        copy: _heard(2),
+      );
+      expect(late?.currentAttempt, false);
+    });
+
+    test('a new attempt takes over an unanswered older expectation', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, attempt: 0);
+      expectSend(repeats, a, attempt: 1, at: 30);
+      // Only one expectation is left, so the copy binds to the new attempt
+      // rather than being refused as ambiguous or tagged as the old one.
+      final hit = repeats.observe(
+        payload: _payload(0x11, _self, 2),
+        hopCount: 1,
+        at: _at(31),
+        copy: _heard(1),
+      );
+      expect(hit?.target, a);
+      expect(hit?.currentAttempt, true);
+    });
+
     test('two messages on one pair of hashes are refused', () {
       final repeats = DirectFloodRepeats();
       for (final target in [a, b]) {
-        repeats.expectOutgoing(
-          target: target,
-          destinationHash: 0x11,
-          sourceHash: _self,
-          identity: '${target.conversationKey}:1',
-          at: _at(0),
-        );
+        expectSend(repeats, target, identity: '${target.conversationKey}:1');
       }
       expect(
         repeats.observe(
@@ -89,31 +189,43 @@ void main() {
     });
 
     test('a decrypted copy binds to the message it names', () {
-      final repeats = DirectFloodRepeats()
-        ..expectOutgoing(
-          target: a,
-          destinationHash: 0x11,
-          sourceHash: _self,
-          identity: 'k:100',
-          at: _at(0),
-        )
-        ..expectOutgoing(
-          target: b,
-          destinationHash: 0x11,
-          sourceHash: _self,
-          identity: 'k:200',
-          at: _at(0),
-        );
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, identity: 'k:100');
+      expectSend(repeats, b, identity: 'k:200');
+      final hit = repeats.observe(
+        payload: _payload(0x11, _self, 1),
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
+        identity: 'k:200',
+      );
+      expect(hit?.target, b);
+    });
+
+    test('a decrypted copy of another attempt is refused', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, identity: 'k:100', attempt: 1);
       expect(
         repeats.observe(
           payload: _payload(0x11, _self, 1),
           hopCount: 1,
           at: _at(1),
           copy: _heard(1),
-          identity: 'k:200',
+          identity: 'k:100',
+          attempt: 0,
         ),
-        b,
+        isNull,
       );
+      final hit = repeats.observe(
+        payload: _payload(0x11, _self, 2),
+        hopCount: 1,
+        at: _at(2),
+        copy: _heard(1),
+        identity: 'k:100',
+        attempt: 1,
+      );
+      expect(hit?.target, a);
+      expect(hit?.currentAttempt, true);
     });
   });
 
@@ -149,15 +261,53 @@ void main() {
             ?.relays,
         1,
       );
-      expect(
-        repeats.observe(
-          payload: packet,
-          hopCount: 4,
-          at: _at(3),
-          copy: _heard(4),
-        ),
-        c,
+      final later = repeats.observe(
+        payload: packet,
+        hopCount: 4,
+        at: _at(3),
+        copy: _heard(4),
       );
+      expect(later?.target, c);
+      expect(later?.currentAttempt, true);
+    });
+
+    test("the sender's retry becomes the attempt that counts", () {
+      final repeats = DirectFloodRepeats();
+      final first = _payload(_self, 0x33, 1);
+      repeats.observe(payload: first, hopCount: 2, at: _at(0), copy: _heard(2));
+      repeats.bindIncoming(
+        target: c,
+        sourceHash: 0x33,
+        destinationHash: _self,
+        hopCount: 2,
+        identity: 'cc:5',
+        at: _at(1),
+      );
+      final retry = _payload(_self, 0x33, 2);
+      repeats.observe(payload: retry, hopCount: 2, at: _at(30), copy: _heard(2));
+      final binding = repeats.bindIncoming(
+        target: c,
+        sourceHash: 0x33,
+        destinationHash: _self,
+        hopCount: 2,
+        identity: 'cc:5',
+        at: _at(31),
+      );
+      expect(binding?.relays, 0);
+      final oldCopy = repeats.observe(
+        payload: first,
+        hopCount: 3,
+        at: _at(32),
+        copy: _heard(3),
+      );
+      expect(oldCopy?.currentAttempt, false);
+      final retryCopy = repeats.observe(
+        payload: retry,
+        hopCount: 3,
+        at: _at(33),
+        copy: _heard(3),
+      );
+      expect(retryCopy?.currentAttempt, true);
     });
 
     test('hands back every copy heard, the delivered one first', () {
@@ -314,6 +464,7 @@ void main() {
       destinationHash: 0x11,
       sourceHash: _self,
       identity: 'aa:1',
+      attempt: 0,
       at: _t0.add(const Duration(minutes: 20)),
     );
     expect(
