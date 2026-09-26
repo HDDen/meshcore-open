@@ -79,6 +79,8 @@ import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/routing_sheet.dart';
+import '../widgets/contact_region_dialog.dart';
+import '../storage/contact_region_store.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -656,6 +658,7 @@ class _ChatScreenState extends State<ChatScreen> {
               );
               final unreadLabel = context.l10n.chat_unread(unreadCount);
               final pathLabel = _currentPathLabel(contact);
+              final floodRegionLabel = _floodRegionLabel(connector, contact);
 
               // Show path details if we have non-empty path data (from device or override)
               final effectivePath = contact.pathOverrideBytes ?? contact.path;
@@ -665,7 +668,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(contact.name),
+                  Text(
+                    contact.name,
+                    // A third line has to fit under the name while a send
+                    // goes by flood; the name gives up a little height.
+                    style: floodRegionLabel == null
+                        ? null
+                        : const TextStyle(fontSize: 15),
+                  ),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () =>
@@ -683,6 +693,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
+                  if (floodRegionLabel != null)
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _pickFloodRegion(contact),
+                      child: Text(
+                        floodRegionLabel,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.normal,
+                          decoration: TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.dotted,
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
@@ -1716,6 +1741,41 @@ class _ChatScreenState extends State<ChatScreen> {
           listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
       orElse: () => null,
     );
+  }
+
+  /// The region line under the route line: shown only while a send would
+  /// go by flood, forced or automatic with no route, and never for a room
+  /// server, whose posts the retry service keeps off flood. A contact marked
+  /// unscoped reads "no region"; without a choice of the contact's own the
+  /// line names the node's, with the node's default scope once the node has
+  /// reported it.
+  String? _floodRegionLabel(MeshCoreConnector connector, Contact contact) {
+    final floods = contact.pathOverride == null
+        ? contact.pathLength < 0
+        : contact.pathOverride! < 0;
+    if (!floods || contact.type == advTypeRoom) return null;
+    final region = connector.getContactRegion(contact.publicKeyHex);
+    if (ContactRegionStore.isUnscoped(region)) {
+      return context.l10n.chat_floodRegionNone;
+    }
+    if (region.isNotEmpty) return context.l10n.channels_messageRegion(region);
+    if (!connector.hasLoadedDefaultRegionScope) {
+      return context.l10n.chat_floodRegionNode;
+    }
+    return context.l10n.chat_floodRegionNodeWith(
+      connector.defaultRegionScopeLabel ??
+          context.l10n.channels_messageRegionEmpty,
+    );
+  }
+
+  Future<void> _pickFloodRegion(Contact contact) async {
+    final connector = context.read<MeshCoreConnector>();
+    final region = await ContactRegionDialog.show(
+      context,
+      selectedRegion: connector.getContactRegion(contact.publicKeyHex),
+    );
+    if (region == null || !mounted) return;
+    await connector.setContactRegion(contact.publicKeyHex, region);
   }
 
   String _currentPathLabel(Contact contact) {

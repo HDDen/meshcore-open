@@ -395,6 +395,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureLegacyRejectedMessagesTable();
     await _ensureContactLocationCacheTable();
     await _ensureHeardPacketsTable();
+    await _ensureContactSettingsTable();
   }
 
   Future<void> _ensureLegacyRejectedMessagesTable() async {
@@ -471,6 +472,81 @@ ON heard_packets (packet_type, heard_at_ms)
 CREATE INDEX IF NOT EXISTS heard_packets_region_time
 ON heard_packets (region_hash, heard_at_ms)
 ''');
+  }
+
+  /// Per-contact settings of one node: `name` names the setting and `value`
+  /// holds it as text. The contact's flood region is the first of them. An
+  /// auxiliary table like the two above, so a database that predates it
+  /// gains it on the next open without a schema bump.
+  Future<void> _ensureContactSettingsTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS contact_settings (
+  node_key TEXT NOT NULL,
+  contact_key TEXT NOT NULL,
+  name TEXT NOT NULL,
+  value TEXT NOT NULL,
+  PRIMARY KEY (node_key, contact_key, name)
+)
+''');
+  }
+
+  /// The values of the setting [name] for every contact of [nodeKey], keyed
+  /// by contact key.
+  Future<Map<String, String>> readContactSettings(
+    String nodeKey,
+    String name,
+  ) async {
+    final rows = await customSelect(
+      '''
+SELECT contact_key, value
+FROM contact_settings
+WHERE node_key = ? AND name = ?
+''',
+      variables: [Variable<String>(nodeKey), Variable<String>(name)],
+    ).get();
+    return {
+      for (final row in rows)
+        row.read<String>('contact_key'): row.read<String>('value'),
+    };
+  }
+
+  Future<void> upsertContactSetting({
+    required String nodeKey,
+    required String contactKey,
+    required String name,
+    required String value,
+  }) async {
+    await customInsert(
+      '''
+INSERT INTO contact_settings (node_key, contact_key, name, value)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(node_key, contact_key, name) DO UPDATE SET value = excluded.value
+''',
+      variables: [
+        Variable<String>(nodeKey),
+        Variable<String>(contactKey),
+        Variable<String>(name),
+        Variable<String>(value),
+      ],
+    );
+  }
+
+  Future<void> deleteContactSetting({
+    required String nodeKey,
+    required String contactKey,
+    required String name,
+  }) async {
+    await customUpdate(
+      '''
+DELETE FROM contact_settings
+WHERE node_key = ? AND contact_key = ? AND name = ?
+''',
+      variables: [
+        Variable<String>(nodeKey),
+        Variable<String>(contactKey),
+        Variable<String>(name),
+      ],
+    );
   }
 
   Future<bool> isLegacyMigrationComplete() async {

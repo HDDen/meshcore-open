@@ -40,7 +40,16 @@ typedef AckHashMapping = ({
 });
 
 class RetryServiceConfig {
-  final Future<DateTime?> Function(Contact, String, int, int) sendMessage;
+  /// Sends one attempt; [useFlood] says how the attempt is routed, which the
+  /// connector needs to scope a flood send with the contact's region.
+  final Future<DateTime?> Function(
+    Contact,
+    String,
+    int,
+    int, {
+    required bool useFlood,
+  })
+  sendMessage;
   final void Function(String, Message) addMessage;
   final void Function(Message) updateMessage;
   final Function(Contact)? clearContactPath;
@@ -474,12 +483,13 @@ class MessageRetryService extends ChangeNotifier {
     _retireProgressTracker(messageId);
     config.updateMessage(progressMessage);
 
+    final bool useFlood = effectiveSelection != null
+        ? effectiveSelection.useFlood
+        : (effectiveMessage.pathLength != null &&
+              effectiveMessage.pathLength! < 0);
+
     // Sync path settings with device before sending
     if (config.setContactPath != null && config.clearContactPath != null) {
-      final bool useFlood = effectiveSelection != null
-          ? effectiveSelection.useFlood
-          : (effectiveMessage.pathLength != null &&
-                effectiveMessage.pathLength! < 0);
       final List<int> pathBytes = effectiveSelection != null
           ? effectiveSelection.pathBytes
           : effectiveMessage.pathBytes;
@@ -556,6 +566,7 @@ class MessageRetryService extends ChangeNotifier {
       _preparedOutboundTexts[messageId] ?? message.text,
       attempt,
       timestampSeconds,
+      useFlood: useFlood,
     );
     if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
     if (sentByRadioAt != null) {

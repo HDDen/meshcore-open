@@ -77,6 +77,7 @@ import '../storage/channel_message_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
+import '../storage/contact_region_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/connection_transport_preference_store.dart';
 import '../storage/contact_location_estimate_store.dart';
@@ -513,6 +514,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final ChannelSettingsStore _channelSettingsStore = ChannelSettingsStore();
   final ChannelRegionStore _channelRegionStore = ChannelRegionStore();
   final ContactSettingsStore _contactSettingsStore = ContactSettingsStore();
+  final ContactRegionStore _contactRegionStore = ContactRegionStore();
   final ContactStore _contactStore = ContactStore();
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
   final ContactLocationEstimateStore _contactLocationEstimateStore =
@@ -534,6 +536,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, int?> _channelWidgetColor = {};
   final Map<int, int?> _channelWidgetTextColor = {};
   final Map<int, Region> _channelRegions = {};
+
+  /// The region each contact's flood sends are scoped with, keyed by contact
+  /// key; a contact absent here goes out under the node's default scope.
+  final Map<String, Region> _contactRegions = {};
   String? _defaultRegionScope;
   bool _hasLoadedDefaultRegionScope = false;
   Future<void>? _defaultRegionScopeRefreshFuture;
@@ -1009,6 +1015,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelOrderStore.setPublicKeyHex = publicKeyHex;
     _channelSettingsStore.setPublicKeyHex = publicKeyHex;
     _channelRegionStore.setPublicKeyHex = publicKeyHex;
+    _contactRegionStore.setPublicKeyHex = publicKeyHex;
     _contactSettingsStore.setPublicKeyHex = publicKeyHex;
     _contactStore.setPublicKeyHex = publicKeyHex;
     _channelStore.setPublicKeyHex = publicKeyHex;
@@ -2531,6 +2538,43 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _channelRegions[channelIndex] ?? '';
   }
 
+  /// The region [contactKeyHex]'s flood sends are scoped with, empty when the
+  /// node's default scope applies.
+  Region getContactRegion(String contactKeyHex) =>
+      _contactRegions[contactKeyHex] ?? '';
+
+  /// Whether the node has answered what its default flood scope is; until
+  /// then [defaultRegionScopeLabel] says nothing.
+  bool get hasLoadedDefaultRegionScope => _hasLoadedDefaultRegionScope;
+
+  /// The node's default flood scope as the region screen shows it, null when
+  /// the node has none or has not answered yet.
+  String? get defaultRegionScopeLabel => _hasLoadedDefaultRegionScope
+      ? _displayPacketRegion(_defaultRegionScope ?? '')
+      : null;
+
+  Future<void> setContactRegion(String contactKeyHex, String region) async {
+    final normalized = await _contactRegionStore.saveRegion(
+      contactKeyHex,
+      region,
+    );
+    if (normalized.isEmpty) {
+      _contactRegions.remove(contactKeyHex);
+    } else {
+      _contactRegions[contactKeyHex] = normalized;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _loadContactRegions(String expectedPublicKeyHex) async {
+    final regions = await _contactRegionStore.loadRegions();
+    if (expectedPublicKeyHex != selfPublicKeyHex) return;
+    _contactRegions
+      ..clear()
+      ..addAll(regions);
+    if (regions.isNotEmpty) notifyListeners();
+  }
+
   Region _outgoingChannelRegion(int channelIndex) {
     final channelRegion = getChannelRegion(channelIndex).trim();
     if (channelRegion.isNotEmpty) return channelRegion;
@@ -3886,34 +3930,95 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  /// One attempt of a direct message, under the same lock as channel sends:
+  /// the flood scope is a single field on the node, so an attempt must never
+  /// fall inside a channel's scoped window, nor a channel send inside the
+  /// window this one opens for a contact with a region of its own.
   Future<DateTime?> _sendMessageDirect(
     Contact contact,
     String text,
     int attempt,
-    int timestampSeconds,
-  ) async {
+    int timestampSeconds, {
+    required bool useFlood,
+  }) async {
     if (!isConnected || text.isEmpty) return null;
-    try {
-      await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
-      final outboundText = prepareContactOutboundText(
-        contact,
-        text,
-        estimateSignatureOverhead: false,
-      );
-      final sentByRadioAt = DateTime.now();
-      await sendFrame(
-        buildSendTextMsgFrame(
+    return _runChannelCommandLocked(() async {
+      try {
+        await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
+        final outboundText = prepareContactOutboundText(
+          contact,
+          text,
+          estimateSignatureOverhead: false,
+        );
+        final frame = buildSendTextMsgFrame(
           contact.publicKey,
           outboundText,
           attempt: attempt,
           timestampSeconds: timestampSeconds,
-        ),
-      );
-      return sentByRadioAt;
-    } catch (e) {
-      appLogger.error('Failed to send message: $e', tag: 'Connector');
-      return null;
+        );
+        final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
+        if (region.isNotEmpty) return _sendScopedTextMsg(frame, region);
+        final sentByRadioAt = DateTime.now();
+        await sendFrame(frame);
+        return sentByRadioAt;
+      } catch (e) {
+        appLogger.error('Failed to send message: $e', tag: 'Connector');
+        return null;
+      }
+    });
+  }
+
+  /// Set once the node has refused CMD_SET_FLOOD_SCOPE sub-command 1, which
+  /// firmware before version 12 does not know; later unscoped sends go out
+  /// under the node's default scope instead of failing.
+  bool _unscopedSendUnsupported = false;
+
+  /// A flood send to a contact with a region of its own: the scope is set
+  /// before the frame and cleared once RESP_CODE_SENT says the packet was
+  /// built under it, as `_runScopedChannelSend` does for a channel. The
+  /// unscoped choice sets the node's no-scope flag instead, which the same
+  /// clearing frame resets.
+  Future<DateTime?> _sendScopedTextMsg(Uint8List frame, String region) async {
+    if (!ContactRegionStore.isUnscoped(region)) {
+      await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
+    } else if (!_unscopedSendUnsupported) {
+      try {
+        await _sendFrameAndWaitForCommandAck(buildSetFloodUnscopedFrame());
+      } on TimeoutException {
+        rethrow;
+      } catch (error) {
+        _unscopedSendUnsupported = true;
+        appLogger.warn(
+          'Unscoped flood sends are not supported by this firmware ($error); '
+          'direct messages marked "no region" go out under the default '
+          'scope this session',
+          tag: 'Connector',
+        );
+      }
     }
+    final sentByRadioAt = DateTime.now();
+    try {
+      await _sendFrameAndWaitForCommandAck(frame, successCode: respCodeSent);
+    } on TimeoutException {
+      // The frame was written; the retry service arms its timer on the SENT
+      // it may still receive, and the scope is cleared either way.
+      appLogger.warn(
+        'No RESP_CODE_SENT for a scoped direct send within the ACK timeout',
+        tag: 'Connector',
+      );
+    } finally {
+      if (isConnected) {
+        try {
+          await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(''));
+        } catch (error) {
+          appLogger.warn(
+            'Flood scope reset after a direct send failed: $error',
+            tag: 'Connector',
+          );
+        }
+      }
+    }
+    return sentByRadioAt;
   }
 
   void _updateMessage(Message message) {
@@ -5593,6 +5698,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearDirectEchoKey('new session');
     _directFloodRepeats.clear();
     _directEchoAckUnsupported = false;
+    _unscopedSendUnsupported = false;
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
     _selfPublicKey = null;
@@ -9736,6 +9842,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _clearSharedMessageHistoryState();
       _clearDirectEchoKey('node changed');
       _directFloodRepeats.clear();
+      _contactRegions.clear();
     }
 
     //set all the stores' public key so they can load the correct data
@@ -9744,6 +9851,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelOrderStore.setPublicKeyHex = selfPublicKeyHex;
     _channelSettingsStore.setPublicKeyHex = selfPublicKeyHex;
     _channelRegionStore.setPublicKeyHex = selfPublicKeyHex;
+    _contactRegionStore.setPublicKeyHex = selfPublicKeyHex;
     _contactSettingsStore.setPublicKeyHex = selfPublicKeyHex;
     _contactStore.setPublicKeyHex = selfPublicKeyHex;
     _channelStore.setPublicKeyHex = selfPublicKeyHex;
@@ -9761,6 +9869,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // different node cannot apply stale channel state to the new node.
     final storagePublicKeyHex = selfPublicKeyHex;
     _loadChannelOrder(publicKeyHex: storagePublicKeyHex);
+    unawaited(_loadContactRegions(storagePublicKeyHex));
     final contactCacheLoadGeneration = ++_contactCacheLoadGeneration;
     _contactCacheLoadFuture = _loadContactCacheForNode(
       storagePublicKeyHex,
@@ -12874,7 +12983,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     final route = resolvePathSelection(contact);
     int? transportCode;
-    final scope = _defaultRegionScope?.trim() ?? '';
+    // The region our own flood sends to this contact take: its own, none
+    // when it is marked unscoped, else the node's default scope.
+    final contactRegion = getContactRegion(contact.publicKeyHex);
+    final scope = ContactRegionStore.isUnscoped(contactRegion)
+        ? ''
+        : contactRegion.isNotEmpty
+        ? contactRegion
+        : _defaultRegionScope?.trim() ?? '';
     if (route.useFlood && scope.isNotEmpty && !scope.startsWith(r'$')) {
       transportCode = _computeRegionTransportCode(scope, payloadTypeACK, ack);
     }
@@ -13013,19 +13129,33 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  /// A flood send the node confirmed goes out under the node's default scope,
-  /// the app setting no other for direct messages. That is the region the
-  /// message shows until a relayed copy of the packet says exactly; a region
-  /// already read off a copy is left alone.
+  /// A flood send the node confirmed goes out under the contact's own region
+  /// when one is set, else under the node's default scope. That is the region
+  /// the message shows until a relayed copy of the packet says exactly; a
+  /// region already read off a copy is left alone.
   Future<void> _stampDirectFloodSend(
     ({Message message, Contact contact}) sent,
   ) async {
     if (sent.contact.publicKey.isEmpty) return;
-    if (!_hasLoadedDefaultRegionScope && isConnected) {
+    final choice = getContactRegion(sent.contact.publicKeyHex);
+    // An unscoped send has no region, and says so, unless the firmware
+    // refused the flag and sent the packet under its default scope after all.
+    final unscoped =
+        ContactRegionStore.isUnscoped(choice) && !_unscopedSendUnsupported;
+    final ownRegion = ContactRegionStore.isUnscoped(choice) ? '' : choice;
+    if (!unscoped &&
+        ownRegion.isEmpty &&
+        !_hasLoadedDefaultRegionScope &&
+        isConnected) {
       await _refreshDefaultRegionScope();
     }
-    final scopeKnown = _hasLoadedDefaultRegionScope;
-    final region = _displayPacketRegion(_defaultRegionScope ?? '');
+    final scopeKnown =
+        unscoped || ownRegion.isNotEmpty || _hasLoadedDefaultRegionScope;
+    final region = unscoped
+        ? null
+        : _displayPacketRegion(
+            ownRegion.isNotEmpty ? ownRegion : _defaultRegionScope ?? '',
+          );
     _updateStoredContactMessage(
       sent.contact.publicKeyHex,
       sent.message.messageId,

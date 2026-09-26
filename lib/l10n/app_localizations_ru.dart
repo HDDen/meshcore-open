@@ -6810,4 +6810,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get discoveredContacts_alreadyAdded => 'Узел уже добавлен в контакты';
+
+  @override
+  String get chat_floodRegionNode => 'Регион ноды';
+
+  @override
+  String chat_floodRegionNodeWith(String region) {
+    return 'Регион ноды: $region';
+  }
+
+  @override
+  String get chat_floodRegionNone => 'Без региона';
 }

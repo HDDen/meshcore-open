@@ -3740,5 +3740,15 @@
   },
   "channelPath_copyInvertedPath": "Copy inverted route",
   "channelPath_invertedPathCopied": "Inverted route copied",
-  "discoveredContacts_alreadyAdded": "Node already in contacts"
+  "discoveredContacts_alreadyAdded": "Node already in contacts",
+  "chat_floodRegionNode": "Node region",
+  "chat_floodRegionNodeWith": "Node region: {region}",
+  "@chat_floodRegionNodeWith": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_floodRegionNone": "No region"
 }

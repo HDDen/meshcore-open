@@ -591,7 +591,8 @@ void main() {
 
         retryService.initialize(
           RetryServiceConfig(
-            sendMessage: (_, _, _, _) async => DateTime.now(),
+            sendMessage: (_, _, _, _, {required bool useFlood}) async =>
+              DateTime.now(),
             addMessage: (_, message) => addedMessage = message,
             updateMessage: (_) {},
             clearContactPath: (_) {},
@@ -625,7 +626,8 @@ void main() {
 
       retryService.initialize(
         RetryServiceConfig(
-          sendMessage: (_, _, _, _) async => DateTime.now(),
+          sendMessage: (_, _, _, _, {required bool useFlood}) async =>
+              DateTime.now(),
           addMessage: (_, message) => addedMessage = message,
           updateMessage: (_) {},
           clearContactPath: (_) {},

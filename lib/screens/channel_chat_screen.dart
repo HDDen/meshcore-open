@@ -5413,20 +5413,29 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
             ),
             const SizedBox(height: 15),
             Expanded(
-              child: ListView.builder(
-                itemCount: regions.length,
-                itemBuilder: (context, index) => ListTile(
-                  title: Text(regions[index]),
-                  tileColor: selectedIndex == index
-                      ? Colors.blue.withValues(alpha: 0.2)
-                      : null,
-                  onTap: () {
-                    context.read<MeshCoreConnector>().setChannelRegion(
-                      widget.channel.index,
-                      regions[index],
-                    );
-                    Navigator.pop(context);
-                  },
+              // A tile's colour is ink, painted on the dialog's Material, so
+              // a tile scrolled under the bar kept showing its colour there;
+              // a Material of the list's own inside a clip keeps it in the
+              // list.
+              child: ClipRect(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ListView.builder(
+                    itemCount: regions.length,
+                    itemBuilder: (context, index) => ListTile(
+                      title: Text(regions[index]),
+                      tileColor: selectedIndex == index
+                          ? Colors.blue.withValues(alpha: 0.2)
+                          : null,
+                      onTap: () {
+                        context.read<MeshCoreConnector>().setChannelRegion(
+                          widget.channel.index,
+                          regions[index],
+                        );
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

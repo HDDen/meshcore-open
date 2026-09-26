@@ -2882,5 +2882,8 @@
   "channelPath_incompletePathTitle": "Неполный путь {index} • {hops}",
   "channelPath_copyInvertedPath": "Скопировать обратный маршрут",
   "channelPath_invertedPathCopied": "Обратный маршрут скопирован",
-  "discoveredContacts_alreadyAdded": "Узел уже добавлен в контакты"
+  "discoveredContacts_alreadyAdded": "Узел уже добавлен в контакты",
+  "chat_floodRegionNode": "Регион ноды",
+  "chat_floodRegionNodeWith": "Регион ноды: {region}",
+  "chat_floodRegionNone": "Без региона"
 }

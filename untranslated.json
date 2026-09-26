@@ -8,7 +8,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "de": [
@@ -20,7 +23,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "es": [
@@ -32,7 +38,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "fr": [
@@ -44,7 +53,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "hu": [
@@ -56,7 +68,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "it": [
@@ -68,7 +83,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "ja": [
@@ -80,7 +98,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "ko": [
@@ -92,7 +113,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "nl": [
@@ -104,7 +128,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "pl": [
@@ -116,7 +143,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "pt": [
@@ -128,7 +158,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "sk": [
@@ -140,7 +173,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "sl": [
@@ -152,7 +188,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "sv": [
@@ -164,7 +203,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "uk": [
@@ -176,7 +218,10 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ],
 
   "zh": [
@@ -188,6 +233,9 @@
     "channelPath_incompletePathTitle",
     "channelPath_copyInvertedPath",
     "channelPath_invertedPathCopied",
-    "discoveredContacts_alreadyAdded"
+    "discoveredContacts_alreadyAdded",
+    "chat_floodRegionNode",
+    "chat_floodRegionNodeWith",
+    "chat_floodRegionNone"
   ]
 }

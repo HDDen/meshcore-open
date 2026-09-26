@@ -11587,6 +11587,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Node already in contacts'**
   String get discoveredContacts_alreadyAdded;
+
+  /// No description provided for @chat_floodRegionNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Node region'**
+  String get chat_floodRegionNode;
+
+  /// No description provided for @chat_floodRegionNodeWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Node region: {region}'**
+  String chat_floodRegionNodeWith(String region);
+
+  /// No description provided for @chat_floodRegionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No region'**
+  String get chat_floodRegionNone;
 }
 
 class _AppLocalizationsDelegate

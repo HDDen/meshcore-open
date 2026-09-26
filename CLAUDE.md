@@ -157,6 +157,7 @@ Most stores in `lib/storage/` use `PrefsManager` (a `SharedPreferences` singleto
 | `contact_store`, `contact_discovery_store` | Known + discovered contacts |
 | `channel_store`, `channel_order_store`, `channel_settings_store`, `channel_group_store` | Channels, display order, per-channel compression/sign toggles, channel groups |
 | `channel_region_store`, `region_store` | Per-channel region tag + known regions / flood scopes (Advanced mod) |
+| `contact_region_store` | Per-contact flood region, a `contact_settings` row in the message-history database rather than a preference (Advanced mod) |
 | `community_store` | Communities (32-byte shared secrets) |
 | `contact_group_store`, `contact_settings_store` | Groups; per-contact compression (MCMP/MCOtxt/Smaz/cyr2lat), sign, sending-delay, quick-answer, widget-color settings |
 | `node_identity_store` | Cached self/node identity metadata |
@@ -178,7 +179,7 @@ Message history moved out of `SharedPreferences` into SQLite via **drift** (`mes
 
 `MessageHistoryStorage` is the only door to the database. Every method has a `kIsWeb` branch that falls back to `SharedPreferences`, because the web build never creates the database at all — `initializeAndMigrate` returns before constructing it, which is why `web/` carries no `sqlite3.wasm` or `drift_worker.js` despite the `DriftWebOptions` in the constructor.
 
-**Indexes** (`schemaVersion = 1`, `auto_vacuum = INCREMENTAL` set in `onCreate` *before* `createAll()` — the only moment that pragma takes effect):
+**Indexes** (`schemaVersion = 2`, `auto_vacuum = INCREMENTAL` set in `onCreate` *before* `createAll()` — the only moment that pragma takes effect):
 
 | Index | Serves |
 |---|---|
@@ -187,6 +188,8 @@ Message history moved out of `SharedPreferences` into SQLite via **drift** (`mes
 | `history_message_summary` (kind, storageKey, isCli, timelineAtMs, messageId) | contact-list previews, covers the `ORDER BY` too |
 | `history_message_marker` (kind, storageKey, containsMarker) | the map's marker sweep |
 | `legacy_rejected_location` (kind, storageKey, messageIndex) | quarantine listing |
+
+**Auxiliary tables** stay out of the drift table list, so adding one needs no regenerated `.g.dart` and no schema bump: `_ensureAuxiliaryTables` runs `CREATE TABLE IF NOT EXISTS` for `legacy_rejected_messages`, `contact_location_cache`, `heard_packets` and `contact_settings` from `onCreate`, `onUpgrade` and `beforeOpen`, which is what gives a database that predates one of them the table on its next open, and they are read and written through `customSelect` / `customInsert` / `customUpdate`. `contact_settings` (`node_key`, `contact_key`, `name`, `value`, one primary key over the first three) holds per-contact settings of a node as text. The contact flood region (`ContactRegionStore`, name `flood_region`) is its first tenant; a setting moving out of preferences later takes a new `name`, not a new table.
 
 **`timelineAtMs` repeats the domain rules rather than inventing its own.** It is `receivedAt ?? timestamp` for channel rows and for room messages (detected by a non-empty `fourByteRoomContactKey`), and plain `timestamp` for ordinary direct messages — so SQL order matches `ChannelMessageTimelineHelper.compare` / `RoomMessageTimelineHelper.compare` instead of drifting from them. Contact-list summaries sort by the same column, which is why a room contact's `lastMessageAt` is its local receive time and not the timestamp the room server stamped.
 
@@ -987,9 +990,10 @@ to the sender.
 (65, stock MeshCore since May 2026) sends any parsed packet, so
 `_sendDirectEchoAck` builds a `PAYLOAD_TYPE_ACK` packet as
 `BaseChatMesh::sendAckTo` would route it — direct along
-`resolvePathSelection(contact)`, else a flood, scoped with the node's default
-region through `_computeRegionTransportCode` when there is one — with the
-path byte packed as the firmware packs it. It is sent once, for the copy that
+`resolvePathSelection(contact)`, else a flood, scoped through
+`_computeRegionTransportCode` with the contact's own region or else the node's
+default one, when there is one — with the path byte packed as the firmware
+packs it. It is sent once, for the copy that
 created the message; repeats and the delivery send none. A `RESP_CODE_ERR`
 answer means the firmware predates the command, sets
 `_directEchoAckUnsupported` for the session and is logged once; a timeout is
@@ -1010,7 +1014,7 @@ A direct message that travels by flood shows the relay counter channel messages 
 
 Heard packets are remembered for ten minutes and a flood send waits two for its first copy; all of it is dropped with the session. `_processIncomingMessage` reads the frame's path byte before the message's path is replaced by the contact's route, and a sender's retry, being a packet of its own, binds to the message it repeats. The retry service writes back its own stale copy of a pending message, so `_updateMessage` keeps the stored count when that one is ahead: the count only grows.
 
-The same message shows the region line channel bubbles have, `Region: …` on its own line above the time under `showMessageRegion`, but only when it travelled by flood: `Message.sentByFlood`, set from the `is_flood` byte of `RESP_CODE_SENT` for an outgoing message and from the CONTACT_MSG_RECV path byte for an incoming one, since a message on a known route carries no scope at all. The three region fields mirror `ChannelMessage`'s (`packetRegion`, `packetRegionInfoAvailable`, `packetRegionNotMatched`), persisted by `message_store`, and the bubble words them as the channel bubble does: the name, *no matches* for a transport code no known region produces, *unset* for a plain flood, *unknown* while nothing was read. The exact answer comes from a heard copy of the packet: the helper keeps each copy's first transport code with its payload and hands both back on binding, and `_withDirectFloodCopy` resolves them through `_resolveTransportCodeRegion`, which tries the node's default scope after the known regions, because a flood direct message goes out under that scope and the region screen does not add it to the list (a channel packet heard under it is named the same way now). An outgoing message shows the default scope as soon as the node confirms the flood send (`_stampDirectFloodSend`), the app setting no other scope for direct messages, and a relayed copy replaces that assumption with what the packet carried. An incoming one shows the region of the copy the node delivered, which the RX log carries as well, or *unknown* when no copy was heard, such as a packet too long for the log. `_updateMessage` keeps the stored flag and region when the retry service writes back a copy without them, as it keeps the count.
+The same message shows the region line channel bubbles have, `Region: …` on its own line above the time under `showMessageRegion`, but only when it travelled by flood: `Message.sentByFlood`, set from the `is_flood` byte of `RESP_CODE_SENT` for an outgoing message and from the CONTACT_MSG_RECV path byte for an incoming one, since a message on a known route carries no scope at all. The three region fields mirror `ChannelMessage`'s (`packetRegion`, `packetRegionInfoAvailable`, `packetRegionNotMatched`), persisted by `message_store`, and the bubble words them as the channel bubble does: the name, *no matches* for a transport code no known region produces, *unset* for a plain flood, *unknown* while nothing was read. The exact answer comes from a heard copy of the packet: the helper keeps each copy's first transport code with its payload and hands both back on binding, and `_withDirectFloodCopy` resolves them through `_resolveTransportCodeRegion`, which tries the node's default scope after the known regions, because a flood direct message goes out under that scope and the region screen does not add it to the list (a channel packet heard under it is named the same way now). An outgoing message shows the contact's own region, else the node's default scope, as soon as the node confirms the flood send (`_stampDirectFloodSend`), and a relayed copy replaces that assumption with what the packet carried. An incoming one shows the region of the copy the node delivered, which the RX log carries as well, or *unknown* when no copy was heard, such as a packet too long for the log. `_updateMessage` keeps the stored flag and region when the retry service writes back a copy without them, as it keeps the count.
 
 ### Map raster sources
 
@@ -1330,6 +1334,10 @@ Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, dr
 
 ### Region / flood-scope routing
 Channels can be tagged with a named region; `cmdSetFloodScope` (54) / `cmdSetDefaultFloodScope` (63) hash `#<name>` (SHA-256, first 16 bytes) into a scope. Managed in `region_management_screen.dart`; persisted in `region_store` / `channel_region_store`.
+
+A channel send carries no region in its command: `_runScopedChannelSend` sets the scope override (54 with the key, or 54 without one for an unscoped channel, so nothing another client left behind leaks into the packet), sends, waits for `RESP_CODE_SENT`, since only then has the firmware built the packet, and clears the override; all of it under `_runChannelCommandLocked`, the scope being one field on the node.
+
+A contact can carry a flood choice of its own (`ContactRegionStore`, `getContactRegion` / `setContactRegion`): a region, or `ContactRegionStore.unscoped` (`*`), no scope at all. It is chosen from the line the direct chat's app bar shows under the route line whenever a send would go by flood, forced or automatic with no route; the picker (`widgets/contact_region_dialog.dart`) lists *no region* first, then the known regions, and its clear action drops the contact's choice so the node's default scope applies again. Every attempt the retry service makes goes through `_sendMessageDirect` under the same lock, so a direct send never falls inside a channel's scoped window nor a channel send inside a direct one. A flood attempt to a contact with a choice opens a window of its own (`_sendScopedTextMsg`): 54 with the region's key, or 54 sub-command 1 for unscoped (`buildSetFloodUnscopedFrame`, firmware 12+; a refusal is logged once and the send goes out under the default scope for the rest of the session), then the frame, `RESP_CODE_SENT`, and 54 sub-command 0, which clears the key and the unscoped flag alike. Without a choice the app sends nothing extra and the node stamps its default scope. Room servers get no line, the retry service keeping room posts off flood. The node's own ACKs and path returns for what it receives from that contact still go under its default scope, out of the app's reach. The picker paints a tile's colour through its own `Material` inside a `ClipRect`: `tileColor` is ink on the nearest Material, which a scrolled-away tile otherwise keeps showing under the bar.
 
 ### DirectRepeater last-hop path selection
 `DirectRepeater` (top of `meshcore_connector.dart`) tracks the ≤5 best last-hop repeaters ranked by SNR + recency (stale after 30 min), built from advert path tails and repeater-ACK trip-times (fed to `PathHistoryService`). Feeds auto route-rotation in `preparePathForContactSend()`. Related: **path-hash mode** (`cmdSetPathHashMode`, variable 1–4 byte per-hop hash width).

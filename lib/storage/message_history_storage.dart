@@ -388,6 +388,45 @@ class MessageHistoryStorage {
     return _database!.readLatestHeardPackets(limit: limit);
   }
 
+  Future<Map<String, String>> loadContactSettings(
+    String nodeKey,
+    String name,
+  ) async {
+    _requireInitialized();
+    if (kIsWeb) return const {};
+    return _database!.readContactSettings(nodeKey, name);
+  }
+
+  Future<void> saveContactSetting({
+    required String nodeKey,
+    required String contactKey,
+    required String name,
+    required String value,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.upsertContactSetting(
+      nodeKey: nodeKey,
+      contactKey: contactKey,
+      name: name,
+      value: value,
+    );
+  }
+
+  Future<void> deleteContactSetting({
+    required String nodeKey,
+    required String contactKey,
+    required String name,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.deleteContactSetting(
+      nodeKey: nodeKey,
+      contactKey: contactKey,
+      name: name,
+    );
+  }
+
   Set<String> getKeys(MessageHistoryKind kind) {
     _requireInitialized();
     return Set.unmodifiable(_keys[kind]!);

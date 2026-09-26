@@ -1229,6 +1229,12 @@ Uint8List buildSetFloodScopeFrame(String region) {
   return Uint8List.fromList([cmdSetFloodScope, 0, ...scope]);
 }
 
+/// CMD_SET_FLOOD_SCOPE sub-command 1 (firmware 12+): the next flood sends go
+/// out with no scope at all, the node's default one included, until a
+/// sub-command 0 frame clears the flag again.
+Uint8List buildSetFloodUnscopedFrame() =>
+    Uint8List.fromList([cmdSetFloodScope, 1]);
+
 Uint8List buildGetDefaultFloodScopeFrame() {
   return Uint8List.fromList([cmdGetDefaultFloodScope]);
 }

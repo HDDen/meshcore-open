@@ -6822,4 +6822,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get discoveredContacts_alreadyAdded => 'Node already in contacts';
+
+  @override
+  String get chat_floodRegionNode => 'Node region';
+
+  @override
+  String chat_floodRegionNodeWith(String region) {
+    return 'Node region: $region';
+  }
+
+  @override
+  String get chat_floodRegionNone => 'No region';
 }
