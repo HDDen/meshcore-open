@@ -256,6 +256,9 @@ Sends a message to a channel (broadcast group).
 
 **Max text length**: Depends on sender name prefix (see `maxChannelMessageBytes()`)
 
+**Response**: `RESP_CODE_OK` once the packet is built and queued, the flood
+scope's transport code included, or `RESP_CODE_ERR`; never `RESP_CODE_SENT`
+
 ### CMD_SEND_CHANNEL_DATA (0x3E)
 
 Sends a typed `GROUP_DATA` datagram to a channel.
@@ -278,6 +281,9 @@ Sends a typed `GROUP_DATA` datagram to a channel.
 
 Built by `buildSendChannelDataFrame`. A datagram received from the mesh
 arrives as `RESP_CODE_CHANNEL_DATA_RECV` (0x1B) below.
+
+**Response**: `RESP_CODE_OK` or `RESP_CODE_ERR`, as for a channel text
+message; never `RESP_CODE_SENT`
 
 ### CMD_GET_CONTACTS (0x04)
 
@@ -547,7 +553,12 @@ Received channel message (protocol version 3).
 
 ### RESP_CODE_SENT (0x06)
 
-Confirmation that message was transmitted to LoRa radio.
+The node accepted a send to a contact and queued its packet: a text message
+or CLI command (`CMD_SEND_TXT_MSG`), a login, a status, telemetry, binary or
+anonymous request, a path discovery or a trace. Channel sends are answered
+with `RESP_CODE_OK` instead. The node answers commands in order, one reply
+each, so a SENT that arrives while a request waits may belong to another
+send written just before or after it.
 
 **Format**:
 ```
@@ -556,7 +567,8 @@ Confirmation that message was transmitted to LoRa radio.
 
 **Fields**:
 - `is_flood` (1 byte): 1 if flood mode, 0 if direct path
-- `ack_hash` (4 bytes): Hash for matching future ACK
+- `ack_hash` (4 bytes): Hash for matching future ACK; 0 for a CLI command,
+  which is never acknowledged; for a request, the tag its answer repeats
 - `timeout_ms` (4 bytes LE): Expected ACK timeout in milliseconds
 
 ### PUSH_CODE_SEND_CONFIRMED (0x82)

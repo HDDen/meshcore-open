@@ -7280,7 +7280,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           buildSendChannelTextMsgFrame(channel.index, text),
           channelSendQueueId: reactionQueueId,
           expectsGenericAck: true,
-          successCode: respCodeSent,
         );
       }, region: getChannelRegion(channel.index));
       return;
@@ -7677,7 +7676,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ),
         channelSendQueueId: message.messageId,
         expectsGenericAck: true,
-        successCode: respCodeSent,
       );
     }, region: getChannelRegion(channel.index));
   }
@@ -7990,10 +7988,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   // Sends [data] and resolves once the device replies. [successCode] is the
-  // response code that signals success for this frame: SET_FLOOD_SCOPE replies
-  // with RESP_CODE_OK, whereas a channel text send replies with RESP_CODE_SENT.
-  // Waiting for the text send's RESP_CODE_SENT before the scope is reset
-  // guarantees the firmware has already built the packet with the active scope.
+  // response code that signals success for this frame. SET_FLOOD_SCOPE and
+  // both channel sends reply with RESP_CODE_OK or an ERR, never with
+  // RESP_CODE_SENT, which answers a send to a contact only: a direct message,
+  // a CLI command, a login or a request. The firmware writes the reply after
+  // building the packet, the scope's transport code included, so waiting for
+  // it before the scope is reset is enough. Channel text waited for
+  // RESP_CODE_SENT once, and held the lock and the scope for the whole
+  // timeout on every message and reaction.
   Future<void> _sendFrameAndWaitForCommandAck(
     Uint8List data, {
     String? channelSendQueueId,
@@ -14038,10 +14040,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }
         return;
       }
-
-      if (_markNextPendingChannelMessageSent()) {
-        return;
-      }
+      // Nobody claimed it, and it is left alone. A channel send is answered
+      // with RESP_CODE_OK, never RESP_CODE_SENT, so an unclaimed SENT answers
+      // a login, a request or a CLI command; handed to the oldest pending
+      // channel message, it marked that one sent before it went out and
+      // dropped it from the replay after a reconnect.
     } catch (e) {
       appLogger.warn('Error handling message sent frame: $e');
       // Fallback to old behavior
@@ -14056,25 +14059,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     }
-  }
-
-  bool _markNextPendingChannelMessageSent() {
-    while (_pendingChannelSentQueue.isNotEmpty) {
-      final queuedMessageId = _pendingChannelSentQueue.removeAt(0);
-      _pendingGenericAckQueue.removeWhere(
-        (pending) =>
-            pending.channelSendQueueId == queuedMessageId &&
-            (pending.commandCode == cmdSendChannelTxtMsg ||
-                pending.commandCode == cmdSendChannelData),
-      );
-      if (_isReactionSendQueueId(queuedMessageId)) {
-        return true;
-      }
-      if (_markPendingChannelMessageSentById(queuedMessageId)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   bool _markPendingChannelMessageSentById(String messageId) {
