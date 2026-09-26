@@ -4065,20 +4065,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // counted and their routes, the flood routing and the packet's
         // region. The routes only grow and the other two are only ever set,
         // so the stored ones are kept when the copy is behind; the count
-        // grows within an attempt only. A copy with another attempt number
-        // is a retry being planned: its count starts from the copy's zero,
-        // and the helper stops counting the earlier attempt's copies now,
-        // not when the retry finally leaves the radio.
+        // grows within an attempt only, and so does the region. A copy with
+        // another attempt number is a retry being planned: its count and its
+        // region start from the copy's blank, the region being stamped anew
+        // at the retry's RESP_CODE_SENT from the contact's choice as it is
+        // then, and the helper stops counting the earlier attempt's copies
+        // now, not when the retry finally leaves the radio.
         final stored = messages[index];
         var updated = message;
-        if (message.isOutgoing && message.retryCount != stored.retryCount) {
-          _directFloodRepeats.planAttempt(
-            target: (conversationKey: contactKey, messageId: message.messageId),
-            attempt: message.retryCount,
-          );
-        } else if (message.repeatCount < stored.repeatCount) {
-          updated = updated.copyWith(repeatCount: stored.repeatCount);
-        }
         if (message.floodPathObservations.length <
             stored.floodPathObservations.length) {
           updated = updated.copyWith(
@@ -4089,13 +4083,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (stored.sentByFlood && !message.sentByFlood) {
           updated = updated.copyWith(sentByFlood: true);
         }
-        if (stored.packetRegionInfoAvailable &&
-            !message.packetRegionInfoAvailable) {
-          updated = updated.copyWith(
-            packetRegion: stored.packetRegion,
-            packetRegionInfoAvailable: true,
-            packetRegionNotMatched: stored.packetRegionNotMatched,
+        if (message.isOutgoing && message.retryCount != stored.retryCount) {
+          _directFloodRepeats.planAttempt(
+            target: (conversationKey: contactKey, messageId: message.messageId),
+            attempt: message.retryCount,
           );
+        } else {
+          if (message.repeatCount < stored.repeatCount) {
+            updated = updated.copyWith(repeatCount: stored.repeatCount);
+          }
+          if (stored.packetRegionInfoAvailable &&
+              !message.packetRegionInfoAvailable) {
+            updated = updated.copyWith(
+              packetRegion: stored.packetRegion,
+              packetRegionInfoAvailable: true,
+              packetRegionNotMatched: stored.packetRegionNotMatched,
+            );
+          }
         }
         messages[index] = updated;
         if (_isRoomConversation(contactKey)) {
@@ -10969,6 +10973,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     transportCode: binding.transportCode,
                     payload: binding.payload,
                     copies: binding.copies,
+                    currentAttempt: true,
                   ),
                 );
               }
@@ -10992,6 +10997,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             transportCode: binding.transportCode,
             payload: binding.payload,
             copies: binding.copies,
+            currentAttempt: true,
           );
         }
       }
@@ -13112,17 +13118,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       attempt: decrypted?.attempt,
     );
     if (hit == null) return;
-    // A copy of an earlier attempt still tells its route; only the latest
-    // attempt's copies are counted.
     _updateStoredContactMessage(
       hit.target.conversationKey,
       hit.target.messageId,
       (current) => _withDirectFloodCopy(
         current,
-        relays: hit.currentAttempt ? 1 : 0,
+        relays: 1,
         transportCode: packet.transportCode1,
         payload: packet.payload,
         copies: [copy],
+        currentAttempt: hit.currentAttempt,
       ),
     );
   }
@@ -13280,23 +13285,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  /// [message] with [relays] more retransmissions, the routes of the heard
-  /// [copies] added to its observations, and the region of the packet,
-  /// resolved from its first transport code (null for a plain flood) and the
-  /// [payload] that code was computed over. The copy is the packet itself,
-  /// so its region replaces whatever the message assumed.
+  /// [message] with the routes of the heard [copies] added to its
+  /// observations and, when they belong to its latest attempt, [relays] more
+  /// retransmissions and the region of the packet, resolved from its first
+  /// transport code (null for a plain flood) and the [payload] that code was
+  /// computed over. The copy is the packet itself, so its region replaces
+  /// whatever the message assumed; a copy of an earlier attempt leaves the
+  /// count and the region alone, since both describe the latest packet.
   Message _withDirectFloodCopy(
     Message message, {
     required int relays,
     required int? transportCode,
     required Uint8List payload,
     required List<DirectFloodCopy> copies,
+    required bool currentAttempt,
   }) {
-    final region = _resolveTransportCodeRegion(
-      transportCode,
-      payloadTypeTXTMSG,
-      payload,
-    );
     var observations = message.floodPathObservations;
     for (final copy in copies) {
       observations = ChannelPathSignalHelper.includeReading(
@@ -13306,13 +13309,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         rssi: copy.rssi,
       );
     }
-    return message.copyWith(
-      sentByFlood: true,
-      repeatCount: message.repeatCount + relays,
+    final withRoutes = message.copyWith(
       floodPathObservations: observations,
       floodPathHashWidth:
           message.floodPathHashWidth ??
           (copies.isEmpty ? null : copies.first.pathHashWidth),
+    );
+    if (!currentAttempt) return withRoutes;
+    final region = _resolveTransportCodeRegion(
+      transportCode,
+      payloadTypeTXTMSG,
+      payload,
+    );
+    return withRoutes.copyWith(
+      sentByFlood: true,
+      repeatCount: message.repeatCount + relays,
       packetRegion: region.region,
       packetRegionInfoAvailable: true,
       packetRegionNotMatched: region.notMatched,
