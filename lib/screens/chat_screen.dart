@@ -3727,8 +3727,19 @@ class _MessageBubble extends StatelessWidget {
                                 : EdgeInsets.zero,
                           ),
                         // A send still retrying, or waiting for its
-                        // acknowledgement, can be stopped by hand.
-                        if (onStopSending != null)
+                        // acknowledgement, can be stopped by hand. The row
+                        // sits under the delivery bar, which then joins the
+                        // column instead of lying on the bubble's edge.
+                        if (onStopSending != null) ...[
+                          if (showDeliveryProgress) ...[
+                            const SizedBox(height: 6),
+                            _MessageDeliveryProgressBar(
+                              totalSteps: message.deliveryProgressTotalSteps,
+                              completedSteps:
+                                  message.deliveryProgressCompletedSteps,
+                              color: metaColor,
+                            ),
+                          ],
                           StopSendingBar(
                             onStop: onStopSending!,
                             foregroundColor: textColor,
@@ -3736,12 +3747,12 @@ class _MessageBubble extends StatelessWidget {
                                 ? const EdgeInsets.symmetric(horizontal: 8)
                                 : EdgeInsets.zero,
                           ),
-                        if (showDeliveryProgress)
+                        ] else if (showDeliveryProgress)
                           const SizedBox(height: 6),
                           ],
                         ),
                         ),
-                        if (showDeliveryProgress)
+                        if (showDeliveryProgress && onStopSending == null)
                           Positioned(
                             left: 0,
                             right: 0,
