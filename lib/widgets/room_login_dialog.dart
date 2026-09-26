@@ -129,7 +129,11 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
           'Sending login attempt ${attempt + 1}/$_maxAttempts',
           tag: 'RoomLogin',
         );
-        await _connector.sendFrame(loginFrame);
+        await _connector.sendContactFrame(
+          room,
+          loginFrame,
+          useFlood: selection.useFlood,
+        );
 
         (loginResult, isAdmin) = await _awaitLoginResponse(timeout);
         if (loginResult == true) {

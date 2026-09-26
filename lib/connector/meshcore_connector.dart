@@ -3957,7 +3957,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           timestampSeconds: timestampSeconds,
         );
         final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
-        if (region.isNotEmpty) return _sendScopedTextMsg(frame, region);
+        if (region.isNotEmpty) return _sendScopedContactFrame(frame, region);
         final sentByRadioAt = DateTime.now();
         await sendFrame(frame);
         return sentByRadioAt;
@@ -3973,12 +3973,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// under the node's default scope instead of failing.
   bool _unscopedSendUnsupported = false;
 
-  /// A flood send to a contact with a region of its own: the scope is set
-  /// before the frame and cleared once RESP_CODE_SENT says the packet was
-  /// built under it, as `_runScopedChannelSend` does for a channel. The
-  /// unscoped choice sets the node's no-scope flag instead, which the same
-  /// clearing frame resets.
-  Future<DateTime?> _sendScopedTextMsg(Uint8List frame, String region) async {
+  /// A flood send to a contact with a flood choice of its own, a text
+  /// message, a login or a status request alike: the scope is set before the
+  /// frame and cleared once RESP_CODE_SENT says the packet was built under
+  /// it, as `_runScopedChannelSend` does for a channel. The unscoped choice
+  /// sets the node's no-scope flag instead, which the same clearing frame
+  /// resets.
+  Future<DateTime?> _sendScopedContactFrame(
+    Uint8List frame,
+    String region,
+  ) async {
     if (!ContactRegionStore.isUnscoped(region)) {
       await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
     } else if (!_unscopedSendUnsupported) {
@@ -4020,6 +4024,33 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     return sentByRadioAt;
   }
+
+  /// Sends [frame], a command that makes the node transmit one packet to
+  /// [contact], a login or a status request, the way a direct message goes
+  /// out: under the channel command lock, and inside a scope window when the
+  /// packet goes by flood and the contact has a flood choice of its own.
+  /// [useFlood] is the routing the caller has already prepared on the node.
+  /// A refused command is logged, as `_sendMessageDirect` logs its own; the
+  /// caller keeps waiting for the node's answer as before.
+  Future<void> sendContactFrame(
+    Contact contact,
+    Uint8List frame, {
+    required bool useFlood,
+  }) => _runChannelCommandLocked(() async {
+    try {
+      final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
+      if (region.isEmpty) {
+        await sendFrame(frame);
+      } else {
+        await _sendScopedContactFrame(frame, region);
+      }
+    } catch (e) {
+      appLogger.error(
+        'Failed to send a command to ${contact.name}: $e',
+        tag: 'Connector',
+      );
+    }
+  });
 
   void _updateMessage(Message message) {
     final contactKey = pubKeyToHex(message.senderKey);

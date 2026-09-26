@@ -133,7 +133,11 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
           'Sending login attempt ${attempt + 1}/$_maxAttempts',
           tag: 'RepeaterLogin',
         );
-        await _connector.sendFrame(loginFrame);
+        await _connector.sendContactFrame(
+          repeater,
+          loginFrame,
+          useFlood: selection.useFlood,
+        );
 
         (loginResult, isAdmin) = await _awaitLoginResponse(timeout);
         if (loginResult == true) {

@@ -1744,16 +1744,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   /// The region line under the route line: shown only while a send would
-  /// go by flood, forced or automatic with no route, and never for a room
-  /// server, whose posts the retry service keeps off flood. A contact marked
-  /// unscoped reads "no region"; without a choice of the contact's own the
-  /// line names the node's, with the node's default scope once the node has
-  /// reported it.
+  /// go by flood, forced or automatic with no route. For a room server that
+  /// is its login: posts stay off flood in the retry service. A contact
+  /// marked unscoped reads "no region"; without a choice of the contact's
+  /// own the line names the node's, with the node's default scope once the
+  /// node has reported it.
   String? _floodRegionLabel(MeshCoreConnector connector, Contact contact) {
     final floods = contact.pathOverride == null
         ? contact.pathLength < 0
         : contact.pathOverride! < 0;
-    if (!floods || contact.type == advTypeRoom) return null;
+    if (!floods) return null;
     final region = connector.getContactRegion(contact.publicKeyHex);
     if (ContactRegionStore.isUnscoped(region)) {
       return context.l10n.chat_floodRegionNone;

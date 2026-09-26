@@ -296,7 +296,11 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       final selection = await connector.preparePathForContactSend(repeater);
       _pendingStatusSelection = selection;
       final frame = buildSendStatusRequestFrame(repeater.publicKey);
-      await connector.sendFrame(frame);
+      await connector.sendContactFrame(
+        repeater,
+        frame,
+        useFlood: selection.useFlood,
+      );
 
       final pathLengthValue = selection.useFlood ? -1 : selection.hopCount;
       var messageBytes = frame.length >= _statusResponseWithErrorsBytes
