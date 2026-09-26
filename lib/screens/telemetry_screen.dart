@@ -15,6 +15,7 @@ import '../services/repeater_command_service.dart';
 import '../utils/app_logger.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/cayenne_lpp.dart';
+import '../helpers/request_sent_tags.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -44,7 +45,8 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   static const int _autoRefreshMinQuantity = 1;
   static const int _autoRefreshMaxQuantity = 10;
 
-  int _tagData = 0;
+  static const Duration _sentResponseFallbackTimeout = Duration(seconds: 10);
+  final RequestSentTags _sentTags = RequestSentTags();
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -65,8 +67,6 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   int _autoRefreshCurrentAttempt = 0;
   int _autoRefreshTotalAttempts = 0;
   int _autoRefreshIntervalSeconds = _autoRefreshDefaultIntervalSeconds;
-
-  int _tripTime = 0;
 
   int _resolveContactIndex = -1;
 
@@ -106,23 +106,22 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       final reader = BufferReader(frame);
       try {
         final cmd = reader.readByte();
-        if (cmd == respCodeSent) {
+        if (cmd == respCodeSent && _isLoading) {
           reader.skipBytes(1); // Skip the reserved byte
-          _tagData = reader.readUInt32LE();
-          _tripTime = reader.readUInt32LE();
-          _statusTimeout?.cancel();
-          final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
-          _statusTimeout = Timer(
-            Duration(milliseconds: _tripTime),
-            () => _handleTelemetryTimeout(isAutoRefreshRequest),
+          final tag = reader.readUInt32LE();
+          final estimatedTimeoutMs = reader.readUInt32LE();
+          final timeout = _sentTags.recordSent(
+            tag,
+            Duration(milliseconds: estimatedTimeoutMs),
           );
+          if (timeout != null) _armTelemetryTimeout(timeout);
         }
 
         // Check if it's a binary response
         if (!widget.isSelf && cmd == pushCodeBinaryResponse) {
           if (!mounted) return;
           reader.skipBytes(1); // Skip the reserved byte
-          if (reader.readUInt32LE() != _tagData) return;
+          if (!_sentTags.matches(reader.readUInt32LE())) return;
           _handleTelemetryResponse(reader.readRemainingBytes());
         }
 
@@ -143,7 +142,17 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     });
   }
 
+  void _armTelemetryTimeout(Duration timeout) {
+    _statusTimeout?.cancel();
+    final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
+    _statusTimeout = Timer(
+      timeout,
+      () => _handleTelemetryTimeout(isAutoRefreshRequest),
+    );
+  }
+
   void _handleTelemetryResponse(Uint8List frame) {
+    _sentTags.clear();
     final parsedTelemetry = CayenneLpp.parseByChannel(frame);
     final batteryMv = _extractTelemetryBatteryMillivolts(parsedTelemetry);
     if (batteryMv != null) {
@@ -212,13 +221,15 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       _isLoaded = false;
       _activeTelemetryRequestIsAutoRefresh = isAutoRefresh;
     });
+    _sentTags.clear();
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
       Uint8List frame;
+      PathSelection? selection;
       if (widget.isSelf) {
         frame = buildSendTelemetryReq(null);
       } else {
-        final selection = await connector.preparePathForContactSend(
+        selection = await connector.preparePathForContactSend(
           _resolveContact(connector),
         );
         _pendingStatusSelection = selection;
@@ -238,7 +249,21 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           () => _handleTelemetryTimeout(isAutoRefresh),
         );
       }
-      await connector.sendFrame(frame);
+      if (selection == null) {
+        await connector.sendFrame(frame);
+      } else {
+        _sentTags.start();
+        await connector.sendContactFrame(
+          _resolveContact(connector),
+          frame,
+          useFlood: selection.useFlood,
+        );
+        // Without a SENT the request would wait for good; armed once it is
+        // out, and only when no SENT has set the timeout yet.
+        if (_sentTags.isWaiting && !_sentTags.hasDeadline) {
+          _armTelemetryTimeout(_sentResponseFallbackTimeout);
+        }
+      }
     } catch (e) {
       _statusTimeout?.cancel();
       if (mounted) {

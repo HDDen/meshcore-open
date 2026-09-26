@@ -203,12 +203,14 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
         try {
           final timestampSeconds =
               DateTime.now().millisecondsSinceEpoch ~/ 1000;
-          await _connector.sendFrame(
+          await _connector.sendContactFrame(
+            repeater,
             buildSendCliCommandFrame(
               repeater.publicKey,
               'clock sync',
               timestampSeconds: timestampSeconds,
             ),
+            useFlood: selection.useFlood,
           );
         } catch (e) {
           appLogger.warn(

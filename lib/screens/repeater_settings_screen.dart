@@ -2250,7 +2250,11 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         command,
         timestampSeconds: timestampSeconds,
       );
-      await connector.sendFrame(frame);
+      await connector.sendContactFrame(
+        repeater,
+        frame,
+        useFlood: selection.useFlood,
+      );
 
       if (mounted) {
         showDismissibleSnackBar(

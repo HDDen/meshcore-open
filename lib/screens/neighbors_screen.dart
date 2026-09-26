@@ -15,6 +15,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/neighbor_map_focus.dart';
+import '../helpers/request_sent_tags.dart';
 import 'map_screen.dart';
 
 class NeighborsScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
 
   static const Duration _sentResponseFallbackTimeout = Duration(seconds: 10);
   static const Duration _responseTimeoutPadding = Duration(seconds: 2);
-  Uint8List _tagData = Uint8List(4);
+  final RequestSentTags _sentTags = RequestSentTags();
   int _neighborCount = 0;
   final List<Map<String, dynamic>> _collectedNeighbors = [];
   int _pagesFetched = 0;
@@ -95,25 +96,23 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
 
-      if (frame[0] == respCodeSent) {
-        if (frame.length >= 6) {
-          _tagData = frame.sublist(2, 6);
-        }
-        if (_isLoading && frame.length >= 10) {
-          final estimatedTimeoutMs = readUint32LE(frame, 6);
-          _startStatusTimeout(
-            estimatedTimeoutMs > 0
-                ? Duration(milliseconds: estimatedTimeoutMs) +
-                      _responseTimeoutPadding
-                : _sentResponseFallbackTimeout,
-          );
-        }
+      if (frame[0] == respCodeSent && _isLoading && frame.length >= 10) {
+        final estimatedTimeoutMs = readUint32LE(frame, 6);
+        final timeout = _sentTags.recordSent(
+          readUint32LE(frame, 2),
+          estimatedTimeoutMs > 0
+              ? Duration(milliseconds: estimatedTimeoutMs) +
+                    _responseTimeoutPadding
+              : _sentResponseFallbackTimeout,
+        );
+        if (timeout != null) _startStatusTimeout(timeout);
       }
 
       // Check if it's a binary response
       if (frame.length >= 6 &&
           frame[0] == pushCodeBinaryResponse &&
-          listEquals(frame.sublist(2, 6), _tagData)) {
+          _sentTags.matches(readUint32LE(frame, 2))) {
+        _sentTags.clear();
         _handleNeighborsResponse(connector, frame.sublist(6));
       }
     });
@@ -237,6 +236,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
   }
 
   Future<void> _requestNeighborsPage(int offset) async {
+    _sentTags.clear();
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
       final repeater = _resolveRepeater(connector);
@@ -257,8 +257,17 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
           _reqNeighborsKeyLen,
         ]),
       );
-      _startStatusTimeout(_sentResponseFallbackTimeout);
-      await connector.sendFrame(frame);
+      _sentTags.start();
+      await connector.sendContactFrame(
+        repeater,
+        frame,
+        useFlood: selection.useFlood,
+      );
+      // Armed once the request is out, so a channel send it waited behind
+      // does not use up its time, and only when no SENT has set it yet.
+      if (_sentTags.isWaiting && !_sentTags.hasDeadline) {
+        _startStatusTimeout(_sentResponseFallbackTimeout);
+      }
     } catch (e) {
       _statusTimeout?.cancel();
       if (mounted) {

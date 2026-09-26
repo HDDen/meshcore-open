@@ -86,7 +86,11 @@ class RepeaterCommandService {
         messageBytes: responseBytes,
       );
       final timeoutSeconds = (timeoutMs / 1000).ceil();
-      await _connector.sendFrame(frame);
+      await _connector.sendContactFrame(
+        repeater,
+        frame,
+        useFlood: selection.useFlood,
+      );
       _commandTimeouts[commandId]?.cancel();
       _commandTimeouts[commandId] = Timer(
         Duration(milliseconds: timeoutMs),

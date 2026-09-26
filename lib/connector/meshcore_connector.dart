@@ -4027,12 +4027,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   /// Sends [frame], a command that makes the node transmit one packet to
-  /// [contact], a login or a status request, the way a direct message goes
-  /// out: under the channel command lock, and inside a scope window when the
-  /// packet goes by flood and the contact has a flood choice of its own.
+  /// [contact], a login, a status, telemetry or neighbour request or a CLI
+  /// command, the way a direct message goes out: under the channel command
+  /// lock, and inside a scope window when the packet goes by flood and the
+  /// contact has a flood choice of its own, so that every packet to one
+  /// contact carries one region and none falls into another send's window.
   /// [useFlood] is the routing the caller has already prepared on the node.
-  /// A refused command is logged, as `_sendMessageDirect` logs its own; the
-  /// caller keeps waiting for the node's answer as before.
+  /// A failure is logged and rethrown, as `sendFrame` throws its own: the
+  /// callers report a send that did not happen rather than wait out an
+  /// answer that cannot come.
   Future<void> sendContactFrame(
     Contact contact,
     Uint8List frame, {
@@ -4050,6 +4053,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         'Failed to send a command to ${contact.name}: $e',
         tag: 'Connector',
       );
+      rethrow;
     }
   });
 
