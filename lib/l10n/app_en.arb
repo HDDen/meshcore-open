@@ -34,6 +34,8 @@
   "messageStatus_pending": "Sending",
   "messageStatus_failed": "Failed to send",
   "messageStatus_repeated": "Heard repeated",
+  "urlImage_enable": "Enable URL images",
+  "urlImage_possible": "Possible URL image; enable it in Settings.",
   "common_reboot": "Reboot",
   "common_loading": "Loading...",
   "common_notAvailable": "—",
@@ -158,6 +160,7 @@
   "settings_radioSettings": "Radio Settings",
   "settings_radioSettingsSubtitle": "Frequency, power, spreading factor",
   "settings_radioSettingsUpdated": "Radio settings updated",
+  "settings_radioSettingsNotApplied": "The radio did not apply these settings",
   "settings_regionSettings": "Regions",
   "settings_regionSettingsSubtitle": "Manage stored regions",
   "settings_regionManagement_screenTitle": "Region Management",
@@ -246,6 +249,7 @@
   "settings_infoStatus": "Status",
   "settings_infoBattery": "Battery",
   "settings_infoPublicKey": "Public Key",
+  "settings_publicKeyCopied": "Public key copied",
   "settings_infoContactsCount": "Contacts Count",
   "settings_infoChannelCount": "Channel Count",
   "settings_infoHardware": "Hardware",
@@ -253,7 +257,7 @@
   "settings_presets": "Presets",
   "settings_frequency": "Frequency (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
-  "settings_frequencyInvalid": "Invalid frequency (300-2500 MHz)",
+  "settings_frequencyInvalid": "Invalid frequency (150-2500 MHz)",
   "settings_bandwidth": "Bandwidth",
   "settings_spreadingFactor": "Spreading Factor",
   "settings_codingRate": "Coding Rate",
@@ -262,7 +266,7 @@
   "settings_txPowerInvalid": "Invalid TX power (0-22 dBm)",
   "settings_clientRepeat": "Off-Grid Repeat",
   "settings_clientRepeatSubtitle": "Allow this device to repeat mesh packets for others",
-  "settings_clientRepeatFreqWarning": "Off-grid repeat requires 433, 869, or 918 MHz frequency",
+  "settings_clientRepeatFreqWarning": "Off-grid repeat requires 433, 869.495, or 918 MHz frequency",
   "settings_error": "Error: {message}",
   "@settings_error": {
     "placeholders": {
@@ -659,6 +663,7 @@
     }
   },
   "channels_publicChannelAdded": "Public channel added",
+  "channels_noFreeSlots": "All channel slots are in use",
   "channels_sortBy": "Sort by",
   "channels_sortManual": "Manual",
   "channels_sortAZ": "A-Z",
@@ -1663,6 +1668,25 @@
   "repeater_cliHelpGpsAdvertSet": "Sets location advert configuration.",
   "repeater_commandsListTitle": "Commands List",
   "repeater_commandsListNote": "NOTE: for the various \"set ...\" commands, there is also a \"get ...\" command.",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_frequencyInvalid": "Invalid frequency (150-2500 MHz)",
+  "repeater_txPowerRangeHelper": "-9 to 30 dBm",
+  "repeater_recvErrors": "Receive Errors",
+  "room_postsStored": "Posts",
+  "room_postsPushed": "Posts Pushed",
+  "repeater_cliRegionLoadActive": "Region load mode: send one region name per line, indented with spaces under its parent (add F after the name to allow flood). Lines get no reply. Send an empty line to finish, then \"region save\" to keep the result.",
+  "repeater_cliRegionLoadHint": "Region line, or empty to finish",
+  "repeater_cliRegionLoadEnd": "(end of region load)",
+  "repeater_cliHelpRegionDef": "Defines a chain of regions in one command: each name is added under the previous one; \"name,parent\" adds the name, then continues under the given parent. Replies with the region list.",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Sets the maximum hop count for forwarding flood packets that have no region scope (0-64).",
+  "repeater_cliHelpSetFloodMaxAdvert": "Sets the maximum hop count for forwarding flood adverts (0-64).",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Shows the maximum hop count for unscoped flood packets.",
+  "repeater_cliHelpGetFloodMaxAdvert": "Shows the maximum hop count for flood adverts.",
+  "repeater_cliHelpSetRadioFemRxGain": "Toggles the LoRa front-end module's RX gain (LNA). Boards without one reply \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Toggles the LoRa front-end module's TX gain (PA). Boards without one reply \"Error: unsupported\".",
+  "repeater_cliHelpGetRadioFemRxGain": "Shows whether the LoRa front-end module's RX gain is on.",
+  "repeater_cliHelpGetRadioFemTxGain": "Shows whether the LoRa front-end module's TX gain is on.",
+  "repeater_bridgeNote": "Only available on firmware built with a bridge (RS232 or ESP-NOW).",
   "repeater_general": "General",
   "repeater_settingsCategory": "Settings",
   "repeater_bridge": "Bridge",
@@ -2882,6 +2906,15 @@
       },
       "seconds": {
         "type": "String"
+      }
+    }
+  },
+  "chat_longMessageRetryNote": "Over 158 bytes: sent at most {count} times",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

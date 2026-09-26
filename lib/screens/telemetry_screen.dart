@@ -40,6 +40,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   static const int _autoRefreshMaxQuantity = 10;
 
   int _tagData = 0;
+  bool _awaitingSent = false;
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -101,7 +102,8 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       final reader = BufferReader(frame);
       try {
         final cmd = reader.readByte();
-        if (cmd == respCodeSent) {
+        if (cmd == respCodeSent && _awaitingSent) {
+          _awaitingSent = false;
           reader.skipBytes(1); // Skip the reserved byte
           _tagData = reader.readUInt32LE();
           _tripTime = reader.readUInt32LE();
@@ -183,6 +185,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       );
     }
     _statusTimeout?.cancel();
+    _recordTelemetryResult(true);
     if (!mounted) return;
     setState(() {
       _isLoading = false;
@@ -217,8 +220,10 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       } else {
         frame = buildSendTelemetryReq(widget.contact.publicKey);
       }
+      _awaitingSent = true;
       await connector.sendFrame(frame);
     } catch (e) {
+      _awaitingSent = false;
       if (mounted) {
         setState(() {
           _isLoading = false;

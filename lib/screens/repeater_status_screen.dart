@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/path_selection.dart';
+import '../models/remote_node_stats.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../services/app_settings_service.dart';
@@ -32,10 +32,7 @@ class RepeaterStatusScreen extends StatefulWidget {
 }
 
 class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
-  static const int _statusPayloadOffset = 8;
-  static const int _statusStatsSize = 52;
-  static const int _statusResponseBytes =
-      _statusPayloadOffset + _statusStatsSize;
+  static const int _statusResponseBytes = RemoteNodeStats.payloadOffset + 56;
 
   bool _isLoading = false;
   StreamSubscription<Uint8List>? _frameSubscription;
@@ -50,6 +47,9 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
   int? _noiseFloor;
   int? _txAirSecs;
   int? _rxAirSecs;
+  int? _recvErrors;
+  int? _posted;
+  int? _postPushes;
   int? _packetsSent;
   int? _packetsRecv;
   int? _floodTx;
@@ -124,72 +124,39 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     if (frame.length < 8) return;
     final prefix = frame.sublist(2, 8);
     if (!_matchesRepeaterPrefix(prefix)) return;
-    if (frame.length < _statusResponseBytes) return;
-
-    final data = ByteData.sublistView(
-      frame,
-      _statusPayloadOffset,
-      _statusResponseBytes,
-    );
-    int offset = 0;
-
-    final batteryMv = data.getUint16(offset, Endian.little);
-    offset += 2;
-    final queueLen = data.getUint16(offset, Endian.little);
-    offset += 2;
-    final noiseFloor = data.getInt16(offset, Endian.little);
-    offset += 2;
-    final lastRssi = data.getInt16(offset, Endian.little);
-    offset += 2;
-    final packetsRecv = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final packetsSent = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final txAirSecs = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final uptimeSecs = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final floodTx = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final directTx = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final floodRx = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final directRx = data.getUint32(offset, Endian.little);
-    offset += 4;
-    final errEvents = data.getUint16(offset, Endian.little);
-    offset += 2;
-    final lastSnrRaw = data.getInt16(offset, Endian.little);
-    offset += 2;
-    final directDups = data.getUint16(offset, Endian.little);
-    offset += 2;
-    final floodDups = data.getUint16(offset, Endian.little);
-    offset += 2;
-    final rxAirSecs = data.getUint32(offset, Endian.little);
+    final stats = RemoteNodeStats.tryParse(frame, isRoom: _isRoom);
+    if (stats == null) return;
 
     _statusTimeout?.cancel();
     if (!mounted) return;
+    final rxAirSecs = stats.rxAirSecs;
     setState(() {
       _isLoading = false;
-      _batteryMv = batteryMv;
-      _queueLen = queueLen;
-      _noiseFloor = noiseFloor;
-      _lastRssi = lastRssi;
-      _packetsRecv = packetsRecv;
-      _packetsSent = packetsSent;
-      _txAirSecs = txAirSecs;
+      _batteryMv = stats.batteryMv;
+      _queueLen = stats.queueLen;
+      _noiseFloor = stats.noiseFloor;
+      _lastRssi = stats.lastRssi;
+      _packetsRecv = stats.packetsRecv;
+      _packetsSent = stats.packetsSent;
+      _txAirSecs = stats.txAirSecs;
       _rxAirSecs = rxAirSecs;
-      _uptimeSecs = uptimeSecs;
-      _floodTx = floodTx;
-      _directTx = directTx;
-      _floodRx = floodRx;
-      _directRx = directRx;
-      _debugFlags = errEvents;
-      _lastSnr = lastSnrRaw / 4.0;
-      _dupDirect = directDups;
-      _dupFlood = floodDups;
-      _chanUtil = ((txAirSecs + rxAirSecs) / uptimeSecs) * 100;
+      _recvErrors = stats.recvErrors;
+      _posted = stats.posted;
+      _postPushes = stats.postPushes;
+      _uptimeSecs = stats.uptimeSecs;
+      _floodTx = stats.floodTx;
+      _directTx = stats.directTx;
+      _floodRx = stats.floodRx;
+      _directRx = stats.directRx;
+      _debugFlags = stats.errEvents;
+      _lastSnr = stats.lastSnr;
+      _dupDirect = stats.directDups;
+      _dupFlood = stats.floodDups;
+      _chanUtil = rxAirSecs != null && stats.uptimeSecs > 0
+          ? ((stats.txAirSecs + rxAirSecs) / stats.uptimeSecs) * 100
+          : null;
     });
+    final batteryMv = stats.batteryMv;
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     connector.updateRepeaterBatterySnapshot(
       widget.repeater.publicKeyHex,
@@ -198,6 +165,8 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     );
     _recordStatusResult(true);
   }
+
+  bool get _isRoom => widget.repeater.type == advTypeRoom;
 
   bool _matchesRepeaterPrefix(Uint8List prefix) {
     final target = widget.repeater.publicKey;
@@ -266,6 +235,9 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
       _noiseFloor = null;
       _txAirSecs = null;
       _rxAirSecs = null;
+      _recvErrors = null;
+      _posted = null;
+      _postPushes = null;
       _packetsSent = null;
       _packetsRecv = null;
       _floodTx = null;
@@ -551,12 +523,13 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
               value: _formatDuration(_txAirSecs),
               color: MeshPalette.warn,
             ),
-            _StatItem(
-              icon: Icons.download,
-              label: l10n.repeater_rxAirtime,
-              value: _formatDuration(_rxAirSecs),
-              color: MeshPalette.signal,
-            ),
+            if (!_isRoom)
+              _StatItem(
+                icon: Icons.download,
+                label: l10n.repeater_rxAirtime,
+                value: _formatDuration(_rxAirSecs),
+                color: MeshPalette.signal,
+              ),
           ]),
         ),
 
@@ -583,16 +556,39 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
               value: _duplicateText(),
               color: scheme.onSurfaceVariant,
             ),
-            _StatItem(
-              icon: Icons.percent,
-              label: l10n.repeater_chanUtil,
-              value: _chanUtilText(),
-              color: _chanUtil != null && _chanUtil! > 80
-                  ? MeshPalette.alert
-                  : _chanUtil != null && _chanUtil! > 50
-                  ? MeshPalette.warn
-                  : MeshPalette.signal,
-            ),
+            if (_isRoom) ...[
+              _StatItem(
+                icon: Icons.forum_outlined,
+                label: l10n.room_postsStored,
+                value: _formatValue(_posted),
+                color: MeshPalette.blue,
+              ),
+              _StatItem(
+                icon: Icons.outbox,
+                label: l10n.room_postsPushed,
+                value: _formatValue(_postPushes),
+                color: MeshPalette.signal,
+              ),
+            ] else
+              _StatItem(
+                icon: Icons.error_outline,
+                label: l10n.repeater_recvErrors,
+                value: _formatValue(_recvErrors),
+                color: _recvErrors != null && _recvErrors! > 0
+                    ? MeshPalette.warn
+                    : scheme.onSurfaceVariant,
+              ),
+            if (!_isRoom)
+              _StatItem(
+                icon: Icons.percent,
+                label: l10n.repeater_chanUtil,
+                value: _chanUtilText(),
+                color: _chanUtil != null && _chanUtil! > 80
+                    ? MeshPalette.alert
+                    : _chanUtil != null && _chanUtil! > 50
+                    ? MeshPalette.warn
+                    : MeshPalette.signal,
+              ),
           ]),
         ),
         const SizedBox(height: 8),

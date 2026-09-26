@@ -5,6 +5,7 @@ import 'package:meshcore_open/services/image_chunk_transport.dart';
 import 'package:meshcore_open/widgets/image_send_codec_binding.dart';
 import 'package:meshcore_open/models/radio_settings.dart';
 import 'package:meshcore_open/utils/lora_airtime.dart';
+import 'package:meshcore_open/connector/meshcore_protocol.dart' as protocol;
 
 double _ms(Duration d) => d.inMicroseconds / 1000.0;
 
@@ -22,24 +23,24 @@ RadioSettings _radio({
 
 void main() {
   group('loraTimeOnAir reference values (255-byte packet)', () {
-    test('SF9, CR 4/8, BW 250 kHz -> 975 ms', () {
+    test('SF9, CR 4/8, BW 250 kHz -> 992 ms', () {
       final toa = loraTimeOnAir(
         payloadBytes: 255,
         spreadingFactor: 9,
         bandwidthHz: 250000,
         codingRate: 8,
       );
-      expect(_ms(toa), closeTo(975, 1));
+      expect(_ms(toa), closeTo(991.744, 1));
     });
 
-    test('SF10, CR 4/5, BW 250 kHz -> 1148 ms', () {
+    test('SF10, CR 4/5, BW 250 kHz -> 1181 ms', () {
       final toa = loraTimeOnAir(
         payloadBytes: 255,
         spreadingFactor: 10,
         bandwidthHz: 250000,
         codingRate: 5,
       );
-      expect(_ms(toa), closeTo(1148, 1));
+      expect(_ms(toa), closeTo(1180.672, 1));
     });
   });
 
@@ -52,8 +53,8 @@ void main() {
         codingRate: 5,
       );
       // DE = 1 -> denominator 4*(12-2) = 40 -> 51 * 5 = 255 payload symbols
-      // ToA = (12.25 + 263) * 32.768 ms
-      expect(_ms(toa), closeTo(9019.392, 1));
+      // ToA = (20.25 + 263) * 32.768 ms
+      expect(_ms(toa), closeTo(9281.536, 1));
     });
 
     test('SF12 / BW 500 kHz does NOT engage LDRO (Tsym = 8.192 ms)', () {
@@ -64,8 +65,8 @@ void main() {
         codingRate: 5,
       );
       // DE = 0 -> denominator 48 -> 43 * 5 = 215 payload symbols
-      // ToA = (12.25 + 223) * 8.192 ms
-      expect(_ms(toa), closeTo(1927.9296, 1));
+      // ToA = (20.25 + 223) * 8.192 ms
+      expect(_ms(toa), closeTo(1992.704, 1));
     });
 
     test('SF11 / BW 250 kHz does NOT engage LDRO (Tsym = 8.192 ms)', () {
@@ -77,9 +78,60 @@ void main() {
         codingRate: 5,
       );
       // DE = 0 -> denominator 44 -> 47 * 5 = 235 payload symbols
-      // ToA = (12.25 + 243) * 8.192 ms
-      expect(_ms(withSf11), closeTo(2091.008, 1));
+      // ToA = (20.25 + 243) * 8.192 ms
+      expect(_ms(withSf11), closeTo(2156.544, 1));
     });
+
+    test('calculateLoRaAirtime derives LDRO off for SF11 / BW 250 kHz', () {
+      // cr is in the 1..4 domain here; 16-symbol preamble at SF11.
+      expect(
+        protocol.calculateLoRaAirtime(
+          payloadBytes: 255,
+          spreadingFactor: 11,
+          bandwidthHz: 250000,
+          codingRate: 1,
+        ),
+        2157,
+      );
+    });
+  });
+
+  group('preamble matches firmware (32 symbols <= SF8, 16 above)', () {
+    test('meshCorePreambleSymbols', () {
+      expect(meshCorePreambleSymbols(7), 32);
+      expect(meshCorePreambleSymbols(8), 32);
+      expect(meshCorePreambleSymbols(9), 16);
+      expect(meshCorePreambleSymbols(12), 16);
+    });
+
+    for (final sf in [7, 8, 9, 12]) {
+      test('SF$sf default preamble equals explicit firmware length', () {
+        final preamble = sf <= 8 ? 32 : 16;
+        Duration toa({int? preambleSymbols}) => loraTimeOnAir(
+          payloadBytes: 100,
+          spreadingFactor: sf,
+          bandwidthHz: 125000,
+          codingRate: 5,
+          preambleSymbols: preambleSymbols,
+        );
+        expect(toa(), toa(preambleSymbols: preamble));
+        expect(
+          protocol.calculateLoRaAirtime(
+            payloadBytes: 100,
+            spreadingFactor: sf,
+            bandwidthHz: 125000,
+            codingRate: 1,
+          ),
+          protocol.calculateLoRaAirtime(
+            payloadBytes: 100,
+            spreadingFactor: sf,
+            bandwidthHz: 125000,
+            codingRate: 1,
+            preambleSymbols: preamble,
+          ),
+        );
+      });
+    }
   });
 
   group('airtime monotonicity / sanity', () {
@@ -136,7 +188,7 @@ void main() {
         codingRate: normalizeCodingRate(8),
       );
       expect(a, b);
-      expect(_ms(a), closeTo(975, 1));
+      expect(_ms(a), closeTo(991.744, 1));
     });
   });
 

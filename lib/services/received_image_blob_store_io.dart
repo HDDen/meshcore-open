@@ -66,6 +66,10 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
   String? _dirPath;
   Future<String>? _pending;
 
+  /// Last queued sidecar operation per id. Writes share one `.tmp` path, so
+  /// two in flight for the same id would interleave; each waits for the last.
+  final Map<String, Future<void>> _sidecarOps = <String, Future<void>>{};
+
   FileReceivedImageBlobStore({
     Future<Directory> Function()? baseDirectory,
     this.directoryName = 'received_images',
@@ -190,7 +194,19 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
   /// atomic within a directory on every platform we ship, so a reader either
   /// sees the old record or the new one.
   @override
-  Future<void> writeSidecar(String streamId, String json) async {
+  Future<void> writeSidecar(String streamId, String json) =>
+      _serializeSidecar(streamId, () => _writeSidecarNow(streamId, json));
+
+  Future<void> _serializeSidecar(String streamId, Future<void> Function() op) {
+    final previous = _sidecarOps[streamId] ?? Future<void>.value();
+    final next = previous.then((_) => op());
+    _sidecarOps[streamId] = next;
+    return next.whenComplete(() {
+      if (identical(_sidecarOps[streamId], next)) _sidecarOps.remove(streamId);
+    });
+  }
+
+  Future<void> _writeSidecarNow(String streamId, String json) async {
     try {
       final finalPath = await _pathFor(streamId, _sidecarExt);
       final tmpPath = await _pathFor(streamId, _tmpExt);
@@ -207,10 +223,11 @@ class FileReceivedImageBlobStore implements ReceivedImageBlobStore {
   }
 
   @override
-  Future<void> deleteSidecar(String streamId) async {
-    await _delete(streamId, _sidecarExt);
-    await _delete(streamId, _tmpExt);
-  }
+  Future<void> deleteSidecar(String streamId) =>
+      _serializeSidecar(streamId, () async {
+        await _delete(streamId, _sidecarExt);
+        await _delete(streamId, _tmpExt);
+      });
 
   /// Startup scan. Also the only place orphaned bytes are reaped: anything
   /// whose sidecar is gone is invisible to the store and therefore to the

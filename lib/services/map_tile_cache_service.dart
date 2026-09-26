@@ -358,6 +358,19 @@ class MapTileCacheService extends ChangeNotifier {
 
   String get urlTemplate => _buildUrlTemplate(appSettingsService.settings);
 
+  /// Cache key for a tile URL: the URL without its `api_key`, so rotating the
+  /// Stadia key does not orphan every offline tile.
+  static String tileCacheKey(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.queryParameters.containsKey('api_key')) return url;
+    final params = Map<String, String>.of(uri.queryParameters)
+      ..remove('api_key');
+    final stripped = params.isEmpty
+        ? uri.replace(query: '')
+        : uri.replace(queryParameters: params);
+    return stripped.toString().replaceFirst(RegExp(r'\?$'), '');
+  }
+
   TileBuilder? get tileBuilder => null;
 
   static bool shouldApplyDarkFilterForSettings(
@@ -614,7 +627,7 @@ class MapTileCacheService extends ChangeNotifier {
     final pending = <Future<void>>[];
     Future<void> queueDownload(String url) async {
       final future = cacheManager
-          .downloadFile(url, key: url, authHeaders: authHeaders)
+          .downloadFile(url, key: tileCacheKey(url), authHeaders: authHeaders)
           .then((_) {
             completed += 1;
           })
@@ -828,6 +841,7 @@ class CachedNetworkTileProvider extends TileProvider {
     final url = getTileUrl(coordinates, options);
     return CachedNetworkImageProvider(
       url,
+      cacheKey: MapTileCacheService.tileCacheKey(url),
       cacheManager: cacheManager,
       headers: headers,
     );

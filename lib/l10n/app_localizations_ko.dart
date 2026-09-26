@@ -111,6 +111,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get messageStatus_repeated => '반복 수신됨';
 
   @override
+  String get urlImage_enable => 'URL 이미지 활성화';
+
+  @override
+  String get urlImage_possible => 'URL 이미지일 수 있습니다. 설정에서 활성화하세요.';
+
+  @override
   String get common_reboot => '재부팅';
 
   @override
@@ -354,6 +360,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_radioSettingsUpdated => '라디오 설정이 업데이트되었습니다.';
 
   @override
+  String get settings_radioSettingsNotApplied => '라디오가 이 설정을 적용하지 않았습니다';
+
+  @override
   String get settings_regionSettings => '지역';
 
   @override
@@ -436,11 +445,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_privacyMode => '개인 정보 보호 모드';
 
   @override
-  String get settings_privacyModeSubtitle => '광고에 이름/위치 정보 숨기기';
+  String get settings_privacyModeSubtitle => '어드버트에 이름/위치 정보 숨기기';
 
   @override
   String get settings_privacyModeToggle =>
-      '광고에 자신의 이름과 위치를 숨기기 위해 개인 정보 보호 모드를 켜거나 끄십시오.';
+      '어드버트에 자신의 이름과 위치를 숨기기 위해 개인 정보 보호 모드를 켜거나 끄십시오.';
 
   @override
   String get settings_privacyModeEnabled => '개인 정보 보호 모드 활성화';
@@ -477,18 +486,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_telemetryEnvironmentMode => '텔레메트리 환경 모드';
 
   @override
-  String get settings_advertLocation => '광고 위치';
+  String get settings_advertLocation => '어드버트 위치';
 
   @override
-  String get settings_advertLocationSubtitle => '광고에 위치 정보를 포함하세요.';
+  String get settings_advertLocationSubtitle => '어드버트에 위치 정보를 포함하세요.';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdate =>
-      'GPS 업데이트 시 제로 홉 광고 자동 전송';
+      'GPS 업데이트 시 제로 홉 어드버트 자동 전송';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      'GPS 위치가 변경되면 제로 홉 광고를 전송합니다(광고에 위치 포함 필요).';
+      'GPS 위치가 변경되면 제로 홉 어드버트를 전송합니다(어드버트에 위치 포함 필요).';
 
   @override
   String get settings_multiAck => '다중 ACK';
@@ -506,13 +515,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_deleteAllPathsSubtitle => '연락처의 모든 경로 데이터를 지웁니다.';
 
   @override
-  String get settings_sendAdvertisement => '광고 전송';
+  String get settings_sendAdvertisement => '어드버트 전송';
 
   @override
   String get settings_sendAdvertisementSubtitle => '현재 존재를 방송합니다.';
 
   @override
-  String get settings_advertisementSent => '광고가 전송되었습니다.';
+  String get settings_advertisementSent => '어드버트가 전송되었습니다.';
 
   @override
   String get settings_syncTime => '시간 동기화';
@@ -587,6 +596,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_infoPublicKey => '공개 키';
+
+  @override
+  String get settings_publicKeyCopied => '공개 키가 복사되었습니다';
 
   @override
   String get settings_infoContactsCount => '연락처 수';
@@ -741,7 +753,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_enableNotifications => '알림 활성화';
 
   @override
-  String get appSettings_enableNotificationsSubtitle => '메시지와 광고에 대한 알림을 받으세요.';
+  String get appSettings_enableNotificationsSubtitle =>
+      '메시지와 어드버트에 대한 알림을 받으세요.';
 
   @override
   String get appSettings_notificationPermissionDenied => '알림 권한 거부';
@@ -766,7 +779,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '채널 메시지를 수신할 때 알림 표시';
 
   @override
-  String get appSettings_advertisementNotifications => '광고 알림';
+  String get appSettings_advertisementNotifications => '어드버트 알림';
 
   @override
   String get appSettings_advertisementNotificationsSubtitle =>
@@ -793,7 +806,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationSubtitle =>
-      '최적 경로와 플러드 모드 사이를 전환합니다.';
+      '최적 경로와 플러딩 모드 사이를 전환합니다.';
 
   @override
   String get appSettings_autoRouteRotationEnabled => '자동 경로 순환 기능 활성화';
@@ -978,7 +991,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_noContacts => '아직 연락처는 없습니다.';
 
   @override
-  String get contacts_contactsWillAppear => '장치가 광고를 할 때, 연락처 정보가 표시됩니다.';
+  String get contacts_contactsWillAppear => '장치가 어드버트를 전송하면 연락처 정보가 표시됩니다.';
 
   @override
   String get contacts_unread => '읽지 않음';
@@ -1299,6 +1312,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_publicChannelAdded => '공개 채널 추가';
 
   @override
+  String get channels_noFreeSlots => '모든 채널 슬롯이 사용 중입니다';
+
+  @override
   String get channels_sortBy => '정렬 기준 선택';
 
   @override
@@ -1440,7 +1456,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_me => '나';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => '이모지 반응';
 
   @override
   String get emojiCategorySmileys => '이모티콘';
@@ -1585,14 +1601,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get routing_modeAuto => '자동';
 
   @override
-  String get routing_modeFlood => '플러드';
+  String get routing_modeFlood => '플러딩';
 
   @override
   String get routing_modeManual => '수동';
 
   @override
   String get routing_modeAutoHint =>
-      '가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없으면 플러드로 전환합니다.';
+      '가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없으면 플러딩으로 전환합니다.';
 
   @override
   String get routing_modeFloodHint =>
@@ -1641,7 +1657,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get routing_qualityWorked => '작동함';
 
   @override
-  String get routing_qualityFlood => '플러드로 수신됨';
+  String get routing_qualityFlood => '플러딩으로 수신됨';
 
   @override
   String get routing_qualityUntested => '미검증';
@@ -1660,7 +1676,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => '플러드 전송';
+  String get routing_floodDelivery => '플러딩 전송';
 
   @override
   String get pathEditor_title => '경로 만들기';
@@ -1728,7 +1744,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_compressOutgoingMessages => '전송되는 메시지 압축';
 
   @override
-  String get chat_floodForced => '플러드 (강제)';
+  String get chat_floodForced => '플러딩 (강제)';
 
   @override
   String get chat_directForced => '직접 (강제)';
@@ -1739,7 +1755,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get chat_floodAuto => '플러드 (자동)';
+  String get chat_floodAuto => '플러딩 (자동)';
 
   @override
   String get chat_direct => '직접';
@@ -2200,7 +2216,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get login_autoUseSavedPath => '자동 (저장된 경로 사용)';
 
   @override
-  String get login_forceFloodMode => '강수 모드 활성화';
+  String get login_forceFloodMode => '플러딩 모드 강제 활성화';
 
   @override
   String get login_managePaths => '경로 관리';
@@ -2369,17 +2385,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
-    return '총: $total, 홍수: $flood, 직접: $direct';
+    return '총: $total, 플러딩: $flood, 직접: $direct';
   }
 
   @override
   String repeater_packetRxTotal(int total, String flood, String direct) {
-    return '총: $total, 홍수: $flood, 직접: $direct';
+    return '총: $total, 플러딩: $flood, 직접: $direct';
   }
 
   @override
   String repeater_duplicatesFloodDirect(String flood, String direct) {
-    return '홍수: $flood, 직접: $direct';
+    return '플러딩: $flood, 직접: $direct';
   }
 
   @override
@@ -2469,13 +2485,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_privacyMode => '개인 정보 보호 모드';
 
   @override
-  String get repeater_privacyModeSubtitle => '광고에 이름/위치 정보 숨기기';
+  String get repeater_privacyModeSubtitle => '어드버트에 이름/위치 정보 숨기기';
 
   @override
-  String get repeater_advertisementSettings => '광고 설정';
+  String get repeater_advertisementSettings => '어드버트 설정';
 
   @override
-  String get repeater_localAdvertInterval => '지역 광고 시간 간격';
+  String get repeater_localAdvertInterval => '지역 어드버트 시간 간격';
 
   @override
   String repeater_localAdvertIntervalMinutes(int minutes) {
@@ -2483,7 +2499,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodAdvertInterval => '홍수 광고 간격';
+  String get repeater_floodAdvertInterval => '플러딩 어드버트 간격';
 
   @override
   String repeater_floodAdvertIntervalHours(int hours) {
@@ -2491,7 +2507,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get repeater_encryptedAdvertInterval => '암호화된 광고 간격';
+  String get repeater_encryptedAdvertInterval => '암호화된 어드버트 간격';
 
   @override
   String get repeater_dangerZone => '위험 구역';
@@ -2622,7 +2638,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      '이 리피터의 ID를 플러드 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수입니다. 0=1바이트(256개 ID, 최대 64홉), 1=2바이트(65,000개 ID, 최대 32홉), 2=3바이트(1,600만 개 ID, 최대 21홉). v1.14 이전 펌웨어는 항상 1바이트 경로를 사용했으며, v1.14 이상은 2바이트 또는 3바이트 경로로 설정할 수 있습니다.';
+      '이 리피터의 ID를 플러딩 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수입니다. 0=1바이트(256개 ID, 최대 64홉), 1=2바이트(65,000개 ID, 최대 32홉), 2=3바이트(1,600만 개 ID, 최대 21홉). v1.14 이전 펌웨어는 항상 1바이트 경로를 사용했으며, v1.14 이상은 2바이트 또는 3바이트 경로로 설정할 수 있습니다.';
 
   @override
   String get repeater_keySettings => '신원 키 변경';
@@ -2658,11 +2674,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get repeater_txDelay => '플러드 TX 지연';
+  String get repeater_txDelay => '플러딩 TX 지연';
 
   @override
   String get repeater_txDelayHelper =>
-      '홍수 시 교통량에 맞춰 재전송 간격을 설정합니다. 이는 패킷의 전송 시간을 곱한 값 (0-2, 기본값 0.5)으로 설정합니다. 값이 클수록 충돌이 줄어들지만 전송 속도가 느려집니다.';
+      '플러딩 시 교통량에 맞춰 재전송 간격을 설정합니다. 이는 패킷의 전송 시간을 곱한 값 (0-2, 기본값 0.5)으로 설정합니다. 값이 클수록 충돌이 줄어들지만 전송 속도가 느려집니다.';
 
   @override
   String get repeater_directTxDelay => '직접적인 TX 지연';
@@ -2689,16 +2705,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_actionsTitle => '행동';
 
   @override
-  String get repeater_sendAdvert => '홍수 관련 광고 전송';
+  String get repeater_sendAdvert => '플러딩 관련 어드버트 전송';
 
   @override
-  String get repeater_sendAdvertSubtitle => '네트워크를 통해 홍수 광고를 방송';
+  String get repeater_sendAdvertSubtitle => '네트워크를 통해 플러딩 어드버트를 방송';
 
   @override
-  String get repeater_sendAdvertZeroHop => '제로 홉 광고 전송';
+  String get repeater_sendAdvertZeroHop => '제로 홉 어드버트 전송';
 
   @override
-  String get repeater_sendAdvertZeroHopSubtitle => '단일 중계 (중계 없이) 광고를 송출';
+  String get repeater_sendAdvertZeroHopSubtitle => '1홉 어드버트를 전송합니다 (중계 없음).';
 
   @override
   String get repeater_clockSync => '현재 시계 동기화';
@@ -2812,7 +2828,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_cliQuickVersion => '버전';
 
   @override
-  String get repeater_cliQuickAdvertise => '광고';
+  String get repeater_cliQuickAdvertise => '어드버트';
 
   @override
   String get repeater_cliQuickClock => '시계';
@@ -2824,7 +2840,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_cliQuickDiscovery => '이웃 발견하기';
 
   @override
-  String get repeater_cliHelpAdvert => '광고 패킷을 발송';
+  String get repeater_cliHelpAdvert => '어드버트 패킷을 발송';
 
   @override
   String get repeater_cliHelpReboot =>
@@ -2858,7 +2874,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMax =>
-      '들어오는 플러드 패킷의 최대 홉 수를 설정합니다 (최대 홉 수보다 크거나 같으면 패킷은 전달되지 않습니다).';
+      '들어오는 플러딩 패킷의 최대 홉 수를 설정합니다 (최대 홉 수보다 크거나 같으면 패킷은 전달되지 않습니다).';
 
   @override
   String get repeater_cliHelpSetIntThresh =>
@@ -2874,24 +2890,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetAdvertInterval =>
-      '로컬 (제로 홉) 광고 패킷을 전송하는 간격 (분 단위)을 설정합니다. 0으로 설정하면 비활성화됩니다.';
+      '로컬 (제로 홉) 어드버트 패킷을 전송하는 간격 (분 단위)을 설정합니다. 0으로 설정하면 비활성화됩니다.';
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval =>
-      '시간 단위로 광고 패킷을 전송하는 간격을 설정합니다. 0으로 설정하면 비활성화됩니다.';
+      '시간 단위로 어드버트 패킷을 전송하는 간격을 설정합니다. 0으로 설정하면 비활성화됩니다.';
 
   @override
   String get repeater_cliHelpSetGuestPassword =>
       '게스트 비밀번호를 설정하거나 업데이트합니다. (반복 사용자, 게스트 로그인 시 \"통계 가져오기\" 요청을 보낼 수 있음)';
 
   @override
-  String get repeater_cliHelpSetName => '광고 이름을 설정합니다.';
+  String get repeater_cliHelpSetName => '어드버트 이름을 설정합니다.';
 
   @override
-  String get repeater_cliHelpSetLat => '광고 지도의 위도를 설정합니다. (십진법 단위)';
+  String get repeater_cliHelpSetLat => '어드버트 지도의 위도를 설정합니다. (십진법 단위)';
 
   @override
-  String get repeater_cliHelpSetLon => '광고 지도의 경도를 설정합니다. (십진도)';
+  String get repeater_cliHelpSetLon => '어드버트 지도의 경도를 설정합니다. (십진도)';
 
   @override
   String get repeater_cliHelpSetRadio =>
@@ -2952,7 +2968,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpNeighbors =>
-      '제로 홉 광고를 통해 수신된 다른 리피터 노드 목록을 보여줍니다. 각 줄은 ID-프리픽스-16진수:타임스탬프:SNR-횟수-4 형식입니다.';
+      '제로 홉 어드버트를 통해 수신된 다른 리피터 노드 목록을 보여줍니다. 각 줄은 ID-프리픽스-16진수:타임스탬프:SNR-횟수-4 형식입니다.';
 
   @override
   String get repeater_cliHelpNeighborRemove =>
@@ -2960,7 +2976,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegion =>
-      '(단일 시리즈) 정의된 모든 지역과 현재 홍수 허가 정보를 나열합니다.';
+      '(단일 시리즈) 정의된 모든 지역과 현재 플러딩 허가 정보를 나열합니다.';
 
   @override
   String get repeater_cliHelpRegionLoad =>
@@ -3010,10 +3026,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGpsAdvert =>
-      '노드의 위치 광고 설정:\n- none: 광고에 위치 정보를 포함하지 않음\n- share: GPS 위치 정보를 공유 (SensorManager에서 가져옴)\n- prefs: 설정에 저장된 위치를 광고';
+      '노드의 위치 어드버트 설정:\n- none: 어드버트에 위치 정보를 포함하지 않음\n- share: GPS 위치 정보를 공유 (SensorManager에서 가져옴)\n- prefs: 설정에 저장된 위치를 어드버트에 포함';
 
   @override
-  String get repeater_cliHelpGpsAdvertSet => '위치 기반 광고 설정 구성';
+  String get repeater_cliHelpGpsAdvertSet => '위치 기반 어드버트 설정 구성';
 
   @override
   String get repeater_commandsListTitle => '명령 목록';
@@ -3021,6 +3037,73 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get repeater_commandsListNote =>
       '참고: 다양한 \"set...\" 명령과 함께 \"get...\" 명령도 존재합니다.';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => '유효하지 않은 주파수 (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9~30 dBm';
+
+  @override
+  String get repeater_recvErrors => '수신 오류';
+
+  @override
+  String get room_postsStored => '게시물';
+
+  @override
+  String get room_postsPushed => '푸시된 게시물';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      '지역 로드 모드: 한 줄에 지역 이름 하나씩 보내고, 상위 지역 아래에 공백으로 들여씁니다 (플러딩을 허용하려면 이름 뒤에 F를 추가). 각 줄에는 응답이 없습니다. 빈 줄을 보내 완료한 뒤 \"region save\"를 보내면 결과가 저장됩니다.';
+
+  @override
+  String get repeater_cliRegionLoadHint => '지역 줄, 또는 완료하려면 비워 두기';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(지역 로드 종료)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      '하나의 명령으로 지역 체인을 정의합니다. 각 이름은 이전 이름 아래에 추가됩니다. \"name,parent\"를 사용하면 해당 이름을 추가한 뒤 지정한 상위 지역 아래로 이어집니다. 지역 목록으로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      '지역 범위가 없는 플러딩 패킷을 전달할 때의 최대 홉 수를 설정합니다(0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      '플러딩 어드버트를 전달할 때의 최대 홉 수를 설정합니다(0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      '지역 범위가 없는 플러딩 패킷의 최대 홉 수를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert => '플러딩 어드버트의 최대 홉 수를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'LoRa 프런트엔드 모듈의 RX 게인(LNA)을 전환합니다. 이 기능이 없는 보드는 \"Error: unsupported\"로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'LoRa 프런트엔드 모듈의 TX 게인(PA)을 전환합니다. 이 기능이 없는 보드는 \"Error: unsupported\"로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'LoRa 프런트엔드 모듈의 RX 게인이 켜져 있는지 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'LoRa 프런트엔드 모듈의 TX 게인이 켜져 있는지 표시합니다.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'RS232 또는 ESP-NOW 브리지 기능이 포함된 펌웨어에서만 사용할 수 있습니다.';
 
   @override
   String get repeater_general => '일반';
@@ -3066,7 +3149,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_cliHelpClkReboot => '시계를 알려진 시점으로 재설정하고 장치를 재부팅합니다.';
 
   @override
-  String get repeater_cliHelpAdvertZeroHop => '직접적인 연결 없이 이웃에게만 광고를 전송합니다.';
+  String get repeater_cliHelpAdvertZeroHop => '직접적인 연결 없이 이웃에게만 어드버트를 전송합니다.';
 
   @override
   String get repeater_cliHelpStartOta => '지원되는 보드에서 무선으로 펌웨어 업데이트를 시작합니다.';
@@ -3107,7 +3190,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetOwnerInfo =>
-      '광고에 포함된 소유자 연락처 정보를 지정합니다. 줄 바꿈을 위해 \'|\' 문자를 사용합니다.';
+      '어드버트에 포함된 소유자 연락처 정보를 지정합니다. 줄 바꿈을 위해 \'|\' 문자를 사용합니다.';
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
@@ -3175,11 +3258,11 @@ class AppLocalizationsKo extends AppLocalizations {
       '게스트의 읽기 전용 액세스가 허용되는지 여부를 표시합니다.';
 
   @override
-  String get repeater_cliHelpGetAdvertInterval => '지역 광고 시간 간격을 분 단위로 표시합니다.';
+  String get repeater_cliHelpGetAdvertInterval => '지역 어드버트 시간 간격을 분 단위로 표시합니다.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      '홍수 광고 시간 간격을 시간 단위로 표시합니다.';
+      '플러딩 어드버트 시간 간격을 시간 단위로 표시합니다.';
 
   @override
   String get repeater_cliHelpGetGuestPassword => '구성된 게스트 비밀번호를 표시합니다.';
@@ -3194,13 +3277,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_cliHelpGetRxDelay => 'Rxdelay 기본 값을 표시합니다.';
 
   @override
-  String get repeater_cliHelpGetTxDelay => '홍수 모드에서의 전송 지연 계수를 보여줍니다.';
+  String get repeater_cliHelpGetTxDelay => '플러딩 모드에서의 전송 지연 계수를 보여줍니다.';
 
   @override
   String get repeater_cliHelpGetDirectTxDelay => '직렬 모드에서의 딜레이 계수를 보여줍니다.';
 
   @override
-  String get repeater_cliHelpGetFloodMax => '최대 홍수 발생 횟수를 보여줍니다.';
+  String get repeater_cliHelpGetFloodMax => '최대 플러딩 홉 수를 보여줍니다.';
 
   @override
   String get repeater_cliHelpGetOwnerInfo => '소유주 연락처 정보를 표시합니다.';
@@ -3276,10 +3359,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '기본 지역 범위를 설정합니다. \"<null>\"을 사용하여 초기화합니다.';
 
   @override
-  String get repeater_cliHelpRegionListAllowed => '홍수 피해 차량 통행이 가능한 지역 목록';
+  String get repeater_cliHelpRegionListAllowed => '플러딩 트래픽이 허용되는 지역 목록';
 
   @override
-  String get repeater_cliHelpRegionListDenied => '홍수 발생 시 통행 금지 지역 목록';
+  String get repeater_cliHelpRegionListDenied => '플러딩 트래픽이 금지되는 지역 목록';
 
   @override
   String get repeater_cliHelpStatsPackets => '(전송 속도만 표시) 패킷 수준의 통계 정보를 보여줍니다.';
@@ -3561,7 +3644,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelPath_unknownPath => '알 수 없음';
 
   @override
-  String get channelPath_floodPath => '홍수';
+  String get channelPath_floodPath => '플러딩';
 
   @override
   String get channelPath_directPath => '직접';
@@ -4032,13 +4115,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_contactImportFailed => '연락처를 가져오지 못했습니다.';
 
   @override
-  String get contacts_zeroHopAdvert => '제로 홉 광고';
+  String get contacts_zeroHopAdvert => '제로 홉 어드버트';
 
   @override
-  String get contacts_floodAdvert => '홍수 광고';
+  String get contacts_floodAdvert => '플러딩 어드버트';
 
   @override
-  String get contacts_copyAdvertToClipboard => '광고 텍스트를 클립보드에 복사';
+  String get contacts_copyAdvertToClipboard => '어드버트 텍스트를 클립보드에 복사';
 
   @override
   String get contacts_addContactFromClipboard => '복사본에서 연락처 추가';
@@ -4047,19 +4130,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_ShareContact => '연락처를 복사';
 
   @override
-  String get contacts_ShareContactZeroHop => '광고를 통해 연락처 공유';
+  String get contacts_ShareContactZeroHop => '어드버트를 통해 연락처 공유';
 
   @override
-  String get contacts_zeroHopContactAdvertSent => '광고를 통해 연락처를 받았습니다.';
+  String get contacts_zeroHopContactAdvertSent => '어드버트를 통해 연락처를 받았습니다.';
 
   @override
   String get contacts_zeroHopContactAdvertFailed => '연락처 전송에 실패했습니다.';
 
   @override
-  String get contacts_contactAdvertCopied => '광고 내용이 복사되었습니다.';
+  String get contacts_contactAdvertCopied => '어드버트 내용이 복사되었습니다.';
 
   @override
-  String get contacts_contactAdvertCopyFailed => '광고를 클립보드에 복사하는 데 실패했습니다.';
+  String get contacts_contactAdvertCopyFailed => '어드버트를 클립보드에 복사하는 데 실패했습니다.';
 
   @override
   String get notification_activityTitle => '메쉬코어 활동';
@@ -4688,7 +4771,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      '홍수 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.';
+      '플러딩 라우팅: 범위 내의 모든 리피터가 각 패킷을 재전송하므로, 채널이 이보다 더 오래 점유 상태를 유지합니다.';
 
   @override
   String get imageSend_parityTitle => '회복 패킷';
@@ -4811,5 +4894,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes분 $seconds초';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return '158바이트 초과 시: 최대 $count회 전송됩니다';
   }
 }

@@ -55,11 +55,12 @@ const int kMeshCoreMaxTransUnit = 255;
 ///    (it would compute CR 4/9..4/12), and passing a 1..4 value to
 ///    [loraTimeOnAir] trips its assert in debug and understates airtime in
 ///    release. Always normalise at the boundary.
-///  * **Low-data-rate optimise.** `calculateLoRaAirtime()` takes `DE` as a
-///    parameter and its one caller passes the `sf >= 11` shortcut, which is
-///    wrong for SF11/BW250 and SF12/BW500 (Tsym is 8.192 ms there, below the
-///    16 ms threshold). This file derives `DE` from `Tsym > 16 ms`, per the
-///    datasheet. See the LDRO tests in `test/lora_airtime_test.dart`.
+///  * **Low-data-rate optimise.** `DE` is derived from `Tsym > 16 ms` (the
+///    RadioLib rule), not the `sf >= 11` shortcut, which is wrong for
+///    SF11/BW250 and SF12/BW500 (Tsym is 8.192 ms there). See the LDRO tests
+///    in `test/lora_airtime_test.dart`.
+///  * **Preamble.** Defaults to the firmware's per-SF length, see
+///    [meshCorePreambleSymbols].
 ///  * **Precision and guards.** `calculateLoRaAirtime()` returns whole
 ///    milliseconds and will throw `Unsupported operation: Infinity or NaN
 ///    toInt` on `sf == 0` / `bw == 0`, which a half-initialised device does
@@ -88,7 +89,7 @@ Duration loraTimeOnAir({
   required int spreadingFactor,
   required int bandwidthHz,
   required int codingRate,
-  int preambleSymbols = 8,
+  int? preambleSymbols,
   bool crc = true,
   bool explicitHeader = true,
 }) {
@@ -114,11 +115,17 @@ Duration loraTimeOnAir({
     0,
   );
 
-  final preambleMs = (preambleSymbols + 4.25) * tsymMs;
+  final preamble = preambleSymbols ?? meshCorePreambleSymbols(sf);
+  final preambleMs = (preamble + 4.25) * tsymMs;
   final payloadMs = (8 + payloadSymbols) * tsymMs;
 
   return Duration(microseconds: ((preambleMs + payloadMs) * 1000).round());
 }
+
+/// Preamble length MeshCore firmware configures for [spreadingFactor]
+/// (`RadioLibWrapper::preambleLengthForSF`): 32 symbols up to SF8, 16 above.
+int meshCorePreambleSymbols(int spreadingFactor) =>
+    spreadingFactor <= 8 ? 32 : 16;
 
 /// Normalises a raw firmware coding rate into the 5..8 domain used by
 /// [loraTimeOnAir] and [LoRaCodingRate.value]. Some firmwares report 1..4.

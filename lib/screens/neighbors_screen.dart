@@ -31,12 +31,16 @@ class NeighborsScreen extends StatefulWidget {
 
 class _NeighborsScreenState extends State<NeighborsScreen> {
   static const int _reqNeighborsKeyLen = 4;
+  // Firmware packs results into a 130-byte buffer (simple_repeater/MyMesh.cpp).
+  static const int _reqNeighborsPageSize = 130 ~/ (_reqNeighborsKeyLen + 5);
   static const int _statusPayloadOffset = 8;
   static const int _statusStatsSize = 52;
   static const int _statusResponseBytes =
       _statusPayloadOffset + _statusStatsSize;
   Uint8List _tagData = Uint8List(4);
+  bool _awaitingSent = false;
   int _neighborCount = 0;
+  int _pageOffset = 0;
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -82,12 +86,14 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
 
-      if (frame[0] == respCodeSent) {
+      if (frame[0] == respCodeSent && _awaitingSent && frame.length >= 6) {
+        _awaitingSent = false;
         _tagData = frame.sublist(2, 6);
       }
 
       // Check if it's a binary response
       if (frame[0] == pushCodeBinaryResponse &&
+          frame.length >= 6 &&
           listEquals(frame.sublist(2, 6), _tagData)) {
         _handleNeighborsResponse(connector, frame.sublist(6));
       }
@@ -148,7 +154,11 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     final contacts = connector.allContactsUnfiltered;
     try {
       final neighborCount = buffer.readUInt16LE();
-      final parsedNeighbors = parseNeighborsData(buffer, buffer.readUInt16LE());
+      final page = parseNeighborsData(buffer, buffer.readUInt16LE());
+      final parsedNeighbors = [
+        if (_pageOffset > 0) ...?_parsedNeighbors,
+        ...page,
+      ];
       contacts.where((c) => c.type == advTypeRepeater).forEach((repeater) {
         for (var neighborData in parsedNeighbors) {
           final publicKey = neighborData['publicKey'];
@@ -166,13 +176,19 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         _neighborCount = neighborCount;
       });
 
+      _tagData = Uint8List(4);
+      _statusTimeout?.cancel();
+      _recordStatusResult(true);
+      if (!mounted) return;
+      if (page.isNotEmpty && parsedNeighbors.length < neighborCount) {
+        _loadNeighbors(offset: parsedNeighbors.length);
+        return;
+      }
       showDismissibleSnackBar(
         context,
         content: Text(context.l10n.neighbors_receivedData),
         backgroundColor: Theme.of(context).colorScheme.tertiary,
       );
-      _statusTimeout?.cancel();
-      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _isLoaded = true;
@@ -183,9 +199,10 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
     }
   }
 
-  Future<void> _loadNeighbors() async {
+  Future<void> _loadNeighbors({int offset = 0}) async {
     if (_commandService == null) return;
 
+    _pageOffset = offset;
     setState(() {
       _isLoading = true;
       _isLoaded = false;
@@ -202,13 +219,14 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         payload: Uint8List.fromList([
           reqTypeGetNeighbors,
           0x00,
-          0x0F,
-          0x00,
-          0x00,
+          _reqNeighborsPageSize,
+          offset & 0xFF,
+          (offset >> 8) & 0xFF,
           0x00,
           _reqNeighborsKeyLen,
         ]),
       );
+      _awaitingSent = true;
       await connector.sendFrame(frame);
 
       final pathLengthValue = selection.useFlood ? -1 : selection.hopCount;
@@ -234,6 +252,7 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
         _recordStatusResult(false);
       });
     } catch (e) {
+      _awaitingSent = false;
       if (mounted) {
         setState(() {
           _isLoading = false;

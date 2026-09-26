@@ -68,13 +68,24 @@ class ChannelMessageStore {
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
+    final List<dynamic> jsonList;
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList.map((json) => _messageFromJson(json)).toList();
+      jsonList = jsonDecode(jsonString) as List<dynamic>;
     } catch (e) {
-      // If parsing fails, return empty list
+      appLogger.warn(
+        'Stored messages for channel $channelIndex are unreadable: $e',
+      );
       return [];
     }
+    final messages = <ChannelMessage>[];
+    for (final json in jsonList) {
+      try {
+        messages.add(_messageFromJson(json as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed stored channel message: $e');
+      }
+    }
+    return messages;
   }
 
   /// Clear messages for a specific channel
@@ -163,7 +174,7 @@ class ChannelMessageStore {
       senderKey: json['senderKey'] != null
           ? Uint8List.fromList(base64Decode(json['senderKey']))
           : null,
-      senderName: json['senderName'] as String,
+      senderName: json['senderName'] as String? ?? 'Unknown',
       text: decodedText,
       originalText: json['originalText'] as String?,
       translatedText: json['translatedText'] as String?,
@@ -173,8 +184,12 @@ class ChannelMessageStore {
       ),
       translationModelId: json['translationModelId'] as String?,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
-      isOutgoing: json['isOutgoing'] as bool,
-      status: ChannelMessageStatus.values[json['status'] as int],
+      isOutgoing: json['isOutgoing'] as bool? ?? false,
+      status:
+          ChannelMessageStatus.values.elementAtOrNull(
+            json['status'] as int? ?? -1,
+          ) ??
+          ChannelMessageStatus.failed,
       repeatCount: (json['repeatCount'] as int?) ?? 0,
       pathLength: decodedPathLength,
       pathHashWidth: decodedPathHashWidth,

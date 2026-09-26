@@ -9,8 +9,7 @@ class PathHistoryService extends ChangeNotifier {
   final Map<String, ContactPathHistory> _cache = {};
   final Map<String, int> _autoRotationIndex = {};
   final Map<String, _FloodStats> _floodStats = {};
-  final Set<String> _pendingLoads = {};
-  final Map<String, List<_DeferredPathRecord>> _deferredRecords = {};
+  final Map<String, Future<void>> _pendingLoads = {};
 
   // LRU cache eviction tracking
   static const int _maxCachedContacts = 50;
@@ -22,6 +21,16 @@ class PathHistoryService extends ChangeNotifier {
   int get version => _version;
 
   PathHistoryService(this._storage);
+
+  void setDevicePublicKey(String publicKeyHex) {
+    _storage.setPublicKeyHex = publicKeyHex;
+    _cache.clear();
+    _cacheAccessOrder.clear();
+    _autoRotationIndex.clear();
+    _floodStats.clear();
+    _version++;
+    notifyListeners();
+  }
 
   Future<void> initialize() async {
     // Load cached path histories on startup if needed
@@ -40,7 +49,7 @@ class PathHistoryService extends ChangeNotifier {
       pathBytes: contact.path,
       successCount: 0,
       failureCount: 0,
-      routeWeight: initialWeight,
+      initialWeight: initialWeight,
       timestamp: null,
     );
   }
@@ -74,6 +83,20 @@ class PathHistoryService extends ChangeNotifier {
     double maxWeight = 5.0,
   }) {
     if (pathBytes.isEmpty || hopCount < 0) return;
+    if (!_cache.containsKey(contactPubKeyHex)) {
+      _ensureLoaded(contactPubKeyHex).then((_) {
+        if (!_cache.containsKey(contactPubKeyHex)) return;
+        recordFloodPathAttribution(
+          contactPubKeyHex: contactPubKeyHex,
+          pathBytes: pathBytes,
+          hopCount: hopCount,
+          tripTimeMs: tripTimeMs,
+          successIncrement: successIncrement,
+          maxWeight: maxWeight,
+        );
+      });
+      return;
+    }
 
     final existing = _findPathRecord(contactPubKeyHex, pathBytes);
     final successCount = (existing?.successCount ?? 0) + 1;
@@ -121,6 +144,22 @@ class PathHistoryService extends ChangeNotifier {
         stats.failureCount += 1;
       }
       stats.lastUsed = DateTime.now();
+      return;
+    }
+
+    if (!_cache.containsKey(contactPubKeyHex)) {
+      _ensureLoaded(contactPubKeyHex).then((_) {
+        if (!_cache.containsKey(contactPubKeyHex)) return;
+        recordPathResult(
+          contactPubKeyHex,
+          selection,
+          success: success,
+          tripTimeMs: tripTimeMs,
+          successIncrement: successIncrement,
+          failureDecrement: failureDecrement,
+          maxWeight: maxWeight,
+        );
+      });
       return;
     }
 
@@ -222,73 +261,11 @@ class PathHistoryService extends ChangeNotifier {
     required List<int> pathBytes,
     required int successCount,
     required int failureCount,
-    double routeWeight = 1.0,
+    double? routeWeight,
+    double initialWeight = 1.0,
     DateTime? timestamp,
   }) {
-    var history = _cache[contactPubKeyHex];
-
-    if (history == null) {
-      // If a load is already in progress, defer this record
-      if (_pendingLoads.contains(contactPubKeyHex)) {
-        _deferredRecords.putIfAbsent(contactPubKeyHex, () => []);
-        _deferredRecords[contactPubKeyHex]!.add(
-          _DeferredPathRecord(
-            hopCount: hopCount,
-            tripTimeMs: tripTimeMs,
-            wasFloodDiscovery: wasFloodDiscovery,
-            pathBytes: pathBytes,
-            successCount: successCount,
-            failureCount: failureCount,
-            routeWeight: routeWeight,
-            timestamp: timestamp,
-          ),
-        );
-        return;
-      }
-
-      _pendingLoads.add(contactPubKeyHex);
-      _loadHistoryFromStorage(contactPubKeyHex).then((loaded) {
-        _cache[contactPubKeyHex] =
-            loaded ??
-            ContactPathHistory(
-              contactPubKeyHex: contactPubKeyHex,
-              recentPaths: [],
-            );
-        _addPathRecordInternal(
-          contactPubKeyHex,
-          hopCount,
-          tripTimeMs,
-          wasFloodDiscovery,
-          pathBytes,
-          successCount,
-          failureCount,
-          routeWeight,
-          timestamp,
-        );
-
-        // Apply any deferred records
-        final deferred = _deferredRecords.remove(contactPubKeyHex);
-        if (deferred != null) {
-          for (final record in deferred) {
-            _addPathRecordInternal(
-              contactPubKeyHex,
-              record.hopCount,
-              record.tripTimeMs,
-              record.wasFloodDiscovery,
-              record.pathBytes,
-              record.successCount,
-              record.failureCount,
-              record.routeWeight,
-              record.timestamp,
-            );
-          }
-        }
-        _pendingLoads.remove(contactPubKeyHex);
-      });
-      return;
-    }
-
-    _addPathRecordInternal(
+    void add() => _addPathRecordInternal(
       contactPubKeyHex,
       hopCount,
       tripTimeMs,
@@ -297,8 +274,34 @@ class PathHistoryService extends ChangeNotifier {
       successCount,
       failureCount,
       routeWeight,
+      initialWeight,
       timestamp,
     );
+
+    if (_cache.containsKey(contactPubKeyHex)) {
+      add();
+    } else {
+      _ensureLoaded(contactPubKeyHex).then((_) => add());
+    }
+  }
+
+  Future<void> _ensureLoaded(String contactPubKeyHex) {
+    if (_cache.containsKey(contactPubKeyHex)) return Future.value();
+    return _pendingLoads[contactPubKeyHex] ??=
+        _loadHistoryFromStorage(contactPubKeyHex)
+            .then((loaded) {
+              _cache[contactPubKeyHex] ??=
+                  loaded ??
+                  ContactPathHistory(
+                    contactPubKeyHex: contactPubKeyHex,
+                    recentPaths: [],
+                  );
+              _trackAccess(contactPubKeyHex);
+              _evictIfNeeded();
+            })
+            .whenComplete(() {
+              _pendingLoads.remove(contactPubKeyHex);
+            });
   }
 
   void _addPathRecordInternal(
@@ -309,7 +312,8 @@ class PathHistoryService extends ChangeNotifier {
     List<int> pathBytes,
     int successCount,
     int failureCount,
-    double routeWeight,
+    double? routeWeight,
+    double initialWeight,
     DateTime? timestamp,
   ) {
     var history = _cache[contactPubKeyHex];
@@ -326,6 +330,7 @@ class PathHistoryService extends ChangeNotifier {
       wasFloodDiscovery = existing.wasFloodDiscovery || wasFloodDiscovery;
       timestamp ??= existing.timestamp;
     }
+    routeWeight ??= existing?.routeWeight ?? initialWeight;
 
     final newRecord = PathRecord(
       hopCount: hopCount,
@@ -368,11 +373,8 @@ class PathHistoryService extends ChangeNotifier {
       return history.recentPaths;
     }
 
-    _loadHistoryFromStorage(contactPubKeyHex).then((loaded) {
-      if (loaded != null) {
-        _cache[contactPubKeyHex] = loaded;
-        _trackAccess(contactPubKeyHex);
-        _evictIfNeeded();
+    _ensureLoaded(contactPubKeyHex).then((_) {
+      if (_cache[contactPubKeyHex]?.recentPaths.isNotEmpty ?? false) {
         _version++;
         notifyListeners();
       }
@@ -577,28 +579,6 @@ class PathHistoryService extends ChangeNotifier {
     _version = 0;
     notifyListeners();
   }
-}
-
-class _DeferredPathRecord {
-  final int hopCount;
-  final int tripTimeMs;
-  final bool wasFloodDiscovery;
-  final List<int> pathBytes;
-  final int successCount;
-  final int failureCount;
-  final double routeWeight;
-  final DateTime? timestamp;
-
-  _DeferredPathRecord({
-    required this.hopCount,
-    required this.tripTimeMs,
-    required this.wasFloodDiscovery,
-    required this.pathBytes,
-    required this.successCount,
-    required this.failureCount,
-    this.routeWeight = 1.0,
-    this.timestamp,
-  });
 }
 
 class _FloodStats {

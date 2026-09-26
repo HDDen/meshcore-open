@@ -185,6 +185,14 @@ class _ContactsScreenState extends State<ContactsScreen>
           }
           final hexString = pubKeyToHex(advertPacket);
           Clipboard.setData(ClipboardData(text: "meshcore://$hexString"));
+          _pendingOperations.remove(ContactOperationType.export);
+          if (mounted) {
+            showDismissibleSnackBar(
+              context,
+              content: Text(context.l10n.contacts_contactAdvertCopied),
+            );
+          }
+          return;
         }
 
         // Generic OK/ERR acks carry no command correlation, so consume only

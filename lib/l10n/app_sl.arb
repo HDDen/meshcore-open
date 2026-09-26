@@ -578,7 +578,7 @@
   "chat_pathManagement": "Upravljanje poti",
   "chat_routingMode": "Navodilo za usmerjevalni način",
   "chat_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
-  "chat_forceFloodMode": "Nasilje obvezati v način",
+  "chat_forceFloodMode": "Vsili flood način",
   "chat_recentAckPaths": "Nedavni poti ACK (tap za uporabo):",
   "chat_pathHistoryFull": "Zapiske o poti so popolni. Izbriši vnose, da dodaš nove.",
   "chat_hopSingular": "skok",
@@ -622,7 +622,7 @@
   "chat_path": "Pot",
   "chat_publicKey": "Ključ javnega tipa",
   "chat_compressOutgoingMessages": "Stisnite izhodne sporočila",
-  "chat_floodForced": "Porolni (nasilje).",
+  "chat_floodForced": "Flood (vsiljeno)",
   "chat_directForced": "Nezglašen (nasilje)",
   "chat_hopsForced": "{count} skoki (nasilje)",
   "@chat_hopsForced": {
@@ -632,7 +632,7 @@
       }
     }
   },
-  "chat_floodAuto": "Preplavljenje (avtomatizirano)",
+  "chat_floodAuto": "Flood (samodejno)",
   "chat_direct": "Neposredni",
   "chat_poiShared": "Deljeno točke MN",
   "chat_unread": "Nerešeno: {count}",
@@ -900,7 +900,7 @@
   "login_routing": "Usmerjanje",
   "login_routingMode": "Navodilo za usmerjevalni način",
   "login_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
-  "login_forceFloodMode": "Nasilje obvezati v način",
+  "login_forceFloodMode": "Vsili flood način",
   "login_managePaths": "Upravljajte Potniške Proti",
   "login_login": "Prijava",
   "login_attempt": "Poskušajo {current}/{max}",
@@ -973,7 +973,7 @@
   "repeater_statusTitle": "Status ponovitelja",
   "repeater_routingMode": "Navodilo za usmerjevalni način",
   "repeater_autoUseSavedPath": "Avto (uporabi shranjeno pot)",
-  "repeater_forceFloodMode": "Nasilje obvezati v način",
+  "repeater_forceFloodMode": "Vsili flood način",
   "repeater_pathManagement": "Upravljanje poti",
   "repeater_refresh": "Ponovno obnavljati",
   "repeater_statusRequestTimeout": "Zahtev statusa je iztekla.",
@@ -1018,7 +1018,7 @@
       }
     }
   },
-  "repeater_packetTxTotal": "Skupno: {total}, Poplava: {flood}, Neposredno: {direct}",
+  "repeater_packetTxTotal": "Skupno: {total}, Flood: {flood}, Neposredno: {direct}",
   "@repeater_packetTxTotal": {
     "placeholders": {
       "total": {
@@ -1032,7 +1032,7 @@
       }
     }
   },
-  "repeater_packetRxTotal": "Skupno: {total}, Poplava: {flood}, Neposredno: {direct}",
+  "repeater_packetRxTotal": "Skupno: {total}, Flood: {flood}, Neposredno: {direct}",
   "@repeater_packetRxTotal": {
     "placeholders": {
       "total": {
@@ -1046,7 +1046,7 @@
       }
     }
   },
-  "repeater_duplicatesFloodDirect": "Prah: {flood}, Neposredni: {direct}",
+  "repeater_duplicatesFloodDirect": "Flood: {flood}, Neposredni: {direct}",
   "@repeater_duplicatesFloodDirect": {
     "placeholders": {
       "flood": {
@@ -1103,7 +1103,7 @@
       }
     }
   },
-  "repeater_floodAdvertInterval": "Razpon Obvestil o Poplavah",
+  "repeater_floodAdvertInterval": "Razpon Flood Oglasov",
   "repeater_floodAdvertIntervalHours": "{hours} ur",
   "@repeater_floodAdvertIntervalHours": {
     "placeholders": {
@@ -1174,8 +1174,8 @@
   "repeater_advancedSettingsSubtitle": "Gumbi za nastavljanje za izkušene uporabnike",
   "repeater_pathHashMode": "Način ustvarjanja hash-a poti",
   "repeater_pathHashModeHelper": "Bajti, uporabljeni za kodiranje ID-ja tega repetitorja v oznakah flood poti/zaznavanja zank. 0=1 bajt (256 ID-jev, do 64 skokov), 1=2 bajta (65.000 ID-jev, do 32 skokov), 2=3 bajti (16 milijonov ID-jev, do 21 skokov). Vdelana programska oprema pred v1.14 je vedno uporabljala 1-bajtne poti; v1.14 in novejše je mogoče nastaviti na 2- ali 3-bajtne poti.",
-  "repeater_txDelay": "Zatemnitevanje zaradi poplav v Texasu",
-  "repeater_txDelayHelper": "Uporaba intervalov za ponovno pošiljanje v primeru prometa zaradi poplav, kot pomnožnik časovne trajanje paketa (0-2, privzeto 0,5). Veje vrednost = manjše kolizije, vendar počasnejše dostavo.",
+  "repeater_txDelay": "Flood TX zakasnitev",
+  "repeater_txDelayHelper": "Uporaba intervalov za ponovno pošiljanje v primeru flood prometa, kot pomnožnik časovne trajanje paketa (0-2, privzeto 0,5). Veje vrednost = manjše kolizije, vendar počasnejše dostavo.",
   "repeater_directTxDelay": "Neposredni časovno odlašanje",
   "repeater_directTxDelayHelper": "Razdalja za ponovno pošiljanje za neposredno (neobvezen) promet, kot pomnožnik časovne trajanja paketa (0-2, privzeto 0,3).",
   "repeater_intThresh": "Meja, pri kateri nastane motnja",
@@ -1183,8 +1183,8 @@
   "repeater_agcResetInterval": "Interval ponovne kalibracije AGC",
   "repeater_agcResetIntervalHelper": "Kako pogosto je treba ponovno nastaviti samodejno regulacijo občutljivosti, da se vrnete v normalno stanje? Interval je nastavljen na nekaj sekund, natančno na 4. 0 izklopi periodično ponovno nastavljanje.",
   "repeater_actionsTitle": "Dejanja",
-  "repeater_sendAdvert": "Pošlji oglas o poplavah",
-  "repeater_sendAdvertSubtitle": "Razpustite oglas o poplavah preko omrežja.",
+  "repeater_sendAdvert": "Pošlji flood oglas",
+  "repeater_sendAdvertSubtitle": "Razpošlji flood oglas preko omrežja.",
   "repeater_sendAdvertZeroHop": "Pošlji oglas, ki ne potrebuje posrednika.",
   "repeater_sendAdvertZeroHopSubtitle": "Premejte oglas, ki uporablja eno povezavo (brez posrednikov).",
   "repeater_clockSync": "Sinerizirajte uro zdaj",
@@ -1283,19 +1283,19 @@
   "repeater_cliHelpSetTx": "Nastavi moč LoRa oddajanja v dBm. (za ponovni zagon za uporabo)",
   "repeater_cliHelpSetRepeat": "Omogoči ali onemogoči vlogo ponovitelja za tono.",
   "repeater_cliHelpSetAllowReadOnly": "(Osebni strežnik) Če je 'vklopljeno', potem bo dovoljeno prijavo z praznim geslom, vendar ne bo mogoče objaviti v sobo. (samo branje).",
-  "repeater_cliHelpSetFloodMax": "Nastavi največjo število skokov za vstopne poplave (če je >= maks, paket ni usmerjen)",
+  "repeater_cliHelpSetFloodMax": "Nastavi največje število skokov za vhodni flood paket (če je >= maks, paket ni posredovan)",
   "repeater_cliHelpSetIntThresh": "Nastavi Prag Interferencij (v dB). Privzeto je 14. Nastavi na 0 za onemogočitev zaznavanja interferenc kanalov.",
   "repeater_cliHelpSetAgcResetInterval": "Nastavi časovno razdaljo za ponovni zagon nadzornika Avtomatske uteži. Nastavi na 0 za onemogočanje.",
   "repeater_cliHelpSetMultiAcks": "Omogoči ali onemogoči funkcijo \"dvojakih potrdil\".",
   "repeater_cliHelpSetAdvertInterval": "Nastavi časovno obmesto v minutah za pošiljanje lokalnega (brezposrednega) napovednega paketa. Nastavi na 0 za onemogočiti.",
-  "repeater_cliHelpSetFloodAdvertInterval": "Nastavi časovno obmesto v urah za pošiljanje plovilnega oglasnega paketa. Nastavi na 0 za onemogočanje.",
+  "repeater_cliHelpSetFloodAdvertInterval": "Nastavi časovno obmesto v urah za pošiljanje flood oglasnega paketa. Nastavi na 0 za onemogočanje.",
   "repeater_cliHelpSetGuestPassword": "Nastavi/posodobi geslo gosta. (za ponovitve lahko gostov prijavi pošiljajo zahtevo \"Get Stats\")",
   "repeater_cliHelpSetName": "Nastavi ime oglasnika.",
   "repeater_cliHelpSetLat": "Nastavi zemljepisno širino oglaševalskega zemljevida (desetdeljne).",
   "repeater_cliHelpSetLon": "Nastavi zemljevidno širino oglasnika. (desetdelne stopnje)",
   "repeater_cliHelpSetRadio": "Nastavi popolnoma nove radijske parametre in jih shranjuje v nastavitve. Za uporabo je potrebna \"restart\" ukaz.",
   "repeater_cliHelpSetRxDelay": "Nastavitve (eksperimentalne) osnova (mora biti > 1 za učinkovanje) za uporabo rahle zakasnitve prejetih paketov, glede na moč signala/rezultat. Nastavite na 0 za onemogočanje.",
-  "repeater_cliHelpSetTxDelay": "Nastavi faktor, ki se množi s časom delovanja za paket v načinu poplavnega režima in z randomiziranim sistemom slotov, da odvrne njegovo posredovanje. (da se zmanjša verjetnost kolizij)",
+  "repeater_cliHelpSetTxDelay": "Nastavi faktor, ki se množi s časom delovanja za paket v flood načinu in z randomiziranim sistemom slotov, da odvrne njegovo posredovanje. (da se zmanjša verjetnost kolizij)",
   "repeater_cliHelpSetDirectTxDelay": "Ima podobno vrednost kot txdelay, vendar jo lahko uporabite za dodajanje naknadnega zamika pri posredovanju paketov v režimu neposredne prevodi.",
   "repeater_cliHelpSetBridgeEnabled": "Omogoči/Preklopi most.",
   "repeater_cliHelpSetBridgeDelay": "Nastavi zamik pred ponovnim poslanjem paketov.",
@@ -1311,7 +1311,7 @@
   "repeater_cliHelpLogErase": "Izbriše pakete zapisov iz datotek sistema.",
   "repeater_cliHelpNeighbors": "Prikaže seznam drugih ponovnih knopov, do katerih je prišlo preko brezposrednih oglasov. Vsaka vrstica je id-prefix-hex:timestamp:snr-times-4",
   "repeater_cliHelpNeighborRemove": "Izbriše prvo ustreznu postavko (po predpomnilku pubkey (heks),) iz seznama sosedov.",
-  "repeater_cliHelpRegion": "(Serija samo) Navaja vse definirane regije in trenutne poplave dovolilnosti.",
+  "repeater_cliHelpRegion": "(Serija samo) Navaja vse definirane regije in trenutna dovoljenja za flood.",
   "repeater_cliHelpRegionLoad": "Opomba: to je posebna več ukazna pozivna operacija. Vsak naslednji ukaz je ime regije (z lezijami za prikaz hierarhije, z enim ustvarjenim razmislom). Zaključena s pošiljanjem praznega reda/ukaza.",
   "repeater_cliHelpRegionGet": "Išče regijo s podanimi imenimi prefiksom (ali \"\\\" za globalni obseg). Odgovori se s \"-> regija-ime (rodič-ime) 'F'\"",
   "repeater_cliHelpRegionPut": "Dodaja ali posodobi regijsko definicijo s podanim imenom.",
@@ -1483,7 +1483,7 @@
     }
   },
   "channelPath_unknownPath": "Neznano",
-  "channelPath_floodPath": "Prebivalstvo",
+  "channelPath_floodPath": "Flood",
   "channelPath_directPath": "Neposredni",
   "channelPath_observedZeroOf": "0 iz {total} skokov",
   "@channelPath_observedZeroOf": {
@@ -1555,7 +1555,7 @@
       }
     }
   },
-  "repeater_neighborsSubtitle": "Pogledati nič sosednjih hopjev.",
+  "repeater_neighborsSubtitle": "Pogledati nič sosednjih skokov.",
   "repeater_neighbors": "Sosedi",
   "neighbors_receivedData": "Prejeto podatke o sosedih",
   "neighbors_requestTimedOut": "Sosedi zahtevajo izklop po dogovoru.",
@@ -1758,8 +1758,8 @@
   "appSettings_enableMessageTracingSubtitle": "Prikaži podrobne metapodatke o usmerjanju in časovnem usklajevanju sporočil",
   "contacts_contactImported": "Kontakt je bil uvožen.",
   "contacts_contactImportFailed": "Kontakt ni bil uspešno uvožen.",
-  "contacts_zeroHopAdvert": "Reklama brez posrednikov",
-  "contacts_floodAdvert": "Poplavna oglás",
+  "contacts_zeroHopAdvert": "Oglas brez posrednikov",
+  "contacts_floodAdvert": "Flood oglas",
   "contacts_invalidAdvertFormat": "Neveljavni kontaktne podatke",
   "contacts_clipboardEmpty": "Odložišče je prazno.",
   "contacts_copyAdvertToClipboard": "Kopiraj oglas v odložišče",
@@ -1791,7 +1791,7 @@
   "settings_gpxExportNoContacts": "Ni stikov za izvoz.",
   "settings_gpxExportNotAvailable": "Ni podprto na vašem napravi/operacijskem sistemu",
   "settings_gpxExportShareSubject": "meshcore-open izvoz podatkov GPX karte",
-  "pathTrace_someHopsNoLocation": "Ena ali več hmelju manjka lokacija!",
+  "pathTrace_someHopsNoLocation": "Enemu ali več skokom manjka lokacija!",
   "map_tapToAdd": "Pritisnite na vozlišča, da jih dodate poti.",
   "map_removeLast": "Odstrani Zadnji",
   "map_runTrace": "Zaženi sledenje poti",
@@ -2298,15 +2298,15 @@
   "repeater_cliHelpGetAgcResetInterval": "Prikazuje interval ponovne kalibracije AGC v sekundah.",
   "repeater_cliHelpGetMultiAcks": "Pokaže, ali je vklopljen način dvojnega potrdila (1) ali je izklopljen (0).",
   "repeater_cliHelpGetAllowReadOnly": "Pokaže, ali je omogočen le brani dostop za goste.",
-  "repeater_cliHelpGetAdvertInterval": "Prikazuje časovno obdobje lokalne reklame v minutah.",
-  "repeater_cliHelpGetFloodAdvertInterval": "Prikaže časovno obdobje, ko se prikazuje oglas o poplavah, v urah.",
+  "repeater_cliHelpGetAdvertInterval": "Prikazuje časovno obdobje lokalnega oglasa v minutah.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Prikaže časovno obdobje flood oglasa, v urah.",
   "repeater_cliHelpGetGuestPassword": "Prikaže nastavljeno geslo za gostitelja.",
   "repeater_cliHelpGetLat": "Prikaže določeno zemljepisno širino.",
   "repeater_cliHelpGetLon": "Prikaže določeno merilo dolžine.",
   "repeater_cliHelpGetRxDelay": "Prikazuje osnovno vrednost RX odlašanja.",
-  "repeater_cliHelpGetTxDelay": "Prikazuje faktor zamude v načinu delovanja pri plavlju.",
+  "repeater_cliHelpGetTxDelay": "Prikazuje faktor zamude v flood načinu.",
   "repeater_cliHelpGetDirectTxDelay": "Prikazuje faktor odlašanja signala v režimu neposredne komunikacije.",
-  "repeater_cliHelpGetFloodMax": "Prikazuje največjo število, kolikokrat lahko voda doseže najvišjo višino.",
+  "repeater_cliHelpGetFloodMax": "Prikazuje največje število skokov za flood.",
   "repeater_cliHelpGetOwnerInfo": "Prikazuje niz z informacijami o lastniku.",
   "repeater_cliHelpGetPathHashMode": "Prikaže način delovanja z hashjem poti (0/1/2).",
   "repeater_cliHelpGetLoopDetect": "Prikazuje občutljivost na zaznavanje ciklov.",
@@ -2328,8 +2328,8 @@
   "repeater_cliHelpSensorList": "Navaja vse nastavitve za uporabniške senzorje, razvrščene po želeni začetni indeksu.",
   "repeater_cliHelpRegionDefault": "Prikaže trenutno privzeto območje.",
   "repeater_cliHelpRegionDefaultSet": "Določi privzeto območje. Za izbris uporabite \"<null>\".",
-  "repeater_cliHelpRegionListAllowed": "Navaja regije, ki dovoljujejo promet v času poplav.",
-  "repeater_cliHelpRegionListDenied": "Navaja regije, ki preprečujejo promet zaradi poplav.",
+  "repeater_cliHelpRegionListAllowed": "Navaja regije, ki dovoljujejo flood promet.",
+  "repeater_cliHelpRegionListDenied": "Navaja regije, ki preprečujejo flood promet.",
   "repeater_cliHelpStatsPackets": "(Samo za serijske povezave) Prikazuje statistiko na nivoju paketov.",
   "repeater_cliHelpStatsRadio": "(Samo za serije) Prikazuje statistične podatke o radiju.",
   "repeater_cliHelpStatsCore": "(Samo za serijske naprave) Prikazuje osnovne statistične podatke.",
@@ -2469,7 +2469,7 @@
   "contacts_searchClose": "Izklopi iskanje",
   "routing_title": "Navigacija",
   "routing_modeAuto": "Avto",
-  "routing_modeFlood": "Poplavo",
+  "routing_modeFlood": "Flood",
   "routing_modeManual": "Navodilo",
   "routing_modeAutoHint": "Samodejno izbere najbolj poznano pot, in sicer, ko ni na voljo nobena.",
   "routing_modeFloodHint": "Prenosi preko vseh repetitorjev. Najzanesljivejši način, vendar zahteva več časa.",
@@ -2487,15 +2487,15 @@
   "routing_qualityGood": "Prva uspešna faza",
   "routing_qualityFair": "Prva, uspešna faza",
   "routing_qualityWorked": "Izpolnil",
-  "routing_qualityFlood": "Slišano preko poplave",
+  "routing_qualityFlood": "Slišano prek flooda",
   "routing_qualityUntested": "Ne preizkušen",
   "routing_lastWorked": "delal/a {when}",
   "routing_neverWorked": "nikoli ni bilo potrjeno",
-  "routing_floodDelivery": "Dostava zaradi poplave",
+  "routing_floodDelivery": "Dostava prek flooda",
   "pathEditor_title": "Izgradnja poti",
-  "pathEditor_hopCounter": "{count} od 64 različnih sort hropa",
-  "pathEditor_noHops": "Še niso dodani hmelji. Za dodajanje hmelja v vrstnem redu kliknite na povezavo spodaj, ali pa shranite brez dodanega hmelja, da ga lahko posredujete neposredno.",
-  "pathEditor_addHops": "Dodajte suho travo v skladu s postopkom.",
+  "pathEditor_hopCounter": "{count} od 64 skokov",
+  "pathEditor_noHops": "Še niso dodani skoki. Za dodajanje skokov v vrstnem redu kliknite na ponovitelje spodaj, ali pa shranite brez dodanih skokov, da ga lahko posredujete neposredno.",
+  "pathEditor_addHops": "Dodajte skoke v vrstnem redu.",
   "pathEditor_searchRepeaters": "Iskanje ponovitev",
   "pathEditor_advancedHex": "Napredno: surovi šestnajstni pot",
   "pathEditor_hexLabel": "Predfiks za heksadecimalno šifro",
@@ -2503,7 +2503,7 @@
   "pathEditor_invalidTokens": "Neveljaven: {tokens}",
   "pathEditor_tooManyHops": "Največ 64 hopov",
   "pathEditor_usePath": "Uporabite to poto",
-  "pathEditor_removeHop": "Odstranite hmelj",
+  "pathEditor_removeHop": "Odstranite skok",
   "pathEditor_unknownHop": "Neznani ponovitelj",
   "map_zoomIn": "Povečaj",
   "routing_deliveryCounts": "{successes} delivered, {failures} failed",
@@ -2798,7 +2798,7 @@
   "imageSend_radioUnknownBody": "Poučajte se na stroj, da se lahko izračunuje čas v prikazu.",
   "imageSend_longSendTitle": "Dluga preposlana",
   "imageSend_longSendBody": "Ovo bo ohranilo kanal prihodno za obliko {duration}.",
-  "imageSend_floodNote": "Povlatni potok: sve repeaterje v območju pretrasirajo svak paket, pa kanál ostane zanudnejši od tega.",
+  "imageSend_floodNote": "Flood usmerjanje: vsak ponovitelj v dosegu znova odda vsak paket, zato je kanal zaseden dlje kot to.",
   "imageSend_parityTitle": "Pobavni paket zdržbe",
   "imageSend_paritySubtitle": "Jedna dodatna paczka. Grupni izjasi ne izvajajo potvarnosti, pa ta izdelka omogoča preuzimanju ponovno izgleda, če je zgubjen pojedni paket.",
   "imageSend_send": "Posyłaj",
@@ -2828,5 +2828,39 @@
   "receivedImage_tapToProcess": "Kliknij za obravnavanje",
   "receivedImage_awaiting": "{bytes} bajtov · {packets} {packets, plural, =1{paket} other{paketov}}",
   "imageSend_secondsValue": "{seconds} s",
-  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s"
+  "imageSend_minutesSecondsValue": "{minutes} m {seconds} s",
+  "channels_noFreeSlots": "Vsa mesta za kanale so zasedena",
+  "chat_longMessageRetryNote": "Nad 158 bajtov: poslano največ {count}-krat",
+  "reaction_report": "Emoji reakcije",
+  "repeater_bridgeNote": "Na voljo samo v vdelani programski opremi, zgrajeni z mostom (RS232 ali ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Prikaže največje število skokov za flood oglase.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Prikaže največje število skokov za flood pakete brez določenega regijskega obsega.",
+  "repeater_cliHelpGetRadioFemRxGain": "Prikaže, ali je RX ojačanje LoRa front-end modula vklopljeno.",
+  "repeater_cliHelpGetRadioFemTxGain": "Prikaže, ali je TX ojačanje LoRa front-end modula vklopljeno.",
+  "repeater_cliHelpRegionDef": "Definira verigo regij z enim ukazom: vsako ime se doda pod prejšnje; \"name,parent\" doda ime in nato nadaljuje pod navedeno nadrejeno regijo. Odgovori s seznamom regij.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Nastavi največje število skokov za posredovanje flood oglasov (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Nastavi največje število skokov za posredovanje flood paketov brez določenega regijskega obsega (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Preklopi RX ojačanje (LNA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Preklopi TX ojačanje (PA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Način nalaganja regij: pošljite eno ime regije na vrstico, zamaknjeno s presledki pod nadrejeno regijo (dodajte F za imenom, da dovolite flood). Vrstice ne prejmejo odgovora. Pošljite prazno vrstico za konec, nato pa \"region save\", da shranite rezultat.",
+  "repeater_cliRegionLoadEnd": "(konec nalaganja regij)",
+  "repeater_cliRegionLoadHint": "Vrstica regije ali prazna vrstica za konec",
+  "repeater_frequencyInvalid": "Neveljavna frekvenca (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Napake sprejema",
+  "repeater_txPowerRangeHelper": "-9 do 30 dBm",
+  "room_postsPushed": "Poslane objave",
+  "room_postsStored": "Objave",
+  "settings_publicKeyCopied": "Javni ključ kopiran",
+  "settings_radioSettingsNotApplied": "Radio teh nastavitev ni uveljavil",
+  "urlImage_enable": "Omogoči slike iz URL",
+  "urlImage_possible": "Mogoča slika iz URL; omogočite jo v Nastavitvah.",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

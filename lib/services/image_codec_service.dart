@@ -90,6 +90,10 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
   String? _lastError;
   Future<void> _queue = Future<void>.value();
   ImageCodecSession? _session;
+
+  /// Teardown started by [handleMemoryPressure]; [_ensureSession] waits for it
+  /// so a second isolate is never spawned while the first is still resident.
+  Future<void>? _pendingRelease;
   ImageCodecBundle? _loadedBundle;
   ImageCodecBundle? _failedBundle;
   int _downloadedBytes = 0;
@@ -1339,6 +1343,12 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
   // ---- model memory (mirrors translation_service.dart:586-629) -------------
 
   Future<ImageCodecSession?> _ensureSession(ImageCodecBundle bundle) async {
+    final pendingRelease = _pendingRelease;
+    if (pendingRelease != null) {
+      try {
+        await pendingRelease;
+      } catch (_) {}
+    }
     if (_session != null && _loadedBundle == bundle) {
       return _session;
     }
@@ -1455,8 +1465,16 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
     if (session != null) {
       // Ask for the big half back before the shutdown handshake, so the peak
       // does not have to wait on isolate teardown.
-      await session.release(decoder: true);
-      await session.dispose();
+      final release = () async {
+        await session.release(decoder: true);
+        await session.dispose();
+      }();
+      _pendingRelease = release;
+      try {
+        await release;
+      } finally {
+        if (identical(_pendingRelease, release)) _pendingRelease = null;
+      }
     }
     appLogger.info('Image codec model evicted', tag: 'ImageCodec');
     _notify();

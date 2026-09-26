@@ -218,23 +218,26 @@ class RepeaterHubScreen extends StatelessWidget {
               },
             ),
 
-            _HubActionTile(
-              index: 2,
-              icon: Icons.group,
-              title: l10n.repeater_neighbors,
-              subtitle: l10n.repeater_neighborsSubtitle,
-              accentColor: MeshPalette.signal,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        NeighborsScreen(repeater: repeater, password: password),
-                  ),
-                );
-              },
-            ),
+            if (repeater.type != advTypeRoom)
+              _HubActionTile(
+                index: 2,
+                icon: Icons.group,
+                title: l10n.repeater_neighbors,
+                subtitle: l10n.repeater_neighborsSubtitle,
+                accentColor: MeshPalette.signal,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NeighborsScreen(
+                        repeater: repeater,
+                        password: password,
+                      ),
+                    ),
+                  );
+                },
+              ),
 
             if (isAdmin) ...[
               _HubActionTile(

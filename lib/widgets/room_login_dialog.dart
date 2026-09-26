@@ -14,6 +14,7 @@ import '../theme/mesh_theme.dart';
 import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import 'routing_sheet.dart';
 
 class RoomLoginDialog extends StatefulWidget {
@@ -288,6 +289,10 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    // Firmware stores at most 15 bytes (CommonCLI.h password[16]).
+                    inputFormatters: const [
+                      Utf8LengthLimitingTextInputFormatter(15),
+                    ],
                     decoration: InputDecoration(
                       labelText: l10n.login_password,
                       hintText: l10n.login_enterPassword,

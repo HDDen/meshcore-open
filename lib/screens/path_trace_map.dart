@@ -91,6 +91,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Timer? _timeoutTimer;
 
   bool _isLoading = false;
+  bool _awaitingTraceSent = false;
   bool _failed2Loaded = false;
   bool _hasData = false;
   PathTraceData? _traceData;
@@ -112,6 +113,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   // Live path resolved at trace time; used by the response handler for
   // endpoint inference so it matches the path that was actually traced.
   Uint8List _tracedPath = Uint8List(0);
+  int _tracedPathHashWidth = 1;
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -184,9 +186,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Uint8List? _tracePathFromBytes(
     Uint8List pathBytes,
     int traceHashByteWidth,
-    MeshCoreConnector connector,
-  ) {
-    final hops = PathHelper.splitPathBytes(pathBytes, widget.pathHashByteWidth);
+    MeshCoreConnector connector, {
+    int? pathHashByteWidth,
+  }) {
+    final hops = PathHelper.splitPathBytes(
+      pathBytes,
+      pathHashByteWidth ?? widget.pathHashByteWidth,
+    );
     final traceBytes = <int>[];
     for (final hop in hops) {
       final traceHop = _expandHopForTrace(hop, traceHashByteWidth, connector);
@@ -316,11 +322,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Uint8List? buildPath(
     Uint8List pathBytes,
     int traceHashByteWidth,
-    MeshCoreConnector connector,
-  ) {
+    MeshCoreConnector connector, {
+    int? pathHashByteWidth,
+  }) {
     final pathHops = PathHelper.splitPathBytes(
       pathBytes,
-      widget.pathHashByteWidth,
+      pathHashByteWidth ?? widget.pathHashByteWidth,
     );
     final hopWidth = traceHashByteWidth.clamp(1, pubKeySize).toInt();
 
@@ -375,17 +382,21 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   /// route (flipPathAround), re-read that contact's live forced/auto path from
   /// the connector so a path the user just changed (force flood / set path /
   /// reset to auto) is honored immediately, instead of the value captured when
-  /// this screen was first pushed.
-  Uint8List _resolveLivePath(MeshCoreConnector connector) {
+  /// this screen was first pushed. Also returns the path's bytes per hop: the
+  /// contact's learned width for its device path, the local mode otherwise.
+  (Uint8List, int) _resolveLivePath(MeshCoreConnector connector) {
     final target = widget.targetContact;
     if (!widget.flipPathAround || target == null) {
-      return widget.path;
+      return (widget.path, widget.pathHashByteWidth);
     }
     final live = connector.allContactsUnfiltered.firstWhere(
       (c) => c.publicKeyHex == target.publicKeyHex,
       orElse: () => target,
     );
-    return live.pathBytesForDisplay;
+    final width = live.pathOverride == null && live.path.isNotEmpty
+        ? live.pathHashWidth
+        : widget.pathHashByteWidth;
+    return (live.pathBytesForDisplay, width);
   }
 
   Future<void> _doPathTrace() async {
@@ -398,17 +409,28 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     }
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    final traceHashByteWidth = _traceHashByteWidth(widget.pathHashByteWidth);
-    final livePath = _resolveLivePath(connector);
+    final (livePath, hopWidth) = _resolveLivePath(connector);
+    final traceHashByteWidth = _traceHashByteWidth(hopWidth);
     _tracedPath = livePath;
+    _tracedPathHashWidth = hopWidth;
 
     final pathTmp = widget.reversePathAround
-        ? _reversePathByHop(livePath, widget.pathHashByteWidth)
+        ? _reversePathByHop(livePath, hopWidth)
         : livePath;
 
     final path = widget.flipPathAround
-        ? buildPath(pathTmp, traceHashByteWidth, connector)
-        : _tracePathFromBytes(pathTmp, traceHashByteWidth, connector);
+        ? buildPath(
+            pathTmp,
+            traceHashByteWidth,
+            connector,
+            pathHashByteWidth: hopWidth,
+          )
+        : _tracePathFromBytes(
+            pathTmp,
+            traceHashByteWidth,
+            connector,
+            pathHashByteWidth: hopWidth,
+          );
 
     if (path == null) {
       if (!mounted) return;
@@ -442,6 +464,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       flags, // flag
       payload: tracePayload,
     );
+    _awaitingTraceSent = true;
     connector.sendFrame(frame);
   }
 
@@ -455,7 +478,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       try {
         final code = frameBuffer.readUInt8();
 
-        if (code == respCodeSent) {
+        if (code == respCodeSent && _awaitingTraceSent) {
+          _awaitingTraceSent = false;
           frameBuffer.skipBytes(1); //reserved
           tagData = frameBuffer.readBytes(4);
           final timeoutMilliseconds = frameBuffer.readUInt32LE();
@@ -474,7 +498,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           );
         }
 
-        if (code == respCodeErr) {
+        if (code == respCodeErr && _awaitingTraceSent) {
+          _awaitingTraceSent = false;
           _timeoutTimer?.cancel();
           if (!mounted) return;
           setState(() {
@@ -593,7 +618,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                   c.hasLocation &&
                   c.path.isNotEmpty &&
                   _matchesHopPrefix(
-                    _lastHopChunk(c.path, widget.pathHashByteWidth),
+                    _lastHopChunk(c.path, c.pathHashWidth),
                     hop,
                   ),
             )
@@ -633,7 +658,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             // sits in the middle of the symmetric sequence; .last is the local side.
             final tracedHops = PathHelper.splitPathBytes(
               _tracedPath,
-              widget.pathHashByteWidth,
+              _tracedPathHashWidth,
             );
             final hopsForEndpoint = tracedHops.isNotEmpty
                 ? tracedHops
@@ -649,7 +674,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                       c.hasLocation &&
                       c.path.isNotEmpty &&
                       _matchesHopPrefix(
-                        _lastHopChunk(c.path, widget.pathHashByteWidth),
+                        _lastHopChunk(c.path, c.pathHashWidth),
                         lastHop,
                       ),
                 )
@@ -795,7 +820,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
               c.hasLocation &&
               c.path.isNotEmpty &&
               _matchesHopPrefix(
-                _lastHopChunk(c.path, widget.pathHashByteWidth),
+                _lastHopChunk(c.path, c.pathHashWidth),
                 hop,
               ),
         )
@@ -837,7 +862,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         if (record.pathBytes.isEmpty) continue;
         final recordHops = PathHelper.splitPathBytes(
           record.pathBytes,
-          widget.pathHashByteWidth,
+          Contact.inferPathHashWidth(
+            record.hopCount,
+            record.pathBytes.length,
+          ),
         );
         if (!seen.add(_pathKeyForHops(recordHops))) continue;
         if (altIndex >= kAlternatePathColors.length) break;

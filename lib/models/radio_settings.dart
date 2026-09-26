@@ -478,7 +478,17 @@ class RadioSettings {
         bandwidth: LoRaBandwidth.bw62_5,
         spreadingFactor: LoRaSpreadingFactor.sf9,
         codingRate: LoRaCodingRate.cr4_8,
-        txPowerDbm: 20,
+        txPowerDbm: 22,
+      ),
+    ),
+    (
+      'USA Philly',
+      RadioSettings(
+        frequencyMHz: 902.250,
+        bandwidth: LoRaBandwidth.bw500,
+        spreadingFactor: LoRaSpreadingFactor.sf11,
+        codingRate: LoRaCodingRate.cr4_5,
+        txPowerDbm: 22,
       ),
     ),
     (
@@ -488,7 +498,7 @@ class RadioSettings {
         bandwidth: LoRaBandwidth.bw62_5,
         spreadingFactor: LoRaSpreadingFactor.sf7,
         codingRate: LoRaCodingRate.cr4_5,
-        txPowerDbm: 20,
+        txPowerDbm: 22,
       ),
     ),
     (
@@ -515,7 +525,7 @@ class RadioSettings {
     (
       'Off-Grid 869',
       RadioSettings(
-        frequencyMHz: 869.0,
+        frequencyMHz: 869.495,
         bandwidth: LoRaBandwidth.bw250,
         spreadingFactor: LoRaSpreadingFactor.sf11,
         codingRate: LoRaCodingRate.cr4_8,

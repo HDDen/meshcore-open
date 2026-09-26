@@ -99,7 +99,10 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
     final override = contact.pathOverride;
     final initial = override != null && override > 0
         ? (contact.pathOverrideBytes ?? Uint8List(0))
-        : (contact.pathLength > 0 ? contact.path : Uint8List(0));
+        : (contact.pathLength > 0 &&
+                  contact.pathHashWidth == connector.pathHashByteWidth
+              ? contact.path
+              : Uint8List(0));
     final available = connector.allContacts
         .where((c) => c.publicKeyHex != contact.publicKeyHex)
         .toList();
@@ -169,7 +172,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
       for (var i = 0; i < ranked.length && i < 3; i++) {
         if (ranked[i].matchesPathStart(
           record.pathBytes,
-          connector.pathHashByteWidth,
+          _recordPathHashWidth(record),
         )) {
           return switch (i) {
             0 => _PathQuality.strong,
@@ -252,7 +255,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
         return PathHelper.resolvePathNames(
           contact.path,
           connector.allContacts,
-          connector.pathHashByteWidth,
+          contact.pathHashWidth,
         );
     }
   }
@@ -285,21 +288,26 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
     );
   }
 
+  int _recordPathHashWidth(PathRecord record) =>
+      Contact.inferPathHashWidth(record.hopCount, record.pathBytes.length);
+
   void _showPathDetail(
     BuildContext context,
     MeshCoreConnector connector,
     Contact contact,
-    List<int> pathBytes,
+    PathRecord record,
   ) {
     final l10n = context.l10n;
+    final pathBytes = record.pathBytes;
+    final width = _recordPathHashWidth(record);
     final formattedPath = PathHelper.splitPathBytes(
       pathBytes,
-      connector.pathHashByteWidth,
+      width,
     ).map(PathHelper.formatHopHex).join(',');
     final resolvedNames = PathHelper.resolvePathNames(
       pathBytes,
       connector.allContacts,
-      connector.pathHashByteWidth,
+      width,
     );
 
     showDialog(
@@ -545,13 +553,13 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
         ? PathHelper.resolvePathNames(
             record.pathBytes,
             connector.allContacts,
-            connector.pathHashByteWidth,
+            _recordPathHashWidth(record),
           )
         : l10n.chat_hopsCount(record.hopCount);
     final displayHopCount = hasBytes
         ? PathHelper.splitPathBytes(
             record.pathBytes,
-            connector.pathHashByteWidth,
+            _recordPathHashWidth(record),
           ).length
         : record.hopCount;
 
@@ -570,7 +578,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
       behavior: HitTestBehavior.opaque,
       onSecondaryTapUp: PlatformInfo.isDesktop && hasBytes
           ? (_) =>
-                _showPathDetail(context, connector, contact, record.pathBytes)
+                _showPathDetail(context, connector, contact, record)
           : null,
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4),
@@ -619,12 +627,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
               ? () => _applyHistoryPath(connector, contact, record)
               : null,
           onLongPress: hasBytes
-              ? () => _showPathDetail(
-                  context,
-                  connector,
-                  contact,
-                  record.pathBytes,
-                )
+              ? () => _showPathDetail(context, connector, contact, record)
               : null,
         ),
       ),

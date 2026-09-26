@@ -111,6 +111,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageStatus_repeated => 'Ouvi repetidamente';
 
   @override
+  String get urlImage_enable => 'Ativar imagens de URL';
+
+  @override
+  String get urlImage_possible =>
+      'Possível imagem de URL; ative-a em Configurações.';
+
+  @override
   String get common_reboot => 'Reiniciar';
 
   @override
@@ -370,6 +377,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Configurações de rádio atualizadas';
 
   @override
+  String get settings_radioSettingsNotApplied =>
+      'O rádio não aplicou estas configurações';
+
+  @override
   String get settings_regionSettings => 'Regiões';
 
   @override
@@ -531,7 +542,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Clear all path data from contacts.';
 
   @override
-  String get settings_sendAdvertisement => 'Enviar Publicidade';
+  String get settings_sendAdvertisement => 'Enviar Anúncio';
 
   @override
   String get settings_sendAdvertisementSubtitle =>
@@ -618,6 +629,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settings_infoPublicKey => 'Chave Pública';
+
+  @override
+  String get settings_publicKeyCopied => 'Chave pública copiada';
 
   @override
   String get settings_infoContactsCount => 'Número de Contatos';
@@ -1363,6 +1377,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channels_publicChannelAdded => 'Canal público adicionado';
 
   @override
+  String get channels_noFreeSlots => 'Todos os slots de canal estão em uso';
+
+  @override
   String get channels_sortBy => 'Ordenar por';
 
   @override
@@ -1508,7 +1525,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_me => 'Eu';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Reações com Emoji';
 
   @override
   String get emojiCategorySmileys => 'Emojis';
@@ -1744,15 +1761,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '$count de 64 gramas de lúpulo';
+    return '$count de 64 saltos';
   }
 
   @override
   String get pathEditor_noHops =>
-      'Ainda não há lúpulos adicionados. Clique nos repetidores abaixo para adicioná-los na ordem desejada, ou salve sem adicionar lúpulos para enviar diretamente.';
+      'Ainda não há saltos adicionados. Clique nos repetidores abaixo para adicioná-los na ordem desejada, ou salve sem adicionar saltos para enviar diretamente.';
 
   @override
-  String get pathEditor_addHops => 'Adicione os lúpulos na seguinte ordem.';
+  String get pathEditor_addHops => 'Adicione os saltos na seguinte ordem.';
 
   @override
   String get pathEditor_searchRepeaters => 'Encontrar repetidores';
@@ -1779,7 +1796,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pathEditor_usePath => 'Utilize este caminho.';
 
   @override
-  String get pathEditor_removeHop => 'Remova o lúpulo';
+  String get pathEditor_removeHop => 'Remova o salto';
 
   @override
   String get pathEditor_unknownHop => 'Repetidor desconhecido';
@@ -3006,7 +3023,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval =>
-      'Define o intervalo do timer em horas para enviar um pacote de anúncio em massa. Defina como 0 para desativar.';
+      'Define o intervalo do timer em horas para enviar um pacote de anúncio de inundação. Defina como 0 para desativar.';
 
   @override
   String get repeater_cliHelpSetGuestPassword =>
@@ -3116,11 +3133,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionAllowf =>
-      'Define a permissão de \'F\'luido para a região especificada. (\'\' para o escopo global/legado)';
+      'Define a permissão de \'F\'lood para a região especificada. (\'\' para o escopo global/legado)';
 
   @override
   String get repeater_cliHelpRegionDenyf =>
-      'Remove a permissão de \"F\"luido para a região especificada. (NOTA: neste momento NÃO é aconselhável usar isso no escopo global/legado!!)';
+      'Remove a permissão de \"F\"lood para a região especificada. (NOTA: neste momento NÃO é aconselhável usar isso no escopo global/legado!!)';
 
   @override
   String get repeater_cliHelpRegionHome =>
@@ -3162,6 +3179,75 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get repeater_commandsListNote =>
       'NOTA: para os diversos comandos \"set...\", também existe um comando \"get...\".';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Frequência inválida (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 a 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Erros de Recepção';
+
+  @override
+  String get room_postsStored => 'Publicações';
+
+  @override
+  String get room_postsPushed => 'Publicações Enviadas';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Modo de carregamento de regiões: envie um nome de região por linha, indentado com espaços sob sua região pai (adicione F após o nome para permitir inundação). As linhas não recebem resposta. Envie uma linha vazia para terminar e depois \"region save\" para salvar o resultado.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Linha de região, ou vazia para terminar';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(fim do carregamento de regiões)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Define uma cadeia de regiões em um único comando: cada nome é adicionado sob o anterior; \"name,parent\" adiciona o nome e continua sob o pai indicado. Responde com a lista de regiões.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Define o número máximo de saltos para encaminhar pacotes de inundação sem escopo regional (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Define o número máximo de saltos para encaminhar anúncios de inundação (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Mostra o número máximo de saltos para pacotes de inundação sem escopo regional.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Mostra o número máximo de saltos para os anúncios de inundação.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Ativa ou desativa o ganho RX (LNA) do módulo frontal de LoRa. Placas sem esse módulo respondem \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Ativa ou desativa o ganho TX (PA) do módulo frontal de LoRa. Placas sem esse módulo respondem \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Mostra se o ganho RX do módulo frontal de LoRa está ativado.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Mostra se o ganho TX do módulo frontal de LoRa está ativado.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Disponível apenas em firmware compilado com uma ponte (RS232 ou ESP-NOW).';
 
   @override
   String get repeater_general => 'Geral';
@@ -3334,11 +3420,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetAdvertInterval =>
-      'Indica o intervalo de publicidade local em minutos.';
+      'Indica o intervalo de anúncio local em minutos.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      'Mostra o intervalo de tempo da publicidade relacionada às inundações, em horas.';
+      'Mostra o intervalo do anúncio de inundação, em horas.';
 
   @override
   String get repeater_cliHelpGetGuestPassword =>
@@ -3452,11 +3538,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionListAllowed =>
-      'Lista as regiões que permitem o tráfego em áreas de risco de inundações.';
+      'Lista as regiões que permitem o tráfego por inundação.';
 
   @override
   String get repeater_cliHelpRegionListDenied =>
-      'Lista as regiões que restringem o tráfego em áreas de risco de inundações.';
+      'Lista as regiões que negam o tráfego por inundação.';
 
   @override
   String get repeater_cliHelpStatsPackets =>
@@ -3784,7 +3870,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get channelPath_noHopDetailsAvailable =>
-      'Não estão disponíveis detalhes de voo para este pacote.';
+      'Não estão disponíveis detalhes de salto para este pacote.';
 
   @override
   String get channelPath_unknownRepeater => 'Repetidor Desconhecido';
@@ -4019,7 +4105,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pathTrace_someHopsNoLocation =>
-      'Um ou mais dos lúpulos estão sem localização!';
+      'Um ou mais dos saltos estão sem localização!';
 
   @override
   String get pathTrace_clearTooltip => 'Limpar caminho';
@@ -5051,5 +5137,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes min $seconds s';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Mais de 158 bytes: enviado no máximo $count vezes';
   }
 }

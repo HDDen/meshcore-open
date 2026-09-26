@@ -76,12 +76,14 @@ class Community {
   factory Community.fromJson(Map<String, dynamic> json) {
     return Community(
       id: json['id'] as String,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       secret: base64Decode(json['secret'] as String),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        json['created_at'] as int? ?? 0,
+      ),
       hashtagChannels:
           (json['hashtag_channels'] as List<dynamic>?)
-              ?.map((e) => e as String)
+              ?.whereType<String>()
               .toList() ??
           [],
     );
@@ -157,7 +159,7 @@ class Community {
   /// Normalize a hashtag name for consistent PSK derivation.
   /// Strips leading #, converts to lowercase, trims whitespace.
   static String _normalizeCommunityHashtag(String hashtag) {
-    return hashtag.replaceFirst(RegExp(r'^#'), '').toLowerCase().trim();
+    return hashtag.trim().replaceFirst(RegExp(r'^#'), '').toLowerCase().trim();
   }
 
   /// Returns true if this is the community's public channel

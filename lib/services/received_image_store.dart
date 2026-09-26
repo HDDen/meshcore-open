@@ -595,6 +595,10 @@ class ReceivedImageStore extends ChangeNotifier {
   /// True when the queue stopped because the codec was busy encoding. Cleared
   /// by anything that could plausibly have freed it.
   bool _parkedOnBusyDecoder = false;
+
+  /// Set by [handleMemoryPressure] so the decode it cancels is parked rather
+  /// than reported as corrupt.
+  bool _cancelRequested = false;
   bool _foreground = true;
   bool _disposed = false;
 
@@ -775,10 +779,13 @@ class ReceivedImageStore extends ChangeNotifier {
         // `conflicting` means the reassembler threw the old stream away and
         // restarted from this chunk. A stream that had already been surfaced
         // keeps its id (and therefore its message) only if it was still
-        // receiving; anything else gets a fresh entry.
+        // receiving; anything else gets a fresh entry. The same goes for a
+        // plain `accepted`: once an entry is past `receiving` the reassembler
+        // reports its stragglers as `duplicate`, so an accepted chunk on that
+        // key is a new image reusing the 8-bit id and must not overwrite it.
         final resets = outcome.status == ImageChunkStatus.conflicting;
         if (existing != null &&
-            (!resets || existing.state == ReceivedImageState.receiving)) {
+            existing.state == ReceivedImageState.receiving) {
           final updated = existing.copyWith(
             state: ReceivedImageState.receiving,
             receivedChunks: resets
@@ -824,7 +831,9 @@ class ReceivedImageStore extends ChangeNotifier {
             channelIndex: channelIndex,
           ),
         );
-        if (entry == null) return null;
+        if (entry == null || entry.state != ReceivedImageState.receiving) {
+          return null;
+        }
         _queue.remove(entry.streamId);
         return _store(
           entry.copyWith(
@@ -847,7 +856,9 @@ class ReceivedImageStore extends ChangeNotifier {
   ) async {
     final key = result.key;
     var entry = entryForKey(key);
-    if (entry == null) {
+    // A one-chunk image completes without an `accepted` first, so the key may
+    // still point at an older, finished image that reused the id.
+    if (entry == null || entry.state != ReceivedImageState.receiving) {
       final streamId = _uniqueStreamId(
         senderPrefix: key.senderPrefix,
         imgId: key.imgId,
@@ -906,7 +917,7 @@ class ReceivedImageStore extends ChangeNotifier {
       // Already completed by a later chunk; the failure is stale.
       return entry;
     }
-    return _store(
+    final failed = await _store(
       entry.copyWith(
         // `isCorrupt` means every chunk arrived but the bytes were unusable
         // (CRC-16 mismatch or an undecodable metadata byte). The UI must say
@@ -919,6 +930,8 @@ class ReceivedImageStore extends ChangeNotifier {
         error: failure.isCorrupt ? failure.reason.name : null,
       ),
     );
+    await evictToBudget(protect: failed.streamId);
+    return failed;
   }
 
   /// Records the local user's own send so the outgoing bubble can show the real
@@ -1027,6 +1040,7 @@ class ReceivedImageStore extends ChangeNotifier {
   /// Cancels the running decode and stops the queue; the entry goes back to
   /// `reassembled` and will be picked up again later.
   Future<void> handleMemoryPressure() async {
+    _cancelRequested = true;
     decoder?.cancelCodecJob();
     _queue.clear();
     for (final entry in _entries.values.toList()) {
@@ -1190,6 +1204,7 @@ class ReceivedImageStore extends ChangeNotifier {
       return;
     }
     final started = _clock();
+    _cancelRequested = false;
     await _store(entry.copyWith(state: ReceivedImageState.decoding));
 
     ImageCodecResult? result;
@@ -1201,7 +1216,14 @@ class ReceivedImageStore extends ChangeNotifier {
       );
     } catch (error) {
       final current = _entries[entry.streamId] ?? entry;
-      if (!_foreground) {
+      if (_cancelRequested) {
+        await _store(
+          current.copyWith(
+            state: ReceivedImageState.reassembled,
+            needsManualDecode: true,
+          ),
+        );
+      } else if (!_foreground) {
         await _store(current.copyWith(state: ReceivedImageState.reassembled));
       } else {
         await _store(
@@ -1224,6 +1246,16 @@ class ReceivedImageStore extends ChangeNotifier {
     }
     final png = result.pngBytes;
     if (result.status != ImageCodecStatus.completed || png == null) {
+      if (_cancelRequested) {
+        // The codec reports a killed job as `failed`; the bitstream is fine.
+        await _store(
+          current.copyWith(
+            state: ReceivedImageState.reassembled,
+            needsManualDecode: true,
+          ),
+        );
+        return;
+      }
       await _store(
         current.copyWith(
           state: ReceivedImageState.failedCorrupt,
@@ -1348,9 +1380,15 @@ class ReceivedImageStore extends ChangeNotifier {
     final evicted = <String>[];
     final now = _clock();
 
-    // 1. Age budget: nothing survives, not even the bitstream.
+    // 1. Age budget: nothing survives, not even the bitstream. A failed image
+    // has no bubble worth keeping, so it goes entirely, sidecar included.
     for (final entry in _entries.values.toList()) {
       if (now.difference(entry.firstSeen) <= maxAge) continue;
+      if (entry.state.isFailure) {
+        await deleteImage(entry.streamId);
+        evicted.add(entry.streamId);
+        continue;
+      }
       if (!entry.pngStored && !entry.bitstreamStored) continue;
       await blobs.deletePng(entry.streamId);
       await blobs.deleteBitstream(entry.streamId);
@@ -1412,6 +1450,22 @@ class ReceivedImageStore extends ChangeNotifier {
         ),
       );
       evicted.add(victim.streamId);
+    }
+
+    // 3. Failed entries hold no PNG, so the loop above never counts them; cap
+    // them by entry count, oldest first, or a noisy mesh grows the sidecars
+    // (and the startup load) without bound.
+    if (_entries.length > maxImages) {
+      final failures =
+          _entries.values
+              .where((e) => e.state.isFailure && e.streamId != protect)
+              .toList()
+            ..sort((a, b) => a.firstSeen.compareTo(b.firstSeen));
+      for (final victim in failures) {
+        if (_entries.length <= maxImages) break;
+        await deleteImage(victim.streamId);
+        evicted.add(victim.streamId);
+      }
     }
 
     if (evicted.isNotEmpty) _notify();

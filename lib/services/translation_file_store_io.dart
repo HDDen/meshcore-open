@@ -58,7 +58,10 @@ class TranslationFileStore {
     required Stream<List<int>> chunks,
   }) async {
     final directoryPath = await modelDirectoryPath();
-    final file = File('$directoryPath/$fileName');
+    final finalPath = '$directoryPath/$fileName';
+    // Hidden until complete, so a killed download is swept by
+    // [scanDownloadedModels] instead of being registered as a model.
+    final file = File(_partPath(directoryPath, fileName));
     final sink = file.openWrite();
     var fileSizeBytes = 0;
     var completed = false;
@@ -74,8 +77,9 @@ class TranslationFileStore {
         await file.delete();
       }
     }
+    await file.rename(finalPath);
     return DownloadedModelFile(
-      localPath: file.path,
+      localPath: finalPath,
       fileSizeBytes: fileSizeBytes,
     );
   }
@@ -91,7 +95,8 @@ class TranslationFileStore {
   }) async {
     final dir = await modelDirectoryPath();
     final finalPath = '$dir/$fileName';
-    final sink = File(finalPath).openWrite();
+    final partPath = _partPath(dir, fileName);
+    final sink = File(partPath).openWrite();
     var totalSize = 0;
     var completed = false;
     try {
@@ -110,14 +115,18 @@ class TranslationFileStore {
         }
       }
       if (!completed) {
-        final finalFile = File(finalPath);
-        if (finalFile.existsSync()) {
-          await finalFile.delete();
+        final partFile = File(partPath);
+        if (partFile.existsSync()) {
+          await partFile.delete();
         }
       }
     }
+    await File(partPath).rename(finalPath);
     return DownloadedModelFile(localPath: finalPath, fileSizeBytes: totalSize);
   }
+
+  String _partPath(String dir, String fileName) =>
+      fileName.startsWith('.') ? '$dir/$fileName.part' : '$dir/.$fileName.part';
 }
 
 class DownloadedModelFile {

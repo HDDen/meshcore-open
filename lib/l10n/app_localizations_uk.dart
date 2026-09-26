@@ -111,6 +111,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messageStatus_repeated => 'Почув неодноразово';
 
   @override
+  String get urlImage_enable => 'Показувати зображення за URL';
+
+  @override
+  String get urlImage_possible =>
+      'Можливе зображення за URL; увімкніть це в Налаштуваннях.';
+
+  @override
   String get common_reboot => 'Перезавантажити';
 
   @override
@@ -368,6 +375,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'Налаштування радіо оновлено';
 
   @override
+  String get settings_radioSettingsNotApplied =>
+      'Радіомодуль не застосував ці налаштування';
+
+  @override
   String get settings_regionSettings => 'Ріси';
 
   @override
@@ -614,6 +625,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_infoPublicKey => 'Відкритий ключ';
+
+  @override
+  String get settings_publicKeyCopied => 'Публічний ключ скопійовано';
 
   @override
   String get settings_infoContactsCount => 'Кількість контактів';
@@ -1358,6 +1372,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_publicChannelAdded => 'Публічний канал додано';
 
   @override
+  String get channels_noFreeSlots => 'Немає вільних слотів для каналів';
+
+  @override
   String get channels_sortBy => 'Сортувати за';
 
   @override
@@ -1502,7 +1519,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_me => 'Я';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Реакції';
 
   @override
   String get emojiCategorySmileys => 'Емодзі';
@@ -1653,14 +1670,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get routing_modeAuto => 'Автомобіль';
 
   @override
-  String get routing_modeFlood => 'Повені';
+  String get routing_modeFlood => 'Через всю мережу';
 
   @override
   String get routing_modeManual => 'Інструкція';
 
   @override
   String get routing_modeAutoHint =>
-      'Автоматично обирає найкращий відомий шлях, та у разі відсутності відомого шляху, використовує алгоритм \"занурення\".';
+      'Автоматично обирає найкращий відомий шлях, а за відсутності відомого шляху використовує режим «через всю мережу» (flood).';
 
   @override
   String get routing_modeFloodHint =>
@@ -1701,7 +1718,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get routing_inUse => 'У робочому стані';
 
   @override
-  String get routing_qualityStrong => 'Сильний перший стрибок';
+  String get routing_qualityStrong => 'Сильний перший перехід';
 
   @override
   String get routing_qualityGood => 'Чудова перша спроба';
@@ -1713,7 +1730,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get routing_qualityWorked => 'Доставлено';
 
   @override
-  String get routing_qualityFlood => 'Дізнався через новини';
+  String get routing_qualityFlood => 'Отримано через всю мережу (flood)';
 
   @override
   String get routing_qualityUntested => 'Не протестовано';
@@ -1732,7 +1749,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => 'Доставка під час повені';
+  String get routing_floodDelivery => 'Доставка через всю мережу (flood)';
 
   @override
   String get pathEditor_title => 'Створити маршрут';
@@ -1744,10 +1761,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pathEditor_noHops =>
-      'Ще не додано хміль. Натисніть на відповідні кнопки, щоб додати його в потрібному порядку, або збережіть рецепт без хмілю, щоб відправити його безпосередньо.';
+      'Ще не додано жодного переходу. Натисніть на відповідні кнопки нижче, щоб додати їх у потрібному порядку, або збережіть шлях без переходів, щоб надіслати напряму.';
 
   @override
-  String get pathEditor_addHops => 'Додавайте хміль у наступній послідовності.';
+  String get pathEditor_addHops => 'Додавайте переходи в потрібному порядку.';
 
   @override
   String get pathEditor_searchRepeaters => 'Пошук повторювачів';
@@ -1776,7 +1793,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pathEditor_usePath => 'Використовуйте цей шлях';
 
   @override
-  String get pathEditor_removeHop => 'Видалити хміль';
+  String get pathEditor_removeHop => 'Видалити перехід';
 
   @override
   String get pathEditor_unknownHop => 'Невідомий ретранслятор';
@@ -2719,7 +2736,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_floodMax =>
-      'Максимальна кількість стрибків під час повені';
+      'Максимальна кількість переходів під час поширення через всю мережу (flood)';
 
   @override
   String get repeater_floodMaxHelper =>
@@ -2779,7 +2796,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_txDelayHelper =>
-      'Повторне надсилання з урахуванням навантаження від потоків транспорту, як множник від часу передачі пакета (0-2, за замовчуванням 0,5). Чим вище значення, тим менше конфліктів, але повільніше передавання.';
+      'Затримка повторного надсилання для трафіку через всю мережу (flood), як множник від часу передачі пакета (0-2, за замовчуванням 0,5). Чим вище значення, тим менше конфліктів, але повільніше передавання.';
 
   @override
   String get repeater_directTxDelay => 'Пряме затримка TX';
@@ -2806,18 +2823,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get repeater_actionsTitle => 'Дії';
 
   @override
-  String get repeater_sendAdvert => 'Надіслати рекламу щодо повені';
+  String get repeater_sendAdvert =>
+      'Надіслати оголошення через всю мережу (flood)';
 
   @override
   String get repeater_sendAdvertSubtitle =>
-      'Розповсюдити рекламу про надзвичайну ситуацію (повен) через мережу.';
+      'Розповсюдити оголошення через всю мережу (flood).';
 
   @override
-  String get repeater_sendAdvertZeroHop => 'Надіслати рекламу без посередників';
+  String get repeater_sendAdvertZeroHop =>
+      'Надіслати оголошення без ретрансляції';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
-      'Розповсюдити рекламу з однією переадресацією (без повторного розповсюдження)';
+      'Розповсюдити оголошення лише на один перехід (без ретрансляторів)';
 
   @override
   String get repeater_clockSync => 'Синхронізувати годинник зараз';
@@ -3162,6 +3181,75 @@ class AppLocalizationsUk extends AppLocalizations {
       'ПРИМІТКА: для різних команд «set»... також існує команда «get»...';
 
   @override
+  String get repeater_frequencyRangeHelper => '150-2500 МГц';
+
+  @override
+  String get repeater_frequencyInvalid => 'Некоректна частота (150-2500 МГц)';
+
+  @override
+  String get repeater_txPowerRangeHelper => 'від -9 до 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Помилки прийому';
+
+  @override
+  String get room_postsStored => 'Публікації';
+
+  @override
+  String get room_postsPushed => 'Надіслано публікацій';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Режим завантаження регіонів: надсилайте по одному імені регіону в рядку, з відступом пробілами під батьківським регіоном (додайте F після імені, щоб дозволити поширення через всю мережу). Рядки не отримують відповіді. Надішліть порожній рядок, щоб завершити, а потім \"region save\", щоб зберегти результат.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Рядок регіону або порожній рядок для завершення';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(кінець завантаження регіонів)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Визначає ланцюжок регіонів однією командою: кожне ім’я додається під попереднім; \"name,parent\" додає ім’я і продовжує під вказаним батьківським регіоном. У відповідь повертає список регіонів.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Встановлює максимальну кількість переходів для пересилання пакетів через всю мережу (flood) без визначеної області регіону (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Встановлює максимальну кількість переходів для пересилання оголошень через всю мережу (flood) (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Показує максимальну кількість переходів для пакетів через всю мережу (flood) без визначеної області.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Показує максимальну кількість переходів для оголошень через всю мережу (flood).';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Перемикає підсилення RX (LNA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Перемикає підсилення TX (PA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Показує, чи увімкнено підсилення RX вхідного модуля LoRa.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Показує, чи увімкнено підсилення TX вхідного модуля LoRa.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Доступно лише для прошивки, зібраної з мостом (RS232 або ESP-NOW).';
+
+  @override
   String get repeater_general => 'Загальні';
 
   @override
@@ -3210,7 +3298,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpAdvertZeroHop =>
-      'Надсилає рекламу, яка не проходить через інші мережі (лише до безпосередніх сусідів).';
+      'Надсилає оголошення, яке не проходить через інші мережі (лише до безпосередніх сусідів).';
 
   @override
   String get repeater_cliHelpStartOta =>
@@ -3334,11 +3422,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetAdvertInterval =>
-      'Показує тривалість місцевої рекламної паузи в хвилинах.';
+      'Показує тривалість інтервалу локальних оголошень у хвилинах.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      'Показує інтервал часу між рекламними роликами про повені, виражений у годинах.';
+      'Показує інтервал оголошень через всю мережу (flood), виражений у годинах.';
 
   @override
   String get repeater_cliHelpGetGuestPassword =>
@@ -3356,7 +3444,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetTxDelay =>
-      'Показує коефіцієнт затримки сигналу у режимі затоплення.';
+      'Показує коефіцієнт затримки сигналу в режимі «через всю мережу» (flood).';
 
   @override
   String get repeater_cliHelpGetDirectTxDelay =>
@@ -3364,7 +3452,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetFloodMax =>
-      'Показує максимальну кількість підйомів, спричинених повенем.';
+      'Показує максимальну кількість переходів під час пересилання через всю мережу (flood).';
 
   @override
   String get repeater_cliHelpGetOwnerInfo =>
@@ -3452,11 +3540,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionListAllowed =>
-      'Перелік регіонів, де дозволено рух транспорту під час повені.';
+      'Перелік регіонів, де дозволено поширення через всю мережу (flood).';
 
   @override
   String get repeater_cliHelpRegionListDenied =>
-      'Перелік регіонів, які забороняють рух транспорту під час повені.';
+      'Перелік регіонів, де заборонено поширення через всю мережу (flood).';
 
   @override
   String get repeater_cliHelpStatsPackets =>
@@ -4240,7 +4328,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contacts_zeroHopAdvert => 'Оголошення без ретрансляції';
 
   @override
-  String get contacts_floodAdvert => 'Оголошення з ретрансляцією';
+  String get contacts_floodAdvert => 'Оголошення через всю мережу (flood)';
 
   @override
   String get contacts_copyAdvertToClipboard => 'Копіювати оголошення';
@@ -4942,7 +5030,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      'Рухування потоків: кожен ретрансатор у діапазоні відправлює кожен пакет, тому канал залишається занятшим довше, ніж це.';
+      'Поширення через всю мережу (flood): кожен ретранслятор у діапазоні пересилає кожен пакет, тому канал залишається зайнятим довше, ніж зазначено тут.';
 
   @override
   String get imageSend_parityTitle => 'Пакет відновлення';
@@ -5071,5 +5159,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes хв $seconds с';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Понад 158 байтів: надсилається не більше $count разів';
   }
 }

@@ -111,6 +111,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get messageStatus_repeated => 'Usłyszałem to wielokrotnie';
 
   @override
+  String get urlImage_enable => 'Włącz obrazy z URL';
+
+  @override
+  String get urlImage_possible =>
+      'Możliwy obraz z URL; włącz go w Ustawieniach.';
+
+  @override
   String get common_reboot => 'Uruchom ponownie';
 
   @override
@@ -372,6 +379,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ustawienia radia zostały zaktualizowane';
 
   @override
+  String get settings_radioSettingsNotApplied =>
+      'Radio nie zastosowało tych ustawień';
+
+  @override
   String get settings_regionSettings => 'Regiony';
 
   @override
@@ -504,7 +515,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Tryb środowiska telemetrycznego';
 
   @override
-  String get settings_advertLocation => 'Lokalizacja reklamowa';
+  String get settings_advertLocation => 'Lokalizacja rozgłoszenia';
 
   @override
   String get settings_advertLocationSubtitle =>
@@ -621,6 +632,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_infoPublicKey => 'Klucz Publiczny';
+
+  @override
+  String get settings_publicKeyCopied => 'Skopiowano klucz publiczny';
 
   @override
   String get settings_infoContactsCount => 'Liczba kontaktów';
@@ -837,7 +851,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationSubtitle =>
-      'Przełączaj się między najlepszymi ścieżkami a trybem zalewowym.';
+      'Przełączaj się między najlepszymi ścieżkami a trybem flood.';
 
   @override
   String get appSettings_autoRouteRotationEnabled =>
@@ -1376,6 +1390,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get channels_publicChannelAdded => 'Kanał publiczny dodany';
 
   @override
+  String get channels_noFreeSlots => 'Wszystkie miejsca na kanały są zajęte';
+
+  @override
   String get channels_sortBy => 'Sortuj po';
 
   @override
@@ -1522,7 +1539,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_me => 'Ja';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Reakcje Emoji';
 
   @override
   String get emojiCategorySmileys => 'Emoji';
@@ -1672,7 +1689,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get routing_modeAuto => 'Samochód';
 
   @override
-  String get routing_modeFlood => 'Powódź';
+  String get routing_modeFlood => 'Flood';
 
   @override
   String get routing_modeManual => 'Instrukcja obsługi';
@@ -1752,22 +1769,22 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => 'Dostawa w przypadku powodzi';
+  String get routing_floodDelivery => 'Dostawa flood';
 
   @override
   String get pathEditor_title => 'Stworzenie ścieżki';
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '$count z 64 rodzajów chmielu';
+    return '$count z 64 skoków';
   }
 
   @override
   String get pathEditor_noHops =>
-      'Na razie nie dodano żadnych chmielu. Aby dodać je w odpowiedniej kolejności, kliknij w odpowiednie przyciski poniżej, lub zapisz przepis bez chmielu, aby wysłać go bezpośrednio.';
+      'Nie dodano jeszcze żadnych skoków. Stuknij przekaźniki poniżej, aby dodać je w kolejności, lub zapisz bez skoków, aby wysłać bezpośrednio.';
 
   @override
-  String get pathEditor_addHops => 'Dodawaj chmiel zgodnie z kolejnością.';
+  String get pathEditor_addHops => 'Dodawaj skoki w kolejności.';
 
   @override
   String get pathEditor_searchRepeaters => 'Funkcje powtarzania';
@@ -1795,7 +1812,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pathEditor_usePath => 'Użyj tej ścieżki.';
 
   @override
-  String get pathEditor_removeHop => 'Usuń dziką psiankę';
+  String get pathEditor_removeHop => 'Usuń skok';
 
   @override
   String get pathEditor_unknownHop => 'Nieznany repeater';
@@ -1824,7 +1841,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_compressOutgoingMessages => 'Kompresuj wychodzące wiadomości';
 
   @override
-  String get chat_floodForced => 'Zalew (wymuszony)';
+  String get chat_floodForced => 'Flood (wymuszony)';
 
   @override
   String get chat_directForced => 'Bezpośrednio (wymuszono)';
@@ -1835,7 +1852,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get chat_floodAuto => 'Zalew (automatyczny)';
+  String get chat_floodAuto => 'Flood (automatyczny)';
 
   @override
   String get chat_direct => 'Bezpośrednio';
@@ -2310,7 +2327,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get login_autoUseSavedPath => 'Automatycznie (użyj zapisanej ścieżki)';
 
   @override
-  String get login_forceFloodMode => 'Wymuś tryb zalewowy';
+  String get login_forceFloodMode => 'Wymuś tryb flood';
 
   @override
   String get login_managePaths => 'Zarządzaj Ścieżkami';
@@ -2484,17 +2501,17 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
-    return 'Razem: $total, Zalew: $flood, Bezpośrednio: $direct';
+    return 'Razem: $total, Flood: $flood, Bezpośrednio: $direct';
   }
 
   @override
   String repeater_packetRxTotal(int total, String flood, String direct) {
-    return 'Razem: $total, Zalew: $flood, Bezpośrednio: $direct';
+    return 'Razem: $total, Flood: $flood, Bezpośrednio: $direct';
   }
 
   @override
   String repeater_duplicatesFloodDirect(String flood, String direct) {
-    return 'Zalew: $flood, Bezpośrednie: $direct';
+    return 'Flood: $flood, Bezpośrednie: $direct';
   }
 
   @override
@@ -2601,7 +2618,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodAdvertInterval => 'Interwał rozgłoszenia zalewowego';
+  String get repeater_floodAdvertInterval => 'Interwał rozgłoszenia flood';
 
   @override
   String repeater_floodAdvertIntervalHours(int hours) {
@@ -2734,7 +2751,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Aktualizacja danych dotyczących operatora';
 
   @override
-  String get repeater_floodMax => 'Maksymalna liczba skoków podczas powodzi';
+  String get repeater_floodMax => 'Maksymalna liczba skoków flood';
 
   @override
   String get repeater_floodMaxHelper =>
@@ -2795,7 +2812,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_txDelayHelper =>
-      'Ustawienie odstępu dla ruchu związanego z powodzią, jako mnożnik czasu przesyłania pakietu (0-2, domyślnie 0,5). Wyższe wartości oznaczają mniejszą liczbę kolizji, ale wolniejszą prędkość przesyłania.';
+      'Ustawienie odstępu dla ruchu flood, jako mnożnik czasu przesyłania pakietu (0-2, domyślnie 0,5). Wyższe wartości oznaczają mniejszą liczbę kolizji, ale wolniejszą prędkość przesyłania.';
 
   @override
   String get repeater_directTxDelay => 'Bezpośrednie opóźnienie sygnału TX';
@@ -2822,18 +2839,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get repeater_actionsTitle => 'Działania';
 
   @override
-  String get repeater_sendAdvert => 'Wysłać reklamę dotyczącą powodzi';
+  String get repeater_sendAdvert => 'Wysłać rozgłoszenie flood';
 
   @override
   String get repeater_sendAdvertSubtitle =>
-      'Wyemituj reklamę dotyczącą powodzi w sieci.';
+      'Wyemituj rozgłoszenie flood w sieci.';
 
   @override
-  String get repeater_sendAdvertZeroHop => 'Wysłać reklamę bez pośrednictwa';
+  String get repeater_sendAdvertZeroHop => 'Wysłać rozgłoszenie zero-hop';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
-      'Napisz reklamę, która będzie transmitowana bezpośrednio (bez powtarzania).';
+      'Wyemituj rozgłoszenie jednoskokowe (bez pośredników).';
 
   @override
   String get repeater_clockSync => 'Synchronizuj zegar';
@@ -3000,7 +3017,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMax =>
-      'Ustawia maksymalną liczbę skoków pakietu zalewowego (jeśli >= max, pakiet nie jest przekierowywany)';
+      'Ustawia maksymalną liczbę skoków pakietu flood (jeśli >= max, pakiet nie jest przekierowywany)';
 
   @override
   String get repeater_cliHelpSetIntThresh =>
@@ -3047,7 +3064,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetTxDelay =>
-      'Ustawia czynnik mnożony przez czas utrzymania w trybie zalewowym dla pakietu oraz z wykorzystaniem losowego systemu slotów, aby opóźnić jego przesyłanie (zmniejszając prawdopodobieństwo kolizji).';
+      'Ustawia czynnik mnożony przez czas utrzymania w trybie flood dla pakietu oraz z wykorzystaniem losowego systemu slotów, aby opóźnić jego przesyłanie (zmniejszając prawdopodobieństwo kolizji).';
 
   @override
   String get repeater_cliHelpSetDirectTxDelay =>
@@ -3110,7 +3127,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegion =>
-      '(tylko port szeregowy) Wyświetla wszystkie zdefiniowane regiony i aktualne uprawnienia do zalewu.';
+      '(tylko port szeregowy) Wyświetla wszystkie zdefiniowane regiony i aktualne uprawnienia flood.';
 
   @override
   String get repeater_cliHelpRegionLoad =>
@@ -3130,11 +3147,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionAllowf =>
-      'Ustawia uprawnienia \'F\' (zalewowe) dla podanego regionu. (\'\' dla zakresu globalnego/starszego)';
+      'Ustawia uprawnienia \'F\' (flood) dla podanego regionu. (\'\' dla zakresu globalnego/starszego)';
 
   @override
   String get repeater_cliHelpRegionDenyf =>
-      'Usuwa uprawnienie \'F\' (zalewowe) dla podanej strefy. (ZALECANE: na tym etapie NIE zaleca się używania tego na globalnym/starszym zakresie!!).';
+      'Usuwa uprawnienie \'F\' (flood) dla podanej strefy. (ZALECANE: na tym etapie NIE zaleca się używania tego na globalnym/starszym zakresie!!).';
 
   @override
   String get repeater_cliHelpRegionHome =>
@@ -3176,6 +3193,76 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get repeater_commandsListNote =>
       'UWAGA: dla różnych poleceń \"set ...\" istnieje również polecenie \"get ...\".';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid =>
+      'Nieprawidłowa częstotliwość (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 do 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Błędy Odbioru';
+
+  @override
+  String get room_postsStored => 'Posty';
+
+  @override
+  String get room_postsPushed => 'Wysłane Posty';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Tryb wczytywania regionów: wysyłaj po jednej nazwie regionu w linii, wcięte spacjami pod regionem nadrzędnym (dodaj F po nazwie, aby zezwolić na flood). Linie nie otrzymują odpowiedzi. Wyślij pustą linię, aby zakończyć, a następnie \"region save\", aby zachować wynik.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Linia regionu lub pusta, aby zakończyć';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(koniec wczytywania regionów)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definiuje łańcuch regionów w jednej komendzie: każda nazwa jest dodawana pod poprzednią; \"name,parent\" dodaje nazwę, a następnie kontynuuje pod podanym regionem nadrzędnym. Odpowiada listą regionów.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Ustawia maksymalną liczbę skoków przy przekazywaniu pakietów flood bez przypisanego regionu (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Ustawia maksymalną liczbę skoków przy przekazywaniu rozgłoszeń flood (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Pokazuje maksymalną liczbę skoków dla pakietów flood bez przypisanego regionu.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Pokazuje maksymalną liczbę skoków dla rozgłoszeń flood.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Przełącza wzmocnienie RX (LNA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Przełącza wzmocnienie TX (PA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Pokazuje, czy wzmocnienie RX modułu front-end LoRa jest włączone.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Pokazuje, czy wzmocnienie TX modułu front-end LoRa jest włączone.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Dostępne tylko w firmware zbudowanym z mostkiem (RS232 lub ESP-NOW).';
 
   @override
   String get repeater_general => 'Ogólne';
@@ -3226,7 +3313,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpAdvertZeroHop =>
-      'Wysyła reklamę, która dociera bezpośrednio do sąsiadów (bez pośrednictwa).';
+      'Wysyła rozgłoszenie, które dociera bezpośrednio do sąsiadów (bez pośrednictwa).';
 
   @override
   String get repeater_cliHelpStartOta =>
@@ -3349,11 +3436,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetAdvertInterval =>
-      'Pokazuje czas trwania lokalnej reklamy w minutach.';
+      'Pokazuje interwał lokalnego rozgłoszenia w minutach.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      'Pokazuje interwał reklamowy dotyczący powodzi w godzinach.';
+      'Pokazuje interwał rozgłoszenia flood w godzinach.';
 
   @override
   String get repeater_cliHelpGetGuestPassword =>
@@ -3373,7 +3460,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetTxDelay =>
-      'Pokazuje współczynnik opóźnienia transmisji w trybie zalewowym.';
+      'Pokazuje współczynnik opóźnienia transmisji w trybie flood.';
 
   @override
   String get repeater_cliHelpGetDirectTxDelay =>
@@ -3381,7 +3468,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetFloodMax =>
-      'Pokazuje maksymalną liczbę skoków spowodowanych powodzią.';
+      'Pokazuje maksymalną liczbę skoków flood.';
 
   @override
   String get repeater_cliHelpGetOwnerInfo =>
@@ -3469,11 +3556,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionListAllowed =>
-      'Wymienia regiony, w których dopuszczony jest ruch związany z powodzami.';
+      'Wymienia regiony, w których dozwolony jest ruch flood.';
 
   @override
   String get repeater_cliHelpRegionListDenied =>
-      'Wymienia regiony, w których ruch związany z powodziami jest ograniczony.';
+      'Wymienia regiony, w których ruch flood jest zabroniony.';
 
   @override
   String get repeater_cliHelpStatsPackets =>
@@ -3761,7 +3848,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get channelPath_unknownPath => 'Nieznane';
 
   @override
-  String get channelPath_floodPath => 'Zalew';
+  String get channelPath_floodPath => 'Flood';
 
   @override
   String get channelPath_directPath => 'Bezpośrednio';
@@ -4035,7 +4122,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get pathTrace_someHopsNoLocation =>
-      'Jeden lub więcej z chmieli nie ma określonej lokalizacji!';
+      'Jeden lub więcej skoków nie ma określonej lokalizacji!';
 
   @override
   String get pathTrace_clearTooltip => 'Wyczyść ścieżkę';
@@ -4253,7 +4340,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get contacts_zeroHopAdvert => 'Rozgłoszenie zero-hop';
 
   @override
-  String get contacts_floodAdvert => 'Rozgłoszenie zalewowe';
+  String get contacts_floodAdvert => 'Rozgłoszenie flood';
 
   @override
   String get contacts_copyAdvertToClipboard => 'Kopiuj rozgłoszenie do schowka';
@@ -5079,5 +5166,10 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes minut $seconds sekundy';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Powyżej 158 bajtów: wysyłane maksymalnie $count razy';
   }
 }

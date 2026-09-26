@@ -616,7 +616,8 @@ void main() {
     test(
       'ContactDiscoveryStore decodes and migrates legacy mode-encoded paths',
       () async {
-        final store = ContactDiscoveryStore();
+        final store = ContactDiscoveryStore()
+          ..setPublicKeyHex = 'AABBCCDDEEFF00112233';
 
         final rawPath = Uint8List(64)
           ..[0] = 0x11
@@ -641,6 +642,8 @@ void main() {
         expect(contacts, hasLength(1));
         expect(contacts.first.pathLength, equals(1));
         expect(contacts.first.path, equals(Uint8List.fromList([0x11, 0x22])));
+        expect(prefs.getString('discovered_contacts'), isNull);
+        expect(prefs.getString(store.keyFor), isNotNull);
       },
     );
   });

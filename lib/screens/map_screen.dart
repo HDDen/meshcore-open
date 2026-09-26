@@ -22,6 +22,7 @@ import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
 import '../utils/contact_search.dart';
+import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/battery_utils.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/quick_switch_bar.dart';
@@ -59,7 +60,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen>
+    with DisconnectNavigationMixin {
   // Zoom level at which node labels start to appear
   static const double _labelZoomThreshold = 14.0;
   // Below this zoom, nearby nodes collapse into clusters.
@@ -345,6 +347,9 @@ class _MapScreenState extends State<MapScreen> {
               _MapConnectorSnapshot.fromConnector,
             );
         final connector = connectorSnapshot.connector;
+        if (!checkConnectionAndNavigate(connector)) {
+          return const SizedBox.shrink();
+        }
         final settings = context.select<AppSettingsService, AppSettings>(
           (service) => service.settings,
         );
@@ -428,20 +433,17 @@ class _MapScreenState extends State<MapScreen> {
 
         // Compute guessed locations with caching
         final maxRangeKm = _estimateLoRaRangeKm(connector);
-        final pathHashByteWidth = connector.pathHashByteWidth
-            .clamp(1, 4)
-            .toInt();
         final filteredKeys = guessCandidates
             .map((c) => '${c.publicKeyHex}:${c.path.join("-")}')
             .join(',');
         final anchorKeys = allContactsWithLocation
             .map(
               (c) =>
-                  '${c.publicKeyHex}:${c.latitude}:${c.longitude}:${PathHelper.formatHopHex(c.path.isNotEmpty ? c.path.sublist(max(0, c.path.length - pathHashByteWidth)) : const [])}',
+                  '${c.publicKeyHex}:${c.latitude}:${c.longitude}:${PathHelper.formatHopHex(c.path.isNotEmpty ? c.path.sublist(max(0, c.path.length - c.pathHashWidth)) : const [])}',
             )
             .join(',');
         final cacheKey =
-            '$filteredKeys|$anchorKeys|$pathHistoryVersion:$pathHashByteWidth:${connector.currentFreqHz}:${connector.currentSf}:${connector.currentBwHz}:${connector.currentTxPower}:${settings.mapShowGuessedLocations}';
+            '$filteredKeys|$anchorKeys|$pathHistoryVersion:${connector.currentFreqHz}:${connector.currentSf}:${connector.currentBwHz}:${connector.currentTxPower}:${settings.mapShowGuessedLocations}';
         if (cacheKey != _guessedLocationsCacheKey) {
           _guessedLocationsCacheKey = cacheKey;
           _cachedGuessedLocations = settings.mapShowGuessedLocations
@@ -450,7 +452,6 @@ class _MapScreenState extends State<MapScreen> {
                   allContactsWithLocation,
                   pathHistory,
                   maxRangeKm,
-                  pathHashByteWidth,
                 )
               : [];
         }
@@ -1012,18 +1013,19 @@ class _MapScreenState extends State<MapScreen> {
     List<Contact> withLocation,
     PathHistoryService pathHistory,
     double? maxRangeKm,
-    int pathHashByteWidth,
   ) {
     final result = <_GuessedLocation>[];
-    final hopWidth = pathHashByteWidth.clamp(1, 4).toInt();
+    // Paths keep the width they were learned with, so index every width.
     final anchorsByPrefix = <String, List<Contact>>{};
     for (final repeater in withLocation) {
       if (repeater.type != advTypeRepeater) continue;
-      if (repeater.publicKey.length < hopWidth) continue;
-      final prefix = PathHelper.formatHopHex(
-        repeater.publicKey.sublist(0, hopWidth),
-      );
-      anchorsByPrefix.putIfAbsent(prefix, () => []).add(repeater);
+      for (var width = 1; width <= 3; width++) {
+        if (repeater.publicKey.length < width) continue;
+        final prefix = PathHelper.formatHopHex(
+          repeater.publicKey.sublist(0, width),
+        );
+        anchorsByPrefix.putIfAbsent(prefix, () => []).add(repeater);
+      }
     }
 
     for (final contact in allContacts) {
@@ -1039,13 +1041,18 @@ class _MapScreenState extends State<MapScreen> {
       // Collect the contact-side (last-hop) repeater from every known path.
       // path = [device-side hop, ..., contact-side hop]
       // Only the last hop chunk is actually within radio range of the contact.
-      final pathSets = <List<int>>[
-        contact.path.toList(),
+      final pathSets = <(List<int>, int)>[
+        (contact.path.toList(), contact.pathHashWidth),
         ...pathHistory
             .getRecentPaths(contact.publicKeyHex)
-            .map((r) => r.pathBytes),
+            .map(
+              (r) => (
+                r.pathBytes,
+                Contact.inferPathHashWidth(r.hopCount, r.pathBytes.length),
+              ),
+            ),
       ];
-      for (final pathBytes in pathSets) {
+      for (final (pathBytes, hopWidth) in pathSets) {
         if (pathBytes.isEmpty) continue;
         final lastHop = pathBytes.sublist(max(0, pathBytes.length - hopWidth));
         if (lastHop.isEmpty) continue;
@@ -1081,22 +1088,16 @@ class _MapScreenState extends State<MapScreen> {
           continue; // discard implausible guesses near (0, 0)
         }
       } else {
-        double lat = 0, lon = 0, weight = 1.0;
-        int counted = 0;
+        double lat = 0, lon = 0, weight = 1.0, totalWeight = 0;
         for (final a in anchors) {
-          if (counted == 0) {
-            lat = a.latitude;
-            lon = a.longitude;
-          } else {
-            lat += a.latitude * weight;
-            lon += a.longitude * weight;
-          }
+          lat += a.latitude * weight;
+          lon += a.longitude * weight;
+          totalWeight += weight;
           // weight subsequent anchors less to create a bias towards the first (if more than 2)
           weight = weight / 2;
-          counted++;
         }
         position = _offsetGuessedPosition(
-          LatLng(lat / anchors.length, lon / anchors.length),
+          LatLng(lat / totalWeight, lon / totalWeight),
           contact,
           radiusMeters: anchors.length >= 3 ? 80 : 120,
         );
@@ -3794,6 +3795,7 @@ int _mapContactSignature(Contact contact) {
     contact.flags,
     contact.pathLength,
     _bytesSignature(contact.path),
+    contact.pathHashWidth,
     contact.pathOverride,
     _bytesSignature(contact.pathOverrideBytes),
     contact.latitude,
@@ -4029,6 +4031,7 @@ MarkerPayload? parseMarkerText(String text) {
   final lat = double.tryParse(match.group(1) ?? '');
   final lon = double.tryParse(match.group(2) ?? '');
   if (lat == null || lon == null) return null;
+  if (lat.abs() > 90 || lon.abs() > 180) return null;
   final label = (match.group(3) ?? '').trim();
   final flags = (match.group(4) ?? '').trim();
   return MarkerPayload(position: LatLng(lat, lon), label: label, flags: flags);

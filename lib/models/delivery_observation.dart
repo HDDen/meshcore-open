@@ -35,7 +35,7 @@ class DeliveryObservation {
       pathLength: json['path_length'] as int,
       messageBytes: json['message_bytes'] as int,
       secondsSinceLastRx: json['seconds_since_last_rx'] as int? ?? 0,
-      isFlood: json['is_flood'] as bool,
+      isFlood: json['is_flood'] as bool? ?? false,
       deliveryMs: json['delivery_ms'] as int,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );

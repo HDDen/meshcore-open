@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
+import '../services/received_image_store.dart';
 import '../services/ui_view_state_service.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -814,6 +815,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       connector.channels,
       connector.maxChannels,
     );
+    if (nextIndex == null) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_noFreeSlots),
+      );
+      return;
+    }
     final hasPublicChannel = connector.channels.any((c) => c.isPublicChannel);
     int? selectedOption;
     final nameController = TextEditingController();
@@ -1533,6 +1541,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final pskController = TextEditingController(text: channel.pskHex);
     bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
     bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
+    bool urlImagesEnabled = connector.isChannelUrlImagesEnabled(channel.index);
     String? selectedCyr2LatProfileId = connector.getChannelCyr2LatProfileId(
       channel.index,
     );
@@ -1635,6 +1644,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         ),
                       ),
                     ],
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(sheetContext.l10n.urlImage_enable),
+                      value: urlImagesEnabled,
+                      onChanged: (value) =>
+                          setSheetState(() => urlImagesEnabled = value),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -1684,6 +1700,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               channel.index,
                               cyr2latEnabled,
                             );
+                            await connector.setChannelUrlImagesEnabled(
+                              channel.index,
+                              urlImagesEnabled,
+                            );
                             await connector.setChannelCyr2LatProfileId(
                               channel.index,
                               selectedCyr2LatProfileId,
@@ -1725,6 +1745,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelMessageStore channelMessageStore,
     Channel channel,
   ) {
+    ReceivedImageStore? imageStore;
+    try {
+      imageStore = context.read<ReceivedImageStore>();
+    } on ProviderNotFoundException {
+      imageStore = null;
+    }
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1744,6 +1770,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 await connector.deleteChannel(channel.index);
 
                 await channelMessageStore.clearChannelMessages(channel.index);
+                await imageStore?.deleteImagesForChannel(channel.index);
 
                 if (!context.mounted) return;
 
@@ -1788,12 +1815,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
-  int _findNextAvailableIndex(List<Channel> channels, int maxChannels) {
+  int? _findNextAvailableIndex(List<Channel> channels, int maxChannels) {
     final usedIndices = channels.map((c) => c.index).toSet();
     for (int i = 0; i < maxChannels; i++) {
       if (!usedIndices.contains(i)) return i;
     }
-    return 0;
+    return null;
   }
 
   void _showManageCommunitiesDialog(BuildContext context) {

@@ -40,14 +40,22 @@ class ContactStore {
       return [];
     }
 
+    final List<dynamic> jsonList;
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList
-          .map((entry) => _fromJson(entry as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
+      jsonList = jsonDecode(jsonString) as List<dynamic>;
+    } catch (e) {
+      appLogger.warn('Stored contacts are unreadable: $e');
       return [];
     }
+    final contacts = <Contact>[];
+    for (final entry in jsonList) {
+      try {
+        contacts.add(_fromJson(entry as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed stored contact: $e');
+      }
+    }
+    return contacts;
   }
 
   Future<void> saveContacts(List<Contact> contacts) async {
@@ -68,6 +76,7 @@ class ContactStore {
       'flags': contact.flags,
       'pathLength': contact.pathLength,
       'path': base64Encode(contact.path),
+      'pathHashWidth': contact.pathHashWidth,
       'pathOverride': contact.pathOverride,
       'pathOverrideBytes': contact.pathOverrideBytes != null
           ? base64Encode(contact.pathOverrideBytes!)
@@ -96,6 +105,7 @@ class ContactStore {
 
     int decodedPathLength = rawPathLength;
     Uint8List decodedPath = rawPath;
+    int? decodedPathHashWidth = json['pathHashWidth'] as int?;
 
     if (rawPathLength == 0xFF || rawPathLength < 0) {
       decodedPathLength = -1;
@@ -106,6 +116,7 @@ class ContactStore {
       final width = mode + 1;
       final byteLen = hopCount * width;
       decodedPathLength = hopCount;
+      decodedPathHashWidth = width;
       if (byteLen <= rawPath.length) {
         decodedPath = rawPath.sublist(0, byteLen);
       } else {
@@ -122,6 +133,9 @@ class ContactStore {
       flags: json['flags'] as int? ?? 0,
       pathLength: decodedPathLength,
       path: decodedPath,
+      pathHashWidth:
+          decodedPathHashWidth ??
+          Contact.inferPathHashWidth(decodedPathLength, decodedPath.length),
       pathOverride: json['pathOverride'] as int?,
       pathOverrideBytes: json['pathOverrideBytes'] != null
           ? Uint8List.fromList(

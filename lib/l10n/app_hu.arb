@@ -175,7 +175,7 @@
   "settings_deleteAllPathsSubtitle": "Törölje az összes elérési utat a névjegyekből.",
   "settings_sendAdvertisement": "Hirdetés küldése",
   "settings_sendAdvertisementSubtitle": "Jelenlét a közvetítésben most",
-  "settings_advertisementSent": "Reklám elküldve",
+  "settings_advertisementSent": "Hirdetés elküldve",
   "settings_syncTime": "Szinkronizálási idő",
   "settings_syncTimeSubtitle": "Az eszköz órájának beállítása a telefon idejére",
   "settings_timeSynchronized": "Idő szinkronizálva",
@@ -264,7 +264,7 @@
   "appSettings_messageNotificationsSubtitle": "Értesítés megjelenítése új üzenetek fogadásakor",
   "appSettings_channelMessageNotifications": "Csatorna üzenetek értesítései",
   "appSettings_channelMessageNotificationsSubtitle": "Értesítés megjelenítése csatornaüzenetek fogadásakor",
-  "appSettings_advertisementNotifications": "Reklám Értesítések",
+  "appSettings_advertisementNotifications": "Hirdetési értesítések",
   "appSettings_advertisementNotificationsSubtitle": "Értesítés megjelenítése új csomópontok felfedezésekor",
   "appSettings_messaging": "Üzenetküldés",
   "appSettings_clearPathOnMaxRetry": "Útvonal törlése a Max. újrapróbálkozásnál",
@@ -774,7 +774,7 @@
   "chat_clearPathSubtitle": "A parancs új küldéskor újra kell aktivizálnia.",
   "chat_pathCleared": "Út megtisztítva. A következő üzenet újra felfedezi az útvonalat.",
   "chat_floodModeSubtitle": "Használja a \"útvonal\" kapcsolót az alkalmazás sávjában.",
-  "chat_floodModeEnabled": "Árvízvédelmi mód bekapcsolva. A visszaállítás a alkalmazásban található útvonal ikon segítségével.",
+  "chat_floodModeEnabled": "Elárasztás mód bekapcsolva. A visszaállítás a alkalmazásban található útvonal ikon segítségével.",
   "chat_fullPath": "Teljes útvonal",
   "chat_pathDetailsNotAvailable": "Az útvonal részletei még nem elérhetők. Próbálja meg küldeni egy üzenetet, hogy frissítse az információkat.",
   "chat_pathSetHops": "Path set: {hopCount} {hopCount, plural, =1{hop} other{hops}} - {status}",
@@ -795,7 +795,7 @@
   "chat_path": "Útvonal",
   "chat_publicKey": "Nyilvános kulcs",
   "chat_compressOutgoingMessages": "A kimenő üzenetek tömörítése",
-  "chat_floodForced": "Árvíz (kényszerített)",
+  "chat_floodForced": "Elárasztás (kényszerített)",
   "chat_directForced": "Közvetlen (kényszerített)",
   "chat_hopsForced": "{count} ugrás (kényszerített)",
   "@chat_hopsForced": {
@@ -805,7 +805,7 @@
       }
     }
   },
-  "chat_floodAuto": "Árvíz (automatikus)",
+  "chat_floodAuto": "Elárasztás (automatikus)",
   "chat_direct": "Közvetlen",
   "chat_poiShared": "POI megosztva",
   "chat_unread": "Olvasatlan: {count}",
@@ -1204,7 +1204,7 @@
       }
     }
   },
-  "repeater_packetTxTotal": "Összesen: {total}, Árvíz: {flood}, Közvetlen: {direct}",
+  "repeater_packetTxTotal": "Összesen: {total}, Elárasztás: {flood}, Közvetlen: {direct}",
   "@repeater_packetTxTotal": {
     "placeholders": {
       "total": {
@@ -1218,7 +1218,7 @@
       }
     }
   },
-  "repeater_packetRxTotal": "Összesen: {total}, Árvíz: {flood}, Közvetlen: {direct}",
+  "repeater_packetRxTotal": "Összesen: {total}, Elárasztás: {flood}, Közvetlen: {direct}",
   "@repeater_packetRxTotal": {
     "placeholders": {
       "total": {
@@ -1232,7 +1232,7 @@
       }
     }
   },
-  "repeater_duplicatesFloodDirect": "Árvíz: {flood}, Közvetlen: {direct}",
+  "repeater_duplicatesFloodDirect": "Elárasztás: {flood}, Közvetlen: {direct}",
   "@repeater_duplicatesFloodDirect": {
     "placeholders": {
       "flood": {
@@ -1279,7 +1279,7 @@
   "repeater_guestAccessSubtitle": "Csak olvasási hozzáférés engedélyezése a vendégek számára",
   "repeater_privacyMode": "Adatvédelmi mód",
   "repeater_privacyModeSubtitle": "Név/hely elrejtése a hirdetésekben",
-  "repeater_advertisementSettings": "Reklámbeállítások",
+  "repeater_advertisementSettings": "Hirdetésbeállítások",
   "repeater_localAdvertInterval": "Helyi hirdetési intervallum",
   "repeater_localAdvertIntervalMinutes": "{minutes} perc",
   "@repeater_localAdvertIntervalMinutes": {
@@ -1289,7 +1289,7 @@
       }
     }
   },
-  "repeater_floodAdvertInterval": "Árvízi hirdetési intervallum",
+  "repeater_floodAdvertInterval": "Elárasztási hirdetési intervallum",
   "repeater_floodAdvertIntervalHours": "{hours} óra",
   "@repeater_floodAdvertIntervalHours": {
     "placeholders": {
@@ -1336,7 +1336,7 @@
   "repeater_refreshMultiAcks": "Többszörös ACK-ek frissítése",
   "repeater_networkHealth": "Hálózat állapota",
   "repeater_loopDetect": "Hurokérzékelés",
-  "repeater_loopDetectHelper": "Dobd el az útválasztó huroknak tűnő árvízcsomagokat",
+  "repeater_loopDetectHelper": "Dobd el az útválasztó huroknak tűnő elárasztási csomagokat",
   "repeater_loopDetectOff": "Le",
   "repeater_loopDetectMinimal": "Minimális",
   "repeater_loopDetectModerate": "Mérsékelt",
@@ -1354,14 +1354,14 @@
   "repeater_ownerInfo": "Üzemeltető információ",
   "repeater_ownerInfoHelper": "Nyilvános metaadatok ehhez az átjátszóhoz",
   "repeater_refreshOwnerInfo": "Frissítse az operátor adatait",
-  "repeater_floodMax": "Árvíz max ugrás",
-  "repeater_floodMaxHelper": "Maximum ugrások, amelyeket egy árvízcsomag utazhat (0-64)",
+  "repeater_floodMax": "Elárasztás max ugrás",
+  "repeater_floodMaxHelper": "Maximum ugrások, amelyeket egy elárasztási csomag utazhat (0-64)",
   "repeater_advancedSettings": "Fejlett",
   "repeater_advancedSettingsSubtitle": "Hangológombok tapasztalt kezelőknek",
   "repeater_pathHashMode": "Útvonal hash mód",
   "repeater_pathHashModeHelper": "Az átjátszó azonosítójának elárasztási útvonal/hurokészlelési címkékbe való kódolására használt bájtok. 0 = 1 bájt (256 azonosító, legfeljebb 64 ugrás), 1 = 2 bájt (65 000 azonosító, legfeljebb 32 ugrás), 2 = 3 bájt (16 millió azonosító, legfeljebb 21 ugrás). A v1.13 és régebbi firmware eldobja a többbájtos elérési utat – csak akkor emelje meg, ha a hálózat a v1.14+ verziót használja.",
   "repeater_txDelay": "Áradási TX késleltetés",
-  "repeater_txDelayHelper": "Újraküldési térköz az árvízi forgalomhoz, a csomag sugárzási idejének szorzójaként (0-2, alapértelmezett 0,5). Magasabb = kevesebb ütközés, de lassabb szállítás.",
+  "repeater_txDelayHelper": "Újraküldési térköz az elárasztási forgalomhoz, a csomag sugárzási idejének szorzójaként (0-2, alapértelmezett 0,5). Magasabb = kevesebb ütközés, de lassabb szállítás.",
   "repeater_directTxDelay": "Közvetlen TX késleltetés",
   "repeater_directTxDelayHelper": "A közvetlen (nem elárasztásos) forgalom újraküldési távolsága a csomag sugárzási idejének szorzójaként (0-2, alapértelmezett 0,3).",
   "repeater_intThresh": "Interferencia küszöb",
@@ -1369,8 +1369,8 @@
   "repeater_agcResetInterval": "AGC reset intervallum",
   "repeater_agcResetIntervalHelper": "Milyen gyakran kell visszaállítani a rádió automatikus erősítésszabályozását, hogy helyreálljon a beragadt erősítési állapotból. A másodpercek, 4 többszörösére csökkentve. 0 letiltja az időszakos visszaállításokat.",
   "repeater_actionsTitle": "Akciók",
-  "repeater_sendAdvert": "Árvízhirdetés küldése",
-  "repeater_sendAdvertSubtitle": "Adjon árvízreklámot a hálózaton keresztül",
+  "repeater_sendAdvert": "Elárasztási hirdetés küldése",
+  "repeater_sendAdvertSubtitle": "Küldjön elárasztási hirdetést a hálózaton keresztül",
   "repeater_sendAdvertZeroHop": "Zéró ugrású hirdetés küldése",
   "repeater_sendAdvertZeroHopSubtitle": "Egyugrásos hirdetés sugárzása (közvetítés nélkül)",
   "repeater_clockSync": "Óra szinkronizálása most",
@@ -1459,7 +1459,7 @@
   "repeater_cliQuickVersion": "Változat",
   "repeater_cliQuickAdvertise": "Hirdet",
   "repeater_cliQuickClock": "Óra",
-  "repeater_cliHelpAdvert": "Reklámcsomagot küld",
+  "repeater_cliHelpAdvert": "Hirdetési csomagot küld",
   "repeater_cliHelpReboot": "Újraindítja az eszközt. (megjegyzendő, hogy \"Időtúllépés\" jelenik meg, ami normális)",
   "repeater_cliHelpClock": "Megjeleníti az aktuális időt az eszköz órájánként.",
   "repeater_cliHelpPassword": "Új rendszergazdai jelszót állít be az eszközhöz.",
@@ -1469,12 +1469,12 @@
   "repeater_cliHelpSetTx": "A LoRa adási teljesítményét dBm-ben állítja be. (újraindítás az alkalmazáshoz)",
   "repeater_cliHelpSetRepeat": "Engedélyezi vagy letiltja a csomópont ismétlő szerepét.",
   "repeater_cliHelpSetAllowReadOnly": "(Szobaszerver) Ha 'be', akkor az üres jelszó bejelentkezés engedélyezett, de nem lehet postázni a szobába. (csak olvasható)",
-  "repeater_cliHelpSetFloodMax": "Beállítja a bejövő árvízcsomag ugrásainak maximális számát (ha >= max, a csomag nem kerül továbbításra)",
+  "repeater_cliHelpSetFloodMax": "Beállítja a bejövő elárasztási csomag ugrásainak maximális számát (ha >= max, a csomag nem kerül továbbításra)",
   "repeater_cliHelpSetIntThresh": "Beállítja az interferencia küszöböt (DB-ben). Az alapértelmezett érték 14. Állítsa 0-ra a csatornainterferencia-érzékelés letiltásához.",
   "repeater_cliHelpSetAgcResetInterval": "Beállítja az Auto Gain Controller alaphelyzetbe állításának intervallumát. A letiltáshoz állítsa 0-ra.",
   "repeater_cliHelpSetMultiAcks": "Engedélyezi vagy letiltja a „dupla ACK” funkciót.",
   "repeater_cliHelpSetAdvertInterval": "Beállítja a helyi (nulla ugrású) hirdetési csomag küldésének időzítési időközét percekben. A letiltáshoz állítsa 0-ra.",
-  "repeater_cliHelpSetFloodAdvertInterval": "Beállítja az időzítő intervallumát órákban az árvízhirdetési csomag küldéséhez. A letiltáshoz állítsa 0-ra.",
+  "repeater_cliHelpSetFloodAdvertInterval": "Beállítja az időzítő intervallumát órákban az elárasztási hirdetési csomag küldéséhez. A letiltáshoz állítsa 0-ra.",
   "repeater_cliHelpSetGuestPassword": "Beállítja/frissíti a vendég jelszavát. (Repeaterek esetén a vendégbejelentkezés elküldheti a \"Statisztikák lekérése\" kérést)",
   "repeater_cliHelpSetName": "Beállítja a hirdetés nevét.",
   "repeater_cliHelpSetLat": "Beállítja a hirdetéstérkép szélességi fokát. (tizedes fok)",
@@ -1497,7 +1497,7 @@
   "repeater_cliHelpLogErase": "Törli a csomagnaplókat a fájlrendszerből.",
   "repeater_cliHelpNeighbors": "Megjeleníti a nulla ugrású hirdetéseken keresztül hallható egyéb átjátszó csomópontok listáját. Minden sor id-prefix-hex:timestamp:snr-times-4",
   "repeater_cliHelpNeighborRemove": "Eltávolítja az első egyező bejegyzést (a pubkey előtag (hex) alapján) a szomszédok listájából.",
-  "repeater_cliHelpRegion": "(csak soros) Felsorolja az összes meghatározott régiót és az aktuális árvízi engedélyeket.",
+  "repeater_cliHelpRegion": "(csak soros) Felsorolja az összes meghatározott régiót és az aktuális elárasztási engedélyeket.",
   "repeater_cliHelpRegionLoad": "MEGJEGYZÉS: ez egy speciális többparancsos hívás. Minden következő parancs egy régiónév (szóközökkel behúzva a szülőhierarchiát jelölve, legalább egy szóközzel). Üres sor/parancs küldésével megszűnik.",
   "repeater_cliHelpRegionGet": "Régiót keres adott név előtaggal (vagy \"*\" a globális hatókörhöz). A válasz a következővel: \"-> régiónév (szülőnév) 'F'\"",
   "repeater_cliHelpRegionPut": "Adott névvel rendelkező régiódefiníció hozzáadása vagy frissítése.",
@@ -1655,7 +1655,7 @@
   "channelPath_viewMap": "Térkép megtekintése",
   "channelPath_otherObservedPaths": "Egyéb megfigyelt utak",
   "channelPath_repeaterHops": "Repeater Hops",
-  "channelPath_noHopDetails": "Ennél a csomagnál a komlórészletek nincsenek megadva.",
+  "channelPath_noHopDetails": "Ennél a csomagnál az ugrásrészletek nincsenek megadva.",
   "channelPath_messageDetails": "Üzenet részletei",
   "channelPath_senderLabel": "Feladó",
   "channelPath_timeLabel": "Idő",
@@ -1697,7 +1697,7 @@
     }
   },
   "channelPath_unknownPath": "Ismeretlen",
-  "channelPath_floodPath": "Árvíz",
+  "channelPath_floodPath": "Elárasztás",
   "channelPath_directPath": "Közvetlen",
   "channelPath_observedZeroOf": "0 / {total} ugrás",
   "@channelPath_observedZeroOf": {
@@ -1905,7 +1905,7 @@
   "pathTrace_failed": "Az útvonal nyomon követése nem sikerült.",
   "pathTrace_notAvailable": "Útvonal nyomkövetés nem érhető el.",
   "pathTrace_refreshTooltip": "Path Trace frissítése.",
-  "pathTrace_someHopsNoLocation": "Egy vagy több komló helye hiányzik!",
+  "pathTrace_someHopsNoLocation": "Egy vagy több ugrás helye hiányzik!",
   "pathTrace_clearTooltip": "Tiszta útvonal.",
   "losSelectStartEnd": "Válassza ki a LOS kezdő és záró csomópontját.",
   "losRunFailed": "A rálátás ellenőrzése sikertelen: {error}",
@@ -2060,7 +2060,7 @@
   "contacts_contactImported": "A névjegy importálása megtörtént.",
   "contacts_contactImportFailed": "Nem sikerült importálni a névjegyet.",
   "contacts_zeroHopAdvert": "Zero Hop hirdetés",
-  "contacts_floodAdvert": "Árvíz hirdetés",
+  "contacts_floodAdvert": "Elárasztási hirdetés",
   "contacts_copyAdvertToClipboard": "Hirdetés másolása a vágólapra",
   "contacts_addContactFromClipboard": "Névjegy hozzáadása a vágólapról",
   "contacts_ShareContact": "Névjegy másolása a vágólapra",
@@ -2337,7 +2337,7 @@
   "repeater_cliHelpGetMultiAcks": "Megmutatja, hogy a dupla ACK mód be van-e kapcsolva (1) vagy ki (0).",
   "repeater_cliHelpGetAllowReadOnly": "Megmutatja, hogy a vendég csak olvasási hozzáférés engedélyezett-e.",
   "repeater_cliHelpGetAdvertInterval": "A helyi hirdetési intervallumot mutatja percben.",
-  "repeater_cliHelpGetFloodAdvertInterval": "Megjeleníti az árvízhirdetés intervallumát órákban.",
+  "repeater_cliHelpGetFloodAdvertInterval": "Megjeleníti az elárasztási hirdetés intervallumát órákban.",
   "repeater_cliHelpGetGuestPassword": "Megjeleníti a beállított vendégjelszót.",
   "repeater_cliHelpGetLat": "Megjeleníti a beállított szélességi fokot.",
   "repeater_cliHelpGetLon": "A beállított hosszúságot mutatja.",
@@ -2366,8 +2366,8 @@
   "repeater_cliHelpSensorList": "Felsorolja az összes egyéni érzékelőbeállítást, oldalszámozással az opcionális kezdőindexből.",
   "repeater_cliHelpRegionDefault": "Megjeleníti az aktuális alapértelmezett régióhatókört.",
   "repeater_cliHelpRegionDefaultSet": "Beállítja az alapértelmezett régió hatókört. A törléshez használja a \"<null>\" parancsot.",
-  "repeater_cliHelpRegionListAllowed": "Felsorolja azokat a régiókat, amelyek lehetővé teszik az árvízi forgalmat.",
-  "repeater_cliHelpRegionListDenied": "Felsorolja azokat a régiókat, amelyek megtagadják az árvízi forgalmat.",
+  "repeater_cliHelpRegionListAllowed": "Felsorolja azokat a régiókat, amelyek lehetővé teszik az elárasztási forgalmat.",
+  "repeater_cliHelpRegionListDenied": "Felsorolja azokat a régiókat, amelyek megtagadják az elárasztási forgalmat.",
   "repeater_cliHelpStatsPackets": "(Csak soros) Csomag szintű statisztikákat jelenít meg.",
   "repeater_cliHelpStatsRadio": "(Csak soros) Rádióstatisztikák megjelenítése.",
   "repeater_cliHelpStatsCore": "(Csak soros) Az alapvető firmware-statisztikák megjelenítése.",
@@ -2507,7 +2507,7 @@
   "contacts_searchClose": "Keresés bezárása",
   "routing_title": "Útválasztás",
   "routing_modeAuto": "Auto",
-  "routing_modeFlood": "Árvíz",
+  "routing_modeFlood": "Elárasztás",
   "routing_modeManual": "Kézikönyv",
   "routing_modeAutoHint": "Automatikusan kiválasztja a legismertebb utat, és elárasztja, ha nem ismert.",
   "routing_modeFloodHint": "Minden átjátszón keresztül sugároz. A legmegbízhatóbb, de több műsoridőt használ.",
@@ -2525,14 +2525,14 @@
   "routing_qualityGood": "Jó első ugrás",
   "routing_qualityFair": "Tisztességes első ugrás",
   "routing_qualityWorked": "Szállított",
-  "routing_qualityFlood": "Árvízen keresztül hallatszott",
+  "routing_qualityFlood": "Elárasztáson keresztül hallatszott",
   "routing_qualityUntested": "Nem tesztelt",
   "routing_neverWorked": "soha nem erősítették meg",
-  "routing_floodDelivery": "Árvízi szállítás",
+  "routing_floodDelivery": "Elárasztási szállítás",
   "pathEditor_title": "Építsd meg az útvonalat",
   "pathEditor_hopCounter": "{count} 64 ugrásból",
   "pathEditor_noHops": "Még nincs ugrás. Koppintson az alábbi ismétlőkre, ha sorrendben szeretné felvenni őket, vagy mentse ugrás nélkül a közvetlen küldéshez.",
-  "pathEditor_addHops": "Sorrendben adjuk hozzá a komlót",
+  "pathEditor_addHops": "Sorrendben adjuk hozzá az ugrásokat",
   "pathEditor_searchRepeaters": "Ismétlő keresése",
   "pathEditor_advancedHex": "Haladó: nyers hexadecimális útvonal",
   "pathEditor_hexLabel": "Hexadecimális előtagok",
@@ -2866,5 +2866,39 @@
   "receivedImage_tapToProcess": "Klikd a feljelenítést",
   "receivedImage_awaiting": "{bytes} bájt · {packets} {packets, plural, =1{csomag} other{csomag}}",
   "imageSend_secondsValue": "{seconds} sekünd\n\n(Note: The placeholder {seconds} is kept unchanged as requested.)",
-  "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)"
+  "imageSend_minutesSecondsValue": "{minutes} per {seconds} sekünd\n\n(Note: The original text appears to be a placeholder format rather than a complete sentence. The translation reflects the literal structure while preserving the placeholders as requested.)",
+  "channels_noFreeSlots": "Minden csatornahely foglalt",
+  "chat_longMessageRetryNote": "158 bájt felett: legfeljebb {count} alkalommal küldve",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reaction_report": "Emoji reakciók",
+  "repeater_bridgeNote": "Csak híddal (RS232 vagy ESP-NOW) épített firmware-en érhető el.",
+  "repeater_cliHelpGetFloodMaxAdvert": "Megjeleníti az elárasztási hirdetések maximális ugrásszámát.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Megjeleníti a hatókör nélküli elárasztási csomagok maximális ugrásszámát.",
+  "repeater_cliHelpGetRadioFemRxGain": "Megjeleníti, hogy a LoRa front-end modul RX erősítése be van-e kapcsolva.",
+  "repeater_cliHelpGetRadioFemTxGain": "Megjeleníti, hogy a LoRa front-end modul TX erősítése be van-e kapcsolva.",
+  "repeater_cliHelpRegionDef": "Egy paranccsal régiók láncát határozza meg: minden név az előző alá kerül; a \"name,parent\" hozzáadja a nevet, majd a megadott szülő alatt folytatja. Válaszként a régiólistát adja.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Beállítja az elárasztási hirdetések továbbításának maximális ugrásszámát (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Beállítja a hatókör nélküli elárasztási csomagok továbbításának maximális ugrásszámát (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Ki-/bekapcsolja a LoRa front-end modul RX erősítését (LNA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Ki-/bekapcsolja a LoRa front-end modul TX erősítését (PA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Régióbetöltési mód: soronként küldjön egy régiónevet, szóközökkel behúzva a szülője alá (a név után F hozzáadásával engedélyezhető az elárasztás). A sorokra nem érkezik válasz. Egy üres sor küldésével fejezze be, majd a \"region save\" paranccsal mentse az eredményt.",
+  "repeater_cliRegionLoadEnd": "(régióbetöltés vége)",
+  "repeater_cliRegionLoadHint": "Régiósor, vagy üres a befejezéshez",
+  "repeater_frequencyInvalid": "Érvénytelen frekvencia (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Vételi hibák",
+  "repeater_txPowerRangeHelper": "-9-től 30 dBm-ig",
+  "room_postsPushed": "Kiküldött bejegyzések",
+  "room_postsStored": "Bejegyzések",
+  "settings_publicKeyCopied": "Nyilvános kulcs másolva",
+  "settings_radioSettingsNotApplied": "A rádió nem alkalmazta ezeket a beállításokat",
+  "urlImage_enable": "URL-képek engedélyezése",
+  "urlImage_possible": "Lehetséges URL-kép; engedélyezze a Beállításokban."
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:crypto/crypto.dart';
+import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/path_selection.dart';
@@ -34,7 +35,7 @@ typedef AckHashMapping = ({
 });
 
 class RetryServiceConfig {
-  final void Function(Contact, String, int, int) sendMessage;
+  final FutureOr<void> Function(Contact, String, int, int) sendMessage;
   final void Function(String, Message) addMessage;
   final void Function(Message) updateMessage;
   final Function(Contact)? clearContactPath;
@@ -209,18 +210,43 @@ class MessageRetryService extends ChangeNotifier {
       final messageId = queue.removeAt(0);
       if (_pendingMessages.containsKey(messageId)) {
         _activeMessages.add(messageId);
-        _attemptSend(messageId).catchError((e) {
-          debugPrint('_attemptSend threw for $messageId: $e');
-          final msg = _pendingMessages[messageId];
-          if (msg != null) {
-            final failed = msg.copyWith(status: MessageStatus.failed);
-            _pendingMessages[messageId] = failed;
-            _config?.updateMessage(failed);
-          }
-          _onMessageResolved(messageId, contactKey);
-        });
+        _attemptSendOrFail(messageId);
         return;
       }
+    }
+  }
+
+  void _attemptSendOrFail(String messageId) {
+    _attemptSend(messageId).catchError((Object e) {
+      debugPrint('_attemptSend threw for $messageId: $e');
+      _config?.debugLogService?.warn(
+        'Send failed for message $messageId: $e',
+        tag: 'AckHash',
+      );
+      _failMessage(messageId);
+    });
+  }
+
+  /// Marks a message that could not be handed to the radio as failed and
+  /// releases its in-flight slot so the contact's queue keeps moving.
+  void _failMessage(String messageId) {
+    final message = _pendingMessages[messageId];
+    if (message == null) return;
+    _timeoutTimers[messageId]?.cancel();
+    if (message.status != MessageStatus.failed &&
+        message.status != MessageStatus.delivered) {
+      _config?.updateMessage(message.copyWith(status: MessageStatus.failed));
+    }
+    _cleanupMessage(messageId);
+    notifyListeners();
+  }
+
+  /// Fails every pending and queued message. Call when the radio link drops:
+  /// nothing in flight can be sent or acknowledged any more.
+  void failAllPending() {
+    _sendQueue.clear();
+    for (final messageId in _pendingMessages.keys.toList()) {
+      _failMessage(messageId);
     }
   }
 
@@ -358,6 +384,9 @@ class MessageRetryService extends ChangeNotifier {
     // Compute expected ACK hash that device will return in RESP_CODE_SENT
     // IMPORTANT: Use the transformed text (with SMAZ encoding if enabled) to match device's hash
     final selfPubKey = config.getSelfPublicKey?.call();
+    if (config.getSelfPublicKey != null && selfPubKey == null) {
+      throw StateError('Self public key unknown; cannot track ACK');
+    }
     if (selfPubKey != null) {
       final outboundText =
           config.prepareContactOutboundText?.call(contact, message.text) ??
@@ -380,7 +409,7 @@ class MessageRetryService extends ChangeNotifier {
       );
     }
 
-    config.sendMessage(contact, message.text, attempt, timestampSeconds);
+    await config.sendMessage(contact, message.text, attempt, timestampSeconds);
   }
 
   bool updateMessageFromSent(int ackHash, int timeoutMs) {
@@ -535,7 +564,8 @@ class MessageRetryService extends ChangeNotifier {
       tag: 'AckHash',
     );
 
-    if (message.retryCount < maxRetries - 1) {
+    if (message.retryCount < maxRetries - 1 &&
+        _textFitsAttempt(message, contact, message.retryCount + 1)) {
       final backoffMs = 1000 * (1 << message.retryCount);
 
       if (selection != null) {
@@ -563,7 +593,7 @@ class MessageRetryService extends ChangeNotifier {
 
       _timeoutTimers[messageId] = Timer(Duration(milliseconds: backoffMs), () {
         if (_pendingMessages.containsKey(messageId)) {
-          _attemptSend(messageId);
+          _attemptSendOrFail(messageId);
         }
       });
     } else {
@@ -596,6 +626,17 @@ class MessageRetryService extends ChangeNotifier {
         _cleanupMessage(messageId);
       });
     }
+  }
+
+  /// From attempt 4 on the firmware appends [0][attempt] to the payload and
+  /// rejects text longer than MAX_TEXT_LEN - 2 (BaseChatMesh::composeMsgPacket).
+  bool _textFitsAttempt(Message message, Contact contact, int attempt) {
+    if (attempt <= maxFullLengthTextAttempt) return true;
+    final outboundText =
+        _config?.prepareContactOutboundText?.call(contact, message.text) ??
+        message.text;
+    return utf8.encode(outboundText).length <=
+        maxTextPayloadBytesAfterFullLengthAttempts;
   }
 
   void _moveAckHashesToHistory(String messageId) {

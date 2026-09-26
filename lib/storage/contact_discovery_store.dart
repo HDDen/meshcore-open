@@ -2,30 +2,54 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../models/contact.dart';
+import '../utils/app_logger.dart';
 import 'prefs_manager.dart';
 
 class ContactDiscoveryStore {
   static const String _keyPrefix = 'discovered_contacts';
 
+  String publicKeyHex = '';
+  set setPublicKeyHex(String value) =>
+      publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
+
+  String get keyFor => '$_keyPrefix$publicKeyHex';
+
   Future<List<Contact>> loadContacts() async {
+    if (publicKeyHex.isEmpty) return [];
     final prefs = PrefsManager.instance;
-    final jsonStr = prefs.getString(_keyPrefix);
+    var jsonStr = prefs.getString(keyFor);
+    if (jsonStr == null) {
+      jsonStr = prefs.getString(_keyPrefix);
+      if (jsonStr != null) {
+        await prefs.setString(keyFor, jsonStr);
+        await prefs.remove(_keyPrefix);
+      }
+    }
     if (jsonStr == null) return [];
 
+    final List<dynamic> jsonList;
     try {
-      final jsonList = jsonDecode(jsonStr) as List<dynamic>;
-      return jsonList
-          .map((entry) => _fromJson(entry as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
+      jsonList = jsonDecode(jsonStr) as List<dynamic>;
+    } catch (e) {
+      appLogger.warn('Stored discovered contacts are unreadable: $e');
       return [];
     }
+    final contacts = <Contact>[];
+    for (final entry in jsonList) {
+      try {
+        contacts.add(_fromJson(entry as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed discovered contact: $e');
+      }
+    }
+    return contacts;
   }
 
   Future<void> saveContacts(List<Contact> contacts) async {
+    if (publicKeyHex.isEmpty) return;
     final prefs = PrefsManager.instance;
     final jsonList = contacts.map(_toJson).toList();
-    await prefs.setString(_keyPrefix, jsonEncode(jsonList));
+    await prefs.setString(keyFor, jsonEncode(jsonList));
   }
 
   Map<String, dynamic> _toJson(Contact contact) {
@@ -36,6 +60,7 @@ class ContactDiscoveryStore {
       'flags': contact.flags,
       'pathLength': contact.pathLength,
       'path': base64Encode(contact.path),
+      'pathHashWidth': contact.pathHashWidth,
       'pathOverride': contact.pathOverride,
       'pathOverrideBytes': contact.pathOverrideBytes != null
           ? base64Encode(contact.pathOverrideBytes!)
@@ -63,6 +88,7 @@ class ContactDiscoveryStore {
 
     int decodedPathLength = rawPathLength;
     Uint8List decodedPath = rawPath;
+    int? decodedPathHashWidth = json['pathHashWidth'] as int?;
 
     if (rawPathLength == 0xFF || rawPathLength < 0) {
       decodedPathLength = -1;
@@ -73,6 +99,7 @@ class ContactDiscoveryStore {
       final width = mode + 1;
       final byteLen = hopCount * width;
       decodedPathLength = hopCount;
+      decodedPathHashWidth = width;
       if (byteLen <= rawPath.length) {
         decodedPath = rawPath.sublist(0, byteLen);
       } else {
@@ -89,6 +116,9 @@ class ContactDiscoveryStore {
       flags: json['flags'] as int? ?? 0,
       pathLength: decodedPathLength,
       path: decodedPath,
+      pathHashWidth:
+          decodedPathHashWidth ??
+          Contact.inferPathHashWidth(decodedPathLength, decodedPath.length),
       pathOverride: json['pathOverride'] as int?,
       pathOverrideBytes: json['pathOverrideBytes'] != null
           ? Uint8List.fromList(

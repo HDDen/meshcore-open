@@ -111,6 +111,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get messageStatus_repeated => 'Hearsay, herhaald';
 
   @override
+  String get urlImage_enable => 'URL-afbeeldingen inschakelen';
+
+  @override
+  String get urlImage_possible =>
+      'Mogelijke URL-afbeelding; schakel dit in bij Instellingen.';
+
+  @override
   String get common_reboot => 'Herstarten';
 
   @override
@@ -366,6 +373,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'Radio instellingen bijgewerkt';
 
   @override
+  String get settings_radioSettingsNotApplied =>
+      'De radio heeft deze instellingen niet toegepast';
+
+  @override
   String get settings_regionSettings => 'Regio\'s';
 
   @override
@@ -613,6 +624,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_infoPublicKey => 'Openbare Sleutel';
+
+  @override
+  String get settings_publicKeyCopied => 'Openbare sleutel gekopieerd';
 
   @override
   String get settings_infoContactsCount => 'Aantal Contacten';
@@ -1354,6 +1368,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channels_publicChannelAdded => 'Open kanaal toegevoegd';
 
   @override
+  String get channels_noFreeSlots => 'Alle kanaalslots zijn bezet';
+
+  @override
   String get channels_sortBy => 'Sorteren door';
 
   @override
@@ -1499,7 +1516,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chat_me => 'Mijn';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Emoji-reacties';
 
   @override
   String get emojiCategorySmileys => 'Emoji\'s';
@@ -1647,7 +1664,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get routing_modeAuto => 'Auto';
 
   @override
-  String get routing_modeFlood => 'Overstroming';
+  String get routing_modeFlood => 'Flood';
 
   @override
   String get routing_modeManual => 'Handleiding';
@@ -1705,7 +1722,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get routing_qualityWorked => 'Is geleverd';
 
   @override
-  String get routing_qualityFlood => 'Hears via een overstroming';
+  String get routing_qualityFlood => 'Gehoord via flood';
 
   @override
   String get routing_qualityUntested => 'Niet getest';
@@ -1724,14 +1741,14 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => 'Levering bij overstroming';
+  String get routing_floodDelivery => 'Flood-levering';
 
   @override
   String get pathEditor_title => 'Pad creëren';
 
   @override
   String pathEditor_hopCounter(int count) {
-    return '$count van 64 hopgranen';
+    return '$count van 64 hops';
   }
 
   @override
@@ -1760,7 +1777,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get pathEditor_tooManyHops => 'Maximaal 64 hopken';
+  String get pathEditor_tooManyHops => 'Maximaal 64 hops';
 
   @override
   String get pathEditor_usePath => 'Gebruik deze route.';
@@ -1806,7 +1823,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get chat_floodAuto => 'Overstroming (van een auto)';
+  String get chat_floodAuto => 'Flood (automatisch)';
 
   @override
   String get chat_direct => 'Direct';
@@ -2462,7 +2479,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String repeater_duplicatesFloodDirect(String flood, String direct) {
-    return 'Overstroming: $flood, Direct: $direct';
+    return 'Flood: $flood, Direct: $direct';
   }
 
   @override
@@ -2761,7 +2778,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_txDelayHelper =>
-      'Herzendinterval voor verkeer tijdens overstromingen, als een veelvoud van de tijd die het pakket nodig heeft (0-2, standaard 0.5). Een hoger getal betekent minder botsingen, maar ook een langere leveringstijd.';
+      'Herzendinterval voor flood-verkeer, als een veelvoud van de tijd die het pakket nodig heeft (0-2, standaard 0.5). Een hoger getal betekent minder botsingen, maar ook een langere leveringstijd.';
 
   @override
   String get repeater_directTxDelay => 'Directe vertraging';
@@ -2789,11 +2806,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get repeater_actionsTitle => 'Acties';
 
   @override
-  String get repeater_sendAdvert => 'Verzend advertentie over overstromingen';
+  String get repeater_sendAdvert => 'Verzend flood-advertentie';
 
   @override
   String get repeater_sendAdvertSubtitle =>
-      'Zend een advertentie over overstromingen uit via het netwerk.';
+      'Zend een flood-advertentie uit via het netwerk.';
 
   @override
   String get repeater_sendAdvertZeroHop =>
@@ -3148,6 +3165,75 @@ class AppLocalizationsNl extends AppLocalizations {
       'LET OP: voor de verschillende \"set ...\" commando\'s is er ook een \"get ...\" commando.';
 
   @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Ongeldige frequentie (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 tot 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Ontvangstfouten';
+
+  @override
+  String get room_postsStored => 'Opgeslagen posts';
+
+  @override
+  String get room_postsPushed => 'Verzonden posts';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Regio-laadmodus: verstuur per regel één regionaam, ingesprongen met spaties onder de bovenliggende regio (voeg F toe na de naam om flood toe te staan). Regels krijgen geen antwoord. Verstuur een lege regel om te voltooien en dan \"region save\" om het resultaat te bewaren.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Regioregel, of leeg om te voltooien';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(einde van regio-laadmodus)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definieert een keten van regio\'s in één commando: elke naam wordt onder de vorige toegevoegd; \"name,parent\" voegt de naam toe en gaat dan verder onder de opgegeven bovenliggende regio. Antwoordt met de regiolijst.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Stelt het maximale aantal hops in voor het doorsturen van flood-pakketten zonder regio-scope (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Stelt het maximale aantal hops in voor het doorsturen van flood-advertenties (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Toont het maximale aantal hops voor flood-pakketten zonder regio-scope.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Toont het maximale aantal hops voor flood-advertenties.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Schakelt de RX-versterking (LNA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Schakelt de TX-versterking (PA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Toont of de RX-versterking van de LoRa-frontendmodule aan staat.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Toont of de TX-versterking van de LoRa-frontendmodule aan staat.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Alleen beschikbaar bij firmware gebouwd met een bridge (RS232 of ESP-NOW).';
+
+  @override
   String get repeater_general => 'Algemeen';
 
   @override
@@ -3318,11 +3404,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetAdvertInterval =>
-      'Geeft de duur van de lokale reclame in minuten aan.';
+      'Geeft de duur van het lokale advertentie-interval in minuten aan.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      'Geeft de duur van de reclame-interval in uren aan.';
+      'Geeft de duur van het flood-advertentie-interval in uren aan.';
 
   @override
   String get repeater_cliHelpGetGuestPassword =>
@@ -3348,7 +3434,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetFloodMax =>
-      'Toont het maximale aantal keer dat een overstroming heeft plaatsgevonden.';
+      'Toont het maximale aantal hops voor flood-pakketten.';
 
   @override
   String get repeater_cliHelpGetOwnerInfo =>
@@ -3436,11 +3522,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionListAllowed =>
-      'Lijst van gebieden waar doorstromen tijdens overstromingen is toegestaan.';
+      'Geeft een lijst van regio\'s die flood-verkeer toestaan.';
 
   @override
   String get repeater_cliHelpRegionListDenied =>
-      'Geeft een lijst van regio\'s die het verkeer tijdens overstromingen verbieden.';
+      'Geeft een lijst van regio\'s die flood-verkeer verbieden.';
 
   @override
   String get repeater_cliHelpStatsPackets =>
@@ -3727,7 +3813,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get channelPath_unknownPath => 'Onbekend';
 
   @override
-  String get channelPath_floodPath => 'Overstroming';
+  String get channelPath_floodPath => 'Flood';
 
   @override
   String get channelPath_directPath => 'Direct';
@@ -4217,10 +4303,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Contact kon niet geïmporteerd worden.';
 
   @override
-  String get contacts_zeroHopAdvert => 'Zero Hop Reclame';
+  String get contacts_zeroHopAdvert => 'Zero-hop-advertentie';
 
   @override
-  String get contacts_floodAdvert => 'Overstromingsadvertentie';
+  String get contacts_floodAdvert => 'Flood-advertentie';
 
   @override
   String get contacts_copyAdvertToClipboard => 'Advert naar klembord kopiëren';
@@ -4245,7 +4331,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get contacts_contactAdvertCopied =>
-      'Reclame gekopieerd naar Klembord.';
+      'Advertentie gekopieerd naar Klembord.';
 
   @override
   String get contacts_contactAdvertCopyFailed =>
@@ -4905,7 +4991,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      'Overstromingsrouting: elke repeater binnen bereik herzendsends elk pakket opnieuw, waardoor het kanaal langer bezig blijft dan dit.';
+      'Flood-routing: elke repeater binnen bereik herzendsends elk pakket opnieuw, waardoor het kanaal langer bezig blijft dan dit.';
 
   @override
   String get imageSend_parityTitle => 'Herstelpakket';
@@ -5034,5 +5120,10 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes m $seconds s';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Meer dan 158 bytes: maximaal $count keer verzonden';
   }
 }

@@ -271,10 +271,19 @@ class TranslationService extends ChangeNotifier {
       _downloadTotalBytes ??= response.contentLength;
       _notify();
       final trackedStream = _trackDownloadProgress(response.stream);
-      return await _fileStore.writeModelBytes(
+      final downloaded = await _fileStore.writeModelBytes(
         fileName: fileName,
         chunks: trackedStream,
       );
+      final expected = response.contentLength;
+      if (expected != null && downloaded.fileSizeBytes != expected) {
+        await _fileStore.deleteFile(downloaded.localPath);
+        throw StateError(
+          'Model download incomplete: '
+          '${downloaded.fileSizeBytes} of $expected bytes',
+        );
+      }
+      return downloaded;
     } finally {
       client.close();
     }
@@ -350,10 +359,17 @@ class TranslationService extends ChangeNotifier {
       );
     }
     final trackedStream = _trackDownloadProgress(response.stream);
-    await _fileStore.writeModelBytes(
+    final downloaded = await _fileStore.writeModelBytes(
       fileName: chunkPath.split(RegExp(r'[/\\]')).last,
       chunks: trackedStream,
     );
+    final expected = end - start + 1;
+    if (downloaded.fileSizeBytes != expected) {
+      throw StateError(
+        'Range download incomplete: '
+        '${downloaded.fileSizeBytes} of $expected bytes',
+      );
+    }
   }
 
   void cancelDownload() {

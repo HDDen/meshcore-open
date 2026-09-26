@@ -10,6 +10,7 @@ class Contact {
   final int flags;
   final int pathLength; // -1 = flood, 0+ = direct hops (from device)
   final Uint8List path; // Path bytes from device
+  final int pathHashWidth; // Bytes per hop in [path], as learned by the device
   final int?
   pathOverride; // User's path override: -1 = force flood, null = auto
   final Uint8List? pathOverrideBytes; // User's path override bytes
@@ -29,6 +30,7 @@ class Contact {
     this.flags = 0,
     required this.pathLength,
     required this.path,
+    this.pathHashWidth = 1,
     this.pathOverride,
     this.pathOverrideBytes,
     this.latitude,
@@ -81,6 +83,7 @@ class Contact {
     int? flags,
     int? pathLength,
     Uint8List? path,
+    int? pathHashWidth,
     int? pathOverride,
     Uint8List? pathOverrideBytes,
     bool clearPathOverride = false,
@@ -99,6 +102,7 @@ class Contact {
       flags: flags ?? this.flags,
       pathLength: pathLength ?? this.pathLength,
       path: path ?? this.path,
+      pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathOverride: clearPathOverride
           ? null
           : (pathOverride ?? this.pathOverride),
@@ -140,6 +144,13 @@ class Contact {
     return "<${publicKeyHex.substring(0, 8)}...${publicKeyHex.substring(publicKeyHex.length - 8)}>";
   }
 
+  /// Infers bytes per hop for stored paths that predate [pathHashWidth].
+  static int inferPathHashWidth(int hopCount, int byteLen) {
+    if (hopCount <= 0 || byteLen % hopCount != 0) return 1;
+    final width = byteLen ~/ hopCount;
+    return width >= 1 && width <= 3 ? width : 1;
+  }
+
   Uint8List get pathBytesForDisplay {
     if (pathOverride != null) {
       if (pathOverride! < 0) return Uint8List(0);
@@ -168,12 +179,12 @@ class Contact {
       final pathLen = reader.readByte();
       int hopCount = 0;
       int byteLen = 0;
+      int width = 1;
       if (pathLen == 0xFF) {
         hopCount = -1;
       } else {
-        final mode = (pathLen & 0xC0) >> 6;
+        width = ((pathLen & 0xC0) >> 6) + 1;
         hopCount = pathLen & 0x3F;
-        final width = mode + 1;
         byteLen = hopCount * width;
       }
       final safePathLen = byteLen > 0
@@ -225,6 +236,7 @@ class Contact {
         flags: flags,
         pathLength: hopCount,
         path: pathBytes,
+        pathHashWidth: width,
         latitude: lat,
         longitude: lon,
         lastSeen: DateTime.fromMillisecondsSinceEpoch(

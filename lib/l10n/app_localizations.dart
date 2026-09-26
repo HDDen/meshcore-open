@@ -334,6 +334,18 @@ abstract class AppLocalizations {
   /// **'Heard repeated'**
   String get messageStatus_repeated;
 
+  /// No description provided for @urlImage_enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable URL images'**
+  String get urlImage_enable;
+
+  /// No description provided for @urlImage_possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible URL image; enable it in Settings.'**
+  String get urlImage_possible;
+
   /// No description provided for @common_reboot.
   ///
   /// In en, this message translates to:
@@ -784,6 +796,12 @@ abstract class AppLocalizations {
   /// **'Radio settings updated'**
   String get settings_radioSettingsUpdated;
 
+  /// No description provided for @settings_radioSettingsNotApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'The radio did not apply these settings'**
+  String get settings_radioSettingsNotApplied;
+
   /// No description provided for @settings_regionSettings.
   ///
   /// In en, this message translates to:
@@ -1228,6 +1246,12 @@ abstract class AppLocalizations {
   /// **'Public Key'**
   String get settings_infoPublicKey;
 
+  /// No description provided for @settings_publicKeyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key copied'**
+  String get settings_publicKeyCopied;
+
   /// No description provided for @settings_infoContactsCount.
   ///
   /// In en, this message translates to:
@@ -1273,7 +1297,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_frequencyInvalid.
   ///
   /// In en, this message translates to:
-  /// **'Invalid frequency (300-2500 MHz)'**
+  /// **'Invalid frequency (150-2500 MHz)'**
   String get settings_frequencyInvalid;
 
   /// No description provided for @settings_bandwidth.
@@ -1327,7 +1351,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_clientRepeatFreqWarning.
   ///
   /// In en, this message translates to:
-  /// **'Off-grid repeat requires 433, 869, or 918 MHz frequency'**
+  /// **'Off-grid repeat requires 433, 869.495, or 918 MHz frequency'**
   String get settings_clientRepeatFreqWarning;
 
   /// No description provided for @settings_error.
@@ -2517,6 +2541,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Public channel added'**
   String get channels_publicChannelAdded;
+
+  /// No description provided for @channels_noFreeSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'All channel slots are in use'**
+  String get channels_noFreeSlots;
 
   /// No description provided for @channels_sortBy.
   ///
@@ -5606,6 +5636,120 @@ abstract class AppLocalizations {
   /// **'NOTE: for the various \"set ...\" commands, there is also a \"get ...\" command.'**
   String get repeater_commandsListNote;
 
+  /// No description provided for @repeater_frequencyRangeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'150-2500 MHz'**
+  String get repeater_frequencyRangeHelper;
+
+  /// No description provided for @repeater_frequencyInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid frequency (150-2500 MHz)'**
+  String get repeater_frequencyInvalid;
+
+  /// No description provided for @repeater_txPowerRangeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'-9 to 30 dBm'**
+  String get repeater_txPowerRangeHelper;
+
+  /// No description provided for @repeater_recvErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive Errors'**
+  String get repeater_recvErrors;
+
+  /// No description provided for @room_postsStored.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get room_postsStored;
+
+  /// No description provided for @room_postsPushed.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts Pushed'**
+  String get room_postsPushed;
+
+  /// No description provided for @repeater_cliRegionLoadActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Region load mode: send one region name per line, indented with spaces under its parent (add F after the name to allow flood). Lines get no reply. Send an empty line to finish, then \"region save\" to keep the result.'**
+  String get repeater_cliRegionLoadActive;
+
+  /// No description provided for @repeater_cliRegionLoadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Region line, or empty to finish'**
+  String get repeater_cliRegionLoadHint;
+
+  /// No description provided for @repeater_cliRegionLoadEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'(end of region load)'**
+  String get repeater_cliRegionLoadEnd;
+
+  /// No description provided for @repeater_cliHelpRegionDef.
+  ///
+  /// In en, this message translates to:
+  /// **'Defines a chain of regions in one command: each name is added under the previous one; \"name,parent\" adds the name, then continues under the given parent. Replies with the region list.'**
+  String get repeater_cliHelpRegionDef;
+
+  /// No description provided for @repeater_cliHelpSetFloodMaxUnscoped.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the maximum hop count for forwarding flood packets that have no region scope (0-64).'**
+  String get repeater_cliHelpSetFloodMaxUnscoped;
+
+  /// No description provided for @repeater_cliHelpSetFloodMaxAdvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the maximum hop count for forwarding flood adverts (0-64).'**
+  String get repeater_cliHelpSetFloodMaxAdvert;
+
+  /// No description provided for @repeater_cliHelpGetFloodMaxUnscoped.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the maximum hop count for unscoped flood packets.'**
+  String get repeater_cliHelpGetFloodMaxUnscoped;
+
+  /// No description provided for @repeater_cliHelpGetFloodMaxAdvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the maximum hop count for flood adverts.'**
+  String get repeater_cliHelpGetFloodMaxAdvert;
+
+  /// No description provided for @repeater_cliHelpSetRadioFemRxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggles the LoRa front-end module\'s RX gain (LNA). Boards without one reply \"Error: unsupported\".'**
+  String get repeater_cliHelpSetRadioFemRxGain;
+
+  /// No description provided for @repeater_cliHelpSetRadioFemTxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggles the LoRa front-end module\'s TX gain (PA). Boards without one reply \"Error: unsupported\".'**
+  String get repeater_cliHelpSetRadioFemTxGain;
+
+  /// No description provided for @repeater_cliHelpGetRadioFemRxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether the LoRa front-end module\'s RX gain is on.'**
+  String get repeater_cliHelpGetRadioFemRxGain;
+
+  /// No description provided for @repeater_cliHelpGetRadioFemTxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether the LoRa front-end module\'s TX gain is on.'**
+  String get repeater_cliHelpGetRadioFemTxGain;
+
+  /// No description provided for @repeater_bridgeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only available on firmware built with a bridge (RS232 or ESP-NOW).'**
+  String get repeater_bridgeNote;
+
   /// No description provided for @repeater_general.
   ///
   /// In en, this message translates to:
@@ -8613,6 +8757,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} m {seconds} s'**
   String imageSend_minutesSecondsValue(String minutes, String seconds);
+
+  /// Shown under the DM composer when the message is too long for the firmware's later retry attempts
+  ///
+  /// In en, this message translates to:
+  /// **'Over 158 bytes: sent at most {count} times'**
+  String chat_longMessageRetryNote(int count);
 }
 
 class _AppLocalizationsDelegate

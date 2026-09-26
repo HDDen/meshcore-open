@@ -630,6 +630,9 @@ enum ImageReassemblyFailureReason {
   /// Reassembled but the metadata byte was undecodable
   /// ([ImageChunkStatus.unsupportedFormat]).
   unsupportedFormat,
+
+  /// Dropped by [ImageReassembler.clear] (disconnect / new session).
+  disconnected,
 }
 
 /// A fully reassembled image.
@@ -852,10 +855,27 @@ class ImageReassembler {
   /// Keys of the remembered completed images (test/debug aid).
   Iterable<ImageStreamKey> get completedKeys => _recentlyCompleted.keys;
 
-  /// Drops everything (e.g. on disconnect). Does not fire [onFailed].
-  void clear() {
+  /// Drops everything (e.g. on disconnect). In-progress streams are reported
+  /// through [onFailed] right away, so their bubbles stop showing "receiving";
+  /// nothing is left behind for [evictExpired] to report later.
+  void clear({DateTime? now}) {
+    final at = now ?? _clock();
+    final dropped = _pending.values.toList();
     _pending.clear();
     _recentlyCompleted.clear();
+    for (final entry in dropped) {
+      onFailed?.call(
+        ImageReassemblyFailure(
+          key: entry.key,
+          total: entry.total,
+          receivedDataChunks: entry.bodies.length,
+          hadParity: entry.hasParity,
+          firstSeen: entry.firstSeen,
+          expiredAt: at,
+          reason: ImageReassemblyFailureReason.disconnected,
+        ),
+      );
+    }
   }
 
   /// Feeds one received GRP_DATA blob.
@@ -881,6 +901,12 @@ class ImageReassembler {
     final body = Uint8List.sublistView(blob, kImageChunkHeaderBytes);
     if (header.isParity && body.isEmpty) {
       // A parity chunk must carry at least its length byte.
+      return ImageChunkOutcome(ImageChunkStatus.malformed, header: header);
+    }
+    if (!header.isParity && body.length > kImageChunkBodyBytes) {
+      // The blob cap leaves room for one byte more than the XOR buffer holds;
+      // such a body can never come from [buildImageChunks] and would overrun
+      // parity recovery.
       return ImageChunkOutcome(ImageChunkStatus.malformed, header: header);
     }
 

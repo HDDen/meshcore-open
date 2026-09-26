@@ -823,4 +823,70 @@ void main() {
       expect(paths.first.routeWeight, closeTo(1.5, 0.001));
     });
   });
+
+  group('learned state is preserved', () {
+    const sel = PathSelection(pathBytes: [0x01], hopCount: 1, useFlood: false);
+
+    test('recordPathAttempt keeps the learned route weight', () async {
+      final pubKey = _hex('k001');
+      await _seed(svc, pubKey, pathBytes: [0x01], weight: 1.0);
+      svc.recordPathResult(pubKey, sel, success: true, successIncrement: 1.0);
+      await _flush();
+
+      svc.recordPathAttempt(pubKey, sel);
+      await _flush();
+
+      expect(svc.getRecentPaths(pubKey).first.routeWeight, closeTo(2.0, 1e-9));
+    });
+
+    test('handlePathUpdated keeps the learned route weight', () async {
+      final pubKey = _hex('k002');
+      await _seed(svc, pubKey, pathBytes: [0x01], weight: 3.0);
+
+      svc.handlePathUpdated(
+        _makeContact(publicKeyHex: pubKey, pathLength: 1, path: [0x01]),
+      );
+      await _flush();
+
+      expect(svc.getRecentPaths(pubKey).first.routeWeight, closeTo(3.0, 1e-9));
+    });
+
+    test('recordPathResult after eviction merges with stored counts', () async {
+      final pubKey = _hex('k003');
+      await _seed(svc, pubKey, pathBytes: [0x01], weight: 1.0);
+      for (var i = 0; i < 3; i++) {
+        svc.recordPathResult(pubKey, sel, success: true, successIncrement: 0.5);
+      }
+      await _flush();
+
+      final fresh = PathHistoryService(storage);
+      fresh.recordPathResult(pubKey, sel, success: true, successIncrement: 0.5);
+      await _flush();
+
+      final record = fresh.getRecentPaths(pubKey).first;
+      expect(record.successCount, equals(4));
+      expect(record.routeWeight, closeTo(3.0, 1e-9));
+    });
+
+    test('getRecentPaths load does not drop a concurrent add', () async {
+      final pubKey = _hex('k004');
+      await _seed(svc, pubKey, pathBytes: [0x01], weight: 1.0);
+
+      final fresh = PathHistoryService(storage);
+      fresh.getRecentPaths(pubKey);
+      fresh.handlePathUpdated(
+        _makeContact(publicKeyHex: pubKey, pathLength: 1, path: [0x02]),
+      );
+      await _flush();
+
+      final paths = fresh.getRecentPaths(pubKey).map((p) => p.pathBytes);
+      expect(
+        paths,
+        containsAll([
+          [0x01],
+          [0x02],
+        ]),
+      );
+    });
+  });
 }

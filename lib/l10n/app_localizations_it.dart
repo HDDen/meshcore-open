@@ -111,6 +111,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messageStatus_repeated => 'Ricevuto ripetutamente';
 
   @override
+  String get urlImage_enable => 'Abilita immagini URL';
+
+  @override
+  String get urlImage_possible =>
+      'Possibile immagine URL; abilitala nelle Impostazioni.';
+
+  @override
   String get common_reboot => 'Riavvia';
 
   @override
@@ -370,6 +377,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_radioSettingsUpdated => 'Impostazioni radio aggiornate';
 
   @override
+  String get settings_radioSettingsNotApplied =>
+      'La radio non ha applicato queste impostazioni';
+
+  @override
   String get settings_regionSettings => 'Regioni';
 
   @override
@@ -622,6 +633,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_infoPublicKey => 'Chiave Pubblica';
 
   @override
+  String get settings_publicKeyCopied => 'Chiave pubblica copiata';
+
+  @override
   String get settings_infoContactsCount => 'Numero di contatti';
 
   @override
@@ -805,7 +819,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get appSettings_advertisementNotifications =>
-      'Notifiche Pubblicitarie';
+      'Notifiche degli Annunci';
 
   @override
   String get appSettings_advertisementNotificationsSubtitle =>
@@ -1367,6 +1381,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channels_publicChannelAdded => 'Canale pubblico aggiunto';
 
   @override
+  String get channels_noFreeSlots => 'Tutti gli slot dei canali sono in uso';
+
+  @override
   String get channels_sortBy => 'Ordina per';
 
   @override
@@ -1513,7 +1530,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chat_me => 'Io';
 
   @override
-  String get reaction_report => 'Emoji Reactions';
+  String get reaction_report => 'Reazioni con Emoji';
 
   @override
   String get emojiCategorySmileys => 'Emoji';
@@ -2701,8 +2718,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get repeater_dutyCycle => 'Ciclo di lavoro';
 
   @override
-  String get repeater_dutyCycleHelper =>
-      'Percentuale massima di utilizzo dello spazio pubblicitario';
+  String get repeater_dutyCycleHelper => 'Percentuale massima di airtime';
 
   @override
   String repeater_dutyCyclePercent(int percent) {
@@ -2721,8 +2737,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiorna le informazioni sull\'operatore';
 
   @override
-  String get repeater_floodMax =>
-      'Massimo numero di salti in caso di inondazione';
+  String get repeater_floodMax => 'Numero massimo di salti in flood';
 
   @override
   String get repeater_floodMaxHelper =>
@@ -2810,12 +2825,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get repeater_actionsTitle => 'Azioni';
 
   @override
-  String get repeater_sendAdvert =>
-      'Inviare annuncio relativo alle inondazioni';
+  String get repeater_sendAdvert => 'Invia annuncio flood';
 
   @override
   String get repeater_sendAdvertSubtitle =>
-      'Trasmettere un annuncio pubblicitario relativo alle inondazioni attraverso la rete.';
+      'Trasmettere un annuncio flood attraverso la rete.';
 
   @override
   String get repeater_sendAdvertZeroHop =>
@@ -2952,7 +2966,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get repeater_cliQuickDiscovery => 'Scopri vicini';
 
   @override
-  String get repeater_cliHelpAdvert => 'Invia un pacchetto pubblicitario';
+  String get repeater_cliHelpAdvert => 'Invia un pacchetto di annuncio';
 
   @override
   String get repeater_cliHelpReboot =>
@@ -2992,7 +3006,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMax =>
-      'Imposta il numero massimo di salti per i pacchetti di inondazione in entrata (se >= max, il pacchetto non viene inoltrato)';
+      'Imposta il numero massimo di salti per i pacchetti flood in entrata (se >= max, il pacchetto non viene inoltrato)';
 
   @override
   String get repeater_cliHelpSetIntThresh =>
@@ -3008,11 +3022,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetAdvertInterval =>
-      'Imposta l\'intervallo del timer in minuti per inviare un pacchetto di pubblicità locale (senza salto). Imposta su 0 per disabilitare.';
+      'Imposta l\'intervallo del timer in minuti per inviare un pacchetto di annuncio locale (senza salto). Imposta su 0 per disabilitare.';
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval =>
-      'Imposta l\'intervallo del timer in ore per inviare un pacchetto pubblicitario di massa. Imposta su 0 per disabilitare.';
+      'Imposta l\'intervallo del timer in ore per inviare un pacchetto di annuncio flood. Imposta su 0 per disabilitare.';
 
   @override
   String get repeater_cliHelpSetGuestPassword =>
@@ -3023,11 +3037,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetLat =>
-      'Imposta la latitudine della mappa pubblicitaria. (gradi decimali)';
+      'Imposta la latitudine della mappa dell\'annuncio. (gradi decimali)';
 
   @override
   String get repeater_cliHelpSetLon =>
-      'Imposta la longitudine della mappa pubblicitaria. (gradi decimali)';
+      'Imposta la longitudine della mappa dell\'annuncio. (gradi decimali)';
 
   @override
   String get repeater_cliHelpSetRadio =>
@@ -3103,7 +3117,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegion =>
-      '(solo serie) Elenca tutte le regioni definite e le autorizzazioni di allagamento correnti.';
+      '(solo serie) Elenca tutte le regioni definite e le autorizzazioni flood correnti.';
 
   @override
   String get repeater_cliHelpRegionLoad =>
@@ -3170,6 +3184,75 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get repeater_commandsListNote =>
       'NOTA: per i vari comandi \"set...\", esiste anche un comando \"get...\".';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Frequenza non valida (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => 'Da -9 a 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Errori di ricezione';
+
+  @override
+  String get room_postsStored => 'Post';
+
+  @override
+  String get room_postsPushed => 'Post Inviati';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Modalità di caricamento regioni: invia un nome di regione per riga, indentato con spazi sotto la sua regione padre (aggiungi F dopo il nome per consentire il flood). Le righe non ricevono risposta. Invia una riga vuota per terminare, poi \"region save\" per salvare il risultato.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Riga di regione, o vuota per terminare';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(fine caricamento regioni)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definisce una catena di regioni in un solo comando: ogni nome viene aggiunto sotto il precedente; \"name,parent\" aggiunge il nome e continua sotto il padre indicato. Risponde con l\'elenco delle regioni.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Imposta il numero massimo di salti per l\'inoltro dei pacchetti flood privi di ambito regionale (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Imposta il numero massimo di salti per l\'inoltro degli annunci flood (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Mostra il numero massimo di salti per i pacchetti flood senza ambito regionale.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Mostra il numero massimo di salti per gli annunci flood.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Attiva o disattiva il guadagno RX (LNA) del modulo frontend LoRa. Le schede prive di questo modulo rispondono \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Attiva o disattiva il guadagno TX (PA) del modulo frontend LoRa. Le schede prive di questo modulo rispondono \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Mostra se il guadagno RX del modulo frontend LoRa è attivo.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Mostra se il guadagno TX del modulo frontend LoRa è attivo.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Disponibile solo su firmware compilato con un bridge (RS232 o ESP-NOW).';
 
   @override
   String get repeater_general => 'Generale';
@@ -3342,7 +3425,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetAdvertInterval =>
-      'Indica l\'intervallo pubblicitario locale in minuti.';
+      'Indica l\'intervallo di annuncio locale in minuti.';
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
@@ -4023,7 +4106,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pathTrace_someHopsNoLocation =>
-      'Uno o più hop non hanno una posizione!';
+      'Uno o più salti non hanno una posizione!';
 
   @override
   String get pathTrace_clearTooltip => 'Cancella percorso';
@@ -4242,7 +4325,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contacts_zeroHopAdvert => 'Annuncio Zero Hop';
 
   @override
-  String get contacts_floodAdvert => 'Annuncio alluvionale';
+  String get contacts_floodAdvert => 'Annuncio Flood';
 
   @override
   String get contacts_copyAdvertToClipboard => 'Copia Annuncio negli Appunti';
@@ -4935,7 +5018,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      'Instradamento delle inondazioni: ogni ripetitore nel raggio ritrasmette ogni pacchetto, quindi il canale rimane occupato più a lungo.';
+      'Instradamento flood: ogni ripetitore nel raggio ritrasmette ogni pacchetto, quindi il canale rimane occupato più a lungo.';
 
   @override
   String get imageSend_parityTitle => 'Pacchetto di recupero';
@@ -5065,5 +5148,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String imageSend_minutesSecondsValue(String minutes, String seconds) {
     return '$minutes min $seconds s';
+  }
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Oltre 158 byte: inviato al massimo $count volte';
   }
 }

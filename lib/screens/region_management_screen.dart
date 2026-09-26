@@ -440,7 +440,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       await connector.clearContactPath(repeater);
       return;
     }
-    await connector.setContactPath(repeater, originalPath, originalPathLength);
+    await connector.setContactPath(
+      repeater,
+      originalPath,
+      originalPathLength,
+      pathHashWidth: repeater.pathHashWidth,
+    );
   }
 
   Set<Region> _parseRegionsResponse(Uint8List frame) {

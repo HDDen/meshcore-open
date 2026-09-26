@@ -34,6 +34,8 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   int _historyIndex = -1;
   StreamSubscription<Uint8List>? _frameSubscription;
   RepeaterCommandService? _commandService;
+  bool _regionLoadActive = false;
+  static final RegExp _regionLoadPattern = RegExp(r'^region +load( |$)');
 
   late final List<Map<String, String>> _quickCommands = [
     {'labelKey': 'advertise', 'command': 'advert'},
@@ -111,8 +113,13 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   }
 
   void _sendCommand({bool showDebug = false}) async {
+    if (_regionLoadActive) {
+      _sendRegionLoadLine();
+      return;
+    }
     final command = _commandController.text.trim();
     if (command.isEmpty) return;
+    final startsRegionLoad = _regionLoadPattern.hasMatch(command.toLowerCase());
 
     setState(() {
       _commandHistory.add({
@@ -121,6 +128,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         'timestamp': DateTime.now().toString(),
       });
     });
+    _commandController.clear();
+    _historyIndex = -1;
+    _commandFocusNode.requestFocus();
 
     if (showDebug && mounted) {
       final frame = buildSendCliCommandFrame(
@@ -168,12 +178,79 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       }
     }
 
+    // The reply to `region load` may be lost even though the repeater entered
+    // load mode, so enter it regardless; a blank line always ends it safely.
+    if (startsRegionLoad && mounted) {
+      setState(() {
+        _regionLoadActive = true;
+        _commandHistory.add({
+          'type': 'response',
+          'text': context.l10n.repeater_cliRegionLoadActive,
+          'timestamp': DateTime.now().toString(),
+        });
+      });
+    }
+
+    _scrollToBottom();
+  }
+
+  /// In `region load` mode lines go out verbatim: no `XX|` prefix and no
+  /// trimming, since indentation encodes the parent. Region lines get no
+  /// reply; a blank line commits the load and is answered with
+  /// "OK - loaded N regions".
+  Future<void> _sendRegionLoadLine() async {
+    final line = _commandController.text;
+    final isTerminator = line.trim().isEmpty;
+    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    final repeater = _resolveRepeater(connector);
+    setState(() {
+      _commandHistory.add({
+        'type': 'command',
+        'text': isTerminator ? context.l10n.repeater_cliRegionLoadEnd : line,
+        'timestamp': DateTime.now().toString(),
+      });
+    });
     _commandController.clear();
     _historyIndex = -1;
     _commandFocusNode.requestFocus();
 
+    String? response;
+    var ended = false;
+    try {
+      if (isTerminator) {
+        response = await _commandService!.sendCommand(
+          repeater,
+          '',
+          retries: 1,
+          raw: true,
+        );
+        ended = true;
+      } else {
+        await _commandService!.sendUnansweredLine(repeater, line);
+      }
+    } catch (e) {
+      if (mounted) {
+        response = context.l10n.repeater_cliCommandError(e.toString());
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      if (ended) _regionLoadActive = false;
+      if (response != null) {
+        _commandHistory.add({
+          'type': 'response',
+          'text': response,
+          'timestamp': DateTime.now().toString(),
+        });
+      }
+    });
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    if (!mounted) return;
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
+      if (mounted && _scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 200),
@@ -337,7 +414,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                       backgroundColor: MeshPalette.blueBg,
                       side: const BorderSide(color: MeshPalette.blueLine),
                       visualDensity: VisualDensity.compact,
-                      onPressed: () => _useQuickCommand(cmd['command']!),
+                      onPressed: _regionLoadActive
+                          ? null
+                          : () => _useQuickCommand(cmd['command']!),
                     ),
                   );
                 }).toList(),
@@ -392,12 +471,14 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                         color: MeshPalette.ink,
                       ),
                       decoration: InputDecoration(
-                        hintText: context.l10n.repeater_enterCommandHint,
+                        hintText: _regionLoadActive
+                            ? context.l10n.repeater_cliRegionLoadHint
+                            : context.l10n.repeater_enterCommandHint,
                         hintStyle: MeshTheme.mono(
                           fontSize: 13,
                           color: MeshPalette.ink4,
                         ),
-                        prefixText: '> ',
+                        prefixText: _regionLoadActive ? '' : '> ',
                         prefixStyle: MeshTheme.mono(
                           fontSize: 13,
                           color: MeshPalette.blue,
@@ -609,22 +690,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         command: 'powersaving {on|off}',
         description: l10n.repeater_cliHelpPowersavingOnOff,
       ),
-      _CommandHelpEntry(
-        command: 'erase',
-        description: l10n.repeater_cliHelpErase,
-      ),
-      _CommandHelpEntry(
-        command: 'stats-packets',
-        description: l10n.repeater_cliHelpStatsPackets,
-      ),
-      _CommandHelpEntry(
-        command: 'stats-radio',
-        description: l10n.repeater_cliHelpStatsRadio,
-      ),
-      _CommandHelpEntry(
-        command: 'stats-core',
-        description: l10n.repeater_cliHelpStatsCore,
-      ),
     ];
 
     final settingsCommands = [
@@ -647,6 +712,14 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       _CommandHelpEntry(
         command: 'set flood.max {max-hops}',
         description: l10n.repeater_cliHelpSetFloodMax,
+      ),
+      _CommandHelpEntry(
+        command: 'set flood.max.unscoped {0-64}',
+        description: l10n.repeater_cliHelpSetFloodMaxUnscoped,
+      ),
+      _CommandHelpEntry(
+        command: 'set flood.max.advert {0-64}',
+        description: l10n.repeater_cliHelpSetFloodMaxAdvert,
       ),
       _CommandHelpEntry(
         command: 'set int.thresh {db}',
@@ -701,26 +774,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         description: l10n.repeater_cliHelpSetDirectTxDelay,
       ),
       _CommandHelpEntry(
-        command: 'set bridge.enabled {on|off}',
-        description: l10n.repeater_cliHelpSetBridgeEnabled,
-      ),
-      _CommandHelpEntry(
-        command: 'set bridge.delay {0-10000}',
-        description: l10n.repeater_cliHelpSetBridgeDelay,
-      ),
-      _CommandHelpEntry(
-        command: 'set bridge.source {rx|tx}',
-        description: l10n.repeater_cliHelpSetBridgeSource,
-      ),
-      _CommandHelpEntry(
-        command: 'set bridge.baud {speed}',
-        description: l10n.repeater_cliHelpSetBridgeBaud,
-      ),
-      _CommandHelpEntry(
-        command: 'set bridge.secret {shared-secret}',
-        description: l10n.repeater_cliHelpSetBridgeSecret,
-      ),
-      _CommandHelpEntry(
         command: 'set adc.multiplier {factor}',
         description: l10n.repeater_cliHelpSetAdcMultiplier,
       ),
@@ -745,6 +798,14 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         description: l10n.repeater_cliHelpSetRadioRxGain,
       ),
       _CommandHelpEntry(
+        command: 'set radio.fem.rxgain {on|off}',
+        description: l10n.repeater_cliHelpSetRadioFemRxGain,
+      ),
+      _CommandHelpEntry(
+        command: 'set radio.fem.txgain {on|off}',
+        description: l10n.repeater_cliHelpSetRadioFemTxGain,
+      ),
+      _CommandHelpEntry(
         command: 'set owner.info {text}',
         description: l10n.repeater_cliHelpSetOwnerInfo,
       ),
@@ -756,17 +817,57 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         command: 'set loop.detect {off|minimal|moderate|strict}',
         description: l10n.repeater_cliHelpSetLoopDetect,
       ),
+    ];
+
+    final bridgeCommands = [
       _CommandHelpEntry(
-        command: 'set freq {mhz}',
-        description: l10n.repeater_cliHelpSetFreq,
+        command: 'set bridge.enabled {on|off}',
+        description: l10n.repeater_cliHelpSetBridgeEnabled,
+      ),
+      _CommandHelpEntry(
+        command: 'set bridge.delay {0-10000}',
+        description: l10n.repeater_cliHelpSetBridgeDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'set bridge.source {rx|tx}',
+        description: l10n.repeater_cliHelpSetBridgeSource,
+      ),
+      _CommandHelpEntry(
+        command: 'set bridge.baud {speed}',
+        description: l10n.repeater_cliHelpSetBridgeBaud,
+      ),
+      _CommandHelpEntry(
+        command: 'set bridge.secret {shared-secret}',
+        description: l10n.repeater_cliHelpSetBridgeSecret,
       ),
       _CommandHelpEntry(
         command: 'set bridge.channel {1-14}',
         description: l10n.repeater_cliHelpSetBridgeChannel,
       ),
-    ];
-
-    final bridgeCommands = [
+      _CommandHelpEntry(
+        command: 'get bridge.enabled',
+        description: l10n.repeater_cliHelpGetBridgeEnabled,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.delay',
+        description: l10n.repeater_cliHelpGetBridgeDelay,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.source',
+        description: l10n.repeater_cliHelpGetBridgeSource,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.baud',
+        description: l10n.repeater_cliHelpGetBridgeBaud,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.channel',
+        description: l10n.repeater_cliHelpGetBridgeChannel,
+      ),
+      _CommandHelpEntry(
+        command: 'get bridge.secret',
+        description: l10n.repeater_cliHelpGetBridgeSecret,
+      ),
       _CommandHelpEntry(
         command: 'get bridge.type',
         description: l10n.repeater_cliHelpGetBridgeType,
@@ -807,6 +908,10 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       _CommandHelpEntry(
         command: 'region load',
         description: l10n.repeater_cliHelpRegionLoad,
+      ),
+      _CommandHelpEntry(
+        command: 'region def {name}[,{jump-prefix}] ...',
+        description: l10n.repeater_cliHelpRegionDef,
       ),
       _CommandHelpEntry(
         command: 'region get {* | name-prefix}',
@@ -872,10 +977,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         description: l10n.repeater_cliHelpGetPublicKey,
       ),
       _CommandHelpEntry(
-        command: 'get prv.key',
-        description: l10n.repeater_cliHelpGetPrvKey,
-      ),
-      _CommandHelpEntry(
         command: 'get repeat',
         description: l10n.repeater_cliHelpGetRepeat,
       ),
@@ -894,6 +995,14 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       _CommandHelpEntry(
         command: 'get radio.rxgain',
         description: l10n.repeater_cliHelpGetRadioRxGain,
+      ),
+      _CommandHelpEntry(
+        command: 'get radio.fem.rxgain',
+        description: l10n.repeater_cliHelpGetRadioFemRxGain,
+      ),
+      _CommandHelpEntry(
+        command: 'get radio.fem.txgain',
+        description: l10n.repeater_cliHelpGetRadioFemTxGain,
       ),
       _CommandHelpEntry(
         command: 'get af',
@@ -956,6 +1065,14 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         description: l10n.repeater_cliHelpGetFloodMax,
       ),
       _CommandHelpEntry(
+        command: 'get flood.max.unscoped',
+        description: l10n.repeater_cliHelpGetFloodMaxUnscoped,
+      ),
+      _CommandHelpEntry(
+        command: 'get flood.max.advert',
+        description: l10n.repeater_cliHelpGetFloodMaxAdvert,
+      ),
+      _CommandHelpEntry(
         command: 'get owner.info',
         description: l10n.repeater_cliHelpGetOwnerInfo,
       ),
@@ -966,34 +1083,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       _CommandHelpEntry(
         command: 'get loop.detect',
         description: l10n.repeater_cliHelpGetLoopDetect,
-      ),
-      _CommandHelpEntry(
-        command: 'get acl',
-        description: l10n.repeater_cliHelpGetAcl,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.enabled',
-        description: l10n.repeater_cliHelpGetBridgeEnabled,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.delay',
-        description: l10n.repeater_cliHelpGetBridgeDelay,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.source',
-        description: l10n.repeater_cliHelpGetBridgeSource,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.baud',
-        description: l10n.repeater_cliHelpGetBridgeBaud,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.channel',
-        description: l10n.repeater_cliHelpGetBridgeChannel,
-      ),
-      _CommandHelpEntry(
-        command: 'get bridge.secret',
-        description: l10n.repeater_cliHelpGetBridgeSecret,
       ),
       _CommandHelpEntry(
         command: 'get bootloader.ver',
@@ -1103,7 +1192,12 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
               const SizedBox(height: 16),
               _buildHelpSection(context, l10n.repeater_sensors, sensorCommands),
               const SizedBox(height: 16),
-              _buildHelpSection(context, l10n.repeater_bridge, bridgeCommands),
+              _buildHelpSection(
+                context,
+                l10n.repeater_bridge,
+                bridgeCommands,
+                note: l10n.repeater_bridgeNote,
+              ),
               const SizedBox(height: 16),
               _buildHelpSection(
                 context,

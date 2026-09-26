@@ -956,6 +956,55 @@ void main() {
     });
   });
 
+  group('oversized data body', () {
+    test('a 159-byte data body is rejected and parity cannot overrun', () {
+      final failed = <ImageReassemblyFailure>[];
+      final r = ImageReassembler(onFailed: failed.add);
+      // Header: sender 0x1234, img 5, idx 0 of 2; body one byte past the cap.
+      final oversized = Uint8List.fromList(<int>[
+        0x12,
+        0x34,
+        5,
+        (0 << 4) | 2,
+        ...List<int>.filled(kImageChunkBodyBytes + 1, 0xAA),
+      ]);
+      expect(oversized.length, kImageChunkBlobBytes);
+      expect(r.addChunk(oversized).status, ImageChunkStatus.malformed);
+      expect(r.pendingCount, 0);
+
+      // A parity chunk for the same stream must not throw.
+      final parity = Uint8List.fromList(<int>[
+        0x12,
+        0x34,
+        5,
+        (2 << 4) | 2,
+        ...List<int>.filled(kImageChunkBodyBytes + 1, 0x55),
+      ]);
+      expect(() => r.addChunk(parity), returnsNormally);
+    });
+  });
+
+  group('clear()', () {
+    test('reports in-progress streams as failed (disconnected)', () {
+      final failed = <ImageReassemblyFailure>[];
+      final r = ImageReassembler(onFailed: failed.add);
+      final set = buildImageChunks(
+        payload: payloadOf(400, seed: 3),
+        metadata: stdMeta,
+        senderPrefix: senderA,
+        imgId: 8,
+      );
+      r.addChunk(set.blobs[0]);
+      expect(r.pendingCount, 1);
+      r.clear();
+      expect(r.pendingCount, 0);
+      expect(failed, hasLength(1));
+      expect(failed.single.reason, ImageReassemblyFailureReason.disconnected);
+      expect(failed.single.isCorrupt, isFalse);
+      expect(r.evictExpired(now: DateTime(2100)), isEmpty);
+    });
+  });
+
   group('completed-image map is capped', () {
     /// A lone parity chunk of a `total == 1` image completes that image by
     /// itself — one packet, one remembered entry. That is the amplification the

@@ -990,6 +990,16 @@ void main() {
     FileReceivedImageBlobStore newStore() =>
         FileReceivedImageBlobStore(baseDirectory: () async => tempDir);
 
+    test('concurrent sidecar writes for one id land the last one', () async {
+      final blobs = newStore();
+      await Future.wait<void>([
+        for (var i = 0; i < 20; i++)
+          blobs.writeSidecar('1a2b0700693f21', '{"n":$i}'),
+      ]);
+      final sidecars = await blobs.readSidecars();
+      expect(sidecars['1a2b0700693f21'], '{"n":19}');
+    });
+
     test('round-trips bytes and sidecars through real files', () async {
       final blobs = newStore();
       await blobs.writeBitstream('1a2b0700693f21', _payload(155));
@@ -1170,6 +1180,109 @@ void main() {
       expect(listenable.value!.state, ReceivedImageState.decoded);
     },
   );
+
+  group('review fixes 2026-09-24', () {
+    Future<ReceivedImageEntry> startTwoChunk(_Rig h, int imgId) async {
+      final set = buildImageChunks(
+        payload: _payload(kImageChunkFirstCapacity + 20, imgId),
+        metadata: const ImageStreamMetadata(rate: ImageCodecRatePoint.standard),
+        senderPrefix: kSender,
+        imgId: imgId,
+      );
+      final entry = await h.store.handleOutcome(
+        h.reassembler.addChunk(set.blobs[0], channelIndex: 3, now: h.clock()),
+        channelIndex: 3,
+        at: h.clock(),
+      );
+      return entry!;
+    }
+
+    Future<void> failIt(_Rig h, ReceivedImageEntry entry) async {
+      await h.store.handleFailure(
+        ImageReassemblyFailure(
+          key: entry.key,
+          total: 2,
+          receivedDataChunks: 1,
+          hadParity: false,
+          firstSeen: entry.firstSeen,
+          expiredAt: h.clock(),
+        ),
+      );
+    }
+
+    test('a reused img_id does not overwrite a decoded image', () async {
+      final h = _build();
+      final first = await _completeOne(h, imgId: 11, seed: 1);
+      await h.store.settle();
+      expect(
+        h.store.entryFor(first.streamId)!.state,
+        ReceivedImageState.decoded,
+      );
+
+      h.advance(const Duration(minutes: 1));
+      final second = await startTwoChunk(h, 11);
+      expect(second.streamId, isNot(first.streamId));
+      expect(second.state, ReceivedImageState.receiving);
+      expect(
+        h.store.entryFor(first.streamId)!.state,
+        ReceivedImageState.decoded,
+      );
+
+      h.advance(const Duration(minutes: 10));
+      h.reassembler.clear();
+      final third = await _completeOne(h, imgId: 11, seed: 9);
+      expect(third.streamId, isNot(first.streamId));
+      expect(
+        h.store.entryFor(first.streamId)!.state,
+        ReceivedImageState.decoded,
+      );
+    });
+
+    test('failed entries are capped by count, oldest first', () async {
+      final h = _build(maxImages: 2);
+      final ids = <String>[];
+      for (var i = 0; i < 4; i++) {
+        final entry = await startTwoChunk(h, 70 + i);
+        await failIt(h, entry);
+        ids.add(entry.streamId);
+        h.advance(const Duration(seconds: 5));
+      }
+      expect(h.store.entries.length, 2);
+      expect(h.store.entryFor(ids[0]), isNull);
+      expect(h.blobs.hasSidecar(ids[0]), isFalse);
+      expect(
+        h.store.entryFor(ids[3])!.state,
+        ReceivedImageState.failedIncomplete,
+      );
+    });
+
+    test('failed entries past maxAge are deleted outright', () async {
+      final h = _build(maxAge: const Duration(days: 1));
+      final entry = await startTwoChunk(h, 80);
+      await failIt(h, entry);
+      h.advance(const Duration(days: 2));
+      await h.store.evictToBudget();
+      expect(h.store.entryFor(entry.streamId), isNull);
+      expect(h.blobs.hasSidecar(entry.streamId), isFalse);
+    });
+
+    test('foreground memory pressure mid-decode parks, not corrupt', () async {
+      final decoder = _FakeDecoder(mode: 'fail')
+        ..delay = const Duration(milliseconds: 50);
+      final h = _build(decoder: decoder);
+      final entry = await _completeOne(h);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(
+        h.store.entryFor(entry.streamId)!.state,
+        ReceivedImageState.decoding,
+      );
+      await h.store.handleMemoryPressure();
+      await h.store.settle();
+      final after = h.store.entryFor(entry.streamId)!;
+      expect(after.state, ReceivedImageState.reassembled);
+      expect(after.needsManualDecode, isTrue);
+    });
+  });
 }
 
 /// Delivers a whole single-chunk image and returns its entry (state

@@ -40,7 +40,7 @@ class PathHelper {
   ) {
     if (pathBytes.isEmpty) return const [];
 
-    final width = hashByteWidth.clamp(1, 4).toInt();
+    final width = hashByteWidth.clamp(1, 3).toInt();
     final hops = <Uint8List>[];
     for (int i = 0; i < pathBytes.length; i += width) {
       final endIdx = (i + width).clamp(0, pathBytes.length).toInt();
@@ -58,7 +58,6 @@ class PathHelper {
   /// - 1: Single byte per hop (256 unique nodes)
   /// - 2: Two bytes per hop (65K unique nodes)
   /// - 3: Three bytes per hop (16M unique nodes)
-  /// - 4: Four bytes per hop (4.3G unique nodes)
   static String resolvePathNames(
     List<int> pathBytes,
     List<Contact> allContacts,

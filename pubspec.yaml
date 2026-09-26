@@ -42,7 +42,7 @@ dependencies:
   flserial:
     git:
       url: https://github.com/MeshEnvy/flserial.git
-      ref: 48216310061efc8d5d217cc18014fc2cb501646e
+      ref: e1864de9b65cda9656dba804329bdd2890dd5a92
   provider: ^6.1.5+1
   shared_preferences: ^2.2.2
   uuid: ^4.3.3
@@ -64,6 +64,7 @@ dependencies:
   flutter_linkify: ^6.0.0 # Auto-detect and linkify URLs in text
   gpx: ^2.3.0
   path_provider: ^2.1.5
+  file_selector: ^1.0.3   # desktop save dialog for GPX export
   share_plus: ^13.1.0
   build_pipe: ^0.3.1
   material_symbols_icons: ^4.2928.1
@@ -82,6 +83,7 @@ dependencies:
   # the abiFilters note in android/app/build.gradle.kts; a universal APK pays
   # ~56 MB for ORT instead of ~18 MB.
   flutter_onnxruntime: ^1.8.3
+  base32: ^2.2.0
 
 hooks:
   user_defines:

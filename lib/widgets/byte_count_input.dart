@@ -54,6 +54,11 @@ class ByteCountedTextField extends StatelessWidget {
   /// If provided, byte limits and counters will use the encoded text length.
   final String Function(String)? encoder;
 
+  /// Optional byte count above which [softLimitNote] is shown next to the
+  /// counter (the text is still allowed up to [maxBytes]).
+  final int? softLimitBytes;
+  final String? softLimitNote;
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -69,6 +74,8 @@ class ByteCountedTextField extends StatelessWidget {
     this.errorThreshold = 0.9,
     this.hideCounterWhenEmpty = true,
     this.encoder,
+    this.softLimitBytes,
+    this.softLimitNote,
   });
 
   @override
@@ -82,6 +89,10 @@ class ByteCountedTextField extends StatelessWidget {
         final usedBytes = utf8.encode(effectiveText).length;
         final ratio = maxBytes > 0 ? usedBytes / maxBytes : 0.0;
         final showCounter = !(hideCounterWhenEmpty && value.text.isEmpty);
+        final showSoftLimitNote =
+            softLimitNote != null &&
+            softLimitBytes != null &&
+            usedBytes > softLimitBytes!;
 
         final counterColor = ratio > errorThreshold
             ? Theme.of(context).colorScheme.error
@@ -122,12 +133,25 @@ class ByteCountedTextField extends StatelessWidget {
               opacity: showCounter ? 1 : 0,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4, right: 4),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '$usedBytes / $maxBytes',
-                    style: TextStyle(fontSize: 11, color: counterColor),
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: showSoftLimitNote
+                          ? Text(
+                              softLimitNote!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$usedBytes / $maxBytes',
+                      style: TextStyle(fontSize: 11, color: counterColor),
+                    ),
+                  ],
                 ),
               ),
             ),
