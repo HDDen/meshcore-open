@@ -121,7 +121,10 @@ class Cyr2Lat {
     'я': 'ya',
   };
 
-  static final RegExp _prefixRegExp = RegExp(r'\@\[[\S\s]+\] ');
+  /// The mention a reply starts with, up to its first closing bracket as
+  /// `ChannelMessage.parseReplyMention` reads it. It stays as typed, so the
+  /// receiver can match it to the sender's name, and a quote line may follow.
+  static final RegExp _prefixRegExp = RegExp(r'@\[[^\]]+\] ');
 
   static Map<String, String> _charMap = Map.from(defaultCharMap);
 
@@ -131,17 +134,44 @@ class Cyr2Lat {
 
   static String encode(String text) {
     if (text.isEmpty) return text;
-    final buffer = StringBuffer();
-
     final senderName = extractSenderName(text);
-    final msgText = removeSenderName(text);
+    var msgText = removeSenderName(text);
+    final buffer = StringBuffer(senderName);
 
-    for (final rune in msgText.runes) {
+    // A reply's quote line is transliterated whole, brackets included: the
+    // receiver matches it against its own transliteration of the quoted
+    // message, which spares nothing.
+    if (senderName.isNotEmpty && msgText.startsWith('>')) {
+      final lineEnd = msgText.indexOf('\n');
+      if (lineEnd > 1) {
+        _writeTransliterated(buffer, msgText.substring(0, lineEnd + 1));
+        msgText = msgText.substring(lineEnd + 1);
+      }
+    }
+
+    // What sits inside square brackets, a mention's name above all, stays as
+    // typed. A colour tag keeps only its key that way: the text it encloses
+    // lies between two tags, outside both.
+    var start = 0;
+    while (start < msgText.length) {
+      final open = msgText.indexOf('[', start);
+      final close = open < 0 ? -1 : msgText.indexOf(']', open + 1);
+      if (close < 0) {
+        _writeTransliterated(buffer, msgText.substring(start));
+        break;
+      }
+      _writeTransliterated(buffer, msgText.substring(start, open));
+      buffer.write(msgText.substring(open, close + 1));
+      start = close + 1;
+    }
+    return buffer.toString();
+  }
+
+  static void _writeTransliterated(StringBuffer buffer, String text) {
+    for (final rune in text.runes) {
       final char = String.fromCharCode(rune);
       buffer.write(_charMap[char] ?? char);
     }
-
-    return senderName + buffer.toString();
   }
 
   static String removeSenderName(String text) {
