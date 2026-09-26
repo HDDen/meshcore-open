@@ -91,6 +91,7 @@ import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
+import '../widgets/stop_sending_bar.dart';
 
 class ChatScreen extends StatefulWidget {
   final Contact contact;
@@ -1051,6 +1052,12 @@ class _ChatScreenState extends State<ChatScreen> {
                         connector,
                         message.messageId,
                       ),
+                      onStopSending:
+                          connector.isSendInProgress(message.messageId)
+                          ? () => unawaited(
+                              connector.stopSending(contact, message),
+                            )
+                          : null,
                     );
                     final isUnreadAnchor =
                         _unreadDividerMessageId != null &&
@@ -2877,6 +2884,7 @@ class _MessageBubble extends StatelessWidget {
   final DateTime? pendingSendAt;
   final int? pendingSendDelaySeconds;
   final VoidCallback? onCancelPendingSend;
+  final VoidCallback? onStopSending;
   final double textScale;
   final String sourceId;
   final bool isHighlighted;
@@ -2915,6 +2923,7 @@ class _MessageBubble extends StatelessWidget {
     this.pendingSendAt,
     this.pendingSendDelaySeconds,
     this.onCancelPendingSend,
+    this.onStopSending,
   });
 
   @override
@@ -3118,7 +3127,7 @@ class _MessageBubble extends StatelessWidget {
                     child: Stack(
                       children: [
                         _stretchToContentWhen(
-                          pendingSendAt != null,
+                          pendingSendAt != null || onStopSending != null,
                           Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -3712,6 +3721,16 @@ class _MessageBubble extends StatelessWidget {
                             sendAt: pendingSendAt!,
                             delaySeconds: pendingSendDelaySeconds!,
                             onCancel: onCancelPendingSend!,
+                            foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                          ),
+                        // A send still retrying, or waiting for its
+                        // acknowledgement, can be stopped by hand.
+                        if (onStopSending != null)
+                          StopSendingBar(
+                            onStop: onStopSending!,
                             foregroundColor: textColor,
                             contentPadding: isMediaMessage
                                 ? const EdgeInsets.symmetric(horizontal: 8)

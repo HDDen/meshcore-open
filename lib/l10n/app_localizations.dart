@@ -11605,6 +11605,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No region'**
   String get chat_floodRegionNone;
+
+  /// No description provided for @chat_stopSending.
+  ///
+  /// In en, this message translates to:
+  /// **'stop sending'**
+  String get chat_stopSending;
 }
 
 class _AppLocalizationsDelegate

@@ -706,6 +706,15 @@ class MessageRetryService extends ChangeNotifier {
 
   bool get hasPendingMessages => _pendingMessages.isNotEmpty;
 
+  /// Whether [messageId] is still being worked on: attempts ahead, or an
+  /// acknowledgement awaited.
+  bool isTracking(String messageId) => _pendingMessages.containsKey(messageId);
+
+  /// The ACK hashes the attempts of [messageId] have been waiting for, for a
+  /// caller that stops tracking it but still wants to recognise a late one.
+  List<int> expectedAckHashesFor(String messageId) =>
+      List.unmodifiable(_expectedAckHashes[messageId] ?? const <int>[]);
+
   /// The pending message and recipient a RESP_CODE_SENT with [ackHash] was
   /// matched to by [updateMessageFromSent], or null. The connector follows
   /// the relays of a flood send from here, since only the node's answer says

@@ -11,7 +11,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "de": [
@@ -26,7 +27,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "es": [
@@ -41,7 +43,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "fr": [
@@ -56,7 +59,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "hu": [
@@ -71,7 +75,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "it": [
@@ -86,7 +91,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "ja": [
@@ -101,7 +107,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "ko": [
@@ -116,7 +123,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "nl": [
@@ -131,7 +139,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "pl": [
@@ -146,7 +155,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "pt": [
@@ -161,7 +171,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "sk": [
@@ -176,7 +187,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "sl": [
@@ -191,7 +203,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "sv": [
@@ -206,7 +219,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "uk": [
@@ -221,7 +235,8 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ],
 
   "zh": [
@@ -236,6 +251,7 @@
     "discoveredContacts_alreadyAdded",
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
-    "chat_floodRegionNone"
+    "chat_floodRegionNone",
+    "chat_stopSending"
   ]
 }

@@ -5751,6 +5751,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _directFloodRepeats.clear();
     _directEchoAckUnsupported = false;
     _unscopedSendUnsupported = false;
+    _stoppedSendAcks.clear();
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
     _selfPublicKey = null;
@@ -8550,6 +8551,67 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     pending.timer?.cancel();
     notifyListeners();
     return pending.inputText;
+  }
+
+  /// The message behind each ACK hash a stopped send was waiting for, so a
+  /// confirmation that arrives after all still marks it delivered.
+  final Map<String, ({String contactKeyHex, String messageId})>
+  _stoppedSendAcks = {};
+
+  /// Whether the retry service is still working on [messageId]: attempts
+  /// ahead, or an acknowledgement awaited.
+  bool isSendInProgress(String messageId) =>
+      _retryService?.isTracking(messageId) ?? false;
+
+  /// Stops the attempts of an outgoing direct or room message and the wait
+  /// for its acknowledgement, on the user's word: the message was most
+  /// likely read long ago and only the ACK is missing. The retry service
+  /// drops it, which frees the contact's queue and the in-flight slot for
+  /// other sends; the message keeps what its attempts earned, sent once the
+  /// node had taken it, failed when nothing had gone out; the node's flood
+  /// scope is cleared under the command lock, after any window an attempt
+  /// still holds, in case one was cut short; and an acknowledgement that
+  /// arrives after all still marks the message delivered.
+  Future<void> stopSending(Contact contact, Message message) async {
+    final retryService = _retryService;
+    if (retryService != null) {
+      for (final ackHash in retryService.expectedAckHashesFor(
+        message.messageId,
+      )) {
+        _stoppedSendAcks[ackHashToHex(ackHash)] = (
+          contactKeyHex: contact.publicKeyHex,
+          messageId: message.messageId,
+        );
+      }
+      while (_stoppedSendAcks.length > 64) {
+        _stoppedSendAcks.remove(_stoppedSendAcks.keys.first);
+      }
+      retryService.untrack(message.messageId);
+    }
+    _updateStoredContactMessage(contact.publicKeyHex, message.messageId, (
+      current,
+    ) {
+      if (current.status == MessageStatus.delivered) return current;
+      final wentOut = current.sentAt != null || current.sentByRadioAt != null;
+      return current.copyWith(
+        status: wentOut ? MessageStatus.sent : MessageStatus.failed,
+      );
+    });
+    appLogger.info(
+      'Sending to ${contact.name} stopped by hand',
+      tag: 'Connector',
+    );
+    if (!isConnected || getContactRegion(contact.publicKeyHex).isEmpty) return;
+    try {
+      await _runChannelCommandLocked(
+        () => _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame('')),
+      );
+    } catch (error) {
+      appLogger.warn(
+        'Flood scope reset after a stopped send failed: $error',
+        tag: 'Connector',
+      );
+    }
   }
 
   String? cancelPendingChannelSend(String messageId) {
@@ -13845,6 +13907,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // Handle ACK in retry service
       if (_retryService != null) {
         _retryService!.handleAckReceived(ackHash, tripTimeMs);
+      }
+      // A send stopped by hand is no longer the retry service's, but its
+      // acknowledgement is still worth the double tick.
+      final stopped = _stoppedSendAcks.remove(ackHashToHex(ackHash));
+      if (stopped != null) {
+        _updateStoredContactMessage(
+          stopped.contactKeyHex,
+          stopped.messageId,
+          (current) => current.copyWith(
+            status: MessageStatus.delivered,
+            deliveredAt: DateTime.now(),
+            tripTimeMs: tripTimeMs,
+            deliveryProgressCompletedSteps: current.deliveryProgressTotalSteps,
+          ),
+        );
+        appLogger.info(
+          'A send stopped by hand was acknowledged after all',
+          tag: 'Connector',
+        );
       }
     } catch (e) {
       appLogger.warn('Error handling send confirmed frame: $e');

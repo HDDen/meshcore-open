@@ -6821,4 +6821,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_floodRegionNone => 'Без региона';
+
+  @override
+  String get chat_stopSending => 'остановить отправку';
 }

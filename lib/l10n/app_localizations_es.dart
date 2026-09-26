@@ -6828,4 +6828,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chat_floodRegionNone => 'No region';
+
+  @override
+  String get chat_stopSending => 'stop sending';
 }
