@@ -6,6 +6,7 @@ import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
+import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/mesh_compressor.dart';
@@ -526,6 +527,10 @@ class MessageStore {
           ? null
           : DirectEchoObservation.encodeList(msg.directEchoObservations),
       'repeatCount': msg.repeatCount,
+      'floodPathObservations': msg.floodPathObservations.isEmpty
+          ? null
+          : ChannelPathSignalHelper.encode(msg.floodPathObservations),
+      'floodPathHashWidth': msg.floodPathHashWidth,
       'sentByFlood': msg.sentByFlood,
       'packetRegion': msg.packetRegion,
       'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
@@ -668,6 +673,10 @@ class MessageStore {
         json['directEchoObservations'],
       ),
       repeatCount: json['repeatCount'] as int? ?? 0,
+      floodPathObservations: ChannelPathSignalHelper.decode(
+        json['floodPathObservations'],
+      ),
+      floodPathHashWidth: json['floodPathHashWidth'] as int?,
       sentByFlood: json['sentByFlood'] as bool? ?? false,
       packetRegion: json['packetRegion'] as String?,
       packetRegionInfoAvailable:

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
 import '../helpers/message_text_codec.dart';
@@ -91,6 +92,15 @@ class Message {
   /// travelled a known route or was never heard relayed.
   final int repeatCount;
 
+  /// The routes the flood copies of this message were heard on (see
+  /// `DirectFloodRepeats`), each in the order the packet travelled, sender
+  /// first, with the signal our radio measured on that copy; one entry per
+  /// distinct route. Empty for a message that took a known route or was never
+  /// heard. [floodPathHashWidth] is the hash width those routes are written
+  /// in, null while there are none.
+  final List<ChannelPathObservation> floodPathObservations;
+  final int? floodPathHashWidth;
+
   /// True when the packet travelled by flood: the node said so in
   /// RESP_CODE_SENT for an outgoing message, the CONTACT_MSG_RECV path byte
   /// for an incoming one. Only such a message carries a region, below.
@@ -164,6 +174,8 @@ class Message {
     this.deliveryProgressCompletedSteps = 0,
     List<DirectEchoObservation>? directEchoObservations,
     this.repeatCount = 0,
+    List<ChannelPathObservation>? floodPathObservations,
+    this.floodPathHashWidth,
     this.sentByFlood = false,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
@@ -178,6 +190,7 @@ class Message {
        sentByRadioWaitSeconds = sentByRadioWaitSeconds ?? const [],
        pathBytes = pathBytes ?? Uint8List(0),
        directEchoObservations = directEchoObservations ?? const [],
+       floodPathObservations = floodPathObservations ?? const [],
        fourByteRoomContactKey = fourByteRoomContactKey ?? Uint8List(0),
        reactions = reactions ?? {},
        reactionStatuses = reactionStatuses ?? {};
@@ -201,6 +214,8 @@ class Message {
     int? deliveryProgressCompletedSteps,
     List<DirectEchoObservation>? directEchoObservations,
     int? repeatCount,
+    List<ChannelPathObservation>? floodPathObservations,
+    int? floodPathHashWidth,
     bool? sentByFlood,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
@@ -329,6 +344,9 @@ class Message {
       directEchoObservations:
           directEchoObservations ?? this.directEchoObservations,
       repeatCount: repeatCount ?? this.repeatCount,
+      floodPathObservations:
+          floodPathObservations ?? this.floodPathObservations,
+      floodPathHashWidth: floodPathHashWidth ?? this.floodPathHashWidth,
       sentByFlood: sentByFlood ?? this.sentByFlood,
       packetRegion: packetRegion == _unset
           ? this.packetRegion

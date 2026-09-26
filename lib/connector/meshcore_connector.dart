@@ -4062,13 +4062,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (index != -1) {
         // The retry service writes back its own copy of a pending message,
         // which never sees what the RX log added meanwhile: the flood relays
-        // counted, the flood routing and the packet's region. The count only
-        // grows and the other two are only ever set, so the stored ones are
-        // kept when the copy is behind.
+        // counted and their routes, the flood routing and the packet's
+        // region. The count and the routes only grow and the other two are
+        // only ever set, so the stored ones are kept when the copy is behind.
         final stored = messages[index];
         var updated = message;
         if (message.repeatCount < stored.repeatCount) {
           updated = updated.copyWith(repeatCount: stored.repeatCount);
+        }
+        if (message.floodPathObservations.length <
+            stored.floodPathObservations.length) {
+          updated = updated.copyWith(
+            floodPathObservations: stored.floodPathObservations,
+            floodPathHashWidth: stored.floodPathHashWidth,
+          );
         }
         if (stored.sentByFlood && !message.sentByFlood) {
           updated = updated.copyWith(sentByFlood: true);
@@ -10951,6 +10958,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     relays: binding.relays,
                     transportCode: binding.transportCode,
                     payload: binding.payload,
+                    copies: binding.copies,
                   ),
                 );
               }
@@ -10973,6 +10981,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             relays: binding.relays,
             transportCode: binding.transportCode,
             payload: binding.payload,
+            copies: binding.copies,
           );
         }
       }
@@ -13069,13 +13078,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final DirectFloodRepeats _directFloodRepeats = DirectFloodRepeats();
 
   /// A flood copy of a TXT_MSG heard in the RX log: one more retransmission
-  /// of the direct message it is tied to, if it is tied to one, and that
-  /// message's region, read off the copy.
-  void _countDirectFloodCopy(_RawPacket packet) {
+  /// of the direct message it is tied to, if it is tied to one, that
+  /// message's region, read off the copy, and the route the copy took.
+  void _countDirectFloodCopy(
+    _RawPacket packet, {
+    required double? snr,
+    required int? rssi,
+  }) {
+    final copy = (
+      pathBytes: packet.pathBytes,
+      pathHashWidth: packet.pathHashWidth,
+      snr: snr,
+      rssi: rssi,
+    );
     final target = _directFloodRepeats.observe(
       payload: packet.payload,
       hopCount: packet.hopCount,
       at: DateTime.now(),
+      copy: copy,
       transportCode: packet.transportCode1,
       identity: _directFloodIdentity(packet.payload),
     );
@@ -13088,6 +13108,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         relays: 1,
         transportCode: packet.transportCode1,
         payload: packet.payload,
+        copies: [copy],
       ),
     );
   }
@@ -13227,24 +13248,39 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  /// [message] with [relays] more retransmissions and the region of a flood
-  /// copy of it, resolved from the copy's first transport code (null for a
-  /// plain flood) and the [payload] that code was computed over. The copy is
-  /// the packet itself, so its region replaces whatever the message assumed.
+  /// [message] with [relays] more retransmissions, the routes of the heard
+  /// [copies] added to its observations, and the region of the packet,
+  /// resolved from its first transport code (null for a plain flood) and the
+  /// [payload] that code was computed over. The copy is the packet itself,
+  /// so its region replaces whatever the message assumed.
   Message _withDirectFloodCopy(
     Message message, {
     required int relays,
     required int? transportCode,
     required Uint8List payload,
+    required List<DirectFloodCopy> copies,
   }) {
     final region = _resolveTransportCodeRegion(
       transportCode,
       payloadTypeTXTMSG,
       payload,
     );
+    var observations = message.floodPathObservations;
+    for (final copy in copies) {
+      observations = ChannelPathSignalHelper.includeReading(
+        observations: observations,
+        pathBytes: copy.pathBytes,
+        snr: copy.snr,
+        rssi: copy.rssi,
+      );
+    }
     return message.copyWith(
       sentByFlood: true,
       repeatCount: message.repeatCount + relays,
+      floodPathObservations: observations,
+      floodPathHashWidth:
+          message.floodPathHashWidth ??
+          (copies.isEmpty ? null : copies.first.pathHashWidth),
       packetRegion: region.region,
       packetRegionInfoAvailable: true,
       packetRegionNotMatched: region.notMatched,
@@ -13278,7 +13314,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
       if (packet?.payloadType == payloadTypeTXTMSG) {
-        if (packet!.isFlood) _countDirectFloodCopy(packet);
+        if (packet!.isFlood) {
+          _countDirectFloodCopy(packet, snr: snr, rssi: rssi);
+        }
         await _recoverDirectEcho(frame, snr: snr, rssi: rssi);
         return;
       }

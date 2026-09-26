@@ -41,6 +41,7 @@ import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/path_helper.dart';
+import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
@@ -2329,6 +2330,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _openMessagePath(Message message, Contact contact) {
     final connector = context.read<MeshCoreConnector>();
+    // The routes its flood copies were heard on, as the path screen reads
+    // a direct message's routes: from our end, so an incoming message's are
+    // turned around hop by hop.
+    final floodPaths = message.isOutgoing
+        ? message.floodPathObservations
+        : ChannelPathSignalHelper.reverseHops(
+            message.floodPathObservations,
+            message.floodPathHashWidth ?? connector.pathHashByteWidth,
+          );
     final fourByteHex = message.fourByteRoomContactKey
         .map((b) => b.toRadixString(16).padLeft(2, '0'))
         .join()
@@ -2374,6 +2384,9 @@ class _ChatScreenState extends State<ChatScreen> {
       repeatCount: message.repeatCount,
       pathLength: message.pathLength,
       pathBytes: message.pathBytes,
+      pathHashWidth: message.floodPathHashWidth,
+      pathVariants: [for (final path in floodPaths) path.pathBytes],
+      pathObservations: floodPaths,
     );
     Navigator.push(
       context,

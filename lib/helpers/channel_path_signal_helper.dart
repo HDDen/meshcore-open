@@ -60,6 +60,31 @@ abstract final class ChannelPathSignalHelper {
     return merged;
   }
 
+  /// The same observations with each route read the other way round, hop by
+  /// hop: what a route stored sender-first becomes when a screen expects it
+  /// from our end.
+  static List<ChannelPathObservation> reverseHops(
+    List<ChannelPathObservation> observations,
+    int hashByteWidth,
+  ) {
+    final width = hashByteWidth.clamp(1, 4).toInt();
+    return [
+      for (final observation in observations)
+        ChannelPathObservation(
+          pathBytes: Uint8List.fromList([
+            for (
+              var i = observation.pathBytes.length - width;
+              i >= 0;
+              i -= width
+            )
+              ...observation.pathBytes.sublist(i, i + width),
+          ]),
+          snr: observation.snr,
+          rssi: observation.rssi,
+        ),
+    ];
+  }
+
   static ChannelPathObservation? find(
     List<ChannelPathObservation> observations,
     Uint8List pathBytes,
