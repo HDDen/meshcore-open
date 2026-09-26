@@ -274,6 +274,35 @@ void main() {
     });
   });
 
+  group('MCOtxt text transport timestamp', () {
+    test('a channel text packet inherits the packet timestamp', () {
+      final text = MCOtxtAppCodec.encodeTextTransport(
+        text: 'hello',
+        timestamp: 1,
+      );
+
+      expect(MCOtxtAppCodec.isTextPayload(text), isTrue);
+      expect(MCOtxtAppCodec.inheritsPacketTimestamp(text), isTrue);
+    });
+
+    test('a carried timestamp is not inherited', () {
+      final text = MCOtxtAppCodec.encodeTextTransport(
+        text: 'hello',
+        timestamp: 1,
+        includeTimestamp: true,
+      );
+
+      expect(MCOtxtAppCodec.isTextPayload(text), isTrue);
+      expect(MCOtxtAppCodec.inheritsPacketTimestamp(text), isFalse);
+    });
+
+    test('plain text and a missing text inherit nothing', () {
+      expect(MCOtxtAppCodec.inheritsPacketTimestamp('hello'), isFalse);
+      expect(MCOtxtAppCodec.inheritsPacketTimestamp('mct:'), isFalse);
+      expect(MCOtxtAppCodec.inheritsPacketTimestamp(null), isFalse);
+    });
+  });
+
   group('MCOtxt default language pair', () {
     tearDown(() => MCOtxtCodec.defaultLanguagePair = null);
 

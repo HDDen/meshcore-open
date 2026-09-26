@@ -8753,7 +8753,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Aligns an outgoing message's packet timestamp to the value that was
   /// actually written into the transmitted frame, so replies to our own
   /// message resolve by exact-timestamp matching. The visible bubble time uses
-  /// receivedAt and is unaffected.
+  /// receivedAt and is unaffected. An MCOtxt text packet carries no timestamp
+  /// of its own and its receivers give the container the packet's, so our
+  /// copy's container timestamp moves with it: that is the value a reply to
+  /// the message anchors on.
   void _updateChannelMessagePacketTimestamp(
     int channelIndex,
     String messageId,
@@ -8770,6 +8773,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!message.isOutgoing) return;
     final updated = message.copyWith(
       timestamp: DateTime.fromMillisecondsSinceEpoch(timestampSeconds * 1000),
+      containerTimestamp:
+          MCOtxtAppCodec.inheritsPacketTimestamp(message.rawText)
+          ? timestampSeconds
+          : message.containerTimestamp,
       packetHash: packetHash,
     );
     channelMessages[index] = updated;

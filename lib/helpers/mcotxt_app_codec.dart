@@ -181,6 +181,21 @@ class MCOtxtAppCodec {
         trimmedLeft.length > textPrefix.length;
   }
 
+  /// Whether [text] is a text transport whose container takes its timestamp
+  /// from the packet it travels in (flag `0x04`) instead of carrying one. A
+  /// channel text packet is sent that way and its receivers read the
+  /// packet's timestamp into the container, so the sender's own copy has to
+  /// follow the packet too.
+  static bool inheritsPacketTimestamp(String? text) {
+    if (text == null || !isTextPayload(text)) return false;
+    try {
+      final body = bodyFromText(text);
+      return body.isNotEmpty && (body[0] & _flagTimestampInherited) != 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Uint8List bodyFromText(String text) {
     return _bodyFromTextEnvelope(text).body;
   }

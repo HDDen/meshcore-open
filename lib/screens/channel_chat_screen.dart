@@ -2349,13 +2349,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       ),
     );
 
-    if (!isOutgoing && !PlatformInfo.isDesktop) {
+    // Our own bubbles take the swipe too: a reply may quote our own message
+    // as it quotes anyone's. They keep the inset they had without it.
+    if (!PlatformInfo.isDesktop) {
       return _SwipeReplyBubble(
         maxSwipeOffset: maxSwipeOffset,
         replySwipeThreshold: replySwipeThreshold,
+        horizontalPadding: isOutgoing ? 0 : 8,
         onReplyTriggered: () => _setReplyingTo(message),
         hintBuilder: ({required isStart}) =>
-            _buildReplySwipeHint(isStart: isStart),
+            _buildReplySwipeHint(isStart: isStart, iconOnly: isOutgoing),
         child: messageBody,
       );
     } else {
@@ -2366,7 +2369,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
-  Widget _buildReplySwipeHint({required bool isStart}) {
+  Widget _buildReplySwipeHint({required bool isStart, bool iconOnly = false}) {
     final colorScheme = Theme.of(context).colorScheme;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
@@ -2387,7 +2390,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       alignment: isStart ? Alignment.centerLeft : Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       color: colorScheme.primary.withValues(alpha: 0.08),
-      child: isStart
+      // Our own bubble lies over the side the hint is drawn on and slides
+      // away only as far as the icon, so the label would show as a cut tail.
+      child: iconOnly
+          ? Icon(Icons.reply, color: colorScheme.primary)
+          : isStart
           ? content
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -4132,6 +4139,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  /// [message] as the connector holds it now rather than as it was when the
+  /// reply started. Our own message learns its packet time only as it goes on
+  /// the air, and a quick answer to it can start before that; the anchor has
+  /// to carry the time that went out.
+  ChannelMessage? _currentCopyOf(
+    MeshCoreConnector connector,
+    ChannelMessage? message,
+  ) {
+    if (message == null) return null;
+    final messages = connector.getChannelMessages(widget.channel);
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].messageId == message.messageId) return messages[i];
+    }
+    return message;
+  }
+
   Future<void> _showQuickAnswersPicker() async {
     final connector = context.read<MeshCoreConnector>();
     final selectedAnswerIds = await connector.loadChannelQuickAnswerIds(
@@ -4271,9 +4294,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // store last sended msg to resend mechanism
     _lastChannelSentText = messageText;
 
-    final replyTarget = skipReplyContext
-        ? embeddedReplyTarget
-        : _replyingToMessage;
+    final replyTarget = _currentCopyOf(
+      connector,
+      skipReplyContext ? embeddedReplyTarget : _replyingToMessage,
+    );
     if (quickAnswerText == null) {
       ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
@@ -5449,6 +5473,7 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
 class _SwipeReplyBubble extends StatefulWidget {
   final double maxSwipeOffset;
   final double replySwipeThreshold;
+  final double horizontalPadding;
   final VoidCallback onReplyTriggered;
   final Widget Function({required bool isStart}) hintBuilder;
   final Widget child;
@@ -5456,6 +5481,7 @@ class _SwipeReplyBubble extends StatefulWidget {
   const _SwipeReplyBubble({
     required this.maxSwipeOffset,
     required this.replySwipeThreshold,
+    required this.horizontalPadding,
     required this.onReplyTriggered,
     required this.hintBuilder,
     required this.child,
@@ -5574,7 +5600,10 @@ class _SwipeReplyBubbleState extends State<_SwipeReplyBubble> {
       onPointerUp: (event) => _handleSwipePointerUp(event.position),
       onPointerCancel: (_) => _resetSwipe(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+        padding: EdgeInsets.symmetric(
+          vertical: 3,
+          horizontal: widget.horizontalPadding,
+        ),
         child: Stack(
           alignment: Alignment.center,
           children: [
