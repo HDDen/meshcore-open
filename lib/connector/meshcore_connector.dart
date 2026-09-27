@@ -4166,12 +4166,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // counted and their routes, the flood routing and the packet's
         // region. The routes only grow and the other two are only ever set,
         // so the stored ones are kept when the copy is behind; the count
-        // grows within an attempt only, and so does the region. A copy with
-        // another attempt number is a retry being planned: its count and its
-        // region start from the copy's blank, the region being stamped anew
-        // at the retry's RESP_CODE_SENT from the contact's choice as it is
-        // then, and the helper stops counting the earlier attempt's copies
-        // now, not when the retry finally leaves the radio.
+        // grows within an attempt only. A copy with another attempt number
+        // is a retry being planned: its count starts from the copy's zero,
+        // and the helper stops counting the earlier attempt's copies now, not
+        // when the retry finally leaves the radio. The region stays the one
+        // the last attempt went out under until the retry's RESP_CODE_SENT
+        // stamps its own: an acknowledgement of that attempt can still arrive
+        // during the backoff and cancel the retry, and the delivered message
+        // would otherwise show an unknown region.
         final stored = messages[index];
         var updated = message;
         if (message.floodPathObservations.length <
@@ -4184,23 +4186,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (stored.sentByFlood && !message.sentByFlood) {
           updated = updated.copyWith(sentByFlood: true);
         }
+        if (stored.packetRegionInfoAvailable &&
+            !message.packetRegionInfoAvailable) {
+          updated = updated.copyWith(
+            packetRegion: stored.packetRegion,
+            packetRegionInfoAvailable: true,
+            packetRegionNotMatched: stored.packetRegionNotMatched,
+          );
+        }
         if (message.isOutgoing && message.retryCount != stored.retryCount) {
           _directFloodRepeats.planAttempt(
             target: (conversationKey: contactKey, messageId: message.messageId),
             attempt: message.retryCount,
           );
-        } else {
-          if (message.repeatCount < stored.repeatCount) {
-            updated = updated.copyWith(repeatCount: stored.repeatCount);
-          }
-          if (stored.packetRegionInfoAvailable &&
-              !message.packetRegionInfoAvailable) {
-            updated = updated.copyWith(
-              packetRegion: stored.packetRegion,
-              packetRegionInfoAvailable: true,
-              packetRegionNotMatched: stored.packetRegionNotMatched,
-            );
-          }
+        } else if (message.repeatCount < stored.repeatCount) {
+          updated = updated.copyWith(repeatCount: stored.repeatCount);
         }
         messages[index] = updated;
         if (_isRoomConversation(contactKey)) {
@@ -13859,8 +13859,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// A flood send the node confirmed goes out under the contact's own region
   /// when one is set, else under the node's default scope. That is the region
-  /// the message shows until a relayed copy of the packet says exactly; a
-  /// region already read off a copy is left alone.
+  /// the message shows until a relayed copy of the packet says exactly. It
+  /// replaces the region of an earlier attempt, but not one already read off
+  /// a copy of this attempt, which can arrive while the default scope loads.
   Future<void> _stampDirectFloodSend(
     ({Message message, Contact contact}) sent,
   ) async {
@@ -13884,12 +13885,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : _displayPacketRegion(
             ownRegion.isNotEmpty ? ownRegion : _defaultRegionScope ?? '',
           );
+    final readOffCopy = _directFloodRepeats.heardCopyOf(
+      target: (
+        conversationKey: sent.contact.publicKeyHex,
+        messageId: sent.message.messageId,
+      ),
+      attempt: sent.message.retryCount,
+    );
     _updateStoredContactMessage(
       sent.contact.publicKeyHex,
       sent.message.messageId,
       (current) {
         final flooded = current.copyWith(sentByFlood: true);
-        if (!scopeKnown || current.packetRegionInfoAvailable) return flooded;
+        if (!scopeKnown || readOffCopy) return flooded;
         return flooded.copyWith(
           packetRegion: region,
           packetRegionInfoAvailable: true,

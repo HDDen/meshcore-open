@@ -156,6 +156,31 @@ void main() {
       expect(late?.currentAttempt, false);
     });
 
+    test('knows whether a copy of the latest attempt was heard', () {
+      final repeats = DirectFloodRepeats();
+      expectSend(repeats, a, attempt: 0);
+      expect(repeats.heardCopyOf(target: a, attempt: 0), false);
+      repeats.observe(
+        payload: _payload(0x11, _self, 1),
+        hopCount: 1,
+        at: _at(1),
+        copy: _heard(1),
+      );
+      expect(repeats.heardCopyOf(target: a, attempt: 0), true);
+      repeats.planAttempt(target: a, attempt: 1);
+      expect(repeats.heardCopyOf(target: a, attempt: 0), false);
+      expect(repeats.heardCopyOf(target: a, attempt: 1), false);
+      expectSend(repeats, a, attempt: 1, at: 30);
+      repeats.observe(
+        payload: _payload(0x11, _self, 2),
+        hopCount: 1,
+        at: _at(31),
+        copy: _heard(1),
+      );
+      expect(repeats.heardCopyOf(target: a, attempt: 1), true);
+      expect(repeats.heardCopyOf(target: b, attempt: 1), false);
+    });
+
     test('a new attempt takes over an unanswered older expectation', () {
       final repeats = DirectFloodRepeats();
       expectSend(repeats, a, attempt: 0);

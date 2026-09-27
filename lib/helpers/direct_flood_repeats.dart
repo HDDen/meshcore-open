@@ -90,6 +90,17 @@ class DirectFloodRepeats {
     _rememberAttempt(target, attempt);
   }
 
+  /// Whether a copy of [attempt] of [target] has been heard while it is still
+  /// the latest attempt. Such a copy carried the packet's own region, which
+  /// outranks the one its send assumed.
+  bool heardCopyOf({required DirectFloodTarget target, required int attempt}) =>
+      _packets.values.any(
+        (packet) =>
+            packet.target == target &&
+            packet.attempt == attempt &&
+            !packet.superseded,
+      );
+
   /// The node confirmed a flood send of [target], its attempt number
   /// [attempt], to the peer whose key starts with [destinationHash]; ours
   /// starts with [sourceHash]. A new attempt takes the place of the older
