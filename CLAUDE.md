@@ -901,6 +901,15 @@ They are cleared only when a new trace starts. A stage with no observation is dr
 check and the `pathTrace_hopConfirmedNoDirectEchoTooltip`: confirmed by the reply, never heard
 directly, because that hop is out of our range.
 
+The trace map names the hops of the reply in route order, walking out from our own position
+(`_nameHops` over `PathHopResolver`: the nearest node with each prefix after the one before it,
+the most recently seen when none has a location). A target that forwards traces went into the
+path as its last outbound hop (`buildPath`), so that hop is pinned to the target itself. With
+one-byte hashes the prefix of a pinged repeater is usually shared by other nodes, and the scan
+this replaced, which gave each hop to the last matching contact in list order, drew the ping to
+one of them. Routes from the target's path history are drawn only beside a traced route that
+could be drawn: shown alone, a route the trace never took reads as its result.
+
 **Direct-message delivery progress** (`helpers/direct_message_progress_helper.dart`, driven from
 `MessageRetryService.handleRxLogFrame`). The echo of a `TXTMSG` carries the *remaining* route, so
 completed hops follow from `hopCount - remainingHopCount`, and the progress bar under an outgoing

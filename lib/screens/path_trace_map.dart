@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/path_helper.dart';
+import 'package:meshcore_open/helpers/path_hop_resolver.dart';
 import 'package:meshcore_open/helpers/map_location_helper.dart';
 import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
@@ -100,8 +101,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   /// screen would spin forever, because the real timeout only starts once
   /// RESP_CODE_SENT arrives.
   static const Duration _traceSentFallbackTimeout = Duration(seconds: 15);
-  //miles to meters conversion for filtering out repeaters that are too far from the last known GPS hop to be a likely match, to avoid false matches that throw off the inferred positions of other hops in the path
-  static const double _maxRepeaterMatchDistanceMeters = 40 * 1609.344;
 
   final MapController _mapController = MapController();
   final GlobalKey _mapBodyKey = GlobalKey();
@@ -148,6 +147,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   PathHistoryService? _pathHistory;
   PathViewMode _viewMode = PathViewMode.single;
   List<DisplayPath> _displayPaths = [];
+
+  /// Nodes named for the hops of the alternate routes, by hop key. The traced
+  /// route's own names, in [PathTraceData.pathContacts], come first.
+  final Map<String, Contact> _alternateHopContacts = {};
   List<Uint8List> _primaryOutboundHops = [];
   String _selectedPathId = 'primary';
   final Set<String> _hiddenPathIds = {};
@@ -789,16 +792,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           .toList();
 
       Map<String, Contact> pathContacts = {};
-      Contact lastContact = Contact(
-        path: Uint8List(0),
-        pathLength: 0,
-        publicKey: connector.selfPublicKey ?? Uint8List(0),
-        name: context.l10n.pathTrace_you,
-        type: advTypeChat,
-        latitude: _selfPosition(connector)?.latitude,
-        longitude: _selfPosition(connector)?.longitude,
-        lastSeen: DateTime.now(),
-      );
       if (widget.pathContacts != null) {
         final hopWidth = width.clamp(1, pubKeySize).toInt();
         pathContacts = {
@@ -807,31 +800,19 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
               _hopKey(Uint8List.fromList(c.publicKey.sublist(0, hopWidth))): c,
         };
       } else {
-        final contacts = connector.allContactsUnfiltered;
-        contacts.where((c) => c.type != advTypeChat).forEach((repeater) {
-          if (lastContact.latitude != null &&
-              lastContact.longitude != null &&
-              repeater.hasLocation &&
-              lastContact.hasLocation &&
-              Distance().distance(
-                    LatLng(lastContact.latitude!, lastContact.longitude!),
-                    LatLng(repeater.latitude!, repeater.longitude!),
-                  ) >
-                  _maxRepeaterMatchDistanceMeters) {
-            return; //skip reapeaters that are far away from the last one with known GPS, to avoid false matches
-          }
-          for (final repeaterData in pathData) {
-            final hopWidth = repeaterData.length;
-            if (repeater.publicKey.length < hopWidth) continue;
-            if (listEquals(
-              repeater.publicKey.sublist(0, hopWidth),
-              repeaterData,
-            )) {
-              pathContacts[_hopKey(repeaterData)] = repeater;
-              lastContact = repeater;
-            }
-          }
-        });
+        final outbound = _outboundHops(pathData);
+        // A target that forwards traces went into the path as its last
+        // outbound hop (buildPath), so that hop is the target itself,
+        // whichever other node shares its prefix.
+        final target = widget.targetContact;
+        if (widget.flipPathAround &&
+            target != null &&
+            _forwardsTracePackets(target) &&
+            outbound.isNotEmpty &&
+            _matchesHopPrefix(outbound.last, target.publicKey)) {
+          pathContacts[_hopKey(outbound.last)] = target;
+        }
+        _nameHops(outbound, connector, pathContacts);
       }
 
       // For hops with no GPS contact, infer position from other contacts
@@ -1026,9 +1007,34 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     return hops;
   }
 
+  /// Names [hops] in route order, walking out from our own position: each
+  /// hop goes to the nearest node with its prefix after the one before it
+  /// (PathHopResolver). Only hops without a name in [into] get one. The
+  /// resolver matches up to three bytes, and a four-byte trace hash begins
+  /// with the three-byte one.
+  void _nameHops(
+    List<Uint8List> hops,
+    MeshCoreConnector connector,
+    Map<String, Contact> into,
+  ) {
+    if (hops.isEmpty) return;
+    final width = hops.first.length.clamp(1, 3).toInt();
+    final resolved = PathHopResolver.resolve(
+      pathBytes: [for (final hop in hops) ...hop.take(width)],
+      contacts: connector.allContactsUnfiltered,
+      endpoint: _selfPosition(connector),
+      pathHashByteWidth: width,
+    );
+    for (var i = 0; i < hops.length; i++) {
+      final contact = resolved[i];
+      if (contact != null) into.putIfAbsent(_hopKey(hops[i]), () => contact);
+    }
+  }
+
   Contact? _contactForHop(Uint8List hop, MeshCoreConnector connector) {
-    final traced = _traceData?.pathContacts[_hopKey(hop)];
-    if (traced != null) return traced;
+    final key = _hopKey(hop);
+    final named = _traceData?.pathContacts[key] ?? _alternateHopContacts[key];
+    if (named != null) return named;
     for (final c in connector.allContactsUnfiltered) {
       if (c.type != advTypeChat &&
           c.publicKey.length >= hop.length &&
@@ -1071,6 +1077,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   /// Rebuilds the renderable paths: the traced path as primary plus up to
   /// four distinct alternates from the target contact's path history.
   void _rebuildDisplayPaths(MeshCoreConnector connector) {
+    _alternateHopContacts.clear();
     final paths = <DisplayPath>[];
     final primary = _buildDisplayPath(
       id: 'primary',
@@ -1084,7 +1091,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
     final target = widget.targetContact;
     final history = _pathHistory;
-    if (target != null && history != null) {
+    // Other known routes are drawn beside the traced one, never in its place:
+    // shown alone, a route the trace did not take reads as its result.
+    if (primary != null && target != null && history != null) {
       final seen = <String>{_pathKeyForHops(_primaryOutboundHops)};
       var altIndex = 0;
       for (final record in history.getRecentPaths(target.publicKeyHex)) {
@@ -1098,6 +1107,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         );
         if (!seen.add(_pathKeyForHops(recordHops))) continue;
         if (altIndex >= kAlternatePathColors.length) break;
+        _nameHops(recordHops, connector, _alternateHopContacts);
         final alt = _buildDisplayPath(
           id: 'alt-${_pathKeyForHops(recordHops)}',
           label: context.l10n.pathMap_alternate(altIndex + 1),
