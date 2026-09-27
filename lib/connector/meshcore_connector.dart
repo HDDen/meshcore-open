@@ -223,7 +223,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // continuously from the whole mesh, so without a bound this list grows for
   // as long as the app stays connected. When full, the stalest node (oldest
   // lastSeen) is evicted to make room for a newly heard one.
-  static const int _maxDiscoveredContacts = 500;
+  static const int _maxDiscoveredContacts = 1000;
 
   MeshCoreConnectionState _state = MeshCoreConnectionState.disconnected;
   BluetoothDevice? _device;
@@ -255,7 +255,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final KeyIndexedList<Contact> _contacts = KeyIndexedList<Contact>(
     (contact) => contact.publicKeyHex,
   );
-  final List<Contact> _discoveredContacts = [];
+  // Indexed for the same reason, and versioned: the contact list shows the
+  // repeaters in it that the node does not hold (localRepeaters).
+  final KeyIndexedList<Contact> _discoveredContacts = KeyIndexedList<Contact>(
+    (contact) => contact.publicKeyHex,
+  );
   Future<void>? _contactCacheLoadFuture;
   int _contactCacheLoadGeneration = 0;
   final List<Channel> _channels = [];
@@ -442,6 +446,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int? _contactSyncTotal;
   int _contactSyncReceived = 0;
   bool _contactSyncUsesSinceFilter = false;
+
+  /// During a full contact sync, the contacts listed before it began that no
+  /// CONTACT frame has named since: what is left at END_OF_CONTACTS is not
+  /// on the node. Null outside a full sync.
+  Set<String>? _contactsUnconfirmedBySync;
   Timer? _contactSyncTimeout;
   static const Duration _contactSyncIdleTimeout = Duration(seconds: 10);
   bool _isSyncingQueuedMessages = false;
@@ -772,6 +781,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   List<Contact> get allContactsUnfiltered =>
       List.unmodifiable([..._contacts, ..._discoveredContacts]);
+
+  /// Changes whenever the discovered list changes, whichever path changes it.
+  int get discoveredRevision => _discoveredContacts.version;
+
+  /// Repeaters the app has heard whose adverts the node did not keep, listed
+  /// with the node's own contacts. They live in the app's discovered list,
+  /// not on any node: a ping reaches them as they are, while a login, a
+  /// request or a share asks to add them to the node first
+  /// (ensureContactOnNode).
+  List<Contact> get localRepeaters {
+    final selfKey = selfPublicKeyHex;
+    return List.unmodifiable(
+      _discoveredContacts.where(
+        (contact) =>
+            contact.type == advTypeRepeater &&
+            contact.publicKeyHex != selfKey &&
+            _contacts.byKey(contact.publicKeyHex) == null,
+      ),
+    );
+  }
 
   List<Contact> get discoveredContacts {
     return List.unmodifiable(_discoveredContacts);
@@ -3766,36 +3795,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       cached.removeRange(_maxDiscoveredContacts, cached.length);
       unawaited(_discoveryContactStore.saveContacts(cached));
     }
+    // Discovered nodes stay discovered: the contact list is the node's, and
+    // a discovered entry never turns into a contact by itself, whatever its
+    // isActive, favourite or message flags say. Merging them in once put
+    // every node the firmware had declined to store into the list.
     _discoveredContacts
       ..clear()
       ..addAll(cached);
-    var contactsChanged = false;
-    for (final contact in cached) {
-      if (!(contact.isActive || contact.isFavorite || contact.hasMessages)) {
-        continue;
-      }
-      if (listEquals(contact.publicKey, _selfPublicKey)) {
-        continue;
-      }
-      final existingIndex = _contacts.indexWhere(
-        (c) => c.publicKeyHex == contact.publicKeyHex,
-      );
-      if (existingIndex >= 0) {
-        _contacts[existingIndex] = mergeDuplicateContacts(
-          _contacts[existingIndex],
-          contact.copyWith(isActive: true),
-        );
-        _knownContactKeys.add(contact.publicKeyHex);
-        contactsChanged = true;
-        continue;
-      }
-      _contacts.add(contact.copyWith(isActive: true));
-      _knownContactKeys.add(contact.publicKeyHex);
-      contactsChanged = true;
-    }
-    if (contactsChanged) {
-      unawaited(_persistContacts());
-    }
     await _refreshContactMessageSummaries();
   }
 
@@ -5887,6 +5893,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactSyncTotal = null;
     _contactSyncReceived = 0;
     _contactSyncUsesSinceFilter = false;
+    _contactsUnconfirmedBySync = null;
     _contactSyncTimeout?.cancel();
     _contactSyncTimeout = null;
     _isLoadingContacts = false;
@@ -6737,6 +6744,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _hasLoadedContacts = true;
       _preserveContactsOnRefresh = false;
       _contactSyncUsesSinceFilter = false;
+      _contactsUnconfirmedBySync = null;
       _contactSyncIndexes = null;
       _discoveredContactSyncIndexes = null;
       _contactMessageSummarySnapshot.clear();
@@ -8108,10 +8116,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// Returns false when the transport is unavailable (disconnected or firmware
   /// too old); throws whatever [_sendFrameAndWaitForCommandAck] throws, i.e.
-  /// Exception('Command failed with error code N') where N is 1
-  /// (unsupported command), 2 (bad channel index), 3 (packet pool full, worth
-  /// retrying) or 6 (illegal arg — blob too long or bad data type), or a
-  /// TimeoutException after _commandAckTimeout.
+  /// a [CommandFailedException] whose errCode is 1 (unsupported command),
+  /// 2 (bad channel index), 3 (packet pool full, worth retrying) or 6
+  /// (illegal arg — blob too long or bad data type), or a TimeoutException
+  /// after _commandAckTimeout.
   Future<bool> sendImageChunks(
     List<Uint8List> blobs, {
     required int channelIndex,
@@ -9064,10 +9072,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
-    await sendFrame(
-      buildRemoveContactFrame(contact.publicKey),
-      waitForGenericAck: waitForAck,
-    );
+    try {
+      await sendFrame(
+        buildRemoveContactFrame(contact.publicKey),
+        waitForGenericAck: waitForAck,
+      );
+    } on CommandFailedException catch (error) {
+      // The node does not hold the contact, which is what removing it is
+      // for, so the removal is finished here. A contact only the app listed
+      // could otherwise never be deleted in a batch.
+      if (error.errCode != errCodeNotFound) rethrow;
+    }
     _contactsStorageFull = false;
 
     _handleDiscovery(
@@ -9114,6 +9129,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     unawaited(_persistDiscoveredContacts());
     notifyListeners();
+  }
+
+  /// Deletes [contact] from wherever it is kept: from the node when the node
+  /// holds it, otherwise from the app's discovered list, the only place a
+  /// node the app has merely heard takes up.
+  Future<void> deleteContact(Contact contact, {bool waitForAck = false}) {
+    if (_contacts.byKey(contact.publicKeyHex) != null) {
+      return removeContact(contact, waitForAck: waitForAck);
+    }
+    return removeDiscoveredContact(contact);
   }
 
   Future<bool> importDiscoveredContact(Contact contact) async {
@@ -9852,6 +9877,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (!_preserveContactsOnRefresh) {
           _contacts.clear();
         }
+        // A sync filtered by lastmod lists only what changed, so only a full
+        // one can tell which listed contacts the node no longer holds.
+        _contactsUnconfirmedBySync = _contactSyncUsesSinceFilter
+            ? null
+            : {for (final contact in _contacts) contact.publicKeyHex};
         _isLoadingContacts = true;
         _contactSyncIndexes = {
           for (var i = 0; i < _contacts.length; i++)
@@ -9924,6 +9954,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         debugPrint('Got END_OF_CONTACTS');
         _contactSyncTimeout?.cancel();
         _contactSyncTimeout = null;
+        _dropContactsMissingFromNode();
         _isLoadingContacts = false;
         _hasLoadedContacts = true;
         _preserveContactsOnRefresh = false;
@@ -10760,6 +10791,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return physicsMax.clamp(0, _hardMaxTimeoutMs);
   }
 
+  /// Drops the contacts a completed full sync did not list. The node no
+  /// longer holds them, deleted there by another app or by the firmware, or
+  /// never did, like the discovered nodes older builds merged into the list.
+  /// Their conversations stay in the database; their unread counts go, since
+  /// nothing left on screen could clear them.
+  void _dropContactsMissingFromNode() {
+    final missing = _contactsUnconfirmedBySync;
+    _contactsUnconfirmedBySync = null;
+    if (missing == null || missing.isEmpty) return;
+    _contacts.removeWhere((contact) => missing.contains(contact.publicKeyHex));
+    _knownContactKeys.removeAll(missing);
+    for (final key in missing) {
+      final unread = _contactUnreadCount.remove(key) ?? 0;
+      _cachedContactsUnreadTotal = (_cachedContactsUnreadTotal - unread).clamp(
+        0,
+        _cachedContactsUnreadTotal,
+      );
+    }
+    appLogger.info(
+      'Contact sync: dropped ${missing.length} contact(s) the node does not '
+      'hold',
+      tag: 'Connector',
+    );
+  }
+
   void _registerContactInActiveSync(String publicKeyHex, int index) {
     if (!_isLoadingContacts || index < 0 || index >= _contacts.length) return;
     _contactSyncIndexes?[publicKeyHex] = index;
@@ -10799,6 +10855,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _handleContact(Uint8List frame, {bool countTowardSync = true}) {
     final contactTmp = Contact.fromFrame(frame);
     if (contactTmp != null) {
+      // Any CONTACT frame, a sync's or not, says the node holds the contact.
+      _contactsUnconfirmedBySync?.remove(contactTmp.publicKeyHex);
       final isContactSync = countTowardSync && _isLoadingContacts;
       if (isContactSync) {
         _contactSyncReceived++;

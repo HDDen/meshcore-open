@@ -38,6 +38,7 @@ import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
+import '../widgets/node_memory_prompt.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
@@ -121,6 +122,9 @@ class _ContactsScreenState extends State<ContactsScreen>
   String _contactsDerivedKey = '';
   String _contactsSnapshotKey = '';
   List<Contact> _contactsSnapshot = const [];
+
+  /// Keys of the snapshot's repeaters the node does not hold.
+  Set<String> _localContactKeys = const {};
   List<Contact> _derivedFilteredContacts = const [];
   List<_ContactListItemData> _derivedContactItems = const [];
   List<Key> _derivedContactKeys = const [];
@@ -840,7 +844,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     await _runBatchOperation(
       contacts: selectedContacts,
       operation: (contact) =>
-          connector.removeContact(contact, waitForAck: true),
+          connector.deleteContact(contact, waitForAck: true),
       successMessage: successMessage,
       failureMessage: failureMessage,
     );
@@ -1352,10 +1356,17 @@ class _ContactsScreenState extends State<ContactsScreen>
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
     final viewState = context.watch<UiViewStateService>();
     // Copied again only when a contact changed, not on every notification.
+    // The node's contacts come first, then the repeaters the app has heard
+    // that the node does not hold, whose cards say so.
     final snapshotKey =
-        '${connector.contactsRevision}:${connector.selfPublicKeyHex}';
+        '${connector.contactsRevision}:${connector.discoveredRevision}:'
+        '${connector.selfPublicKeyHex}';
     if (_contactsSnapshotKey != snapshotKey) {
-      _contactsSnapshot = connector.contacts;
+      final localRepeaters = connector.localRepeaters;
+      _contactsSnapshot = [...connector.contacts, ...localRepeaters];
+      _localContactKeys = {
+        for (final contact in localRepeaters) contact.publicKeyHex,
+      };
       _contactsSnapshotKey = snapshotKey;
     }
     final contacts = _contactsSnapshot;
@@ -1708,6 +1719,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     return [
       connector.contactsRevision,
       connector.contactUnreadRevision,
+      connector.discoveredRevision,
       sortsByRecentMessages
           ? _lastDirectMessageFingerprint(contacts, connector)
           : '',
@@ -1737,6 +1749,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       for (final contact in contacts)
         _ContactListItemData.fromContact(
           contact: contact,
+          notOnNode: _localContactKeys.contains(contact.publicKeyHex),
           pathHashByteWidth: pathHashByteWidth,
           unreadCount: connector.getUnreadCountForContact(contact),
           lastSeenText: _formatLastSeen(context, _resolveLastSeen(contact)),
@@ -2420,13 +2433,31 @@ class _ContactsScreenState extends State<ContactsScreen>
           ),
         );
       },
-      onManage: () => _showRepeaterLogin(context, repeater),
-      onRequestRegions: () =>
-          _openRepeaterRegionRequestTrace(context, connector, repeater),
-      onToggleFavorite: () => unawaited(
-        connector.setContactFlags(
+      onManage: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
           repeater,
-          isFavorite: !repeater.isFavorite,
+          (stored) => _showRepeaterLogin(context, stored),
+        ),
+      ),
+      onRequestRegions: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) =>
+              _openRepeaterRegionRequestTrace(context, connector, stored),
+        ),
+      ),
+      onToggleFavorite: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(
+            connector.setContactFlags(stored, isFavorite: !stored.isFavorite),
+          ),
         ),
       ),
       extraTilesBuilder: (sheetContext) => context
@@ -2457,8 +2488,22 @@ class _ContactsScreenState extends State<ContactsScreen>
       onWardriveIgnoredChanged: (ignored) => unawaited(
         wardrive.setRepeaterIgnored(repeater.publicKeyHex, ignored),
       ),
-      onShare: () => unawaited(_contactExport(repeater.publicKey)),
-      onShareZeroHop: () => unawaited(_contactZeroHop(repeater.publicKey)),
+      onShare: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(_contactExport(stored.publicKey)),
+        ),
+      ),
+      onShareZeroHop: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(_contactZeroHop(stored.publicKey)),
+        ),
+      ),
       onDelete: () => _confirmDelete(context, connector, repeater),
     );
   }
@@ -2472,7 +2517,14 @@ class _ContactsScreenState extends State<ContactsScreen>
     if (isRepeater) {
       // Swapped with the tap on purpose: the sheet is the frequent action,
       // the login the deliberate one.
-      _showRepeaterLogin(context, contact);
+      unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          contact,
+          (stored) => _showRepeaterLogin(context, stored),
+        ),
+      );
       return;
     }
     final isRoom = contact.type == advTypeRoom;
@@ -3022,7 +3074,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              connector.removeContact(contact);
+              connector.deleteContact(contact);
             },
             child: Text(
               context.l10n.common_delete,
@@ -3044,6 +3096,9 @@ class _ContactListItemData {
   final String? emoji;
   final String publicKeyLabel;
 
+  /// A repeater the app has heard whose advert the node did not keep.
+  final bool notOnNode;
+
   const _ContactListItemData({
     required this.contact,
     required this.unreadCount,
@@ -3052,10 +3107,12 @@ class _ContactListItemData {
     required this.lastSeenText,
     required this.emoji,
     required this.publicKeyLabel,
+    required this.notOnNode,
   });
 
   factory _ContactListItemData.fromContact({
     required Contact contact,
+    bool notOnNode = false,
     required int pathHashByteWidth,
     required int unreadCount,
     required String lastSeenText,
@@ -3069,6 +3126,7 @@ class _ContactListItemData {
       lastSeenText: lastSeenText,
       emoji: firstEmoji(contact.name),
       publicKeyLabel: contact.publicKeyHex.toUpperCase(),
+      notOnNode: notOnNode,
     );
   }
 }
@@ -3236,6 +3294,19 @@ class _ContactTile extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (item.notOnNode) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      context.l10n.contacts_notInNodeMemory,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

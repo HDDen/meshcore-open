@@ -305,6 +305,10 @@ const int anonReqTypeOwner = 0x02;
 // Repeater response codes
 const int respServerLoginOk = 0;
 
+// Error codes RESP_CODE_ERR carries (companion MyMesh.cpp ERR_CODE_*).
+const int errCodeNotFound = 2;
+const int errCodeTableFull = 3;
+
 // Response codes (from device)
 const int respCodeOk = 0;
 const int respCodeErr = 1;

@@ -12,7 +12,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "de": [
@@ -28,7 +33,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "es": [
@@ -44,7 +54,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "fr": [
@@ -60,7 +75,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "hu": [
@@ -76,7 +96,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "it": [
@@ -92,7 +117,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "ja": [
@@ -108,7 +138,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "ko": [
@@ -124,7 +159,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "nl": [
@@ -140,7 +180,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "pl": [
@@ -156,7 +201,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "pt": [
@@ -172,7 +222,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "sk": [
@@ -188,7 +243,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "sl": [
@@ -204,7 +264,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "sv": [
@@ -220,7 +285,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "uk": [
@@ -236,7 +306,12 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ],
 
   "zh": [
@@ -252,6 +327,11 @@
     "chat_floodRegionNode",
     "chat_floodRegionNodeWith",
     "chat_floodRegionNone",
-    "chat_stopSending"
+    "chat_stopSending",
+    "contacts_notInNodeMemory",
+    "contacts_addToNodeTitle",
+    "contacts_addToNodeMessage",
+    "contacts_addToNodeFailed",
+    "contacts_addToNodeFull"
   ]
 }

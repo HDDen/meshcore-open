@@ -11761,6 +11761,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Over 158 bytes: sent at most {count} times'**
   String chat_longMessageRetryNote(int count);
+
+  /// No description provided for @contacts_notInNodeMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added to node memory'**
+  String get contacts_notInNodeMemory;
+
+  /// No description provided for @contacts_addToNodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to node memory?'**
+  String get contacts_addToNodeTitle;
+
+  /// No description provided for @contacts_addToNodeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{contactName} is known only to the app. Logging in, requests, sharing and messages need it in the node\'s memory.'**
+  String contacts_addToNodeMessage(String contactName);
+
+  /// No description provided for @contacts_addToNodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add it to the node memory'**
+  String get contacts_addToNodeFailed;
+
+  /// No description provided for @contacts_addToNodeFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The node memory is full'**
+  String get contacts_addToNodeFull;
 }
 
 class _AppLocalizationsDelegate

@@ -63,6 +63,7 @@ import 'contacts_screen.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/node_memory_prompt.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/repeater_options_sheet.dart';
 import '../widgets/room_login_dialog.dart';
@@ -5147,18 +5148,19 @@ class _MapScreenState extends State<MapScreen>
       case advTypeChat:
         return [
           action(context.l10n.contacts_openChat, Icons.chat_bubble_outline, () {
-            if (!connector.isOfflineMode && !contact.isActive) {
-              connector.importDiscoveredContact(contact);
-            }
-            final unread = connector.getUnreadCountForContactKey(
-              contact.publicKeyHex,
-            );
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    ChatScreen(contact: contact, initialUnreadCount: unread),
-              ),
+            unawaited(
+              runWithContactOnNode(context, connector, contact, (stored) {
+                final unread = connector.getUnreadCountForContactKey(
+                  stored.publicKeyHex,
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ChatScreen(contact: stored, initialUnreadCount: unread),
+                  ),
+                );
+              }),
             );
           }),
         ];
@@ -5184,10 +5186,14 @@ class _MapScreenState extends State<MapScreen>
         return [
           action(context.l10n.map_joinRoom, Icons.meeting_room, () {
             if (_blockMapActionIfOffline(connector)) return;
-            if (!contact.isActive) {
-              connector.importDiscoveredContact(contact);
-            }
-            _showRoomLogin(context, contact);
+            unawaited(
+              runWithContactOnNode(
+                context,
+                connector,
+                contact,
+                (stored) => _showRoomLogin(context, stored),
+              ),
+            );
           }),
         ];
       default:
@@ -5537,18 +5543,31 @@ class _MapScreenState extends State<MapScreen>
           ),
         );
       },
-      onManage: () {
-        if (!repeater.isActive) {
-          unawaited(connector.importDiscoveredContact(repeater));
-        }
-        _showRepeaterLogin(context, repeater);
-      },
-      onRequestRegions: () =>
-          _openRepeaterRegionRequestTrace(context, connector, repeater),
-      onToggleFavorite: () => unawaited(
-        connector.setContactFlags(
+      onManage: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
           repeater,
-          isFavorite: !repeater.isFavorite,
+          (stored) => _showRepeaterLogin(context, stored),
+        ),
+      ),
+      onRequestRegions: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) =>
+              _openRepeaterRegionRequestTrace(context, connector, stored),
+        ),
+      ),
+      onToggleFavorite: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(
+            connector.setContactFlags(stored, isFavorite: !stored.isFavorite),
+          ),
         ),
       ),
       extraTilesBuilder: (sheetContext) => context
@@ -5580,9 +5599,22 @@ class _MapScreenState extends State<MapScreen>
       onWardriveIgnoredChanged: (ignored) => unawaited(
         wardrive.setRepeaterIgnored(repeater.publicKeyHex, ignored),
       ),
-      onShare: () => unawaited(_exportContactFromMap(connector, repeater)),
-      onShareZeroHop: () =>
-          unawaited(_shareContactZeroHopFromMap(connector, repeater)),
+      onShare: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(_exportContactFromMap(connector, stored)),
+        ),
+      ),
+      onShareZeroHop: () => unawaited(
+        runWithContactOnNode(
+          context,
+          connector,
+          repeater,
+          (stored) => unawaited(_shareContactZeroHopFromMap(connector, stored)),
+        ),
+      ),
       onDelete: () => _confirmDeleteMapContact(context, connector, repeater),
     );
   }
@@ -5602,9 +5634,6 @@ class _MapScreenState extends State<MapScreen>
     MeshCoreConnector connector,
     Contact repeater,
   ) {
-    if (!repeater.isActive) {
-      unawaited(connector.importDiscoveredContact(repeater));
-    }
     final hashByteWidth = connector.pathHashByteWidth;
     Navigator.push(
       context,
@@ -5745,7 +5774,7 @@ class _MapScreenState extends State<MapScreen>
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              unawaited(connector.removeContact(contact));
+              unawaited(connector.deleteContact(contact));
             },
             child: Text(
               context.l10n.common_delete,
@@ -5818,21 +5847,22 @@ class _MapScreenState extends State<MapScreen>
           actions.add(
             FilledButton(
               onPressed: () {
-                if (!connector.isOfflineMode && !contact.isActive) {
-                  connector.importDiscoveredContact(contact);
-                }
-                final unread = connector.getUnreadCountForContactKey(
-                  contact.publicKeyHex,
-                );
                 Navigator.pop(sheetContext);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                      contact: contact,
-                      initialUnreadCount: unread,
-                    ),
-                  ),
+                unawaited(
+                  runWithContactOnNode(context, connector, contact, (stored) {
+                    final unread = connector.getUnreadCountForContactKey(
+                      stored.publicKeyHex,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          contact: stored,
+                          initialUnreadCount: unread,
+                        ),
+                      ),
+                    );
+                  }),
                 );
               },
               child: Text(context.l10n.contacts_openChat),
@@ -5882,11 +5912,15 @@ class _MapScreenState extends State<MapScreen>
             FilledButton(
               onPressed: () {
                 if (_blockMapActionIfOffline(connector)) return;
-                if (!contact.isActive) {
-                  connector.importDiscoveredContact(contact);
-                }
                 Navigator.pop(sheetContext);
-                _showRoomLogin(context, contact);
+                unawaited(
+                  runWithContactOnNode(
+                    context,
+                    connector,
+                    contact,
+                    (stored) => _showRoomLogin(context, stored),
+                  ),
+                );
               },
               child: Text(context.l10n.map_joinRoom),
             ),

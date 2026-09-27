@@ -2918,5 +2918,10 @@
   "settings_publicKeyCopied": "Публичный ключ скопирован",
   "settings_radioSettingsNotApplied": "Радиомодуль не применил эти настройки",
   "urlImage_enable": "Показывать изображения по URL",
-  "urlImage_possible": "Возможно изображение по URL; включите это в настройках."
+  "urlImage_possible": "Возможно изображение по URL; включите это в настройках.",
+  "contacts_notInNodeMemory": "Не добавлен в память ноды",
+  "contacts_addToNodeTitle": "Добавить в память ноды?",
+  "contacts_addToNodeMessage": "{contactName} известен только приложению. Для входа, запросов, отправки контакта и сообщений он должен быть в памяти ноды.",
+  "contacts_addToNodeFailed": "Не удалось добавить в память ноды",
+  "contacts_addToNodeFull": "Память ноды заполнена"
 }

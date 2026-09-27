@@ -4,6 +4,17 @@ import 'package:flutter/foundation.dart';
 
 import 'meshcore_protocol.dart';
 
+/// The node's RESP_CODE_ERR to a command whose sender waited for its reply.
+class CommandFailedException implements Exception {
+  const CommandFailedException(this.errCode);
+
+  /// The firmware's ERR_CODE_* value, or -1 when the frame carried none.
+  final int errCode;
+
+  @override
+  String toString() => 'Exception: Command failed with error code $errCode';
+}
+
 /// A command waiting for its reply from the companion firmware.
 class PendingCommandReply {
   final int commandCode;
@@ -183,9 +194,7 @@ class PendingCommandReplies {
     _pruneStale();
     if (_queue.isEmpty) return null;
     final pending = _queue.removeAt(0);
-    pending.completer?.completeError(
-      Exception('Command failed with error code $errCode'),
-    );
+    pending.completer?.completeError(CommandFailedException(errCode));
     return pending;
   }
 

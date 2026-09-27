@@ -6888,4 +6888,21 @@ class AppLocalizationsSl extends AppLocalizations {
   String chat_longMessageRetryNote(int count) {
     return 'Nad 158 bajtov: poslano največ $count-krat';
   }
+
+  @override
+  String get contacts_notInNodeMemory => 'Not added to node memory';
+
+  @override
+  String get contacts_addToNodeTitle => 'Add to node memory?';
+
+  @override
+  String contacts_addToNodeMessage(String contactName) {
+    return '$contactName is known only to the app. Logging in, requests, sharing and messages need it in the node\'s memory.';
+  }
+
+  @override
+  String get contacts_addToNodeFailed => 'Could not add it to the node memory';
+
+  @override
+  String get contacts_addToNodeFull => 'The node memory is full';
 }

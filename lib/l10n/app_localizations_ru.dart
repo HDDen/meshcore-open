@@ -6915,4 +6915,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String chat_longMessageRetryNote(int count) {
     return 'Более 158 байт: отправляется не более $count раз';
   }
+
+  @override
+  String get contacts_notInNodeMemory => 'Не добавлен в память ноды';
+
+  @override
+  String get contacts_addToNodeTitle => 'Добавить в память ноды?';
+
+  @override
+  String contacts_addToNodeMessage(String contactName) {
+    return '$contactName известен только приложению. Для входа, запросов, отправки контакта и сообщений он должен быть в памяти ноды.';
+  }
+
+  @override
+  String get contacts_addToNodeFailed => 'Не удалось добавить в память ноды';
+
+  @override
+  String get contacts_addToNodeFull => 'Память ноды заполнена';
 }
