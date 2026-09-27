@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
+import '../connector/pending_command_replies.dart';
 import '../models/contact.dart';
 import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
@@ -315,4 +316,13 @@ abstract final class DirectEchoRecovery {
   /// `[CMD_SEND_RAW_PACKET][priority][packet]`.
   static Uint8List buildSendRawPacketFrame(Uint8List packet) =>
       Uint8List.fromList([cmdSendRawPacket, _ackPriority, ...packet]);
+
+  /// Whether [error], from sending [buildSendRawPacketFrame], means the node
+  /// does not know the command: ERR_CODE_UNSUPPORTED_CMD, or an ERR with no
+  /// code, which only firmware from before error codes (March 2025) sends.
+  /// Any other refusal concerns that one packet, above all
+  /// ERR_CODE_TABLE_FULL from a busy node that has no packet to spare.
+  static bool meansRawPacketUnsupported(Object error) =>
+      error is CommandFailedException &&
+      (error.errCode == errCodeUnsupportedCmd || error.errCode < 0);
 }

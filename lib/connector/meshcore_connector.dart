@@ -4067,7 +4067,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Set once the node has refused CMD_SET_FLOOD_SCOPE sub-command 1, which
   /// firmware before version 12 does not know; later unscoped sends go out
-  /// under the node's default scope instead of failing.
+  /// under the node's default scope instead of failing, until the link goes
+  /// (`disconnect`, `_handleDisconnection`).
   bool _unscopedSendUnsupported = false;
 
   /// A flood send to a contact with a flood choice of its own, a text
@@ -4085,14 +4086,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     } else if (!_unscopedSendUnsupported) {
       try {
         await _sendFrameAndWaitForCommandAck(buildSetFloodUnscopedFrame());
-      } on TimeoutException {
-        rethrow;
-      } catch (error) {
+      } on CommandFailedException catch (error) {
+        // Firmware before version 12 answers ERR_CODE_UNSUPPORTED_CMD, and
+        // an ERR with no code before March 2025. Any other failure, a lost
+        // link or a timeout included, goes to the caller as a region's scope
+        // command does and says nothing about the firmware.
+        if (error.errCode != errCodeUnsupportedCmd && error.errCode >= 0) {
+          rethrow;
+        }
         _unscopedSendUnsupported = true;
         appLogger.warn(
           'Unscoped flood sends are not supported by this firmware ($error); '
           'direct messages marked "no region" go out under the default '
-          'scope this session',
+          'scope until the next connection',
           tag: 'Connector',
         );
       }
@@ -6123,6 +6129,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _currentCustomVars = null;
     _settingsSectionsService?.setDeviceRawVars(null);
     _settingsSectionsService?.setActiveDeviceKey(null);
+    _directEchoAckUnsupported = false;
+    _unscopedSendUnsupported = false;
     _contacts.clear();
     _discoveredContacts.clear();
     _conversations.clear();
@@ -13480,9 +13488,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final DirectEchoKeyStore _directEchoKeys = DirectEchoKeyStore();
   Future<void>? _directEchoKeyRequest;
 
-  /// Set when the node answered CMD_SEND_RAW_PACKET with an error: firmware
-  /// older than that command cannot inject the ACK, so none is tried again
-  /// this session.
+  /// Set when the node answered CMD_SEND_RAW_PACKET as a command it does not
+  /// know: firmware older than that command cannot inject the ACK, so none
+  /// is tried again until the link goes. `disconnect` and
+  /// `_handleDisconnection` clear it, since the next connection may reach
+  /// another node or new firmware, and `_resetConnectionHandshakeState` does
+  /// not run for a native BLE one.
   bool _directEchoAckUnsupported = false;
 
   bool get _directEchoRecoveryEnabled =>
@@ -13665,7 +13676,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// that created the message; repeats and the ordinary delivery send none
   /// (the node still acknowledges the delivery on its own — that is
   /// firmware behaviour and out of reach). Firmware without the command
-  /// answers with an error, after which no ACK is attempted this session.
+  /// answers ERR_CODE_UNSUPPORTED_CMD, after which no ACK is attempted until
+  /// the next connection; any other refusal costs only this ACK.
   Future<void> _sendDirectEchoAck(DirectEchoContext echo) async {
     if (_directEchoAckUnsupported || !isConnected) return;
     final contact =
@@ -13714,13 +13726,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         tag: 'DirectEcho',
       );
     } catch (error) {
-      // RESP_CODE_ERR: the node has no CMD_SEND_RAW_PACKET (firmware before
-      // May 2026), so an echoed message is acknowledged only once it
-      // arrives in full and the node answers by itself.
+      if (!DirectEchoRecovery.meansRawPacketUnsupported(error)) {
+        // Most often a full packet pool: the node drops its own ACK the same
+        // way when it has no packet for it, and the next echo tries again.
+        appLogger.warn(
+          'ACK for the echoed message from ${contact.name} was not sent '
+          '($error)',
+          tag: 'DirectEcho',
+        );
+        return;
+      }
+      // The node has no CMD_SEND_RAW_PACKET (firmware before May 2026), so
+      // an echoed message is acknowledged only once it arrives in full and
+      // the node answers by itself.
       _directEchoAckUnsupported = true;
       appLogger.warn(
         'ACK for echoed messages is not supported by this firmware '
-        '($error); none will be sent this session',
+        '($error); none will be sent until the next connection',
         tag: 'DirectEcho',
       );
     }
@@ -15811,6 +15833,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _lastSentWasCliCommand = false;
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
+    // The node may come back with other firmware, flashed while it was
+    // away, and a successful reconnect never passes through disconnect().
+    _directEchoAckUnsupported = false;
+    _unscopedSendUnsupported = false;
     _resetSyncProgressState();
     _cancelAllChannelNoRetransmissionTimers();
     _pendingChannelSentQueue.clear();

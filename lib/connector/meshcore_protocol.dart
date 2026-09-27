@@ -306,6 +306,7 @@ const int anonReqTypeOwner = 0x02;
 const int respServerLoginOk = 0;
 
 // Error codes RESP_CODE_ERR carries (companion MyMesh.cpp ERR_CODE_*).
+const int errCodeUnsupportedCmd = 1;
 const int errCodeNotFound = 2;
 const int errCodeTableFull = 3;
 
