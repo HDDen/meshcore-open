@@ -543,11 +543,27 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
     };
 
     final hasBytes = record.pathBytes.isNotEmpty;
+    // No bytes and no hops is the direct route, known in full and set like
+    // any other; hops without bytes are an older record that never stored
+    // its route, so there is nothing to set.
+    final isDirect = !hasBytes && record.hopCount == 0;
+    final canApply = hasBytes || isDirect;
+    final displayHopCount = hasBytes
+        ? PathHelper.splitPathBytes(
+            record.pathBytes,
+            _recordPathHashWidth(record),
+          ).length
+        : record.hopCount;
     final inUse =
-        hasBytes &&
+        canApply &&
         ((mode == _RoutingMode.manual &&
-                listEquals(record.pathBytes, contact.pathOverrideBytes)) ||
+                contact.pathOverride == displayHopCount &&
+                listEquals(
+                  record.pathBytes,
+                  contact.pathOverrideBytes ?? Uint8List(0),
+                )) ||
             (mode == _RoutingMode.auto &&
+                contact.pathLength == displayHopCount &&
                 listEquals(record.pathBytes, contact.path)));
 
     final title = hasBytes
@@ -556,13 +572,9 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
             connector.allContacts,
             _recordPathHashWidth(record),
           )
+        : isDirect
+        ? l10n.routing_directNoHops
         : l10n.chat_hopsCount(record.hopCount);
-    final displayHopCount = hasBytes
-        ? PathHelper.splitPathBytes(
-            record.pathBytes,
-            _recordPathHashWidth(record),
-          ).length
-        : record.hopCount;
 
     final line1 =
         '${l10n.chat_hopsCount(displayHopCount)} • ${_qualityLabel(context, quality)}';
@@ -584,7 +596,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4),
         child: ListTile(
-          enabled: hasBytes,
+          enabled: canApply,
           leading: CircleAvatar(
             radius: 18,
             backgroundColor: bg,
@@ -624,7 +636,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
               ),
             ],
           ),
-          onTap: hasBytes && !inUse
+          onTap: canApply && !inUse
               ? () => _applyHistoryPath(connector, contact, record)
               : null,
           onLongPress: hasBytes
