@@ -143,7 +143,7 @@
   "settings_presets": "Preset",
   "settings_frequency": "Frequenza (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Frequenza non valida (300-2500 MHz)",
+  "settings_frequencyInvalid": "Frequenza non valida (150-2500 MHz)",
   "settings_bandwidth": "Larghezza di banda",
   "settings_spreadingFactor": "Fattore di diffusione",
   "settings_codingRate": "Tasso di Codifica",
@@ -1940,7 +1940,7 @@
   "snrIndicator_nearByRepeaters": "Ripetitori vicini",
   "snrIndicator_lastSeen": "Ultimo accesso",
   "settings_clientRepeat": "Ripetizione \"fuori dalla rete\"",
-  "settings_clientRepeatFreqWarning": "Per la comunicazione fuori rete, è necessario utilizzare frequenze di 433, 869 o 918 MHz.",
+  "settings_clientRepeatFreqWarning": "Per la comunicazione fuori rete, è necessario utilizzare frequenze di 433, 869.495 o 918 MHz.",
   "settings_clientRepeatSubtitle": "Permetti a questo dispositivo di ripetere i pacchetti di rete per gli altri.",
   "settings_aboutOpenMeteoAttribution": "Dati di elevazione LOS: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Unità",
@@ -3577,5 +3577,37 @@
   "channels_shareQrTapToCopy": "Tocca il codice QR per copiarlo come immagine.",
   "channels_shareQrTapToShare": "Tocca il codice QR per salvarlo o condividerlo come immagine.",
   "channels_shareQrImageCopied": "Codice QR copiato come immagine",
-  "channels_shareQrImageFailed": "Impossibile preparare l'immagine del codice QR"
+  "channels_shareQrImageFailed": "Impossibile preparare l'immagine del codice QR",
+  "settings_publicKeyCopied": "Chiave pubblica copiata",
+  "channels_noFreeSlots": "Tutti gli slot dei canali sono in uso",
+  "chat_longMessageRetryNote": "Oltre 158 byte: inviato al massimo {count} volte",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Disponibile solo su firmware compilato con un bridge (RS232 o ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Mostra il numero massimo di salti per gli annunci flood.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Mostra il numero massimo di salti per i pacchetti flood senza ambito regionale.",
+  "repeater_cliHelpGetRadioFemRxGain": "Mostra se il guadagno RX del modulo frontend LoRa è attivo.",
+  "repeater_cliHelpGetRadioFemTxGain": "Mostra se il guadagno TX del modulo frontend LoRa è attivo.",
+  "repeater_cliHelpRegionDef": "Definisce una catena di regioni in un solo comando: ogni nome viene aggiunto sotto il precedente; \"name,parent\" aggiunge il nome e continua sotto il padre indicato. Risponde con l'elenco delle regioni.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Imposta il numero massimo di salti per l'inoltro degli annunci flood (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Imposta il numero massimo di salti per l'inoltro dei pacchetti flood privi di ambito regionale (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Attiva o disattiva il guadagno RX (LNA) del modulo frontend LoRa. Le schede prive di questo modulo rispondono \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Attiva o disattiva il guadagno TX (PA) del modulo frontend LoRa. Le schede prive di questo modulo rispondono \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Modalità di caricamento regioni: invia un nome di regione per riga, indentato con spazi sotto la sua regione padre (aggiungi F dopo il nome per consentire il flood). Le righe non ricevono risposta. Invia una riga vuota per terminare, poi \"region save\" per salvare il risultato.",
+  "repeater_cliRegionLoadEnd": "(fine caricamento regioni)",
+  "repeater_cliRegionLoadHint": "Riga di regione, o vuota per terminare",
+  "repeater_frequencyInvalid": "Frequenza non valida (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Errori di ricezione",
+  "repeater_txPowerRangeHelper": "Da -9 a 30 dBm",
+  "room_postsPushed": "Post Inviati",
+  "room_postsStored": "Post",
+  "settings_radioSettingsNotApplied": "La radio non ha applicato queste impostazioni",
+  "urlImage_enable": "Abilita immagini URL",
+  "urlImage_possible": "Possibile immagine URL; abilitala nelle Impostazioni."
 }

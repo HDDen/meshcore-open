@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:meshcore_open/utils/gpx_export.dart';
 import 'package:meshcore_open/widgets/elements_ui.dart';
 import 'package:provider/provider.dart';
@@ -38,14 +39,23 @@ int _toUiCodingRate(int deviceCr) {
   return deviceCr <= 4 ? deviceCr + 4 : deviceCr;
 }
 
-/// Convert UI coding-rate value (5-8) back to firmware encoding.
-/// Uses the current device CR to detect which encoding the firmware expects.
-int _toDeviceCodingRate(int uiCr, int? deviceCr) {
-  if (deviceCr != null && deviceCr <= 4) {
-    return uiCr - 4;
+const Set<int> _defaultRepeatFreqsKHz = {433000, 869495, 918000};
+
+/// Whether the firmware accepts [freqKHz] for off-grid client repeat, using
+/// the ranges from CMD_GET_ALLOWED_REPEAT_FREQ when known.
+bool _isAllowedRepeatFreqKHz(MeshCoreConnector connector, int freqKHz) {
+  final ranges = connector.allowedRepeatFreqRanges;
+  if (ranges == null || ranges.isEmpty) {
+    return _defaultRepeatFreqsKHz.contains(freqKHz);
   }
-  return uiCr;
+  return ranges.any((r) => freqKHz >= r.lowKHz && freqKHz <= r.highKHz);
 }
+
+/// Companion firmware version that added CMD_SET_PATH_HASH_MODE (v1.14.0).
+const int _minFirmwareVerCodeForPathHashMode = 10;
+
+/// Lowest TX power companion firmware accepts (CMD_SET_RADIO_TX_POWER).
+const int _minTxPowerDbm = -9;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -353,12 +363,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           value: connector.selfName!,
                         ),
                       if (connector.selfPublicKey != null)
-                        _infoRow(
+                        _publicKeyRow(
                           context,
                           label: l10n.settings_infoPublicKey,
-                          value:
-                              '${pubKeyToHex(connector.selfPublicKey!).substring(0, 16)}...',
-                          mono: true,
+                          publicKeyHex: pubKeyToHex(connector.selfPublicKey!),
                         ),
                       _infoRow(
                         context,
@@ -421,6 +429,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       MaterialPageRoute(
         builder: (_) => TelemetryScreen(contact: contact, isSelf: true),
       ),
+    );
+  }
+
+  /// Copies the key rendered in the row, not whatever the connector holds when
+  /// the tap lands: a disconnect in between clears `selfPublicKey`.
+  Widget _publicKeyRow(
+    BuildContext context, {
+    required String label,
+    required String publicKeyHex,
+  }) {
+    return _infoRow(
+      context,
+      label: label,
+      value: publicKeyHex,
+      mono: true,
+      onTap: () => _copyPublicKey(context, publicKeyHex),
+    );
+  }
+
+  Future<void> _copyPublicKey(BuildContext context, String publicKeyHex) async {
+    await Clipboard.setData(ClipboardData(text: publicKeyHex));
+    if (!context.mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.settings_publicKeyCopied),
     );
   }
 
@@ -585,7 +618,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.route_outlined,
           title: l10n.repeater_pathHashMode,
           subtitle: _pathHashModeSubtitle(context, connector.pathHashByteWidth),
-          onTap: connector.isConnected
+          onTap:
+              connector.isConnected &&
+                  (connector.firmwareVerCode ?? 0) >=
+                      _minFirmwareVerCodeForPathHashMode
               ? () => _editPathHashMode(context, connector)
               : null,
         ),
@@ -941,12 +977,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _editPathHashMode(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
-    var selectedMode = (connector.pathHashByteWidth - 1).clamp(0, 3).toInt();
+    var selectedMode = (connector.pathHashByteWidth - 1).clamp(0, 2).toInt();
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (builderContext, setDialogState) => AlertDialog(
           title: Text(l10n.repeater_pathHashMode),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -971,10 +1007,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: 2,
                     child: Text(l10n.repeater_pathHashModeOption2),
                   ),
-                  DropdownMenuItem(
-                    value: 3,
-                    child: Text(l10n.repeater_pathHashModeOption3),
-                  ),
                 ],
                 onChanged: (value) {
                   if (value == null) return;
@@ -984,7 +1016,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 l10n.repeater_pathHashModeHelper,
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(builderContext).textTheme.bodySmall,
               ),
             ],
           ),
@@ -1044,7 +1076,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (builderContext, setDialogState) => AlertDialog(
           title: Text(l10n.settings_location),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1110,7 +1142,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(l10n.common_cancel),
             ),
             TextButton(
@@ -1131,7 +1163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 }
 
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
 
                 if (interval != null) {
                   await settingsService.setGpsIntervalSeconds(
@@ -1495,7 +1527,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
   showDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setDialogState) => AlertDialog(
+      builder: (builderContext, setDialogState) => AlertDialog(
         title: Text(l10n.settings_privacy),
         content: SingleChildScrollView(
           child: Column(
@@ -1582,12 +1614,12 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.common_cancel),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await connector.setTelemetryModeBase(
                 telemetryMode,
                 telemetryLocMode,
@@ -1765,9 +1797,15 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
   }
 
   double _offGridFrequencyForBaseFrequency(double baseFrequencyMHz) {
-    if (baseFrequencyMHz < 500) return 433.0;
-    if (baseFrequencyMHz < 900) return 869.0;
-    return 918.0;
+    final baseKHz = (baseFrequencyMHz * 1000).round();
+    final ranges = widget.connector.allowedRepeatFreqRanges;
+    final candidates = ranges == null || ranges.isEmpty
+        ? _defaultRepeatFreqsKHz
+        : {for (final r in ranges) baseKHz.clamp(r.lowKHz, r.highKHz)};
+    final closestKHz = candidates.reduce(
+      (a, b) => (a - baseKHz).abs() <= (b - baseKHz).abs() ? a : b,
+    );
+    return closestKHz / 1000.0;
   }
 
   double _normalFrequencyForBand(double frequencyMHz) {
@@ -1908,14 +1946,15 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
   void _validateFields() {
     final l10n = context.l10n;
     final freqMHz = double.tryParse(_frequencyController.text);
-    _frequencyError = (freqMHz == null || freqMHz < 300 || freqMHz > 2500)
+    _frequencyError = (freqMHz == null || freqMHz < 150 || freqMHz > 2500)
         ? l10n.settings_frequencyInvalid
         : null;
 
     final maxTxPower = widget.connector.maxTxPower ?? 22;
     final txPower = int.tryParse(_txPowerController.text);
-    _txPowerError = (txPower == null || txPower < 0 || txPower > maxTxPower)
-        ? '${l10n.settings_txPowerInvalid} (0-$maxTxPower dBm)'
+    _txPowerError =
+        (txPower == null || txPower < _minTxPowerDbm || txPower > maxTxPower)
+        ? '${l10n.settings_txPowerInvalid} ($_minTxPowerDbm-$maxTxPower dBm)'
         : null;
   }
 
@@ -1952,7 +1991,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     final freqMHz = double.tryParse(_frequencyController.text);
     final txPower = int.tryParse(_txPowerController.text);
 
-    if (freqMHz == null || freqMHz < 300 || freqMHz > 2500) {
+    if (freqMHz == null || freqMHz < 150 || freqMHz > 2500) {
       showDismissibleSnackBar(
         context,
         content: Text(l10n.settings_frequencyInvalid),
@@ -1961,10 +2000,12 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     }
 
     final maxTxPower = widget.connector.maxTxPower ?? 22;
-    if (txPower == null || txPower < 0 || txPower > maxTxPower) {
+    if (txPower == null || txPower < _minTxPowerDbm || txPower > maxTxPower) {
       showDismissibleSnackBar(
         context,
-        content: Text('${l10n.settings_txPowerInvalid} (0-$maxTxPower dBm)'),
+        content: Text(
+          '${l10n.settings_txPowerInvalid} ($_minTxPowerDbm-$maxTxPower dBm)',
+        ),
       );
       return;
     }
@@ -1972,18 +2013,14 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     final freqHz = (freqMHz * 1000).round();
     final bwHz = _bandwidth.hz;
     final sf = _spreadingFactor.value;
-    final cr = _toDeviceCodingRate(
-      _codingRate.value,
-      widget.connector.currentCr,
-    );
+    final cr = _codingRate.value;
 
     // if the client repeat isnt null then we know its supported
     //otherwise we leave it out of the frame to avoid accidentally enabling
     final knownRepeat = widget.connector.clientRepeat != null;
 
     if (knownRepeat) {
-      const validRepeatFreqsKHz = {433000, 869000, 918000};
-      if (_clientRepeat && !validRepeatFreqsKHz.contains(freqHz)) {
+      if (_clientRepeat && !_isAllowedRepeatFreqKHz(widget.connector, freqHz)) {
         showDismissibleSnackBar(
           context,
           content: Text(l10n.settings_clientRepeatFreqWarning),
@@ -1994,23 +2031,53 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
 
     try {
       _logRadioSettingsState('Saving radio settings');
-      await widget.connector.sendFrame(
-        buildSetRadioParamsFrame(
-          freqHz,
-          bwHz,
-          sf,
-          cr,
+      final accepted = await widget.connector.setRadioParams(
+        freqHz,
+        bwHz,
+        sf,
+        cr,
+        clientRepeat: knownRepeat ? _clientRepeat : null,
+      );
+      if (!accepted) {
+        _logRadioSettingsState('Radio rejected requested settings');
+        if (!mounted) return;
+        showDismissibleSnackBar(
+          context,
+          content: Text(l10n.settings_radioSettingsNotApplied),
+        );
+        return;
+      }
+      await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
+      final selfInfo = widget.connector.receivedFrames
+          .firstWhere((f) => f.isNotEmpty && f[0] == respCodeSelfInfo)
+          .timeout(const Duration(seconds: 5));
+      await widget.connector.refreshDeviceInfo();
+      final applied = await selfInfo.then(
+        (_) => _deviceMatches(
+          freqHz: freqHz,
+          bwHz: bwHz,
+          sf: sf,
+          cr: cr,
+          txPower: txPower,
           clientRepeat: knownRepeat ? _clientRepeat : null,
         ),
+        onError: (_) => true,
       );
-      await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
-      await widget.connector.refreshDeviceInfo();
+      if (!applied) {
+        _logRadioSettingsState('Radio did not apply requested settings');
+        if (!mounted) return;
+        showDismissibleSnackBar(
+          context,
+          content: Text(l10n.settings_radioSettingsNotApplied),
+        );
+        return;
+      }
       final rememberedSnapshot = _clientRepeat
           ? _lastNonRepeatSnapshot
           : _currentSnapshot();
       if (rememberedSnapshot != null) {
         widget.connector.rememberNonRepeatRadioState(
-          rememberedSnapshot.toMeshCoreSnapshot(widget.connector.currentCr),
+          rememberedSnapshot.toMeshCoreSnapshot(),
         );
       }
 
@@ -2030,6 +2097,27 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     }
     if (!mounted) return;
     Navigator.pop(context);
+  }
+
+  bool _deviceMatches({
+    required int freqHz,
+    required int bwHz,
+    required int sf,
+    required int cr,
+    required int txPower,
+    required bool? clientRepeat,
+  }) {
+    final c = widget.connector;
+    // Firmware stores freq/bw as float MHz/kHz, so allow 1 unit of rounding.
+    return c.currentFreqHz != null &&
+        (c.currentFreqHz! - freqHz).abs() <= 1 &&
+        c.currentBwHz != null &&
+        (c.currentBwHz! - bwHz).abs() <= 1 &&
+        c.currentSf == sf &&
+        c.currentCr != null &&
+        _toUiCodingRate(c.currentCr!) == cr &&
+        c.currentTxPower == txPower &&
+        (clientRepeat == null || c.clientRepeat == clientRepeat);
   }
 
   String _presetLabel(int? index) {
@@ -2263,12 +2351,12 @@ class _RadioSettingsSnapshot {
   }
 
   /// Convert back to the connector's raw-int snapshot.
-  MeshCoreRadioStateSnapshot toMeshCoreSnapshot(int? deviceCr) {
+  MeshCoreRadioStateSnapshot toMeshCoreSnapshot() {
     return MeshCoreRadioStateSnapshot(
       freqHz: frequencyHz,
       bwHz: bandwidth.hz,
       sf: spreadingFactor.value,
-      cr: _toDeviceCodingRate(codingRate.value, deviceCr),
+      cr: codingRate.value,
       txPowerDbm: txPowerDbm,
     );
   }

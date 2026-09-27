@@ -145,7 +145,7 @@
   "settings_presets": "Presety",
   "settings_frequency": "Częstotliwość (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Nieprawidłowa częstotliwość (300-2500 MHz)",
+  "settings_frequencyInvalid": "Nieprawidłowa częstotliwość (150-2500 MHz)",
   "settings_bandwidth": "Przepustowość",
   "settings_spreadingFactor": "Współczynnik rozpraszania",
   "settings_codingRate": "Współczynnik kodowania",
@@ -1842,7 +1842,7 @@
   "snrIndicator_nearByRepeaters": "Pobliskie przekaźniki",
   "settings_clientRepeatSubtitle": "Pozwól temu urządzeniu powtarzać pakiety danych dla innych urządzeń.",
   "settings_clientRepeat": "Powtórzenie: Niezależne od sieci",
-  "settings_clientRepeatFreqWarning": "Powtórka poza siecią wymaga częstotliwości 433, 869 lub 918 MHz.",
+  "settings_clientRepeatFreqWarning": "Powtórka poza siecią wymaga częstotliwości 433, 869.495 lub 918 MHz.",
   "settings_aboutOpenMeteoAttribution": "Dane wysokościowe LOS: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Jednostki",
   "appSettings_unitsMetric": "Metryczne (m / km)",
@@ -3652,5 +3652,38 @@
   "channels_shareQrTapToCopy": "Dotknij kodu QR, aby skopiować go jako obraz.",
   "channels_shareQrTapToShare": "Dotknij kodu QR, aby zapisać go lub udostępnić jako obraz.",
   "channels_shareQrImageCopied": "Skopiowano kod QR jako obraz",
-  "channels_shareQrImageFailed": "Nie udało się przygotować obrazu z kodem QR"
+  "channels_shareQrImageFailed": "Nie udało się przygotować obrazu z kodem QR",
+  "channels_noFreeSlots": "Wszystkie miejsca na kanały są zajęte",
+  "chat_longMessageRetryNote": "Powyżej 158 bajtów: wysyłane maksymalnie {count} razy",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Dostępne tylko w firmware zbudowanym z mostkiem (RS232 lub ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Pokazuje maksymalną liczbę skoków dla rozgłoszeń flood.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Pokazuje maksymalną liczbę skoków dla pakietów flood bez przypisanego regionu.",
+  "repeater_cliHelpGetRadioFemRxGain": "Pokazuje, czy wzmocnienie RX modułu front-end LoRa jest włączone.",
+  "repeater_cliHelpGetRadioFemTxGain": "Pokazuje, czy wzmocnienie TX modułu front-end LoRa jest włączone.",
+  "repeater_cliHelpRegionDef": "Definiuje łańcuch regionów w jednej komendzie: każda nazwa jest dodawana pod poprzednią; \"name,parent\" dodaje nazwę, a następnie kontynuuje pod podanym regionem nadrzędnym. Odpowiada listą regionów.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Ustawia maksymalną liczbę skoków przy przekazywaniu rozgłoszeń flood (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Ustawia maksymalną liczbę skoków przy przekazywaniu pakietów flood bez przypisanego regionu (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Przełącza wzmocnienie RX (LNA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Przełącza wzmocnienie TX (PA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Tryb wczytywania regionów: wysyłaj po jednej nazwie regionu w linii, wcięte spacjami pod regionem nadrzędnym (dodaj F po nazwie, aby zezwolić na flood). Linie nie otrzymują odpowiedzi. Wyślij pustą linię, aby zakończyć, a następnie \"region save\", aby zachować wynik.",
+  "repeater_cliRegionLoadEnd": "(koniec wczytywania regionów)",
+  "repeater_cliRegionLoadHint": "Linia regionu lub pusta, aby zakończyć",
+  "repeater_frequencyInvalid": "Nieprawidłowa częstotliwość (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Błędy Odbioru",
+  "repeater_txPowerRangeHelper": "-9 do 30 dBm",
+  "room_postsPushed": "Wysłane Posty",
+  "room_postsStored": "Posty",
+  "settings_publicKeyCopied": "Skopiowano klucz publiczny",
+  "settings_radioSettingsNotApplied": "Radio nie zastosowało tych ustawień",
+  "urlImage_enable": "Włącz obrazy z URL",
+  "urlImage_possible": "Możliwy obraz z URL; włącz go w Ustawieniach."
 }

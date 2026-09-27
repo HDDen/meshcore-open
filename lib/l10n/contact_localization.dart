@@ -38,7 +38,7 @@ extension ContactLocalization on Contact {
     if (pathLength < 0) return l10n.channelPath_floodPath;
     if (pathLength == 0) return l10n.chat_direct;
     return l10n.chat_hopsCount(
-      _displayHopCount(path, pathLength, pathHashByteWidth),
+      _displayHopCount(path, pathLength, pathHashWidth),
     );
   }
 

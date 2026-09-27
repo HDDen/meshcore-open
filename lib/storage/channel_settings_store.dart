@@ -16,6 +16,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   static const String _quickAnswersKeyPrefix = 'channel_quick_answer_ids_';
   static const String _widgetColorKeyPrefix = 'channel_widget_color_';
   static const String _widgetTextColorKeyPrefix = 'channel_widget_text_color_';
+  static const String _urlImagesKeyPrefix = 'channel_url_images_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -33,6 +34,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
   String get keyForWidgetColor => '$_widgetColorKeyPrefix$publicKeyHex';
   String get keyForWidgetTextColor => '$_widgetTextColorKeyPrefix$publicKeyHex';
+  String get keyForUrlImages => '$_urlImagesKeyPrefix$publicKeyHex';
 
   Future<T?> _loadValue<T>({
     required String nameKeyPrefix,
@@ -258,6 +260,23 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         write: PrefsManager.instance.setStringList,
       );
 
+  Future<bool> loadUrlImagesEnabled(int channelIndex) async =>
+      await _loadValue<bool>(
+        nameKeyPrefix: keyForUrlImages,
+        channelIndex: channelIndex,
+        read: PrefsManager.instance.getBool,
+        write: PrefsManager.instance.setBool,
+      ) ??
+      false;
+
+  Future<void> saveUrlImagesEnabled(int channelIndex, bool enabled) =>
+      _saveValue<bool>(
+        nameKeyPrefix: keyForUrlImages,
+        channelIndex: channelIndex,
+        value: enabled,
+        write: PrefsManager.instance.setBool,
+      );
+
   Future<String?> loadCyr2LatProfileId(int channelIndex) => _loadValue<String>(
     nameKeyPrefix: '${keyForCyr2Lat}profile_',
     channelIndex: channelIndex,
@@ -317,6 +336,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
       keyForQuickAnswerIds,
       keyForWidgetColor,
       keyForWidgetTextColor,
+      keyForUrlImages,
     ];
     for (final prefix in prefixes) {
       final nameKey = channelStorageKey(prefix, channelIndex);

@@ -215,7 +215,7 @@
   "settings_presets": "プリセット",
   "settings_frequency": "周波数 (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
-  "settings_frequencyInvalid": "無効な周波数 (300-2500 MHz)",
+  "settings_frequencyInvalid": "無効な周波数 (150-2500 MHz)",
   "settings_bandwidth": "帯域幅",
   "settings_spreadingFactor": "伝播係数",
   "settings_codingRate": "コーディング速度",
@@ -224,7 +224,7 @@
   "settings_txPowerInvalid": "無効な送信電力 (0-22 dBm)",
   "settings_clientRepeat": "オフグリッド中継",
   "settings_clientRepeatSubtitle": "このデバイスが他のデバイス向けにメッシュパケットを中継できるようにします。",
-  "settings_clientRepeatFreqWarning": "オフグリッド中継には 433、869、または 918 MHz の周波数が必要です。",
+  "settings_clientRepeatFreqWarning": "オフグリッド中継には 433、869.495、または 918 MHz の周波数が必要です。",
   "settings_error": "エラー: {message}",
   "@settings_error": {
     "placeholders": {
@@ -3719,5 +3719,37 @@
   "channels_shareQrTapToCopy": "QR コードをタップすると、画像としてコピーします。",
   "channels_shareQrTapToShare": "QR コードをタップすると、画像として保存または共有できます。",
   "channels_shareQrImageCopied": "QR コードを画像としてコピーしました",
-  "channels_shareQrImageFailed": "QR コードの画像を作成できませんでした"
+  "channels_shareQrImageFailed": "QR コードの画像を作成できませんでした",
+  "channels_noFreeSlots": "すべてのチャンネルスロットが使用中です",
+  "chat_longMessageRetryNote": "158バイトを超える場合：最大 {count} 回まで送信されます",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "RS232またはESP-NOWのブリッジ機能を備えたファームウェアでのみ利用可能です。",
+  "repeater_cliHelpGetFloodMaxAdvert": "フラッドアドバートの最大ホップ数を表示します。",
+  "repeater_cliHelpGetFloodMaxUnscoped": "地域スコープのないフラッドパケットの最大ホップ数を表示します。",
+  "repeater_cliHelpGetRadioFemRxGain": "LoRaフロントエンドモジュールのRXゲインが有効になっているかどうかを表示します。",
+  "repeater_cliHelpGetRadioFemTxGain": "LoRaフロントエンドモジュールのTXゲインが有効になっているかどうかを表示します。",
+  "repeater_cliHelpRegionDef": "1つのコマンドで地域のチェーンを定義します。各名前は直前の名前の下に追加されます。「name,parent」を指定すると、その名前を追加した後、指定した親の下に続けます。地域リストを返信します。",
+  "repeater_cliHelpSetFloodMaxAdvert": "フラッドアドバートを転送する際の最大ホップ数を設定します(0-64)。",
+  "repeater_cliHelpSetFloodMaxUnscoped": "地域スコープを持たないフラッドパケットを転送する際の最大ホップ数を設定します(0-64)。",
+  "repeater_cliHelpSetRadioFemRxGain": "LoRaフロントエンドモジュールのRXゲイン（LNA）の有効/無効を切り替えます。対応していない基板は「Error: unsupported」と返信します。",
+  "repeater_cliHelpSetRadioFemTxGain": "LoRaフロントエンドモジュールのTXゲイン（PA）の有効/無効を切り替えます。対応していない基板は「Error: unsupported」と返信します。",
+  "repeater_cliRegionLoadActive": "地域読み込みモード：1行に1つの地域名を送信し、親の下にスペースでインデントします（フラッドを許可する場合は名前の後にFを追加）。各行に返信はありません。空行を送信して終了し、その後「region save」を送信すると結果が保存されます。",
+  "repeater_cliRegionLoadEnd": "（地域読み込み終了）",
+  "repeater_cliRegionLoadHint": "地域行、または空欄で終了",
+  "repeater_frequencyInvalid": "無効な周波数 (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "受信エラー",
+  "repeater_txPowerRangeHelper": "-9～30 dBm",
+  "room_postsPushed": "プッシュされた投稿",
+  "room_postsStored": "投稿",
+  "settings_publicKeyCopied": "公開鍵がコピーされました",
+  "settings_radioSettingsNotApplied": "ラジオがこれらの設定を適用しませんでした",
+  "urlImage_enable": "URL画像を有効にする",
+  "urlImage_possible": "URL画像の可能性があります。設定で有効にしてください。"
 }

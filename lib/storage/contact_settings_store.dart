@@ -14,6 +14,7 @@ class ContactSettingsStore {
   static const String _sendingDelayKeyPrefix = 'contact_sending_delay_';
   // Store quick answer ids, not text, so editing a reply keeps chat assignment.
   static const String _quickAnswersKeyPrefix = 'contact_quick_answer_ids_';
+  static const String _urlImagesKeyPrefix = 'contact_url_images_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -29,6 +30,7 @@ class ContactSettingsStore {
   String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
   String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
+  String get keyForUrlImages => '$_urlImagesKeyPrefix$publicKeyHex';
 
   Future<bool> loadSmazEnabled(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
@@ -287,6 +289,31 @@ class ContactSettingsStore {
     await prefs.setStringList(
       key,
       AppSettings.normalizeQuickAnswerIds(answerIds),
+    );
+  }
+
+  Future<bool> loadUrlImagesEnabled(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot load contact URL image settings.',
+      );
+      return false;
+    }
+    final prefs = PrefsManager.instance;
+    final key = '$keyForUrlImages$contactKeyHex';
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> saveUrlImagesEnabled(String contactKeyHex, bool enabled) async {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn(
+        'Public key hex is not set. Cannot save contact URL image settings.',
+      );
+      return;
+    }
+    await PrefsManager.instance.setBool(
+      '$keyForUrlImages$contactKeyHex',
+      enabled,
     );
   }
 

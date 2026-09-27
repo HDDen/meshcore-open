@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../models/delivery_observation.dart';
 import '../models/path_history.dart';
 import '../storage/prefs_manager.dart';
+import '../utils/app_logger.dart';
 
 class StorageService {
   static const String _pathHistoryPrefix = 'path_history_';
@@ -10,6 +11,14 @@ class StorageService {
   static const String _repeaterAutoClockSyncAfterLoginKey =
       'repeater_auto_clock_sync_after_login';
   static const String _deliveryObservationsKey = 'delivery_observations';
+
+  String _publicKeyHex = '';
+  set setPublicKeyHex(String value) =>
+      _publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
+
+  String _pathHistoryKey(String contactPubKeyHex) => _publicKeyHex.isEmpty
+      ? '$_pathHistoryPrefix$contactPubKeyHex'
+      : '$_pathHistoryPrefix${_publicKeyHex}_$contactPubKeyHex';
 
   Future<Map<String, bool>> _loadRepeaterAutoClockSyncAfterLogin() async {
     final prefs = PrefsManager.instance;
@@ -48,15 +57,18 @@ class StorageService {
     ContactPathHistory history,
   ) async {
     final prefs = PrefsManager.instance;
-    final key = '$_pathHistoryPrefix$contactPubKeyHex';
+    final key = _pathHistoryKey(contactPubKeyHex);
     final jsonStr = jsonEncode(history.toJson());
     await prefs.setString(key, jsonStr);
   }
 
   Future<ContactPathHistory?> loadPathHistory(String contactPubKeyHex) async {
     final prefs = PrefsManager.instance;
-    final key = '$_pathHistoryPrefix$contactPubKeyHex';
-    final jsonStr = prefs.getString(key);
+    final key = _pathHistoryKey(contactPubKeyHex);
+    // Fall back to the pre-scoping key so learned routes survive the upgrade.
+    final jsonStr =
+        prefs.getString(key) ??
+        prefs.getString('$_pathHistoryPrefix$contactPubKeyHex');
 
     if (jsonStr == null) return null;
 
@@ -70,8 +82,8 @@ class StorageService {
 
   Future<void> clearPathHistory(String contactPubKeyHex) async {
     final prefs = PrefsManager.instance;
-    final key = '$_pathHistoryPrefix$contactPubKeyHex';
-    await prefs.remove(key);
+    await prefs.remove(_pathHistoryKey(contactPubKeyHex));
+    await prefs.remove('$_pathHistoryPrefix$contactPubKeyHex');
   }
 
   Future<void> clearAllPathHistories() async {
@@ -173,14 +185,24 @@ class StorageService {
 
     if (jsonStr == null) return [];
 
+    final List<dynamic> list;
     try {
-      final list = jsonDecode(jsonStr) as List;
-      return list
-          .map((e) => DeliveryObservation.fromJson(e as Map<String, dynamic>))
-          .toList();
+      list = jsonDecode(jsonStr) as List<dynamic>;
     } catch (e) {
+      appLogger.warn('Stored delivery observations are unreadable: $e');
       return [];
     }
+    final observations = <DeliveryObservation>[];
+    for (final e in list) {
+      try {
+        observations.add(
+          DeliveryObservation.fromJson(e as Map<String, dynamic>),
+        );
+      } catch (err) {
+        appLogger.warn('Skipping malformed delivery observation: $err');
+      }
+    }
+    return observations;
   }
 
   Future<void> clearDeliveryObservations() async {

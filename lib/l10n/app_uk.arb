@@ -146,7 +146,7 @@
   "settings_presets": "Попередні налаштування",
   "settings_frequency": "Частота (МГц)",
   "settings_frequencyHelper": "300,0 – 2500,0",
-  "settings_frequencyInvalid": "Некоректна частота (300-2500 МГц)",
+  "settings_frequencyInvalid": "Некоректна частота (150-2500 МГц)",
   "settings_bandwidth": "Смуга пропускання",
   "settings_spreadingFactor": "Коефіцієнт розширення",
   "settings_codingRate": "Швидкість кодування",
@@ -1810,7 +1810,7 @@
   "scanner_bluetoothOff": "Bluetooth вимкнено",
   "snrIndicator_lastSeen": "Останній раз бачили",
   "snrIndicator_nearByRepeaters": "Найближчі ретранслятори",
-  "settings_clientRepeatFreqWarning": "Повтор без підключення до мережі вимагає частоти 433, 869 або 918 МГц.",
+  "settings_clientRepeatFreqWarning": "Повтор без підключення до мережі вимагає частоти 433, 869.495 або 918 МГц.",
   "settings_clientRepeatSubtitle": "Дозвольте цьому пристрою повторювати пакети даних для інших пристроїв.",
   "settings_clientRepeat": "Автономна система",
   "settings_aboutOpenMeteoAttribution": "Дані про висоту LOS: Open-Meteo (CC BY 4.0)",
@@ -3594,5 +3594,37 @@
   "channels_shareQrTapToCopy": "Натисніть на QR-код, щоб скопіювати його як зображення.",
   "channels_shareQrTapToShare": "Натисніть на QR-код, щоб зберегти його або поділитися ним як зображенням.",
   "channels_shareQrImageCopied": "QR-код скопійовано як зображення",
-  "channels_shareQrImageFailed": "Не вдалося підготувати зображення з QR-кодом"
+  "channels_shareQrImageFailed": "Не вдалося підготувати зображення з QR-кодом",
+  "channels_noFreeSlots": "Немає вільних слотів для каналів",
+  "chat_longMessageRetryNote": "Понад 158 байтів: надсилається не більше {count} разів",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Доступно лише для прошивки, зібраної з мостом (RS232 або ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Показує максимальну кількість переходів для оголошень через всю мережу (flood).",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Показує максимальну кількість переходів для пакетів через всю мережу (flood) без визначеної області.",
+  "repeater_cliHelpGetRadioFemRxGain": "Показує, чи увімкнено підсилення RX вхідного модуля LoRa.",
+  "repeater_cliHelpGetRadioFemTxGain": "Показує, чи увімкнено підсилення TX вхідного модуля LoRa.",
+  "repeater_cliHelpRegionDef": "Визначає ланцюжок регіонів однією командою: кожне ім’я додається під попереднім; \"name,parent\" додає ім’я і продовжує під вказаним батьківським регіоном. У відповідь повертає список регіонів.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Встановлює максимальну кількість переходів для пересилання оголошень через всю мережу (flood) (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Встановлює максимальну кількість переходів для пересилання пакетів через всю мережу (flood) без визначеної області регіону (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Перемикає підсилення RX (LNA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Перемикає підсилення TX (PA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Режим завантаження регіонів: надсилайте по одному імені регіону в рядку, з відступом пробілами під батьківським регіоном (додайте F після імені, щоб дозволити поширення через всю мережу). Рядки не отримують відповіді. Надішліть порожній рядок, щоб завершити, а потім \"region save\", щоб зберегти результат.",
+  "repeater_cliRegionLoadEnd": "(кінець завантаження регіонів)",
+  "repeater_cliRegionLoadHint": "Рядок регіону або порожній рядок для завершення",
+  "repeater_frequencyInvalid": "Некоректна частота (150-2500 МГц)",
+  "repeater_frequencyRangeHelper": "150-2500 МГц",
+  "repeater_recvErrors": "Помилки прийому",
+  "repeater_txPowerRangeHelper": "від -9 до 30 dBm",
+  "room_postsPushed": "Надіслано публікацій",
+  "room_postsStored": "Публікації",
+  "settings_publicKeyCopied": "Публічний ключ скопійовано",
+  "settings_radioSettingsNotApplied": "Радіомодуль не застосував ці налаштування",
+  "urlImage_enable": "Показувати зображення за URL",
+  "urlImage_possible": "Можливе зображення за URL; увімкніть це в Налаштуваннях."
 }

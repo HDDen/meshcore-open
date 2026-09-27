@@ -33,6 +33,7 @@ void showChannelEditSheet(
   );
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
+  bool urlImagesEnabled = connector.isChannelUrlImagesEnabled(channel.index);
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
     channel.index,
   );
@@ -241,6 +242,13 @@ void showChannelEditSheet(
                     ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
+                    title: Text(sheetContext.l10n.urlImage_enable),
+                    value: urlImagesEnabled,
+                    onChanged: (value) =>
+                        setSheetState(() => urlImagesEnabled = value),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
                     title: Text(sheetContext.l10n.settings_useSendingDelay),
                     value: sendingDelayEnabled,
                     onChanged: (value) => setSheetState(() {
@@ -366,6 +374,10 @@ void showChannelEditSheet(
                             await connector.setChannelCyr2LatProfileId(
                               channel.index,
                               selectedCyr2LatProfileId,
+                            );
+                            await connector.setChannelUrlImagesEnabled(
+                              channel.index,
+                              urlImagesEnabled,
                             );
                             await connector.setChannelSendingDelayEnabled(
                               channel.index,

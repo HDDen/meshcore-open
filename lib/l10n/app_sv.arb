@@ -145,7 +145,7 @@
   "settings_presets": "Fördefinierade inställningar",
   "settings_frequency": "Frekvens (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Ogiltig frekvens (300-2500 MHz)",
+  "settings_frequencyInvalid": "Ogiltig frekvens (150-2500 MHz)",
   "settings_bandwidth": "Bandbredd",
   "settings_spreadingFactor": "Spreadingfaktor",
   "settings_codingRate": "Kodningsgrad",
@@ -1769,7 +1769,7 @@
   "snrIndicator_nearByRepeaters": "Närliggande uppreparstationer",
   "settings_clientRepeatSubtitle": "Låt enheten repetera nätpaket för andra användare.",
   "settings_clientRepeat": "Upprepa utan elnät",
-  "settings_clientRepeatFreqWarning": "För att kunna kommunicera utanför elnätet krävs frekvenserna 433, 869 eller 918 MHz.",
+  "settings_clientRepeatFreqWarning": "För att kunna kommunicera utanför elnätet krävs frekvenserna 433, 869.495 eller 918 MHz.",
   "settings_aboutOpenMeteoAttribution": "LOS-höjddata: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Enheter",
   "appSettings_unitsMetric": "Metriskt (m/km)",
@@ -3396,5 +3396,38 @@
   "channels_shareQrTapToCopy": "Tryck på QR-koden för att kopiera den som en bild.",
   "channels_shareQrTapToShare": "Tryck på QR-koden för att spara eller dela den som en bild.",
   "channels_shareQrImageCopied": "QR-koden kopierad som bild",
-  "channels_shareQrImageFailed": "Det gick inte att skapa bilden med QR-koden"
+  "channels_shareQrImageFailed": "Det gick inte att skapa bilden med QR-koden",
+  "channels_noFreeSlots": "Alla kanalplatser är upptagna",
+  "chat_longMessageRetryNote": "Över 158 byte: skickas högst {count} gånger",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Endast tillgängligt på firmware byggd med en brygga (RS232 eller ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Visar det maximala antalet hopp för flood-annonser.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Visar det maximala antalet hopp för flood-paket utan regionscope.",
+  "repeater_cliHelpGetRadioFemRxGain": "Visar om LoRa-frontändmodulens RX-gain är påslagen.",
+  "repeater_cliHelpGetRadioFemTxGain": "Visar om LoRa-frontändmodulens TX-gain är påslagen.",
+  "repeater_cliHelpRegionDef": "Definierar en kedja av regioner i ett kommando: varje namn läggs till under det föregående; \"name,parent\" lägger till namnet och fortsätter sedan under den angivna föräldern. Svarar med regionlistan.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Anger det maximala antalet hopp för vidarebefordran av flood-annonser (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Anger det maximala antalet hopp för vidarebefordran av flood-paket utan regionscope (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Växlar LoRa-frontändmodulens RX-gain (LNA). Kort utan denna modul svarar \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Växlar LoRa-frontändmodulens TX-gain (PA). Kort utan denna modul svarar \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Regionladdningsläge: skicka ett regionnamn per rad, indraget med blanksteg under sin förälder (lägg till F efter namnet för att tillåta flood). Rader får inget svar. Skicka en tom rad för att avsluta, och sedan \"region save\" för att spara resultatet.",
+  "repeater_cliRegionLoadEnd": "(slut på regionladdning)",
+  "repeater_cliRegionLoadHint": "Regionrad, eller tom för att avsluta",
+  "repeater_frequencyInvalid": "Ogiltig frekvens (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Mottagningsfel",
+  "repeater_txPowerRangeHelper": "-9 till 30 dBm",
+  "room_postsPushed": "Skickade inlägg",
+  "room_postsStored": "Inlägg",
+  "settings_publicKeyCopied": "Publik nyckel kopierad",
+  "settings_radioSettingsNotApplied": "Radion tillämpade inte dessa inställningar",
+  "urlImage_enable": "Aktivera URL-bilder",
+  "urlImage_possible": "Möjlig URL-bild; aktivera den i Inställningar."
 }

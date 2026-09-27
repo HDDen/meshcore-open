@@ -183,22 +183,7 @@ class MessageRetryService extends ChangeNotifier {
         );
         continue;
       }
-      unawaited(
-        _attemptSend(messageId).catchError((e) {
-          debugPrint('_attemptSend threw for $messageId after resume: $e');
-          if (_sendingPaused) return;
-          final message = _pendingMessages[messageId];
-          final contactKey = _pendingContacts[messageId]?.publicKeyHex;
-          if (message != null) {
-            final failed = message.copyWith(status: MessageStatus.failed);
-            _pendingMessages[messageId] = failed;
-            _config?.updateMessage(failed);
-          }
-          if (contactKey != null) {
-            _onMessageResolved(messageId, contactKey);
-          }
-        }),
-      );
+      _attemptSendOrFail(messageId);
     }
     for (final contactKey in List<String>.from(_sendQueue.keys)) {
       _sendNextForContact(contactKey);
@@ -353,20 +338,51 @@ class MessageRetryService extends ChangeNotifier {
       final messageId = queue.removeAt(0);
       if (_pendingMessages.containsKey(messageId)) {
         _activeMessages.add(messageId);
-        _attemptSend(messageId).catchError((e) {
-          debugPrint('_attemptSend threw for $messageId: $e');
-          if (_sendingPaused) return;
-          final msg = _pendingMessages[messageId];
-          if (msg != null) {
-            final failed = msg.copyWith(status: MessageStatus.failed);
-            _pendingMessages[messageId] = failed;
-            _config?.updateMessage(failed);
-          }
-          _onMessageResolved(messageId, contactKey);
-        });
+        _attemptSendOrFail(messageId);
         return;
       }
     }
+  }
+
+  void _attemptSendOrFail(String messageId) {
+    _attemptSend(messageId).catchError((Object e) {
+      debugPrint('_attemptSend threw for $messageId: $e');
+      // A send cut short by the link going down is kept for the reconnect,
+      // which resumes it.
+      if (_sendingPaused) return;
+      _config?.debugLogService?.warn(
+        'Send failed for message $messageId: $e',
+        tag: 'AckHash',
+      );
+      _failMessage(messageId);
+    });
+  }
+
+  /// Marks a message that could not be handed to the radio as failed and
+  /// releases its in-flight slot so the contact's queue keeps moving. When an
+  /// earlier attempt did go out, its ACK may still come, so the message stays
+  /// matchable for the grace period the last attempt gets too.
+  void _failMessage(String messageId) {
+    final message = _pendingMessages[messageId];
+    if (message == null) return;
+    _timeoutTimers[messageId]?.cancel();
+    if (message.status != MessageStatus.failed &&
+        message.status != MessageStatus.delivered) {
+      final failed = message.copyWith(status: MessageStatus.failed);
+      _pendingMessages[messageId] = failed;
+      _config?.updateMessage(failed);
+    }
+    final contactKey = _pendingContacts[messageId]?.publicKeyHex;
+    if (contactKey != null &&
+        (_expectedAckHashes[messageId]?.isNotEmpty ?? false)) {
+      _onMessageResolved(messageId, contactKey);
+      _timeoutTimers[messageId] = Timer(_lateAckGracePeriod, () {
+        _cleanupMessage(messageId);
+      });
+    } else {
+      _cleanupMessage(messageId);
+    }
+    notifyListeners();
   }
 
   void _onMessageResolved(String messageId, String contactKey) {
@@ -526,6 +542,9 @@ class MessageRetryService extends ChangeNotifier {
     // Compute expected ACK hash that device will return in RESP_CODE_SENT
     // IMPORTANT: Use the transformed text (with SMAZ encoding if enabled) to match device's hash
     final selfPubKey = config.getSelfPublicKey?.call();
+    if (config.getSelfPublicKey != null && selfPubKey == null) {
+      throw StateError('Self public key unknown; cannot track ACK');
+    }
     if (selfPubKey != null) {
       final outboundText =
           _preparedOutboundTexts[messageId] ??
@@ -881,7 +900,8 @@ class MessageRetryService extends ChangeNotifier {
       tag: 'AckHash',
     );
 
-    if (message.retryCount < maxRetries - 1) {
+    if (message.retryCount < maxRetries - 1 &&
+        _textFitsAttempt(message, contact, message.retryCount + 1)) {
       final backoffMs = 1000 * (1 << message.retryCount);
 
       if (selection != null) {
@@ -910,17 +930,7 @@ class MessageRetryService extends ChangeNotifier {
       _timeoutTimers[messageId] = Timer(Duration(milliseconds: backoffMs), () {
         if (_sendingPaused) return;
         if (!_pendingMessages.containsKey(messageId)) return;
-        _attemptSend(messageId).catchError((e) {
-          debugPrint('_attemptSend threw for $messageId: $e');
-          if (_sendingPaused) return;
-          final msg = _pendingMessages[messageId];
-          if (msg != null) {
-            final failed = msg.copyWith(status: MessageStatus.failed);
-            _pendingMessages[messageId] = failed;
-            _config?.updateMessage(failed);
-          }
-          _onMessageResolved(messageId, contact.publicKeyHex);
-        });
+        _attemptSendOrFail(messageId);
       });
     } else {
       // Max retries reached - mark as failed
@@ -962,6 +972,20 @@ class MessageRetryService extends ChangeNotifier {
         _cleanupMessage(messageId);
       });
     }
+  }
+
+  /// From attempt 4 on the firmware appends [0][attempt] to the payload and
+  /// rejects text longer than MAX_TEXT_LEN - 2 (BaseChatMesh::composeMsgPacket).
+  /// The wire text is what counts: a reply's stored body is shorter than the
+  /// mention and quote line that go out with it.
+  bool _textFitsAttempt(Message message, Contact contact, int attempt) {
+    if (attempt <= maxFullLengthTextAttempt) return true;
+    final outboundText =
+        _preparedOutboundTexts[message.messageId] ??
+        _config?.prepareContactOutboundText?.call(contact, message.text) ??
+        message.text;
+    return utf8.encode(outboundText).length <=
+        maxTextPayloadBytesAfterFullLengthAttempts;
   }
 
   void _moveAckHashesToHistory(String messageId) {

@@ -468,6 +468,30 @@ class MapTileCacheService extends ChangeNotifier {
 
   String get urlTemplate => _buildUrlTemplate(appSettingsService.settings);
 
+  /// Cache key for a tile URL: the URL without the credentials a source puts
+  /// in its query string, so reissuing them does not orphan the stored tiles,
+  /// the offline regions this cache exists to keep above all. Stadia carries
+  /// its `api_key` there; Yandex its `apikey` and the request `signature`,
+  /// whose removal also keeps a tile valid when signing is switched on or
+  /// off.
+  static String tileCacheKey(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    if (url.contains(yandexTileHost)) {
+      final query = Map<String, String>.from(uri.queryParameters)
+        ..remove('apikey')
+        ..remove('signature');
+      return uri.replace(queryParameters: query).toString();
+    }
+    if (!uri.queryParameters.containsKey('api_key')) return url;
+    final params = Map<String, String>.of(uri.queryParameters)
+      ..remove('api_key');
+    final stripped = params.isEmpty
+        ? uri.replace(query: '')
+        : uri.replace(queryParameters: params);
+    return stripped.toString().replaceFirst(RegExp(r'\?$'), '');
+  }
+
   TileBuilder tileBuilderFor(BuildContext context) {
     final theme = Theme.of(context);
     final placeholderColor = theme.brightness == Brightness.dark
@@ -1198,23 +1222,6 @@ class RateLimitedTileCacheManager extends CacheManager {
   }
 }
 
-/// Cache key for a tile URL.
-///
-/// Yandex carries the API key and the request signature in the query string,
-/// so keying the cache on the raw URL would orphan every stored tile the
-/// moment the user reissues either — precisely the offline regions this cache
-/// exists to keep. Dropping both also means a tile stays valid when signing is
-/// switched on or off.
-String tileCacheKey(String url) {
-  if (!url.contains(MapTileCacheService.yandexTileHost)) return url;
-  final uri = Uri.tryParse(url);
-  if (uri == null) return url;
-  final query = Map<String, String>.from(uri.queryParameters)
-    ..remove('apikey')
-    ..remove('signature');
-  return uri.replace(queryParameters: query).toString();
-}
-
 /// Signs a Yandex request with the "simple signature" scheme.
 ///
 /// `HMAC-SHA256` over the path and query with the host stripped — the string
@@ -1273,7 +1280,7 @@ class CachedNetworkTileProvider extends TileProvider {
     final signedUrl = urlSigner?.call(url) ?? url;
     return _CacheFirstTileImageProvider(
       url: signedUrl,
-      cacheKey: tileCacheKey(signedUrl),
+      cacheKey: MapTileCacheService.tileCacheKey(signedUrl),
       cacheManager: cacheManager,
       headers: headersFor?.call(signedUrl) ?? headers,
     );

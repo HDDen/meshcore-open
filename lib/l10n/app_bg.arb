@@ -145,7 +145,7 @@
   "settings_presets": "Предварителни настройки",
   "settings_frequency": "Честота (MHz)",
   "settings_frequencyHelper": "300,0 – 2500,0",
-  "settings_frequencyInvalid": "Невалидна честота (300-2500 MHz)",
+  "settings_frequencyInvalid": "Невалидна честота (150-2500 MHz)",
   "settings_bandwidth": "Ширина на честотната лента",
   "settings_spreadingFactor": "Фактор на разпространение",
   "settings_codingRate": "Скорост на кодиране",
@@ -1803,7 +1803,7 @@
   "snrIndicator_lastSeen": "Последно видян",
   "snrIndicator_nearByRepeaters": "Близки повторители",
   "settings_clientRepeatSubtitle": "Позволете на това устройство да предава пакети към мрежата за други устройства.",
-  "settings_clientRepeatFreqWarning": "За повторение извън мрежата са необходими честоти от 433, 869 или 918 MHz.",
+  "settings_clientRepeatFreqWarning": "За повторение извън мрежата са необходими честоти от 433, 869.495 или 918 MHz.",
   "settings_clientRepeat": "Клиентско повторение",
   "settings_aboutOpenMeteoAttribution": "Данни за надморска височина на LOS: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "единици",
@@ -3614,5 +3614,37 @@
   "channels_shareQrTapToCopy": "Докоснете QR кода, за да го копирате като изображение.",
   "channels_shareQrTapToShare": "Докоснете QR кода, за да го запазите или споделите като изображение.",
   "channels_shareQrImageCopied": "QR кодът е копиран като изображение",
-  "channels_shareQrImageFailed": "Изображението с QR кода не можа да бъде подготвено"
+  "channels_shareQrImageFailed": "Изображението с QR кода не можа да бъде подготвено",
+  "urlImage_enable": "Активиране на URL изображения",
+  "urlImage_possible": "Възможно изображение от URL; активирайте го в Настройки.",
+  "settings_radioSettingsNotApplied": "Радиото не приложи тези настройки",
+  "settings_publicKeyCopied": "Публичният ключ е копиран",
+  "channels_noFreeSlots": "Няма свободни канални места",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_frequencyInvalid": "Невалидна честота (150-2500 MHz)",
+  "repeater_txPowerRangeHelper": "от -9 до 30 dBm",
+  "repeater_recvErrors": "Грешки при приемане",
+  "room_postsStored": "Публикации",
+  "room_postsPushed": "Изпратени публикации",
+  "repeater_cliRegionLoadActive": "Режим на зареждане на региони: изпращайте по едно име на регион на ред, с отстъп от интервали под съответния родител (добавете F след името, за да разрешите flood). Редовете не получават отговор. Изпратете празен ред, за да завършите, след което изпратете „region save“, за да запазите резултата.",
+  "repeater_cliRegionLoadHint": "Ред за регион или празно за завършване",
+  "repeater_cliRegionLoadEnd": "(край на зареждането на региони)",
+  "repeater_cliHelpRegionDef": "Задава верига от региони с една команда: всяко име се добавя под предишното; „name,parent“ добавя името и продължава под указания родител. Връща списъка с региони.",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Задава максималния брой скокове за препращане на flood пакети без определена регионална област (0-64).",
+  "repeater_cliHelpSetFloodMaxAdvert": "Задава максималния брой скокове за препращане на flood обяви (0-64).",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Показва максималния брой скокове за flood пакети без определена област.",
+  "repeater_cliHelpGetFloodMaxAdvert": "Показва максималния брой скокове за flood обяви.",
+  "repeater_cliHelpSetRadioFemRxGain": "Превключва RX усилването (LNA) на LoRa предния модул. Платки без такъв отговарят с „Error: unsupported“.",
+  "repeater_cliHelpSetRadioFemTxGain": "Превключва TX усилването (PA) на LoRa предния модул. Платки без такъв отговарят с „Error: unsupported“.",
+  "repeater_cliHelpGetRadioFemRxGain": "Показва дали RX усилването на LoRa предния модул е включено.",
+  "repeater_cliHelpGetRadioFemTxGain": "Показва дали TX усилването на LoRa предния модул е включено.",
+  "repeater_bridgeNote": "Налично само за прошивка с мост (RS232 или ESP-NOW).",
+  "chat_longMessageRetryNote": "Над 158 байта: изпраща се най-много {count} пъти",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -145,7 +145,7 @@
   "settings_presets": "Prednastavitve",
   "settings_frequency": "Frekvenca (MHz)",
   "settings_frequencyHelper": "300,00 - 2500,00",
-  "settings_frequencyInvalid": "Neveljavna frekvenca (300-2500 MHz)",
+  "settings_frequencyInvalid": "Neveljavna frekvenca (150-2500 MHz)",
   "settings_bandwidth": "Pasovna širina",
   "settings_spreadingFactor": "Razširitveni faktor",
   "settings_codingRate": "Programska hitrost",
@@ -1802,7 +1802,7 @@
   "scanner_bluetoothOff": "Bluetooth je izklopljen",
   "snrIndicator_lastSeen": "Zadnjič videno",
   "snrIndicator_nearByRepeaters": "Bližnji ponovitelji",
-  "settings_clientRepeatFreqWarning": "Za ponovni prenos na brezžični način so potrebne frekvence 433, 869 ali 918 MHz.",
+  "settings_clientRepeatFreqWarning": "Za ponovni prenos na brezžični način so potrebne frekvence 433, 869.495 ali 918 MHz.",
   "settings_clientRepeatSubtitle": "Omogočite temu naprave, da ponavlja paketne sporočila za druge.",
   "settings_clientRepeat": "Neovadno ponavljanje",
   "settings_aboutOpenMeteoAttribution": "Podatki o višini LOS: Open-Meteo (CC BY 4.0)",
@@ -3614,5 +3614,38 @@
   "channels_shareQrTapToCopy": "Tapnite QR kodo, da jo kopirate kot sliko.",
   "channels_shareQrTapToShare": "Tapnite QR kodo, da jo shranite ali delite kot sliko.",
   "channels_shareQrImageCopied": "QR koda kopirana kot slika",
-  "channels_shareQrImageFailed": "Slike s QR kodo ni bilo mogoče pripraviti"
+  "channels_shareQrImageFailed": "Slike s QR kodo ni bilo mogoče pripraviti",
+  "channels_noFreeSlots": "Vsa mesta za kanale so zasedena",
+  "chat_longMessageRetryNote": "Nad 158 bajtov: poslano največ {count}-krat",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Na voljo samo v vdelani programski opremi, zgrajeni z mostom (RS232 ali ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Prikaže največje število skokov za flood oglase.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Prikaže največje število skokov za flood pakete brez določenega regijskega obsega.",
+  "repeater_cliHelpGetRadioFemRxGain": "Prikaže, ali je RX ojačanje LoRa front-end modula vklopljeno.",
+  "repeater_cliHelpGetRadioFemTxGain": "Prikaže, ali je TX ojačanje LoRa front-end modula vklopljeno.",
+  "repeater_cliHelpRegionDef": "Definira verigo regij z enim ukazom: vsako ime se doda pod prejšnje; \"name,parent\" doda ime in nato nadaljuje pod navedeno nadrejeno regijo. Odgovori s seznamom regij.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Nastavi največje število skokov za posredovanje flood oglasov (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Nastavi največje število skokov za posredovanje flood paketov brez določenega regijskega obsega (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Preklopi RX ojačanje (LNA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Preklopi TX ojačanje (PA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Način nalaganja regij: pošljite eno ime regije na vrstico, zamaknjeno s presledki pod nadrejeno regijo (dodajte F za imenom, da dovolite flood). Vrstice ne prejmejo odgovora. Pošljite prazno vrstico za konec, nato pa \"region save\", da shranite rezultat.",
+  "repeater_cliRegionLoadEnd": "(konec nalaganja regij)",
+  "repeater_cliRegionLoadHint": "Vrstica regije ali prazna vrstica za konec",
+  "repeater_frequencyInvalid": "Neveljavna frekvenca (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Napake sprejema",
+  "repeater_txPowerRangeHelper": "-9 do 30 dBm",
+  "room_postsPushed": "Poslane objave",
+  "room_postsStored": "Objave",
+  "settings_publicKeyCopied": "Javni ključ kopiran",
+  "settings_radioSettingsNotApplied": "Radio teh nastavitev ni uveljavil",
+  "urlImage_enable": "Omogoči slike iz URL",
+  "urlImage_possible": "Mogoča slika iz URL; omogočite jo v Nastavitvah."
 }

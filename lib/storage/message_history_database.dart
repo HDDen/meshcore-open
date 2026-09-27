@@ -396,6 +396,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureContactLocationCacheTable();
     await _ensureHeardPacketsTable();
     await _ensureContactSettingsTable();
+    await _ensureDiscoveredContactsTable();
   }
 
   Future<void> _ensureLegacyRejectedMessagesTable() async {
@@ -547,6 +548,78 @@ WHERE node_key = ? AND contact_key = ? AND name = ?
         Variable<String>(name),
       ],
     );
+  }
+
+  /// The nodes the app has heard of but no radio stores, one row per node
+  /// holding the JSON `ContactDiscoveryStore` writes. The list is the app's,
+  /// not a node's, so the table has no node column.
+  Future<void> _ensureDiscoveredContactsTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS discovered_contacts (
+  public_key_hex TEXT NOT NULL PRIMARY KEY,
+  contact_json TEXT NOT NULL
+)
+''');
+  }
+
+  /// Every discovered contact's JSON, in the order the rows were first
+  /// written: an update keeps its row, so this is the order the list keeps.
+  Future<List<String>> readDiscoveredContacts() async {
+    final rows = await customSelect(
+      'SELECT contact_json FROM discovered_contacts ORDER BY rowid',
+    ).get();
+    return [for (final row in rows) row.read<String>('contact_json')];
+  }
+
+  /// Writes [upserts] (contact JSON by public key) and removes [deleteKeys],
+  /// in one transaction.
+  Future<void> writeDiscoveredContacts({
+    required Map<String, String> upserts,
+    required List<String> deleteKeys,
+  }) async {
+    if (upserts.isEmpty && deleteKeys.isEmpty) return;
+    await transaction(() async {
+      for (final key in deleteKeys) {
+        await customUpdate(
+          'DELETE FROM discovered_contacts WHERE public_key_hex = ?',
+          variables: [Variable<String>(key)],
+        );
+      }
+      for (final entry in upserts.entries) {
+        await customInsert(
+          '''
+INSERT INTO discovered_contacts (public_key_hex, contact_json)
+VALUES (?, ?)
+ON CONFLICT(public_key_hex) DO UPDATE SET contact_json = excluded.contact_json
+''',
+          variables: [
+            Variable<String>(entry.key),
+            Variable<String>(entry.value),
+          ],
+        );
+      }
+    });
+  }
+
+  /// Adds [rows] from the former preference copy of the list. A row already
+  /// in the table is newer than that copy and is kept.
+  Future<void> importDiscoveredContacts(Map<String, String> rows) async {
+    if (rows.isEmpty) return;
+    await transaction(() async {
+      for (final entry in rows.entries) {
+        await customInsert(
+          '''
+INSERT INTO discovered_contacts (public_key_hex, contact_json)
+VALUES (?, ?)
+ON CONFLICT(public_key_hex) DO NOTHING
+''',
+          variables: [
+            Variable<String>(entry.key),
+            Variable<String>(entry.value),
+          ],
+        );
+      }
+    });
   }
 
   Future<bool> isLegacyMigrationComplete() async {

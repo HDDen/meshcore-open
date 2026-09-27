@@ -77,6 +77,11 @@ class ByteCountedTextField extends StatefulWidget {
   /// Whether the text field accepts input.
   final bool enabled;
 
+  /// Optional byte count above which [softLimitNote] is shown next to the
+  /// counter (the text is still allowed up to [maxBytes]).
+  final int? softLimitBytes;
+  final String? softLimitNote;
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -96,6 +101,8 @@ class ByteCountedTextField extends StatefulWidget {
     this.minLines = 1,
     this.maxHeight,
     this.enabled = true,
+    this.softLimitBytes,
+    this.softLimitNote,
   });
 
   @override
@@ -178,13 +185,16 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
   /// pass `[key]` and `[/key]`.
   void _wrapSelection(String opener, [String? closer]) {
     final value = widget.controller.value;
-    widget.controller.value = Utf8LengthLimitingTextInputFormatter(
+    final wrapped = MarkupEditing.wrap(value, opener, closer ?? opener);
+    final limited = Utf8LengthLimitingTextInputFormatter(
       widget.maxBytes,
       encoder: widget.encoder,
-    ).formatEditUpdate(
-      value,
-      MarkupEditing.wrap(value, opener, closer ?? opener),
-    );
+    ).formatEditUpdate(value, wrapped);
+    // The limiter keeps the part of an insertion that fits, and a wrap
+    // inserts across the selection: cut short it would leave half a marker
+    // and drop the selected words, so a wrap that does not fit is refused.
+    if (limited.text != wrapped.text) return;
+    widget.controller.value = wrapped;
   }
 
   Future<void> _pickColor(BuildContext context) async {
@@ -319,6 +329,10 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
     final excessBytes = _excessBytes;
     final ratio = widget.maxBytes > 0 ? usedBytes / widget.maxBytes : 0.0;
     final showCounter = !(widget.hideCounterWhenEmpty && _text.isEmpty);
+    final softLimitBytes = widget.softLimitBytes;
+    final softLimitNote = softLimitBytes != null && usedBytes > softLimitBytes
+        ? widget.softLimitNote
+        : null;
 
     final counterColor = ratio > widget.errorThreshold
         ? Theme.of(context).colorScheme.error
@@ -380,14 +394,27 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
           opacity: showCounter ? 1 : 0,
           child: Padding(
             padding: const EdgeInsets.only(top: 4, right: 4),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                excessBytes == null
-                    ? '$usedBytes / ${widget.maxBytes}'
-                    : '$usedBytes (-$excessBytes) / ${widget.maxBytes}',
-                style: TextStyle(fontSize: 11, color: counterColor),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: softLimitNote != null
+                      ? Text(
+                          softLimitNote,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  excessBytes == null
+                      ? '$usedBytes / ${widget.maxBytes}'
+                      : '$usedBytes (-$excessBytes) / ${widget.maxBytes}',
+                  style: TextStyle(fontSize: 11, color: counterColor),
+                ),
+              ],
             ),
           ),
         ),

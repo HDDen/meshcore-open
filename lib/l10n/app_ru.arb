@@ -131,7 +131,7 @@
   "settings_presets": "Пресеты",
   "settings_frequency": "Частота (МГц)",
   "settings_frequencyHelper": "300.0 – 2500.0",
-  "settings_frequencyInvalid": "Недопустимая частота (300–2500 МГц)",
+  "settings_frequencyInvalid": "Недопустимая частота (150–2500 МГц)",
   "settings_bandwidth": "Полоса пропускания",
   "settings_spreadingFactor": "Коэффициент расширения",
   "settings_codingRate": "Коэффициент кодирования",
@@ -984,7 +984,7 @@
   "scanner_chromeRequiredMessage": "Для поддержки Bluetooth в этом веб-приложении требуется Google Chrome или браузер на базе Chromium.",
   "snrIndicator_nearByRepeaters": "Ближайшие репитеры",
   "snrIndicator_lastSeen": "Последний раз видели",
-  "settings_clientRepeatFreqWarning": "Для работы в режиме \"без подключения к сети\" требуется частота 433, 869 или 918 МГц.",
+  "settings_clientRepeatFreqWarning": "Для работы в режиме \"без подключения к сети\" требуется частота 433, 869.495 или 918 МГц.",
   "settings_clientRepeatSubtitle": "Позвольте этому устройству повторять пакеты данных для других устройств.",
   "settings_clientRepeat": "Повторение \"вне сети\"",
   "settings_aboutOpenMeteoAttribution": "Данные о высоте LOS: Open-Meteo (CC BY 4.0)",
@@ -2886,5 +2886,37 @@
   "chat_floodRegionNode": "Регион ноды",
   "chat_floodRegionNodeWith": "Регион ноды: {region}",
   "chat_floodRegionNone": "Без региона",
-  "chat_stopSending": "остановить отправку"
+  "chat_stopSending": "остановить отправку",
+  "channels_noFreeSlots": "Нет свободных слотов для каналов",
+  "chat_longMessageRetryNote": "Более 158 байт: отправляется не более {count} раз",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Доступно только на прошивке, собранной с мостом (RS232 или ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Показывает максимальное число хопов для анонсов, рассылаемых по сети (flood).",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Показывает максимальное число хопов для пакетов рассылки (flood) без региональной области.",
+  "repeater_cliHelpGetRadioFemRxGain": "Показывает, включено ли усиление RX на входном модуле LoRa.",
+  "repeater_cliHelpGetRadioFemTxGain": "Показывает, включено ли усиление TX на входном модуле LoRa.",
+  "repeater_cliHelpRegionDef": "Задаёт цепочку регионов одной командой: каждое имя добавляется под предыдущим; \"name,parent\" добавляет имя и продолжает под указанным родителем. В ответ возвращается список регионов.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Задаёт максимальное число хопов для пересылки анонсов, рассылаемых по сети (flood) (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Задаёт максимальное число хопов для пересылки пакетов рассылки (flood) без региональной области (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Переключает усиление RX (LNA) входного модуля LoRa. Платы без него отвечают \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Переключает усиление TX (PA) входного модуля LoRa. Платы без него отвечают \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить рассылку по сети). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.",
+  "repeater_cliRegionLoadEnd": "(конец загрузки регионов)",
+  "repeater_cliRegionLoadHint": "Строка региона или пусто для завершения",
+  "repeater_frequencyInvalid": "Недопустимая частота (150-2500 МГц)",
+  "repeater_frequencyRangeHelper": "150-2500 МГц",
+  "repeater_recvErrors": "Ошибки приёма",
+  "repeater_txPowerRangeHelper": "от -9 до 30 dBm",
+  "room_postsPushed": "Отправлено публикаций",
+  "room_postsStored": "Публикации",
+  "settings_publicKeyCopied": "Публичный ключ скопирован",
+  "settings_radioSettingsNotApplied": "Радиомодуль не применил эти настройки",
+  "urlImage_enable": "Показывать изображения по URL",
+  "urlImage_possible": "Возможно изображение по URL; включите это в настройках."
 }

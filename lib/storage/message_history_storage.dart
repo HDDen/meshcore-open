@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -15,6 +16,7 @@ class MessageHistoryStorage {
   static final MessageHistoryStorage instance = MessageHistoryStorage._();
 
   static const String databaseFileName = 'message_history.sqlite';
+  static const String _discoveredContactsKey = 'discovered_contacts';
   static const String _directPrefix = 'messages_';
   static const String _channelPrefix = 'channel_messages_';
   static final RegExp _directKeyPattern = RegExp(
@@ -113,6 +115,7 @@ class MessageHistoryStorage {
           await prefs.remove(key);
         }
       }
+      await _moveDiscoveredContacts(prefs, database);
 
       await _refreshCaches();
       _initialized = true;
@@ -150,6 +153,72 @@ class MessageHistoryStorage {
     append(directKeys, MessageHistoryKind.direct);
     append(channelKeys, MessageHistoryKind.channel);
     return entries;
+  }
+
+  /// Moves the discovered-contacts list out of preferences, where it was one
+  /// JSON array, into its table, one row per node. The key is removed only
+  /// after the rows are committed, and rows already in the table win, so an
+  /// import cut short runs again at the next launch without touching newer
+  /// rows. A failure costs this launch the old list and leaves the key for
+  /// the next one: a cache of heard nodes is not worth refusing to start.
+  Future<void> _moveDiscoveredContacts(
+    SharedPreferences prefs,
+    MessageHistoryDatabase database,
+  ) async {
+    final value = prefs.get(_discoveredContactsKey);
+    if (value == null) return;
+    try {
+      final decoded = value is String ? jsonDecode(value) : null;
+      if (decoded is! List) {
+        developer.log(
+          'Discovered contacts in preferences are not a JSON array; '
+          'left in place',
+          name: 'MessageHistoryMigration',
+        );
+        return;
+      }
+      final rows = <String, String>{};
+      var skipped = 0;
+      for (final entry in decoded) {
+        final key = _discoveredContactKey(entry);
+        if (key == null) {
+          skipped++;
+          continue;
+        }
+        rows[key] = jsonEncode(entry);
+      }
+      await database.importDiscoveredContacts(rows);
+      await prefs.remove(_discoveredContactsKey);
+      developer.log(
+        'Moved ${rows.length} discovered contacts into the database'
+        '${skipped > 0 ? ', skipped $skipped without a readable key' : ''}',
+        name: 'MessageHistoryMigration',
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'Discovered contacts stay in preferences for now: $error',
+        name: 'MessageHistoryMigration',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// The row key of a stored discovered contact: its public key as the
+  /// lowercase hex `Contact.publicKeyHex` gives, or null when the entry has
+  /// none, which the store could not have read either.
+  static String? _discoveredContactKey(Object? entry) {
+    if (entry is! Map) return null;
+    final encoded = entry['publicKey'];
+    if (encoded is! String) return null;
+    final List<int> bytes;
+    try {
+      bytes = base64Decode(encoded);
+    } on FormatException {
+      return null;
+    }
+    if (bytes.length != 32) return null;
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   Future<void> _refreshCaches() async {
@@ -386,6 +455,29 @@ class MessageHistoryStorage {
     _requireInitialized();
     if (kIsWeb) return const [];
     return _database!.readLatestHeardPackets(limit: limit);
+  }
+
+  /// Whether the database is open: false on the web, which never creates it,
+  /// and in a process that has not initialised the storage, such as a unit
+  /// test.
+  bool get hasDatabase => _initialized && _database != null;
+
+  Future<List<String>> loadDiscoveredContacts() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readDiscoveredContacts();
+  }
+
+  Future<void> writeDiscoveredContacts({
+    required Map<String, String> upserts,
+    required List<String> deleteKeys,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.writeDiscoveredContacts(
+      upserts: upserts,
+      deleteKeys: deleteKeys,
+    );
   }
 
   Future<Map<String, String>> loadContactSettings(

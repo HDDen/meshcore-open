@@ -103,6 +103,7 @@ Commands implemented by the Flutter connector in this checkout:
 | 0x39 | `CMD_SEND_ANON_REQ` | Send an anonymous request |
 | 0x3A | `CMD_SET_AUTO_ADD_CONFIG` | Set auto-add configuration |
 | 0x3B | `CMD_GET_AUTO_ADD_CONFIG` | Get auto-add configuration |
+| 0x3C | `CMD_GET_ALLOWED_REPEAT_FREQ` | Query the frequency ranges client repeat may use (v9+) |
 | 0x3D | `CMD_SET_PATH_HASH_MODE` | Set path hash width |
 | 0x3E | `CMD_SEND_CHANNEL_DATA` | Send typed channel data |
 | 0x3F | `CMD_SET_DEFAULT_FLOOD_SCOPE` | Set default flood scope |
@@ -158,6 +159,7 @@ Responses handled by the Flutter connector in this checkout:
 | 0x15 | `RESP_CODE_CUSTOM_VARS` | Custom variables data |
 | 0x18 | `RESP_CODE_STATS` | Statistics data (v8+) |
 | 0x19 | `RESP_CODE_AUTO_ADD_CONFIG` | Auto-add configuration |
+| 0x1A | `RESP_CODE_ALLOWED_REPEAT_FREQ` | Frequency ranges allowed for client repeat |
 | 0x1B | `RESP_CODE_CHANNEL_DATA_RECV` | Incoming typed channel data |
 | 0x1C | `RESP_CODE_DEFAULT_FLOOD_SCOPE` | Current default flood scope |
 
@@ -171,7 +173,7 @@ Responses handled by the Flutter connector in this checkout:
 | 0x17 | `RESP_CODE_TUNING_PARAMS` | Tuning parameters |
 | 0x19 | `RESP_CODE_RADIO_SETTINGS` | Legacy mapping; conflicts with current `RESP_CODE_AUTO_ADD_CONFIG` |
 
-## Push Codes (0x80-0x8E)
+## Push Codes (0x80-0x90)
 
 Asynchronous notifications from device:
 
@@ -187,11 +189,13 @@ Asynchronous notifications from device:
 | 0x87 | `PUSH_CODE_STATUS_RESPONSE` | Repeater status response |
 | 0x88 | `PUSH_CODE_LOG_RX_DATA` | Raw LoRa packet log |
 | 0x89 | `PUSH_CODE_TRACE_DATA` | Path trace response |
-| 0x8A | `PUSH_CODE_NEW_ADVERT` | New contact advertisement |
+| 0x8A | `PUSH_CODE_NEW_ADVERT` | Advert from a node the device did not store; the app lists it under discovery only |
 | 0x8B | `PUSH_CODE_TELEMETRY_RESPONSE` | Telemetry data response |
 | 0x8C | `PUSH_CODE_BINARY_RESPONSE` | Binary request response |
 | 0x8D | `PUSH_CODE_PATH_DISCOVERY_RESPONSE` | Path discovery response (firmware-only/legacy) |
 | 0x8E | `PUSH_CODE_CONTROL_DATA` | Control data received (v8+) |
+| 0x8F | `PUSH_CODE_CONTACT_DELETED` | A contact was dropped to make room for a new one (overwrite-oldest auto-add) |
+| 0x90 | `PUSH_CODE_CONTACTS_FULL` | Contact table full, the new contact was not stored |
 
 ## Key Frame Formats
 
@@ -376,23 +380,36 @@ buildSetAdvertLatLonFrame(37.7749, -122.4194)
 
 ### CMD_ADD_UPDATE_CONTACT (0x09)
 
-Adds a new contact or updates an existing contact's routing path.
+Adds a new contact or updates an existing one, its routing path above all.
 
 **Format**:
 ```
-[0x09][pub_key x32][type][flags][path_len][path x64][name x32][timestamp x4]
+[0x09][pub_key x32][type][flags][path_len][path x64][name x32][last_advert x4][lat x4][lon x4][lastmod x4]
 ```
 
 **Fields**:
 - `pub_key` (32 bytes): Contact's public key
 - `type` (1 byte): Advertisement type (1=chat, 2=repeater, 3=room, 4=sensor)
 - `flags` (1 byte): Contact flags
-- `path_len` (1 byte): Number of path bytes used
+- `path_len` (1 byte): the packed path byte of received frames: bits 7-6 the
+  hash width minus one, bits 5-0 the hop count; 0xFF for no route (flood).
+  The width is the contact's own (`Contact.pathHashWidth`), which need not be
+  the node's current path-hash mode.
 - `path` (64 bytes): Custom routing path (padded with zeros)
 - `name` (32 bytes): Contact name, null-padded UTF-8
-- `timestamp` (4 bytes LE): Unix timestamp
+- `last_advert` (4 bytes LE): the contact's own advert timestamp, 0 when
+  unknown. The firmware keeps it as the contact's replay guard, dropping any
+  advert that is not newer (`BaseChatMesh::onAdvertRecv`), and evicts the
+  oldest contact by it when the table is full, so the app sends back what the
+  node reported (`Contact.lastSeen`), never the phone's clock: that made the
+  contact's genuine adverts look replayed for as long as the phone ran ahead
+  of the sender.
+- `lat`, `lon` (4 bytes LE each, optional): position x1e6, written when known
+  or when `lastmod` follows
+- `lastmod` (4 bytes LE, optional): last modification time; the node's clock
+  when absent
 
-**Total size**: 136 bytes
+**Total size**: 136 bytes, 144 with the position, 148 with `lastmod`
 
 ### CMD_RESET_PATH (0x0D)
 
@@ -880,15 +897,30 @@ String decoded = Smaz.tryDecodePrefixed(received) ?? received;
 
 ### Message Reactions
 
-**Format**: `"m:[message_id]:[emoji]"`
+A reaction travels as an ordinary text message in one of two formats
+(`helpers/reaction_helper.dart`):
 
-**Example**: `"m:abc123:👍"`
+- **This app's**: `r:<hash>:<index>`, e.g. `r:a1b2:00`. `hash` is four hex
+  digits of a hash over the target's timestamp in seconds, its sender's name
+  (left out in a one-to-one chat) and the first five characters of its text;
+  `index` is two hex digits into the fixed reaction emoji list.
+- **MeshCore One's**: `@[<sender>]<emoji>` + newline + `<hash>` in a channel,
+  `<emoji>` + newline + `<hash>` in a direct chat, where `hash` is eight
+  lowercase Crockford base32 characters of the first five bytes of SHA-256 over
+  the target's UTF-8 text followed by its timestamp as u32 LE. An older form
+  puts the emoji before the name. The app reads both forms and sends its own.
 
 **Processing**:
-1. Parse reaction from incoming message
-2. Find target message by `messageId`
-3. Increment emoji counter in target message's `reactions` map
-4. Don't display reaction as a separate message
+1. Parse the reaction from the incoming message
+2. Find the target by hash among the conversation's messages, newest first
+3. Add the reacting sender under the emoji in the target's `reactions` map
+4. Don't display the reaction as a separate message
+
+A reaction whose target is not found is dropped when it is in this app's
+format and shown as an ordinary message when it is in MeshCore One's, so a
+reaction to a message the app never had still reads as something. The same
+rule applies when sending to a channel: text that parses as a reaction but
+whose target the app cannot find goes out as an ordinary message.
 
 ### Message Replies
 
@@ -916,6 +948,14 @@ The app implements automatic retry for failed messages:
 
 **Retry strategy**: Exponential backoff with path rotation (if auto-rotation enabled).
 
+Each attempt waits for its own `RESP_CODE_SENT` (see *Send Failures*). An ERR
+fails the message at once; an ACK for an earlier attempt that did go out is
+still accepted for the grace period the last attempt gets. From the fifth
+attempt on the firmware appends the attempt number after the text and refuses
+text over 158 bytes (`BaseChatMesh::composeMsgPacket`), so a longer message
+goes out at most four times; the composer says so once the text passes that
+size.
+
 ## LoRa Timing Calculations
 
 ### Airtime Calculation
@@ -937,8 +977,11 @@ int airtime = ceil(preambleTime + payloadTime);
 **Variables**:
 - `sf`: Spreading factor (5-12)
 - `bw`: Bandwidth in Hz
-- `cr`: Coding rate (5-8)
-- `de`: Low data rate optimization (1 if sf≥11, else 0)
+- `cr`: Coding rate index 1-4 (4/5 to 4/8); the connector converts the node's 5-8
+- `preambleSymbols`: the firmware's per-SF preamble, 32 symbols up to SF8 and
+  16 above (`RadioLibWrappers.h`, `preambleLengthForSF`)
+- `de`: Low data rate optimization, the RadioLib rule: 1 when the symbol time
+  exceeds 16 ms, else 0
 - `crc`: CRC enabled (always 1)
 
 ### Message Timeout Calculation
@@ -963,16 +1006,19 @@ timeout = 500 + ((50×6 + 250) × 3) = 500 + (550 × 3) = 2150 ms
 
 ### Path Format
 
-Paths are sequences of public-key hash prefixes, 1 to 4 bytes per hop
-depending on the node's path-hash mode; the packed path byte of a received
-frame says which width the packet travelled with.
+Paths are sequences of public-key hash prefixes, 1 to 3 bytes per hop
+depending on the node's path-hash mode (0-2; the firmware refuses 3); the
+packed path byte of a received frame says which width the packet travelled
+with. Each contact keeps the width its route was learned in
+(`Contact.pathHashWidth`), and a route written back to the node is packed in
+that width rather than the node's current mode.
 
 **Example path** (3 hops, 1-byte hashes):
 ```
 [0xAB][0xCD][0xEF]  // Route through nodes AB... → CD... → EF...
 ```
 
-**Max path size**: 64 bytes: 64 hops with 1-byte hashes, 16 with 4-byte ones
+**Max path size**: 64 bytes: 64 hops with 1-byte hashes, 21 with 3-byte ones
 
 ### Path Modes
 
@@ -988,14 +1034,17 @@ frame says which width the packet travelled with.
 
 ### Auto Path Rotation
 
-When enabled, the app cycles through known paths:
+When enabled, the attempts of a direct message cycle through known paths:
 
 **Implementation**:
-1. `PathHistoryService` tracks success/failure per path
+1. `PathHistoryService` tracks success/failure per path, per node
 2. On message send, select next path variant
 3. Record attempt and outcome
 4. Rotate to next path on retry
-5. Update contact's path in-memory via `CMD_ADD_UPDATE_CONTACT`
+5. Write the attempt's path to the node via `CMD_ADD_UPDATE_CONTACT`
+
+A route the user pinned is never rotated away, and logins, requests and CLI
+commands take the pinned route or the node's own, never a rotated one.
 
 ## Channel Encryption
 
@@ -1093,11 +1142,14 @@ When connection is lost (not manual disconnect):
 
 **Strategy**: Exponential backoff
 ```dart
-int delayMs = 1000 * (1 << attempt);  // 1s, 2s, 4s, 8s, 16s, 32s
-delayMs = min(delayMs, 30000);         // Cap at 30 seconds
+int delayMs = 1000 * (1 << min(attempt, 6));  // 1s, 2s, 4s, 8s, 16s, 30s...
+delayMs = min(delayMs, 30000);                 // Cap at 30 seconds
 ```
 
-**Attempts**: Unlimited until manual disconnect or successful reconnect.
+**Attempts**: Unlimited until manual disconnect or successful reconnect. The
+count starts over once a session is ready (`RESP_CODE_SELF_INFO` parsed) or on
+a manual disconnect, not with every attempt: each attempt goes through
+`connect()`, which used to reset it and kept the delay at one second.
 
 ### Message Queue Syncing
 
@@ -1129,18 +1181,41 @@ All frame handlers validate:
 
 **Exceptions**:
 - Not connected: `throw Exception("Not connected to a MeshCore device")`
-- No write support: `throw Exception("RX characteristic does not support write")`
+- No write support: `throw Exception("MeshCore RX characteristic does not support write")`
 
 **Retries**: Write operations use platform-level retries (BLE stack).
 
+**Pairing replies with commands**: the node answers commands in order, one
+reply each, while pushes and replies to other commands interleave with them.
+`PendingCommandReplies` (`connector/pending_command_replies.dart`) enrols every
+command whose reply is known before it is written (`replyCodeForCommand`:
+`RESP_CODE_OK`, `RESP_CODE_SENT`, or a specific response such as
+`RESP_CODE_CONTACT` for `CMD_GET_CONTACT_BY_KEY`, matched by key). A specific
+response completes the oldest command waiting for it, `RESP_CODE_OK` the oldest
+waiting for OK, and `RESP_CODE_ERR` the oldest command of any kind. Entries
+older than ten seconds are dropped before an OK or ERR is attributed, so a
+reply that never came cannot take a later one. `sendFrame` with
+`waitForGenericAck: true` waits up to five seconds for its own command's reply
+and throws on its ERR. Commands with no single reply (`CMD_SYNC_NEXT_MESSAGE`,
+`CMD_REBOOT`) are not enrolled, nor `CMD_EXPORT_PRIVATE_KEY`, which a node
+built without the export refuses with `RESP_CODE_DISABLED`: an entry waiting
+for a reply that never pairs would take the next ERR. A `CONTACT` frame that
+answers `CMD_GET_CONTACT_BY_KEY` does not count towards a running contact sync.
+
+**Direct messages**: each attempt waits for its `RESP_CODE_SENT` under the
+command lock. An ERR (unknown contact, packet pool full, text too long for the
+attempt) fails the message at once and frees its place in the send queue; a
+missing SENT leaves the message to the retry timer.
+
 ### Disconnection Recovery
 
-**Actions on disconnect**:
-1. Cancel all subscriptions
-2. Clear device references (but preserve ID/name for reconnection)
-3. Clear in-memory contacts and conversations
-4. Reset sync state flags
-5. Schedule reconnection (if not manual)
+An unexpected drop keeps what the reconnect needs: contacts, conversations and
+the device's ID and name stay, sending of direct messages is paused rather
+than failed, and channel sends already under way are replayed once the new
+session is ready. It cancels the subscriptions and polling, clears the device
+references, the handshake flags and the command-reply queue, and schedules the
+reconnect. A manual disconnect pauses sending too, fails the channel sends
+still waiting, and clears contacts, conversations and the node's identity.
 
 ## CLI Commands
 

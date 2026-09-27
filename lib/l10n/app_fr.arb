@@ -145,7 +145,7 @@
   "settings_presets": "Préréglages",
   "settings_frequency": "Fréquence (MHz)",
   "settings_frequencyHelper": "300,0 - 2 500,0",
-  "settings_frequencyInvalid": "Fréquence invalide (300-2500 MHz)",
+  "settings_frequencyInvalid": "Fréquence invalide (150-2500 MHz)",
   "settings_bandwidth": "Bande passante",
   "settings_spreadingFactor": "Facteur d'étalement (SF)",
   "settings_codingRate": "Taux de codage (CR)",
@@ -1887,7 +1887,7 @@
   "scanner_enableBluetooth": "Activer le Bluetooth",
   "snrIndicator_lastSeen": "Vu pour la dernière fois",
   "snrIndicator_nearByRepeaters": "Répéteurs à proximité",
-  "settings_clientRepeatFreqWarning": "Pour les transmissions hors réseau, il est nécessaire d'utiliser les fréquences de 433, 869 ou 918 MHz.",
+  "settings_clientRepeatFreqWarning": "Pour les transmissions hors réseau, il est nécessaire d'utiliser les fréquences de 433, 869.495 ou 918 MHz.",
   "settings_clientRepeatSubtitle": "Permettre à cet appareil de relayer les paquets du maillage pour les autres.",
   "settings_clientRepeat": "Répétition hors réseau",
   "settings_aboutOpenMeteoAttribution": "Données d'élévation LOS : Open-Meteo (CC BY 4.0)",
@@ -3713,5 +3713,37 @@
   "channels_shareQrTapToCopy": "Touchez le QR code pour le copier en tant qu'image.",
   "channels_shareQrTapToShare": "Touchez le QR code pour l'enregistrer ou le partager en tant qu'image.",
   "channels_shareQrImageCopied": "QR code copié en tant qu'image",
-  "channels_shareQrImageFailed": "Impossible de préparer l'image du QR code"
+  "channels_shareQrImageFailed": "Impossible de préparer l'image du QR code",
+  "channels_noFreeSlots": "Tous les emplacements de canaux sont utilisés",
+  "chat_longMessageRetryNote": "Plus de 158 octets : envoi au maximum {count} fois",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Disponible uniquement sur un firmware compilé avec un pont (RS232 ou ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Affiche le nombre maximal de sauts pour les annonces flood.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Affiche le nombre maximal de sauts pour les paquets flood sans portée régionale.",
+  "repeater_cliHelpGetRadioFemRxGain": "Indique si le gain RX du module frontal LoRa est activé.",
+  "repeater_cliHelpGetRadioFemTxGain": "Indique si le gain TX du module frontal LoRa est activé.",
+  "repeater_cliHelpRegionDef": "Définit une chaîne de régions en une seule commande : chaque nom est ajouté sous le précédent ; \"name,parent\" ajoute le nom, puis continue sous le parent indiqué. Répond avec la liste des régions.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Définit le nombre maximal de sauts pour la retransmission des annonces flood (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Définit le nombre maximal de sauts pour la retransmission des paquets flood sans portée régionale (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Active ou désactive le gain RX (LNA) du module frontal LoRa. Les cartes qui n'en ont pas répondent \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Active ou désactive le gain TX (PA) du module frontal LoRa. Les cartes qui n'en ont pas répondent \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Mode de chargement des régions : envoyez un nom de région par ligne, indenté avec des espaces sous sa région parente (ajoutez F après le nom pour autoriser le flood). Les lignes ne reçoivent pas de réponse. Envoyez une ligne vide pour terminer, puis \"region save\" pour conserver le résultat.",
+  "repeater_cliRegionLoadEnd": "(fin du chargement des régions)",
+  "repeater_cliRegionLoadHint": "Ligne de région, ou vide pour terminer",
+  "repeater_frequencyInvalid": "Fréquence invalide (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Erreurs de réception",
+  "repeater_txPowerRangeHelper": "-9 à 30 dBm",
+  "room_postsPushed": "Publications envoyées",
+  "room_postsStored": "Publications",
+  "settings_publicKeyCopied": "Clé publique copiée",
+  "settings_radioSettingsNotApplied": "La radio n'a pas appliqué ces paramètres",
+  "urlImage_enable": "Activer les images URL",
+  "urlImage_possible": "Image URL possible ; activez-la dans les Paramètres."
 }

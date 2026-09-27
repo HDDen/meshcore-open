@@ -7,6 +7,7 @@ import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/utf8_length_limiter.dart';
 import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
 import '../theme/mesh_theme.dart';
@@ -191,6 +192,13 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   ];
   final List<int> _spreadingFactorOptions = [5, 6, 7, 8, 9, 10, 11, 12];
   final List<int> _codingRateOptions = [5, 6, 7, 8];
+  static const int _minRepeaterTxPower = -9;
+  static const int _maxRepeaterTxPower = 30;
+  // CommonCLI.h: password[16], node_name[32], owner_info[120].
+  static const int _maxPasswordBytes = 15;
+  static const int _maxNameBytes = 31;
+  static const int _maxOwnerInfoBytes = 119;
+  static const int _maxAgcResetInterval = 255 * 4;
 
   @override
   void initState() {
@@ -287,7 +295,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         break;
       case 'tx':
         final dbm = int.tryParse(value.replaceAll(RegExp(r'[^0-9-]'), ''));
-        if (dbm != null && dbm >= 1 && dbm <= 30) {
+        if (dbm != null && dbm >= -128 && dbm <= 127) {
           _txPowerController.text = dbm.toString();
         }
         break;
@@ -364,7 +372,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         break;
       case 'agc.reset.interval':
         final v = int.tryParse(value.trim());
-        if (v != null && v >= 0) _agcResetInterval = v;
+        if (v != null && v >= 0) {
+          _agcResetInterval = v.clamp(0, _maxAgcResetInterval);
+        }
         break;
     }
   }
@@ -388,10 +398,18 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
     }
     if (parts.length > 2) {
-      _spreadingFactor = int.tryParse(parts[2].trim()) ?? _spreadingFactor;
+      final sf = int.tryParse(parts[2].trim());
+      if (sf != null && _spreadingFactorOptions.contains(sf)) {
+        _spreadingFactor = sf;
+      }
     }
     if (parts.length > 3) {
-      _codingRate = int.tryParse(parts[3].trim()) ?? _codingRate;
+      final cr = int.tryParse(parts[3].trim());
+      // Some firmware reports CR as 1-4 instead of 5-8.
+      final uiCr = cr != null && cr <= 4 ? cr + 4 : cr;
+      if (uiCr != null && _codingRateOptions.contains(uiCr)) {
+        _codingRate = uiCr;
+      }
     }
   }
 
@@ -734,11 +752,18 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     });
 
     try {
+      final l10n = context.l10n;
       // Each pending command remembers the dirty-field it came from (null for
       // password commands, which always re-send when text is present). On
       // failure we keep that field in `_dirtyFields` so the Save button stays
       // available and the user can retry.
       final pending = <({_SettingField? field, String command})>[];
+      final failures = <String>[];
+      final retainDirty = <_SettingField>{};
+      void reject(_SettingField field, String message) {
+        failures.add(message);
+        retainDirty.add(field);
+      }
 
       if (_dirtyFields.contains(_SettingField.name) &&
           _nameController.text.isNotEmpty) {
@@ -768,9 +793,24 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
           _bandwidth != null &&
           _spreadingFactor != null &&
           _codingRate != null) {
-        final freqText = _freqController.text.trim();
-        if (double.tryParse(freqText) != null) {
-          final bwKHz = _bandwidth! / 1000;
+        final freqText = _normalizeDecimal(_freqController.text);
+        final freq = double.tryParse(freqText);
+        final bwKHz = _bandwidth! / 1000;
+        if (freq == null || freq < 150 || freq > 2500) {
+          reject(_SettingField.radio, l10n.repeater_frequencyInvalid);
+        } else if (bwKHz < 7.8 || bwKHz > 500) {
+          reject(_SettingField.radio, '${l10n.repeater_bandwidth}: $bwKHz');
+        } else if (_spreadingFactor! < 5 || _spreadingFactor! > 12) {
+          reject(
+            _SettingField.radio,
+            '${l10n.repeater_spreadingFactor}: $_spreadingFactor',
+          );
+        } else if (_codingRate! < 5 || _codingRate! > 8) {
+          reject(
+            _SettingField.radio,
+            '${l10n.repeater_codingRate}: $_codingRate',
+          );
+        } else {
           pending.add((
             field: _SettingField.radio,
             command:
@@ -782,26 +822,46 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       if (_dirtyFields.contains(_SettingField.txPower) &&
           _txPowerController.text.isNotEmpty) {
         final dbm = int.tryParse(_txPowerController.text.trim());
-        if (dbm != null) {
+        if (dbm == null ||
+            dbm < _minRepeaterTxPower ||
+            dbm > _maxRepeaterTxPower) {
+          reject(
+            _SettingField.txPower,
+            '${l10n.repeater_txPower}: ${_txPowerController.text.trim()} '
+            '($_minRepeaterTxPower-$_maxRepeaterTxPower dBm)',
+          );
+        } else {
           pending.add((field: _SettingField.txPower, command: 'set tx $dbm'));
         }
       }
 
       if (_dirtyFields.contains(_SettingField.lat) &&
-          _latController.text.isNotEmpty &&
-          _isValidCoordinate(_latController.text, 90)) {
-        pending.add((
-          field: _SettingField.lat,
-          command: 'set lat ${_latController.text}',
-        ));
+          _latController.text.isNotEmpty) {
+        if (_isValidCoordinate(_latController.text, 90)) {
+          pending.add((
+            field: _SettingField.lat,
+            command: 'set lat ${_normalizeDecimal(_latController.text)}',
+          ));
+        } else {
+          reject(
+            _SettingField.lat,
+            '${l10n.repeater_latitude}: ${_latController.text.trim()}',
+          );
+        }
       }
       if (_dirtyFields.contains(_SettingField.lon) &&
-          _lonController.text.isNotEmpty &&
-          _isValidCoordinate(_lonController.text, 180)) {
-        pending.add((
-          field: _SettingField.lon,
-          command: 'set lon ${_lonController.text}',
-        ));
+          _lonController.text.isNotEmpty) {
+        if (_isValidCoordinate(_lonController.text, 180)) {
+          pending.add((
+            field: _SettingField.lon,
+            command: 'set lon ${_normalizeDecimal(_lonController.text)}',
+          ));
+        } else {
+          reject(
+            _SettingField.lon,
+            '${l10n.repeater_longitude}: ${_lonController.text.trim()}',
+          );
+        }
       }
 
       if (_dirtyFields.contains(_SettingField.repeat)) {
@@ -882,32 +942,50 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
       if (_dirtyFields.contains(_SettingField.txDelay) &&
           _txDelayController.text.isNotEmpty) {
-        final v = double.tryParse(_txDelayController.text.trim());
+        final v = double.tryParse(_normalizeDecimal(_txDelayController.text));
         if (v != null) {
           pending.add((
             field: _SettingField.txDelay,
             command: 'set txdelay $v',
           ));
+        } else {
+          reject(
+            _SettingField.txDelay,
+            '${l10n.repeater_txDelay}: ${_txDelayController.text.trim()}',
+          );
         }
       }
       if (_dirtyFields.contains(_SettingField.directTxDelay) &&
           _directTxDelayController.text.isNotEmpty) {
-        final v = double.tryParse(_directTxDelayController.text.trim());
+        final v = double.tryParse(
+          _normalizeDecimal(_directTxDelayController.text),
+        );
         if (v != null) {
           pending.add((
             field: _SettingField.directTxDelay,
             command: 'set direct.txdelay $v',
           ));
+        } else {
+          reject(
+            _SettingField.directTxDelay,
+            '${l10n.repeater_directTxDelay}: '
+            '${_directTxDelayController.text.trim()}',
+          );
         }
       }
       if (_dirtyFields.contains(_SettingField.intThresh) &&
           _intThreshController.text.isNotEmpty) {
         final v = int.tryParse(_intThreshController.text.trim());
-        if (v != null) {
+        if (v != null && v >= 0 && v <= 255) {
           pending.add((
             field: _SettingField.intThresh,
             command: 'set int.thresh $v',
           ));
+        } else {
+          reject(
+            _SettingField.intThresh,
+            '${l10n.repeater_intThresh}: ${_intThreshController.text.trim()}',
+          );
         }
       }
       if (_dirtyFields.contains(_SettingField.agcResetInterval)) {
@@ -917,8 +995,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         ));
       }
 
-      final failures = <String>[];
-      final retainDirty = <_SettingField>{};
       var passwordsFailed = false;
       var rebootNeeded = false;
       for (final entry in pending) {
@@ -951,6 +1027,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         }
         await Future.delayed(const Duration(milliseconds: 200));
       }
+      if (!mounted) return;
 
       // Only clear password fields if every password command succeeded —
       // otherwise the user keeps their typed value to retry.
@@ -967,7 +1044,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       });
 
       if (mounted) {
-        final l10n = context.l10n;
         if (failures.isEmpty && rebootNeeded) {
           showDismissibleSnackBar(
             context,
@@ -990,11 +1066,10 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         showDismissibleSnackBar(
           context,
           content: Text(
@@ -1011,9 +1086,12 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     _flagHasChanges();
   }
 
+  static String _normalizeDecimal(String text) =>
+      text.trim().replaceAll(',', '.');
+
   static bool _isValidCoordinate(String text, double max) {
     if (text.trim().isEmpty) return true;
-    final value = double.tryParse(text.trim());
+    final value = double.tryParse(_normalizeDecimal(text));
     return value != null && value >= -max && value <= max;
   }
 
@@ -1157,6 +1235,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   labelText: l10n.repeater_repeaterName,
                   helperText: l10n.repeater_repeaterNameHelper,
                 ),
+                inputFormatters: const [
+                  Utf8LengthLimitingTextInputFormatter(_maxNameBytes),
+                ],
                 onChanged: (_) => _markChanged(_SettingField.name),
               ),
               const SizedBox(height: 12),
@@ -1167,6 +1248,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   helperText: l10n.repeater_adminPasswordHelper,
                 ),
                 obscureText: true,
+                inputFormatters: const [
+                  Utf8LengthLimitingTextInputFormatter(_maxPasswordBytes),
+                ],
                 onChanged: (_) => _flagHasChanges(),
               ),
               const SizedBox(height: 12),
@@ -1177,6 +1261,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   helperText: l10n.repeater_guestPasswordHelper,
                 ),
                 obscureText: true,
+                inputFormatters: const [
+                  Utf8LengthLimitingTextInputFormatter(_maxPasswordBytes),
+                ],
                 onChanged: (_) => _flagHasChanges(),
               ),
             ],
@@ -1213,7 +1300,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                 controller: _freqController,
                 decoration: InputDecoration(
                   labelText: l10n.repeater_frequencyMhz,
-                  helperText: l10n.repeater_frequencyHelper,
+                  helperText: l10n.repeater_frequencyRangeHelper,
                   suffixText: 'MHz',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
@@ -1230,10 +1317,12 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                       controller: _txPowerController,
                       decoration: InputDecoration(
                         labelText: l10n.repeater_txPower,
-                        helperText: l10n.repeater_txPowerHelper,
+                        helperText: l10n.repeater_txPowerRangeHelper,
                         suffixText: 'dBm',
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        signed: true,
+                      ),
                       onChanged: (_) => _markChanged(_SettingField.txPower),
                     ),
                   ),
@@ -1561,9 +1650,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                 ],
               ),
               Slider(
-                value: _advertInterval == 0
-                    ? 60.toDouble()
-                    : _advertInterval.toDouble(),
+                value: _advertInterval.clamp(60, 240).toDouble(),
                 min: 60,
                 max: 240,
                 divisions: 18,
@@ -1620,9 +1707,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                 ],
               ),
               Slider(
-                value: _floodAdvertInterval == 0
-                    ? 3.toDouble()
-                    : _floodAdvertInterval.toDouble(),
+                value: _floodAdvertInterval.clamp(3, 168).toDouble(),
                 min: 3,
                 max: 168,
                 divisions: 165,
@@ -1813,6 +1898,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
             ),
             maxLines: 4,
             minLines: 2,
+            inputFormatters: const [
+              Utf8LengthLimitingTextInputFormatter(_maxOwnerInfoBytes),
+            ],
             onChanged: (_) => _markChanged(_SettingField.ownerInfo),
           ),
         ),
@@ -2017,10 +2105,10 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
             ],
           ),
           Slider(
-            value: _agcResetInterval.toDouble(),
+            value: _agcResetInterval.clamp(0, _maxAgcResetInterval).toDouble(),
             min: 0,
-            max: 240,
-            divisions: 60,
+            max: _maxAgcResetInterval.toDouble(),
+            divisions: _maxAgcResetInterval ~/ 4,
             label: '${_agcResetInterval}s',
             onChanged: (v) {
               setState(() {

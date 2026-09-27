@@ -2,30 +2,102 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../models/contact.dart';
+import '../utils/app_logger.dart';
+import 'message_history_storage.dart';
 import 'prefs_manager.dart';
 
+/// Nodes the app has heard of but no radio stores. The list is one for the
+/// whole app, not one per node like the other stores: only the app knows
+/// these nodes, whichever radio it heard them through.
+///
+/// It lives in the `discovered_contacts` table of the message-history
+/// database, one row per node holding the JSON [_toJson] writes. The web
+/// build, which has no database, and a process that never opened it, such as
+/// a unit test, keep the whole list in preferences under the same name.
 class ContactDiscoveryStore {
   static const String _keyPrefix = 'discovered_contacts';
 
-  Future<List<Contact>> loadContacts() async {
-    final prefs = PrefsManager.instance;
-    final jsonStr = prefs.getString(_keyPrefix);
-    if (jsonStr == null) return [];
+  /// The rows the database holds, as the very contacts last loaded or
+  /// written. The connector saves its whole list on every advert it hears,
+  /// and an update always replaces a contact rather than changing it, so a
+  /// save writes only the contacts that are not identical to these. Null
+  /// until the first load, and nothing is deleted before it: the list handed
+  /// in then need not hold what is stored.
+  Map<String, Contact>? _stored;
 
-    try {
-      final jsonList = jsonDecode(jsonStr) as List<dynamic>;
-      return jsonList
-          .map((entry) => _fromJson(entry as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return [];
+  /// Database writes run one after another, each measured against what the
+  /// one before it left.
+  Future<void> _writes = Future.value();
+
+  Future<List<Contact>> loadContacts() async {
+    final storage = MessageHistoryStorage.instance;
+    if (!storage.hasDatabase) {
+      return _decodeList(PrefsManager.instance.getString(_keyPrefix));
     }
+    await _writes;
+    final contacts = <Contact>[];
+    for (final row in await storage.loadDiscoveredContacts()) {
+      try {
+        contacts.add(_fromJson(jsonDecode(row) as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed discovered contact: $e');
+      }
+    }
+    _stored = {for (final contact in contacts) contact.publicKeyHex: contact};
+    return contacts;
   }
 
-  Future<void> saveContacts(List<Contact> contacts) async {
-    final prefs = PrefsManager.instance;
-    final jsonList = contacts.map(_toJson).toList();
-    await prefs.setString(_keyPrefix, jsonEncode(jsonList));
+  Future<void> saveContacts(List<Contact> contacts) {
+    if (!MessageHistoryStorage.instance.hasDatabase) {
+      final jsonList = contacts.map(_toJson).toList();
+      return PrefsManager.instance.setString(_keyPrefix, jsonEncode(jsonList));
+    }
+    // The caller hands in its live list, which may change before this write
+    // gets its turn.
+    final snapshot = List<Contact>.of(contacts);
+    final write = _writes.then((_) => _writeRows(snapshot));
+    _writes = write.catchError((Object _) {});
+    return write;
+  }
+
+  Future<void> _writeRows(List<Contact> contacts) async {
+    final stored = _stored;
+    final next = {
+      for (final contact in contacts) contact.publicKeyHex: contact,
+    };
+    await MessageHistoryStorage.instance.writeDiscoveredContacts(
+      upserts: {
+        for (final entry in next.entries)
+          if (!identical(stored?[entry.key], entry.value))
+            entry.key: jsonEncode(_toJson(entry.value)),
+      },
+      deleteKeys: [
+        if (stored != null)
+          for (final key in stored.keys)
+            if (!next.containsKey(key)) key,
+      ],
+    );
+    _stored = next;
+  }
+
+  List<Contact> _decodeList(String? jsonStr) {
+    if (jsonStr == null) return [];
+    final List<dynamic> jsonList;
+    try {
+      jsonList = jsonDecode(jsonStr) as List<dynamic>;
+    } catch (e) {
+      appLogger.warn('Stored discovered contacts are unreadable: $e');
+      return [];
+    }
+    final contacts = <Contact>[];
+    for (final entry in jsonList) {
+      try {
+        contacts.add(_fromJson(entry as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed discovered contact: $e');
+      }
+    }
+    return contacts;
   }
 
   Map<String, dynamic> _toJson(Contact contact) {
@@ -36,6 +108,7 @@ class ContactDiscoveryStore {
       'flags': contact.flags,
       'pathLength': contact.pathLength,
       'path': base64Encode(contact.path),
+      'pathHashWidth': contact.pathHashWidth,
       'pathOverride': contact.pathOverride,
       'pathOverrideBytes': contact.pathOverrideBytes != null
           ? base64Encode(contact.pathOverrideBytes!)
@@ -65,6 +138,7 @@ class ContactDiscoveryStore {
 
     int decodedPathLength = rawPathLength;
     Uint8List decodedPath = rawPath;
+    int? decodedPathHashWidth = json['pathHashWidth'] as int?;
 
     if (rawPathLength == 0xFF || rawPathLength < 0) {
       decodedPathLength = -1;
@@ -75,6 +149,7 @@ class ContactDiscoveryStore {
       final width = mode + 1;
       final byteLen = hopCount * width;
       decodedPathLength = hopCount;
+      decodedPathHashWidth = width;
       if (byteLen <= rawPath.length) {
         decodedPath = rawPath.sublist(0, byteLen);
       } else {
@@ -91,6 +166,9 @@ class ContactDiscoveryStore {
       flags: json['flags'] as int? ?? 0,
       pathLength: decodedPathLength,
       path: decodedPath,
+      pathHashWidth:
+          decodedPathHashWidth ??
+          Contact.inferPathHashWidth(decodedPathLength, decodedPath.length),
       pathOverride: json['pathOverride'] as int?,
       pathOverrideBytes: json['pathOverrideBytes'] != null
           ? Uint8List.fromList(

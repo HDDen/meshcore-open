@@ -45,15 +45,22 @@ class CommunityStore {
       return [];
     }
 
+    final List<dynamic> jsonList;
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList
-          .map((json) => Community.fromJson(json as Map<String, dynamic>))
-          .toList();
+      jsonList = jsonDecode(jsonString) as List<dynamic>;
     } catch (e) {
-      // If JSON is corrupted, return empty list
+      appLogger.warn('Stored communities are unreadable: $e');
       return [];
     }
+    final communities = <Community>[];
+    for (final json in jsonList) {
+      try {
+        communities.add(Community.fromJson(json as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed stored community: $e');
+      }
+    }
+    return communities;
   }
 
   /// Save all communities to storage

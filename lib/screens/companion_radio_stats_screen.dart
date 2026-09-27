@@ -46,8 +46,8 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
   @override
   void dispose() {
     _connector?.radioStatsNotifier.removeListener(_onStatsUpdate);
-    _connector?.releaseRadioStatsPolling();
     _connector?.setPollingInterval(30);
+    _connector?.releaseRadioStatsPolling();
     super.dispose();
   }
 

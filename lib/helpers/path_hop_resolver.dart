@@ -14,7 +14,7 @@ class PathHopResolver {
     bool resolveFromEnd = false,
     int pathHashByteWidth = 1,
   }) {
-    final width = pathHashByteWidth.clamp(1, 4).toInt();
+    final width = pathHashByteWidth.clamp(1, 3).toInt();
     final candidatesByPrefix = <String, List<Contact>>{};
     for (final contact in contacts) {
       if (contact.publicKey.length < width) continue;

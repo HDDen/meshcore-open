@@ -24,6 +24,7 @@ import '../helpers/composer_draft_cache.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/message_markup.dart';
+import '../helpers/message_url_image_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/inserted_text_limiter.dart';
@@ -1652,6 +1653,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   }
                   return ByteCountedTextField(
                     maxBytes: maxBytes,
+                    softLimitBytes: maxTextPayloadBytesAfterFullLengthAttempts,
+                    softLimitNote: context.l10n.chat_longMessageRetryNote(
+                      maxFullLengthTextAttempt + 1,
+                    ),
                     controller: _textController,
                     focusNode: _textFieldFocusNode,
                     enabled: !connector.isOfflineMode,
@@ -2192,7 +2197,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final hopCount = _displayHopCount(
       contact.path,
       contact.pathLength,
-      connector.pathHashByteWidth,
+      contact.pathHashWidth,
     );
     return context.l10n.chat_hopsCount(hopCount);
   }
@@ -2274,6 +2279,9 @@ class _ChatScreenState extends State<ChatScreen> {
     bool mcmpUseSign = connector.contactMcmpUseSign(contact.publicKeyHex);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
+      contact.publicKeyHex,
+    );
+    bool urlImagesEnabled = connector.isContactUrlImagesEnabled(
       contact.publicKeyHex,
     );
     bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
@@ -2580,6 +2588,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     setDialogState(() {
                       selectedQuickAnswerIds = selection;
                     });
+                  },
+                ),
+                const Divider(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.urlImage_enable),
+                  value: urlImagesEnabled,
+                  onChanged: (value) {
+                    connector.setContactUrlImagesEnabled(
+                      contact.publicKeyHex,
+                      value,
+                    );
+                    setDialogState(() => urlImagesEnabled = value);
                   },
                 ),
                 const Divider(height: 8),
@@ -3444,6 +3465,9 @@ class _MessageBubble extends StatelessWidget {
         sharedContact == null;
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final isFailed = message.status == MessageStatus.failed;
+    final urlImagesEnabled = context.select<MeshCoreConnector, bool>(
+      (connector) => connector.isContactUrlImagesEnabled(sourceId),
+    );
 
     // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
     final bubbleColor = isFailed
@@ -3858,7 +3882,45 @@ class _MessageBubble extends StatelessWidget {
                               ],
                             ],
                           )
-                        else
+                        else ...[
+                          if (urlImagesEnabled)
+                            MessageUrlImageFutureBuilder(
+                              messageId: message.messageId,
+                              text: bodyText,
+                              builder: (context, snapshot) {
+                                final imageUrl = snapshot.data;
+                                if (imageUrl == null) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 4,
+                                    bottom: 12,
+                                  ),
+                                  child: Align(
+                                    alignment: isOutgoing
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: MessageUrlImagePreview(
+                                      imageUrl: imageUrl,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          else if (MessageUrlImageHelper.hasPotentialImageUrl(
+                            bodyText,
+                          ))
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                context.l10n.urlImage_possible,
+                                style: TextStyle(
+                                  color: metaColor,
+                                  fontSize: 11 * textScale,
+                                ),
+                              ),
+                            ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -3951,6 +4013,7 @@ class _MessageBubble extends StatelessWidget {
                               ],
                             ],
                           ),
+                        ],
                         // Incoming signature badge: room-server chats only,
                         // on its own line above the message time, independent
                         // of the message-tracing setting. Direct messages

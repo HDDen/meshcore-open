@@ -209,7 +209,7 @@
   "settings_presets": "Előbeállítások",
   "settings_frequency": "Frekvencia (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Érvénytelen frekvencia (300-2500 MHz)",
+  "settings_frequencyInvalid": "Érvénytelen frekvencia (150-2500 MHz)",
   "settings_bandwidth": "Sávszélesség",
   "settings_spreadingFactor": "Szórási tényező",
   "settings_codingRate": "Kódolási sebesség",
@@ -218,7 +218,7 @@
   "settings_txPowerInvalid": "Érvénytelen TX teljesítmény (0-22 dBm)",
   "settings_clientRepeat": "Hálózaton kívüli ismétlés",
   "settings_clientRepeatSubtitle": "Engedélyezze az eszköznek, hogy megismételje a mesh-csomagokat mások számára",
-  "settings_clientRepeatFreqWarning": "A hálózaton kívüli ismétlés 433, 869 vagy 918 MHz frekvenciát igényel",
+  "settings_clientRepeatFreqWarning": "A hálózaton kívüli ismétlés 433, 869.495 vagy 918 MHz frekvenciát igényel",
   "settings_error": "Hiba: {message}",
   "@settings_error": {
     "placeholders": {
@@ -3617,5 +3617,38 @@
   "channels_shareQrTapToCopy": "Koppintson a QR-kódra, hogy képként másolja.",
   "channels_shareQrTapToShare": "Koppintson a QR-kódra, hogy képként mentse vagy megossza.",
   "channels_shareQrImageCopied": "QR-kód képként kimásolva",
-  "channels_shareQrImageFailed": "Nem sikerült elkészíteni a QR-kód képét"
+  "channels_shareQrImageFailed": "Nem sikerült elkészíteni a QR-kód képét",
+  "channels_noFreeSlots": "Minden csatornahely foglalt",
+  "chat_longMessageRetryNote": "158 bájt felett: legfeljebb {count} alkalommal küldve",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Csak híddal (RS232 vagy ESP-NOW) épített firmware-en érhető el.",
+  "repeater_cliHelpGetFloodMaxAdvert": "Megjeleníti az elárasztási hirdetések maximális ugrásszámát.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Megjeleníti a hatókör nélküli elárasztási csomagok maximális ugrásszámát.",
+  "repeater_cliHelpGetRadioFemRxGain": "Megjeleníti, hogy a LoRa front-end modul RX erősítése be van-e kapcsolva.",
+  "repeater_cliHelpGetRadioFemTxGain": "Megjeleníti, hogy a LoRa front-end modul TX erősítése be van-e kapcsolva.",
+  "repeater_cliHelpRegionDef": "Egy paranccsal régiók láncát határozza meg: minden név az előző alá kerül; a \"name,parent\" hozzáadja a nevet, majd a megadott szülő alatt folytatja. Válaszként a régiólistát adja.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Beállítja az elárasztási hirdetések továbbításának maximális ugrásszámát (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Beállítja a hatókör nélküli elárasztási csomagok továbbításának maximális ugrásszámát (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Ki-/bekapcsolja a LoRa front-end modul RX erősítését (LNA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Ki-/bekapcsolja a LoRa front-end modul TX erősítését (PA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Régióbetöltési mód: soronként küldjön egy régiónevet, szóközökkel behúzva a szülője alá (a név után F hozzáadásával engedélyezhető az elárasztás). A sorokra nem érkezik válasz. Egy üres sor küldésével fejezze be, majd a \"region save\" paranccsal mentse az eredményt.",
+  "repeater_cliRegionLoadEnd": "(régióbetöltés vége)",
+  "repeater_cliRegionLoadHint": "Régiósor, vagy üres a befejezéshez",
+  "repeater_frequencyInvalid": "Érvénytelen frekvencia (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Vételi hibák",
+  "repeater_txPowerRangeHelper": "-9-től 30 dBm-ig",
+  "room_postsPushed": "Kiküldött bejegyzések",
+  "room_postsStored": "Bejegyzések",
+  "settings_publicKeyCopied": "Nyilvános kulcs másolva",
+  "settings_radioSettingsNotApplied": "A rádió nem alkalmazta ezeket a beállításokat",
+  "urlImage_enable": "URL-képek engedélyezése",
+  "urlImage_possible": "Lehetséges URL-kép; engedélyezze a Beállításokban."
 }

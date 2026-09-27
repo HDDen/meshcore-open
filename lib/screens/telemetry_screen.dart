@@ -180,6 +180,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       );
     }
     _statusTimeout?.cancel();
+    _recordTelemetryResult(true);
     if (!mounted) return;
     setState(() {
       _isLoading = false;

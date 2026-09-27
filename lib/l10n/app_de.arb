@@ -145,7 +145,7 @@
   "settings_presets": "Voreinstellungen",
   "settings_frequency": "Frequenz (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Ungültige Frequenz (300-2500 MHz)",
+  "settings_frequencyInvalid": "Ungültige Frequenz (150-2500 MHz)",
   "settings_bandwidth": "Bandbreite",
   "settings_spreadingFactor": "Spreading-Faktor",
   "settings_codingRate": "Kodierungsrate",
@@ -1899,7 +1899,7 @@
   "snrIndicator_lastSeen": "Zuletzt gesehen",
   "snrIndicator_nearByRepeaters": "In der Nähe befindliche Repeater",
   "settings_clientRepeat": "Weiterleitung ohne Netzstrom",
-  "settings_clientRepeatFreqWarning": "Weiterleitung ohne Netzstrom erfordert 433, 869 oder 918 MHz",
+  "settings_clientRepeatFreqWarning": "Weiterleitung ohne Netzstrom erfordert 433, 869.495 oder 918 MHz",
   "settings_clientRepeatSubtitle": "Dieses Gerät kann Mesh-Pakete für andere weiterleiten",
   "settings_aboutOpenMeteoAttribution": "LOS-Höhendaten: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Einheiten",
@@ -3741,5 +3741,38 @@
   "channels_shareQrTapToCopy": "Tippen Sie auf den QR-Code, um ihn als Bild zu kopieren.",
   "channels_shareQrTapToShare": "Tippen Sie auf den QR-Code, um ihn als Bild zu speichern oder zu teilen.",
   "channels_shareQrImageCopied": "QR-Code als Bild kopiert",
-  "channels_shareQrImageFailed": "Das Bild mit dem QR-Code konnte nicht erstellt werden"
+  "channels_shareQrImageFailed": "Das Bild mit dem QR-Code konnte nicht erstellt werden",
+  "urlImage_enable": "URL-Bilder anzeigen",
+  "urlImage_possible": "Mögliches URL-Bild; in den Einstellungen aktivieren.",
+  "channels_noFreeSlots": "Alle Kanal-Slots sind belegt",
+  "chat_longMessageRetryNote": "Über 158 Byte: wird höchstens {count} Mal gesendet",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Nur verfügbar bei Firmware, die mit einer Bridge (RS232 oder ESP-NOW) gebaut wurde.",
+  "repeater_cliHelpGetFloodMaxAdvert": "Zeigt die maximale Hop-Anzahl für Flood-Ankündigungen an.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Zeigt die maximale Hop-Anzahl für Flood-Pakete ohne Region-Scope an.",
+  "repeater_cliHelpGetRadioFemRxGain": "Zeigt, ob der RX-Gain des LoRa-Frontend-Moduls aktiviert ist.",
+  "repeater_cliHelpGetRadioFemTxGain": "Zeigt, ob der TX-Gain des LoRa-Frontend-Moduls aktiviert ist.",
+  "repeater_cliHelpRegionDef": "Definiert in einem Befehl eine Kette von Regionen: Jeder Name wird unter dem vorherigen hinzugefügt; \"name,parent\" fügt den Namen hinzu und setzt dann unter der angegebenen übergeordneten Region fort. Antwortet mit der Regionsliste.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Legt die maximale Hop-Anzahl für die Weiterleitung von Flood-Ankündigungen fest (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Legt die maximale Hop-Anzahl für die Weiterleitung von Flood-Paketen ohne Region-Scope fest (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Schaltet den RX-Gain (LNA) des LoRa-Frontend-Moduls um. Boards ohne dieses Modul antworten mit \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Schaltet den TX-Gain (PA) des LoRa-Frontend-Moduls um. Boards ohne dieses Modul antworten mit \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Regions-Ladevorgang: Sende pro Zeile einen Regionsnamen, eingerückt mit Leerzeichen unter der übergeordneten Region (F nach dem Namen anhängen, um Flood zu erlauben). Zeilen erhalten keine Antwort. Sende eine Leerzeile zum Abschließen, dann \"region save\", um das Ergebnis zu speichern.",
+  "repeater_cliRegionLoadEnd": "(Ende des Regions-Ladevorgangs)",
+  "repeater_cliRegionLoadHint": "Regionszeile, oder leer zum Abschließen",
+  "repeater_frequencyInvalid": "Ungültige Frequenz (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Empfangsfehler",
+  "repeater_txPowerRangeHelper": "-9 bis 30 dBm",
+  "room_postsPushed": "Gesendete Beiträge",
+  "room_postsStored": "Beiträge",
+  "settings_publicKeyCopied": "Öffentlicher Schlüssel kopiert",
+  "settings_radioSettingsNotApplied": "Das Funkgerät hat diese Einstellungen nicht übernommen"
 }

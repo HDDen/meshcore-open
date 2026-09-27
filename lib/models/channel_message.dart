@@ -414,7 +414,8 @@ class ChannelMessage {
         txtType = reader.readByte();
       } else {
         channelIdx = reader.readByte();
-        pathLen = reader.readInt8();
+        final pathByte = reader.readUInt8();
+        pathLen = pathByte == 0xFF ? -1 : pathByte & 0x3F;
         txtType = reader.readByte();
       }
       final timestampRaw = reader.readUInt32LE();
@@ -640,6 +641,7 @@ class ChannelMessage {
             targetHash: hash,
             emoji: entry.key,
             senderName: senderName,
+            hashType: HashType.ours,
           ),
         );
       }

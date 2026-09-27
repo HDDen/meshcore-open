@@ -41,6 +41,7 @@ import '../helpers/message_content_cache.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/message_markup.dart';
+import '../helpers/message_url_image_helper.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
@@ -1098,15 +1099,23 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               Expanded(
                 child: Selector<
                   MeshCoreConnector,
-                  ({List<ChannelMessage> messages, int pathHashByteWidth})
+                  ({
+                    List<ChannelMessage> messages,
+                    int pathHashByteWidth,
+                    bool urlImagesEnabled,
+                  })
                 >(
                   selector: (context, connector) => (
                     messages: _messagesForDisplay(connector),
                     pathHashByteWidth: connector.pathHashByteWidth,
+                    urlImagesEnabled: connector.isChannelUrlImagesEnabled(
+                      widget.channel.index,
+                    ),
                   ),
                   shouldRebuild: (previous, next) =>
                       !identical(previous.messages, next.messages) ||
-                      previous.pathHashByteWidth != next.pathHashByteWidth,
+                      previous.pathHashByteWidth != next.pathHashByteWidth ||
+                      previous.urlImagesEnabled != next.urlImagesEnabled,
                   builder: (context, timeline, child) {
                     final connector = context.read<MeshCoreConnector>();
                     final settingsService = context
@@ -1271,6 +1280,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                                   textScale,
                                                   connector,
                                                   settingsService,
+                                                  timeline.urlImagesEnabled,
                                                 )
                                               : _buildImageBubble(
                                                   row.image!,
@@ -1436,6 +1446,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     double textScale,
     MeshCoreConnector connector,
     AppSettingsService settingsService,
+    bool urlImagesEnabled,
   ) {
     final enableTracing = settingsService.settings.enableMessageTracing;
     final noRetransmissionWarningsEnabled =
@@ -1983,7 +1994,43 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ],
                           )
-                        else
+                        else ...[
+                          if (urlImagesEnabled)
+                            MessageUrlImageFutureBuilder(
+                              messageId: message.messageId,
+                              text: bodyText,
+                              builder: (context, snapshot) {
+                                final imageUrl = snapshot.data;
+                                if (imageUrl == null) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 4,
+                                    bottom: 12,
+                                  ),
+                                  child: Align(
+                                    alignment: isOutgoing
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: MessageUrlImagePreview(
+                                      imageUrl: imageUrl,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          else if (parsedContent.potentialImageUrl)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                context.l10n.urlImage_possible,
+                                style: TextStyle(
+                                  color: metaColor,
+                                  fontSize: 11 * textScale,
+                                ),
+                              ),
+                            ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -2051,6 +2098,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ],
                           ),
+                        ],
                         // Standalone textual signing badge for outgoing
                         // messages, kept commented in case it comes back —
                         // the lock icon now lives in the meta row after the
@@ -5657,6 +5705,7 @@ class _ParsedChannelMessageContent {
     required this.poiRemoved,
     required this.coordinate,
     required this.sharedContact,
+    required this.potentialImageUrl,
   });
 
   factory _ParsedChannelMessageContent.parse(String text) {
@@ -5679,6 +5728,7 @@ class _ParsedChannelMessageContent {
       sharedContact: trimmed.startsWith('<') && trimmed.endsWith('>')
           ? parseSharedContactText(trimmed)
           : null,
+      potentialImageUrl: MessageUrlImageHelper.hasPotentialImageUrl(trimmed),
     );
   }
 
@@ -5689,6 +5739,7 @@ class _ParsedChannelMessageContent {
   final bool poiRemoved;
   final MarkerPayload? coordinate;
   final SharedContactInfo? sharedContact;
+  final bool potentialImageUrl;
 }
 
 /// [ReceivedImageStrings] built from the app's localizations.

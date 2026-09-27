@@ -6,10 +6,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../widgets/mco_image_message.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
+import '../helpers/message_url_image_helper.dart';
 import '../helpers/reaction_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/platform_info.dart';
@@ -323,9 +325,10 @@ class NotificationService {
   }
 
   List<DarwinNotificationAttachment>? _darwinAttachmentsFor(
-    _MCOImageNotificationAttachment? attachment,
-  ) {
-    final filePath = attachment?.filePath;
+    _MCOImageNotificationAttachment? attachment, {
+    String? imagePath,
+  }) {
+    final filePath = attachment?.filePath ?? imagePath;
     if (filePath == null) {
       return null;
     }
@@ -410,9 +413,34 @@ class NotificationService {
     return (value * 255.0).round().clamp(0, 255).toInt();
   }
 
+  // Callers await the notification before the node's message queue advances,
+  // so a slow image host must not hold that queue.
+  static const Duration _notificationImageTimeout = Duration(seconds: 5);
+
+  Future<String?> _resolveNotificationImagePath(
+    String text, {
+    required bool urlImagesEnabled,
+  }) async {
+    if (!urlImagesEnabled) return null;
+
+    final imageUrl = await MessageUrlImageHelper.parseVerified(text);
+    if (imageUrl == null) return null;
+
+    try {
+      // Cache the image so notification platforms can read it from disk.
+      final imageFile = await DefaultCacheManager().getSingleFile(imageUrl);
+      if (!imageFile.existsSync()) return null;
+      return imageFile.path;
+    } catch (e) {
+      debugPrint('Failed to resolve notification image: $e');
+      return null;
+    }
+  }
+
   Future<void> _showMessageNotificationImpl({
     required String contactName,
     required String message,
+    required bool urlImagesEnabled,
     String? contactId,
     int? badgeCount,
   }) async {
@@ -421,6 +449,12 @@ class NotificationService {
     final body = mcoAttachment == null
         ? formatNotificationText(message)
         : 'MCOimg';
+    final imagePath = mcoAttachment == null
+        ? await _resolveNotificationImagePath(
+            message,
+            urlImagesEnabled: urlImagesEnabled,
+          ).timeout(_notificationImageTimeout, onTimeout: () => null)
+        : null;
 
     final androidDetails = AndroidNotificationDetails(
       'messages',
@@ -433,14 +467,19 @@ class NotificationService {
       largeIcon: mcoAttachment == null
           ? null
           : ByteArrayAndroidBitmap(mcoAttachment.bytes),
-      styleInformation: mcoAttachment == null
-          ? null
-          : BigPictureStyleInformation(
+      styleInformation: mcoAttachment != null
+          ? BigPictureStyleInformation(
               ByteArrayAndroidBitmap(mcoAttachment.bytes),
               contentTitle: contactName,
               summaryText: 'MCOimg',
               hideExpandedLargeIcon: true,
-            ),
+            )
+          : imagePath != null
+          ? BigPictureStyleInformation(
+              FilePathAndroidBitmap(imagePath),
+              summaryText: formatNotificationText(message),
+            )
+          : null,
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -448,7 +487,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment),
+      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -456,7 +495,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment),
+      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
     );
 
     final notificationDetails = NotificationDetails(
@@ -532,11 +571,18 @@ class NotificationService {
   Future<void> _showChannelMessageNotificationImpl({
     required String channelName,
     required String message,
+    required bool urlImagesEnabled,
     int? channelIndex,
     int? badgeCount,
   }) async {
     if (!await _ensureCanNotify()) return;
     final mcoAttachment = await _tryBuildMcoImageAttachment(message);
+    final imagePath = mcoAttachment == null
+        ? await _resolveNotificationImagePath(
+            message,
+            urlImagesEnabled: urlImagesEnabled,
+          ).timeout(_notificationImageTimeout, onTimeout: () => null)
+        : null;
 
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
@@ -549,14 +595,19 @@ class NotificationService {
       largeIcon: mcoAttachment == null
           ? null
           : ByteArrayAndroidBitmap(mcoAttachment.bytes),
-      styleInformation: mcoAttachment == null
-          ? null
-          : BigPictureStyleInformation(
+      styleInformation: mcoAttachment != null
+          ? BigPictureStyleInformation(
               ByteArrayAndroidBitmap(mcoAttachment.bytes),
               contentTitle: channelName,
               summaryText: 'MCOimg',
               hideExpandedLargeIcon: true,
-            ),
+            )
+          : imagePath != null
+          ? BigPictureStyleInformation(
+              FilePathAndroidBitmap(imagePath),
+              summaryText: formatNotificationText(message),
+            )
+          : null,
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -564,7 +615,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment),
+      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
     );
 
     final macDetails = DarwinNotificationDetails(
@@ -572,7 +623,7 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
       badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment),
+      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
     );
 
     final notificationDetails = NotificationDetails(
@@ -738,6 +789,7 @@ class NotificationService {
   Future<void> showMessageNotification({
     required String contactName,
     required String message,
+    required bool urlImagesEnabled,
     String? contactId,
     int? badgeCount,
   }) async {
@@ -748,6 +800,7 @@ class NotificationService {
         type: _NotificationType.message,
         title: contactName,
         body: message,
+        urlImagesEnabled: urlImagesEnabled,
         id: contactId,
         badgeCount: badgeCount,
       ),
@@ -775,6 +828,7 @@ class NotificationService {
     required String channelName,
     required String senderName,
     required String message,
+    required bool urlImagesEnabled,
     int? channelIndex,
     int? badgeCount,
   }) async {
@@ -785,6 +839,7 @@ class NotificationService {
         type: _NotificationType.channelMessage,
         title: channelName,
         body: '$senderName: $message',
+        urlImagesEnabled: urlImagesEnabled,
         id: channelIndex?.toString(),
         badgeCount: badgeCount,
       ),
@@ -846,6 +901,7 @@ class NotificationService {
           await _showMessageNotificationImpl(
             contactName: notification.title,
             message: notification.body,
+            urlImagesEnabled: notification.urlImagesEnabled,
             contactId: notification.id,
             badgeCount: notification.badgeCount,
           );
@@ -861,6 +917,7 @@ class NotificationService {
           await _showChannelMessageNotificationImpl(
             channelName: notification.title,
             message: notification.body,
+            urlImagesEnabled: notification.urlImagesEnabled,
             channelIndex: int.tryParse(notification.id ?? ''),
             badgeCount: notification.badgeCount,
           );
@@ -983,6 +1040,7 @@ class _PendingNotification {
   final _NotificationType type;
   final String title;
   final String body;
+  final bool urlImagesEnabled;
   final String? id;
   final int? badgeCount;
 
@@ -990,6 +1048,7 @@ class _PendingNotification {
     required this.type,
     required this.title,
     required this.body,
+    this.urlImagesEnabled = false,
     this.id,
     this.badgeCount,
   });

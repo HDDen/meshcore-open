@@ -145,7 +145,7 @@
   "settings_presets": "Prednastavenia",
   "settings_frequency": "Frekvencia (MHz)",
   "settings_frequencyHelper": "300,0 – 2500,0",
-  "settings_frequencyInvalid": "Neplatná frekvencia (300-2500 MHz)",
+  "settings_frequencyInvalid": "Neplatná frekvencia (150-2500 MHz)",
   "settings_bandwidth": "Šírka pásma",
   "settings_spreadingFactor": "Rozptýľovací faktor",
   "settings_codingRate": "Cenový kurz pre programovanie",
@@ -1803,7 +1803,7 @@
   "snrIndicator_lastSeen": "Naposledy videný",
   "snrIndicator_nearByRepeaters": "Miestne opakovače",
   "settings_clientRepeat": "Opätovné použitie bez elektrickej siete",
-  "settings_clientRepeatFreqWarning": "Použitie off-grid systému vyžaduje frekvencie 433, 869 alebo 918 MHz.",
+  "settings_clientRepeatFreqWarning": "Použitie off-grid systému vyžaduje frekvencie 433, 869.495 alebo 918 MHz.",
   "settings_clientRepeatSubtitle": "Umožnite, aby toto zariadenie opakovávalo siete pre ostatných.",
   "settings_aboutOpenMeteoAttribution": "Údaje o nadmorskej výške LOS: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Jednotky",
@@ -3614,5 +3614,38 @@
   "channels_shareQrTapToCopy": "Ťuknutím na QR kód ho skopírujete ako obrázok.",
   "channels_shareQrTapToShare": "Ťuknutím na QR kód ho uložíte alebo zdieľate ako obrázok.",
   "channels_shareQrImageCopied": "QR kód skopírovaný ako obrázok",
-  "channels_shareQrImageFailed": "Obrázok s QR kódom sa nepodarilo pripraviť"
+  "channels_shareQrImageFailed": "Obrázok s QR kódom sa nepodarilo pripraviť",
+  "channels_noFreeSlots": "Všetky miesta pre kanály sú obsadené",
+  "chat_longMessageRetryNote": "Nad 158 bajtov: odoslané najviac {count}-krát",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Dostupné len vo firmvéri zostavenom s mostom (RS232 alebo ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Zobrazuje maximálny počet skokov pre flood inzeráty.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Zobrazuje maximálny počet skokov pre flood pakety bez priradeného regiónu.",
+  "repeater_cliHelpGetRadioFemRxGain": "Zobrazuje, či je zapnuté RX zosilnenie LoRa front-end modulu.",
+  "repeater_cliHelpGetRadioFemTxGain": "Zobrazuje, či je zapnuté TX zosilnenie LoRa front-end modulu.",
+  "repeater_cliHelpRegionDef": "Definuje reťazec regiónov v jednom príkaze: každý názov sa pridá pod predchádzajúci; \"name,parent\" pridá názov a potom pokračuje pod zadaným nadradeným regiónom. Odpovie zoznamom regiónov.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Nastavuje maximálny počet skokov pri preposielaní flood inzerátov (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Nastavuje maximálny počet skokov pri preposielaní flood paketov bez priradeného regiónu (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Prepína RX zosilnenie (LNA) LoRa front-end modulu. Dosky bez neho odpovedia \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Prepína TX zosilnenie (PA) LoRa front-end modulu. Dosky bez neho odpovedia \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Režim načítania regiónov: pošlite po jednom názve regiónu na riadok, odsadenom medzerami pod jeho nadradeným regiónom (pridaním F za názov povolíte flood). Riadky nedostanú odpoveď. Prázdnym riadkom ukončite a potom príkazom \"region save\" výsledok uložte.",
+  "repeater_cliRegionLoadEnd": "(koniec načítania regiónov)",
+  "repeater_cliRegionLoadHint": "Riadok regiónu, alebo prázdny na ukončenie",
+  "repeater_frequencyInvalid": "Neplatná frekvencia (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Chyby príjmu",
+  "repeater_txPowerRangeHelper": "-9 až 30 dBm",
+  "room_postsPushed": "Odoslané príspevky",
+  "room_postsStored": "Príspevky",
+  "settings_publicKeyCopied": "Verejný kľúč skopírovaný",
+  "settings_radioSettingsNotApplied": "Rádio tieto nastavenia neuplatnilo",
+  "urlImage_enable": "Povoliť obrázky z URL",
+  "urlImage_possible": "Možný obrázok z URL; povoľte ho v Nastaveniach."
 }

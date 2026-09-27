@@ -145,7 +145,7 @@
   "settings_presets": "Voorgeprogrammeerde instellingen",
   "settings_frequency": "Frequentie (MHz)",
   "settings_frequencyHelper": "300,0 - 2500,0",
-  "settings_frequencyInvalid": "Ongeldige frequentie (300-2500 MHz)",
+  "settings_frequencyInvalid": "Ongeldige frequentie (150-2500 MHz)",
   "settings_bandwidth": "Bandbreedte",
   "settings_spreadingFactor": "Spreadsnelheid",
   "settings_codingRate": "Codeertarief",
@@ -1769,7 +1769,7 @@
   "snrIndicator_nearByRepeaters": "Nabije herhalingseenheden",
   "settings_clientRepeat": "Off-Grid Herhalen",
   "settings_clientRepeatSubtitle": "Laat dit apparaat de berichten van andere apparaten doorsturen.",
-  "settings_clientRepeatFreqWarning": "Om een signaal buiten het netwerk te versturen, zijn frequenties van 433, 869 of 918 MHz vereist.",
+  "settings_clientRepeatFreqWarning": "Om een signaal buiten het netwerk te versturen, zijn frequenties van 433, 869.495 of 918 MHz vereist.",
   "settings_aboutOpenMeteoAttribution": "LOS-hoogtegegevens: Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "Eenheden",
   "appSettings_unitsMetric": "Metrisch (m / km)",
@@ -3396,5 +3396,38 @@
   "channels_shareQrTapToCopy": "Tik op de QR-code om deze als afbeelding te kopiëren.",
   "channels_shareQrTapToShare": "Tik op de QR-code om deze als afbeelding op te slaan of te delen.",
   "channels_shareQrImageCopied": "QR-code gekopieerd als afbeelding",
-  "channels_shareQrImageFailed": "De afbeelding met de QR-code kon niet worden gemaakt"
+  "channels_shareQrImageFailed": "De afbeelding met de QR-code kon niet worden gemaakt",
+  "channels_noFreeSlots": "Alle kanaalslots zijn bezet",
+  "chat_longMessageRetryNote": "Meer dan 158 bytes: maximaal {count} keer verzonden",
+  "@chat_longMessageRetryNote": {
+    "description": "Shown under the DM composer when the message is too long for the firmware's later retry attempts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "Alleen beschikbaar bij firmware gebouwd met een bridge (RS232 of ESP-NOW).",
+  "repeater_cliHelpGetFloodMaxAdvert": "Toont het maximale aantal hops voor flood-advertenties.",
+  "repeater_cliHelpGetFloodMaxUnscoped": "Toont het maximale aantal hops voor flood-pakketten zonder regio-scope.",
+  "repeater_cliHelpGetRadioFemRxGain": "Toont of de RX-versterking van de LoRa-frontendmodule aan staat.",
+  "repeater_cliHelpGetRadioFemTxGain": "Toont of de TX-versterking van de LoRa-frontendmodule aan staat.",
+  "repeater_cliHelpRegionDef": "Definieert een keten van regio's in één commando: elke naam wordt onder de vorige toegevoegd; \"name,parent\" voegt de naam toe en gaat dan verder onder de opgegeven bovenliggende regio. Antwoordt met de regiolijst.",
+  "repeater_cliHelpSetFloodMaxAdvert": "Stelt het maximale aantal hops in voor het doorsturen van flood-advertenties (0-64).",
+  "repeater_cliHelpSetFloodMaxUnscoped": "Stelt het maximale aantal hops in voor het doorsturen van flood-pakketten zonder regio-scope (0-64).",
+  "repeater_cliHelpSetRadioFemRxGain": "Schakelt de RX-versterking (LNA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".",
+  "repeater_cliHelpSetRadioFemTxGain": "Schakelt de TX-versterking (PA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".",
+  "repeater_cliRegionLoadActive": "Regio-laadmodus: verstuur per regel één regionaam, ingesprongen met spaties onder de bovenliggende regio (voeg F toe na de naam om flood toe te staan). Regels krijgen geen antwoord. Verstuur een lege regel om te voltooien en dan \"region save\" om het resultaat te bewaren.",
+  "repeater_cliRegionLoadEnd": "(einde van regio-laadmodus)",
+  "repeater_cliRegionLoadHint": "Regioregel, of leeg om te voltooien",
+  "repeater_frequencyInvalid": "Ongeldige frequentie (150-2500 MHz)",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "Ontvangstfouten",
+  "repeater_txPowerRangeHelper": "-9 tot 30 dBm",
+  "room_postsPushed": "Verzonden posts",
+  "room_postsStored": "Opgeslagen posts",
+  "settings_publicKeyCopied": "Openbare sleutel gekopieerd",
+  "settings_radioSettingsNotApplied": "De radio heeft deze instellingen niet toegepast",
+  "urlImage_enable": "URL-afbeeldingen inschakelen",
+  "urlImage_possible": "Mogelijke URL-afbeelding; schakel dit in bij Instellingen."
 }

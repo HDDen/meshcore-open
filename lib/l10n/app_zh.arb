@@ -150,7 +150,7 @@
   "settings_presets": "预设",
   "settings_frequency": "频率 (MHz)",
   "settings_frequencyHelper": "300.0 - 2500.0",
-  "settings_frequencyInvalid": "无效频率范围（300-2500 MHz）",
+  "settings_frequencyInvalid": "无效频率范围（150-2500 MHz）",
   "settings_bandwidth": "带宽",
   "settings_spreadingFactor": "扩频因子",
   "settings_codingRate": "编码速率",
@@ -1804,7 +1804,7 @@
   "snrIndicator_nearByRepeaters": "附近的重复器",
   "settings_clientRepeat": "离网重复",
   "settings_clientRepeatSubtitle": "允许此设备重复发送网状数据包给其他设备",
-  "settings_clientRepeatFreqWarning": "离网重复通信需要使用 433、869 或 918 兆赫兹的频率。",
+  "settings_clientRepeatFreqWarning": "离网重复通信需要使用 433、869.495 或 918 兆赫兹的频率。",
   "settings_aboutOpenMeteoAttribution": "LOS 高程数据:Open-Meteo (CC BY 4.0)",
   "appSettings_unitsTitle": "单位",
   "appSettings_unitsMetric": "公制（米/公里）",
@@ -3619,5 +3619,37 @@
   "channels_shareQrTapToCopy": "点击二维码即可将其复制为图片。",
   "channels_shareQrTapToShare": "点击二维码即可将其保存或分享为图片。",
   "channels_shareQrImageCopied": "已将二维码复制为图片",
-  "channels_shareQrImageFailed": "无法生成二维码图片"
+  "channels_shareQrImageFailed": "无法生成二维码图片",
+  "channels_noFreeSlots": "所有频道插槽都已被占用",
+  "chat_longMessageRetryNote": "超过158字节：最多发送 {count} 次",
+  "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repeater_bridgeNote": "仅支持带有桥接功能（RS232 或 ESP-NOW）的固件。",
+  "repeater_cliHelpGetFloodMaxAdvert": "显示泛洪广播包的最大跳数。",
+  "repeater_cliHelpGetFloodMaxUnscoped": "显示无区域范围的泛洪数据包的最大跳数。",
+  "repeater_cliHelpGetRadioFemRxGain": "显示 LoRa 前端模块的 RX 增益是否已开启。",
+  "repeater_cliHelpGetRadioFemTxGain": "显示 LoRa 前端模块的 TX 增益是否已开启。",
+  "repeater_cliHelpRegionDef": "在一条命令中定义一条区域链：每个名称都添加在上一个名称之下；“name,parent”会添加该名称，然后在指定的父级下继续。回复区域列表。",
+  "repeater_cliHelpSetFloodMaxAdvert": "设置转发泛洪广播包时的最大跳数(0-64)。",
+  "repeater_cliHelpSetFloodMaxUnscoped": "设置转发无区域范围的泛洪数据包时的最大跳数(0-64)。",
+  "repeater_cliHelpSetRadioFemRxGain": "切换 LoRa 前端模块的 RX 增益（LNA）。不支持此功能的板卡会回复“Error: unsupported”。",
+  "repeater_cliHelpSetRadioFemTxGain": "切换 LoRa 前端模块的 TX 增益（PA）。不支持此功能的板卡会回复“Error: unsupported”。",
+  "repeater_cliRegionLoadActive": "区域加载模式：每行发送一个区域名称，并用空格缩进表示其位于父级之下（在名称后添加 F 可允许泛洪）。每行不会有回复。发送空行以结束，然后发送“region save”以保存结果。",
+  "repeater_cliRegionLoadEnd": "（区域加载结束）",
+  "repeater_cliRegionLoadHint": "区域行，或留空以结束",
+  "repeater_frequencyInvalid": "无效频率（150-2500 MHz）",
+  "repeater_frequencyRangeHelper": "150-2500 MHz",
+  "repeater_recvErrors": "接收错误",
+  "repeater_txPowerRangeHelper": "-9 至 30 dBm",
+  "room_postsPushed": "已推送的帖子",
+  "room_postsStored": "帖子",
+  "settings_publicKeyCopied": "公钥已复制",
+  "settings_radioSettingsNotApplied": "收音机未应用这些设置",
+  "urlImage_enable": "启用URL图片",
+  "urlImage_possible": "可能是URL图片，请在设置中启用。"
 }
