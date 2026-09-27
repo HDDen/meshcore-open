@@ -96,7 +96,7 @@ void main() {
       maxFragmentBytes: 12,
     );
 
-    ({String prefix, String? fragment})? composerReply(String text) =>
+    ComposerReply? composerReply(String text) =>
         ExactQuoteHelper.composerReply(
           text: text,
           prefix: prefix,
@@ -120,19 +120,24 @@ void main() {
     test('an untouched quote goes out as the budget cut it', () {
       expect(prefix, '@[Vasya] >Where do we...\n');
       final reply = composerReply('${prefix}ok');
-      expect(reply, (prefix: prefix, fragment: 'Where do we...'));
+      expect(reply?.prefix, prefix);
+      expect(reply?.wirePrefix, prefix);
+      expect(reply?.fragment, 'Where do we...');
       expect(send(reply!.fragment), '@[Vasya] >Where do we...\nok');
     });
 
     test('a fragment shortened from its end stays a reply', () {
       final reply = composerReply('@[Vasya] >Where do w\nok');
-      expect(reply, (prefix: '@[Vasya] >Where do w\n', fragment: 'Where do w'));
+      expect(reply?.prefix, '@[Vasya] >Where do w\n');
+      expect(reply?.wirePrefix, '@[Vasya] >Where do w...\n');
+      expect(reply?.fragment, 'Where do w');
       expect(send(reply!.fragment), '@[Vasya] >Where do w...\nok');
     });
 
     test('a partly deleted ellipsis goes out whole', () {
       final reply = composerReply('@[Vasya] >Where do we.\nok');
       expect(reply?.fragment, 'Where do we.');
+      expect(reply?.wirePrefix, '@[Vasya] >Where do we...\n');
       expect(send(reply!.fragment), '@[Vasya] >Where do we...\nok');
     });
 

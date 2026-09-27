@@ -704,7 +704,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// The reply the composer's [text] still carries; see
   /// [ExactQuoteHelper.composerReply].
-  ({String prefix, String? fragment})? _composerReply(String text) {
+  ComposerReply? _composerReply(String text) {
     final prefix = _plainReplyComposerPrefix;
     final replyingTo = _replyingToMessage;
     final authorName = _replyingToAuthor;
@@ -727,11 +727,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _composerWireText(MeshCoreConnector connector, String text) {
     final reply = _composerReply(text);
     if (reply == null) return _applyReplyMention(connector, text);
-    return _applyReplyMention(
-      connector,
-      text.substring(reply.prefix.length),
-      quoteFragment: reply.fragment,
-    );
+    return '${reply.wirePrefix}${text.substring(reply.prefix.length)}';
   }
 
   String _applyReplyMention(
@@ -764,23 +760,26 @@ class _ChatScreenState extends State<ChatScreen> {
   }) {
     final contact = _resolveContact(connector);
     final settings = context.read<AppSettingsService>().settings;
+    // A container anchor pins the quoted message exactly, so a text
+    // fragment would only cost payload.
+    final enabled =
+        settings.exactQuote &&
+        !connector.contactReplyCarriesMcmpAnchor(
+          contact,
+          text.isEmpty ? 'x' : text,
+        );
     return ExactQuoteHelper.formatReplyWith(
       senderName: senderName,
       text: text,
       quotedText: quotedText,
       quotedMessageId: quotedMessageId,
-      history: connector.getMessages(contact),
+      // Read only when a fragment can be due: with shared history on, the
+      // getter merges and sorts it anew on every call.
+      history: enabled ? connector.getMessages(contact) : const <Message>[],
       authorOf: (message) =>
           connector.contactMessageAuthorName(contact, message)?.trim(),
       idOf: (message) => message.messageId,
-      // A container anchor pins the quoted message exactly, so a text
-      // fragment would only cost payload.
-      enabled:
-          settings.exactQuote &&
-          !connector.contactReplyCarriesMcmpAnchor(
-            contact,
-            text.isEmpty ? 'x' : text,
-          ),
+      enabled: enabled,
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.contactCyr2LatCharMap(contact),
       quoteFragment: quoteFragment,

@@ -3,6 +3,10 @@ import 'dart:convert';
 import '../models/channel_message.dart';
 import 'cyr2lat.dart';
 
+/// What a composer's text still carries of a reply; see
+/// [ExactQuoteHelper.composerReply].
+typedef ComposerReply = ({String prefix, String wirePrefix, String? fragment});
+
 /// An incoming reply's quote line, with the message it was matched to.
 class ResolvedQuote<T> {
   /// Reply text with the quote line removed.
@@ -278,10 +282,14 @@ class ExactQuoteHelper {
   /// start of [quotedText]. A fragment shortened from its end, which is how
   /// a quote is trimmed to save payload, keeps the reply, and [formatReply]
   /// sends it as trimmed through its `quoteFragment`. Returns the prefix
-  /// [text] starts with and the fragment of its quote line as typed, null
-  /// when the prefix has none. Returns null altogether once the mention is
-  /// touched or the line quotes something else, which drops the reply.
-  static ({String prefix, String? fragment})? composerReply({
+  /// [text] starts with, that prefix as the wire will carry it, and the
+  /// fragment of its quote line as typed, null when the prefix has none.
+  /// The wire form is what the composer's byte counter puts in front of the
+  /// draft on every keystroke: it needs no history, while [formatReply]
+  /// does, and reading history merges shared history anew each time.
+  /// Returns null altogether once the mention is touched or the line quotes
+  /// something else, which drops the reply.
+  static ComposerReply? composerReply({
     required String text,
     required String prefix,
     required String senderName,
@@ -292,7 +300,7 @@ class ExactQuoteHelper {
       final line = prefix.startsWith(mention)
           ? splitQuoteLine(prefix.substring(mention.length))
           : null;
-      return (prefix: prefix, fragment: line?.fragment);
+      return (prefix: prefix, wirePrefix: prefix, fragment: line?.fragment);
     }
     if (quotedText == null ||
         !prefix.startsWith('$mention$_marker') ||
@@ -300,12 +308,12 @@ class ExactQuoteHelper {
       return null;
     }
     final line = splitQuoteLine(text.substring(mention.length));
-    if (line == null ||
-        _canonicalFragment(line.fragment, quotedText) == null) {
-      return null;
-    }
+    if (line == null) return null;
+    final wireFragment = _canonicalFragment(line.fragment, quotedText);
+    if (wireFragment == null) return null;
     return (
       prefix: '$mention$_marker${line.fragment}\n',
+      wirePrefix: '$mention$_marker$wireFragment\n',
       fragment: line.fragment,
     );
   }

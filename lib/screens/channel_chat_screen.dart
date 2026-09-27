@@ -521,7 +521,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   /// The reply the composer's [text] still carries; see
   /// [ExactQuoteHelper.composerReply].
-  ({String prefix, String? fragment})? _composerReply(String text) {
+  ComposerReply? _composerReply(String text) {
     final prefix = _plainReplyComposerPrefix;
     final replyingTo = _replyingToMessage;
     if (prefix == null || replyingTo == null) return null;
@@ -541,10 +541,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String _composerWireText(String text) {
     final reply = _composerReply(text);
     if (reply == null) return _applyReplyMention(text);
-    return _applyReplyMention(
-      text.substring(reply.prefix.length),
-      quoteFragment: reply.fragment,
-    );
+    return '${reply.wirePrefix}${text.substring(reply.prefix.length)}';
   }
 
   void _highlightMessage(String messageId) {
@@ -4188,17 +4185,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }) {
     final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
+    // MCMP v3 carries its own exact reply anchor, so a text fragment would
+    // only waste payload.
+    final enabled =
+        settings.exactQuote &&
+        !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text);
     return ExactQuoteHelper.formatReply(
       senderName: senderName,
       text: text,
       quotedText: quotedText,
       quotedMessageId: quotedMessageId,
-      history: connector.getChannelMessages(widget.channel),
-      // MCMP v3 carries its own exact reply anchor, so a text fragment would
-      // only waste payload.
-      enabled:
-          settings.exactQuote &&
-          !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text),
+      // Read only when a fragment can be due: with shared history on, the
+      // getter merges it anew on every call.
+      history: enabled
+          ? connector.getChannelMessages(widget.channel)
+          : const <ChannelMessage>[],
+      enabled: enabled,
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.channelCyr2LatCharMap(widget.channel.index),
       quoteFragment: quoteFragment,
