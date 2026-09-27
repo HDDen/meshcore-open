@@ -96,19 +96,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_undo => '撤销';
 
   @override
-  String get messageStatus_sent => '发送';
+  String get messageStatus_sent => '已发送';
 
   @override
   String get messageStatus_delivered => '已送达';
 
   @override
-  String get messageStatus_pending => '发送';
+  String get messageStatus_pending => '发送中';
 
   @override
   String get messageStatus_failed => '发送失败';
 
   @override
-  String get messageStatus_repeated => '多次听到';
+  String get messageStatus_repeated => '已听到转发';
 
   @override
   String get common_reboot => '重启';
@@ -148,7 +148,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_apply => '应用';
 
   @override
-  String get scanner_title => '连接设备';
+  String get scanner_title => 'MeshCore Open (Advanced mod)';
 
   @override
   String get connectionChoiceUsbLabel => 'USB';
@@ -163,10 +163,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tcpScreenTitle => '通过 TCP 连接';
 
   @override
-  String get tcpHostLabel => 'IP地址';
+  String get tcpHostLabel => '目标地址';
 
   @override
-  String get tcpHostHint => '192.168.40.10';
+  String get tcpHostHint => '192.168.40.10 / example.com';
 
   @override
   String get tcpPortLabel => '端口';
@@ -183,7 +183,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => '需要提供IP地址。';
+  String get tcpErrorHostRequired => '需要提供主机地址。';
 
   @override
   String get tcpErrorPortInvalid => '端口号必须在 1 到 65535 之间。';
@@ -260,7 +260,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get usbErrorConnectTimedOut => '连接超时。请确保设备已安装 USB 伴侣固件。';
 
   @override
-  String get usbFallbackDeviceName => 'Web 串流设备';
+  String get usbFallbackDeviceName => 'Web Serial 设备';
 
   @override
   String get usbStatus_notConnected => '选择一个 USB 设备';
@@ -333,7 +333,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get device_quickSwitch => '快速切换';
 
   @override
-  String get device_meshcore => '网格核心';
+  String get device_meshcore => 'MeshCore';
 
   @override
   String get settings_title => '设置';
@@ -452,10 +452,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_privacyMode => '隐私模式';
 
   @override
-  String get settings_privacyModeSubtitle => '在广告中隐藏姓名/位置';
+  String get settings_privacyModeSubtitle => '在广播中隐藏名称/位置';
 
   @override
-  String get settings_privacyModeToggle => '切换隐私模式以在广告中隐藏姓名和位置，保护个人信息。';
+  String get settings_privacyModeToggle => '切换隐私模式，在广播中隐藏你的名称和位置。';
 
   @override
   String get settings_privacyModeEnabled => '隐私模式已启用';
@@ -491,17 +491,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_telemetryEnvironmentMode => '遥测环境模式';
 
   @override
-  String get settings_advertLocation => '广告位置';
+  String get settings_advertLocation => '广播中的位置';
 
   @override
-  String get settings_advertLocationSubtitle => '在广告中包含位置';
+  String get settings_advertLocationSubtitle => '在广播中包含位置。';
 
   @override
-  String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS 更新时自动发送零跳广告';
+  String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS 更新时自动发送零跳广播';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      '当 GPS 位置变化时，发送零跳广告（需要在广告中包含位置）。';
+      'GPS 位置变化时发送零跳广播（需要开启“广播中的位置”）。';
 
   @override
   String get settings_multiAck => '多重ACK';
@@ -516,8 +516,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_deleteAllPaths => '删除所有路径';
 
   @override
-  String get settings_deleteAllPathsSubtitle =>
-      'Clear all path data from contacts.';
+  String get settings_deleteAllPathsSubtitle => '清除联系人中的所有本地路径数据。节点上的路径不受影响。';
 
   @override
   String get settings_sendAdvertisement => '发送广播';
@@ -556,10 +555,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_debug => '调试';
 
   @override
-  String get settings_companionDebugLog => '调试日志';
+  String get settings_companionDebugLog => '伴侣设备调试日志';
 
   @override
-  String get settings_companionDebugLogSubtitle => 'BLE/TCP/USB 协议、响应和原始数据';
+  String get settings_companionDebugLogSubtitle => 'BLE/TCP/USB 命令、响应和原始数据';
 
   @override
   String get settings_appDebugLog => '应用调试日志';
@@ -598,7 +597,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_infoName => '名称';
 
   @override
-  String get settings_infoId => 'MAC ID';
+  String get settings_infoId => 'ID';
 
   @override
   String get settings_infoDeviceName => '板卡名称';
@@ -652,14 +651,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_txPowerInvalid => '无效的发射功率（0-22 dBm）';
 
   @override
-  String get settings_clientRepeat => '离网重复';
+  String get settings_clientRepeat => '离网转发';
 
   @override
-  String get settings_clientRepeatSubtitle => '允许此设备重复发送网状数据包给其他设备';
+  String get settings_clientRepeatSubtitle => '允许此设备为其他设备转发网状网络数据包';
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      '离网重复通信需要使用 433、869.495 或 918 兆赫兹的频率。';
+      '离网转发需要使用 433、869.495 或 918 MHz 频率';
 
   @override
   String settings_error(String message) {
@@ -677,7 +676,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_channelMaxbytesOutgoingSubtitle =>
-      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包重复确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。';
+      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包的转发确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。';
 
   @override
   String get settings_quickAnswersTitle => '快捷回复';
@@ -806,7 +805,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_enableNotificationsSubtitle => '接收消息和广播的通知';
 
   @override
-  String get appSettings_notificationPermissionDenied => '权限被拒绝';
+  String get appSettings_notificationPermissionDenied => '通知权限被拒绝';
 
   @override
   String get appSettings_notificationsEnabled => '通知已启用';
@@ -839,10 +838,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_clearPathOnMaxRetry => '达到最大重试次数时清除路径';
 
   @override
-  String get appSettings_clearPathOnMaxRetrySubtitle => '在5次发送失败后重置联系路径。';
+  String get appSettings_clearPathOnMaxRetrySubtitle => '发送失败 5 次后重置联系人路径。';
 
   @override
-  String get appSettings_pathsWillBeCleared => '5次失败后将重新路由';
+  String get appSettings_pathsWillBeCleared => '5 次重试失败后将清除路径';
 
   @override
   String get appSettings_pathsWillNotBeCleared => '路径不会自动清除';
@@ -860,30 +859,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_autoRouteRotationDisabled => '自动路径轮换已禁用';
 
   @override
-  String get appSettings_maxRouteWeight => '最大路径重量';
+  String get appSettings_maxRouteWeight => '最大路径权重';
 
   @override
-  String get appSettings_maxRouteWeightSubtitle => '一条路径可以累积的最大重量，取决于成功交付的数量。';
+  String get appSettings_maxRouteWeightSubtitle => '路径通过成功送达可累积的最大权重';
 
   @override
   String get appSettings_initialRouteWeight => '初始路线权重';
 
   @override
-  String get appSettings_initialRouteWeightSubtitle => '新发现路径的初始重量';
+  String get appSettings_initialRouteWeightSubtitle => '新发现路径的初始权重';
 
   @override
   String get appSettings_routeWeightSuccessIncrement => '成功权重增加';
 
   @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      '在成功交付后，将重量添加到路径中';
+  String get appSettings_routeWeightSuccessIncrementSubtitle => '成功送达后为路径增加的权重';
 
   @override
   String get appSettings_routeWeightFailureDecrement => '失败权重降低';
 
   @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      '从一条路径上移除的货物，由于无法成功交付而移除。';
+  String get appSettings_routeWeightFailureDecrementSubtitle => '投递失败后从路径扣除的权重';
 
   @override
   String get appSettings_maxMessageRetries => '最大消息重试次数';
@@ -965,7 +962,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_last24Hours => '过去24小时';
 
   @override
-  String get appSettings_lastWeek => '上周';
+  String get appSettings_lastWeek => '过去一周';
 
   @override
   String get appSettings_rasterTileSource => '栅格瓦片源';
@@ -1055,7 +1052,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String contacts_searchRepeaters(int number, String str) {
-    return '搜索 $number$str 重复器...';
+    return '搜索 $number$str 个转发节点...';
   }
 
   @override
@@ -1067,7 +1064,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_noUnreadContacts => '没有未读内容';
 
   @override
-  String get contacts_noContactsFound => '未找到任何联系人或群聊';
+  String get contacts_noContactsFound => '未找到任何联系人或分组';
 
   @override
   String get contacts_deleteContact => '删除联系人';
@@ -1087,24 +1084,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_manageRoom => '管理房间服务器';
 
   @override
-  String get contacts_roomLogin => '服务器登录';
+  String get contacts_roomLogin => '房间服务器登录';
 
   @override
   String get contacts_openChat => '打开聊天';
 
   @override
-  String get contacts_editGroup => '编辑群聊';
+  String get contacts_editGroup => '编辑分组';
 
   @override
-  String get contacts_deleteGroup => '删除群聊';
+  String get contacts_deleteGroup => '删除分组';
 
   @override
   String contacts_deleteGroupConfirm(String groupName) {
-    return '删除群聊 \"$groupName\"？';
+    return '删除分组 \"$groupName\"？';
   }
 
   @override
-  String get contacts_newGroup => '新建群聊';
+  String get contacts_newGroup => '新建分组';
 
   @override
   String get contacts_newGroupDescription => '将频道/联系人合并到文件夹中';
@@ -1116,20 +1113,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_searchOpen => '搜索联系人';
 
   @override
-  String get contacts_searchClose => '高级搜索';
+  String get contacts_searchClose => '关闭搜索';
 
   @override
-  String get contacts_groupName => '群聊名称';
+  String get contacts_groupName => '分组名称';
 
   @override
-  String get contacts_groupNameRequired => '请输入群聊名称';
+  String get contacts_groupNameRequired => '请输入分组名称';
 
   @override
-  String get contacts_groupNameReserved => '该群组名称已被保留';
+  String get contacts_groupNameReserved => '该分组名称已被保留';
 
   @override
   String contacts_groupAlreadyExists(String name) {
-    return '名为 \"$name\" 的群聊已存在';
+    return '名为 \"$name\" 的分组已存在';
   }
 
   @override
@@ -1146,23 +1143,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return '最后在线 $minutes 分钟前';
+    return '~ $minutes 分钟前';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => '最后在线 1小时前';
+  String get contacts_lastSeenHourAgo => '~ 1 小时前';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return '最后在线 $hours 小时前';
+    return '~ $hours 小时前';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => '最后在线 1天前';
+  String get contacts_lastSeenDayAgo => '~ 1 天前';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return '最后在线 $days 天前';
+    return '~ $days 天前';
   }
 
   @override
@@ -1184,7 +1181,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contact_clearChatConfirm => '要删除聊天中的消息吗？';
 
   @override
-  String get contact_teleBase => '遥测基站';
+  String get contact_teleBase => '基础遥测';
 
   @override
   String get contact_teleBaseSubtitle => '允许共享电池电量和基本遥测数据';
@@ -1309,20 +1306,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_mcotxtCompression => 'MCOtxt 压缩';
 
   @override
-  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 設定';
+  String get channels_cyr2latSettingsHeading => 'Cyr2Lat 设置';
 
   @override
-  String get channels_cyr2latSettingsSubheading => '替換清單';
+  String get channels_cyr2latSettingsSubheading => '替换列表';
 
   @override
-  String get channels_cyr2latSettingsDscr => '編輯 JSON 字元替換設定檔';
+  String get channels_cyr2latSettingsDscr => '编辑字符替换的 JSON 配置';
 
   @override
-  String get channels_cyr2latSettingsDialogHint => 'JSON 替換映射表';
+  String get channels_cyr2latSettingsDialogHint => 'JSON 替换映射表';
 
   @override
   String channels_cyr2latSettingsDialogWrongJSON(Object error) {
-    return 'JSON 格式錯誤：$error';
+    return 'JSON 格式错误：$error';
   }
 
   @override
@@ -1343,32 +1340,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_allowOrderingInGroup => '允许在组内排序频道';
 
   @override
-  String get settings_cyr2latProfileAdd => '新增 Cyr2Lat 設定檔';
+  String get settings_cyr2latProfileAdd => '添加 Cyr2Lat 配置文件';
 
   @override
-  String get settings_cyr2latProfileName => '設定檔名稱';
+  String get settings_cyr2latProfileName => '配置文件名称';
 
   @override
-  String get settings_cyr2latProfileNameEmpty => '設定檔名稱不能為空';
+  String get settings_cyr2latProfileNameEmpty => '配置文件名称不能为空';
 
   @override
-  String get settings_cyr2latProfileAdded => '設定檔已成功新增';
+  String get settings_cyr2latProfileAdded => '配置文件已成功添加';
 
   @override
-  String get settings_cyr2latProfileUpdated => '設定檔已成功更新';
+  String get settings_cyr2latProfileUpdated => '配置文件已成功更新';
 
   @override
-  String get settings_cyr2latProfileEdit => '編輯 Cyr2Lat 設定檔';
+  String get settings_cyr2latProfileEdit => '编辑 Cyr2Lat 配置文件';
 
   @override
-  String get settings_cyr2latProfileDelete => '刪除 Cyr2Lat 設定檔';
+  String get settings_cyr2latProfileDelete => '删除 Cyr2Lat 配置文件';
 
   @override
-  String get settings_cyr2latProfileDeleted => '設定檔已成功刪除';
+  String get settings_cyr2latProfileDeleted => '配置文件已成功删除';
 
   @override
   String settings_cyr2latProfileDeleteDscr(String name) {
-    return '您確定要刪除設定檔 \"$name\" 嗎？';
+    return '确定要删除配置文件 \"$name\" 吗？';
   }
 
   @override
@@ -1667,22 +1664,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_title => '路由';
 
   @override
-  String get routing_modeAuto => '汽车';
+  String get routing_modeAuto => '自动';
 
   @override
-  String get routing_modeFlood => '洪水';
+  String get routing_modeFlood => '泛洪';
 
   @override
-  String get routing_modeManual => '手册';
+  String get routing_modeManual => '手动';
 
   @override
-  String get routing_modeAutoHint => '自动选择已知最佳路径，当没有已知路径时，则进行“洪水”搜索。';
+  String get routing_modeAutoHint => '自动选择已知的最佳路径，没有已知路径时使用泛洪。';
 
   @override
-  String get routing_modeFloodHint => '通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。';
+  String get routing_modeFloodHint => '通过所有中继站进行广播。这种方式最可靠，但会占用更多空中时间。';
 
   @override
-  String get routing_modeManualHint => '总是按照您设置的路径进行导航。';
+  String get routing_modeManualHint => '始终沿您设置的确切路径发送。';
 
   @override
   String get routing_currentRoute => '当前路线';
@@ -1691,7 +1688,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_directNoHops => '直接连接— 无中继跳';
 
   @override
-  String get routing_noPathYet => '目前还没有找到路径。直到找到路径，才会收到后续消息。';
+  String get routing_noPathYet => '暂无路径。在发现路由之前，下一条消息将以泛洪方式发送。';
 
   @override
   String get routing_floodBroadcast => '通过所有中继器进行广播';
@@ -1700,7 +1697,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_editPath => '编辑路径';
 
   @override
-  String get routing_forgetPath => '忘记原路';
+  String get routing_forgetPath => '忘记路径';
 
   @override
   String get routing_knownPaths => '已知的路径';
@@ -1712,26 +1709,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_inUse => '使用中';
 
   @override
-  String get routing_qualityStrong => '强劲的初始阶段';
+  String get routing_qualityStrong => '首跳信号强';
 
   @override
-  String get routing_qualityGood => '不错的开端';
+  String get routing_qualityGood => '首跳信号良好';
 
   @override
-  String get routing_qualityFair => '第一次尝试，结果良好';
+  String get routing_qualityFair => '首跳信号一般';
 
   @override
-  String get routing_qualityWorked => '已完成';
+  String get routing_qualityWorked => '曾成功送达';
 
   @override
-  String get routing_qualityFlood => '通过新闻报道';
+  String get routing_qualityFlood => '通过泛洪听到';
 
   @override
   String get routing_qualityUntested => '未经测试';
 
   @override
   String routing_lastWorked(String when) {
-    return '工作于 $when';
+    return '上次成功：$when';
   }
 
   @override
@@ -1743,7 +1740,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get routing_floodDelivery => '洪水配送';
+  String get routing_floodDelivery => '泛洪投递';
 
   @override
   String get pathEditor_title => '构建路径';
@@ -1754,14 +1751,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pathEditor_noHops =>
-      '目前还没有添加任何啤酒花。点击下面的“添加”按钮，按顺序添加，或者直接保存，不添加任何啤酒花。';
+  String get pathEditor_noHops => '还没有添加跳。点击下方的中继按顺序添加，或不添加跳直接保存以直接发送。';
 
   @override
-  String get pathEditor_addHops => '按照顺序添加啤酒花';
+  String get pathEditor_addHops => '按顺序添加跳';
 
   @override
-  String get pathEditor_searchRepeaters => '重复搜索';
+  String get pathEditor_searchRepeaters => '搜索中继';
 
   @override
   String get pathEditor_advancedHex => '高级：原始十六进制路径';
@@ -1770,7 +1766,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathEditor_hexLabel => '十六进制前缀';
 
   @override
-  String get pathEditor_hexHelper => '每次跳跃，使用两个十六进制字符，用逗号分隔。';
+  String get pathEditor_hexHelper => '每跳两个十六进制字符，用逗号分隔';
 
   @override
   String pathEditor_invalidTokens(String tokens) {
@@ -1778,16 +1774,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pathEditor_tooManyHops => '最多 64 个跳跃';
+  String get pathEditor_tooManyHops => '最多 64 跳';
 
   @override
   String get pathEditor_usePath => '请使用此路径';
 
   @override
-  String get pathEditor_removeHop => '去除啤酒花';
+  String get pathEditor_removeHop => '移除跳';
 
   @override
-  String get pathEditor_unknownHop => '未知的重复器';
+  String get pathEditor_unknownHop => '未知中继';
 
   @override
   String get chat_pathSavedLocally => '已本地保存，连接设备后可同步。';
@@ -1932,10 +1928,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_pinDm => '标记（私信）';
 
   @override
-  String get map_pinPrivate => '私有';
+  String get map_pinPrivate => '标记（私有）';
 
   @override
-  String get map_pinPublic => '公共';
+  String get map_pinPublic => '标记（公共）';
 
   @override
   String get map_lastSeen => '最后在线';
@@ -2021,16 +2017,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_otherNodes => '其他节点';
 
   @override
-  String get map_showOverlaps => '重复键重叠';
+  String get map_showOverlaps => '中继密钥重叠';
 
   @override
-  String get map_keyPrefix => '关键字前缀';
+  String get map_keyPrefix => '密钥前缀';
 
   @override
-  String get map_filterByKeyPrefix => '按关键字前缀筛选';
+  String get map_filterByKeyPrefix => '按密钥前缀筛选';
 
   @override
-  String get map_publicKeyPrefix => '关键字前缀';
+  String get map_publicKeyPrefix => '公钥前缀';
 
   @override
   String get map_markers => '标记';
@@ -2432,7 +2428,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String mapCache_downloadTilesPrompt(int count) {
-    return '这需要下载 $count 个瓦片';
+    return '下载 $count 个瓦片以供离线使用？';
   }
 
   @override
@@ -2452,7 +2448,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mapCache_clearOfflineCacheTitle => '清除离线缓存';
 
   @override
-  String get mapCache_clearOfflineCachePrompt => '清除所有缓存的地图瓦片';
+  String get mapCache_clearOfflineCachePrompt => '要清除所有缓存的地图瓦片吗？';
 
   @override
   String get mapCache_offlineCacheCleared => '离线缓存已清除';
@@ -2609,10 +2605,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get login_savePasswordSubtitle => '密码将安全地存储在此设备上';
 
   @override
-  String get login_repeaterDescription => '输入转发节点密码以访问设置和状态。';
+  String get login_repeaterDescription => '输入转发节点密码以获得访客或管理员访问权限。';
 
   @override
-  String get login_roomDescription => '输入房间服务器密码以访问设置和状态。';
+  String get login_roomDescription => '输入房间密码以获得访客或管理员访问权限。';
 
   @override
   String get login_routing => '路由';
@@ -2643,7 +2639,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get login_failedMessage => '登录失败。可能是密码错误或无法连接到服务器。';
+  String get login_failedMessage => '登录失败。可能是密码错误，或无法连接到转发节点。';
 
   @override
   String get common_reload => '重新加载';
@@ -2661,7 +2657,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get room_management => '房间服务器管理';
 
   @override
-  String get repeater_guest => '重复器信息';
+  String get repeater_guest => '转发节点信息';
 
   @override
   String get room_guest => '服务器信息';
@@ -2706,7 +2702,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_clockSyncAfterLogin => '登录后，自动同步时钟';
 
   @override
-  String get repeater_clockSyncAfterLoginSubtitle => '在成功登录后，自动发送“时钟同步”指令。';
+  String get repeater_clockSyncAfterLoginSubtitle =>
+      '成功登录后自动发送 \"clock sync\" 命令。';
 
   @override
   String get repeater_statusTitle => '转发节点状态';
@@ -2762,7 +2759,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_rxAirtime => '接收空中时间';
 
   @override
-  String get repeater_chanUtil => '频道利用率';
+  String get repeater_chanUtil => '信道利用率';
 
   @override
   String get repeater_packetStatistics => '数据包统计';
@@ -2971,7 +2968,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_rxGainHelper => '更高的灵敏度，更大的电流消耗（仅适用于 SX1262/SX1268）';
 
   @override
-  String get repeater_refreshRxGain => '重新启动增强型 RX 功能';
+  String get repeater_refreshRxGain => '刷新增强 RX 增益';
 
   @override
   String get repeater_multiAcks => '多重确认';
@@ -2980,7 +2977,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_multiAcksSubtitle => '通过多个路径确认消息，以提高传递效率。';
 
   @override
-  String get repeater_refreshMultiAcks => '刷新多个确认';
+  String get repeater_refreshMultiAcks => '刷新多重确认';
 
   @override
   String get repeater_networkHealth => '网络健康';
@@ -2989,10 +2986,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_loopDetect => '循环检测';
 
   @override
-  String get repeater_loopDetectHelper => '创建看起来像路由环的“洪水包”';
+  String get repeater_loopDetectHelper => '丢弃看起来像路由环路的泛洪数据包';
 
   @override
-  String get repeater_loopDetectOff => '离开';
+  String get repeater_loopDetectOff => '关闭';
 
   @override
   String get repeater_loopDetectMinimal => '最少';
@@ -3007,7 +3004,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_dutyCycle => '工作周期';
 
   @override
-  String get repeater_dutyCycleHelper => '最大可使用的空闲时间百分比';
+  String get repeater_dutyCycleHelper => '最大空中时间占比';
 
   @override
   String repeater_dutyCyclePercent(int percent) {
@@ -3015,19 +3012,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get repeater_ownerInfo => '运营商信息';
+  String get repeater_ownerInfo => '操作员信息';
 
   @override
-  String get repeater_ownerInfoHelper => '此复播器的公共元数据';
+  String get repeater_ownerInfoHelper => '此转发节点的公开元数据';
 
   @override
   String get repeater_refreshOwnerInfo => '刷新操作员信息';
 
   @override
-  String get repeater_floodMax => '最大跳跃次数';
+  String get repeater_floodMax => '泛洪最大跳数';
 
   @override
-  String get repeater_floodMaxHelper => '一个洪水包中，最大可以传输的跳数 (0-64)';
+  String get repeater_floodMaxHelper => '泛洪数据包可经过的最大跳数 (0-64)';
 
   @override
   String get repeater_advancedSettings => '高级';
@@ -3040,7 +3037,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      '用于在洪泛路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
+      '用于在泛洪路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
 
   @override
   String get repeater_keySettings => '更改节点密钥';
@@ -3075,18 +3072,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get repeater_txDelay => '洪水（德克萨斯州）延误';
+  String get repeater_txDelay => '泛洪发送延迟';
 
   @override
   String get repeater_txDelayHelper =>
-      '对于洪水流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.5）的倍数。 较高的值意味着更少的冲突，但传输速度会变慢。';
+      '泛洪流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.5）。值越高冲突越少，但投递越慢。';
 
   @override
   String get repeater_directTxDelay => '直接的 TX 延迟';
 
   @override
   String get repeater_directTxDelayHelper =>
-      '对于直接（非广播）流量，重新传输间隔应设置为包的传输时间（0-2，默认值为0.3）的倍数。';
+      '直连（非泛洪）流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.3）。';
 
   @override
   String get repeater_intThresh => '干扰阈值';
@@ -3096,32 +3093,32 @@ class AppLocalizationsZh extends AppLocalizations {
       '将阈值传递给射频信号的噪声水平校准，使其能够拒绝高于该水平的干扰。 0 表示禁用——只有在您在嘈杂频段中看到 RX 错误时才启用。';
 
   @override
-  String get repeater_agcResetInterval => 'AGC 恢复间隔';
+  String get repeater_agcResetInterval => 'AGC 重置间隔';
 
   @override
   String get repeater_agcResetIntervalHelper =>
-      '为了从失控的增益状态中恢复，应该多久重置收音机的自动增益控制？设置为“秒”，每次重置间隔为4秒。将此选项设置为“0”将禁用周期性重置。';
+      '定期重置无线电的自动增益控制，以便从卡死的增益状态中恢复。单位为秒，向下取整为 4 的倍数。0 表示禁用定期重置。';
 
   @override
-  String get repeater_actionsTitle => '行动';
+  String get repeater_actionsTitle => '操作';
 
   @override
-  String get repeater_sendAdvert => '发布防洪广告';
+  String get repeater_sendAdvert => '发送泛洪广播';
 
   @override
-  String get repeater_sendAdvertSubtitle => '通过网络播放防洪广告';
+  String get repeater_sendAdvertSubtitle => '通过网络发送泛洪广播';
 
   @override
-  String get repeater_sendAdvertZeroHop => '发送零跳广告';
+  String get repeater_sendAdvertZeroHop => '发送零跳广播';
 
   @override
-  String get repeater_sendAdvertZeroHopSubtitle => '进行单跳广告广播（不使用中继）';
+  String get repeater_sendAdvertZeroHopSubtitle => '发送单跳广播（不经中继）';
 
   @override
   String get repeater_clockSync => '现在同步时钟';
 
   @override
-  String get repeater_clockSyncSubtitle => '将手机的时间设置为与中继器同步';
+  String get repeater_clockSyncSubtitle => '将手机时间推送到中继器';
 
   @override
   String repeater_actionSucceeded(String action) {
@@ -3134,7 +3131,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get repeater_settingsSavedRebootNeeded => '设置已保存 — 重启发射器以应用';
+  String get repeater_settingsSavedRebootNeeded => '设置已保存 — 重启中继器以应用';
 
   @override
   String repeater_settingsPartialFailure(String failures) {
@@ -3181,7 +3178,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_debugNextCommand => '调试下一条命令';
 
   @override
-  String get repeater_commandHelp => '帮助';
+  String get repeater_commandHelp => '命令帮助';
 
   @override
   String get repeater_clearHistory => '清除历史';
@@ -3258,7 +3255,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpClearStats => '重置各种统计数据';
 
   @override
-  String get repeater_cliHelpSetAf => '设置时间因子';
+  String get repeater_cliHelpSetAf => '设置空中时间因子（air-time-factor）。';
 
   @override
   String get repeater_cliHelpSetTx => '设置 LoRa 发射功率 (dBm)（重启生效）';
@@ -3268,13 +3265,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetAllowReadOnly =>
-      '（房间服务器）设为“开”则允许空密码登录，但只能读（不能发送）';
+      '（房间服务器）设为 \'on\' 时允许空密码登录，但不能在房间中发帖（仅只读）。';
 
   @override
-  String get repeater_cliHelpSetFloodMax => '设置最大传入数据包跳数（≥该值则不转发）';
+  String get repeater_cliHelpSetFloodMax => '设置传入泛洪数据包的最大跳数（≥ 该值则不转发）';
 
   @override
-  String get repeater_cliHelpSetIntThresh => '设置干扰阈值 (dB)，默认14，设为0禁用';
+  String get repeater_cliHelpSetIntThresh =>
+      '设置干扰阈值（dB）。默认值为 14。设为 0 可禁用信道干扰检测。';
 
   @override
   String get repeater_cliHelpSetAgcResetInterval => '设置 AGC 重置间隔（秒），设为0禁用';
@@ -3283,13 +3281,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpSetMultiAcks => '启用或禁用“多重确认”功能';
 
   @override
-  String get repeater_cliHelpSetAdvertInterval => '设置本地广播间隔（分钟），设为0禁用';
+  String get repeater_cliHelpSetAdvertInterval =>
+      '设置发送本地（零跳）广播包的定时间隔（分钟）。设为 0 可禁用。';
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval => '设置泛洪广播间隔（小时），设为0禁用';
 
   @override
-  String get repeater_cliHelpSetGuestPassword => '设置/更新访客密码';
+  String get repeater_cliHelpSetGuestPassword =>
+      '设置/更新访客密码。（对于转发节点，访客登录后可以发送 \"Get Stats\" 请求）';
 
   @override
   String get repeater_cliHelpSetName => '设置广播名称';
@@ -3301,16 +3301,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpSetLon => '设置广播经度（十进制）';
 
   @override
-  String get repeater_cliHelpSetRadio => '完全重设无线电参数并保存，需重启生效';
+  String get repeater_cliHelpSetRadio =>
+      '设置全新的无线电参数并保存到首选项。需要执行 \"reboot\" 命令才能生效。';
 
   @override
-  String get repeater_cliHelpSetRxDelay => '（实验性）设置接收延迟基数，设为0禁用';
+  String get repeater_cliHelpSetRxDelay =>
+      '（实验性）设置接收延迟的基数（须 > 1 才生效），根据信号强度/评分对接收到的数据包施加轻微延迟。设为 0 可禁用。';
 
   @override
-  String get repeater_cliHelpSetTxDelay => '通过因子和随机时隙延迟泛洪数据包转发，降低冲突';
+  String get repeater_cliHelpSetTxDelay =>
+      '设置一个因子，与泛洪模式数据包的空中时间相乘，并结合随机时隙机制来延迟其转发。（以降低冲突的可能性）';
 
   @override
-  String get repeater_cliHelpSetDirectTxDelay => '同 txdelay，用于直连模式数据包';
+  String get repeater_cliHelpSetDirectTxDelay =>
+      '与 txdelay 相同，但用于对直连模式数据包的转发施加随机延迟。';
 
   @override
   String get repeater_cliHelpSetBridgeEnabled => '启用/禁用桥接';
@@ -3334,10 +3338,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpTempRadio => '临时设置无线电参数指定分钟，之后恢复（不保存）';
 
   @override
-  String get repeater_cliHelpSetPerm => '修改 ACL，权限位：0访客、1只读、2读写、3管理员';
+  String get repeater_cliHelpSetPerm =>
+      '修改 ACL。如果 \"permissions\" 为零，则删除匹配的条目（按公钥前缀）。如果 pubkey-hex 为完整长度且当前不在 ACL 中，则添加新条目。按匹配的公钥前缀更新条目。权限位因固件角色而异，但低 2 位为：0（访客）、1（只读）、2（读写）、3（管理员）';
 
   @override
-  String get repeater_cliHelpGetBridgeType => '支持桥接模式：RS232、ESPNOW';
+  String get repeater_cliHelpGetBridgeType => '获取桥接类型：none、rs232、espnow';
 
   @override
   String get repeater_cliHelpLogStart => '开始记录数据包到文件系统';
@@ -3349,7 +3354,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpLogErase => '删除所有记录的数据包';
 
   @override
-  String get repeater_cliHelpNeighbors => '显示零跳广播收到的其他转发节点列表';
+  String get repeater_cliHelpNeighbors =>
+      '显示通过零跳广播收到的其他转发节点列表。每行格式为 id-prefix-hex:timestamp:snr×4';
 
   @override
   String get repeater_cliHelpNeighborRemove => '从邻居列表删除第一个匹配项（通过公钥前缀）';
@@ -3358,25 +3364,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpRegion => '（仅串口）列出所有定义区域及当前泛洪权限';
 
   @override
-  String get repeater_cliHelpRegionLoad => '特殊多命令调用，以空行结束';
+  String get repeater_cliHelpRegionLoad =>
+      '注意：这是一个特殊的多命令调用。随后的每条命令都是一个区域名称（用空格缩进表示父级层次，至少一个空格）。发送空行/空命令即结束。';
 
   @override
-  String get repeater_cliHelpRegionGet => '搜索指定前缀的区域';
+  String get repeater_cliHelpRegionGet =>
+      '搜索具有给定名称前缀的区域（或用 \"*\" 表示全局范围）。回复格式为 \"-> region-name (parent-name) \'F\'\"';
 
   @override
   String get repeater_cliHelpRegionPut => '添加或更新区域定义';
 
   @override
-  String get repeater_cliHelpRegionRemove => '删除指定区域定义';
+  String get repeater_cliHelpRegionRemove =>
+      '删除具有给定名称的区域定义。（名称必须完全匹配，且该区域不能有子区域）';
 
   @override
-  String get repeater_cliHelpRegionAllowf => '为区域设置“泛洪”权限';
+  String get repeater_cliHelpRegionAllowf =>
+      '为指定区域设置泛洪（\'F\'lood）权限。（\'*\' 表示全局/旧版范围）';
 
   @override
-  String get repeater_cliHelpRegionDenyf => '移除区域的“泛洪”权限';
+  String get repeater_cliHelpRegionDenyf =>
+      '移除指定区域的泛洪（\'F\'lood）权限。（注意：目前不建议对全局/旧版范围使用此命令！）';
 
   @override
-  String get repeater_cliHelpRegionHome => '返回当前“主区域”（预留）';
+  String get repeater_cliHelpRegionHome => '回复当前的“主”区域。（尚未在任何地方应用，保留供将来使用）';
 
   @override
   String get repeater_cliHelpRegionHomeSet => '设置“主”区域';
@@ -3385,7 +3396,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpRegionSave => '保存区域列表到存储';
 
   @override
-  String get repeater_cliHelpGps => '显示 GPS 状态';
+  String get repeater_cliHelpGps =>
+      '显示 GPS 状态。GPS 关闭时仅回复 off；开启时回复 on、status、fix 和卫星数量';
 
   @override
   String get repeater_cliHelpGpsOnOff => '切换 GPS 电源';
@@ -3397,7 +3409,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGpsSetLoc => '将节点坐标设为 GPS 坐标并保存';
 
   @override
-  String get repeater_cliHelpGpsAdvert => '设置位置广播配置：none/share/prefs';
+  String get repeater_cliHelpGpsAdvert =>
+      '显示节点广播中的位置配置：\n- none：不在广播中包含位置\n- share：共享 GPS 位置（来自 SensorManager）\n- prefs：广播首选项中保存的位置';
 
   @override
   String get repeater_cliHelpGpsAdvertSet => '设置广播位置配置';
@@ -3433,7 +3446,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_gpsManagement => 'GPS 管理';
 
   @override
-  String get repeater_gpsNote => 'GPS 命令用于位置相关任务';
+  String get repeater_gpsNote => 'gps 命令用于管理与位置相关的内容。';
 
   @override
   String get repeater_getCategory => '获取值';
@@ -3451,7 +3464,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpClkReboot => '将时钟重置为已知的时间点，并重启设备。';
 
   @override
-  String get repeater_cliHelpAdvertZeroHop => '发送无中继广告（仅限于邻居）。';
+  String get repeater_cliHelpAdvertZeroHop => '发送零跳广播（仅限直接邻居）。';
 
   @override
   String get repeater_cliHelpStartOta => '在支持的板上启动通过空中进行固件更新。';
@@ -3472,33 +3485,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpPowersavingOnOff => '启用或禁用节能模式（如果支持）。';
 
   @override
-  String get repeater_cliHelpErase => '（仅适用于序列模式）格式化设备的文件系统。清除所有设置和联系人。';
+  String get repeater_cliHelpErase => '（仅限串口）格式化设备的文件系统。清除所有设置和联系人。';
 
   @override
   String get repeater_cliHelpSetDutyCycle =>
-      '设定允许的最大传输时段百分比（1-100）。内部调整空闲时间因子。';
+      '设置允许的最大发射占空比百分比（1-100）。内部会相应调整空中时间因子。';
 
   @override
-  String get repeater_cliHelpSetPrvKey =>
-      '（仅适用于序列号）替换设备身份私钥。需要重启才能应用。生成一个新的公钥。';
+  String get repeater_cliHelpSetPrvKey => '替换设备身份私钥。需要重启才能应用。会生成新的公钥。';
 
   @override
   String get repeater_cliHelpSetRadioRxGain =>
       '（仅适用于 SX126x 芯片） 启用增强型 RX 增益，以在较高电流下提高灵敏度。';
 
   @override
-  String get repeater_cliHelpSetOwnerInfo => '设置广告中包含的联系人信息字符串。使用 \'|\' 作为换行符。';
+  String get repeater_cliHelpSetOwnerInfo =>
+      '设置广播中包含的所有者联系信息字符串。使用 \'|\' 作为换行符。';
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
       '设置路径哈希模式。 0 = 传统模式，1 = 标准模式，2 = 严格模式。 影响路由路径的匹配方式。';
 
   @override
-  String get repeater_cliHelpSetLoopDetect => '设置路由环检测的灵敏度：关闭、低、中、或高。';
+  String get repeater_cliHelpSetLoopDetect =>
+      '设置路由环路检测的灵敏度：off、minimal、moderate 或 strict。';
 
   @override
   String get repeater_cliHelpSetFreq =>
-      '（仅限串行模式）快速设置频率。需要重启。 建议使用“设置收音机参数”功能，以便设置完整的收音机参数。';
+      '（仅限串口）仅快速设置频率。需要重启。设置完整无线电参数时建议使用 \"set radio\"。';
 
   @override
   String get repeater_cliHelpSetBridgeChannel =>
@@ -3514,7 +3528,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetPublicKey => '显示设备的公钥。';
 
   @override
-  String get repeater_cliHelpGetPrvKey => '（仅适用于序列号）显示设备的私钥。请将其视为机密信息。';
+  String get repeater_cliHelpGetPrvKey => '（仅限串口）显示设备的私钥。请将其视为机密信息。';
 
   @override
   String get repeater_cliHelpGetRepeat => '显示数据包转发（作为中继器）是否已启用或已禁用。';
@@ -3532,7 +3546,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetRadioRxGain => '（仅适用于 SX126x 模块）显示 RX 放大器的状态。';
 
   @override
-  String get repeater_cliHelpGetAf => '显示当前的空闲时间系数。';
+  String get repeater_cliHelpGetAf => '显示当前的空中时间因子。';
 
   @override
   String get repeater_cliHelpGetDutyCycle => '显示当前允许的占空比（以百分比表示）。';
@@ -3550,10 +3564,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetAllowReadOnly => '显示是否允许访客仅限查看权限。';
 
   @override
-  String get repeater_cliHelpGetAdvertInterval => '显示本地广告的时间间隔，单位为分钟。';
+  String get repeater_cliHelpGetAdvertInterval => '显示本地广播的时间间隔，单位为分钟。';
 
   @override
-  String get repeater_cliHelpGetFloodAdvertInterval => '显示洪水广告的播放时间间隔，以小时为单位。';
+  String get repeater_cliHelpGetFloodAdvertInterval => '显示泛洪广播的时间间隔，单位为小时。';
 
   @override
   String get repeater_cliHelpGetGuestPassword => '显示已配置的访客密码。';
@@ -3568,34 +3582,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetRxDelay => '显示 rxdelay 的基本值。';
 
   @override
-  String get repeater_cliHelpGetTxDelay => '显示洪水模式下的传输延迟系数。';
+  String get repeater_cliHelpGetTxDelay => '显示泛洪模式下的 txdelay 系数。';
 
   @override
-  String get repeater_cliHelpGetDirectTxDelay => '显示直接模式下的时延系数。';
+  String get repeater_cliHelpGetDirectTxDelay => '显示直连模式下的 txdelay 系数。';
 
   @override
-  String get repeater_cliHelpGetFloodMax => '显示最大洪水传播次数。';
+  String get repeater_cliHelpGetFloodMax => '显示泛洪的最大跳数。';
 
   @override
   String get repeater_cliHelpGetOwnerInfo => '显示所有者的联系信息。';
 
   @override
-  String get repeater_cliHelpGetPathHashMode => '显示哈希模式（0/1/2）。';
+  String get repeater_cliHelpGetPathHashMode => '显示路径哈希模式（0/1/2）。';
 
   @override
   String get repeater_cliHelpGetLoopDetect => '显示循环检测的灵敏度。';
 
   @override
-  String get repeater_cliHelpGetAcl => '（仅适用于序列号）列出复用器上的访问控制条目。';
+  String get repeater_cliHelpGetAcl => '（仅限串口）列出中继器上的访问控制条目。';
 
   @override
   String get repeater_cliHelpGetBridgeEnabled => '显示桥是否已启用。';
 
   @override
-  String get repeater_cliHelpGetBridgeDelay => '显示桥梁延迟的时间，单位为毫秒。';
+  String get repeater_cliHelpGetBridgeDelay => '显示桥接延迟，单位为毫秒。';
 
   @override
-  String get repeater_cliHelpGetBridgeSource => '显示桥接设备是否接收或发送 RX 或 TX 类型的数据包。';
+  String get repeater_cliHelpGetBridgeSource => '显示桥接记录的是 RX 还是 TX 数据包。';
 
   @override
   String get repeater_cliHelpGetBridgeBaud => '（仅限 RS232 桥）显示桥的波特率。';
@@ -3613,7 +3627,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetAdcMultiplier => '显示 ADC 乘数（电池电压缩放）。';
 
   @override
-  String get repeater_cliHelpGetPwrMgtSupport => '报告董事会是否支持电源管理功能。';
+  String get repeater_cliHelpGetPwrMgtSupport => '报告该板是否支持电源管理功能。';
 
   @override
   String get repeater_cliHelpGetPwrMgtSource => '显示当前的电源：外部电源或电池。';
@@ -3625,10 +3639,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetPwrMgtBootMv => '显示启动时的电池电压，单位为毫伏 (mV)。';
 
   @override
-  String get repeater_cliHelpSensorGet => '通过按键读取自定义传感器设置。';
+  String get repeater_cliHelpSensorGet => '根据键名读取自定义传感器设置。';
 
   @override
-  String get repeater_cliHelpSensorSet => '编写自定义传感器设置。';
+  String get repeater_cliHelpSensorSet => '写入自定义传感器设置。';
 
   @override
   String get repeater_cliHelpSensorList => '列出所有自定义传感器设置，并按可选的起始索引进行分页显示。';
@@ -3641,19 +3655,19 @@ class AppLocalizationsZh extends AppLocalizations {
       '设置默认的区域范围。使用 \"<null>\" 可以清除。';
 
   @override
-  String get repeater_cliHelpRegionListAllowed => '列出允许洪水交通的区域。';
+  String get repeater_cliHelpRegionListAllowed => '列出允许泛洪流量的区域。';
 
   @override
-  String get repeater_cliHelpRegionListDenied => '列出禁止洪水交通的区域。';
+  String get repeater_cliHelpRegionListDenied => '列出禁止泛洪流量的区域。';
 
   @override
-  String get repeater_cliHelpStatsPackets => '（仅显示序列信息）显示数据包级别的统计信息。';
+  String get repeater_cliHelpStatsPackets => '（仅限串口）显示数据包级别的统计信息。';
 
   @override
-  String get repeater_cliHelpStatsRadio => '（仅显示序列信息）显示收音机相关统计数据。';
+  String get repeater_cliHelpStatsRadio => '（仅限串口）显示无线电统计信息。';
 
   @override
-  String get repeater_cliHelpStatsCore => '（仅显示序列号）显示核心固件统计信息。';
+  String get repeater_cliHelpStatsCore => '（仅限串口）显示核心固件统计信息。';
 
   @override
   String get telemetry_receivedData => '接收到的遥测数据';
@@ -3671,7 +3685,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String telemetry_channelTitle(int channel) {
-    return '频道 $channel';
+    return '通道 $channel';
   }
 
   @override
@@ -3879,13 +3893,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_otherObservedPaths => '其他观察到的路径';
 
   @override
-  String get channelPath_repeaterHops => '转发节点跳数';
+  String get channelPath_repeaterHops => '中继跳';
 
   @override
   String get channelPath_repeaterHopsHighTimeout => '延长路径追踪超时（10 秒 × 跳数）';
 
   @override
-  String get channelPath_noHopDetails => '此数据包未提供详细信息';
+  String get channelPath_noHopDetails => '此数据包未提供跳的详细信息';
 
   @override
   String get channelPath_messageDetails => '消息详情';
@@ -3894,10 +3908,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_senderLabel => '发送者';
 
   @override
-  String get channelPath_timeLabel => '接收/创建时间';
+  String get channelPath_timeLabel => '时间（接收于）';
 
   @override
-  String get channelPath_repeatsLabel => '重复';
+  String get channelPath_repeatsLabel => '转发次数';
 
   @override
   String channelPath_pathLabel(int index) {
@@ -3967,7 +3981,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channelPath_noHopDetailsAvailable => '此数据包暂无详细信息';
+  String get channelPath_noHopDetailsAvailable => '此数据包暂无跳的详细信息';
 
   @override
   String get channelPath_unknownRepeater => '未知转发节点';
@@ -4049,7 +4063,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get community_addPublicChannel => '添加公共频道';
+  String get community_addPublicChannel => '添加社区公共频道';
 
   @override
   String get community_addPublicChannelHint => '自动添加此社区的公共频道';
@@ -4111,7 +4125,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get community_addHashtagChannel => '添加标签频道';
+  String get community_addHashtagChannel => '添加社区标签频道';
 
   @override
   String get community_addHashtagChannelDesc => '为此社区创建标签频道';
@@ -4185,7 +4199,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get listFilter_unreadOnly => '仅显示未读';
 
   @override
-  String get listFilter_newGroup => '新建群聊';
+  String get listFilter_newGroup => '新建分组';
 
   @override
   String get pathTrace_you => '我自己';
@@ -4200,7 +4214,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pathTrace_refreshTooltip => '刷新路径追踪';
 
   @override
-  String get pathTrace_hopConfirmedNoDirectEchoTooltip => '跳数已确认，但未直接收到回声';
+  String get pathTrace_hopConfirmedNoDirectEchoTooltip => '该跳已确认，但未直接收到回声';
 
   @override
   String get pathTrace_someHopsNoLocation => '某些跳缺少位置信息！';
@@ -4223,7 +4237,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losRunToViewElevationProfile => '运行 LOS 查看高程剖面';
 
   @override
-  String get losMenuTitle => '服务水平菜单';
+  String get losMenuTitle => 'LOS 菜单';
 
   @override
   String get losMenuSubtitle => '点击节点或长按地图以获取自定义点';
@@ -4232,7 +4246,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losShowDisplayNodes => '显示显示节点';
 
   @override
-  String get losCustomPoints => '自定义积分';
+  String get losCustomPoints => '自定义点';
 
   @override
   String losCustomPointLabel(int index) {
@@ -4268,7 +4282,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String clearance,
     String heightUnit,
   ) {
-    return '$distance $distanceUnit，清除 LOS，最小间隙 $clearance $heightUnit';
+    return '$distance $distanceUnit，视距畅通，最小净空 $clearance $heightUnit';
   }
 
   @override
@@ -4282,14 +4296,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get losStatusChecking => '洛斯：正在检查...';
+  String get losStatusChecking => 'LOS：正在检查...';
 
   @override
   String get losStatusNoData => 'LOS：无数据';
 
   @override
   String losStatusSummary(int clear, int total, int blocked, int unknown) {
-    return 'LOS：$clear/$total 清除，$blocked 阻塞，$unknown 未知';
+    return 'LOS：$clear/$total 畅通，$blocked 受阻，$unknown 未知';
   }
 
   @override
@@ -4323,10 +4337,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losLegendTerrain => '地形';
 
   @override
-  String get losBlockedSpotsTitle => '被占用区域';
+  String get losBlockedSpotsTitle => '受阻点';
 
   @override
-  String get losBlockedSpotsHint => '点击地图上的某个被遮盖的区域，以突出显示该区域。';
+  String get losBlockedSpotsHint => '点击受阻点，在地图上突出显示它。';
 
   @override
   String losBlockedSpotChip(
@@ -4339,7 +4353,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get losSelectedObstructionTitle => '选择性阻碍';
+  String get losSelectedObstructionTitle => '所选障碍物';
 
   @override
   String losSelectedObstructionDetails(
@@ -4375,16 +4389,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_pathTrace => '路径追踪';
 
   @override
-  String get contacts_ping => '乒';
+  String get contacts_ping => 'Ping';
 
   @override
-  String get contacts_repeaterPathTrace => 'Trace 转发节点';
+  String get contacts_repeaterPathTrace => '追踪到转发节点的路径';
 
   @override
   String get contacts_repeaterPing => 'Ping 转发节点';
 
   @override
-  String get contacts_roomPathTrace => 'Trace 房间服务器';
+  String get contacts_roomPathTrace => '追踪到房间服务器的路径';
 
   @override
   String get contacts_roomPing => 'Ping 房间服务器';
@@ -4416,10 +4430,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_floodAdvert => '发送泛洪广播';
 
   @override
-  String get contacts_copyAdvertToClipboard => '复制广播到剪贴板';
+  String get contacts_copyAdvertToClipboard => '复制本节点的 meshcore:// 链接';
 
   @override
-  String get contacts_addContactFromClipboard => '从剪贴板添加联系人';
+  String get contacts_addContactFromClipboard =>
+      '通过剪贴板中的 «meshcore://» 链接添加联系人';
 
   @override
   String get contacts_ShareContact => '复制联系人信息到剪贴板';
@@ -4428,7 +4443,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_ShareContactZeroHop => '通过广播分享联系人';
 
   @override
-  String get contacts_zeroHopContactAdvertSent => '零跳广播已发送';
+  String get contacts_zeroHopContactAdvertSent => '已通过广播发送联系人。';
 
   @override
   String get contacts_zeroHopContactAdvertFailed => '发送联系人广播失败。';
@@ -4513,10 +4528,10 @@ class AppLocalizationsZh extends AppLocalizations {
       'MeshCore Open (Advanced mod) GPX 地图数据导出';
 
   @override
-  String get snrIndicator_nearByRepeaters => '附近的重复器';
+  String get snrIndicator_nearByRepeaters => '附近的转发节点';
 
   @override
-  String get snrIndicator_lastSeen => '最近访问';
+  String get snrIndicator_lastSeen => '最后在线';
 
   @override
   String get contactsSettings_title => '联系人设置';
@@ -4534,10 +4549,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactsSettings_autoAddUsersSubtitle => '允许伴侣自动添加发现的用户';
 
   @override
-  String get contactsSettings_autoAddRepeatersTitle => '自动添加重复器';
+  String get contactsSettings_autoAddRepeatersTitle => '自动添加转发节点';
 
   @override
-  String get contactsSettings_autoAddRepeatersSubtitle => '允许伴侣自动添加发现的重复器';
+  String get contactsSettings_autoAddRepeatersSubtitle => '允许伴侣自动添加发现的转发节点';
 
   @override
   String get contactsSettings_autoAddRoomServersTitle => '自动添加房间服务器';
@@ -4559,7 +4574,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '当联系人列表已满时，将替换最老的非收藏联系人。';
 
   @override
-  String get discoveredContacts_Title => '已发现的联系人';
+  String get discoveredContacts_Title => '添加已发现的联系人';
 
   @override
   String get discoveredContacts_noMatching => '没有匹配的联系人';
@@ -4603,14 +4618,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_sendCooldown => '请稍等片刻后再尝试发送。';
 
   @override
-  String get appSettings_jumpToOldestUnread => '跳转到最旧、未读的文章';
+  String get appSettings_jumpToOldestUnread => '跳转到最早的未读消息';
 
   @override
   String get appSettings_jumpToOldestUnreadSubtitle =>
-      '在打开包含未读消息的聊天时，请滚动到第一个未读消息，而不是最新的消息。';
+      '打开包含未读消息的聊天时，滚动到第一条未读消息，而不是最新消息。';
 
   @override
-  String get appSettings_languageHu => '匈牙利';
+  String get appSettings_languageHu => '匈牙利语';
 
   @override
   String get appSettings_languageJa => '日语';
@@ -4622,10 +4637,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get radioStats_tooltip => '无线电和网状结构统计数据';
 
   @override
-  String get radioStats_screenTitle => '广播统计数据';
+  String get radioStats_screenTitle => '无线电统计';
 
   @override
-  String get radioStats_notConnected => '连接到设备以查看收音机统计信息。';
+  String get radioStats_notConnected => '连接到设备以查看无线电统计信息。';
 
   @override
   String get radioStats_firmwareTooOld => '使用无线电统计功能需要配合使用 v8 或更高版本的固件。';
@@ -4650,12 +4665,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String radioStats_txAir(int seconds) {
-    return 'TX 频道播出时间（总时长）：$seconds 秒';
+    return 'TX 空中时间（总计）：$seconds 秒';
   }
 
   @override
   String radioStats_rxAir(int seconds) {
-    return 'RX 使用时长（总时长）：$seconds 秒';
+    return 'RX 空中时间（总计）：$seconds 秒';
   }
 
   @override
@@ -4667,10 +4682,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get radioStats_stripWaiting => '正在获取收音机数据…';
+  String get radioStats_stripWaiting => '正在获取无线电统计…';
 
   @override
-  String get radioStats_settingsTile => '广播统计数据';
+  String get radioStats_settingsTile => '无线电统计';
 
   @override
   String get radioStats_settingsSubtitle => '噪声水平、RSSI、信噪比和空中时间';
@@ -4688,7 +4703,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translation_composerTitle => '在发送之前进行翻译';
 
   @override
-  String get translation_composerSubtitle => '控制作曲家翻译图标的默认状态。';
+  String get translation_composerSubtitle => '控制输入框翻译图标的默认状态。';
 
   @override
   String get translation_autoIncomingTitle => '自动翻译消息';
@@ -4760,7 +4775,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String scanner_linuxPairingPinPrompt(String deviceName) {
-    return '输入 $deviceName 的 PIN 码（如果为空，则留空）。';
+    return '输入 $deviceName 的 PIN 码（若无则留空）。';
   }
 
   @override
@@ -4773,7 +4788,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translation_composerEnabledHint => '消息将在发送前进行翻译。';
 
   @override
-  String get translation_composerDisabledHint => '使用原始的打字方式发送消息。';
+  String get translation_composerDisabledHint => '以原始输入的语言发送消息。';
 
   @override
   String translation_translateTo(String language) {
@@ -4790,7 +4805,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get background_serviceTitle => 'MeshCore 正在运行';
 
   @override
-  String get background_serviceText => 'Keeping BLE connected';
+  String get background_serviceText => '正在保持与节点的连接';
 
   @override
   String appSettings_translationModelDeleted(String name) {
@@ -4836,7 +4851,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      '请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的密钥\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行';
+      '请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的前缀\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行';
 
   @override
   String get settings_copyMsgPathEditFinalTitle => '最终消息';
@@ -4870,10 +4885,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_zoomIn => '放大';
 
   @override
-  String get map_zoomOut => '放大';
+  String get map_zoomOut => '缩小';
 
   @override
-  String get map_centerMap => '中心地图';
+  String get map_centerMap => '地图居中';
 
   @override
   String get chrome_bluetoothRequiresChromium =>
@@ -5388,7 +5403,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_modSettingsSNRindicatorAllRepActivity =>
-      'SNR 指示器：对中继器的所有响应都触发，而不只是 advert';
+      'SNR 指示器：对中继器的所有响应都触发，而不只是广播';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions => '将收到消息中的引用显示为提及';
@@ -5688,7 +5703,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_infoHardware => '硬件';
 
   @override
-  String get appSettings_batteryLipoHv => '锂多压电源（3.0-4.35伏）';
+  String get appSettings_batteryLipoHv => '高压锂聚合物电池 (3.0-4.35V)';
 
   @override
   String get chat_sendImage => '发送图片';
@@ -5700,7 +5715,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageMessages_enableTitle => '启用图片消息';
 
   @override
-  String get imageMessages_enableSubtitle => '通过网格发送图像。需要一次性下载图像模型。';
+  String get imageMessages_enableSubtitle => '通过网状网络发送图像。需要一次性下载图像模型。';
 
   @override
   String get imageMessages_modelSectionTitle => '图像模型';
@@ -5728,7 +5743,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get imageMessages_autoProcessSubtitle =>
-      '每次图像到达后立即重建，每次需要约2GB的内存；若想关闭重建功能，可通过点击取消开启。';
+      '每张图像到达后立即重建。每次约占用 2 GB 内存、持续约一秒；关闭此项则改为点击后再重建。';
 
   @override
   String get imageSend_title => '发送图片';
@@ -5740,7 +5755,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_originalSize => '原图';
 
   @override
-  String get imageSend_onAirSize => '直播中';
+  String get imageSend_onAirSize => '空中传输';
 
   @override
   String get imageSend_quality => '质量';
@@ -5755,7 +5770,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_packetsLabel => '数据包';
 
   @override
-  String get imageSend_airtimeLabel => '播出时间';
+  String get imageSend_airtimeLabel => '空中时间';
 
   @override
   String get imageSend_sizeLabel => '有效载荷';
@@ -5783,18 +5798,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_radioUnknownTitle => '无线电设置未知';
 
   @override
-  String get imageSend_radioUnknownBody => '连接设备以计算播出时间。';
+  String get imageSend_radioUnknownBody => '连接设备以计算空中时间。';
 
   @override
-  String get imageSend_longSendTitle => '长距离传输';
+  String get imageSend_longSendTitle => '传输时间较长';
 
   @override
   String imageSend_longSendBody(String duration) {
-    return '这将维持频道大约 $duration 时间。';
+    return '这将占用信道约 $duration。';
   }
 
   @override
-  String get imageSend_floodNote => '洪水路由：每个中继站都会转发每个数据包，因此信道比这段时间更长地处于繁忙状态。';
+  String get imageSend_floodNote => '泛洪路由：范围内的每个中继都会转发每个数据包，因此信道的繁忙时间会比这更长。';
 
   @override
   String get imageSend_parityTitle => '恢复包';
@@ -5830,7 +5845,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '图片作为群组数据传输，因此只能发送到频道，而不能直接发送给个人。';
 
   @override
-  String get imageSend_tooLarge => '该图像编码的数据包数量超过了网格格式所允许的范围。';
+  String get imageSend_tooLarge => '该图像编码后的数据包数量超过了网状网络格式所允许的上限。';
 
   @override
   String imageSend_sentConfirmation(int count) {
@@ -5850,7 +5865,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String imageSend_sendingProgress(int sent, int total) {
-    return '发送图像 — 已发送 $sent 包含 $total';
+    return '正在发送图像 — 第 $sent / $total 个数据包';
   }
 
   @override
@@ -5860,28 +5875,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String receivedImage_incoming(int received, int total) {
-    return '已收到的 $received 个包含在 $total 个包裹中';
+    return '已收到 $received / $total 个数据包';
   }
 
   @override
   String get receivedImage_queued => '等待解码';
 
   @override
-  String get receivedImage_tapToDecode => '点击解锁';
+  String get receivedImage_tapToDecode => '点击解码';
 
   @override
   String get receivedImage_decoding => '重建……大约1秒';
 
   @override
   String receivedImage_incomplete(int received, int total) {
-    return '图片不完整 — $received 已收到 $total 个数据包';
+    return '图片不完整 — 已收到 $received / $total 个数据包';
   }
 
   @override
   String get receivedImage_corrupt => '图像无法重建';
 
   @override
-  String get receivedImage_decoderMissing => '收到图片 — 图像解码失败';
+  String get receivedImage_decoderMissing => '收到图片 — 图像解码已关闭';
 
   @override
   String get receivedImage_evicted => '图片已不再存储';
@@ -5893,7 +5908,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get receivedImage_decodeAgain => '重新解码';
 
   @override
-  String get receivedImage_openSettings => '建立';
+  String get receivedImage_openSettings => '设置';
 
   @override
   String get receivedImage_tapToProcess => '点击处理';
@@ -6310,51 +6325,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String channels_qrUpdateExisting(String name) {
-    return 'Channel $name already exists. Update its properties?';
+    return '频道 $name 已存在。要更新它的属性吗？';
   }
 
   @override
-  String get settings_modSettingsDirectEchoRecovery =>
-      'Receive direct messages before the route completes';
+  String get settings_modSettingsDirectEchoRecovery => '无需等待路线走完即可接收私聊消息';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
-      'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.';
+      '注意！节点的私钥将被导出到应用内存中，由应用自己而不是节点来解密数据包。';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>
-      'Enable faster direct message receiving?\nTo do this, the node\'s private key will be extracted into the app\'s RAM.';
+      '要启用私聊消息加速接收吗？\n为此，节点的私钥将被读取到应用的内存（RAM）中。';
 
   @override
-  String get channelPath_incompletePaths => 'Incomplete paths';
+  String get channelPath_incompletePaths => '不完整路径';
 
   @override
   String channelPath_incompletePathTitle(int index, String hops) {
-    return 'Incomplete path $index • $hops';
+    return '不完整路径 $index • $hops';
   }
 
   @override
-  String get channelPath_copyInvertedPath => 'Copy inverted route';
+  String get channelPath_copyInvertedPath => '复制反向路线';
 
   @override
-  String get channelPath_invertedPathCopied => 'Inverted route copied';
+  String get channelPath_invertedPathCopied => '反向路线已复制';
 
   @override
-  String get discoveredContacts_alreadyAdded => 'Node already in contacts';
+  String get discoveredContacts_alreadyAdded => '节点已在联系人中';
 
   @override
-  String get chat_floodRegionNode => 'Node region';
+  String get chat_floodRegionNode => '节点区域';
 
   @override
   String chat_floodRegionNodeWith(String region) {
-    return 'Node region: $region';
+    return '节点区域：$region';
   }
 
   @override
-  String get chat_floodRegionNone => 'No region';
+  String get chat_floodRegionNone => '无区域';
 
   @override
-  String get chat_stopSending => 'stop sending';
+  String get chat_stopSending => '停止发送';
 
   @override
   String get urlImage_enable => '启用URL图片';
@@ -6363,7 +6377,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get urlImage_possible => '可能是URL图片，请在设置中启用。';
 
   @override
-  String get settings_radioSettingsNotApplied => '收音机未应用这些设置';
+  String get settings_radioSettingsNotApplied => '无线电模块未应用这些设置';
 
   @override
   String get settings_publicKeyCopied => '公钥已复制';
@@ -6439,19 +6453,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get contacts_notInNodeMemory => 'Not added to node memory';
+  String get contacts_notInNodeMemory => '未添加到节点内存';
 
   @override
-  String get contacts_addToNodeTitle => 'Add to node memory?';
+  String get contacts_addToNodeTitle => '要添加到节点内存吗？';
 
   @override
   String contacts_addToNodeMessage(String contactName) {
-    return '$contactName is known only to the app. Logging in, requests, sharing and messages need it in the node\'s memory.';
+    return '只有应用知道 $contactName。登录、请求、分享和消息都需要它位于节点内存中。';
   }
 
   @override
-  String get contacts_addToNodeFailed => 'Could not add it to the node memory';
+  String get contacts_addToNodeFailed => '无法添加到节点内存';
 
   @override
-  String get contacts_addToNodeFull => 'The node memory is full';
+  String get contacts_addToNodeFull => '节点内存已满';
 }
