@@ -658,7 +658,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_frequency => 'Frekvens (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Ogiltig frekvens (150-2500 MHz)';
@@ -3716,7 +3716,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Definierar läget för hash-baserad ruttning. 0 = äldre läge, 1 = standard, 2 = strikt. Påverkar hur ruttvägar matchas.';
+      'Ställer in hash-läget för sökvägen: hur många byte av varje hopps hash som hamnar i sökvägen för flood-paket som den här noden skickar. 0 = 1 byte, 1 = 2 byte, 2 = 3 byte.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -4166,7 +4166,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channelPath_senderLabel => 'Avsändare';
 
   @override
-  String get channelPath_timeLabel => 'Tid (mottagande)';
+  String get channelPath_timeLabel => 'Tid för mottagning/skapande';
 
   @override
   String get channelPath_repeatsLabel => 'Upprepningar';
@@ -6229,7 +6229,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Den här radion kan inte skicka bildpaket. Anslut en enhet med companion-firmware 13 eller senare.';
+      'Den här radion kan inte skicka bildpaket. Anslut en enhet med companion-firmware v1.15.0 eller senare.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

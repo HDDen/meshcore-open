@@ -637,7 +637,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_frequency => '주파수 (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => '유효하지 않은 주파수 (150-2500 MHz)';
@@ -3569,7 +3569,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      '경로 해시 모드를 설정합니다. 0 = 고전 방식, 1 = 표준 방식, 2 = 엄격한 방식. 경로 매칭 방식에 영향을 미칩니다.';
+      '경로 해시 모드를 설정합니다. 이 노드가 보내는 플러드 패킷의 경로에 각 홉의 해시를 몇 바이트씩 넣을지 정합니다. 0 = 1바이트, 1 = 2바이트, 2 = 3바이트.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -5964,7 +5964,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      '이 라디오는 이미지 패킷을 전송할 수 없습니다. 컴패니언 펌웨어 13 이상을 실행하는 장치를 연결해 주세요.';
+      '이 라디오는 이미지 패킷을 전송할 수 없습니다. 컴패니언 펌웨어 v1.15.0 이상을 실행하는 장치를 연결해 주세요.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

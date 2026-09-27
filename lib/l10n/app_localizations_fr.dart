@@ -163,7 +163,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tcpScreenTitle => 'Établir une connexion via TCP';
 
   @override
-  String get tcpHostLabel => 'Adresse';
+  String get tcpHostLabel => 'Adresse IP';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -184,7 +184,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Une adresse est obligatoire.';
+  String get tcpErrorHostRequired => 'Une adresse IP est obligatoire.';
 
   @override
   String get tcpErrorPortInvalid =>
@@ -671,7 +671,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_frequency => 'Fréquence (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Fréquence invalide (150-2500 MHz)';
@@ -3761,7 +3761,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Définit le mode de hachage de chemin. 0 = mode ancien, 1 = mode standard, 2 = mode strict. Influence la façon dont les chemins de routage sont mis en correspondance.';
+      'Définit le mode de hachage de chemin : combien d\'octets du hachage de chaque saut entrent dans le chemin des paquets flood envoyés par ce nœud. 0 = 1 octet, 1 = 2 octets, 2 = 3 octets.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6301,7 +6301,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Cette radio ne peut pas envoyer de paquets d\'images. Connectez un appareil exécutant le firmware compagnon version 13 ou ultérieure.';
+      'Cette radio ne peut pas envoyer de paquets d\'images. Connectez un appareil exécutant le firmware compagnon version 1.15.0 ou ultérieure.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

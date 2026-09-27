@@ -654,7 +654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_frequency => 'Frequency (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Invalid frequency (150-2500 MHz)';
@@ -3679,7 +3679,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Sets the path-hash mode. 0 = legacy, 1 = standard, 2 = strict. Affects how routing paths are matched.';
+      'Sets the path-hash mode: how many bytes of each hop\'s hash go into the path of floods this node sends. 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6164,7 +6164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'This radio cannot send image packets. Connect a device running companion firmware 13 or newer.';
+      'This radio cannot send image packets. Connect a device running companion firmware v1.15.0 or newer.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

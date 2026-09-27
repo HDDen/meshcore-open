@@ -1321,7 +1321,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_frequencyHelper.
   ///
   /// In en, this message translates to:
-  /// **'300.0 - 2500.0'**
+  /// **'150.0 - 2500.0'**
   String get settings_frequencyHelper;
 
   /// No description provided for @settings_frequencyInvalid.
@@ -6551,7 +6551,7 @@ abstract class AppLocalizations {
   /// No description provided for @repeater_cliHelpSetPathHashMode.
   ///
   /// In en, this message translates to:
-  /// **'Sets the path-hash mode. 0 = legacy, 1 = standard, 2 = strict. Affects how routing paths are matched.'**
+  /// **'Sets the path-hash mode: how many bytes of each hop\'s hash go into the path of floods this node sends. 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes.'**
   String get repeater_cliHelpSetPathHashMode;
 
   /// No description provided for @repeater_cliHelpSetLoopDetect.
@@ -10717,7 +10717,7 @@ abstract class AppLocalizations {
   /// No description provided for @imageSend_deviceUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'This radio cannot send image packets. Connect a device running companion firmware 13 or newer.'**
+  /// **'This radio cannot send image packets. Connect a device running companion firmware v1.15.0 or newer.'**
   String get imageSend_deviceUnsupported;
 
   /// No description provided for @imageSend_directMessagesUnsupported.

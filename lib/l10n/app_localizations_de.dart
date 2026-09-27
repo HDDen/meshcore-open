@@ -163,7 +163,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tcpScreenTitle => 'Verbinden über TCP';
 
   @override
-  String get tcpHostLabel => 'Endpunkt';
+  String get tcpHostLabel => 'IP-Adresse';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Ein Endpunkt ist erforderlich.';
+  String get tcpErrorHostRequired => 'Eine IP-Adresse ist erforderlich.';
 
   @override
   String get tcpErrorPortInvalid =>
@@ -665,7 +665,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_frequency => 'Frequenz (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Ungültige Frequenz (150-2500 MHz)';
@@ -3742,7 +3742,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Legt den Modus für die Pfad-Hashes fest. 0 = ältere Version, 1 = Standard, 2 = streng. Beeinflusst, wie Routing-Pfade abgeglichen werden.';
+      'Legt den Pfad-Hash-Modus fest: wie viele Bytes des Hashs jedes Hops in den Pfad der Flood-Pakete eingehen, die dieser Knoten sendet. 0 = 1 Byte, 1 = 2 Bytes, 2 = 3 Bytes.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -4197,7 +4197,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelPath_senderLabel => 'Absender';
 
   @override
-  String get channelPath_timeLabel => 'Zeit (Empfang)';
+  String get channelPath_timeLabel => 'Empfangs-/Erstellungszeit';
 
   @override
   String get channelPath_repeatsLabel => 'Wiederholungen';
@@ -5685,7 +5685,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'Dieser Bereich enthält Optionen, die MCOa hinzufügt und die im ursprünglichen meshcore_open nicht enthalten sind';
+      'Dieser Bereich enthält Optionen, die im ursprünglichen meshcore_open fehlen';
 
   @override
   String get settings_modSettingsVisual => 'Darstellung';
@@ -6277,7 +6277,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Dieses Radio kann keine Bildpakete senden. Verbinden Sie ein Gerät mit der Companion-Firmware-Version 13 oder neuer.';
+      'Dieses Radio kann keine Bildpakete senden. Verbinden Sie ein Gerät mit der Companion-Firmware-Version 1.15.0 oder neuer.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

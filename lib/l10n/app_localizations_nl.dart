@@ -163,7 +163,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tcpScreenTitle => 'Verbind via TCP';
 
   @override
-  String get tcpHostLabel => 'Eindpunt';
+  String get tcpHostLabel => 'IP-adres';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Een host is vereist.';
+  String get tcpErrorHostRequired => 'Een IP-adres is vereist.';
 
   @override
   String get tcpErrorPortInvalid =>
@@ -662,7 +662,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_frequency => 'Frequentie (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Ongeldige frequentie (150-2500 MHz)';
@@ -3727,7 +3727,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Stelt de modus voor het berekenen van de hash van de route in. 0 = verouderd, 1 = standaard, 2 = strikt. Beïnvloedt hoe de routes worden gematched.';
+      'Stelt de hash-modus voor paden in: hoeveel bytes van de hash van elke hop in het pad komen van de floodpakketten die deze node verzendt. 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -5656,7 +5656,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'In deze sectie staan opties die door MCOa zijn toegevoegd en geen deel uitmaken van het originele meshcore_open';
+      'In deze sectie staan opties die in het originele meshcore_open ontbreken';
 
   @override
   String get settings_modSettingsVisual => 'Weergave';
@@ -6248,7 +6248,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Deze radio kan geen beeldpakketten verzenden. Verbind een apparaat met companion-firmware versie 13 of nieuwer.';
+      'Deze radio kan geen beeldpakketten verzenden. Verbind een apparaat met companion-firmware versie 1.15.0 of nieuwer.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

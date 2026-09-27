@@ -163,7 +163,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tcpScreenTitle => 'Stabilire una connessione tramite TCP';
 
   @override
-  String get tcpHostLabel => 'Indirizzo';
+  String get tcpHostLabel => 'Indirizzo IP';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -666,7 +666,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_frequency => 'Frequenza (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Frequenza non valida (150-2500 MHz)';
@@ -3750,7 +3750,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Imposta la modalità di hashing del percorso. 0 = modalità legacy, 1 = modalità standard, 2 = modalità rigorosa. Influisce su come vengono abbinati i percorsi di routing.';
+      'Imposta la modalità di hashing del percorso: quanti byte dell\'hash di ogni salto entrano nel percorso dei pacchetti flood inviati da questo nodo. 0 = 1 byte, 1 = 2 byte, 2 = 3 byte.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6285,7 +6285,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Questa radio non può inviare pacchetti di immagini. Collegare un dispositivo con firmware companion versione 13 o successiva.';
+      'Questa radio non può inviare pacchetti di immagini. Collegare un dispositivo con firmware companion versione 1.15.0 o successiva.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

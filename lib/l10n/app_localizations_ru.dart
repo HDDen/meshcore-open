@@ -593,8 +593,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_debug => 'Отладка';
 
   @override
-  String get settings_companionDebugLog =>
-      'Журнал отладки (для сопутствующего приложения)';
+  String get settings_companionDebugLog => 'Журнал отладки компаньона';
 
   @override
   String get settings_companionDebugLogSubtitle =>
@@ -667,7 +666,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_frequency => 'Частота (МГц)';
 
   @override
-  String get settings_frequencyHelper => '300.0 – 2500.0';
+  String get settings_frequencyHelper => '150.0 – 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Недопустимая частота (150–2500 МГц)';
@@ -2752,11 +2751,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Введите пароль репитера для доступа к настройкам и статусу.';
+      'Введите пароль репитера для гостевого или администраторского доступа.';
 
   @override
   String get login_roomDescription =>
-      'Введите пароль комнаты для доступа к настройкам и статусу.';
+      'Введите пароль комнаты для гостевого или администраторского доступа.';
 
   @override
   String get login_routing => 'Маршрутизация';
@@ -3248,14 +3247,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get repeater_txDelay => 'Задержка в работе системы Flood TX';
+  String get repeater_txDelay => 'Задержка передачи flood';
 
   @override
   String get repeater_txDelayHelper =>
       'Интервал ретрансляции для flood-трафика как множитель времени пакета в эфире (0–2, по умолчанию 0,5). Чем выше значение, тем меньше коллизий, но тем медленнее доставка.';
 
   @override
-  String get repeater_directTxDelay => 'Прямая задержка сигнала TX';
+  String get repeater_directTxDelay => 'Задержка прямой передачи';
 
   @override
   String get repeater_directTxDelayHelper =>
@@ -3720,7 +3719,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPrvKey =>
-      '(Только через последовательный порт) Заменяет приватный ключ, идентифицирующий устройство. Требуется перезагрузка для применения. Генерирует новый публичный ключ.';
+      'Заменяет приватный ключ, идентифицирующий устройство. Требуется перезагрузка для применения. Генерирует новый публичный ключ.';
 
   @override
   String get repeater_cliHelpSetRadioRxGain =>
@@ -3732,11 +3731,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Устанавливает режим хеширования пути. 0 = устаревший, 1 = стандартный, 2 = строгий. Влияет на то, как определяются маршруты.';
+      'Устанавливает режим хеширования пути: сколько байт хеша каждого хопа попадает в путь flood-пакетов, которые отправляет эта нода. 0 = 1 байт, 1 = 2 байта, 2 = 3 байта.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
-      'Устанавливает чувствительность обнаружения циклов маршрутизации: \"выключено\", \"минимальная\", \"умеренная\" или \"строгая\".';
+      'Устанавливает чувствительность обнаружения петель маршрутизации: off, minimal, moderate или strict.';
 
   @override
   String get repeater_cliHelpSetFreq =>
@@ -3833,7 +3832,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetDirectTxDelay =>
-      'Отображает коэффициент задержки в режиме прямого подключения.';
+      'Показывает коэффициент txdelay в режиме прямой маршрутизации.';
 
   @override
   String get repeater_cliHelpGetFloodMax =>
@@ -4634,7 +4633,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get losLegendTerrain => 'Рельеф';
 
   @override
-  String get losBlockedSpotsTitle => 'Зарезервированные места';
+  String get losBlockedSpotsTitle => 'Препятствия';
 
   @override
   String get losBlockedSpotsHint =>
@@ -4849,7 +4848,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Местоположения повторителей и серверов комнат';
 
   @override
-  String get settings_gpxExportChat => 'Местоположения спутников';
+  String get settings_gpxExportChat => 'Местоположения companion-устройств';
 
   @override
   String get settings_gpxExportAllContacts => 'Все местоположения контактов';
@@ -4892,7 +4891,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contactsSettings_autoAddRepeatersSubtitle =>
-      'Разрешить приложению-компаньону автоматически добавлять обнаруженные репитеры';
+      'Разрешить компаньону автоматически добавлять обнаруженные репитеры';
 
   @override
   String get contactsSettings_autoAddRoomServersTitle =>
@@ -4988,7 +4987,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get radioStats_tooltip => 'Статистика радио и беспроводной сети';
 
   @override
-  String get radioStats_screenTitle => 'Статистика радиовещания';
+  String get radioStats_screenTitle => 'Статистика радио';
 
   @override
   String get radioStats_notConnected =>
@@ -5087,7 +5086,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Предопределенная модель от Hugging Face';
 
   @override
-  String get translation_manualUrlLabel => 'Ссылка на руководство';
+  String get translation_manualUrlLabel => 'URL модели вручную';
 
   @override
   String get translation_downloadModel => 'Скачать модель';
@@ -5218,7 +5217,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_copyMsgPathEditTemplateDscr =>
-      'Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - ключ хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n%hops% - количество хопов\n\\n - перенос строки';
+      'Используйте подстановочные шаблоны:\n%hopInd% - порядок хопа\n%hopKey% - префикс хопа\n%hopName% - имя хопа\n%collisionMarker% - отметка коллизии репитеров\n%div% - разделитель (пропускается для последнего хопа)\n%hops% - количество хопов\n\\n - перенос строки';
 
   @override
   String get settings_copyMsgPathEditFinalTitle => 'Итоговое сообщение';
@@ -5254,10 +5253,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_zoomIn => 'Увеличить масштаб';
 
   @override
-  String get map_zoomOut => 'Увеличить масштаб';
+  String get map_zoomOut => 'Уменьшить масштаб';
 
   @override
-  String get map_centerMap => 'Карта центра';
+  String get map_centerMap => 'Центрировать карту';
 
   @override
   String get chrome_bluetoothRequiresChromium =>
@@ -5687,13 +5686,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_mcmp_version => 'Версия';
 
   @override
-  String get settings_mcmp_useSign => 'Проверка подписи';
+  String get settings_mcmp_useSign => 'Подпись сообщений';
 
   @override
   String get settings_mcmp_signed => 'С проверкой подписи';
 
   @override
-  String get settings_mcmp_noSign => 'Без проверки подписи';
+  String get settings_mcmp_noSign => 'Без подписи';
 
   @override
   String get settings_mcmp_senderNameCollision =>
@@ -6234,7 +6233,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      'Руководство по маршрутизации потоков: каждый ретранслятор в зоне перераспределяет каждый пакет, поэтому канал остаётся занятным дольше, чем это.';
+      'Flood-маршрутизация: каждый ретранслятор в зоне повторяет каждый пакет, поэтому канал будет занят дольше этого времени.';
 
   @override
   String get imageSend_parityTitle => 'Пакет восстановления';
@@ -6267,7 +6266,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Это радио не может отправлять пакеты изображений. Подключите устройство, работающее на прошивке-компаньоне версии 13 или выше.';
+      'Это радио не может отправлять пакеты изображений. Подключите устройство, работающее на прошивке-компаньоне версии 1.15.0 или выше.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
@@ -6327,7 +6326,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get receivedImage_decoderMissing =>
-      'Получен изображение — декодирование изображения неправильное';
+      'Изображение получено, декодирование изображений выключено';
 
   @override
   String get receivedImage_evicted => 'Изображение больше не сохраняется';

@@ -163,7 +163,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tcpScreenTitle => '通过 TCP 连接';
 
   @override
-  String get tcpHostLabel => '目标地址';
+  String get tcpHostLabel => 'IP 地址';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => '需要提供主机地址。';
+  String get tcpErrorHostRequired => '需要提供 IP 地址。';
 
   @override
   String get tcpErrorPortInvalid => '端口号必须在 1 到 65535 之间。';
@@ -627,7 +627,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_frequency => '频率 (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => '无效频率范围（150-2500 MHz）';
@@ -3504,7 +3504,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      '设置路径哈希模式。 0 = 传统模式，1 = 标准模式，2 = 严格模式。 影响路由路径的匹配方式。';
+      '设置路径哈希模式：本节点发送的泛洪数据包路径中，每一跳的哈希占多少字节。0 = 1 字节，1 = 2 字节，2 = 3 字节。';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -3908,7 +3908,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_senderLabel => '发送者';
 
   @override
-  String get channelPath_timeLabel => '时间（接收于）';
+  String get channelPath_timeLabel => '接收/创建时间';
 
   @override
   String get channelPath_repeatsLabel => '转发次数';
@@ -5838,7 +5838,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      '此无线电无法发送图像数据包。请连接运行伴侣固件13或更高版本的设备。';
+      '此无线电无法发送图像数据包。请连接运行伴侣固件 v1.15.0 或更高版本的设备。';
 
   @override
   String get imageSend_directMessagesUnsupported =>

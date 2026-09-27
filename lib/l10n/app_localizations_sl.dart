@@ -183,7 +183,7 @@ class AppLocalizationsSl extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Potreben je naslov gostitelja.';
+  String get tcpErrorHostRequired => 'Potreben je IP naslov.';
 
   @override
   String get tcpErrorPortInvalid => 'Port mora biti med 1 in 65535.';
@@ -659,7 +659,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_frequency => 'Frekvenca (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Neveljavna frekvenca (150-2500 MHz)';
@@ -3710,7 +3710,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Nastavi način path-hash. 0 = starejši, 1 = standardni, 2 = strogi. Vpliva na to, kako se ujemajo poti usmerjanja.';
+      'Nastavi način path-hash: koliko bajtov hash-a vsakega skoka gre v pot flood paketov, ki jih pošilja to vozlišče. 0 = 1 bajt, 1 = 2 bajta, 2 = 3 bajti.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -4159,7 +4159,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get channelPath_senderLabel => 'Pošiljatelj';
 
   @override
-  String get channelPath_timeLabel => 'Čas (prejema)';
+  String get channelPath_timeLabel => 'Čas prejema/nastanka';
 
   @override
   String get channelPath_repeatsLabel => 'Ponovitve';
@@ -6230,7 +6230,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Ta radio ne more pošiljati slikovnih paketov. Poveži napravo s companion vdelano programsko opremo 13 ali novejšo.';
+      'Ta radio ne more pošiljati slikovnih paketov. Poveži napravo s companion vdelano programsko opremo v1.15.0 ali novejšo.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

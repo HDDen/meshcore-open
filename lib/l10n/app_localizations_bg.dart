@@ -163,7 +163,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get tcpScreenTitle => 'Свържете се чрез TCP';
 
   @override
-  String get tcpHostLabel => 'Адрес';
+  String get tcpHostLabel => 'IP адрес';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Необходим е адрес.';
+  String get tcpErrorHostRequired => 'Необходим е IP адрес.';
 
   @override
   String get tcpErrorPortInvalid => 'Портът трябва да бъде между 1 и 65535.';
@@ -672,7 +672,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_frequency => 'Честота (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 – 2500.0';
+  String get settings_frequencyHelper => '150.0 – 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Невалидна честота (150-2500 MHz)';
@@ -3753,7 +3753,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Задава режима за хеширане на пътищата. 0 = остарял, 1 = стандартен, 2 = строг. Влияе върху начина, по който се съпоставят маршрутите.';
+      'Задава режима на хеширане на пътя: колко байта от хеша на всеки скок влизат в пътя на flood пакетите, които изпраща този възел. 0 = 1 байт, 1 = 2 байта, 2 = 3 байта.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -4205,7 +4205,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channelPath_senderLabel => 'Изпращач';
 
   @override
-  String get channelPath_timeLabel => 'Време (на получаване)';
+  String get channelPath_timeLabel => 'Време на получаване/създаване';
 
   @override
   String get channelPath_repeatsLabel => 'Повторения';
@@ -5685,7 +5685,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'Този раздел съдържа опции, добавени от MCOa, които не са част от оригиналния meshcore_open';
+      'В този раздел са събрани опции, които липсват в оригиналния meshcore_open';
 
   @override
   String get settings_modSettingsVisual => 'Външен вид';
@@ -6281,7 +6281,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Това радио не може да изпраща пакети с изображения. Свържи устройство с companion фърмуер 13 или по-нов.';
+      'Това радио не може да изпраща пакети с изображения. Свържи устройство с companion фърмуер v1.15.0 или по-нов.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

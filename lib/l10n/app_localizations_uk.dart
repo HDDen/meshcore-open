@@ -664,7 +664,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_frequency => 'Частота (МГц)';
 
   @override
-  String get settings_frequencyHelper => '300.0 – 2500.0';
+  String get settings_frequencyHelper => '150.0 – 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Некоректна частота (150-2500 МГц)';
@@ -3734,7 +3734,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Встановлює режим хешування шляху. 0 = застарілий, 1 = стандартний, 2 = суворий. Впливає на те, як порівнюються маршрути.';
+      'Встановлює режим хешування шляху: скільки байтів хешу кожного переходу потрапляє у шлях flood-пакетів, які надсилає цей вузол. 0 = 1 байт, 1 = 2 байти, 2 = 3 байти.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6280,7 +6280,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Це радіо не може надсилати пакети зображень. Підключи пристрій із companion-прошивкою 13 або новішою.';
+      'Це радіо не може надсилати пакети зображень. Підключи пристрій із companion-прошивкою v1.15.0 або новішою.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

@@ -665,7 +665,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_frequency => 'Frekvencia (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 – 2500.0';
+  String get settings_frequencyHelper => '150.0 – 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Neplatná frekvencia (150-2500 MHz)';
@@ -3721,7 +3721,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Nastavuje režim hashovania cesty. 0 = starý režim, 1 = štandardný režim, 2 = striktný režim. Ovplyvňuje, ako sa porovnávajú trasy.';
+      'Nastavuje režim hashovania cesty: koľko bajtov z hashu každého skoku sa zapíše do cesty flood paketov, ktoré tento uzol odosiela. 0 = 1 bajt, 1 = 2 bajty, 2 = 3 bajty.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6237,7 +6237,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Toto rádio nedokáže odosielať obrázkové pakety. Pripojte zariadenie s companion firmvérom 13 alebo novším.';
+      'Toto rádio nedokáže odosielať obrázkové pakety. Pripojte zariadenie s companion firmvérom v1.15.0 alebo novším.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

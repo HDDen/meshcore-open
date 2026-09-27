@@ -163,7 +163,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get tcpScreenTitle => 'Csatlakozzon TCP-n keresztül';
 
   @override
-  String get tcpHostLabel => 'Végpont';
+  String get tcpHostLabel => 'IP-cím';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'A gazdagép megadása kötelező.';
+  String get tcpErrorHostRequired => 'Az IP-cím megadása kötelező.';
 
   @override
   String get tcpErrorPortInvalid => 'A portnak 1 és 65535 között kell lennie.';
@@ -662,7 +662,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_frequency => 'Frekvencia (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid =>
@@ -3739,7 +3739,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Beállítja az útvonal-kivonat módot. 0 = örökölt, 1 = szabványos, 2 = szigorú. Befolyásolja az útválasztási útvonalak egyeztetését.';
+      'Beállítja az útvonal-kivonat módot: az egyes ugrások kivonatából hány bájt kerül a csomópont által küldött flood csomagok útvonalába. 0 = 1 bájt, 1 = 2 bájt, 2 = 3 bájt.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -5674,7 +5674,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'Ebben a szakaszban az MCOa által hozzáadott beállítások szerepelnek, amelyek az eredeti meshcore_openben nincsenek meg';
+      'Ebben a szakaszban azok a beállítások szerepelnek, amelyek az eredeti meshcore_openből hiányoznak';
 
   @override
   String get settings_modSettingsVisual => 'Megjelenés';
@@ -6264,7 +6264,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Ez a rádió nem tud képcsomagokat küldeni. Csatlakozzon egy 13-as vagy újabb companion firmware-t futtató eszközhöz.';
+      'Ez a rádió nem tud képcsomagokat küldeni. Csatlakozzon egy 1.15.0-s vagy újabb companion firmware-t futtató eszközhöz.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

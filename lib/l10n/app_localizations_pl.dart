@@ -163,7 +163,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tcpScreenTitle => 'Połącz się za pomocą protokołu TCP';
 
   @override
-  String get tcpHostLabel => 'Adres';
+  String get tcpHostLabel => 'Adres IP';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => 'Wymagany jest adres.';
+  String get tcpErrorHostRequired => 'Wymagany jest adres IP.';
 
   @override
   String get tcpErrorPortInvalid =>
@@ -669,7 +669,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_frequency => 'Częstotliwość (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid =>
@@ -3750,7 +3750,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Ustawia tryb haszowania ścieżki. 0 = stary, 1 = standardowy, 2 = restrykcyjny. Wpływa na sposób dopasowywania ścieżek routingu.';
+      'Ustawia tryb haszujący ścieżkę: ile bajtów hasza każdego skoku trafia do ścieżki pakietów flood wysyłanych przez ten węzeł. 0 = 1 bajt, 1 = 2 bajty, 2 = 3 bajty.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -5694,7 +5694,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_modSettingsSubtitle =>
-      'Ta sekcja zawiera opcje dodane przez MCOa, których nie ma w oryginalnym meshcore_open';
+      'Ta sekcja zawiera opcje, których nie ma w oryginalnym meshcore_open';
 
   @override
   String get settings_modSettingsVisual => 'Wygląd';
@@ -6289,7 +6289,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'To radio nie może wysyłać pakietów obrazu. Podłącz urządzenie z oprogramowaniem Companion w wersji 13 lub nowszej.';
+      'To radio nie może wysyłać pakietów obrazu. Podłącz urządzenie z oprogramowaniem Companion w wersji 1.15.0 lub nowszej.';
 
   @override
   String get imageSend_directMessagesUnsupported =>

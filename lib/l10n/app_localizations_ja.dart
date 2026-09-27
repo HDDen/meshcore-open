@@ -163,7 +163,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tcpScreenTitle => 'TCP で接続';
 
   @override
-  String get tcpHostLabel => '接続先';
+  String get tcpHostLabel => 'IPアドレス';
 
   @override
   String get tcpHostHint => '192.168.40.10 / example.com';
@@ -183,7 +183,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get tcpErrorHostRequired => '接続先は必須です。';
+  String get tcpErrorHostRequired => 'IPアドレスは必須です。';
 
   @override
   String get tcpErrorPortInvalid => 'ポート番号は1から65535の範囲で指定してください。';
@@ -636,7 +636,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_frequency => '周波数 (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => '無効な周波数 (150-2500 MHz)';
@@ -3564,7 +3564,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'パスハッシュモードを設定します。 0 = 従来のモード、1 = 標準モード、2 = 厳格モード。ルーティングパスのマッチング方法に影響します。';
+      'パスハッシュモードを設定します。このノードが送信するフラッドパケットのパスに、各ホップのハッシュを何バイト入れるかを決めます。0 = 1 バイト、1 = 2 バイト、2 = 3 バイト。';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -3981,7 +3981,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channelPath_senderLabel => '送信者';
 
   @override
-  String get channelPath_timeLabel => '時刻（受信時）';
+  String get channelPath_timeLabel => '受信/作成時刻';
 
   @override
   String get channelPath_repeatsLabel => 'リピート数';
@@ -5958,7 +5958,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'このラジオは画像パケットを送信できません。コンパニオン ファームウェア 13 以降を実行しているデバイスを接続してください。';
+      'このラジオは画像パケットを送信できません。コンパニオン ファームウェア v1.15.0 以降を実行しているデバイスを接続してください。';
 
   @override
   String get imageSend_directMessagesUnsupported =>

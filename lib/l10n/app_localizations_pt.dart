@@ -668,7 +668,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings_frequency => 'Frequência (MHz)';
 
   @override
-  String get settings_frequencyHelper => '300.0 - 2500.0';
+  String get settings_frequencyHelper => '150.0 - 2500.0';
 
   @override
   String get settings_frequencyInvalid => 'Frequência inválida (150-2500 MHz)';
@@ -3738,7 +3738,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetPathHashMode =>
-      'Define o modo de hash de caminho. 0 = modo legado, 1 = modo padrão, 2 = modo rigoroso. Afeta a forma como os caminhos de roteamento são correspondidos.';
+      'Define o modo de hash de caminho: quantos bytes do hash de cada salto entram no caminho dos pacotes de inundação enviados por este nó. 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes.';
 
   @override
   String get repeater_cliHelpSetLoopDetect =>
@@ -6258,7 +6258,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get imageSend_deviceUnsupported =>
-      'Este rádio não pode enviar pacotes de imagem. Conecte um dispositivo com firmware companheiro versão 13 ou superior.';
+      'Este rádio não pode enviar pacotes de imagem. Conecte um dispositivo com firmware companheiro versão 1.15.0 ou superior.';
 
   @override
   String get imageSend_directMessagesUnsupported =>
