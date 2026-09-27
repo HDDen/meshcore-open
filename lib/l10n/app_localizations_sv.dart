@@ -659,7 +659,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 - 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Ogiltig frekvens (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Ogiltig frekvens (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Bandbredd';
@@ -688,7 +688,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'För att kunna kommunicera utanför elnätet krävs frekvenserna 433, 869 eller 918 MHz.';
+      'För att kunna kommunicera utanför elnätet krävs frekvenserna 433, 869.495 eller 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6774,4 +6774,95 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Aktivera URL-bilder';
+
+  @override
+  String get urlImage_possible =>
+      'Möjlig URL-bild; aktivera den i Inställningar.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Radion tillämpade inte dessa inställningar';
+
+  @override
+  String get settings_publicKeyCopied => 'Publik nyckel kopierad';
+
+  @override
+  String get channels_noFreeSlots => 'Alla kanalplatser är upptagna';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Ogiltig frekvens (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 till 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Mottagningsfel';
+
+  @override
+  String get room_postsStored => 'Inlägg';
+
+  @override
+  String get room_postsPushed => 'Skickade inlägg';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Regionladdningsläge: skicka ett regionnamn per rad, indraget med blanksteg under sin förälder (lägg till F efter namnet för att tillåta flood). Rader får inget svar. Skicka en tom rad för att avsluta, och sedan \"region save\" för att spara resultatet.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Regionrad, eller tom för att avsluta';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(slut på regionladdning)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definierar en kedja av regioner i ett kommando: varje namn läggs till under det föregående; \"name,parent\" lägger till namnet och fortsätter sedan under den angivna föräldern. Svarar med regionlistan.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Anger det maximala antalet hopp för vidarebefordran av flood-paket utan regionscope (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Anger det maximala antalet hopp för vidarebefordran av flood-annonser (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Visar det maximala antalet hopp för flood-paket utan regionscope.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Visar det maximala antalet hopp för flood-annonser.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Växlar LoRa-frontändmodulens RX-gain (LNA). Kort utan denna modul svarar \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Växlar LoRa-frontändmodulens TX-gain (PA). Kort utan denna modul svarar \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Visar om LoRa-frontändmodulens RX-gain är påslagen.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Visar om LoRa-frontändmodulens TX-gain är påslagen.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Endast tillgängligt på firmware byggd med en brygga (RS232 eller ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Över 158 byte: skickas högst $count gånger';
+  }
 }

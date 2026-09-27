@@ -666,7 +666,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_frequencyInvalid =>
-      'Érvénytelen frekvencia (300-2500 MHz)';
+      'Érvénytelen frekvencia (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Sávszélesség';
@@ -696,7 +696,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'A hálózaton kívüli ismétlés 433, 869 vagy 918 MHz frekvenciát igényel';
+      'A hálózaton kívüli ismétlés 433, 869.495 vagy 918 MHz frekvenciát igényel';
 
   @override
   String settings_error(String message) {
@@ -6823,4 +6823,95 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'URL-képek engedélyezése';
+
+  @override
+  String get urlImage_possible =>
+      'Lehetséges URL-kép; engedélyezze a Beállításokban.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'A rádió nem alkalmazta ezeket a beállításokat';
+
+  @override
+  String get settings_publicKeyCopied => 'Nyilvános kulcs másolva';
+
+  @override
+  String get channels_noFreeSlots => 'Minden csatornahely foglalt';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid =>
+      'Érvénytelen frekvencia (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9-től 30 dBm-ig';
+
+  @override
+  String get repeater_recvErrors => 'Vételi hibák';
+
+  @override
+  String get room_postsStored => 'Bejegyzések';
+
+  @override
+  String get room_postsPushed => 'Kiküldött bejegyzések';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Régióbetöltési mód: soronként küldjön egy régiónevet, szóközökkel behúzva a szülője alá (a név után F hozzáadásával engedélyezhető az elárasztás). A sorokra nem érkezik válasz. Egy üres sor küldésével fejezze be, majd a \"region save\" paranccsal mentse az eredményt.';
+
+  @override
+  String get repeater_cliRegionLoadHint => 'Régiósor, vagy üres a befejezéshez';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(régióbetöltés vége)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Egy paranccsal régiók láncát határozza meg: minden név az előző alá kerül; a \"name,parent\" hozzáadja a nevet, majd a megadott szülő alatt folytatja. Válaszként a régiólistát adja.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Beállítja a hatókör nélküli elárasztási csomagok továbbításának maximális ugrásszámát (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Beállítja az elárasztási hirdetések továbbításának maximális ugrásszámát (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Megjeleníti a hatókör nélküli elárasztási csomagok maximális ugrásszámát.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Megjeleníti az elárasztási hirdetések maximális ugrásszámát.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Ki-/bekapcsolja a LoRa front-end modul RX erősítését (LNA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Ki-/bekapcsolja a LoRa front-end modul TX erősítését (PA). Az ezzel nem rendelkező áramkörök válasza \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Megjeleníti, hogy a LoRa front-end modul RX erősítése be van-e kapcsolva.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Megjeleníti, hogy a LoRa front-end modul TX erősítése be van-e kapcsolva.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Csak híddal (RS232 vagy ESP-NOW) épített firmware-en érhető el.';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return '158 bájt felett: legfeljebb $count alkalommal küldve';
+  }
 }

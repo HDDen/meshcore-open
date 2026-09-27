@@ -671,7 +671,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 - 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Frequência inválida (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Frequência inválida (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Largura de banda';
@@ -700,7 +700,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'A repetição fora da rede requer frequências de 433, 869 ou 918 MHz.';
+      'A repetição fora da rede requer frequências de 433, 869.495 ou 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6822,4 +6822,95 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Ativar imagens de URL';
+
+  @override
+  String get urlImage_possible =>
+      'Possível imagem de URL; ative-a em Configurações.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'O rádio não aplicou estas configurações';
+
+  @override
+  String get settings_publicKeyCopied => 'Chave pública copiada';
+
+  @override
+  String get channels_noFreeSlots => 'Todos os slots de canal estão em uso';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Frequência inválida (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 a 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Erros de Recepção';
+
+  @override
+  String get room_postsStored => 'Publicações';
+
+  @override
+  String get room_postsPushed => 'Publicações Enviadas';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Modo de carregamento de regiões: envie um nome de região por linha, indentado com espaços sob sua região pai (adicione F após o nome para permitir inundação). As linhas não recebem resposta. Envie uma linha vazia para terminar e depois \"region save\" para salvar o resultado.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Linha de região, ou vazia para terminar';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(fim do carregamento de regiões)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Define uma cadeia de regiões em um único comando: cada nome é adicionado sob o anterior; \"name,parent\" adiciona o nome e continua sob o pai indicado. Responde com a lista de regiões.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Define o número máximo de saltos para encaminhar pacotes de inundação sem escopo regional (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Define o número máximo de saltos para encaminhar anúncios de inundação (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Mostra o número máximo de saltos para pacotes de inundação sem escopo regional.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Mostra o número máximo de saltos para os anúncios de inundação.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Ativa ou desativa o ganho RX (LNA) do módulo frontal de LoRa. Placas sem esse módulo respondem \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Ativa ou desativa o ganho TX (PA) do módulo frontal de LoRa. Placas sem esse módulo respondem \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Mostra se o ganho RX do módulo frontal de LoRa está ativado.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Mostra se o ganho TX do módulo frontal de LoRa está ativado.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Disponível apenas em firmware compilado com uma ponte (RS232 ou ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Mais de 158 bytes: enviado no máximo $count vezes';
+  }
 }

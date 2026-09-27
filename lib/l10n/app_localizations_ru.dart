@@ -670,7 +670,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_frequencyHelper => '300.0 – 2500.0';
 
   @override
-  String get settings_frequencyInvalid => 'Недопустимая частота (300–2500 МГц)';
+  String get settings_frequencyInvalid => 'Недопустимая частота (150–2500 МГц)';
 
   @override
   String get settings_bandwidth => 'Полоса пропускания';
@@ -700,7 +700,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Для работы в режиме \"без подключения к сети\" требуется частота 433, 869 или 918 МГц.';
+      'Для работы в режиме \"без подключения к сети\" требуется частота 433, 869.495 или 918 МГц.';
 
   @override
   String settings_error(String message) {
@@ -6824,4 +6824,95 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'остановить отправку';
+
+  @override
+  String get urlImage_enable => 'Показывать изображения по URL';
+
+  @override
+  String get urlImage_possible =>
+      'Возможно изображение по URL; включите это в настройках.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Радиомодуль не применил эти настройки';
+
+  @override
+  String get settings_publicKeyCopied => 'Публичный ключ скопирован';
+
+  @override
+  String get channels_noFreeSlots => 'Нет свободных слотов для каналов';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 МГц';
+
+  @override
+  String get repeater_frequencyInvalid => 'Недопустимая частота (150-2500 МГц)';
+
+  @override
+  String get repeater_txPowerRangeHelper => 'от -9 до 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Ошибки приёма';
+
+  @override
+  String get room_postsStored => 'Публикации';
+
+  @override
+  String get room_postsPushed => 'Отправлено публикаций';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить рассылку по сети). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Строка региона или пусто для завершения';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(конец загрузки регионов)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Задаёт цепочку регионов одной командой: каждое имя добавляется под предыдущим; \"name,parent\" добавляет имя и продолжает под указанным родителем. В ответ возвращается список регионов.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Задаёт максимальное число хопов для пересылки пакетов рассылки (flood) без региональной области (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Задаёт максимальное число хопов для пересылки анонсов, рассылаемых по сети (flood) (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Показывает максимальное число хопов для пакетов рассылки (flood) без региональной области.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Показывает максимальное число хопов для анонсов, рассылаемых по сети (flood).';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Переключает усиление RX (LNA) входного модуля LoRa. Платы без него отвечают \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Переключает усиление TX (PA) входного модуля LoRa. Платы без него отвечают \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Показывает, включено ли усиление RX на входном модуле LoRa.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Показывает, включено ли усиление TX на входном модуле LoRa.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Доступно только на прошивке, собранной с мостом (RS232 или ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Более 158 байт: отправляется не более $count раз';
+  }
 }

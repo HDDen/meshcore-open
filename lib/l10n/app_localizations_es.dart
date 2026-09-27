@@ -670,7 +670,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 - 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Frecuencia inválida (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Frecuencia inválida (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Ancho de banda';
@@ -699,7 +699,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Para la comunicación fuera de la red, se requiere una frecuencia de 433, 869 o 918 MHz.';
+      'Para la comunicación fuera de la red, se requiere una frecuencia de 433, 869.495 o 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6831,4 +6831,95 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Habilitar imágenes de URL';
+
+  @override
+  String get urlImage_possible =>
+      'Posible imagen de URL; actívala en Configuración.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'La radio no aplicó esta configuración';
+
+  @override
+  String get settings_publicKeyCopied => 'Clave pública copiada';
+
+  @override
+  String get channels_noFreeSlots => 'Todos los espacios de canal están en uso';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Frecuencia inválida (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 a 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Errores de Recepción';
+
+  @override
+  String get room_postsStored => 'Publicaciones';
+
+  @override
+  String get room_postsPushed => 'Publicaciones Enviadas';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Modo de carga de regiones: envíe un nombre de región por línea, sangrado con espacios bajo su región padre (añada F después del nombre para permitir inundación). Las líneas no reciben respuesta. Envíe una línea vacía para terminar y luego \"region save\" para guardar el resultado.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Línea de región, o vacía para terminar';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(fin de la carga de regiones)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Define una cadena de regiones en un solo comando: cada nombre se añade bajo el anterior; \"name,parent\" añade el nombre y continúa bajo el padre indicado. Responde con la lista de regiones.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Establece el número máximo de saltos para reenviar paquetes de inundación que no tienen ámbito regional (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Establece el número máximo de saltos para reenviar anuncios por inundación (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Muestra el número máximo de saltos para los paquetes de inundación sin ámbito.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Muestra el número máximo de saltos para los anuncios por inundación.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Activa o desactiva la ganancia RX (LNA) del módulo frontal de LoRa. Las placas que no lo tengan responden \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Activa o desactiva la ganancia TX (PA) del módulo frontal de LoRa. Las placas que no lo tengan responden \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Muestra si la ganancia RX del módulo frontal de LoRa está activada.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Muestra si la ganancia TX del módulo frontal de LoRa está activada.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Solo disponible en firmware compilado con un puente (RS232 o ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Más de 158 bytes: se envía como máximo $count veces';
+  }
 }

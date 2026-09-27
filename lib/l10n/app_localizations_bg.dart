@@ -674,7 +674,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 – 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Невалидна честота (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Невалидна честота (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Ширина на честотната лента';
@@ -703,7 +703,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'За повторение извън мрежата са необходими честоти от 433, 869 или 918 MHz.';
+      'За повторение извън мрежата са необходими честоти от 433, 869.495 или 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6837,4 +6837,95 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Активиране на URL изображения';
+
+  @override
+  String get urlImage_possible =>
+      'Възможно изображение от URL; активирайте го в Настройки.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Радиото не приложи тези настройки';
+
+  @override
+  String get settings_publicKeyCopied => 'Публичният ключ е копиран';
+
+  @override
+  String get channels_noFreeSlots => 'Няма свободни канални места';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Невалидна честота (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => 'от -9 до 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Грешки при приемане';
+
+  @override
+  String get room_postsStored => 'Публикации';
+
+  @override
+  String get room_postsPushed => 'Изпратени публикации';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Режим на зареждане на региони: изпращайте по едно име на регион на ред, с отстъп от интервали под съответния родител (добавете F след името, за да разрешите flood). Редовете не получават отговор. Изпратете празен ред, за да завършите, след което изпратете „region save“, за да запазите резултата.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Ред за регион или празно за завършване';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(край на зареждането на региони)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Задава верига от региони с една команда: всяко име се добавя под предишното; „name,parent“ добавя името и продължава под указания родител. Връща списъка с региони.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Задава максималния брой скокове за препращане на flood пакети без определена регионална област (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Задава максималния брой скокове за препращане на flood обяви (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Показва максималния брой скокове за flood пакети без определена област.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Показва максималния брой скокове за flood обяви.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Превключва RX усилването (LNA) на LoRa предния модул. Платки без такъв отговарят с „Error: unsupported“.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Превключва TX усилването (PA) на LoRa предния модул. Платки без такъв отговарят с „Error: unsupported“.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Показва дали RX усилването на LoRa предния модул е включено.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Показва дали TX усилването на LoRa предния модул е включено.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Налично само за прошивка с мост (RS232 или ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Над 158 байта: изпраща се най-много $count пъти';
+  }
 }

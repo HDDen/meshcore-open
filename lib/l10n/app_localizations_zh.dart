@@ -631,7 +631,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_frequencyHelper => '300.0 - 2500.0';
 
   @override
-  String get settings_frequencyInvalid => '无效频率范围（300-2500 MHz）';
+  String get settings_frequencyInvalid => '无效频率范围（150-2500 MHz）';
 
   @override
   String get settings_bandwidth => '带宽';
@@ -659,7 +659,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      '离网重复通信需要使用 433、869 或 918 兆赫兹的频率。';
+      '离网重复通信需要使用 433、869.495 或 918 兆赫兹的频率。';
 
   @override
   String settings_error(String message) {
@@ -6355,4 +6355,86 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => '启用URL图片';
+
+  @override
+  String get urlImage_possible => '可能是URL图片，请在设置中启用。';
+
+  @override
+  String get settings_radioSettingsNotApplied => '收音机未应用这些设置';
+
+  @override
+  String get settings_publicKeyCopied => '公钥已复制';
+
+  @override
+  String get channels_noFreeSlots => '所有频道插槽都已被占用';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => '无效频率（150-2500 MHz）';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 至 30 dBm';
+
+  @override
+  String get repeater_recvErrors => '接收错误';
+
+  @override
+  String get room_postsStored => '帖子';
+
+  @override
+  String get room_postsPushed => '已推送的帖子';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      '区域加载模式：每行发送一个区域名称，并用空格缩进表示其位于父级之下（在名称后添加 F 可允许泛洪）。每行不会有回复。发送空行以结束，然后发送“region save”以保存结果。';
+
+  @override
+  String get repeater_cliRegionLoadHint => '区域行，或留空以结束';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '（区域加载结束）';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      '在一条命令中定义一条区域链：每个名称都添加在上一个名称之下；“name,parent”会添加该名称，然后在指定的父级下继续。回复区域列表。';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      '设置转发无区域范围的泛洪数据包时的最大跳数(0-64)。';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert => '设置转发泛洪广播包时的最大跳数(0-64)。';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped => '显示无区域范围的泛洪数据包的最大跳数。';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert => '显示泛洪广播包的最大跳数。';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      '切换 LoRa 前端模块的 RX 增益（LNA）。不支持此功能的板卡会回复“Error: unsupported”。';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      '切换 LoRa 前端模块的 TX 增益（PA）。不支持此功能的板卡会回复“Error: unsupported”。';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain => '显示 LoRa 前端模块的 RX 增益是否已开启。';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain => '显示 LoRa 前端模块的 TX 增益是否已开启。';
+
+  @override
+  String get repeater_bridgeNote => '仅支持带有桥接功能（RS232 或 ESP-NOW）的固件。';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return '超过158字节：最多发送 $count 次';
+  }
 }

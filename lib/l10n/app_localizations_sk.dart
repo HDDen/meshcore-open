@@ -664,7 +664,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 – 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Neplatná frekvencia (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Neplatná frekvencia (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Šírka pásma';
@@ -693,7 +693,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Použitie off-grid systému vyžaduje frekvencie 433, 869 alebo 918 MHz.';
+      'Použitie off-grid systému vyžaduje frekvencie 433, 869.495 alebo 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6786,4 +6786,95 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Povoliť obrázky z URL';
+
+  @override
+  String get urlImage_possible =>
+      'Možný obrázok z URL; povoľte ho v Nastaveniach.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Rádio tieto nastavenia neuplatnilo';
+
+  @override
+  String get settings_publicKeyCopied => 'Verejný kľúč skopírovaný';
+
+  @override
+  String get channels_noFreeSlots => 'Všetky miesta pre kanály sú obsadené';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Neplatná frekvencia (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 až 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Chyby príjmu';
+
+  @override
+  String get room_postsStored => 'Príspevky';
+
+  @override
+  String get room_postsPushed => 'Odoslané príspevky';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Režim načítania regiónov: pošlite po jednom názve regiónu na riadok, odsadenom medzerami pod jeho nadradeným regiónom (pridaním F za názov povolíte flood). Riadky nedostanú odpoveď. Prázdnym riadkom ukončite a potom príkazom \"region save\" výsledok uložte.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Riadok regiónu, alebo prázdny na ukončenie';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(koniec načítania regiónov)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definuje reťazec regiónov v jednom príkaze: každý názov sa pridá pod predchádzajúci; \"name,parent\" pridá názov a potom pokračuje pod zadaným nadradeným regiónom. Odpovie zoznamom regiónov.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Nastavuje maximálny počet skokov pri preposielaní flood paketov bez priradeného regiónu (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Nastavuje maximálny počet skokov pri preposielaní flood inzerátov (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Zobrazuje maximálny počet skokov pre flood pakety bez priradeného regiónu.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Zobrazuje maximálny počet skokov pre flood inzeráty.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Prepína RX zosilnenie (LNA) LoRa front-end modulu. Dosky bez neho odpovedia \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Prepína TX zosilnenie (PA) LoRa front-end modulu. Dosky bez neho odpovedia \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Zobrazuje, či je zapnuté RX zosilnenie LoRa front-end modulu.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Zobrazuje, či je zapnuté TX zosilnenie LoRa front-end modulu.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Dostupné len vo firmvéri zostavenom s mostom (RS232 alebo ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Nad 158 bajtov: odoslané najviac $count-krát';
+  }
 }

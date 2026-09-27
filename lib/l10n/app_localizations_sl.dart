@@ -662,7 +662,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_frequencyHelper => '300,00 - 2500,00';
 
   @override
-  String get settings_frequencyInvalid => 'Neveljavna frekvenca (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Neveljavna frekvenca (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Pasovna širina';
@@ -691,7 +691,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Za ponovni prenos na brezžični način so potrebne frekvence 433, 869 ali 918 MHz.';
+      'Za ponovni prenos na brezžični način so potrebne frekvence 433, 869.495 ali 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6797,4 +6797,95 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Omogoči slike iz URL';
+
+  @override
+  String get urlImage_possible =>
+      'Mogoča slika iz URL; omogočite jo v Nastavitvah.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Radio teh nastavitev ni uveljavil';
+
+  @override
+  String get settings_publicKeyCopied => 'Javni ključ kopiran';
+
+  @override
+  String get channels_noFreeSlots => 'Vsa mesta za kanale so zasedena';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Neveljavna frekvenca (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 do 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Napake sprejema';
+
+  @override
+  String get room_postsStored => 'Objave';
+
+  @override
+  String get room_postsPushed => 'Poslane objave';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Način nalaganja regij: pošljite eno ime regije na vrstico, zamaknjeno s presledki pod nadrejeno regijo (dodajte F za imenom, da dovolite flood). Vrstice ne prejmejo odgovora. Pošljite prazno vrstico za konec, nato pa \"region save\", da shranite rezultat.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Vrstica regije ali prazna vrstica za konec';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(konec nalaganja regij)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definira verigo regij z enim ukazom: vsako ime se doda pod prejšnje; \"name,parent\" doda ime in nato nadaljuje pod navedeno nadrejeno regijo. Odgovori s seznamom regij.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Nastavi največje število skokov za posredovanje flood paketov brez določenega regijskega obsega (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Nastavi največje število skokov za posredovanje flood oglasov (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Prikaže največje število skokov za flood pakete brez določenega regijskega obsega.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Prikaže največje število skokov za flood oglase.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Preklopi RX ojačanje (LNA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Preklopi TX ojačanje (PA) LoRa front-end modula. Plošče brez njega odgovorijo z \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Prikaže, ali je RX ojačanje LoRa front-end modula vklopljeno.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Prikaže, ali je TX ojačanje LoRa front-end modula vklopljeno.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Na voljo samo v vdelani programski opremi, zgrajeni z mostom (RS232 ali ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Nad 158 bajtov: poslano največ $count-krat';
+  }
 }

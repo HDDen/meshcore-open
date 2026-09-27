@@ -638,7 +638,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_frequencyHelper => '300.0 - 2500.0';
 
   @override
-  String get settings_frequencyInvalid => '無効な周波数 (300-2500 MHz)';
+  String get settings_frequencyInvalid => '無効な周波数 (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => '帯域幅';
@@ -667,7 +667,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'オフグリッド中継には 433、869、または 918 MHz の周波数が必要です。';
+      'オフグリッド中継には 433、869.495、または 918 MHz の周波数が必要です。';
 
   @override
   String settings_error(String message) {
@@ -6491,4 +6491,91 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'URL画像を有効にする';
+
+  @override
+  String get urlImage_possible => 'URL画像の可能性があります。設定で有効にしてください。';
+
+  @override
+  String get settings_radioSettingsNotApplied => 'ラジオがこれらの設定を適用しませんでした';
+
+  @override
+  String get settings_publicKeyCopied => '公開鍵がコピーされました';
+
+  @override
+  String get channels_noFreeSlots => 'すべてのチャンネルスロットが使用中です';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => '無効な周波数 (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9～30 dBm';
+
+  @override
+  String get repeater_recvErrors => '受信エラー';
+
+  @override
+  String get room_postsStored => '投稿';
+
+  @override
+  String get room_postsPushed => 'プッシュされた投稿';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      '地域読み込みモード：1行に1つの地域名を送信し、親の下にスペースでインデントします（フラッドを許可する場合は名前の後にFを追加）。各行に返信はありません。空行を送信して終了し、その後「region save」を送信すると結果が保存されます。';
+
+  @override
+  String get repeater_cliRegionLoadHint => '地域行、または空欄で終了';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '（地域読み込み終了）';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      '1つのコマンドで地域のチェーンを定義します。各名前は直前の名前の下に追加されます。「name,parent」を指定すると、その名前を追加した後、指定した親の下に続けます。地域リストを返信します。';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      '地域スコープを持たないフラッドパケットを転送する際の最大ホップ数を設定します(0-64)。';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'フラッドアドバートを転送する際の最大ホップ数を設定します(0-64)。';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      '地域スコープのないフラッドパケットの最大ホップ数を表示します。';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert => 'フラッドアドバートの最大ホップ数を表示します。';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'LoRaフロントエンドモジュールのRXゲイン（LNA）の有効/無効を切り替えます。対応していない基板は「Error: unsupported」と返信します。';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'LoRaフロントエンドモジュールのTXゲイン（PA）の有効/無効を切り替えます。対応していない基板は「Error: unsupported」と返信します。';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'LoRaフロントエンドモジュールのRXゲインが有効になっているかどうかを表示します。';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'LoRaフロントエンドモジュールのTXゲインが有効になっているかどうかを表示します。';
+
+  @override
+  String get repeater_bridgeNote =>
+      'RS232またはESP-NOWのブリッジ機能を備えたファームウェアでのみ利用可能です。';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return '158バイトを超える場合：最大 $count 回まで送信されます';
+  }
 }

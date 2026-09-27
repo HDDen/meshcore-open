@@ -667,7 +667,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 – 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Некоректна частота (300-2500 МГц)';
+  String get settings_frequencyInvalid => 'Некоректна частота (150-2500 МГц)';
 
   @override
   String get settings_bandwidth => 'Смуга пропускання';
@@ -696,7 +696,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Повтор без підключення до мережі вимагає частоти 433, 869 або 918 МГц.';
+      'Повтор без підключення до мережі вимагає частоти 433, 869.495 або 918 МГц.';
 
   @override
   String settings_error(String message) {
@@ -6836,4 +6836,95 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Показувати зображення за URL';
+
+  @override
+  String get urlImage_possible =>
+      'Можливе зображення за URL; увімкніть це в Налаштуваннях.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Радіомодуль не застосував ці налаштування';
+
+  @override
+  String get settings_publicKeyCopied => 'Публічний ключ скопійовано';
+
+  @override
+  String get channels_noFreeSlots => 'Немає вільних слотів для каналів';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 МГц';
+
+  @override
+  String get repeater_frequencyInvalid => 'Некоректна частота (150-2500 МГц)';
+
+  @override
+  String get repeater_txPowerRangeHelper => 'від -9 до 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Помилки прийому';
+
+  @override
+  String get room_postsStored => 'Публікації';
+
+  @override
+  String get room_postsPushed => 'Надіслано публікацій';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Режим завантаження регіонів: надсилайте по одному імені регіону в рядку, з відступом пробілами під батьківським регіоном (додайте F після імені, щоб дозволити поширення через всю мережу). Рядки не отримують відповіді. Надішліть порожній рядок, щоб завершити, а потім \"region save\", щоб зберегти результат.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Рядок регіону або порожній рядок для завершення';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(кінець завантаження регіонів)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Визначає ланцюжок регіонів однією командою: кожне ім’я додається під попереднім; \"name,parent\" додає ім’я і продовжує під вказаним батьківським регіоном. У відповідь повертає список регіонів.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Встановлює максимальну кількість переходів для пересилання пакетів через всю мережу (flood) без визначеної області регіону (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Встановлює максимальну кількість переходів для пересилання оголошень через всю мережу (flood) (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Показує максимальну кількість переходів для пакетів через всю мережу (flood) без визначеної області.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Показує максимальну кількість переходів для оголошень через всю мережу (flood).';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Перемикає підсилення RX (LNA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Перемикає підсилення TX (PA) вхідного модуля LoRa. Плати без нього відповідають \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Показує, чи увімкнено підсилення RX вхідного модуля LoRa.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Показує, чи увімкнено підсилення TX вхідного модуля LoRa.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Доступно лише для прошивки, зібраної з мостом (RS232 або ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Понад 158 байтів: надсилається не більше $count разів';
+  }
 }

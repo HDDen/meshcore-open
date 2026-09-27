@@ -665,7 +665,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 - 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Ongeldige frequentie (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Ongeldige frequentie (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Bandbreedte';
@@ -694,7 +694,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Om een signaal buiten het netwerk te versturen, zijn frequenties van 433, 869 of 918 MHz vereist.';
+      'Om een signaal buiten het netwerk te versturen, zijn frequenties van 433, 869.495 of 918 MHz vereist.';
 
   @override
   String settings_error(String message) {
@@ -6808,4 +6808,95 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'URL-afbeeldingen inschakelen';
+
+  @override
+  String get urlImage_possible =>
+      'Mogelijke URL-afbeelding; schakel dit in bij Instellingen.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'De radio heeft deze instellingen niet toegepast';
+
+  @override
+  String get settings_publicKeyCopied => 'Openbare sleutel gekopieerd';
+
+  @override
+  String get channels_noFreeSlots => 'Alle kanaalslots zijn bezet';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Ongeldige frequentie (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 tot 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Ontvangstfouten';
+
+  @override
+  String get room_postsStored => 'Opgeslagen posts';
+
+  @override
+  String get room_postsPushed => 'Verzonden posts';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Regio-laadmodus: verstuur per regel één regionaam, ingesprongen met spaties onder de bovenliggende regio (voeg F toe na de naam om flood toe te staan). Regels krijgen geen antwoord. Verstuur een lege regel om te voltooien en dan \"region save\" om het resultaat te bewaren.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Regioregel, of leeg om te voltooien';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(einde van regio-laadmodus)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definieert een keten van regio\'s in één commando: elke naam wordt onder de vorige toegevoegd; \"name,parent\" voegt de naam toe en gaat dan verder onder de opgegeven bovenliggende regio. Antwoordt met de regiolijst.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Stelt het maximale aantal hops in voor het doorsturen van flood-pakketten zonder regio-scope (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Stelt het maximale aantal hops in voor het doorsturen van flood-advertenties (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Toont het maximale aantal hops voor flood-pakketten zonder regio-scope.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Toont het maximale aantal hops voor flood-advertenties.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Schakelt de RX-versterking (LNA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Schakelt de TX-versterking (PA) van de LoRa-frontendmodule. Boards zonder deze module antwoorden met \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Toont of de RX-versterking van de LoRa-frontendmodule aan staat.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Toont of de TX-versterking van de LoRa-frontendmodule aan staat.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Alleen beschikbaar bij firmware gebouwd met een bridge (RS232 of ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Meer dan 158 bytes: maximaal $count keer verzonden';
+  }
 }

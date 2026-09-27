@@ -674,7 +674,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_frequencyInvalid =>
-      'Nieprawidłowa częstotliwość (300-2500 MHz)';
+      'Nieprawidłowa częstotliwość (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Przepustowość';
@@ -703,7 +703,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Powtórka poza siecią wymaga częstotliwości 433, 869 lub 918 MHz.';
+      'Powtórka poza siecią wymaga częstotliwości 433, 869.495 lub 918 MHz.';
 
   @override
   String settings_error(String message) {
@@ -6846,4 +6846,96 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'Włącz obrazy z URL';
+
+  @override
+  String get urlImage_possible =>
+      'Możliwy obraz z URL; włącz go w Ustawieniach.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Radio nie zastosowało tych ustawień';
+
+  @override
+  String get settings_publicKeyCopied => 'Skopiowano klucz publiczny';
+
+  @override
+  String get channels_noFreeSlots => 'Wszystkie miejsca na kanały są zajęte';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid =>
+      'Nieprawidłowa częstotliwość (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 do 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Błędy Odbioru';
+
+  @override
+  String get room_postsStored => 'Posty';
+
+  @override
+  String get room_postsPushed => 'Wysłane Posty';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Tryb wczytywania regionów: wysyłaj po jednej nazwie regionu w linii, wcięte spacjami pod regionem nadrzędnym (dodaj F po nazwie, aby zezwolić na flood). Linie nie otrzymują odpowiedzi. Wyślij pustą linię, aby zakończyć, a następnie \"region save\", aby zachować wynik.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Linia regionu lub pusta, aby zakończyć';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(koniec wczytywania regionów)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definiuje łańcuch regionów w jednej komendzie: każda nazwa jest dodawana pod poprzednią; \"name,parent\" dodaje nazwę, a następnie kontynuuje pod podanym regionem nadrzędnym. Odpowiada listą regionów.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Ustawia maksymalną liczbę skoków przy przekazywaniu pakietów flood bez przypisanego regionu (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Ustawia maksymalną liczbę skoków przy przekazywaniu rozgłoszeń flood (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Pokazuje maksymalną liczbę skoków dla pakietów flood bez przypisanego regionu.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Pokazuje maksymalną liczbę skoków dla rozgłoszeń flood.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Przełącza wzmocnienie RX (LNA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Przełącza wzmocnienie TX (PA) modułu front-end LoRa. Płytki bez tej funkcji odpowiadają \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Pokazuje, czy wzmocnienie RX modułu front-end LoRa jest włączone.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Pokazuje, czy wzmocnienie TX modułu front-end LoRa jest włączone.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Dostępne tylko w firmware zbudowanym z mostkiem (RS232 lub ESP-NOW).';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Powyżej 158 bajtów: wysyłane maksymalnie $count razy';
+  }
 }

@@ -669,7 +669,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_frequencyHelper => '300,0 - 2500,0';
 
   @override
-  String get settings_frequencyInvalid => 'Ungültige Frequenz (300-2500 MHz)';
+  String get settings_frequencyInvalid => 'Ungültige Frequenz (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => 'Bandbreite';
@@ -698,7 +698,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      'Weiterleitung ohne Netzstrom erfordert 433, 869 oder 918 MHz';
+      'Weiterleitung ohne Netzstrom erfordert 433, 869.495 oder 918 MHz';
 
   @override
   String settings_error(String message) {
@@ -6838,4 +6838,95 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'URL-Bilder anzeigen';
+
+  @override
+  String get urlImage_possible =>
+      'Mögliches URL-Bild; in den Einstellungen aktivieren.';
+
+  @override
+  String get settings_radioSettingsNotApplied =>
+      'Das Funkgerät hat diese Einstellungen nicht übernommen';
+
+  @override
+  String get settings_publicKeyCopied => 'Öffentlicher Schlüssel kopiert';
+
+  @override
+  String get channels_noFreeSlots => 'Alle Kanal-Slots sind belegt';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => 'Ungültige Frequenz (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9 bis 30 dBm';
+
+  @override
+  String get repeater_recvErrors => 'Empfangsfehler';
+
+  @override
+  String get room_postsStored => 'Beiträge';
+
+  @override
+  String get room_postsPushed => 'Gesendete Beiträge';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      'Regions-Ladevorgang: Sende pro Zeile einen Regionsnamen, eingerückt mit Leerzeichen unter der übergeordneten Region (F nach dem Namen anhängen, um Flood zu erlauben). Zeilen erhalten keine Antwort. Sende eine Leerzeile zum Abschließen, dann \"region save\", um das Ergebnis zu speichern.';
+
+  @override
+  String get repeater_cliRegionLoadHint =>
+      'Regionszeile, oder leer zum Abschließen';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(Ende des Regions-Ladevorgangs)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      'Definiert in einem Befehl eine Kette von Regionen: Jeder Name wird unter dem vorherigen hinzugefügt; \"name,parent\" fügt den Namen hinzu und setzt dann unter der angegebenen übergeordneten Region fort. Antwortet mit der Regionsliste.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      'Legt die maximale Hop-Anzahl für die Weiterleitung von Flood-Paketen ohne Region-Scope fest (0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      'Legt die maximale Hop-Anzahl für die Weiterleitung von Flood-Ankündigungen fest (0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      'Zeigt die maximale Hop-Anzahl für Flood-Pakete ohne Region-Scope an.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert =>
+      'Zeigt die maximale Hop-Anzahl für Flood-Ankündigungen an.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'Schaltet den RX-Gain (LNA) des LoRa-Frontend-Moduls um. Boards ohne dieses Modul antworten mit \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'Schaltet den TX-Gain (PA) des LoRa-Frontend-Moduls um. Boards ohne dieses Modul antworten mit \"Error: unsupported\".';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'Zeigt, ob der RX-Gain des LoRa-Frontend-Moduls aktiviert ist.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'Zeigt, ob der TX-Gain des LoRa-Frontend-Moduls aktiviert ist.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'Nur verfügbar bei Firmware, die mit einer Bridge (RS232 oder ESP-NOW) gebaut wurde.';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return 'Über 158 Byte: wird höchstens $count Mal gesendet';
+  }
 }

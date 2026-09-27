@@ -639,7 +639,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_frequencyHelper => '300.0 - 2500.0';
 
   @override
-  String get settings_frequencyInvalid => '유효하지 않은 주파수 (300-2500 MHz)';
+  String get settings_frequencyInvalid => '유효하지 않은 주파수 (150-2500 MHz)';
 
   @override
   String get settings_bandwidth => '대역폭';
@@ -668,7 +668,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_clientRepeatFreqWarning =>
-      '오프그리드 반복에는 433MHz, 869MHz 또는 918MHz 주파수가 필요합니다.';
+      '오프그리드 반복에는 433MHz, 869.495MHz 또는 918MHz 주파수가 필요합니다.';
 
   @override
   String settings_error(String message) {
@@ -6497,4 +6497,91 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_stopSending => 'stop sending';
+
+  @override
+  String get urlImage_enable => 'URL 이미지 활성화';
+
+  @override
+  String get urlImage_possible => 'URL 이미지일 수 있습니다. 설정에서 활성화하세요.';
+
+  @override
+  String get settings_radioSettingsNotApplied => '라디오가 이 설정을 적용하지 않았습니다';
+
+  @override
+  String get settings_publicKeyCopied => '공개 키가 복사되었습니다';
+
+  @override
+  String get channels_noFreeSlots => '모든 채널 슬롯이 사용 중입니다';
+
+  @override
+  String get repeater_frequencyRangeHelper => '150-2500 MHz';
+
+  @override
+  String get repeater_frequencyInvalid => '유효하지 않은 주파수 (150-2500 MHz)';
+
+  @override
+  String get repeater_txPowerRangeHelper => '-9~30 dBm';
+
+  @override
+  String get repeater_recvErrors => '수신 오류';
+
+  @override
+  String get room_postsStored => '게시물';
+
+  @override
+  String get room_postsPushed => '푸시된 게시물';
+
+  @override
+  String get repeater_cliRegionLoadActive =>
+      '지역 로드 모드: 한 줄에 지역 이름 하나씩 보내고, 상위 지역 아래에 공백으로 들여씁니다 (플러딩을 허용하려면 이름 뒤에 F를 추가). 각 줄에는 응답이 없습니다. 빈 줄을 보내 완료한 뒤 \"region save\"를 보내면 결과가 저장됩니다.';
+
+  @override
+  String get repeater_cliRegionLoadHint => '지역 줄, 또는 완료하려면 비워 두기';
+
+  @override
+  String get repeater_cliRegionLoadEnd => '(지역 로드 종료)';
+
+  @override
+  String get repeater_cliHelpRegionDef =>
+      '하나의 명령으로 지역 체인을 정의합니다. 각 이름은 이전 이름 아래에 추가됩니다. \"name,parent\"를 사용하면 해당 이름을 추가한 뒤 지정한 상위 지역 아래로 이어집니다. 지역 목록으로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxUnscoped =>
+      '지역 범위가 없는 플러딩 패킷을 전달할 때의 최대 홉 수를 설정합니다(0-64).';
+
+  @override
+  String get repeater_cliHelpSetFloodMaxAdvert =>
+      '플러딩 어드버트를 전달할 때의 최대 홉 수를 설정합니다(0-64).';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxUnscoped =>
+      '지역 범위가 없는 플러딩 패킷의 최대 홉 수를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetFloodMaxAdvert => '플러딩 어드버트의 최대 홉 수를 표시합니다.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemRxGain =>
+      'LoRa 프런트엔드 모듈의 RX 게인(LNA)을 전환합니다. 이 기능이 없는 보드는 \"Error: unsupported\"로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpSetRadioFemTxGain =>
+      'LoRa 프런트엔드 모듈의 TX 게인(PA)을 전환합니다. 이 기능이 없는 보드는 \"Error: unsupported\"로 응답합니다.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemRxGain =>
+      'LoRa 프런트엔드 모듈의 RX 게인이 켜져 있는지 표시합니다.';
+
+  @override
+  String get repeater_cliHelpGetRadioFemTxGain =>
+      'LoRa 프런트엔드 모듈의 TX 게인이 켜져 있는지 표시합니다.';
+
+  @override
+  String get repeater_bridgeNote =>
+      'RS232 또는 ESP-NOW 브리지 기능이 포함된 펌웨어에서만 사용할 수 있습니다.';
+
+  @override
+  String chat_longMessageRetryNote(int count) {
+    return '158바이트 초과 시: 최대 $count회 전송됩니다';
+  }
 }
