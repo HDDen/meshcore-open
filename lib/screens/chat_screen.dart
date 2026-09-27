@@ -599,9 +599,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
     _lastTextFieldText = text;
-    // Deleting into the reply scaffolding drops the reply, as in a channel.
-    final replyPrefix = _plainReplyComposerPrefix;
-    if (replyPrefix != null && !text.startsWith(replyPrefix)) {
+    // Touching the mention or rewriting the quote line drops the reply, as in
+    // a channel; trimming the quote from its end keeps it.
+    if (_plainReplyComposerPrefix != null && _composerReply(text) == null) {
       setState(() {
         _plainReplyComposerPrefix = null;
         _replyingToMessage = null;
@@ -702,21 +702,43 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  String _composerBodyText(String text) {
+  /// The reply the composer's [text] still carries; see
+  /// [ExactQuoteHelper.composerReply].
+  ({String prefix, String? fragment})? _composerReply(String text) {
     final prefix = _plainReplyComposerPrefix;
-    if (prefix != null && text.startsWith(prefix)) {
-      return text.substring(prefix.length);
+    final replyingTo = _replyingToMessage;
+    final authorName = _replyingToAuthor;
+    if (prefix == null || replyingTo == null || authorName == null) {
+      return null;
     }
-    return text;
+    return ExactQuoteHelper.composerReply(
+      text: text,
+      prefix: prefix,
+      senderName: authorName,
+      quotedText: replyingTo.text,
+    );
+  }
+
+  String _composerBodyText(String text) {
+    final reply = _composerReply(text);
+    return reply == null ? text : text.substring(reply.prefix.length);
   }
 
   String _composerWireText(MeshCoreConnector connector, String text) {
-    final prefix = _plainReplyComposerPrefix;
-    if (prefix != null && text.startsWith(prefix)) return text;
-    return _applyReplyMention(connector, text);
+    final reply = _composerReply(text);
+    if (reply == null) return _applyReplyMention(connector, text);
+    return _applyReplyMention(
+      connector,
+      text.substring(reply.prefix.length),
+      quoteFragment: reply.fragment,
+    );
   }
 
-  String _applyReplyMention(MeshCoreConnector connector, String text) {
+  String _applyReplyMention(
+    MeshCoreConnector connector,
+    String text, {
+    String? quoteFragment,
+  }) {
     final replyingTo = _replyingToMessage;
     final authorName = _replyingToAuthor;
     if (replyingTo == null || authorName == null) return text;
@@ -726,6 +748,7 @@ class _ChatScreenState extends State<ChatScreen> {
       text: text,
       quotedText: replyingTo.text,
       quotedMessageId: replyingTo.messageId,
+      quoteFragment: quoteFragment,
     );
   }
 
@@ -737,6 +760,7 @@ class _ChatScreenState extends State<ChatScreen> {
     required String text,
     required String? quotedText,
     required String? quotedMessageId,
+    String? quoteFragment,
   }) {
     final contact = _resolveContact(connector);
     final settings = context.read<AppSettingsService>().settings;
@@ -759,6 +783,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.contactCyr2LatCharMap(contact),
+      quoteFragment: quoteFragment,
     );
   }
 
@@ -1933,6 +1958,7 @@ class _ChatScreenState extends State<ChatScreen> {
     bool skipTranslation = false,
     bool skipReplyContext = false,
   }) async {
+    final composerReply = _composerReply(_textController.text);
     final rawText =
         quickAnswerText ?? _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -1992,7 +2018,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ? null
         : _replyAnchorTimestamp(replyTarget);
     if (replyTarget != null) {
-      outgoingText = _applyReplyMention(connector, outgoingText);
+      outgoingText = _applyReplyMention(
+        connector,
+        outgoingText,
+        quoteFragment: composerReply?.fragment,
+      );
     }
     final compressionSourceText = outgoingText;
     final maxBytes = _maxContactInputBytes(connector);

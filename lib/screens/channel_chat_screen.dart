@@ -396,8 +396,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final text = _textController.text;
     if (text == _lastTextFieldText) return;
     _lastTextFieldText = text;
-    final replyPrefix = _plainReplyComposerPrefix;
-    if (replyPrefix != null && !text.startsWith(replyPrefix)) {
+    // Touching the mention or rewriting the quote line drops the reply;
+    // trimming the quote from its end keeps it.
+    if (_plainReplyComposerPrefix != null && _composerReply(text) == null) {
       setState(() {
         _plainReplyComposerPrefix = null;
         _replyingToMessage = null;
@@ -518,18 +519,32 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
-  String _composerBodyText(String text) {
+  /// The reply the composer's [text] still carries; see
+  /// [ExactQuoteHelper.composerReply].
+  ({String prefix, String? fragment})? _composerReply(String text) {
     final prefix = _plainReplyComposerPrefix;
-    if (prefix != null && text.startsWith(prefix)) {
-      return text.substring(prefix.length);
-    }
-    return text;
+    final replyingTo = _replyingToMessage;
+    if (prefix == null || replyingTo == null) return null;
+    return ExactQuoteHelper.composerReply(
+      text: text,
+      prefix: prefix,
+      senderName: replyingTo.senderName,
+      quotedText: replyingTo.text,
+    );
+  }
+
+  String _composerBodyText(String text) {
+    final reply = _composerReply(text);
+    return reply == null ? text : text.substring(reply.prefix.length);
   }
 
   String _composerWireText(String text) {
-    final prefix = _plainReplyComposerPrefix;
-    if (prefix != null && text.startsWith(prefix)) return text;
-    return _applyReplyMention(text);
+    final reply = _composerReply(text);
+    if (reply == null) return _applyReplyMention(text);
+    return _applyReplyMention(
+      text.substring(reply.prefix.length),
+      quoteFragment: reply.fragment,
+    );
   }
 
   void _highlightMessage(String messageId) {
@@ -4152,7 +4167,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  String _applyReplyMention(String text) {
+  String _applyReplyMention(String text, {String? quoteFragment}) {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;
     return _formatReply(
@@ -4160,6 +4175,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       text: text,
       quotedText: replyingTo.text,
       quotedMessageId: replyingTo.messageId,
+      quoteFragment: quoteFragment,
     );
   }
 
@@ -4168,6 +4184,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     required String text,
     required String? quotedText,
     required String? quotedMessageId,
+    String? quoteFragment,
   }) {
     final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
@@ -4184,6 +4201,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text),
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.channelCyr2LatCharMap(widget.channel.index),
+      quoteFragment: quoteFragment,
     );
   }
 
@@ -4248,6 +4266,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ChannelMessage? embeddedReplyTarget,
     EncodedMCOImageV3? mcoImageV3,
   }) async {
+    final composerReply = _composerReply(_textController.text);
     final rawText = quickAnswerText ??
         _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -4299,7 +4318,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       }
     }
     if (!skipReplyContext) {
-      messageText = _applyReplyMention(messageText);
+      messageText = _applyReplyMention(
+        messageText,
+        quoteFragment: composerReply?.fragment,
+      );
     }
     final compressionSourceText = messageText;
 

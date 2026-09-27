@@ -146,6 +146,11 @@ class ExactQuoteHelper {
   /// with, or null when it travels untransliterated. The fragment itself is cut
   /// from the readable original — transliteration happens later, to the whole
   /// message at once — but the budget is spent in transliterated bytes.
+  ///
+  /// [quoteFragment] is the quote line as the composer shows it, which the
+  /// user may have shortened by hand to save payload ([composerReply]). It
+  /// takes the place of the budget's cut whenever a fragment is due and it
+  /// still quotes the start of [quotedText].
   static String formatReply({
     required String senderName,
     required String text,
@@ -155,6 +160,7 @@ class ExactQuoteHelper {
     required bool enabled,
     required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
+    String? quoteFragment,
   }) => formatReplyWith(
     senderName: senderName,
     text: text,
@@ -166,6 +172,7 @@ class ExactQuoteHelper {
     enabled: enabled,
     maxFragmentBytes: maxFragmentBytes,
     outboundCharMap: outboundCharMap,
+    quoteFragment: quoteFragment,
   );
 
   /// [formatReply] over any kind of message, for conversations whose
@@ -183,9 +190,10 @@ class ExactQuoteHelper {
     required bool enabled,
     required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
+    String? quoteFragment,
   }) {
-    final mention = '@[$senderName] ';
-    final fragment = enabled
+    final mention = _mention(senderName);
+    var fragment = enabled
         ? _fragmentFor(
             senderName,
             quotedText,
@@ -197,6 +205,9 @@ class ExactQuoteHelper {
             outboundCharMap,
           )
         : null;
+    if (fragment != null && quoteFragment != null && quotedText != null) {
+      fragment = _canonicalFragment(quoteFragment, quotedText) ?? fragment;
+    }
     if (fragment == null) return '$mention$text';
     return '$mention$_marker$fragment\n$text';
   }
@@ -259,6 +270,48 @@ class ExactQuoteHelper {
     );
   }
 
+  /// The reply a composer's [text] still carries. [prefix] is the mention
+  /// and quote line the composer put in front of the draft, for a reply to
+  /// [senderName]'s [quotedText].
+  ///
+  /// The quote line may be edited by hand as long as it still quotes the
+  /// start of [quotedText]. A fragment shortened from its end, which is how
+  /// a quote is trimmed to save payload, keeps the reply, and [formatReply]
+  /// sends it as trimmed through its `quoteFragment`. Returns the prefix
+  /// [text] starts with and the fragment of its quote line as typed, null
+  /// when the prefix has none. Returns null altogether once the mention is
+  /// touched or the line quotes something else, which drops the reply.
+  static ({String prefix, String? fragment})? composerReply({
+    required String text,
+    required String prefix,
+    required String senderName,
+    required String? quotedText,
+  }) {
+    final mention = _mention(senderName);
+    if (text.startsWith(prefix)) {
+      final line = prefix.startsWith(mention)
+          ? splitQuoteLine(prefix.substring(mention.length))
+          : null;
+      return (prefix: prefix, fragment: line?.fragment);
+    }
+    if (quotedText == null ||
+        !prefix.startsWith('$mention$_marker') ||
+        !text.startsWith(mention)) {
+      return null;
+    }
+    final line = splitQuoteLine(text.substring(mention.length));
+    if (line == null ||
+        _canonicalFragment(line.fragment, quotedText) == null) {
+      return null;
+    }
+    return (
+      prefix: '$mention$_marker${line.fragment}\n',
+      fragment: line.fragment,
+    );
+  }
+
+  static String _mention(String senderName) => '@[$senderName] ';
+
   static String? _fragmentFor<T>(
     String senderName,
     String? quotedText,
@@ -308,6 +361,22 @@ class ExactQuoteHelper {
     final fragment = buffer.toString().replaceFirst(_fragmentTrailing, '');
     if (fragment.isEmpty) return null;
     return truncated ? '$fragment$_ellipsis' : fragment;
+  }
+
+  /// [fragment] in the form the wire carries, when it still quotes the start
+  /// of [quotedText]. An ellipsis, whole or partly deleted, and trailing
+  /// punctuation come off, and the ellipsis goes back on when the fragment
+  /// stops short of the message, as [_buildFragment] marks its own cut:
+  /// receivers strip a whole ellipsis before matching and never a partial
+  /// one, so a quote trimmed by hand down to one or two dots would match
+  /// nothing. Null when nothing is left or the fragment quotes something
+  /// else.
+  static String? _canonicalFragment(String fragment, String quotedText) {
+    final core = fragment.replaceFirst(_fragmentTrailing, '');
+    if (core.isEmpty) return null;
+    final source = _normalize(quotedText).replaceFirst(_fragmentTrailing, '');
+    if (!source.startsWith(core)) return null;
+    return core.length < source.length ? '$core$_ellipsis' : core;
   }
 
   /// The most recent message from [mentionedNode] that [fragment] was cut
