@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/app_settings.dart';
 import 'app_settings_service.dart';
+import 'cache_manager_orphans.dart';
 
 enum MapRasterSourcePreset {
   osmAuto('osm_auto'),
@@ -654,6 +655,7 @@ class MapTileCacheService extends ChangeNotifier {
     final repo = _concreteCacheManager.config.repo;
     await repo.open();
     final objects = await repo.getAllObjects();
+    sweepOrphanedCacheFilesOnce(_concreteCacheManager.config, objects);
     final tiles = <CachedTileInfo>[];
     int totalBytes = 0;
 

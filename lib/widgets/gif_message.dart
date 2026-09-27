@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../services/gif_image_provider.dart';
+
 class GifMessage extends StatefulWidget {
   final String url;
   final Color backgroundColor;
@@ -58,7 +60,7 @@ class _GifMessageState extends State<GifMessage> {
       _isLoading = true;
       _error = null;
     });
-    final provider = NetworkImage(widget.url);
+    final provider = gifImageProvider(widget.url);
     final stream = provider.resolve(ImageConfiguration.empty);
     _imageStream = stream;
     _listener = ImageStreamListener(
@@ -85,6 +87,9 @@ class _GifMessageState extends State<GifMessage> {
     _unsubscribe();
     _image = null;
     _isPaused = false;
+    // A failed load stays in the image cache as a completer that only repeats
+    // its error, so it has to go before the retry.
+    PaintingBinding.instance.imageCache.evict(gifImageProvider(widget.url));
     _resolveImage();
   }
 

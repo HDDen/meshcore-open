@@ -60,7 +60,7 @@ dependencies:
   cryptography: ^2.9.0 # Ed25519 verification of MCMP v3 signatures
   http: ^1.2.0
   cached_network_image: ^3.4.1
-  flutter_cache_manager: ^3.4.1
+  flutter_cache_manager: ^3.4.5
   flutter_foreground_task: ^9.2.0
   characters: ^1.4.0
   package_info_plus: ^10.1.0
