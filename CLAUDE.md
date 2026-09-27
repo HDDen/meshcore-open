@@ -1526,7 +1526,7 @@ Recoverable BLE loss does not navigate away from the current chat/canvas. The co
 
 ## Dependencies
 
-App version: `9.5.1-mcoa.1.10.0+45` — Dart SDK constraint: `^3.9.2`
+App version: `9.5.1-mcoa.1.11.0+46` — Dart SDK constraint: `^3.9.2`
 
 `pubspec.yaml` is never edited on its own: it is a copy of the active build profile. `tool/use_translation_profile.dart` overwrites it from `pubspec.full.yaml`, `pubspec.lite.yaml` or `pubspec.lite-aeic.yaml`, and `lib/services/translation_service.dart` and `lib/services/image_codec_backend.dart` from their templates under `tool/translation_profiles/` and `tool/image_codec_profiles/`. The committed default is **lite-aeic**, so `pubspec.yaml` stays byte-identical to `pubspec.lite-aeic.yaml` and each live service file to its active template. The profiles differ only in their own blocks: lite drops `flutter_onnxruntime`, full adds `llamadart`, `flutter_langdetect` and the llamadart `hooks`. A dependency, a version bump or a git ref therefore goes into all three profiles in the same commit, and a change to either service file into its template. Upstream merges touch only `pubspec.yaml`: the flserial ref of upstream `82ec1feb` and `base32` for MeshCore One reactions lived there alone until 2026-09-27, and any profile switch dropped both. The `tool/use_translation_*.ps1` scripts copy the same files but leave the iOS deployment target alone, so a switch meant for a Mac build goes through the Dart tool.
 
