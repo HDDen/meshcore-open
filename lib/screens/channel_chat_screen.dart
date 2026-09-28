@@ -1217,7 +1217,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         _channelSkipNextBottomSnap = false;
                         return;
                       }
-                      _scrollController.scrollToBottomIfAtBottom();
+                      _scrollController.followNewMessage(
+                        reversedRows.isEmpty ? null : reversedRows.first.id,
+                      );
                     });
 
                     return Stack(

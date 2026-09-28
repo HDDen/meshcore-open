@@ -1490,6 +1490,33 @@ Both chats draw a bubble's box with `ChatBubbleBox` (`widgets/chat_bubble_box.da
 
 The contacts list and both chat transcripts put each row's key on the widget the item builder returns and pass `findChildIndexCallback`, backed by a key-to-index map built with the rows. Without the callback a sliver list matches rows by index only, so anything that shifts indices, a new message at the bottom of a reversed transcript, a deleted one, a re-sort of the contacts, made every visible row either take its neighbour's subtree through the message `GlobalKey` or be recreated from scratch, replaying the contacts' entrance animation. Keys stay unique: a repeated message id or contact key gets a numbered key. A key moved back inside the row, or a builder that loses the callback, brings the old cost back.
 
+### Following the newest message
+
+Both chats show their messages in a reversed list, pixel 0 being the newest,
+and a rebuild used to end in `scrollToBottomIfAtBottom`
+(`helpers/chat_scroll_controller.dart`): within 100 px of the bottom, an
+`animateTo(0)`. Every rebuild did it, a relay heard, a reading, a reaction,
+in the direct chat every notification of the connector, and `animateTo`
+begins a new scroll activity, which disposes the drag under the reader's
+finger or the fling they gave the list
+(`ScrollPositionWithSingleContext.beginActivity`); at the bottom exactly
+Flutter turns it into a `jumpTo`, which does the same. So a reader near the
+bottom of a busy channel could not scroll away. Two rules now.
+`followNewMessage(newest)` is what the screens call, with the id of the last
+row: it snaps only when that id changed, a new message at the bottom, and
+keeps the id whether or not it snapped, so a rebuild after the reader's own
+scrolling snaps nothing (the channel screen passes `reversedRows.first.id`
+from its post-frame callback, the direct chat
+`reversedMessages.first.messageId` through `_scheduleAutoScrollIfNeeded`,
+which still schedules once per `uiRevision`). And `scrollToBottomIfAtBottom`
+never moves the list while `position.userScrollDirection` is not idle: a
+drag or a wheel tick sets it and a fling keeps it, while the controller's own
+animation never sets it, so a second new message during the first's
+animation still lands at the bottom, where `isScrollingNotifier` would have
+blocked it. A wheel tick is idle again at once, which is why the first rule,
+not the second, is what lets a desktop reader scroll up through a stream of
+relays (`test/helpers/chat_scroll_controller_test.dart`).
+
 ### Keys cut in the middle
 
 `MiddleEllipsisText` (`widgets/middle_ellipsis_text.dart`) shows public keys in the contacts and discovery lists and needs a monospace style. It computes the cut from the width of one character cell instead of laying out candidate strings. The cell is measured once per effective style and text scaler and shared by every instance; the text scaler is where the app's DPI setting (`uiScale`) lands, on top of the system font size. Measuring without it, as the widget once did, under-measures whenever either is above 100%, and the key then loses its tail instead of its middle.

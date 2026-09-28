@@ -1253,7 +1253,10 @@ class _ChatScreenState extends State<ChatScreen> {
     // Auto-scroll to bottom if user is already at bottom. Schedule it once
     // per data revision so layout-only rebuilds do not create a callback
     // chain while the window is being resized.
-    _scheduleAutoScrollIfNeeded(connector.uiRevision);
+    _scheduleAutoScrollIfNeeded(
+      connector.uiRevision,
+      reversedMessages.isEmpty ? null : reversedMessages.first.messageId,
+    );
 
     return Listener(
       onPointerDown: (_) => _cancelMessageScrollStabilization(),
@@ -1432,7 +1435,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _scheduleAutoScrollIfNeeded(int revision) {
+  void _scheduleAutoScrollIfNeeded(int revision, String? newestMessageId) {
     if (_autoScrollScheduledRevision == revision) return;
     _autoScrollScheduledRevision = revision;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1442,7 +1445,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _autoScrollScheduledRevision = -1;
         return;
       }
-      _scrollController.scrollToBottomIfAtBottom();
+      _scrollController.followNewMessage(newestMessageId);
     });
   }
 

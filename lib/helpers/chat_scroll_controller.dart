@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 
 class ChatScrollController extends ScrollController {
   final ValueNotifier<bool> showJumpToBottom = ValueNotifier(false);
@@ -83,9 +84,38 @@ class ChatScrollController extends ScrollController {
     WidgetsBinding.instance.addPostFrameCallback((_) => onJumped());
   }
 
+  /// The newest row the list showed when [followNewMessage] last ran, so a
+  /// rebuild for anything else (a relay heard, a reading, a reaction, in a
+  /// direct chat any notification of the connector) leaves the list alone.
+  Object? _newestMessageShown;
+
+  /// Follows a new message at the bottom of the chat when the reader is
+  /// there. [newestMessage] identifies the last row, its message id: a
+  /// rebuild that shows the same one snaps nothing, and the id is kept
+  /// whether or not a snap happened, so a reader who was away or scrolling
+  /// when the message came is not pulled down by the next rebuild either.
+  void followNewMessage(Object? newestMessage) {
+    if (newestMessage == _newestMessageShown) return;
+    _newestMessageShown = newestMessage;
+    scrollToBottomIfAtBottom();
+  }
+
+  /// Whether the reader is dragging the list or has flung it. A drag or a
+  /// wheel tick sets the direction and a fling keeps it; an animation of
+  /// this controller's own never sets it, so it does not block itself.
+  bool get _readerIsScrolling =>
+      hasClients && position.userScrollDirection != ScrollDirection.idle;
+
   void scrollToBottomIfAtBottom() {
-    // Only scroll if jump button is NOT showing (i.e., already at bottom)
-    if (!showJumpToBottom.value && hasClients && position.maxScrollExtent > 0) {
+    // Only scroll if jump button is NOT showing (i.e., already at bottom).
+    // Never while the reader is scrolling: animateTo begins a new scroll
+    // activity, which ends the drag under their finger or their fling, and
+    // at the bottom exactly Flutter turns it into a jumpTo, which does the
+    // same.
+    if (!showJumpToBottom.value &&
+        hasClients &&
+        position.maxScrollExtent > 0 &&
+        !_readerIsScrolling) {
       animateTo(
         0, // With reverse: true, position 0 is bottom
         duration: const Duration(milliseconds: 200),

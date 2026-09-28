@@ -9,7 +9,9 @@ import 'package:meshcore_open/helpers/chat_scroll_controller.dart';
 // the bottom only while the reader is within those 100 px, the jump button
 // brings the reader back from anywhere, and the pagination hook fires near
 // the top. The list here is the chats' shape: reversed, rows of one height,
-// more of them than the viewport holds.
+// more of them than the viewport holds. The second half is the change: a
+// snap never ends the reader's drag or fling, and the screens follow the
+// newest message rather than every rebuild.
 
 const double _rowHeight = 40;
 const double _viewport = 400;
@@ -121,5 +123,130 @@ void main() {
     controller.jumpTo(controller.position.maxScrollExtent - 20);
     await tester.pump();
     expect(calls, greaterThanOrEqualTo(1));
+  });
+
+  group('the reader\'s scrolling', () {
+    /// A finger on the list, dragged [dy] px down, which in a reversed list
+    /// scrolls towards older rows; the drag is still in progress.
+    Future<TestGesture> drag(WidgetTester tester, double dy) async {
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(ListView)),
+      );
+      await gesture.moveBy(Offset(0, dy));
+      await tester.pump();
+      return gesture;
+    }
+
+    testWidgets('a snap during a drag leaves the finger in charge', (
+      tester,
+    ) async {
+      final controller = await _pumpChat(tester);
+      final gesture = await drag(tester, 60);
+      final dragged = controller.position.pixels;
+      expect(dragged, greaterThan(0));
+      expect(dragged, lessThan(100));
+
+      controller.scrollToBottomIfAtBottom();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(controller.position.pixels, dragged);
+
+      await gesture.moveBy(const Offset(0, 100));
+      await tester.pump();
+      expect(controller.position.pixels, greaterThan(dragged + 50));
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a snap during a fling leaves it running', (tester) async {
+      final controller = await _pumpChat(tester);
+      await tester.fling(find.byType(ListView), const Offset(0, 50), 800);
+      await tester.pump();
+      final flung = controller.position.pixels;
+      expect(flung, greaterThan(0));
+      expect(flung, lessThan(100));
+
+      controller.scrollToBottomIfAtBottom();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(controller.position.pixels, greaterThan(flung));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a new message that comes during a drag is not followed '
+        'once the drag ends', (tester) async {
+      final controller = await _pumpChat(tester);
+      final gesture = await drag(tester, 60);
+      final dragged = controller.position.pixels;
+
+      controller.followNewMessage('m1');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(controller.position.pixels, dragged);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      final rested = controller.position.pixels;
+      expect(rested, greaterThan(0));
+
+      // The rebuild after the drag shows the same newest message.
+      controller.followNewMessage('m1');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, rested);
+    });
+  });
+
+  group('following the newest message', () {
+    testWidgets('a new message pulls the list down once, a rebuild with the '
+        'same one not at all', (tester) async {
+      final controller = await _pumpChat(tester);
+      controller.jumpTo(60);
+      await tester.pump();
+
+      controller.followNewMessage('m1');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, 0);
+
+      controller.jumpTo(60);
+      await tester.pump();
+      controller.followNewMessage('m1');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, 60, reason: 'a relay, a reading');
+
+      controller.followNewMessage('m2');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, 0);
+    });
+
+    testWidgets('a new message that came while the reader was away is not '
+        'followed when they come back', (tester) async {
+      final controller = await _pumpChat(tester);
+      controller.jumpTo(300);
+      await tester.pump();
+
+      controller.followNewMessage('m1');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, 300);
+
+      controller.jumpTo(60);
+      await tester.pump();
+      controller.followNewMessage('m1');
+      await tester.pumpAndSettle();
+      expect(controller.position.pixels, 60);
+    });
+
+    testWidgets('its own animation does not block the next message', (
+      tester,
+    ) async {
+      final controller = await _pumpChat(tester);
+      controller.jumpTo(90);
+      await tester.pump();
+
+      controller.followNewMessage('m1');
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(controller.position.isScrollingNotifier.value, isTrue);
+      expect(controller.position.pixels, greaterThan(0));
+      controller.followNewMessage('m2');
+      await tester.pumpAndSettle();
+
+      expect(controller.position.pixels, 0);
+    });
   });
 }
