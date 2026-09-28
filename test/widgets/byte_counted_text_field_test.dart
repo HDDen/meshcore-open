@@ -125,6 +125,87 @@ void main() {
     expect(find.text('6 / 20'), findsOneWidget);
   });
 
+  testWidgets('a burst of rebuilds with fresh closures costs one encoding, '
+      'after the wait', (tester) async {
+    final controller = TextEditingController(text: 'привет');
+    addTearDown(controller.dispose);
+    final encoder = _CountingEncoder();
+    Widget field() => ByteCountedTextField(
+      maxBytes: 20,
+      controller: controller,
+      encoder: (text) => encoder.call(text),
+    );
+    await pumpField(tester, field());
+    await settle(tester);
+    final before = encoder.calls;
+
+    for (var i = 0; i < 5; i++) {
+      await pumpField(tester, field());
+    }
+    expect(encoder.calls, before);
+    expect(find.text('6 / 20'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(encoder.calls, before);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(encoder.calls, before + 1);
+    expect(find.text('6 / 20'), findsOneWidget);
+  });
+
+  testWidgets('changes within the wait cost the counter one encoding, and '
+      'the number follows the last one', (tester) async {
+    final controller = TextEditingController();
+    addTearDown(controller.dispose);
+    final encoder = _CountingEncoder();
+    await pumpField(
+      tester,
+      ByteCountedTextField(
+        maxBytes: 20,
+        controller: controller,
+        encoder: encoder.call,
+        hideCounterWhenEmpty: false,
+      ),
+    );
+    await settle(tester);
+    final before = encoder.calls;
+
+    // Set through the controller, which bypasses the limiter, so only the
+    // counter's own encodings are counted.
+    for (final draft in ['п', 'пр', 'при', 'прив']) {
+      controller.text = draft;
+      await tester.pump();
+    }
+    expect(encoder.calls, before);
+    expect(find.text('0 / 20'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(encoder.calls, before + 1);
+    expect(find.text('4 / 20'), findsOneWidget);
+  });
+
+  testWidgets('a field can name its own wait', (tester) async {
+    final controller = TextEditingController();
+    addTearDown(controller.dispose);
+    final encoder = _CountingEncoder();
+    await pumpField(
+      tester,
+      ByteCountedTextField(
+        maxBytes: 20,
+        controller: controller,
+        encoder: encoder.call,
+        countDelay: const Duration(milliseconds: 20),
+      ),
+    );
+    await settle(tester);
+    final before = encoder.calls;
+
+    controller.text = 'привет';
+    await tester.pump(const Duration(milliseconds: 30));
+
+    expect(encoder.calls, before + 1);
+    expect(find.text('6 / 20'), findsOneWidget);
+  });
+
   testWidgets('a rebuild with a fresh encoder closure and the same text '
       'keeps the count right', (tester) async {
     final controller = TextEditingController(text: 'привет');

@@ -70,6 +70,45 @@ void main() {
         text);
   });
 
+  test('a second encoding of the same input is served from memory, and only '
+      'the same input', () {
+    MCOtxtCodec.defaultLanguagePair = MCOtxtLanguagePair.forLocale('ru');
+    const text = 'Привет, как дела? Встречаемся у входа в семь.';
+    int planned() => MCOtxtCodec.debugPlannedEncodings;
+
+    final start = planned();
+    final first = MCOtxtCodec.encode(text);
+    expect(planned(), start + 1);
+    final second = MCOtxtCodec.encode(text);
+    expect(planned(), start + 1);
+    expect(second.data, first.data);
+    expect(second.bitLength, first.bitLength);
+
+    // Another text, another default pair and explicit options each plan.
+    MCOtxtCodec.encode('$text!');
+    expect(planned(), start + 2);
+    MCOtxtCodec.defaultLanguagePair = MCOtxtLanguagePair.forLocale('en');
+    MCOtxtCodec.encode(text);
+    expect(planned(), start + 3);
+    MCOtxtCodec.encode(
+      text,
+      options: const MCOtxtEncodeOptions(languageA: MCOtxtLanguageId.en),
+    );
+    expect(planned(), start + 4);
+    // Back to the first pair: still remembered.
+    MCOtxtCodec.defaultLanguagePair = MCOtxtLanguagePair.forLocale('ru');
+    MCOtxtCodec.encode(text);
+    expect(planned(), start + 4);
+
+    // Eight inputs are kept; the ninth pushes the oldest out.
+    for (var i = 0; i < 8; i++) {
+      MCOtxtCodec.encode('$text $i');
+    }
+    expect(planned(), start + 12);
+    MCOtxtCodec.encode(text);
+    expect(planned(), start + 13);
+  });
+
   test('the text transport is the same for the same input', () {
     MCOtxtCodec.defaultLanguagePair = MCOtxtLanguagePair.forLocale('ru');
     String transport() => MCOtxtAppCodec.encodeTextTransport(

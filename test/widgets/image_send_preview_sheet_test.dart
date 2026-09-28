@@ -26,8 +26,10 @@ const ImageSendRadio _knownRadio = ImageSendRadio(
 );
 
 /// Packets the sheet must report for the fake codec's ft32 mean payload:
-/// the chunker's own data-chunk count plus the XOR parity packet, which is on by
-/// default. Derived, because the chunk capacities have moved before.
+/// the chunker's own data-chunk count plus the XOR parity packet, which these
+/// tests switch on when they open the sheet; the app's own default is off,
+/// since without parity the chunker shares the payload evenly instead.
+/// Derived, because the chunk capacities have moved before.
 final int _expectedPackets =
     imageChunkCount(ImageCodecRateStats.standard.meanBytes) + 1;
 
@@ -57,6 +59,7 @@ Future<ImageSendPreviewResult?> _openSheet(
                   originalFileBytes: 2 * 1024 * 1024,
                   codec: codec,
                   radio: radio,
+                  initialParity: true,
                 );
                 closed = true;
               },
@@ -101,7 +104,7 @@ void main() {
     await _openSheet(tester, radio: _knownRadio);
 
     // FakeImageSendCodec emits the measured ft32 mean (156 B) -> one data chunk,
-    // plus the XOR parity packet, which is on by default.
+    // plus the XOR parity packet the sheet was opened with.
     final expected = estimateSendFromRadioParams(
       payloadBytes: ImageCodecRateStats.standard.meanBytes,
       spreadingFactor: 10,
@@ -206,6 +209,7 @@ void main() {
                     originalFileBytes: 1024,
                     codec: const FakeImageSendCodec(latency: Duration.zero),
                     radio: _knownRadio,
+                    initialParity: true,
                   );
                   closed = true;
                 },
@@ -248,6 +252,7 @@ void main() {
                     originalFileBytes: 1024,
                     codec: const FakeImageSendCodec(latency: Duration.zero),
                     radio: _knownRadio,
+                    initialParity: true,
                   );
                 },
                 child: const Text('open'),
