@@ -46,6 +46,7 @@ import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/reply_target_index.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/signal_reading_text.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -147,6 +148,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String? _plainReplyComposerPrefix;
   List<Contact> _mentionSuggestions = const [];
   _ComposerEncoding? _composerEncodingMemo;
+  final ReplyTargetIndex _replyTargets = ReplyTargetIndex();
   MentionQuery? _mentionQuery;
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
   final CommunityStore _communityStore = CommunityStore();
@@ -2635,12 +2637,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // the same funnel the bubble body uses: every parser below reads this, so
     // a hidden quote shows no image, no pin and no coordinates either.
     final quotedMessageId = message.replyToMessageId;
-    final quoted = quotedMessageId == null
+    // The original comes from the list the transcript is built from, indexed
+    // once per list object instead of merging own and shared history for
+    // every reply bubble; a quote of our own message needs no original.
+    final quoted = quotedMessageId == null || isOwnNode
         ? null
-        : connector
-              .getChannelMessages(widget.channel)
-              .where((current) => current.messageId == quotedMessageId)
-              .firstOrNull;
+        : _replyTargets.find(
+            connector.getChannelMergedMessages(widget.channel),
+            quotedMessageId,
+          );
     final quoteBlocked = BlockedSenders.instance.hidesQuotedMessage(
       quoted: quoted,
       senderName: message.replyToSenderName,

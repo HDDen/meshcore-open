@@ -732,7 +732,14 @@ reply arrived, so a muted sender's words used to come back on screen through som
 `hidesQuotedMessage` is the question that keeps them off it, asked by `_buildReplyPreview`, the
 one place a channel draws a quote. A room chat draws its quotes with `ReplyQuoteBox` and can ask
 less: a room block is keyed by the author's key prefix, which a quote does not carry, so there a
-quote is hidden only while its original is loaded and flagged `wasBlocked`.
+quote is hidden only while its original is loaded and flagged `wasBlocked`. The original is taken
+from the list the transcript itself is built from, `MeshCoreConnector.getChannelMergedMessages`:
+the timeline cache's unfiltered merge of own and shared history, a new object only when the
+timeline is rebuilt, which `ReplyTargetIndex` (`helpers/reply_target_index.dart`) indexes by id
+once per object. Before, every reply bubble merged own and shared history anew
+(`getChannelMessages`) on every rebuild of the transcript, 0.5 to 4 ms a bubble with a large
+shared history, on every relay heard while typing. A quote of our own message skips the lookup,
+since the rule refuses it on its first line.
 
 It answers from the original message when that is still in the loaded conversation, so the quote
 mirrors the bubble a few rows up: nothing is hidden here that stays readable there, and nothing

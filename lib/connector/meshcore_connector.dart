@@ -2124,6 +2124,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  /// The history [getChannelMessageTimeline] is filtered from: own messages
+  /// merged with the shared ones, no pending sends, no blocked-sender filter,
+  /// the same content [getChannelMessages] merges anew on every call. This one
+  /// comes from the timeline cache and is a new object only when the timeline
+  /// is rebuilt, so a caller may index it by identity.
+  List<ChannelMessage> getChannelMergedMessages(Channel channel) {
+    getChannelMessageTimeline(channel);
+    return _channelMessageTimelineCache.merged(channel.index);
+  }
+
   bool get _sharedChannelsEnabled =>
       _appSettingsService?.settings.sharedMessageHistoryMode.includesChannels ??
       false;

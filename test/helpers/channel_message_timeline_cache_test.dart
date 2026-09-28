@@ -210,4 +210,51 @@ void main() {
     expect(three.single.messageId, 'p1');
     expect(four.single.messageId, 'p2');
   });
+
+  group('merged history behind the timeline', () {
+    test('is empty before the channel was resolved', () {
+      expect(ChannelMessageTimelineCache().merged(3), isEmpty);
+    });
+
+    test('holds the merge before the filter and without pending sends', () {
+      final cache = ChannelMessageTimelineCache();
+      final primary = [message('p1', 1), message('p2', 2, sender: 'eve')];
+      final secondary = [message('s1', 3)];
+      final pending = [message('q1', 4, outgoing: true)];
+
+      final timeline = resolve(
+        cache,
+        primary: primary,
+        secondary: secondary,
+        pending: pending,
+        filterRevision: 1,
+        include: (m) => m.senderName != 'eve',
+      );
+      final merged = cache.merged(3);
+
+      expect(timeline.map((m) => m.messageId), ['p1', 's1', 'q1']);
+      expect(merged.map((m) => m.messageId), ['p1', 'p2', 's1']);
+      expect(() => merged.add(message('x', 9)), throwsUnsupportedError);
+    });
+
+    test('is the same object while the sources stay, a new one after a change',
+        () {
+      final cache = ChannelMessageTimelineCache();
+      final primary = [message('p1', 1)];
+
+      resolve(cache, primary: primary);
+      final first = cache.merged(3);
+      resolve(cache, primary: primary);
+      expect(identical(first, cache.merged(3)), isTrue);
+      // Never the live list itself: it is mutated in place by the receive
+      // path, and an index keyed on it would go stale without noticing.
+      expect(identical(first, primary), isFalse);
+
+      primary.add(message('p2', 2));
+      resolve(cache, primary: primary);
+      final second = cache.merged(3);
+      expect(identical(first, second), isFalse);
+      expect(second.map((m) => m.messageId), ['p1', 'p2']);
+    });
+  });
 }

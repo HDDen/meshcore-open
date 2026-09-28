@@ -93,10 +93,19 @@ class ChannelMessageTimelineCache {
       pending: List<ChannelMessage>.of(pending),
       filterRevision: filterRevision,
       filterKey: filterKey,
+      // Its own object per rebuild, never the live primary list, so a caller
+      // may index it by identity and see every change to the history.
+      merged: List<ChannelMessage>.unmodifiable(historical),
       timeline: result,
     );
     return result;
   }
+
+  /// The history behind the last [resolve] for [channelIndex]: own messages
+  /// merged with the shared ones, before the filter and without pending
+  /// sends. Empty until the channel was resolved once.
+  List<ChannelMessage> merged(int channelIndex) =>
+      _entries[channelIndex]?.merged ?? const <ChannelMessage>[];
 
   static bool _sameMessages(
     List<ChannelMessage> previous,
@@ -117,6 +126,7 @@ class _ChannelMessageTimelineEntry {
     required this.pending,
     required this.filterRevision,
     required this.filterKey,
+    required this.merged,
     required this.timeline,
   });
 
@@ -125,5 +135,6 @@ class _ChannelMessageTimelineEntry {
   final List<ChannelMessage> pending;
   final int filterRevision;
   final String filterKey;
+  final List<ChannelMessage> merged;
   final List<ChannelMessage> timeline;
 }
