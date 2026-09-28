@@ -50,6 +50,31 @@ class _RoutingSheetBody extends StatefulWidget {
 }
 
 class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
+  // The route quality labels read the direct repeaters, which change on every
+  // relayed packet and publish through their own notifier rather than the
+  // connector's; the sheet listens for itself.
+  MeshCoreConnector? _repeaterSource;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final connector = context.read<MeshCoreConnector>();
+    if (identical(connector, _repeaterSource)) return;
+    _repeaterSource?.repeaterActivity.removeListener(_onRepeaterActivity);
+    _repeaterSource = connector;
+    connector.repeaterActivity.addListener(_onRepeaterActivity);
+  }
+
+  @override
+  void dispose() {
+    _repeaterSource?.repeaterActivity.removeListener(_onRepeaterActivity);
+    super.dispose();
+  }
+
+  void _onRepeaterActivity() {
+    if (mounted) setState(() {});
+  }
+
   int _resolveContactIndex = -1;
   String? _syncStatus;
 

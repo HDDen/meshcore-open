@@ -38,6 +38,7 @@ import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/key_indexed_list.dart';
+import '../helpers/key_prefix_match.dart';
 import '../helpers/versioned_map.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
@@ -310,6 +311,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _radioStatsPollRefCount = 0;
   final ValueNotifier<CompanionRadioStats?> radioStatsNotifier =
       ValueNotifier<CompanionRadioStats?>(null);
+
+  /// Bumped whenever [activeRepeaters] or [directRepeaters] change, which is
+  /// on every relayed packet the radio hears. Their readers (the SNR
+  /// indicators, the routing sheet) listen here rather than to
+  /// [notifyListeners], so a relay no longer rebuilds every listener of the
+  /// connector for a signal-strength number.
+  final ValueNotifier<int> repeaterActivity = ValueNotifier<int>(0);
   int _reconnectAttempts = 0;
   bool _notifyListenersDirty = false;
   int _uiRevision = 0;
@@ -331,6 +339,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       StreamController<void>.broadcast();
 
   Uint8List? _selfPublicKey;
+  // Hex of [_selfPublicKey], computed when the key is set: the getter runs
+  // per candidate inside per-packet scans.
+  String _selfPublicKeyHex = '';
+
+  void _setSelfPublicKey(Uint8List? key) {
+    _selfPublicKey = key;
+    _selfPublicKeyHex = key == null ? '' : pubKeyToHex(key);
+  }
   String? _selfName;
   int? _currentTxPower;
   int? _maxTxPower;
@@ -772,12 +788,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return restored;
   }
 
-  List<Contact> get allContacts => List.unmodifiable([
-    ..._contacts,
-    ..._discoveredContacts.where(
-      (c) => !c.isActive && c.publicKeyHex != selfPublicKeyHex,
-    ),
-  ]);
+  List<Contact> get allContacts {
+    final selfHex = selfPublicKeyHex;
+    return List.unmodifiable([
+      ..._contacts,
+      ..._discoveredContacts.where(
+        (c) => !c.isActive && c.publicKeyHex != selfHex,
+      ),
+    ]);
+  }
 
   List<Contact> get allContactsUnfiltered =>
       List.unmodifiable([..._contacts, ..._discoveredContacts]);
@@ -904,8 +923,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// [_mcmpSigningFailedController].
   Stream<void> get mcmpSigningFailures => _mcmpSigningFailedController.stream;
   Uint8List? get selfPublicKey => _selfPublicKey;
-  String get selfPublicKeyHex =>
-      _offlinePublicKeyHex ?? pubKeyToHex(_selfPublicKey ?? Uint8List(0));
+  String get selfPublicKeyHex => _offlinePublicKeyHex ?? _selfPublicKeyHex;
 
   /// First 2 bytes of the local public key, big-endian: the `senderPrefix`
   /// stamped into every outgoing image chunk header. Null until SELF_INFO.
@@ -5876,7 +5894,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _stoppedSendAcks.clear();
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
-    _selfPublicKey = null;
+    _setSelfPublicKey(null);
     // Partially received images belong to the previous session's sender prefix.
     _imageTransport?.reassembler.clear();
     _selfName = null;
@@ -6150,7 +6168,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _conversationLoadFutures.clear();
     _clearDirectEchoKey('disconnect');
     _directFloodRepeats.clear();
-    _selfPublicKey = null;
+    _setSelfPublicKey(null);
     _selfName = null;
     _selfLatitude = null;
     _selfLongitude = null;
@@ -6521,6 +6539,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _pathHashByteWidth = nextWidth;
       _directRepeaters.clear();
       _activeRepeaters.clear();
+      _bumpRepeaterActivity();
       notifyListeners();
     }
   }
@@ -10175,7 +10194,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       reader.skipBytes(2);
       _currentTxPower = reader.readInt8();
       _maxTxPower = reader.readInt8();
-      _selfPublicKey = reader.readBytes(pubKeySize);
+      _setSelfPublicKey(reader.readBytes(pubKeySize));
       _selfLatitude = reader.readInt32LE() / 1000000.0;
       _selfLongitude = reader.readInt32LE() / 1000000.0;
       _multiAcks = reader.readByte();
@@ -10374,6 +10393,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_pathHashByteWidth != previousPathHashByteWidth) {
       _directRepeaters.clear();
       _activeRepeaters.clear();
+      _bumpRepeaterActivity();
     }
 
     // Firmware reports MAX_CONTACTS / 2 for v3+ device info.
@@ -16105,6 +16125,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     _cancelAllChannelNoRetransmissionTimers();
     radioStatsNotifier.dispose();
+    repeaterActivity.dispose();
     _receivedFramesController.close();
     _mcmpSigningFailedController.close();
     _contactsFullController.close();
@@ -16364,13 +16385,33 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // with and the one the next send put on the node, and a copy heard
       // directly, having no path, turned a direct route into a flood. The
       // path the advert came along is still offered in the path history.
-      _contacts[existingIndex] = existing.copyWith(
-        latitude: hasLocation ? latitude : existing.latitude,
-        longitude: hasLocation ? longitude : existing.longitude,
-        name: hasName ? name : existing.name,
-        lastMessageAt: mergedLastMessageAt,
-        lastSeen: DateTime.fromMillisecondsSinceEpoch(timestamp * 1000),
+      // Every copy of an advert reaches this log, relayed or heard directly,
+      // and all but the first carry nothing new for the contact. Replacing it
+      // anyway bumped `contactsRevision` and rebuilt every contact row for
+      // each copy; replacing only what changed keeps the revision, and the
+      // notification that follows it, for a real change.
+      final nextLatitude = hasLocation ? latitude : existing.latitude;
+      final nextLongitude = hasLocation ? longitude : existing.longitude;
+      final nextName = hasName ? name : existing.name;
+      final nextLastSeen = DateTime.fromMillisecondsSinceEpoch(
+        timestamp * 1000,
       );
+      final changed =
+          nextName != existing.name ||
+          nextLatitude != existing.latitude ||
+          nextLongitude != existing.longitude ||
+          nextLastSeen != existing.lastSeen ||
+          mergedLastMessageAt != existing.lastMessageAt;
+      if (changed) {
+        _contacts[existingIndex] = existing.copyWith(
+          latitude: nextLatitude,
+          longitude: nextLongitude,
+          name: nextName,
+          lastMessageAt: mergedLastMessageAt,
+          lastSeen: nextLastSeen,
+        );
+        notifyListeners();
+      }
 
       if (_pathHistoryService != null && path.isNotEmpty) {
         _pathHistoryService!.handlePathUpdated(
@@ -16477,21 +16518,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ),
       );
     }
-    notifyListeners();
+    _bumpRepeaterActivity();
   }
 
-  String? _resolveActivityRepeaterContactKeyHex(List<int> pubkeyPrefix) {
-    final prefixMatches = allContacts
-        .where(
-          (c) =>
-              (c.type == advTypeRepeater || c.type == advTypeRoom) &&
-              _contactKeyMatchesPrefix(c.publicKeyHex, pubkeyPrefix),
-        )
-        .toList();
-    if (prefixMatches.length == 1) {
-      return prefixMatches.first.publicKeyHex;
+  void _bumpRepeaterActivity() => repeaterActivity.value++;
+
+  String? _resolveActivityRepeaterContactKeyHex(List<int> pubkeyPrefix) =>
+      _singleRepeaterKeyWithPrefix(pubkeyPrefix);
+
+  /// The one repeater or room server, among the node's contacts and the
+  /// discovered nodes [allContacts] would list, whose key starts with
+  /// [pubkeyPrefix]; null when none or several do. Walks the two lists in
+  /// place and compares bytes: this runs for every relayed packet, and
+  /// building [allContacts] plus a hex string per candidate cost more than
+  /// the packet itself.
+  String? _singleRepeaterKeyWithPrefix(List<int> pubkeyPrefix) {
+    String? match;
+    for (final contact in _contacts) {
+      if (contact.type != advTypeRepeater && contact.type != advTypeRoom) {
+        continue;
+      }
+      if (!KeyPrefixMatch.keyStartsWith(contact.publicKey, pubkeyPrefix)) {
+        continue;
+      }
+      if (match != null) return null;
+      match = contact.publicKeyHex;
     }
-    return null;
+    final selfHex = selfPublicKeyHex;
+    for (final contact in _discoveredContacts) {
+      if (contact.isActive || contact.publicKeyHex == selfHex) continue;
+      if (contact.type != advTypeRepeater && contact.type != advTypeRoom) {
+        continue;
+      }
+      if (!KeyPrefixMatch.keyStartsWith(contact.publicKey, pubkeyPrefix)) {
+        continue;
+      }
+      if (match != null) return null;
+      match = contact.publicKeyHex;
+    }
+    return match;
   }
 
   void _updateDirectRepeater(
@@ -16536,7 +16601,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     //We can use adverts from chat and sensor nodes, but only if the advert has a path to get the last hop.
     if ((contact.type == advTypeChat || contact.type == advTypeSensor) &&
         path.isEmpty) {
-      notifyListeners();
       return;
     }
 
@@ -16602,7 +16666,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ),
       );
     }
-    notifyListeners();
+    _bumpRepeaterActivity();
   }
 
   String? _resolveDirectRepeaterContactKeyHex(
@@ -16614,29 +16678,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (contact.type == advTypeRepeater || contact.type == advTypeRoom)) {
       return contact.publicKeyHex;
     }
-
-    final prefixMatches = allContacts
-        .where(
-          (c) =>
-              (c.type == advTypeRepeater || c.type == advTypeRoom) &&
-              _contactKeyMatchesPrefix(c.publicKeyHex, pubkeyPrefix),
-        )
-        .toList();
-    if (prefixMatches.length == 1) {
-      return prefixMatches.first.publicKeyHex;
-    }
-
-    return null;
+    return _singleRepeaterKeyWithPrefix(pubkeyPrefix);
   }
 
-  bool _contactKeyMatchesPrefix(String contactKeyHex, List<int> pubkeyPrefix) {
-    // Normalize both sides to upper-case hex to avoid case-sensitive mismatches.
-    final normalizedPrefixHex = pubkeyPrefix
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join();
-    final normalizedContactKeyHex = contactKeyHex.toUpperCase();
-    return normalizedContactKeyHex.startsWith(normalizedPrefixHex);
-  }
+  bool _contactKeyMatchesPrefix(String contactKeyHex, List<int> pubkeyPrefix) =>
+      KeyPrefixMatch.hexStartsWith(contactKeyHex, pubkeyPrefix);
 
   void _handleAutoAddConfig(Uint8List frame) {
     final reader = BufferReader(frame);
@@ -16680,6 +16726,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (existingIndex >= 0) {
       final existing = _discoveredContacts[existingIndex];
       final messageSummary = _mergedContactMessageSummary(existing, contact);
+      // A copy of an advert already recorded, heard again the same way,
+      // changes nothing: replacing the entry would bump `discoveredRevision`,
+      // wake every listener and rewrite the store for each copy.
+      final unchanged =
+          existing.name == contact.name &&
+          existing.type == contact.type &&
+          existing.pathLength == contact.pathLength &&
+          listEquals(existing.path, contact.path) &&
+          existing.pathHashWidth == contact.pathHashWidth &&
+          existing.latitude == contact.latitude &&
+          existing.longitude == contact.longitude &&
+          existing.lastSeen == contact.lastSeen &&
+          existing.lastMessageAt == messageSummary.lastMessageAt &&
+          existing.hasMessages == messageSummary.hasMessages &&
+          existing.flags == 0 &&
+          existing.isActive == addActive;
+      if (unchanged) return;
       _discoveredContacts[existingIndex] = existing.copyWith(
         rawPacket: rawPacket,
         name: contact.name,

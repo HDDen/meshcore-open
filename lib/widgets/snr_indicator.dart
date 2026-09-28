@@ -139,8 +139,18 @@ class SNRIndicator extends StatefulWidget {
 }
 
 class _SNRIndicatorState extends State<SNRIndicator> {
+  // The repeater lists change on every relayed packet and publish through
+  // `repeaterActivity`, not through the connector's notifications, so the app
+  // bar does not rebuild for them; the indicator listens for itself.
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: widget.connector.repeaterActivity,
+      builder: (context, _, _) => _buildIndicator(context),
+    );
+  }
+
+  Widget _buildIndicator(BuildContext context) {
     final directRepeaters = widget.connector.directRepeaters;
     final directBestRepeaters = List.of(directRepeaters)
       ..sort((a, b) => (b.ranking).compareTo(a.ranking));
@@ -401,8 +411,17 @@ class SNRActivityIndicator extends StatefulWidget {
 }
 
 class _SNRActivityIndicatorState extends State<SNRActivityIndicator> {
+  // Listens to `repeaterActivity` for the same reason `_SNRIndicatorState`
+  // does: a relayed packet no longer reaches this widget any other way.
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: widget.connector.repeaterActivity,
+      builder: (context, _, _) => _buildIndicator(context),
+    );
+  }
+
+  Widget _buildIndicator(BuildContext context) {
     final activeRepeaters = widget.connector.activeRepeaters;
     // Freshest activity on top.
     final recentRepeaters = List.of(activeRepeaters)

@@ -371,4 +371,77 @@ void main() {
       expect(connector.uiRevision, greaterThan(before));
     });
   });
+
+  group('what a relay no longer does', () {
+    const later = 1700001000;
+
+    test('a relayed packet bumps the repeater notifier, not the connector',
+        () async {
+      final connector = MeshCoreConnector();
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      final revisionBefore = connector.uiRevision;
+      final activityBefore = connector.repeaterActivity.value;
+
+      relayedAck(connector, const [
+        [0x22],
+      ]);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+
+      expect(connector.repeaterActivity.value, greaterThan(activityBefore));
+      expect(connector.uiRevision, revisionBefore);
+      expect(connector.activeRepeaters.single.pubkeyPrefix, [0x22]);
+    });
+
+    test('a copy of an advert already applied leaves the contact, its '
+        'revision and the listeners alone', () async {
+      final connector = MeshCoreConnector();
+      connector.handleFrameForTest(
+        _contactFrame(respCodeContact, _key(0x22), 'Rep', type: advTypeRepeater),
+      );
+      final advert = _rxLogFrame(
+        payloadType: payloadTypeADVERT,
+        hops: const [],
+        snr: 6,
+        payload: _advert(_key(0x22), timestamp: later, name: 'Rep'),
+      );
+      connector.handleFrameForTest(advert);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      final contactsBefore = connector.contactsRevision;
+      final revisionBefore = connector.uiRevision;
+      final activityBefore = connector.repeaterActivity.value;
+      final contactBefore = connector.contacts.single;
+
+      connector.handleFrameForTest(advert);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+
+      expect(connector.contactsRevision, contactsBefore);
+      expect(identical(connector.contacts.single, contactBefore), isTrue);
+      expect(connector.uiRevision, revisionBefore);
+      // The reading itself still lands in the direct repeaters.
+      expect(connector.repeaterActivity.value, greaterThan(activityBefore));
+      expect(connector.directRepeaters.single.snr, 6);
+    });
+
+    test('a chat advert heard directly touches no repeater list', () {
+      final connector = MeshCoreConnector();
+      final activityBefore = connector.repeaterActivity.value;
+
+      connector.handleFrameForTest(
+        _rxLogFrame(
+          payloadType: payloadTypeADVERT,
+          hops: const [],
+          payload: _advert(
+            _key(0x33),
+            timestamp: later,
+            type: advTypeChat,
+            name: 'Bob',
+          ),
+        ),
+      );
+
+      expect(connector.repeaterActivity.value, activityBefore);
+      expect(connector.directRepeaters, isEmpty);
+      expect(connector.activeRepeaters, isEmpty);
+    });
+  });
 }
