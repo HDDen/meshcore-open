@@ -202,6 +202,16 @@ class LegacyQuarantineRetryResult {
   final int remaining;
 }
 
+/// One wardrive sample as the `wardrive_samples` table takes it: the JSON the
+/// store reads back, plus the columns its queries order and filter by.
+typedef WardriveSampleRow = ({
+  String id,
+  int timestampMs,
+  String publicKeyHex,
+  bool? pingSuccess,
+  String sampleJson,
+});
+
 class MessageHistoryDatabaseStats {
   const MessageHistoryDatabaseStats({
     required this.directMessages,
@@ -373,6 +383,11 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
         ),
       );
 
+  /// A database over any executor, for tests: an in-memory one, or a file
+  /// under a temporary directory. Production goes through the unnamed
+  /// constructor and the application support directory.
+  MessageHistoryDatabase.withExecutor(super.executor);
+
   @override
   int get schemaVersion => currentSchemaVersion;
 
@@ -397,6 +412,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureHeardPacketsTable();
     await _ensureContactSettingsTable();
     await _ensureDiscoveredContactsTable();
+    await _ensureWardriveTables();
   }
 
   Future<void> _ensureLegacyRejectedMessagesTable() async {
@@ -619,6 +635,337 @@ ON CONFLICT(public_key_hex) DO NOTHING
           ],
         );
       }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Wardrive: samples, sessions and upload records. One JSON per row plus the
+  // columns the queries need; the store (WardriveSampleStore) owns the shapes.
+
+  Future<void> _ensureWardriveTables() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS wardrive_samples (
+  id TEXT NOT NULL PRIMARY KEY,
+  timestamp_ms INTEGER NOT NULL,
+  public_key_hex TEXT NOT NULL,
+  ping_success INTEGER NULL,
+  sample_json TEXT NOT NULL
+)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS wardrive_samples_time
+ON wardrive_samples (timestamp_ms, id)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS wardrive_sessions (
+  start_time_ms INTEGER NOT NULL PRIMARY KEY,
+  session_json TEXT NOT NULL
+)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS wardrive_uploads (
+  sample_id TEXT NOT NULL,
+  endpoint_url TEXT NOT NULL,
+  uploaded_at_ms INTEGER NOT NULL,
+  PRIMARY KEY (sample_id, endpoint_url)
+)
+''');
+  }
+
+  static const String _insertWardriveSampleSql = '''
+INSERT INTO wardrive_samples
+  (id, timestamp_ms, public_key_hex, ping_success, sample_json)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(id) DO NOTHING
+''';
+
+  static const String _insertWardriveSessionSql = '''
+INSERT INTO wardrive_sessions (start_time_ms, session_json)
+VALUES (?, ?)
+ON CONFLICT(start_time_ms) DO NOTHING
+''';
+
+  static const String _trimWardriveSessionsSql = '''
+DELETE FROM wardrive_sessions WHERE start_time_ms IN (
+  SELECT start_time_ms FROM wardrive_sessions
+  ORDER BY start_time_ms DESC LIMIT -1 OFFSET ?
+)
+''';
+
+  List<Variable<Object>> _wardriveSampleVariables(WardriveSampleRow row) => [
+    Variable<String>(row.id),
+    Variable<int>(row.timestampMs),
+    Variable<String>(row.publicKeyHex),
+    Variable<int>(switch (row.pingSuccess) {
+      null => null,
+      true => 1,
+      false => 0,
+    }),
+    Variable<String>(row.sampleJson),
+  ];
+
+  /// Stores one sample; false when its id is there already. The table is
+  /// then trimmed to its [cap] newest samples and the upload records of
+  /// whatever the trim removed go with them.
+  Future<bool> insertWardriveSample(
+    WardriveSampleRow row, {
+    required int cap,
+  }) async {
+    return transaction(() async {
+      final changes = await customUpdate(
+        _insertWardriveSampleSql,
+        variables: _wardriveSampleVariables(row),
+        updateKind: UpdateKind.insert,
+      );
+      if (changes == 0) return false;
+      await _trimWardriveSamples(cap);
+      return true;
+    });
+  }
+
+  /// Adds the samples of [rows] that are not there yet, in one transaction,
+  /// and returns how many were added.
+  Future<int> importWardriveSamples(
+    List<WardriveSampleRow> rows, {
+    required int cap,
+  }) async {
+    if (rows.isEmpty) return 0;
+    return transaction(() async {
+      var added = 0;
+      for (final row in rows) {
+        added += await customUpdate(
+          _insertWardriveSampleSql,
+          variables: _wardriveSampleVariables(row),
+          updateKind: UpdateKind.insert,
+        );
+      }
+      if (added > 0) await _trimWardriveSamples(cap);
+      return added;
+    });
+  }
+
+  Future<void> _trimWardriveSamples(int cap) async {
+    await customUpdate(
+      '''
+DELETE FROM wardrive_samples WHERE id IN (
+  SELECT id FROM wardrive_samples
+  ORDER BY timestamp_ms DESC, id DESC LIMIT -1 OFFSET ?
+)
+''',
+      variables: [Variable<int>(cap)],
+      updateKind: UpdateKind.delete,
+    );
+    await _deleteOrphanWardriveUploads();
+  }
+
+  Future<void> _deleteOrphanWardriveUploads() async {
+    await customUpdate(
+      '''
+DELETE FROM wardrive_uploads
+WHERE sample_id NOT IN (SELECT id FROM wardrive_samples)
+''',
+      updateKind: UpdateKind.delete,
+    );
+  }
+
+  /// Sample JSON, newest first by the sample's own timestamp.
+  Future<List<String>> readWardriveSamples({
+    required int limit,
+    int offset = 0,
+  }) async {
+    final rows = await customSelect(
+      '''
+SELECT sample_json FROM wardrive_samples
+ORDER BY timestamp_ms DESC, id DESC LIMIT ? OFFSET ?
+''',
+      variables: [Variable<int>(limit), Variable<int>(offset)],
+    ).get();
+    return [for (final row in rows) row.read<String>('sample_json')];
+  }
+
+  Future<int> countWardriveSamples() async {
+    final row = await customSelect(
+      'SELECT COUNT(*) AS n FROM wardrive_samples',
+    ).getSingle();
+    return row.read<int>('n');
+  }
+
+  /// Removes the samples with [ids] and their upload records.
+  Future<void> deleteWardriveSamples(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await transaction(() async {
+      const chunkSize = 400;
+      for (var offset = 0; offset < ids.length; offset += chunkSize) {
+        final end = offset + chunkSize < ids.length
+            ? offset + chunkSize
+            : ids.length;
+        final chunk = ids.sublist(offset, end);
+        final placeholders = List.filled(chunk.length, '?').join(',');
+        await customUpdate(
+          'DELETE FROM wardrive_samples WHERE id IN ($placeholders)',
+          variables: [for (final id in chunk) Variable<String>(id)],
+          updateKind: UpdateKind.delete,
+        );
+      }
+      await _deleteOrphanWardriveUploads();
+    });
+  }
+
+  Future<void> clearWardriveData() async {
+    await transaction(() async {
+      await customUpdate(
+        'DELETE FROM wardrive_uploads',
+        updateKind: UpdateKind.delete,
+      );
+      await customUpdate(
+        'DELETE FROM wardrive_samples',
+        updateKind: UpdateKind.delete,
+      );
+      await customUpdate(
+        'DELETE FROM wardrive_sessions',
+        updateKind: UpdateKind.delete,
+      );
+    });
+  }
+
+  /// Stores a session under its start time (a second one with the same
+  /// start is ignored) and keeps the [cap] newest.
+  Future<void> insertWardriveSession({
+    required int startTimeMs,
+    required String sessionJson,
+    required int cap,
+  }) async {
+    await transaction(() async {
+      await customUpdate(
+        _insertWardriveSessionSql,
+        variables: [Variable<int>(startTimeMs), Variable<String>(sessionJson)],
+        updateKind: UpdateKind.insert,
+      );
+      await customUpdate(
+        _trimWardriveSessionsSql,
+        variables: [Variable<int>(cap)],
+        updateKind: UpdateKind.delete,
+      );
+    });
+  }
+
+  /// Session JSON, newest first.
+  Future<List<String>> readWardriveSessions() async {
+    final rows = await customSelect(
+      'SELECT session_json FROM wardrive_sessions ORDER BY start_time_ms DESC',
+    ).get();
+    return [for (final row in rows) row.read<String>('session_json')];
+  }
+
+  Future<void> markWardriveUploaded({
+    required String endpointUrl,
+    required Iterable<String> sampleIds,
+    required int uploadedAtMs,
+  }) async {
+    final ids = sampleIds.toList();
+    if (ids.isEmpty) return;
+    await transaction(() async {
+      for (final id in ids) {
+        await customUpdate(
+          '''
+INSERT INTO wardrive_uploads (sample_id, endpoint_url, uploaded_at_ms)
+VALUES (?, ?, ?)
+ON CONFLICT(sample_id, endpoint_url) DO NOTHING
+''',
+          variables: [
+            Variable<String>(id),
+            Variable<String>(endpointUrl),
+            Variable<int>(uploadedAtMs),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+    });
+  }
+
+  /// Sample JSON of the samples that carry a reading and, unless
+  /// [includeUploaded], have no upload record for [endpointUrl]; newest
+  /// first, one page.
+  Future<List<String>> readWardrivePendingUploads({
+    required String endpointUrl,
+    required bool includeUploaded,
+    required int limit,
+    required int offset,
+  }) async {
+    final rows = await customSelect(
+      '''
+SELECT s.sample_json FROM wardrive_samples s
+WHERE s.ping_success IS NOT NULL
+  AND (? = 1 OR NOT EXISTS (
+    SELECT 1 FROM wardrive_uploads u
+    WHERE u.sample_id = s.id AND u.endpoint_url = ?
+  ))
+ORDER BY s.timestamp_ms DESC, s.id DESC
+LIMIT ? OFFSET ?
+''',
+      variables: [
+        Variable<int>(includeUploaded ? 1 : 0),
+        Variable<String>(endpointUrl),
+        Variable<int>(limit),
+        Variable<int>(offset),
+      ],
+    ).get();
+    return [for (final row in rows) row.read<String>('sample_json')];
+  }
+
+  /// Moves the preference form of the wardrive data over, once, in one
+  /// transaction: samples and sessions already in the tables win, an upload
+  /// record is taken only for a sample that is there, and both tables are
+  /// trimmed to their caps at the end.
+  Future<void> importWardriveData({
+    required List<WardriveSampleRow> samples,
+    required List<({int startTimeMs, String sessionJson})> sessions,
+    required List<({String sampleId, String endpointUrl})> uploads,
+    required int sampleCap,
+    required int sessionCap,
+    required int uploadedAtMs,
+  }) async {
+    await transaction(() async {
+      for (final row in samples) {
+        await customUpdate(
+          _insertWardriveSampleSql,
+          variables: _wardriveSampleVariables(row),
+          updateKind: UpdateKind.insert,
+        );
+      }
+      for (final session in sessions) {
+        await customUpdate(
+          _insertWardriveSessionSql,
+          variables: [
+            Variable<int>(session.startTimeMs),
+            Variable<String>(session.sessionJson),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+      for (final upload in uploads) {
+        // The WHERE is what SQLite needs to parse an upsert over a SELECT.
+        await customUpdate(
+          '''
+INSERT INTO wardrive_uploads (sample_id, endpoint_url, uploaded_at_ms)
+SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM wardrive_samples WHERE id = ?)
+ON CONFLICT(sample_id, endpoint_url) DO NOTHING
+''',
+          variables: [
+            Variable<String>(upload.sampleId),
+            Variable<String>(upload.endpointUrl),
+            Variable<int>(uploadedAtMs),
+            Variable<String>(upload.sampleId),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+      await _trimWardriveSamples(sampleCap);
+      await customUpdate(
+        _trimWardriveSessionsSql,
+        variables: [Variable<int>(sessionCap)],
+        updateKind: UpdateKind.delete,
+      );
     });
   }
 

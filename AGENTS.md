@@ -22,6 +22,7 @@
 - `~/flutter/bin/flutter pub get` installs dependencies (or `flutter pub get` if Flutter is on PATH).
 - `~/flutter/bin/flutter run` launches the app; `~/flutter/bin/flutter build apk|ios` produces release builds.
 - `~/flutter/bin/flutter analyze` and `~/flutter/bin/flutter test` run linting and tests.
+- `flutter test --exclude-tags=slow` leaves out the MCOimg codec tests, which brute-force encoders and take most of a run (`@Tags(['slow'])`, declared in `dart_test.yaml`); `flutter test --tags=slow` runs only them. A change to the MCOimg codecs still needs the full run.
 
 ## Coding Style & Naming Conventions
 - Follow `flutter_lints`, use `lowerCamelCase`/`UpperCamelCase`/`snake_case`, prefer `StatelessWidget` + `Consumer`, and use `const` constructors.

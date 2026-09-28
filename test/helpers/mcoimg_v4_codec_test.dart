@@ -1,3 +1,6 @@
+@Tags(['slow'])
+library;
+
 // MCOimg v4 command-level tests.
 //
 // Every expected stream is assembled here from the field lists of

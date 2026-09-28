@@ -1,3 +1,6 @@
+@Tags(['slow'])
+library;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/mcoimg_codec.dart';

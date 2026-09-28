@@ -47,7 +47,6 @@ class WardriveUploadService {
   static const defaultApiUrl = 'https://meshwar-map.pages.dev/api/samples';
   static const _uploadSitesKey = 'wardrive_upload_sites_v1';
   static const _selectedSitesKey = 'wardrive_upload_selected_sites_v1';
-  static const _uploadedSamplesKey = 'wardrive_uploaded_samples_v1';
   static const _autoUploadKey = 'wardrive_auto_upload_enabled_v1';
   static const int autoUploadBatchSize = 100;
   // Keep autoupload capped at 100 samples, but post smaller HTTP batches so a
@@ -221,20 +220,15 @@ class WardriveUploadService {
     bool includeUploaded = false,
   }) async {
     cancelToken?.throwIfCancelled();
-    final allSamples = _sampleStore.loadAllSamples();
-    final ignoredRepeaters = WardriveIgnoreStore().loadIgnoredRepeaters();
-    final uploadedIds = _loadUploadedSampleIds(site.url);
-    final samples = allSamples
-        .where((sample) => sample.pingSuccess != null)
-        .where(
-          (sample) => !WardriveIgnoreStore.containsMatchingKey(
-            ignoredRepeaters,
-            sample.publicKeyHex,
-          ),
-        )
-        .where((sample) => includeUploaded || !uploadedIds.contains(sample.id))
-        .take(maxSamples ?? allSamples.length)
-        .toList();
+    // The store answers with the newest samples that carry a reading and
+    // were not sent to this site yet, the ignore list applied, instead of
+    // decoding every stored sample on every upload.
+    final samples = await _sampleStore.pendingUpload(
+      endpointUrl: site.url,
+      limit: maxSamples,
+      includeUploaded: includeUploaded,
+      ignoredRepeaterKeys: WardriveIgnoreStore().loadIgnoredRepeaters(),
+    );
 
     if (samples.isEmpty) {
       return const WardriveUploadResult(
@@ -281,7 +275,10 @@ class WardriveUploadService {
               'Failed at batch ${i + 1}/${batches.length}: ${result.message}',
         );
       }
-      await _markUploaded(site.url, batch.map((sample) => sample.id));
+      await _sampleStore.markUploaded(
+        site.url,
+        batch.map((sample) => sample.id),
+      );
       totalCells = result.totalCount ?? totalCells;
     }
 
@@ -478,39 +475,6 @@ class WardriveUploadService {
     // Original wardrive sends an appVersion string with every uploaded sample.
     _appVersion = info.version;
     return _appVersion!;
-  }
-
-  Set<String> _loadUploadedSampleIds(String endpointUrl) {
-    final allMarks = _loadUploadedMarks();
-    return allMarks[endpointUrl]?.toSet() ?? <String>{};
-  }
-
-  Future<void> _markUploaded(String endpointUrl, Iterable<String> ids) async {
-    final allMarks = _loadUploadedMarks();
-    final nextIds = {...?allMarks[endpointUrl], ...ids}.toList();
-    allMarks[endpointUrl] = nextIds;
-    await PrefsManager.instance.setString(
-      _uploadedSamplesKey,
-      jsonEncode(allMarks),
-    );
-  }
-
-  Map<String, List<String>> _loadUploadedMarks() {
-    final raw = PrefsManager.instance.getString(_uploadedSamplesKey);
-    if (raw == null || raw.isEmpty) return <String, List<String>>{};
-
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! Map) return <String, List<String>>{};
-      return decoded.map((key, value) {
-        final ids = value is List
-            ? value.map((entry) => entry.toString()).toList()
-            : <String>[];
-        return MapEntry(key.toString(), ids);
-      });
-    } catch (_) {
-      return <String, List<String>>{};
-    }
   }
 
   static int _sanitizeUploadBatchSize(int value) {

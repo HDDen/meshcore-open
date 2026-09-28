@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/wardrive_sample.dart';
 import 'message_history_database.dart';
 import 'prefs_manager.dart';
 
@@ -45,6 +46,9 @@ class MessageHistoryStorage {
   Future<bool> initializeAndMigrate({
     Future<void> Function()? onMigrationStarted,
     LegacyMessageValidator? validateMessage,
+    // Tests hand in a database over an in-memory executor; production opens
+    // the file in the application support directory.
+    MessageHistoryDatabase Function()? databaseFactory,
   }) async {
     _legacyMessageValidator = validateMessage;
     if (_initialized) return false;
@@ -80,7 +84,7 @@ class MessageHistoryStorage {
     final hasPreferenceHistory =
         directPreferenceKeys.isNotEmpty || channelPreferenceKeys.isNotEmpty;
 
-    final database = MessageHistoryDatabase();
+    final database = databaseFactory?.call() ?? MessageHistoryDatabase();
     _database = database;
     try {
       final migrationComplete = await database.isLegacyMigrationComplete();
@@ -116,6 +120,7 @@ class MessageHistoryStorage {
         }
       }
       await _moveDiscoveredContacts(prefs, database);
+      await _moveWardriveData(prefs, database);
 
       await _refreshCaches();
       _initialized = true;
@@ -455,6 +460,222 @@ class MessageHistoryStorage {
     _requireInitialized();
     if (kIsWeb) return const [];
     return _database!.readLatestHeardPackets(limit: limit);
+  }
+
+  static const String _wardriveSamplesKey = 'wardrive_samples_v1';
+  static const String _wardriveSessionsKey = 'wardrive_sessions_v1';
+  static const String _wardriveUploadsKey = 'wardrive_uploaded_samples_v1';
+
+  /// How many wardrive samples and sessions the tables keep, the oldest
+  /// going first. The preference form kept 3000 samples for the size of the
+  /// preferences file; the database does not care about that.
+  static const int wardriveSampleLimit = 6000;
+  static const int wardriveSessionLimit = 200;
+
+  /// Moves wardrive samples, sessions and upload records out of their
+  /// preference keys into the tables, once. The three go in one transaction
+  /// and the keys are removed only after it commits, so a move cut short runs
+  /// again at the next launch with rows already there winning. An upload
+  /// record is carried over only for a sample that is carried over: a record
+  /// about a sample that is gone is of no use. A failure leaves the keys for
+  /// the next launch; this launch then sees empty tables, as the discovered
+  /// contacts do in the same case.
+  Future<void> _moveWardriveData(
+    SharedPreferences prefs,
+    MessageHistoryDatabase database,
+  ) async {
+    final rawSamples = prefs.getStringList(_wardriveSamplesKey);
+    final rawSessions = prefs.getStringList(_wardriveSessionsKey);
+    final rawUploads = prefs.getString(_wardriveUploadsKey);
+    if (rawSamples == null && rawSessions == null && rawUploads == null) {
+      return;
+    }
+    try {
+      var skipped = 0;
+      final samples = <WardriveSampleRow>[];
+      for (final raw in rawSamples ?? const <String>[]) {
+        final sample = _decodeWardriveSample(raw);
+        if (sample == null) {
+          skipped++;
+          continue;
+        }
+        samples.add((
+          id: sample.id,
+          timestampMs: sample.timestamp.millisecondsSinceEpoch,
+          publicKeyHex: sample.publicKeyHex,
+          pingSuccess: sample.pingSuccess,
+          sampleJson: jsonEncode(sample.toStorageJson()),
+        ));
+      }
+      final sessions = <({int startTimeMs, String sessionJson})>[];
+      for (final raw in rawSessions ?? const <String>[]) {
+        final session = _decodeWardriveSession(raw);
+        if (session == null) {
+          skipped++;
+          continue;
+        }
+        sessions.add((
+          startTimeMs: session.startTime.millisecondsSinceEpoch,
+          sessionJson: jsonEncode(session.toJson()),
+        ));
+      }
+      final uploads = <({String sampleId, String endpointUrl})>[];
+      if (rawUploads != null && rawUploads.isNotEmpty) {
+        final decoded = jsonDecode(rawUploads);
+        if (decoded is Map) {
+          for (final entry in decoded.entries) {
+            final ids = entry.value;
+            if (ids is! List) continue;
+            for (final id in ids) {
+              uploads.add((
+                sampleId: id.toString(),
+                endpointUrl: entry.key.toString(),
+              ));
+            }
+          }
+        }
+      }
+      await database.importWardriveData(
+        samples: samples,
+        sessions: sessions,
+        uploads: uploads,
+        sampleCap: wardriveSampleLimit,
+        sessionCap: wardriveSessionLimit,
+        uploadedAtMs: DateTime.now().millisecondsSinceEpoch,
+      );
+      await prefs.remove(_wardriveSamplesKey);
+      await prefs.remove(_wardriveSessionsKey);
+      await prefs.remove(_wardriveUploadsKey);
+      developer.log(
+        'Moved ${samples.length} wardrive samples, ${sessions.length} sessions '
+        'and ${uploads.length} upload records into the database'
+        '${skipped > 0 ? ', skipped $skipped unreadable rows' : ''}',
+        name: 'MessageHistoryMigration',
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'Wardrive data stays in preferences for now: $error',
+        name: 'MessageHistoryMigration',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  static WardriveSample? _decodeWardriveSample(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return WardriveSample.fromJson(Map<String, Object?>.from(decoded));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static WardriveSession? _decodeWardriveSession(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return WardriveSession.fromJson(Map<String, Object?>.from(decoded));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> insertWardriveSample(
+    WardriveSampleRow row, {
+    required int cap,
+  }) {
+    _requireInitialized();
+    return _database!.insertWardriveSample(row, cap: cap);
+  }
+
+  Future<int> importWardriveSamples(
+    List<WardriveSampleRow> rows, {
+    required int cap,
+  }) {
+    _requireInitialized();
+    return _database!.importWardriveSamples(rows, cap: cap);
+  }
+
+  Future<List<String>> readWardriveSamples({
+    required int limit,
+    int offset = 0,
+  }) {
+    _requireInitialized();
+    return _database!.readWardriveSamples(limit: limit, offset: offset);
+  }
+
+  Future<int> countWardriveSamples() {
+    _requireInitialized();
+    return _database!.countWardriveSamples();
+  }
+
+  Future<void> deleteWardriveSamples(List<String> ids) {
+    _requireInitialized();
+    return _database!.deleteWardriveSamples(ids);
+  }
+
+  Future<void> clearWardriveData() {
+    _requireInitialized();
+    return _database!.clearWardriveData();
+  }
+
+  Future<void> insertWardriveSession({
+    required int startTimeMs,
+    required String sessionJson,
+    required int cap,
+  }) {
+    _requireInitialized();
+    return _database!.insertWardriveSession(
+      startTimeMs: startTimeMs,
+      sessionJson: sessionJson,
+      cap: cap,
+    );
+  }
+
+  Future<List<String>> readWardriveSessions() {
+    _requireInitialized();
+    return _database!.readWardriveSessions();
+  }
+
+  Future<void> markWardriveUploaded({
+    required String endpointUrl,
+    required Iterable<String> sampleIds,
+  }) {
+    _requireInitialized();
+    return _database!.markWardriveUploaded(
+      endpointUrl: endpointUrl,
+      sampleIds: sampleIds,
+      uploadedAtMs: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  Future<List<String>> readWardrivePendingUploads({
+    required String endpointUrl,
+    required bool includeUploaded,
+    required int limit,
+    required int offset,
+  }) {
+    _requireInitialized();
+    return _database!.readWardrivePendingUploads(
+      endpointUrl: endpointUrl,
+      includeUploaded: includeUploaded,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  /// Closes the database and forgets every cache, for a test that
+  /// initialises the storage more than once in one process.
+  Future<void> resetForTesting() async {
+    await _database?.close();
+    _database = null;
+    for (final keys in _keys.values) {
+      keys.clear();
+    }
+    _directMarkerKeys.clear();
+    _initialized = false;
   }
 
   /// Whether the database is open: false on the web, which never creates it,

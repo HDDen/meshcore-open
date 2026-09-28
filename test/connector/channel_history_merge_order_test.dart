@@ -169,7 +169,9 @@ void main() {
         previous: previous,
       );
 
-      expect(next, previous.add(const Duration(seconds: 1)));
+      // One millisecond, the smallest step the stored time carries; see
+      // ChannelMessageTimelineHelper.nextBacklogReceivedAt.
+      expect(next, previous.add(const Duration(milliseconds: 1)));
     },
   );
 

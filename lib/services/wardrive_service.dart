@@ -46,7 +46,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     : _backgroundService = backgroundService {
     WidgetsBinding.instance.addObserver(this);
     _loadSavedSettings();
-    _loadSavedSamples();
+    unawaited(_loadSavedSamples());
   }
 
   final MeshCoreConnector _connector;
@@ -61,6 +61,10 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, Timer> _discoveryFailureTimers = {};
   final List<WardriveDiscoveryResult> _recentDiscoveries = [];
   final List<WardriveSample> _recentSamples = [];
+  // The filtered view the map reads, built once per change of the samples or
+  // of the ignore list rather than two or three times per map build.
+  List<WardriveSample>? _recentSamplesView;
+  int _samplesLoadGeneration = 0;
   final Set<String> _currentDiscoveryPublicKeys = {};
   final Set<String> _ignoredRepeaterKeys = {};
   int? _currentDiscoveryTag;
@@ -68,7 +72,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   static const Duration _continuousGpsMaxAge = Duration(seconds: 60);
   static const int minAutoDiscoveryIntervalSeconds = 5;
   static const int maxAutoDiscoveryIntervalSeconds = 300;
-  static const int _recentSamplesLimit = 3000;
+  static const int _recentSamplesLimit = WardriveSampleStore.maxSamples;
   static const String _autoDiscoveryIntervalSecondsKey =
       'wardrive_auto_discovery_interval_seconds_v1';
   static const String _screenWakelockEnabledKey =
@@ -150,7 +154,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   List<WardriveDiscoveryResult> get recentDiscoveries =>
       List.unmodifiable(_recentDiscoveries);
   List<WardriveSample> get recentSamples {
-    return List.unmodifiable(
+    return _recentSamplesView ??= List.unmodifiable(
       _recentSamples.where(
         (sample) => !WardriveIgnoreStore.containsMatchingKey(
           _ignoredRepeaterKeys,
@@ -233,17 +237,28 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _syncContinuousLocationStream();
     _startSession();
     _lastAutoDiscoveryError = null;
-    _loadSavedSamples();
+    unawaited(_loadSavedSamples());
     _scheduleAutoDiscovery(const Duration(milliseconds: 250));
     notifyListeners();
   }
 
-  void _loadSavedSamples() {
-    _savedSamplesCount = _sampleStore.count;
+  /// Reads the stored samples into memory. The store is asynchronous now, so
+  /// a load that a later one overtakes is dropped, and the map is told when
+  /// the samples are there.
+  Future<void> _loadSavedSamples() async {
+    final generation = ++_samplesLoadGeneration;
+    final count = await _sampleStore.count();
+    final samples = await _sampleStore.loadRecent(limit: _recentSamplesLimit);
+    if (generation != _samplesLoadGeneration) return;
+    _savedSamplesCount = count;
     _recentSamples
       ..clear()
-      ..addAll(_sampleStore.loadRecent(limit: _recentSamplesLimit));
+      ..addAll(samples);
+    _touchRecentSamples();
+    notifyListeners();
   }
+
+  void _touchRecentSamples() => _recentSamplesView = null;
 
   void _loadSavedSettings() {
     _loadIgnoredRepeaters();
@@ -283,6 +298,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _ignoredRepeaterKeys
       ..clear()
       ..addAll(_ignoreStore.loadIgnoredRepeaters());
+    _touchRecentSamples();
   }
 
   Future<void> setScreenWakelockEnabled(bool enabled) async {
@@ -849,14 +865,23 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _persistSample(WardriveSample sample) async {
-    await _sampleStore.add(sample);
+    // One row goes to the store; the count follows it in memory rather than
+    // through another query, and a sample the store already holds (the same
+    // id from another node in the same millisecond) changes nothing here.
+    final stored = await _sampleStore.add(sample);
     _recordSessionSample(sample);
-    _savedSamplesCount = _sampleStore.count;
     _lastSampleSavedAt = sample.timestamp;
     _lastSampleError = null;
-    _recentSamples.insert(0, sample);
-    if (_recentSamples.length > _recentSamplesLimit) {
-      _recentSamples.removeRange(_recentSamplesLimit, _recentSamples.length);
+    if (stored) {
+      _savedSamplesCount = (_savedSamplesCount + 1).clamp(
+        0,
+        WardriveSampleStore.maxSamples,
+      );
+      _recentSamples.insert(0, sample);
+      if (_recentSamples.length > _recentSamplesLimit) {
+        _recentSamples.removeRange(_recentSamplesLimit, _recentSamples.length);
+      }
+      _touchRecentSamples();
     }
     _scheduleAutoUpload();
   }
@@ -905,7 +930,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     return names;
   }
 
-  String exportSamplesJson() {
+  Future<String> exportSamplesJson() {
     return _sampleStore.exportJson(
       activeSession: _activeSessionSnapshot(),
       ignoredRepeaterKeys: _ignoredRepeaterKeys,
@@ -914,14 +939,14 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<int> importSamplesJson(String rawJson) async {
     final added = await _sampleStore.importJson(rawJson);
-    _loadSavedSamples();
-    notifyListeners();
+    await _loadSavedSamples();
     return added;
   }
 
   Future<void> clearSamples() async {
     await _sampleStore.clear();
     _recentSamples.clear();
+    _touchRecentSamples();
     _savedSamplesCount = 0;
     _sessionSampleCount = 0;
     _sessionPingCount = 0;
@@ -946,8 +971,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     );
     if (removed == 0) return 0;
 
-    _loadSavedSamples();
-    notifyListeners();
+    await _loadSavedSamples();
     return removed;
   }
 

@@ -1,3 +1,6 @@
+@Tags(['slow'])
+library;
+
 import 'dart:math' as math;
 import 'dart:typed_data';
 

@@ -1,0 +1,7 @@
+# Test tags. The MCOimg codec tests brute-force many encoders per image and
+# take most of a full run; they carry `@Tags(['slow'])` and can be left out of
+# a quick run with `flutter test --exclude-tags=slow`, or run alone with
+# `flutter test --tags=slow`. A full `flutter test` still runs everything.
+tags:
+  slow:
+    timeout: 4x

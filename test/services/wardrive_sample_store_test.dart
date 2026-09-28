@@ -8,11 +8,11 @@ import 'package:meshcore_open/services/wardrive_sample_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Invariants of the wardrive store as it is kept in preferences: the order
+// Invariants of the wardrive store in its preference form, which the web
+// build and a process without the database (this one) still use: the order
 // and cap of samples and sessions, the identity an import de-duplicates by,
 // the export format shared with the standalone wardrive app, and the raw
-// preference shapes, which are exactly what a migration to the database has
-// to read. Pinned before the store moves.
+// preference shapes, which are exactly what the move to the database reads.
 
 WardriveSample _sample(
   int n, {
@@ -81,29 +81,33 @@ void main() {
       final store = WardriveSampleStore();
       final first = _sample(1);
       final second = _sample(2, pingSuccess: false);
-      await store.add(first);
-      await store.add(second);
+      expect(await store.add(first), isTrue);
+      expect(await store.add(second), isTrue);
 
-      expect(store.loadRecent().map((s) => s.id), ['id_2', 'id_1']);
-      expect(store.count, 2);
+      expect((await store.loadRecent()).map((s) => s.id), ['id_2', 'id_1']);
+      expect(await store.count(), 2);
 
       final raw = PrefsManager.instance.getStringList('wardrive_samples_v1')!;
       expect(raw.length, 2);
       expect(jsonDecode(raw.first), second.toStorageJson());
       expect(jsonDecode(raw.last), first.toStorageJson());
       // The storage shape carries what the shared export leaves out.
-      expect(second.toStorageJson().keys, containsAll(['phoneLocationAt', 'tag', 'nodeType', 'publicKeyHex']));
+      expect(
+        second.toStorageJson().keys,
+        containsAll(['phoneLocationAt', 'tag', 'nodeType', 'publicKeyHex']),
+      );
       expect(second.toJson().keys, isNot(contains('publicKeyHex')));
     });
 
-    test('the store keeps at most 3000 samples, dropping the oldest', () async {
+    test('the store keeps at most maxSamples, dropping the oldest', () async {
       final store = WardriveSampleStore();
-      for (var n = 1; n <= 3001; n++) {
+      const cap = WardriveSampleStore.maxSamples;
+      for (var n = 1; n <= cap + 1; n++) {
         await store.add(_sample(n));
       }
-      expect(store.count, 3000);
-      expect(store.loadRecent(limit: 1).single.id, 'id_3001');
-      expect(store.loadAllSamples().last.id, 'id_2');
+      expect(await store.count(), cap);
+      expect((await store.loadRecent(limit: 1)).single.id, 'id_${cap + 1}');
+      expect((await store.loadAllSamples()).last.id, 'id_2');
     });
 
     test('loadRecent honours its limit and skips unreadable rows', () async {
@@ -115,54 +119,114 @@ void main() {
         jsonEncode(_sample(1).toStorageJson()),
       ]);
 
-      expect(store.loadRecent().map((s) => s.id), ['id_3', 'id_1']);
-      expect(store.loadRecent(limit: 1).map((s) => s.id), ['id_3']);
+      expect((await store.loadRecent()).map((s) => s.id), ['id_3', 'id_1']);
+      expect((await store.loadRecent(limit: 1)).map((s) => s.id), ['id_3']);
     });
 
-    test('removeWhere drops the matching samples and reports how many',
-        () async {
+    test('removeWhere drops the matching samples, their upload records and '
+        'reports how many', () async {
       final store = WardriveSampleStore();
       for (var n = 1; n <= 3; n++) {
         await store.add(_sample(n));
       }
+      const endpoint = 'https://example.test/api';
+      await store.markUploaded(endpoint, ['id_1', 'id_2', 'id_3']);
+      expect(await store.pendingUpload(endpointUrl: endpoint), isEmpty);
 
       expect(await store.removeWhere((s) => s.tag == 2), 1);
-      expect(store.loadRecent().map((s) => s.id), ['id_3', 'id_1']);
+      expect((await store.loadRecent()).map((s) => s.id), ['id_3', 'id_1']);
       expect(await store.removeWhere((s) => s.tag == 9), 0);
-      expect(store.count, 2);
+      expect(await store.count(), 2);
+
+      // The record of the removed sample went with it: added again, it is
+      // pending again, while the others stay sent.
+      await store.add(_sample(2));
+      expect(
+        (await store.pendingUpload(endpointUrl: endpoint)).map((s) => s.id),
+        ['id_2'],
+      );
     });
 
-    test('clear forgets samples and sessions but not the ignore list',
-        () async {
+    test('clear forgets samples, sessions and upload records but not the '
+        'ignore list', () async {
       final store = WardriveSampleStore();
       await store.add(_sample(1));
       await store.addSession(_session(1));
+      await store.markUploaded('https://example.test/api', ['id_1']);
       await WardriveIgnoreStore().setIgnoredRepeater('AABBCCDD00112233', true);
 
       await store.clear();
 
-      expect(store.count, 0);
-      expect(store.loadRecent(), isEmpty);
-      expect(store.loadSessions(), isEmpty);
+      expect(await store.count(), 0);
+      expect(await store.loadRecent(), isEmpty);
+      expect(await store.loadSessions(), isEmpty);
+      expect(
+        PrefsManager.instance.containsKey('wardrive_uploaded_samples_v1'),
+        isFalse,
+      );
       expect(WardriveIgnoreStore().loadIgnoredRepeaters(), {
         'AABBCCDD00112233',
       });
     });
   });
 
-  group('sessions', () {
-    test('keep the newest first, capped at 200, and the raw shape', () async {
+  group('upload records', () {
+    const endpoint = 'https://example.test/api';
+
+    test('pendingUpload leaves out what has no reading, what is ignored and '
+        'what was sent to that site, newest first and limited', () async {
       final store = WardriveSampleStore();
-      for (var n = 0; n < 201; n++) {
+      await store.add(_sample(1));
+      await store.add(_sample(2, pingSuccess: null));
+      await store.add(
+        _sample(3, pingSuccess: false, publicKeyHex: 'EEFF001122334455'),
+      );
+      await store.add(_sample(4));
+      await store.markUploaded(endpoint, ['id_4']);
+
+      Future<List<String>> pending({
+        String url = endpoint,
+        bool includeUploaded = false,
+        int? limit,
+        Set<String> ignored = const {},
+      }) async => (await store.pendingUpload(
+        endpointUrl: url,
+        includeUploaded: includeUploaded,
+        limit: limit,
+        ignoredRepeaterKeys: ignored,
+      )).map((s) => s.id).toList();
+
+      expect(await pending(), ['id_3', 'id_1']);
+      expect(await pending(ignored: {'EEFF0011'}), ['id_1']);
+      expect(await pending(includeUploaded: true), ['id_4', 'id_3', 'id_1']);
+      expect(await pending(includeUploaded: true, limit: 1), ['id_4']);
+      expect(await pending(url: 'https://other.test'), ['id_4', 'id_3', 'id_1']);
+
+      // The raw shape the move to the database reads: a map of site to ids.
+      final raw = PrefsManager.instance.getString(
+        'wardrive_uploaded_samples_v1',
+      )!;
+      expect(jsonDecode(raw), {
+        endpoint: ['id_4'],
+      });
+    });
+  });
+
+  group('sessions', () {
+    test('keep the newest first, capped at maxSessions, and the raw shape',
+        () async {
+      final store = WardriveSampleStore();
+      const cap = WardriveSampleStore.maxSessions;
+      for (var n = 0; n <= cap; n++) {
         await store.addSession(_session(n));
       }
-      final sessions = store.loadSessions();
-      expect(sessions.length, 200);
-      expect(sessions.first.startTime, _session(200).startTime);
+      final sessions = await store.loadSessions();
+      expect(sessions.length, cap);
+      expect(sessions.first.startTime, _session(cap).startTime);
       expect(sessions.last.startTime, _session(1).startTime);
 
       final raw = PrefsManager.instance.getStringList('wardrive_sessions_v1')!;
-      expect(jsonDecode(raw.first), _session(200).toJson());
+      expect(jsonDecode(raw.first), _session(cap).toJson());
     });
   });
 
@@ -185,21 +249,24 @@ void main() {
       });
 
       expect(await store.importJson(payload), 2);
-      expect(store.loadRecent().map((s) => s.id), ['id_5', 'id_6', 'id_1']);
       expect(
-        store.loadSessions().map((s) => s.startTime),
+        (await store.loadRecent()).map((s) => s.id),
+        ['id_5', 'id_6', 'id_1'],
+      );
+      expect(
+        (await store.loadSessions()).map((s) => s.startTime),
         [_session(2).startTime, _session(1).startTime],
       );
 
       expect(await store.importJson(payload), 0);
-      expect(store.count, 3);
-      expect(store.loadSessions().length, 2);
+      expect(await store.count(), 3);
+      expect((await store.loadSessions()).length, 2);
     });
 
     test('importJson takes a bare list and refuses anything else', () async {
       final store = WardriveSampleStore();
       expect(await store.importJson(jsonEncode([_sample(7).toJson()])), 1);
-      expect(store.loadRecent().single.id, 'id_7');
+      expect((await store.loadRecent()).single.id, 'id_7');
       await expectLater(
         () => store.importJson(jsonEncode({'samples': 'nope'})),
         throwsFormatException,
@@ -215,7 +282,7 @@ void main() {
 
       final decoded =
           jsonDecode(
-                store.exportJson(
+                await store.exportJson(
                   activeSession: _session(9),
                   ignoredRepeaterKeys: {'AABBCCDD'},
                 ),
@@ -226,16 +293,20 @@ void main() {
       expect(decoded['_version'], 1);
       final samples = decoded['samples'] as List;
       expect(samples.map((s) => s['id']), ['id_2']);
-      expect(samples.single, _sample(2, publicKeyHex: 'EEFF001122334455').toJson());
-      final sessions = decoded['sessions'] as List;
       expect(
-        sessions.map((s) => s['startTime']),
-        [_session(9).startTime.toIso8601String(), _session(1).startTime.toIso8601String()],
+        samples.single,
+        _sample(2, publicKeyHex: 'EEFF001122334455').toJson(),
       );
+      final sessions = decoded['sessions'] as List;
+      expect(sessions.map((s) => s['startTime']), [
+        _session(9).startTime.toIso8601String(),
+        _session(1).startTime.toIso8601String(),
+      ]);
 
       // An active session already stored is not listed twice.
-      final again = jsonDecode(store.exportJson(activeSession: _session(1)))
-          as Map<String, dynamic>;
+      final again =
+          jsonDecode(await store.exportJson(activeSession: _session(1)))
+              as Map<String, dynamic>;
       expect((again['sessions'] as List).length, 1);
     });
 
@@ -331,7 +402,10 @@ void main() {
   group('ignore list', () {
     test('matches by prefix from eight characters and stores sorted keys',
         () async {
-      expect(WardriveIgnoreStore.keysMatch('AABBCCDDEE', 'aabbccddee0011'), isTrue);
+      expect(
+        WardriveIgnoreStore.keysMatch('AABBCCDDEE', 'aabbccddee0011'),
+        isTrue,
+      );
       expect(WardriveIgnoreStore.keysMatch('AABBCC', 'aabbccddee0011'), isFalse);
       expect(WardriveIgnoreStore.keysMatch('AABBCC', 'aabbcc'), isTrue);
       expect(WardriveIgnoreStore.keysMatch('', 'aabbcc'), isFalse);

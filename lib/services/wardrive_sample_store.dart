@@ -1,309 +1,72 @@
 import 'dart:convert';
 
+import '../models/wardrive_sample.dart';
+import '../storage/message_history_database.dart' show WardriveSampleRow;
+import '../storage/message_history_storage.dart';
 import '../storage/prefs_manager.dart';
 import 'wardrive_ignore_store.dart';
 
-class WardriveSample {
-  final String id;
-  final DateTime timestamp;
-  final DateTime? phoneLocationAt;
-  final double latitude;
-  final double longitude;
-  final int tag;
-  final int nodeType;
-  final String publicKeyHex;
-  final String? path;
-  final String geohash;
-  final double? snr;
-  final int? rssi;
-  final bool? pingSuccess;
-  final int? responseTimeMs;
-  final String? ductingRisk;
-  final String? source;
+export '../models/wardrive_sample.dart';
 
-  const WardriveSample({
-    required this.id,
-    required this.timestamp,
-    required this.phoneLocationAt,
-    required this.latitude,
-    required this.longitude,
-    required this.tag,
-    required this.nodeType,
-    required this.publicKeyHex,
-    required this.path,
-    required this.geohash,
-    required this.snr,
-    required this.rssi,
-    required this.pingSuccess,
-    required this.responseTimeMs,
-    required this.ductingRisk,
-    required this.source,
-  });
-
-  Map<String, Object?> toJson() {
-    // Match the original MeshCore Wardrive export sample shape so files can be
-    // exchanged between the standalone wardrive app and this integrated view.
-    return {
-      'id': id,
-      'lat': latitude,
-      'lon': longitude,
-      'timestamp': timestamp.toIso8601String(),
-      'path': path,
-      'geohash': geohash,
-      'snr': snr,
-      'rssi': rssi,
-      'pingSuccess': pingSuccess,
-      'responseTimeMs': responseTimeMs,
-      'ductingRisk': ductingRisk,
-      'source': source,
-    };
-  }
-
-  Map<String, Object?> toStorageJson() {
-    final json = toJson();
-    json.addAll({
-      'phoneLocationAt': phoneLocationAt?.toIso8601String(),
-      'tag': tag,
-      'nodeType': nodeType,
-      'publicKeyHex': publicKeyHex,
-    });
-    return json;
-  }
-
-  static WardriveSample? fromJson(Map<String, Object?> json) {
-    final timestamp = DateTime.tryParse(json['timestamp']?.toString() ?? '');
-    final latitude =
-        (json['lat'] as num?)?.toDouble() ??
-        (json['latitude'] as num?)?.toDouble();
-    final longitude =
-        (json['lon'] as num?)?.toDouble() ??
-        (json['longitude'] as num?)?.toDouble();
-    final path = json['path']?.toString();
-    final publicKeyHex = json['publicKeyHex']?.toString() ?? path ?? '';
-    if (timestamp == null || latitude == null || longitude == null) {
-      return null;
-    }
-
-    final phoneLocationAtText = json['phoneLocationAt']?.toString();
-    final geohash =
-        json['geohash']?.toString() ?? _geohash(latitude, longitude);
-    final tag = (json['tag'] as num?)?.toInt() ?? 0;
-    final id =
-        json['id']?.toString() ??
-        _sampleId(timestamp: timestamp, tag: tag, geohash: geohash);
-    final hasPingSuccess = json.containsKey('pingSuccess');
-    final isLegacyOpenSample =
-        json.containsKey('latitude') || json.containsKey('publicKeyHex');
-    bool? pingSuccess;
-    if (hasPingSuccess) {
-      pingSuccess = json['pingSuccess'] as bool?;
-    } else if (isLegacyOpenSample) {
-      pingSuccess = true;
-    }
-    return WardriveSample(
-      id: id,
-      timestamp: timestamp,
-      phoneLocationAt: phoneLocationAtText == null
-          ? null
-          : DateTime.tryParse(phoneLocationAtText),
-      latitude: latitude,
-      longitude: longitude,
-      tag: tag,
-      nodeType: (json['nodeType'] as num?)?.toInt() ?? 0,
-      publicKeyHex: publicKeyHex,
-      path: path ?? (publicKeyHex.isEmpty ? null : publicKeyHex),
-      geohash: geohash,
-      snr: (json['snr'] as num?)?.toDouble(),
-      rssi: (json['rssi'] as num?)?.toInt(),
-      pingSuccess: pingSuccess,
-      responseTimeMs: (json['responseTimeMs'] as num?)?.toInt(),
-      ductingRisk: json['ductingRisk']?.toString(),
-      source: json['source']?.toString(),
-    );
-  }
-
-  static WardriveSample fromDiscovery({
-    required DateTime timestamp,
-    required DateTime? phoneLocationAt,
-    required double latitude,
-    required double longitude,
-    required int tag,
-    required int nodeType,
-    required String publicKeyHex,
-    required double snr,
-    required int rssi,
-    required int? responseTimeMs,
-  }) {
-    final geohash = _geohash(latitude, longitude);
-    return WardriveSample(
-      id: _sampleId(timestamp: timestamp, tag: tag, geohash: geohash),
-      timestamp: timestamp,
-      phoneLocationAt: phoneLocationAt,
-      latitude: latitude,
-      longitude: longitude,
-      tag: tag,
-      nodeType: nodeType,
-      publicKeyHex: publicKeyHex,
-      path: publicKeyHex.toUpperCase(),
-      geohash: geohash,
-      snr: snr,
-      rssi: rssi,
-      pingSuccess: true,
-      responseTimeMs: responseTimeMs,
-      ductingRisk: null,
-      source: null,
-    );
-  }
-
-  static WardriveSample fromDiscoveryFailure({
-    required DateTime timestamp,
-    required DateTime? phoneLocationAt,
-    required double latitude,
-    required double longitude,
-    required int tag,
-  }) {
-    final geohash = _geohash(latitude, longitude);
-    return WardriveSample(
-      id: _sampleId(timestamp: timestamp, tag: tag, geohash: geohash),
-      timestamp: timestamp,
-      phoneLocationAt: phoneLocationAt,
-      latitude: latitude,
-      longitude: longitude,
-      tag: tag,
-      nodeType: 0,
-      publicKeyHex: '',
-      path: null,
-      geohash: geohash,
-      snr: null,
-      rssi: null,
-      pingSuccess: false,
-      responseTimeMs: null,
-      ductingRisk: null,
-      source: null,
-    );
-  }
-
-  static String _sampleId({
-    required DateTime timestamp,
-    required int tag,
-    required String geohash,
-  }) {
-    return '${timestamp.millisecondsSinceEpoch}_${tag.toRadixString(16).padLeft(8, '0')}_$geohash';
-  }
-
-  static String _geohash(double latitude, double longitude) {
-    const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-    var latMin = -90.0;
-    var latMax = 90.0;
-    var lonMin = -180.0;
-    var lonMax = 180.0;
-    var evenBit = true;
-    var bit = 0;
-    var ch = 0;
-    final hash = StringBuffer();
-
-    while (hash.length < 8) {
-      if (evenBit) {
-        final mid = (lonMin + lonMax) / 2;
-        if (longitude >= mid) {
-          ch = (ch << 1) + 1;
-          lonMin = mid;
-        } else {
-          ch <<= 1;
-          lonMax = mid;
-        }
-      } else {
-        final mid = (latMin + latMax) / 2;
-        if (latitude >= mid) {
-          ch = (ch << 1) + 1;
-          latMin = mid;
-        } else {
-          ch <<= 1;
-          latMax = mid;
-        }
-      }
-      evenBit = !evenBit;
-
-      if (++bit == 5) {
-        hash.write(base32[ch]);
-        bit = 0;
-        ch = 0;
-      }
-    }
-
-    return hash.toString();
-  }
-}
-
-class WardriveSession {
-  final DateTime startTime;
-  final DateTime? endTime;
-  final double distanceMeters;
-  final int sampleCount;
-  final int pingCount;
-  final int successCount;
-  final String? notes;
-
-  const WardriveSession({
-    required this.startTime,
-    required this.endTime,
-    required this.distanceMeters,
-    required this.sampleCount,
-    required this.pingCount,
-    required this.successCount,
-    required this.notes,
-  });
-
-  Map<String, Object?> toJson() {
-    return {
-      'startTime': startTime.toIso8601String(),
-      'endTime': endTime?.toIso8601String(),
-      'distanceMeters': distanceMeters,
-      'sampleCount': sampleCount,
-      'pingCount': pingCount,
-      'successCount': successCount,
-      'notes': notes,
-    };
-  }
-
-  static WardriveSession? fromJson(Map<String, Object?> json) {
-    final startTime = DateTime.tryParse(json['startTime']?.toString() ?? '');
-    if (startTime == null) return null;
-
-    final endTimeText = json['endTime']?.toString();
-    return WardriveSession(
-      startTime: startTime,
-      endTime: endTimeText == null ? null : DateTime.tryParse(endTimeText),
-      distanceMeters: (json['distanceMeters'] as num?)?.toDouble() ?? 0.0,
-      sampleCount: (json['sampleCount'] as num?)?.toInt() ?? 0,
-      pingCount: (json['pingCount'] as num?)?.toInt() ?? 0,
-      successCount: (json['successCount'] as num?)?.toInt() ?? 0,
-      notes: json['notes']?.toString(),
-    );
-  }
-}
-
+/// Wardrive samples, sessions and the record of what was uploaded where.
+///
+/// Kept in the message-history database (the auxiliary tables
+/// `wardrive_samples`, `wardrive_sessions` and `wardrive_uploads`) wherever
+/// that database exists. The web build and a process that never opened it
+/// (a unit test) keep the three preference keys the store always used, and
+/// `MessageHistoryStorage.initializeAndMigrate` carries those keys over once.
+/// Every method is asynchronous, the database living on its own isolate.
+///
+/// In the database samples are ordered newest first by their own timestamp;
+/// the preference list keeps its insertion order, as it always did. At most
+/// [maxSamples] are kept, the oldest going as new ones arrive. An upload
+/// record dies with its sample: a sample that is gone cannot be uploaded
+/// again, so nothing is kept about it.
 class WardriveSampleStore {
-  static const _samplesKey = 'wardrive_samples_v1';
-  static const _sessionsKey = 'wardrive_sessions_v1';
-  static const _exportFormat = 'meshcore_wardrive_data';
-  static const _maxSamples = 3000;
-  static const _maxSessions = 200;
+  static const String _samplesKey = 'wardrive_samples_v1';
+  static const String _sessionsKey = 'wardrive_sessions_v1';
+  static const String _uploadedSamplesKey = 'wardrive_uploaded_samples_v1';
+  static const String _exportFormat = 'meshcore_wardrive_data';
+  static const int maxSamples = MessageHistoryStorage.wardriveSampleLimit;
+  static const int maxSessions = MessageHistoryStorage.wardriveSessionLimit;
 
-  Future<void> add(WardriveSample sample) async {
+  bool get _usesDatabase => MessageHistoryStorage.instance.hasDatabase;
+
+  static WardriveSampleRow rowOf(WardriveSample sample) => (
+    id: sample.id,
+    timestampMs: sample.timestamp.millisecondsSinceEpoch,
+    publicKeyHex: sample.publicKeyHex,
+    pingSuccess: sample.pingSuccess,
+    sampleJson: jsonEncode(sample.toStorageJson()),
+  );
+
+  /// Stores [sample]. False when the database already holds a sample with
+  /// that id (two nodes answering one discovery in the same millisecond at
+  /// the same spot share one); the preference form keeps every one.
+  Future<bool> add(WardriveSample sample) async {
+    if (_usesDatabase) {
+      return MessageHistoryStorage.instance.insertWardriveSample(
+        rowOf(sample),
+        cap: maxSamples,
+      );
+    }
     final prefs = PrefsManager.instance;
     final samples = prefs.getStringList(_samplesKey) ?? const <String>[];
     final nextSamples = <String>[
-      jsonEncode(sample.toStorageJson()),
-      ...samples.take(_maxSamples - 1),
+      _encodeSample(sample),
+      ...samples.take(maxSamples - 1),
     ];
-
-    // Keep storage bounded for the first porting step; a larger wardrive
-    // database can replace this helper without touching protocol parsing.
     await prefs.setStringList(_samplesKey, nextSamples);
+    return true;
   }
 
-  List<WardriveSample> loadRecent({int limit = 100}) {
+  Future<List<WardriveSample>> loadRecent({int limit = 100}) async {
+    if (_usesDatabase) {
+      final rows = await MessageHistoryStorage.instance.readWardriveSamples(
+        limit: limit,
+      );
+      return rows.map(_decodeSample).whereType<WardriveSample>().toList();
+    }
     final samples = PrefsManager.instance.getStringList(_samplesKey) ?? [];
     return samples
         .take(limit)
@@ -312,46 +75,58 @@ class WardriveSampleStore {
         .toList();
   }
 
-  List<WardriveSample> loadAllSamples() {
-    return loadRecent(limit: _maxSamples);
+  Future<List<WardriveSample>> loadAllSamples() =>
+      loadRecent(limit: maxSamples);
+
+  Future<int> count() async {
+    if (_usesDatabase) {
+      return MessageHistoryStorage.instance.countWardriveSamples();
+    }
+    return PrefsManager.instance.getStringList(_samplesKey)?.length ?? 0;
   }
 
   Future<int> removeWhere(bool Function(WardriveSample sample) test) async {
-    final samples = loadRecent(limit: _maxSamples);
+    final samples = await loadAllSamples();
+    final removedIds = <String>[];
     final remaining = <WardriveSample>[];
-    var removed = 0;
     for (final sample in samples) {
       if (test(sample)) {
-        removed++;
+        removedIds.add(sample.id);
       } else {
         remaining.add(sample);
       }
     }
-    if (removed == 0) return 0;
+    if (removedIds.isEmpty) return 0;
 
+    if (_usesDatabase) {
+      await MessageHistoryStorage.instance.deleteWardriveSamples(removedIds);
+      return removedIds.length;
+    }
     await PrefsManager.instance.setStringList(
       _samplesKey,
-      remaining.map((sample) => jsonEncode(sample.toStorageJson())).toList(),
+      remaining.map(_encodeSample).toList(),
     );
-    return removed;
+    await _prunePreferenceMarks(remaining.map((sample) => sample.id).toSet());
+    return removedIds.length;
   }
 
-  String exportJson({
+  Future<String> exportJson({
     WardriveSession? activeSession,
     Set<String> ignoredRepeaterKeys = const <String>{},
-  }) {
-    final sessions = loadSessions();
+  }) async {
+    final sessions = await loadSessions();
     if (activeSession != null &&
         !sessions.any(
           (session) => session.startTime == activeSession.startTime,
         )) {
       sessions.insert(0, activeSession);
     }
+    final samples = await loadAllSamples();
 
     return const JsonEncoder.withIndent('  ').convert({
       '_format': _exportFormat,
       '_version': 1,
-      'samples': loadRecent(limit: _maxSamples)
+      'samples': samples
           .where(
             (sample) => !WardriveIgnoreStore.containsMatchingKey(
               ignoredRepeaterKeys,
@@ -364,57 +139,193 @@ class WardriveSampleStore {
     });
   }
 
+  /// Adds the samples of [rawJson] that are not there yet (by id, a file
+  /// naming one twice counting once) and its sessions (by start time), and
+  /// returns how many samples were added.
   Future<int> importJson(String rawJson) async {
     final importedSamples = _decodeImport(rawJson);
     await _importSessions(rawJson: rawJson);
     if (importedSamples.isEmpty) return 0;
 
+    if (_usesDatabase) {
+      final rows = <String, WardriveSampleRow>{};
+      for (final sample in importedSamples) {
+        rows.putIfAbsent(sample.id, () => rowOf(sample));
+      }
+      return MessageHistoryStorage.instance.importWardriveSamples(
+        rows.values.toList(),
+        cap: maxSamples,
+      );
+    }
+
     final prefs = PrefsManager.instance;
-    final existingSamples = loadRecent(limit: _maxSamples);
-    final knownKeys = existingSamples.map(_sampleKey).toSet();
+    final existingSamples = await loadAllSamples();
+    final knownKeys = existingSamples.map((sample) => sample.id).toSet();
     final merged = <WardriveSample>[];
     var added = 0;
-
     for (final sample in importedSamples) {
-      if (knownKeys.add(_sampleKey(sample))) {
+      if (knownKeys.add(sample.id)) {
         merged.add(sample);
         added++;
       }
     }
     merged.addAll(existingSamples);
-
     await prefs.setStringList(
       _samplesKey,
-      merged
-          .take(_maxSamples)
-          .map((sample) => jsonEncode(sample.toStorageJson()))
-          .toList(),
+      merged.take(maxSamples).map(_encodeSample).toList(),
     );
     return added;
   }
 
+  /// Forgets every sample, session and upload record. The ignore list is
+  /// not data about samples and stays.
   Future<void> clear() async {
-    await PrefsManager.instance.remove(_samplesKey);
-    await PrefsManager.instance.remove(_sessionsKey);
-  }
-
-  int get count {
-    return PrefsManager.instance.getStringList(_samplesKey)?.length ?? 0;
+    if (_usesDatabase) {
+      await MessageHistoryStorage.instance.clearWardriveData();
+      return;
+    }
+    final prefs = PrefsManager.instance;
+    await prefs.remove(_samplesKey);
+    await prefs.remove(_sessionsKey);
+    await prefs.remove(_uploadedSamplesKey);
   }
 
   Future<void> addSession(WardriveSession session) async {
+    if (_usesDatabase) {
+      await MessageHistoryStorage.instance.insertWardriveSession(
+        startTimeMs: session.startTime.millisecondsSinceEpoch,
+        sessionJson: jsonEncode(session.toJson()),
+        cap: maxSessions,
+      );
+      return;
+    }
     final prefs = PrefsManager.instance;
     final sessions = prefs.getStringList(_sessionsKey) ?? const <String>[];
     final nextSessions = <String>[
       jsonEncode(session.toJson()),
-      ...sessions.take(_maxSessions - 1),
+      ...sessions.take(maxSessions - 1),
     ];
     await prefs.setStringList(_sessionsKey, nextSessions);
   }
 
-  List<WardriveSession> loadSessions() {
+  Future<List<WardriveSession>> loadSessions() async {
+    if (_usesDatabase) {
+      final rows = await MessageHistoryStorage.instance.readWardriveSessions();
+      return rows.map(_decodeSession).whereType<WardriveSession>().toList();
+    }
     final sessions = PrefsManager.instance.getStringList(_sessionsKey) ?? [];
     return sessions.map(_decodeSession).whereType<WardriveSession>().toList();
+  }
+
+  /// The newest samples that carry a reading (`pingSuccess` set) and were
+  /// not uploaded to [endpointUrl] yet, at most [limit] of them, the ignore
+  /// list applied. With [includeUploaded] the upload records are ignored.
+  Future<List<WardriveSample>> pendingUpload({
+    required String endpointUrl,
+    int? limit,
+    bool includeUploaded = false,
+    Set<String> ignoredRepeaterKeys = const <String>{},
+  }) async {
+    final wanted = limit ?? maxSamples;
+    if (wanted <= 0) return const [];
+    bool ignored(WardriveSample sample) =>
+        WardriveIgnoreStore.containsMatchingKey(
+          ignoredRepeaterKeys,
+          sample.publicKeyHex,
+        );
+
+    if (_usesDatabase) {
+      // The query leaves out what has no reading and what was sent already;
+      // ignored repeaters are a handful, so a page rarely comes up short.
+      final result = <WardriveSample>[];
+      const page = 200;
+      var offset = 0;
+      while (result.length < wanted) {
+        final rows = await MessageHistoryStorage.instance
+            .readWardrivePendingUploads(
+              endpointUrl: endpointUrl,
+              includeUploaded: includeUploaded,
+              limit: page,
+              offset: offset,
+            );
+        if (rows.isEmpty) break;
+        offset += rows.length;
+        for (final raw in rows) {
+          final sample = _decodeSample(raw);
+          if (sample == null || ignored(sample)) continue;
+          result.add(sample);
+          if (result.length == wanted) break;
+        }
+        if (rows.length < page) break;
+      }
+      return result;
+    }
+
+    final uploaded = includeUploaded
+        ? const <String>{}
+        : (_preferenceMarks()[endpointUrl]?.toSet() ?? <String>{});
+    final samples = await loadAllSamples();
+    return samples
+        .where((sample) => sample.pingSuccess != null)
+        .where((sample) => !ignored(sample))
+        .where((sample) => !uploaded.contains(sample.id))
+        .take(wanted)
+        .toList();
+  }
+
+  /// Records that [sampleIds] reached [endpointUrl].
+  Future<void> markUploaded(String endpointUrl, Iterable<String> sampleIds) async {
+    if (_usesDatabase) {
+      await MessageHistoryStorage.instance.markWardriveUploaded(
+        endpointUrl: endpointUrl,
+        sampleIds: sampleIds,
+      );
+      return;
+    }
+    final marks = _preferenceMarks();
+    marks[endpointUrl] = {...?marks[endpointUrl], ...sampleIds}.toList();
+    await PrefsManager.instance.setString(
+      _uploadedSamplesKey,
+      jsonEncode(marks),
+    );
+  }
+
+  Map<String, List<String>> _preferenceMarks() {
+    final raw = PrefsManager.instance.getString(_uploadedSamplesKey);
+    if (raw == null || raw.isEmpty) return <String, List<String>>{};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return <String, List<String>>{};
+      return decoded.map((key, value) {
+        final ids = value is List
+            ? value.map((entry) => entry.toString()).toList()
+            : <String>[];
+        return MapEntry(key.toString(), ids);
+      });
+    } catch (_) {
+      return <String, List<String>>{};
+    }
+  }
+
+  /// Drops the upload records of samples that are no longer stored. The
+  /// preference form does this on a removal, not on the cap: reading the
+  /// whole list for every sample at the cap would cost more than the few
+  /// stale ids are worth, and the next removal catches them.
+  Future<void> _prunePreferenceMarks(Set<String> liveIds) async {
+    final marks = _preferenceMarks();
+    if (marks.isEmpty) return;
+    var changed = false;
+    final pruned = <String, List<String>>{};
+    for (final entry in marks.entries) {
+      final kept = entry.value.where(liveIds.contains).toList();
+      if (kept.length != entry.value.length) changed = true;
+      if (kept.isNotEmpty) pruned[entry.key] = kept;
+    }
+    if (!changed) return;
+    await PrefsManager.instance.setString(
+      _uploadedSamplesKey,
+      jsonEncode(pruned),
+    );
   }
 
   List<WardriveSample> _decodeImport(String rawJson) {
@@ -453,7 +364,14 @@ class WardriveSampleStore {
         .toList();
     if (incomingSessions.isEmpty) return;
 
-    final existingSessions = loadSessions();
+    if (_usesDatabase) {
+      for (final session in incomingSessions) {
+        await addSession(session);
+      }
+      return;
+    }
+
+    final existingSessions = await loadSessions();
     final knownStarts = existingSessions
         .map((session) => session.startTime.toIso8601String())
         .toSet();
@@ -468,15 +386,14 @@ class WardriveSampleStore {
     await PrefsManager.instance.setStringList(
       _sessionsKey,
       merged
-          .take(_maxSessions)
+          .take(maxSessions)
           .map((session) => jsonEncode(session.toJson()))
           .toList(),
     );
   }
 
-  String _sampleKey(WardriveSample sample) {
-    return sample.id;
-  }
+  String _encodeSample(WardriveSample sample) =>
+      jsonEncode(sample.toStorageJson());
 
   WardriveSample? _decodeSample(String raw) {
     try {

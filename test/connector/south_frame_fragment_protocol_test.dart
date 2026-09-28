@@ -12,8 +12,8 @@ void main() {
       enableSouthFrameFragments: false,
     );
 
-    expect(enabledName, 'MeshCoreOpen;cap=frmfrg1,mctxt,mcmp,aeic');
-    expect(disabledName, 'MeshCoreOpen;cap=mctxt,mcmp,aeic');
+    expect(enabledName, 'MeshCoreOpen;cap=frmfrg1,mctxt,mcmp,mcimg,aeic');
+    expect(disabledName, 'MeshCoreOpen;cap=mctxt,mcmp,mcimg,aeic');
 
     final enabledFrame = buildAppStartFrame(appName: enabledName);
     final disabledFrame = buildAppStartFrame(appName: disabledName);

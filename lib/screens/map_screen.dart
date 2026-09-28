@@ -2490,7 +2490,8 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
 
-    final json = wardrive.exportSamplesJson();
+    final json = await wardrive.exportSamplesJson();
+    if (!mounted) return;
     try {
       final fileName = 'meshcore_wardrive_${_wardriveExportTimestamp()}.json';
       final shareText = context.l10n.map_wardriveExportShareText;

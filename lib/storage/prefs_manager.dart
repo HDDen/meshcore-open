@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +20,12 @@ class PrefsManager {
   static Future<void> initialize() async {
     if (_instance != null) return;
     if (Platform.isWindows) {
-      await _quarantineCorruptWindowsPreferences();
+      try {
+        await _quarantineCorruptWindowsPreferences();
+      } on MissingPluginException {
+        // No path_provider in this process (a unit test on Windows): there is
+        // no file to look at, and the mock preferences need no quarantine.
+      }
     }
     _instance = await SharedPreferences.getInstance();
   }
