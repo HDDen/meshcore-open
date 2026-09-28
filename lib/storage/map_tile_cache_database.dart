@@ -275,7 +275,7 @@ WHERE id = ?
   Future<int> deleteRecords(Iterable<int> ids) async {
     final list = ids.toList();
     if (list.isEmpty) return 0;
-    return transaction(() async {
+    final removed = await transaction(() async {
       var deleted = 0;
       const chunkSize = 400;
       for (var offset = 0; offset < list.length; offset += chunkSize) {
@@ -292,12 +292,43 @@ WHERE id = ?
       }
       return deleted;
     });
+    await _rebuildAfterDeleting(removed);
+    return removed;
   }
 
-  Future<int> clearRecords() => customUpdate(
-    'DELETE FROM tile_records',
-    updateKind: UpdateKind.delete,
-  );
+  Future<int> clearRecords() async {
+    final deleted = await customUpdate(
+      'DELETE FROM tile_records',
+      updateKind: UpdateKind.delete,
+    );
+    await _rebuildAfterDeleting(deleted);
+    return deleted;
+  }
+
+  /// Rebuilds the file once a deletion has removed more records than it
+  /// left. SQLite keeps the pages of deleted rows for its own reuse and
+  /// never shrinks a file by itself, so the cache screen's clear left a
+  /// 38 MB file with nothing in it. VACUUM copies the live rows, fewer than
+  /// the deleted ones by then, into a new file, and the checkpoint folds
+  /// the copy out of the log and cuts the file to its new size. The
+  /// package's eviction of a hundred records from a full cache never gets
+  /// here; its pages go to the tiles that come next. Runs after the
+  /// deleting transaction, as VACUUM must, and a failure is logged and
+  /// costs nothing but the space, since the records are already gone.
+  Future<void> _rebuildAfterDeleting(int deleted) async {
+    if (deleted == 0 || deleted <= await countRecords()) return;
+    try {
+      await customStatement('VACUUM');
+      await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (error, stackTrace) {
+      developer.log(
+        'The tile database was not rebuilt after a deletion: $error',
+        name: 'MapTileCacheIndex',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
 
   /// The least recently touched records beyond [capacity], a hundred at a
   /// time and only those untouched for a day, as the package's sqflite

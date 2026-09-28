@@ -286,6 +286,79 @@ Future<void> main() async {
     }, skip: skip);
   });
 
+  group('clearing the records', () {
+    // A database on a file, opened as the app opens it, with enough records
+    // that the file is many pages long. The size is read after a checkpoint,
+    // so the log never counts.
+    Future<({MapTileCacheDatabase database, File file, List<int> ids})> fill(
+      int count,
+    ) async {
+      final file = File(
+        '${tempDir.path}${Platform.pathSeparator}records.sqlite',
+      );
+      final database = MapTileCacheDatabase.withExecutor(
+        NativeDatabase(
+          file,
+          setup: (db) {
+            db.execute('PRAGMA journal_mode = WAL');
+            db.execute('PRAGMA synchronous = NORMAL');
+            db.execute('PRAGMA journal_size_limit = 4194304');
+          },
+        ),
+      );
+      addTearDown(database.close);
+      final repository = MapTileCacheRepository(database);
+      final ids = <int>[];
+      for (var i = 0; i < count; i++) {
+        final stored = await repository.insert(
+          _record('https://tile.example/12/$i/${'x' * 120}.png'),
+        );
+        ids.add(stored.id!);
+      }
+      await database.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+      return (database: database, file: file, ids: ids);
+    }
+
+    test('deleting every record gives the file back', () async {
+      final filled = await fill(2000);
+      final before = filled.file.lengthSync();
+      expect(before, greaterThan(256 * 1024));
+
+      expect(await filled.database.deleteRecords(filled.ids), 2000);
+
+      expect(await filled.database.countRecords(), 0);
+      expect(
+        filled.file.lengthSync(),
+        lessThan(before ~/ 8),
+        reason: 'SQLite keeps the pages of deleted rows until a VACUUM',
+      );
+      final log = File('${filled.file.path}-wal');
+      expect(!log.existsSync() || log.lengthSync() == 0, isTrue);
+    }, skip: skip);
+
+    test('a deletion that removes fewer records than it leaves keeps the '
+        'file as it is', () async {
+      final filled = await fill(2000);
+      final before = filled.file.lengthSync();
+
+      expect(await filled.database.deleteRecords(filled.ids.take(100)), 100);
+      await filled.database.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+
+      expect(await filled.database.countRecords(), 1900);
+      expect(filled.file.lengthSync(), before);
+    }, skip: skip);
+
+    test('clearing the table gives the file back too', () async {
+      final filled = await fill(1000);
+      final before = filled.file.lengthSync();
+
+      expect(await filled.database.clearRecords(), 1000);
+
+      expect(await filled.database.countRecords(), 0);
+      expect(filled.file.lengthSync(), lessThan(before ~/ 8));
+    }, skip: skip);
+  });
+
   group('openForThisPlatform', () {
     test('answers null where the package keeps its own repository', () async {
       expect(
