@@ -311,6 +311,61 @@ void main() {
     });
   });
 
+  group('cost', () {
+    test('a paste of a thousand graphemes costs the encoder a dozen calls, '
+        'not one per grapheme', () {
+      final counting = _CountingEncoder((text) => text);
+      final formatter = Utf8LengthLimitingTextInputFormatter(
+        100,
+        encoder: counting.call,
+      );
+      final pasted = List.filled(1000, 'x').join();
+
+      final result = formatter.formatEditUpdate(_value(''), _value(pasted));
+
+      expect(result.text.length, 100);
+      expect(result.selection.baseOffset, 100);
+      // Two encodings decide that the paste does not fit, then a binary
+      // search over the thousand graphemes.
+      expect(counting.calls, lessThanOrEqualTo(12));
+    });
+
+    test('a paste of mixed graphemes is cut as before, at the same cost', () {
+      final counting = _CountingEncoder(_shrinkCyrillic);
+      final formatter = Utf8LengthLimitingTextInputFormatter(
+        157,
+        encoder: counting.call,
+      );
+      final pasted = List.generate(
+        300,
+        (i) => _alphabet[i % _alphabet.length],
+      ).join();
+
+      final result = formatter.formatEditUpdate(_value('ab', 1), _value('a${pasted}b', 1 + pasted.length));
+
+      expect(_bytes(_shrinkCyrillic(result.text)), lessThanOrEqualTo(157));
+      expect(result.text, startsWith('a'));
+      expect(result.text, endsWith('b'));
+      final kept = result.text.substring(1, result.text.length - 1);
+      final next = pasted.characters.elementAt(kept.characters.length);
+      expect(_bytes(_shrinkCyrillic('a$kept${next}b')), greaterThan(157));
+      expect(counting.calls, lessThanOrEqualTo(12));
+    });
+
+    test('typing one character at the limit costs two encodings', () {
+      final counting = _CountingEncoder((text) => text);
+      final formatter = Utf8LengthLimitingTextInputFormatter(
+        5,
+        encoder: counting.call,
+      );
+
+      final result = formatter.formatEditUpdate(_value('abcde'), _value('abcdef'));
+
+      expect(result.text, 'abcde');
+      expect(counting.calls, 2);
+    });
+  });
+
   group('with an encoder', () {
     test('the limit is measured on the encoded text', () {
       const cyrillic = 'ппппппппппп';
