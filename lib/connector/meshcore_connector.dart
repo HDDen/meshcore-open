@@ -11478,7 +11478,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (echo != null) unawaited(_sendDirectEchoAck(echo));
 
       // Persist first, then enqueue the notification before advancing a
-      // destructive firmware queue read.
+      // destructive firmware queue read. The notification is enqueued here
+      // and shown in the background: the queue waits for the history write,
+      // never for a picture download or the plugin.
       // A muted room author raises none: it would put the hidden text straight
       // back on screen.
       if (!message.isOutgoing &&
@@ -11502,13 +11504,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     translationResult.translatedText.trim().isNotEmpty)
                 ? translationResult.translatedText.trim()
                 : msg.text.trim();
-            await _notificationService.showMessageNotification(
-              contactName: c?.name ?? 'Unknown',
-              message: resolvedText,
-              urlImagesEnabled:
-                  c != null && isContactUrlImagesEnabled(c.publicKeyHex),
-              contactId: msg.senderKeyHex,
-              badgeCount: getTotalUnreadCount(),
+            _showNotificationInBackground(
+              _notificationService.showMessageNotification(
+                contactName: c?.name ?? 'Unknown',
+                message: resolvedText,
+                urlImagesEnabled:
+                    c != null && isContactUrlImagesEnabled(c.publicKeyHex),
+                contactId: msg.senderKeyHex,
+                badgeCount: getTotalUnreadCount(),
+              ),
             );
           } else if (c?.type == advTypeRoom) {
             final resolvedText =
@@ -11518,13 +11522,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     translationResult.translatedText.trim().isNotEmpty)
                 ? translationResult.translatedText.trim()
                 : msg.text.trim();
-            await _notificationService.showMessageNotification(
-              contactName: c?.name ?? 'Unknown Room',
-              message: resolvedText,
-              urlImagesEnabled:
-                  c != null && isContactUrlImagesEnabled(c.publicKeyHex),
-              contactId: msg.senderKeyHex,
-              badgeCount: getTotalUnreadCount(),
+            _showNotificationInBackground(
+              _notificationService.showMessageNotification(
+                contactName: c?.name ?? 'Unknown Room',
+                message: resolvedText,
+                urlImagesEnabled:
+                    c != null && isContactUrlImagesEnabled(c.publicKeyHex),
+                contactId: msg.senderKeyHex,
+                badgeCount: getTotalUnreadCount(),
+              ),
             );
           }
         }
@@ -13159,6 +13165,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ).hasMatch(text);
   }
 
+  /// Shows a notification off the receive path. The message it names is in
+  /// the history already; what remains is the plugin, and for a picture its
+  /// download or rendering, which the node's queue must not wait for (see
+  /// [_processPotentialQueuedMessage]). The call itself ran up to its first
+  /// await, so the service's rate limiter saw the notifications in order.
+  void _showNotificationInBackground(Future<void> notification) {
+    unawaited(
+      notification.catchError((Object error, StackTrace stackTrace) {
+        appLogger.warn(
+          'Could not show a notification: $error\n$stackTrace',
+          tag: 'Notification',
+        );
+      }),
+    );
+  }
+
   Future<void> _maybeNotifyChannelMessage(
     ChannelMessage message, {
     String? channelName,
@@ -13188,13 +13210,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             translationResult.translatedText.trim().isNotEmpty)
         ? translationResult.translatedText.trim()
         : message.text.trim();
-    await _notificationService.showChannelMessageNotification(
-      channelName: label,
-      senderName: message.senderName,
-      message: resolvedText,
-      urlImagesEnabled: isChannelUrlImagesEnabled(channelIndex),
-      channelIndex: message.channelIndex,
-      badgeCount: getTotalUnreadCount(),
+    _showNotificationInBackground(
+      _notificationService.showChannelMessageNotification(
+        channelName: label,
+        senderName: message.senderName,
+        message: resolvedText,
+        urlImagesEnabled: isChannelUrlImagesEnabled(channelIndex),
+        channelIndex: message.channelIndex,
+        badgeCount: getTotalUnreadCount(),
+      ),
     );
   }
 

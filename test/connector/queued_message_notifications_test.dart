@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -32,7 +33,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 // and it talks to `dexterous.com/flutter/local_notifications`, which
 // answers as a phone with notifications allowed would. The history goes into
 // an in-memory database, so the tests are skipped on a host that cannot
-// load a native sqlite3.
+// load a native sqlite3. The last group is the change: the notification is
+// shown off the receive path, so the next request goes out while the plugin
+// still holds the notification, and an MCOimg notification deletes the
+// picture files of earlier ones after a day.
 
 const int _timestamp = 1700000000;
 
@@ -187,6 +191,9 @@ class _NotificationPlugin {
 
   final List<MethodCall> shown = [];
 
+  /// While set, `show` records its call and completes only with this.
+  Completer<void>? hold;
+
   void install() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
@@ -196,6 +203,8 @@ class _NotificationPlugin {
               return true;
             case 'show':
               shown.add(call);
+              final pending = hold;
+              if (pending != null) await pending.future;
               return null;
             default:
               return null;
@@ -332,6 +341,7 @@ Future<void> main() async {
     );
     NotificationService().resetForTest();
     plugin.shown.clear();
+    plugin.hold = null;
     for (final file in _notificationPngs(tempDir)) {
       file.deleteSync();
     }
@@ -536,5 +546,111 @@ Future<void> main() async {
 
       expect(plugin.shown, isEmpty);
     });
+  }, skip: skip);
+
+  group('the notification is shown off the receive path', () {
+    test('a queued direct message: the next request goes out while the '
+        'plugin still holds the notification', () async {
+      final harness = await _Harness.start();
+      final connector = harness.connector;
+      final alice = await harness.addContact(aliceKey, 'Alice');
+      connector.countStored = () => connector.getLoadedMessages(alice).length;
+      final hold = plugin.hold = Completer<void>();
+
+      await connector.syncQueuedMessages();
+      connector.handleFrameForTest(
+        _contactMessageFrame(
+          senderKey: aliceKey,
+          timestampSeconds: _timestamp,
+          text: 'hello',
+        ),
+      );
+      // Nothing completes the hold before this returns, so the request went
+      // out with the notification still in the plugin's hands.
+      await _waitFor(() => connector.syncRequests == 2, 'the next request');
+
+      expect(connector.storedAtSyncNext, [0, 1]);
+      await _waitFor(() => plugin.shown.length == 1, 'the notification');
+      final arguments = _NotificationPlugin.argumentsOf(plugin.shown.single);
+      expect(arguments['title'], 'Alice');
+      hold.complete();
+      await _settle();
+
+      connector.handleFrameForTest(
+        Uint8List.fromList([respCodeNoMoreMessages]),
+      );
+      await _settle();
+      expect(connector.syncRequests, 2);
+    });
+
+    test('a queued channel message: the next request goes out while the '
+        'plugin still holds the notification', () async {
+      final harness = await _Harness.start();
+      final connector = harness.connector;
+      await harness.addChannel(0, 'Test', _psk(1));
+      final channel = connector.channels.single;
+      connector.countStored = () =>
+          connector.getLoadedChannelMessages(channel).length;
+      final hold = plugin.hold = Completer<void>();
+
+      await connector.syncQueuedMessages();
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _waitFor(() => connector.syncRequests == 2, 'the next request');
+
+      expect(connector.storedAtSyncNext, [0, 1]);
+      await _waitFor(() => plugin.shown.length == 1, 'the notification');
+      final arguments = _NotificationPlugin.argumentsOf(plugin.shown.single);
+      expect(arguments['title'], 'Test');
+      hold.complete();
+      await _settle();
+
+      connector.handleFrameForTest(
+        Uint8List.fromList([respCodeNoMoreMessages]),
+      );
+      await _settle();
+      expect(connector.syncRequests, 2);
+    });
+
+    test(
+      'an MCOimg notification deletes the pictures of earlier ones after '
+      'a day and keeps the younger ones',
+      () async {
+        final stale = File('${tempDir.path}/mcoimg_notification_1.png')
+          ..writeAsBytesSync(const [1]);
+        stale.setLastModifiedSync(
+          DateTime.now().subtract(const Duration(hours: 25)),
+        );
+        final young = File('${tempDir.path}/mcoimg_notification_2.png')
+          ..writeAsBytesSync(const [1]);
+        young.setLastModifiedSync(
+          DateTime.now().subtract(const Duration(hours: 23)),
+        );
+        final harness = await _Harness.start();
+        await harness.addContact(aliceKey, 'Alice');
+
+        harness.connector.handleFrameForTest(
+          _contactMessageFrame(
+            senderKey: aliceKey,
+            timestampSeconds: _timestamp,
+            text: _mcoImageText(),
+          ),
+        );
+        await _waitFor(() => plugin.shown.length == 1, 'the notification');
+        await _waitFor(() => !stale.existsSync(), 'the stale picture to go');
+
+        expect(young.existsSync(), isTrue);
+        expect(_notificationPngs(tempDir), hasLength(2));
+      },
+      skip: PlatformInfo.isWindows || PlatformInfo.isMacOS
+          ? null
+          : 'this host writes no picture file',
+    );
   }, skip: skip);
 }

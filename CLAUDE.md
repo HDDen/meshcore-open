@@ -561,6 +561,32 @@ comparison therefore also requires an equal `fourByteRoomContactKey`, the author
 server stamps on every post. Only incoming messages are considered, and the check runs before the
 message is stored, so nothing has to be undone afterwards.
 
+### Notifications and the node's queue
+
+`CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands
+over, so `_processPotentialQueuedMessage` sends the next request only after
+the delivered message is parsed, verified and written to the history. That
+order is the iOS sync fix (`806c51fe`): iOS kept the BLE link while the
+process was not really running, and the app had advanced the queue before
+the write. The notification for the message is enqueued in the same place
+and shown in the background (`_showNotificationInBackground`). The `await`
+on the plugin came from upstream's translated notifications, when the queue
+still advanced first; after the fix it held the queue for `_ensureCanNotify`,
+the MCOimg render with its file, the URL-image download under its
+five-second ceiling and the plugin's `show`, up to five seconds per live
+message with a picture. The call still runs up to its first await before the
+next request goes out, so the service's rate limiter sees the messages in
+order, and the gates (the settings, a blocked sender, a muted channel, the
+initial-drain summary) are decided on the receive path as before; only the
+showing moved. An error from the plugin is logged, where an error inside
+`process()` stops the queue sync. The MCOimg picture of a notification is a
+file only where something reads one: Apple's attachment, which the system
+moves into its own store when the notification is scheduled, and the Windows
+toast; Android and Linux take the bytes. The next MCOimg notification
+deletes the files older than `_notificationImageLifetime` (24 hours), since a
+toast can be shown again from the action centre well after `show`
+(`test/connector/queued_message_notifications_test.dart`).
+
 ### Channel messages under our own name
 
 An incoming channel message whose sender is this node's own name is **not**

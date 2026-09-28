@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io' show Platform, File;
+import 'dart:io' show Directory, File, FileSystemException, Platform;
 import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -314,18 +314,20 @@ class NotificationService {
       final bytes = await MCOImageMessage.renderPngBytes(image, cellSize: 1);
       final rawIcon = _linuxRawIconDataFor(image);
       String? filePath;
+      // Apple's attachment and the Windows toast take the picture as a file;
+      // Android and Linux take the bytes.
       if (!kIsWeb &&
-          (PlatformInfo.isAndroid ||
-              PlatformInfo.isIOS ||
+          (PlatformInfo.isIOS ||
               PlatformInfo.isMacOS ||
               PlatformInfo.isWindows)) {
         final directory = await getTemporaryDirectory();
         final timestamp = DateTime.now().microsecondsSinceEpoch;
         final file = File(
-          '${directory.path}/mcoimg_notification_$timestamp.png',
+          '${directory.path}/$_notificationImagePrefix$timestamp.png',
         );
         await file.writeAsBytes(bytes, flush: true);
         filePath = file.path;
+        unawaited(_deleteStaleNotificationImages(directory));
       }
       return _MCOImageNotificationAttachment(
         bytes: bytes,
@@ -335,6 +337,37 @@ class NotificationService {
     } catch (error) {
       debugPrint('Failed to build MCOimg notification attachment: $error');
       return null;
+    }
+  }
+
+  /// The system moves an Apple attachment into its own store, but Windows
+  /// reads the file when the toast is shown and can show the toast again
+  /// from the action centre, so a picture stays for a day and the next
+  /// MCOimg notification deletes what is older.
+  static const String _notificationImagePrefix = 'mcoimg_notification_';
+  static const Duration _notificationImageLifetime = Duration(hours: 24);
+
+  Future<void> _deleteStaleNotificationImages(Directory directory) async {
+    try {
+      final cutoff = DateTime.now().subtract(_notificationImageLifetime);
+      await for (final entry in directory.list()) {
+        if (entry is! File) continue;
+        final name = entry.uri.pathSegments.last;
+        if (!name.startsWith(_notificationImagePrefix) ||
+            !name.endsWith('.png')) {
+          continue;
+        }
+        try {
+          if ((await entry.lastModified()).isAfter(cutoff)) continue;
+          await entry.delete();
+        } on FileSystemException {
+          // Gone already, or still open by a toast: the next sweep sees it.
+        }
+      }
+    } catch (error) {
+      debugPrint(
+        'Failed to delete stale MCOimg notification pictures: $error',
+      );
     }
   }
 
@@ -427,8 +460,8 @@ class NotificationService {
     return (value * 255.0).round().clamp(0, 255).toInt();
   }
 
-  // Callers await the notification before the node's message queue advances,
-  // so a slow image host must not hold that queue.
+  // The notification is shown off the receive path, so this bounds only how
+  // long a notification waits for its picture before it goes out without one.
   static const Duration _notificationImageTimeout = Duration(seconds: 5);
 
   Future<String?> _resolveNotificationImagePath(
