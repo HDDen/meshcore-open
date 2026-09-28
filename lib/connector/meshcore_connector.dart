@@ -11971,15 +11971,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final rest = text.substring(mention.length);
     if (ExactQuoteHelper.splitQuoteLine(rest) != null) return text;
     final settings = _appSettingsService?.settings;
+    final enabled = settings?.exactQuote ?? false;
     return ExactQuoteHelper.formatReplyWith(
       senderName: replyToSenderName,
       text: rest,
       quotedText: replyToText,
       quotedMessageId: replyToMessageId,
-      history: getMessages(contact),
+      // Read only for the fragment, and merged anew on every call: with the
+      // quote off no fragment is spent and the history is not fetched.
+      history: enabled ? getMessages(contact) : const [],
       authorOf: (message) => contactMessageAuthorName(contact, message)?.trim(),
       idOf: (message) => message.messageId,
-      enabled: settings?.exactQuote ?? false,
+      enabled: enabled,
       maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
       outboundCharMap: contactCyr2LatCharMap(contact),
     );
@@ -12124,13 +12127,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final mention = '@[$replyToSenderName] ';
     if (!text.startsWith(mention)) return text;
     final settings = _appSettingsService?.settings;
+    final enabled = settings?.exactQuote ?? false;
     return ExactQuoteHelper.formatReply(
       senderName: replyToSenderName,
       text: text.substring(mention.length),
       quotedText: replyToText,
       quotedMessageId: replyToMessageId,
-      history: getChannelMessages(channel),
-      enabled: settings?.exactQuote ?? false,
+      // Read only for the fragment, and merged anew on every call: with the
+      // quote off no fragment is spent and the history is not fetched.
+      history: enabled ? getChannelMessages(channel) : const [],
+      enabled: enabled,
       maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
       outboundCharMap: channelCyr2LatCharMap(channel.index),
     );

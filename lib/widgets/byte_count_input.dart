@@ -82,6 +82,17 @@ class ByteCountedTextField extends StatefulWidget {
   final int? softLimitBytes;
   final String? softLimitNote;
 
+  /// How long the counter waits after a change before it encodes the text
+  /// again; null takes [counterDelay]. Every change restarts the wait, so a
+  /// burst of keystrokes or of rebuilds costs one encoding.
+  final Duration? countDelay;
+
+  /// The wait before the counter encodes a changed text: short enough not
+  /// to be noticed, long enough to cover a burst of connector notifications,
+  /// each of which rebuilds the screen and hands the field a fresh encoder
+  /// closure.
+  static const Duration counterDelay = Duration(milliseconds: 250);
+
   const ByteCountedTextField({
     super.key,
     required this.maxBytes,
@@ -103,6 +114,7 @@ class ByteCountedTextField extends StatefulWidget {
     this.enabled = true,
     this.softLimitBytes,
     this.softLimitNote,
+    this.countDelay,
   });
 
   @override
@@ -121,6 +133,17 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
   int _usedBytes = 0;
   int? _excessBytes;
 
+  /// The wait before a changed text is encoded for the counter. The screens
+  /// create the encoder closure in `build` and the connector rebuilds them
+  /// on every notification, so the counter used to encode the same draft
+  /// again per notification, MCMP or MCOtxt included. Now a change, of the
+  /// text or of the encoder, restarts this wait and the count is taken once
+  /// it has passed, the last number staying on screen meanwhile; the first
+  /// count is taken at once, so a restored draft never shows zero. A count
+  /// that lags can neither cut nor pass a message wrongly: the limiter
+  /// encodes on every edit itself and the send path encodes on its own.
+  Timer? _countTimer;
+
   @override
   void initState() {
     super.initState();
@@ -134,33 +157,46 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
       oldWidget.controller.removeListener(_onControllerChanged);
       widget.controller.addListener(_onControllerChanged);
       _text = widget.controller.text;
-      _encodedFor = null;
-    }
-    if (oldWidget.encoder != widget.encoder ||
+      _scheduleCount();
+    } else if (oldWidget.encoder != widget.encoder ||
         oldWidget.excessBytes != widget.excessBytes) {
-      _encodedFor = null;
+      _scheduleCount();
     }
   }
 
   @override
   void dispose() {
+    _countTimer?.cancel();
     widget.controller.removeListener(_onControllerChanged);
     super.dispose();
   }
 
   void _onControllerChanged() {
     if (widget.controller.text == _text) return;
+    // The rebuild shows or hides the counter at once; the number waits.
     setState(() => _text = widget.controller.text);
+    _scheduleCount();
   }
 
-  int get _byteCount {
-    if (_encodedFor == _text) return _usedBytes;
+  void _scheduleCount() {
+    _countTimer?.cancel();
+    _countTimer = Timer(
+      widget.countDelay ?? ByteCountedTextField.counterDelay,
+      () {
+        _countTimer = null;
+        if (!mounted) return;
+        setState(_count);
+      },
+    );
+  }
+
+  /// Encodes [_text] for the counter and the `(-N)` hint.
+  void _count() {
     final encoder = widget.encoder;
     final effective = encoder != null ? encoder(_text) : _text;
     _usedBytes = utf8.encode(effective).length;
     _excessBytes = widget.excessBytes?.call(_text);
     _encodedFor = _text;
-    return _usedBytes;
   }
 
   bool get _usesDesktopEnterHandling {
@@ -325,7 +361,8 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final usedBytes = _byteCount;
+    if (_encodedFor == null) _count();
+    final usedBytes = _usedBytes;
     final excessBytes = _excessBytes;
     final ratio = widget.maxBytes > 0 ? usedBytes / widget.maxBytes : 0.0;
     final showCounter = !(widget.hideCounterWhenEmpty && _text.isEmpty);

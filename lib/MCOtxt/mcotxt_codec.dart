@@ -50,10 +50,69 @@ class MCOtxtCodec {
   /// behaviour and the one the tests pin. Explicit options always win.
   static MCOtxtLanguagePair? defaultLanguagePair;
 
+  /// The last few encodings by input. The composer's limiter, its counter,
+  /// the "plain when smaller" comparison and the send each encode the same
+  /// text once more, four planning passes for one keystroke; a hit returns
+  /// the remembered result with a copy of its bytes, so that nothing a
+  /// caller does to one result reaches another. The key is everything the
+  /// result depends on: the text, the explicit options and the default pair
+  /// of the moment. The planning itself is untouched, so the bytes are the
+  /// same as without the memo.
+  static const int _memoEntries = 8;
+  static final Map<String, MCOtxtEncodeResult> _memo = {};
+
+  /// How many encodings ran the planner rather than the memo; for tests
+  /// and measurements.
+  static int debugPlannedEncodings = 0;
+
   static MCOtxtEncodeResult encode(
     String text, {
     MCOtxtEncodeOptions options = const MCOtxtEncodeOptions(),
   }) {
+    final key =
+        '${options.languageA?.index}|${options.languageB?.index}|'
+        '${options.modelGeneration}|${options.collectStats}|'
+        '${defaultLanguagePair?.a.index}|${defaultLanguagePair?.b?.index}|'
+        '$text';
+    final remembered = _memo.remove(key);
+    if (remembered != null) {
+      _memo[key] = remembered;
+      return _copyOf(remembered);
+    }
+    final result = _encodeUncached(text, options: options);
+    _memo[key] = result;
+    if (_memo.length > _memoEntries) _memo.remove(_memo.keys.first);
+    return _copyOf(result);
+  }
+
+  static MCOtxtEncodeResult _copyOf(MCOtxtEncodeResult result) =>
+      MCOtxtEncodeResult(
+        inputText: result.inputText,
+        data: Uint8List.fromList(result.data),
+        bitLength: result.bitLength,
+        encodingMode: result.encodingMode,
+        bitStream: result.bitStream,
+        debugTokens: List<String>.of(result.debugTokens),
+        decodedText: result.decodedText,
+        encoderVersion: result.encoderVersion,
+        modelGeneration: result.modelGeneration,
+        usedTables: List<MCOtxtTableId>.of(result.usedTables),
+        languageA: result.languageA,
+        languageB: result.languageB,
+        mcotxtCandidateBitLength: result.mcotxtCandidateBitLength,
+        mcotxtCandidateBytes: result.mcotxtCandidateBytes,
+        rawUtf8CandidateBitLength: result.rawUtf8CandidateBitLength,
+        rawUtf8CandidateBytes: result.rawUtf8CandidateBytes,
+        selectedBitLength: result.selectedBitLength,
+        selectedBytes: result.selectedBytes,
+        stats: result.stats,
+      );
+
+  static MCOtxtEncodeResult _encodeUncached(
+    String text, {
+    required MCOtxtEncodeOptions options,
+  }) {
+    debugPlannedEncodings++;
     final modelSet = _modelSetForOptions(options);
     final normalizedText = MCOtxtModelRegistry.normalizeInputText(text);
     final runes = normalizedText.runes.toList(growable: false);
