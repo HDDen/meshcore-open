@@ -24,7 +24,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 // recalculates it. A node without coordinates keeps its guess while other
 // nodes are saved, and the app's discovered list follows the same rule as
 // the node's contacts. The history goes into an in-memory database, so the
-// tests are skipped on a host that cannot load a native sqlite3.
+// tests are skipped on a host that cannot load a native sqlite3. The last
+// group is the change: a save clears only the nodes that became located
+// since the last save, and a node that left the list and came back without
+// coordinates is cleared again when it reports them.
 
 const int _timestamp = 1700000000;
 
@@ -344,6 +347,64 @@ Future<void> main() async {
       await _settle();
 
       expect(await harness.estimatedKeys(), {_hexOf(dieterKey)});
+    });
+  }, skip: skip);
+
+  group('what a save clears', () {
+    test('a save clears only the contacts that became located since the '
+        'last save', () async {
+      final harness = await _Harness.start();
+      await harness.contact(
+        aliceKey,
+        'Alice',
+        latitude: 55.2,
+        longitude: 37.2,
+      );
+      // A guess the map would never make for a located node, planted to see
+      // whether a later save reaches for Alice again.
+      await harness.plantEstimate(aliceKey, 'Alice');
+
+      await harness.contact(bobKey, 'Bob');
+      await harness.contact(
+        aliceKey,
+        'Alice',
+        latitude: 55.2,
+        longitude: 37.2,
+      );
+      await _settle();
+
+      expect(await harness.estimatedKeys(), {_hexOf(aliceKey)});
+    });
+
+    test('a discovered node that left the list and came back without '
+        'coordinates is cleared again when it reports them', () async {
+      final harness = await _Harness.start();
+      final dieter = await harness.advert(
+        dieterKey,
+        'Dieter',
+        latitude: 55.4,
+        longitude: 37.4,
+      );
+      // An advert without coordinates keeps the ones known, so a node loses
+      // them only by leaving the list: evicted as the stalest, or removed.
+      await harness.connector.removeDiscoveredContact(dieter);
+      await _settle();
+      await harness.advert(dieterKey, 'Dieter', advertTime: _timestamp + 60);
+      await harness.plantEstimate(dieterKey, 'Dieter');
+      expect(await harness.estimatedKeys(), {_hexOf(dieterKey)});
+
+      await harness.advert(
+        dieterKey,
+        'Dieter',
+        latitude: 55.4,
+        longitude: 37.4,
+        advertTime: _timestamp + 120,
+      );
+
+      await _waitUntil(
+        () async => (await harness.estimatedKeys()).isEmpty,
+        'the estimate to go',
+      );
     });
   }, skip: skip);
 }

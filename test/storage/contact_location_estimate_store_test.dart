@@ -15,7 +15,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 // with coordinates stores its real position and never an estimate; clearing
 // an estimate keeps the row, its name and its real position, and touches no
 // other row. The table lives in the application database, so the tests open
-// one in memory and skip on a host without a native sqlite3.
+// one in memory and skip on a host without a native sqlite3. The last test
+// is the change: a clear of a key that holds no estimate leaves its row as
+// it was, its `updated_at_ms` included.
 
 const int _epochMs = 1700000000000;
 
@@ -209,6 +211,32 @@ Future<void> main() async {
       await store.clearEstimatesForKeys(const []);
 
       expect(await store.loadEstimates(), hasLength(1));
+    });
+
+    test('clearing a key whose estimate is already gone leaves its row '
+        'untouched', () async {
+      // A located node's row carries the moment of the estimate it was
+      // handed, and no estimate.
+      await store.saveContactLocations(
+        candidates: [_candidate(bob, 'Bob', latitude: 55.1, longitude: 37.1)],
+        estimates: [_estimate(bob, 'Bob')],
+        clearEstimateKeys: const [],
+      );
+      await plant(alice, 'Alice');
+
+      await store.clearEstimatesForKeys([_hex(alice), _hex(bob)]);
+
+      final byKey = {
+        for (final row in await rows()) row.publicKeyHex: row,
+      };
+      expect(byKey[_hex(bob)]!.updatedAtMs, _epochMs);
+      expect(byKey[_hex(bob)]!.realLatitude, 55.1);
+      expect(byKey[_hex(alice)]!.estimatedLatitude, isNull);
+      expect(
+        byKey[_hex(alice)]!.updatedAtMs,
+        greaterThan(_epochMs),
+        reason: 'a dropped estimate stamps its row with the moment',
+      );
     });
   }, skip: skip);
 }
