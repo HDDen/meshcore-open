@@ -74,6 +74,20 @@ class NotificationService {
     }
   }
 
+  /// Forgets the plugin, the permission answer, the tap handler and the
+  /// rate limiter, so a test starts from a service nothing has used yet.
+  @visibleForTesting
+  void resetForTest() {
+    _isInitialized = false;
+    _canNotify = null;
+    _tapHandler = null;
+    _pendingTapPayload = null;
+    _lastNotificationTime = null;
+    _pendingNotifications.clear();
+    _isBatchingActive = false;
+    _suppressNotifications = false;
+  }
+
   Future<void> initialize() async {
     if (_isInitialized) return;
 
