@@ -19,6 +19,9 @@ class MessageHistoryMaintenanceSnapshot {
   });
 
   final String databasePath;
+
+  /// What the database takes on disk: the file, and beside it the
+  /// write-ahead log and the shared index of that log while it is open.
   final int databaseBytes;
   final MessageHistoryDatabaseStats stats;
 }
@@ -39,13 +42,24 @@ class MessageHistoryMaintenance {
     final stats = await _storage.maintenanceStats();
     if (stats == null) return null;
     final path = await databasePath();
-    final file = File(path);
-    final size = await file.exists() ? await file.length() : 0;
     return MessageHistoryMaintenanceSnapshot(
       databasePath: path,
-      databaseBytes: size,
+      databaseBytes: await bytesOnDisk(path),
       stats: stats,
     );
+  }
+
+  /// The database file at [path] with the write-ahead log and the shared
+  /// index SQLite keeps beside it while the database is open: the log holds
+  /// commits the file does not yet, so the file alone understates what the
+  /// database takes.
+  static Future<int> bytesOnDisk(String path) async {
+    var total = 0;
+    for (final suffix in const ['', '-wal', '-shm']) {
+      final file = File('$path$suffix');
+      if (await file.exists()) total += await file.length();
+    }
+    return total;
   }
 
   Future<LegacyQuarantineRetryResult> retryRejected() {

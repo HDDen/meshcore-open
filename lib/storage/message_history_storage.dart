@@ -123,6 +123,18 @@ class MessageHistoryStorage {
       await _moveWardriveData(prefs, database);
       await _moveNodeCollections(prefs, database);
 
+      // The moves are each one transaction, and the log they and the last
+      // session leave behind is folded into the file now, before anything is
+      // read, rather than kept beside it until a checkpoint comes round.
+      try {
+        await database.truncateWriteAheadLog();
+      } catch (error) {
+        developer.log(
+          'The history log was not truncated at startup: $error',
+          name: 'MessageHistory',
+        );
+      }
+
       await _refreshCaches();
       _initialized = true;
       return migrated;

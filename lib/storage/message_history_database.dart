@@ -389,9 +389,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     : super(
         driftDatabase(
           name: 'message_history',
-          native: DriftNativeOptions(
-            databaseDirectory: getApplicationSupportDirectory,
-          ),
+          native: _nativeOptions,
           web: DriftWebOptions(
             sqlite3Wasm: Uri.parse('sqlite3.wasm'),
             driftWorker: Uri.parse('drift_worker.js'),
@@ -403,6 +401,41 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
   /// under a temporary directory. Production goes through the unnamed
   /// constructor and the application support directory.
   MessageHistoryDatabase.withExecutor(super.executor);
+
+  /// The file in the application support directory, and the pragmas of every
+  /// connection to it, run in the database isolate at each open. The
+  /// write-ahead log, so a commit appends to the log instead of writing a
+  /// rollback journal and then the file, and so a read no longer waits behind
+  /// a write; `synchronous = FULL`, so every commit is on disk before the
+  /// write returns, a power cut included, which the owner asked for because a
+  /// message, unlike a tile, cannot be fetched again (3.5 ms a commit
+  /// measured, against 11 to 15 with the rollback journal and 0.2 with
+  /// NORMAL); and a limit on the log, which is reused after a checkpoint but
+  /// never shrunk by itself. The closure captures nothing, as a function
+  /// handed to the isolate must.
+  static final DriftNativeOptions _nativeOptions = DriftNativeOptions(
+    databaseDirectory: getApplicationSupportDirectory,
+    setup: (database) {
+      database
+        ..execute('PRAGMA journal_mode = WAL')
+        ..execute('PRAGMA synchronous = FULL')
+        ..execute('PRAGMA journal_size_limit = 4194304');
+    },
+  );
+
+  /// The same pragmas for a database the tests open over a file of their
+  /// own, through `NativeDatabase(file, setup: setupConnection)`. Typed by
+  /// the options rather than by name, since the sqlite3 types are not this
+  /// package's to import.
+  static final setupConnection = _nativeOptions.setup!;
+
+  /// Folds the write-ahead log into the file and cuts it to nothing. The
+  /// app never closes this database, so a session leaves its log behind at
+  /// the size of the largest transaction it held; run at every launch and
+  /// after a vacuum, which writes the whole rebuilt file into the log.
+  /// Outside WAL mode it does nothing.
+  Future<void> truncateWriteAheadLog() =>
+      customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -611,24 +644,22 @@ CREATE TABLE IF NOT EXISTS discovered_contacts (
     required List<String> deleteKeys,
   }) async {
     if (upserts.isEmpty && deleteKeys.isEmpty) return;
-    await transaction(() async {
+    // One batch, one transaction, one round trip to the database isolate.
+    await batch((batch) {
       for (final key in deleteKeys) {
-        await customUpdate(
+        batch.customStatement(
           'DELETE FROM discovered_contacts WHERE public_key_hex = ?',
-          variables: [Variable<String>(key)],
+          [key],
         );
       }
       for (final entry in upserts.entries) {
-        await customInsert(
+        batch.customStatement(
           '''
 INSERT INTO discovered_contacts (public_key_hex, contact_json)
 VALUES (?, ?)
 ON CONFLICT(public_key_hex) DO UPDATE SET contact_json = excluded.contact_json
 ''',
-          variables: [
-            Variable<String>(entry.key),
-            Variable<String>(entry.value),
-          ],
+          [entry.key, entry.value],
         );
       }
     });
@@ -638,18 +669,15 @@ ON CONFLICT(public_key_hex) DO UPDATE SET contact_json = excluded.contact_json
   /// in the table is newer than that copy and is kept.
   Future<void> importDiscoveredContacts(Map<String, String> rows) async {
     if (rows.isEmpty) return;
-    await transaction(() async {
+    await batch((batch) {
       for (final entry in rows.entries) {
-        await customInsert(
+        batch.customStatement(
           '''
 INSERT INTO discovered_contacts (public_key_hex, contact_json)
 VALUES (?, ?)
 ON CONFLICT(public_key_hex) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(entry.key),
-            Variable<String>(entry.value),
-          ],
+          [entry.key, entry.value],
         );
       }
     });
@@ -724,26 +752,21 @@ CREATE TABLE IF NOT EXISTS node_state (
     required List<String> deleteKeys,
   }) async {
     if (upserts.isEmpty && deleteKeys.isEmpty) return;
-    await transaction(() async {
+    await batch((batch) {
       for (final key in deleteKeys) {
-        await customUpdate(
+        batch.customStatement(
           'DELETE FROM node_contacts WHERE node_key = ? AND contact_key = ?',
-          variables: [Variable<String>(nodeKey), Variable<String>(key)],
-          updateKind: UpdateKind.delete,
+          [nodeKey, key],
         );
       }
       for (final entry in upserts.entries) {
-        await customInsert(
+        batch.customStatement(
           '''
 INSERT INTO node_contacts (node_key, contact_key, contact_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, contact_key) DO UPDATE SET contact_json = excluded.contact_json
 ''',
-          variables: [
-            Variable<String>(nodeKey),
-            Variable<String>(entry.key),
-            Variable<String>(entry.value),
-          ],
+          [nodeKey, entry.key, entry.value],
         );
       }
     });
@@ -767,26 +790,21 @@ WHERE node_key = ? ORDER BY channel_index
     required List<int> deleteIndexes,
   }) async {
     if (upserts.isEmpty && deleteIndexes.isEmpty) return;
-    await transaction(() async {
+    await batch((batch) {
       for (final index in deleteIndexes) {
-        await customUpdate(
+        batch.customStatement(
           'DELETE FROM node_channels WHERE node_key = ? AND channel_index = ?',
-          variables: [Variable<String>(nodeKey), Variable<int>(index)],
-          updateKind: UpdateKind.delete,
+          [nodeKey, index],
         );
       }
       for (final entry in upserts.entries) {
-        await customInsert(
+        batch.customStatement(
           '''
 INSERT INTO node_channels (node_key, channel_index, channel_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, channel_index) DO UPDATE SET channel_json = excluded.channel_json
 ''',
-          variables: [
-            Variable<String>(nodeKey),
-            Variable<int>(entry.key),
-            Variable<String>(entry.value),
-          ],
+          [nodeKey, entry.key, entry.value],
         );
       }
     });
@@ -859,15 +877,12 @@ WHERE contact_key = ? AND node_key IN (?, '')
   /// Replaces the observations with [observations], in one transaction; the
   /// service hands over its whole capped list.
   Future<void> replaceDeliveryObservations(List<String> observations) async {
-    await transaction(() async {
-      await customUpdate(
-        'DELETE FROM delivery_observations',
-        updateKind: UpdateKind.delete,
-      );
+    await batch((batch) {
+      batch.customStatement('DELETE FROM delivery_observations');
       for (final observation in observations) {
-        await customInsert(
+        batch.customStatement(
           'INSERT INTO delivery_observations (observation_json) VALUES (?)',
-          variables: [Variable<String>(observation)],
+          [observation],
         );
       }
     });
@@ -932,78 +947,67 @@ ON CONFLICT(node_key, name) DO UPDATE SET value = excluded.value
     required List<NodeStateRow> state,
   }) async {
     await transaction(() async {
-      for (final row in contacts) {
-        await customUpdate(
-          '''
+      // Batches inside the transaction: one round trip per batch instead of
+      // one per row, and the count of the observations read between them.
+      await batch((batch) {
+        if (contacts.isEmpty && channels.isEmpty && histories.isEmpty) return;
+        for (final row in contacts) {
+          batch.customStatement(
+            '''
 INSERT INTO node_contacts (node_key, contact_key, contact_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, contact_key) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(row.nodeKey),
-            Variable<String>(row.contactKey),
-            Variable<String>(row.contactJson),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
-      for (final row in channels) {
-        await customUpdate(
-          '''
+            [row.nodeKey, row.contactKey, row.contactJson],
+          );
+        }
+        for (final row in channels) {
+          batch.customStatement(
+            '''
 INSERT INTO node_channels (node_key, channel_index, channel_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, channel_index) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(row.nodeKey),
-            Variable<int>(row.channelIndex),
-            Variable<String>(row.channelJson),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
-      for (final row in histories) {
-        await customUpdate(
-          '''
+            [row.nodeKey, row.channelIndex, row.channelJson],
+          );
+        }
+        for (final row in histories) {
+          batch.customStatement(
+            '''
 INSERT INTO contact_path_history (node_key, contact_key, history_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, contact_key) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(row.nodeKey),
-            Variable<String>(row.contactKey),
-            Variable<String>(row.historyJson),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
+            [row.nodeKey, row.contactKey, row.historyJson],
+          );
+        }
+      });
       if (observations.isNotEmpty) {
         final count = await customSelect(
           'SELECT COUNT(*) AS n FROM delivery_observations',
         ).getSingle();
         if (count.read<int>('n') == 0) {
-          for (final observation in observations) {
-            await customInsert(
-              'INSERT INTO delivery_observations (observation_json) VALUES (?)',
-              variables: [Variable<String>(observation)],
-            );
-          }
+          await batch((batch) {
+            for (final observation in observations) {
+              batch.customStatement(
+                'INSERT INTO delivery_observations (observation_json) VALUES (?)',
+                [observation],
+              );
+            }
+          });
         }
       }
-      for (final row in state) {
-        await customUpdate(
-          '''
+      await batch((batch) {
+        for (final row in state) {
+          batch.customStatement(
+            '''
 INSERT INTO node_state (node_key, name, value) VALUES (?, ?, ?)
 ON CONFLICT(node_key, name) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(row.nodeKey),
-            Variable<String>(row.name),
-            Variable<String>(row.value),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
+            [row.nodeKey, row.name, row.value],
+          );
+        }
+      });
     });
   }
 
@@ -1061,17 +1065,33 @@ DELETE FROM wardrive_sessions WHERE start_time_ms IN (
 )
 ''';
 
+  static const String _deleteOrphanWardriveUploadsSql = '''
+DELETE FROM wardrive_uploads
+WHERE sample_id NOT IN (SELECT id FROM wardrive_samples)
+''';
+
   List<Variable<Object>> _wardriveSampleVariables(WardriveSampleRow row) => [
     Variable<String>(row.id),
     Variable<int>(row.timestampMs),
     Variable<String>(row.publicKeyHex),
-    Variable<int>(switch (row.pingSuccess) {
-      null => null,
-      true => 1,
-      false => 0,
-    }),
+    Variable<int>(_pingSuccessColumn(row.pingSuccess)),
     Variable<String>(row.sampleJson),
   ];
+
+  /// The same values as raw batch arguments.
+  List<Object?> _wardriveSampleArguments(WardriveSampleRow row) => [
+    row.id,
+    row.timestampMs,
+    row.publicKeyHex,
+    _pingSuccessColumn(row.pingSuccess),
+    row.sampleJson,
+  ];
+
+  static int? _pingSuccessColumn(bool? pingSuccess) => switch (pingSuccess) {
+    null => null,
+    true => 1,
+    false => 0,
+  };
 
   /// Stores one sample; false when its id is there already. The table is
   /// then trimmed to its [cap] newest samples and the upload records of
@@ -1100,14 +1120,17 @@ DELETE FROM wardrive_sessions WHERE start_time_ms IN (
   }) async {
     if (rows.isEmpty) return 0;
     return transaction(() async {
-      var added = 0;
-      for (final row in rows) {
-        added += await customUpdate(
-          _insertWardriveSampleSql,
-          variables: _wardriveSampleVariables(row),
-          updateKind: UpdateKind.insert,
-        );
-      }
+      // A batch reports no change counts, so the rows are counted around it.
+      final before = await countWardriveSamples();
+      await batch((batch) {
+        for (final row in rows) {
+          batch.customStatement(
+            _insertWardriveSampleSql,
+            _wardriveSampleArguments(row),
+          );
+        }
+      });
+      final added = await countWardriveSamples() - before;
       if (added > 0) await _trimWardriveSamples(cap);
       return added;
     });
@@ -1129,10 +1152,7 @@ DELETE FROM wardrive_samples WHERE id IN (
 
   Future<void> _deleteOrphanWardriveUploads() async {
     await customUpdate(
-      '''
-DELETE FROM wardrive_uploads
-WHERE sample_id NOT IN (SELECT id FROM wardrive_samples)
-''',
+      _deleteOrphanWardriveUploadsSql,
       updateKind: UpdateKind.delete,
     );
   }
@@ -1162,7 +1182,7 @@ ORDER BY timestamp_ms DESC, id DESC LIMIT ? OFFSET ?
   /// Removes the samples with [ids] and their upload records.
   Future<void> deleteWardriveSamples(List<String> ids) async {
     if (ids.isEmpty) return;
-    await transaction(() async {
+    await batch((batch) {
       const chunkSize = 400;
       for (var offset = 0; offset < ids.length; offset += chunkSize) {
         final end = offset + chunkSize < ids.length
@@ -1170,13 +1190,12 @@ ORDER BY timestamp_ms DESC, id DESC LIMIT ? OFFSET ?
             : ids.length;
         final chunk = ids.sublist(offset, end);
         final placeholders = List.filled(chunk.length, '?').join(',');
-        await customUpdate(
+        batch.customStatement(
           'DELETE FROM wardrive_samples WHERE id IN ($placeholders)',
-          variables: [for (final id in chunk) Variable<String>(id)],
-          updateKind: UpdateKind.delete,
+          chunk,
         );
       }
-      await _deleteOrphanWardriveUploads();
+      batch.customStatement(_deleteOrphanWardriveUploadsSql);
     });
   }
 
@@ -1295,40 +1314,31 @@ LIMIT ? OFFSET ?
     required int uploadedAtMs,
   }) async {
     await transaction(() async {
-      for (final row in samples) {
-        await customUpdate(
-          _insertWardriveSampleSql,
-          variables: _wardriveSampleVariables(row),
-          updateKind: UpdateKind.insert,
-        );
-      }
-      for (final session in sessions) {
-        await customUpdate(
-          _insertWardriveSessionSql,
-          variables: [
-            Variable<int>(session.startTimeMs),
-            Variable<String>(session.sessionJson),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
-      for (final upload in uploads) {
-        // The WHERE is what SQLite needs to parse an upsert over a SELECT.
-        await customUpdate(
-          '''
+      await batch((batch) {
+        for (final row in samples) {
+          batch.customStatement(
+            _insertWardriveSampleSql,
+            _wardriveSampleArguments(row),
+          );
+        }
+        for (final session in sessions) {
+          batch.customStatement(_insertWardriveSessionSql, [
+            session.startTimeMs,
+            session.sessionJson,
+          ]);
+        }
+        for (final upload in uploads) {
+          // The WHERE is what SQLite needs to parse an upsert over a SELECT.
+          batch.customStatement(
+            '''
 INSERT INTO wardrive_uploads (sample_id, endpoint_url, uploaded_at_ms)
 SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM wardrive_samples WHERE id = ?)
 ON CONFLICT(sample_id, endpoint_url) DO NOTHING
 ''',
-          variables: [
-            Variable<String>(upload.sampleId),
-            Variable<String>(upload.endpointUrl),
-            Variable<int>(uploadedAtMs),
-            Variable<String>(upload.sampleId),
-          ],
-          updateKind: UpdateKind.insert,
-        );
-      }
+            [upload.sampleId, upload.endpointUrl, uploadedAtMs, upload.sampleId],
+          );
+        }
+      });
       await _trimWardriveSamples(sampleCap);
       await customUpdate(
         _trimWardriveSessionsSql,
@@ -2326,9 +2336,11 @@ FROM legacy_rejected_messages
   }
 
   Future<void> fullVacuum() async {
-    await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    await truncateWriteAheadLog();
     await customStatement('PRAGMA auto_vacuum = INCREMENTAL');
     await customStatement('VACUUM');
+    // The vacuum wrote the whole rebuilt file into the log.
+    await truncateWriteAheadLog();
   }
 
   Future<void> removeHistory(int kind, String storageKey) async {
