@@ -1250,6 +1250,34 @@ for failures; informational messages use `surfaceContainerHigh`. `_removeMapSnac
 must remain in `dispose`, and future notifications owned by the main map should use this helper.
 The path-trace cancellation notice and offline-action rejection follow the same path.
 
+### Estimated node positions
+
+The map can estimate where a node without coordinates is (the repeater
+search behind `locateUnknownRepeatersEnabled`) and keeps the guesses in
+`contact_location_cache` through `ContactLocationEstimateStore`
+(`storage/contact_location_estimate_store.dart`): one row per node, with its
+real position when it has one and its estimate when it has none, plus the
+prefix-only repeaters nobody has named. The map draws a stored estimate only
+for a node that still has no coordinates, so a guess left behind for a node
+that reported its position is invisible, but it would come back the day the
+node loses its coordinates again, and it would keep the map from
+recalculating (`missingKeys`). The connector therefore drops a node's
+estimate when the node becomes located: `_persistContacts` and
+`_persistDiscoveredContacts` hand `clearEstimatesForKeys` the keys that have
+coordinates now and did not at the previous save, remembered per list in
+`_contactEstimatesCleared` and `_discoveredEstimatesCleared`; a key that
+drops out of the list leaves the set (an advert without coordinates keeps
+the known ones, so a node loses them only by leaving the list), a node that
+comes back without them is cleared again when it reports them, and the
+first save of a session clears every located key once.
+Before, every save cleared every located contact, a rewrite of up to a
+thousand rows with nothing in them, 12 ms per advert or message on the
+database isolate. The UPDATE itself touches only rows that hold an estimate
+(`AND estimated_latitude IS NOT NULL`), so a clear of keys already empty
+writes nothing and moves no `updated_at_ms`
+(`test/storage/contact_location_estimate_store_test.dart`,
+`test/connector/contact_location_estimates_test.dart`).
+
 ### Map builds
 
 The map screen (`map_screen.dart`) rebuilds on every notification of the connector, up to twenty a second under live radio, and on those of the path history, the settings and the wardrive service, and each build derives everything from scratch: signatures, filters, guessed positions, markers, coverage. Two things cut that down without touching what is drawn. Under another page (a chat, the settings) the build hands back the tree it built last (`_lastBuiltBody`) and computes nothing, since nobody sees the map; `didPopNext` calls `setState`, so the return builds anew once with everything that changed meanwhile. A dialog or a bottom sheet over the map is no page to `appRouteObserver`, which is typed on `PageRoute`, so the map under one keeps updating live. And the caches key on less. The node marker cache (`_NodeMarkersCacheKey`, its inputs listed above the class) no longer includes a signature of every contact, so an advert from a node off the map leaves the markers as they are, and it includes the node's hash width, which the overlap prefixes are cut at. The guessed-position key is a hash of the same inputs it used to join into a string of a hundred kilobytes per build. `allContacts` is built once per build and handed to the snapshot, and the repeater search candidates are built only while that search is on. The wardrive derivations (the selected coverage samples, the coverage polygons, the repeater coverage samples and polygons, the sample points) go through `LastValueMemo` (`helpers/last_value_memo.dart`), keyed on the samples list itself, which `WardriveService` replaces whole at every change, plus the settings each reads, so a build that changes nothing about the samples reuses the polygons; the samples themselves are collected and kept exactly as before. The search field waits `_searchDelay` (300 ms) for the typing to pause before it sets `_searchQuery`, which rebuilds the whole map. Every marker carries a key (`node:`, `label:`, `cluster:`, `guess:` or `shared:` and the identity), so the marker layer moves subtrees instead of recreating them when the list changes order. Left as it was, on purpose: the centre and zoom of all nodes are computed every build because the centre-map button uses them live; clustering of guessed markers, cheaper marker shadows and the dark-theme tile filter change the look and wait for a decision; the marker signature still hashes every loaded marker message, which is exact, and a connector-side messages revision would be a change of its own (`test/screens/map_screen_state_test.dart`, `test/helpers/last_value_memo_test.dart`).

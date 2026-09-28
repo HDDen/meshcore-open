@@ -558,6 +558,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final ContactDiscoveryStore _discoveryContactStore = ContactDiscoveryStore();
   final ContactLocationEstimateStore _contactLocationEstimateStore =
       ContactLocationEstimateStore();
+
+  /// The located keys whose estimates the store was told to drop, one set
+  /// per list (see [_clearEstimatesOfNewlyLocated]).
+  final Set<String> _contactEstimatesCleared = {};
+  final Set<String> _discoveredEstimatesCleared = {};
+
   final ChannelStore _channelStore = ChannelStore();
   final ConnectionTransportPreferenceStore _transportPreferenceStore =
       ConnectionTransportPreferenceStore();
@@ -11128,25 +11134,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ..clear()
         ..addAll(_contacts.map((contact) => contact.publicKeyHex));
     }
-    unawaited(
-      _contactLocationEstimateStore.clearEstimatesForKeys(
-        _contacts
-            .where((contact) => contact.hasLocation)
-            .map((contact) => contact.publicKeyHex),
-      ),
-    );
+    _clearEstimatesOfNewlyLocated(_contacts, _contactEstimatesCleared);
     await _contactStore.saveContacts(_contacts);
   }
 
   Future<void> _persistDiscoveredContacts() async {
-    unawaited(
-      _contactLocationEstimateStore.clearEstimatesForKeys(
-        _discoveredContacts
-            .where((contact) => contact.hasLocation)
-            .map((contact) => contact.publicKeyHex),
-      ),
+    _clearEstimatesOfNewlyLocated(
+      _discoveredContacts,
+      _discoveredEstimatesCleared,
     );
     await _discoveryContactStore.saveContacts(_discoveredContacts);
+  }
+
+  /// Drops the stored position estimates of the nodes in [contacts] that
+  /// have coordinates now and did not at the last save. The map draws an
+  /// estimate only for a node without coordinates, so what this keeps out of
+  /// the store is a stale guess that would come back the day the node loses
+  /// them again. [cleared] remembers the located keys already handed to the
+  /// store; a key that drops out of [contacts] leaves it (an advert without
+  /// coordinates keeps the known ones, so a node loses them only by leaving
+  /// the list), and a node that comes back without them is cleared again
+  /// when it reports them. Every save used to clear every located contact,
+  /// a rewrite of up to a thousand rows with nothing in them.
+  void _clearEstimatesOfNewlyLocated(
+    Iterable<Contact> contacts,
+    Set<String> cleared,
+  ) {
+    final located = <String>{
+      for (final contact in contacts)
+        if (contact.hasLocation) contact.publicKeyHex,
+    };
+    final fresh = [
+      for (final key in located)
+        if (!cleared.contains(key)) key,
+    ];
+    cleared
+      ..retainWhere(located.contains)
+      ..addAll(fresh);
+    if (fresh.isEmpty) return;
+    unawaited(_contactLocationEstimateStore.clearEstimatesForKeys(fresh));
   }
 
   int _latestContactLastmod() {

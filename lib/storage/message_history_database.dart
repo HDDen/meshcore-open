@@ -1596,6 +1596,9 @@ ON CONFLICT(public_key_hex) DO UPDATE SET
     });
   }
 
+  /// Drops the estimates of [publicKeyHexes]. A row that holds none is left
+  /// as it is, its `updated_at_ms` included: the caller names the keys that
+  /// became located, not the ones known to carry a guess.
   Future<void> clearContactLocationEstimatesForKeys(
     Iterable<String> publicKeyHexes,
   ) async {
@@ -1623,6 +1626,7 @@ SET estimated_latitude = NULL,
     high_confidence = 0,
     updated_at_ms = ?
 WHERE public_key_hex IN ($placeholders)
+  AND estimated_latitude IS NOT NULL
 ''',
         variables: [
           Variable<int>(DateTime.now().millisecondsSinceEpoch),
