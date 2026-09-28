@@ -24,6 +24,7 @@ import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
+import '../models/path_history.dart';
 import '../l10n/contact_localization.dart';
 import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
@@ -602,7 +603,9 @@ class _MapScreenState extends State<MapScreen>
         final connectorSnapshot = _MapConnectorSnapshot.fromConnector(
           connector,
         );
-        final pathHistoryVersion = pathHistory.version;
+        // Only the set of routes matters here: a record refreshed by another
+        // advert copy moves `version` but not `routesVersion`.
+        final pathHistoryVersion = pathHistory.routesVersion;
         final allContacts = connector.allContacts;
         final locateRepeaterCandidates = _locateRepeaterCandidates(allContacts);
         _maybeRefreshLocatedRepeaters(
@@ -2640,6 +2643,7 @@ class _MapScreenState extends State<MapScreen>
     double? maxRangeKm,
   ) {
     final result = <_GuessedLocation>[];
+    final unloadedHistories = <String>[];
     // Paths keep the width they were learned with, so index every width.
     final anchorsByPrefix = <String, List<Contact>>{};
     for (final repeater in withLocation) {
@@ -2666,16 +2670,20 @@ class _MapScreenState extends State<MapScreen>
       // Collect the contact-side (last-hop) repeater from every known path.
       // path = [device-side hop, ..., contact-side hop]
       // Only the last hop chunk is actually within radio range of the contact.
+      // A read without side effects: this runs inside build, and a read that
+      // started loads and reported them rebuilt the map on every frame once
+      // the candidates outnumbered the cache. Histories not cached yet are
+      // requested after the frame, in one batch that reports at most once.
+      final cachedPaths = pathHistory.peekRecentPaths(contact.publicKeyHex);
+      if (cachedPaths == null) unloadedHistories.add(contact.publicKeyHex);
       final pathSets = <(List<int>, int)>[
         (contact.path.toList(), contact.pathHashWidth),
-        ...pathHistory
-            .getRecentPaths(contact.publicKeyHex)
-            .map(
-              (r) => (
-                r.pathBytes,
-                Contact.inferPathHashWidth(r.hopCount, r.pathBytes.length),
-              ),
-            ),
+        ...(cachedPaths ?? const <PathRecord>[]).map(
+          (r) => (
+            r.pathBytes,
+            Contact.inferPathHashWidth(r.hopCount, r.pathBytes.length),
+          ),
+        ),
       ];
       for (final (pathBytes, hopWidth) in pathSets) {
         if (pathBytes.isEmpty) continue;
@@ -2742,7 +2750,23 @@ class _MapScreenState extends State<MapScreen>
       );
     }
 
+    if (unloadedHistories.isNotEmpty) {
+      _requestPathHistories(pathHistory, unloadedHistories);
+    }
     return result;
+  }
+
+  /// Asks for the histories the guessed positions could not read yet, once
+  /// the frame is out: `ensureLoaded` reports at most once for the batch, and
+  /// silently for histories seen before, so the pass converges.
+  void _requestPathHistories(
+    PathHistoryService pathHistory,
+    List<String> contactKeyHexes,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(pathHistory.ensureLoaded(contactKeyHexes));
+    });
   }
 
   List<McoContactLocationCandidate> _locateRepeaterCandidates(

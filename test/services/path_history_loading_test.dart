@@ -177,7 +177,7 @@ void main() {
       () async {
     // The cache keeps a bounded number of contacts; reading more than that
     // evicts the least recently used one, which storage still holds.
-    const cap = 50;
+    const cap = PathHistoryService.maxCachedContacts;
     final first = _hex(0x100);
     storage.store[first] = _history(first, [
       [0x11],
@@ -213,5 +213,150 @@ void main() {
     expect(service.getRecentPaths(key), isEmpty);
     await _flush();
     expect(service.getRecentPaths(key), isEmpty);
+  });
+
+  group('loading without a loop', () {
+    test('a history evicted and read again comes back silently', () async {
+      const cap = PathHistoryService.maxCachedContacts;
+      final first = _hex(0x200);
+      storage.store[first] = _history(first, [
+        [0x11],
+      ]);
+      service.getRecentPaths(first);
+      await _flush();
+      for (var i = 1; i <= cap; i++) {
+        final key = _hex(0x200 + i);
+        storage.store[key] = _history(key, [
+          [i & 0xFF],
+        ]);
+        service.getRecentPaths(key);
+      }
+      await _flush();
+      final seen = notifications;
+      final version = service.version;
+
+      expect(service.getRecentPaths(first), isEmpty);
+      await _flush();
+
+      expect(service.getRecentPaths(first).single.pathBytes, [0x11]);
+      expect(notifications, seen);
+      expect(service.version, version);
+    });
+
+    test('peekRecentPaths reads the cache and never loads', () async {
+      final key = _hex(0x300);
+      storage.store[key] = _history(key, [
+        [0x11],
+      ]);
+      expect(service.peekRecentPaths(key), isNull);
+      await _flush();
+      expect(storage.loads, 0);
+      expect(notifications, 0);
+
+      service.getRecentPaths(key);
+      await _flush();
+      expect(service.peekRecentPaths(key)?.single.pathBytes, [0x11]);
+
+      final empty = _hex(0x301);
+      service.getRecentPaths(empty);
+      await _flush();
+      expect(service.peekRecentPaths(empty), isEmpty);
+    });
+
+    test('ensureLoaded loads what is missing and reports once', () async {
+      final keys = [for (var i = 0; i < 60; i++) _hex(0x400 + i)];
+      for (var i = 0; i < 30; i++) {
+        storage.store[keys[i]] = _history(keys[i], [
+          [i],
+        ]);
+      }
+      final version = service.version;
+      final routes = service.routesVersion;
+
+      await service.ensureLoaded(keys);
+
+      expect(notifications, 1);
+      expect(service.version, greaterThan(version));
+      expect(service.routesVersion, greaterThan(routes));
+      expect(storage.loads, 60);
+      for (final key in keys) {
+        expect(service.peekRecentPaths(key), isNotNull);
+      }
+
+      await service.ensureLoaded(keys);
+      expect(storage.loads, 60);
+      expect(notifications, 1);
+    });
+
+    test('ensureLoaded of only empty histories reports nothing', () async {
+      final keys = [for (var i = 0; i < 5; i++) _hex(0x500 + i)];
+      await service.ensureLoaded(keys);
+      expect(notifications, 0);
+      expect(service.peekRecentPaths(keys.first), isEmpty);
+    });
+
+    test('a map pass over more contacts than the cache holds settles',
+        () async {
+      const cap = PathHistoryService.maxCachedContacts;
+      final keys = [for (var i = 0; i < cap + 10; i++) _hex(0x1000 + i)];
+      for (final key in keys) {
+        storage.store[key] = _history(key, [
+          [0x11],
+        ]);
+      }
+
+      // One rebuild of the map: peek every candidate, ask for the rest.
+      Future<int> pass() async {
+        final before = notifications;
+        final unloaded = [
+          for (final key in keys)
+            if (service.peekRecentPaths(key) == null) key,
+        ];
+        await service.ensureLoaded(unloaded);
+        return notifications - before;
+      }
+
+      expect(await pass(), 1);
+      expect(await pass(), 0);
+      expect(await pass(), 0);
+    });
+
+    test('routesVersion moves only when the set of routes changes', () async {
+      final key = _hex(0x600);
+      final start = service.routesVersion;
+      service.handlePathUpdated(_contact(key, [0x11]));
+      await _flush();
+      final afterFirst = service.routesVersion;
+      expect(afterFirst, greaterThan(start));
+
+      final version = service.version;
+      service.handlePathUpdated(_contact(key, [0x11]));
+      await _flush();
+      expect(service.routesVersion, afterFirst);
+      expect(service.version, greaterThan(version));
+
+      service.handlePathUpdated(_contact(key, [0x22]));
+      await _flush();
+      expect(service.routesVersion, greaterThan(afterFirst));
+
+      final beforeRemove = service.routesVersion;
+      await service.removePathRecord(key, [0x22]);
+      expect(service.routesVersion, greaterThan(beforeRemove));
+
+      // A first load of a stored history moves it, an empty one does not.
+      final stored = _hex(0x601);
+      storage.store[stored] = _history(stored, [
+        [0x33],
+      ]);
+      final beforeLoad = service.routesVersion;
+      service.getRecentPaths(stored);
+      await _flush();
+      expect(service.routesVersion, greaterThan(beforeLoad));
+
+      final beforeEmpty = service.routesVersion;
+      service.getRecentPaths(_hex(0x602));
+      await _flush();
+      expect(service.routesVersion, beforeEmpty);
+    });
   });
 }

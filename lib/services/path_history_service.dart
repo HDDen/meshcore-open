@@ -13,14 +13,31 @@ class PathHistoryService extends ChangeNotifier {
   int _historyGeneration = 0;
   bool _isClearingAllHistories = false;
 
-  // LRU cache eviction tracking
-  static const int _maxCachedContacts = 50;
-  final List<String> _cacheAccessOrder = [];
+  // LRU cache eviction tracking. A history is at most [_maxHistoryEntries]
+  // records, a few kilobytes, so the cache holds as many contacts as the
+  // discovered list does: the map reads the history of every node without a
+  // position it has seen in a day, and a cache smaller than that set evicted
+  // and reloaded histories on every rebuild.
+  static const int maxCachedContacts = 1000;
+  final Set<String> _cacheAccessOrder = <String>{};
 
   static const int _maxHistoryEntries = 100;
 
   int _version = 0;
   int get version => _version;
+
+  /// Moves only when the set of known routes changes: a route added, removed
+  /// or cleared, a history loaded for the first time, a node switch. A record
+  /// refreshed by another attempt or advert copy moves [version] but not this,
+  /// so a reader that only draws routes (the map's guessed positions) keys its
+  /// cache on it and skips the recompute.
+  int _routesVersion = 0;
+  int get routesVersion => _routesVersion;
+
+  /// Contacts whose history was read from storage at least once for the
+  /// current node. A history evicted from the cache and read again is not
+  /// news, and reporting it again is what kept the map rebuilding forever.
+  final Set<String> _loadedOnce = {};
 
   PathHistoryService(this._storage);
 
@@ -31,9 +48,11 @@ class PathHistoryService extends ChangeNotifier {
     _pendingLoads.clear();
     _cache.clear();
     _cacheAccessOrder.clear();
+    _loadedOnce.clear();
     _autoRotationIndex.clear();
     _floodStats.clear();
     _version++;
+    _routesVersion++;
     notifyListeners();
   }
 
@@ -308,6 +327,7 @@ class PathHistoryService extends ChangeNotifier {
                   );
               _trackAccess(contactPubKeyHex);
               _evictIfNeeded();
+              _loadedOnce.add(contactPubKeyHex);
             })
             .whenComplete(() {
               if (loadGeneration == _historyGeneration) {
@@ -363,6 +383,7 @@ class PathHistoryService extends ChangeNotifier {
       return;
     }
 
+    if (existing == null) _routesVersion++;
     updatedPaths.insert(0, newRecord);
 
     final updatedHistory = ContactPathHistory(
@@ -378,6 +399,12 @@ class PathHistoryService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The cached routes of a contact, loading them from storage on a miss and
+  /// reporting through [notifyListeners] once a history read for the first
+  /// time turns out non-empty, so a caller that read too early (a send
+  /// attempt, the routing sheet) sees them on its next look. A history read
+  /// before and evicted since comes back silently. A reader that must not
+  /// start loads from a build uses [peekRecentPaths] and [ensureLoaded].
   List<PathRecord> getRecentPaths(String contactPubKeyHex) {
     if (_isClearingAllHistories) return [];
     final history = _cache[contactPubKeyHex];
@@ -386,14 +413,63 @@ class PathHistoryService extends ChangeNotifier {
       return history.recentPaths;
     }
 
+    final firstLoad = !_loadedOnce.contains(contactPubKeyHex);
     _ensureLoaded(contactPubKeyHex).then((_) {
+      if (!firstLoad) return;
       if (_cache[contactPubKeyHex]?.recentPaths.isNotEmpty ?? false) {
-        _version++;
-        notifyListeners();
+        _reportLoadedRoutes();
       }
     });
 
     return [];
+  }
+
+  /// The cached routes of a contact, or null when its history is not in the
+  /// cache. Never loads and never reports, so it is safe inside a build.
+  List<PathRecord>? peekRecentPaths(String contactPubKeyHex) {
+    if (_isClearingAllHistories) return const [];
+    final history = _cache[contactPubKeyHex];
+    if (history == null) return null;
+    _trackAccess(contactPubKeyHex);
+    return history.recentPaths;
+  }
+
+  /// Loads the histories of [contactPubKeyHexes] that are not cached, in
+  /// small batches with the event loop yielded between them, and reports once
+  /// at the end if any history read for the first time is non-empty. Keys
+  /// read before come back silently, which is what lets a screen asking for
+  /// more contacts than the cache holds settle instead of rebuilding forever.
+  Future<void> ensureLoaded(Iterable<String> contactPubKeyHexes) async {
+    if (_isClearingAllHistories) return;
+    final generation = _historyGeneration;
+    final missing = <String>[
+      for (final key in contactPubKeyHexes)
+        if (!_cache.containsKey(key)) key,
+    ];
+    if (missing.isEmpty) return;
+    final firstLoads = <String>{
+      for (final key in missing)
+        if (!_loadedOnce.contains(key)) key,
+    };
+    const batch = 20;
+    for (var start = 0; start < missing.length; start += batch) {
+      if (start > 0) await Future<void>.delayed(Duration.zero);
+      if (generation != _historyGeneration) return;
+      await Future.wait(missing.skip(start).take(batch).map(_ensureLoaded));
+    }
+    if (generation != _historyGeneration) return;
+    for (final key in firstLoads) {
+      if (_cache[key]?.recentPaths.isNotEmpty ?? false) {
+        _reportLoadedRoutes();
+        return;
+      }
+    }
+  }
+
+  void _reportLoadedRoutes() {
+    _version++;
+    _routesVersion++;
+    notifyListeners();
   }
 
   Future<ContactPathHistory?> _loadHistoryFromStorage(
@@ -442,6 +518,7 @@ class PathHistoryService extends ChangeNotifier {
     _floodStats.remove(contactPubKeyHex);
     await _storage.clearPathHistory(contactPubKeyHex);
     _version++;
+    _routesVersion++;
     notifyListeners();
   }
 
@@ -462,6 +539,7 @@ class PathHistoryService extends ChangeNotifier {
 
     await _storage.savePathHistory(contactPubKeyHex, _cache[contactPubKeyHex]!);
     _version++;
+    _routesVersion++;
     notifyListeners();
   }
 
@@ -575,8 +653,9 @@ class PathHistoryService extends ChangeNotifier {
   }
 
   void _evictIfNeeded() {
-    while (_cache.length > _maxCachedContacts && _cacheAccessOrder.isNotEmpty) {
-      final oldest = _cacheAccessOrder.removeAt(0);
+    while (_cache.length > maxCachedContacts && _cacheAccessOrder.isNotEmpty) {
+      final oldest = _cacheAccessOrder.first;
+      _cacheAccessOrder.remove(oldest);
       _cache.remove(oldest);
       _autoRotationIndex.remove(oldest);
       _floodStats.remove(oldest);
@@ -588,10 +667,12 @@ class PathHistoryService extends ChangeNotifier {
     _historyGeneration++;
     _cache.clear();
     _cacheAccessOrder.clear();
+    _loadedOnce.clear();
     _autoRotationIndex.clear();
     _floodStats.clear();
     _pendingLoads.clear();
     _version++;
+    _routesVersion++;
     notifyListeners();
     try {
       await _storage.clearAllPathHistories();
