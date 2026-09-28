@@ -30,6 +30,13 @@
 ## Testing Guidelines
 - Tests use `flutter_test`; add `*_test.dart` under `test/` and run `flutter test` before UI/protocol changes.
 
+## Performance and Refactoring Workflow
+- Wire formats (the MCMP coder and model, the MCOtxt planner, channel envelopes) and packet de-duplication are frozen by golden tests before they are touched: a pure-Dart script runs the current code over a fixed corpus and prints the expected output as a literal, the test compares it byte for byte, and it is committed green on the unchanged code, separately from the change.
+- Logic that changes on purpose gets two kinds of tests in the same commit as the change: invariants that must survive it, and tests of the new behaviour that are red before and green after.
+- Measure before and after with the same pure-Dart script and corpus (`dart --packages=.dart_tool/package_config.json <script>`); UI timings come from DevTools on a device. Benchmark and golden-generation scripts stay out of `lib/` and `test/`.
+- The agent writes tests and benchmarks but never runs `flutter test`, `flutter analyze`, `dart format`, `flutter pub get` or a build, and never commits: the owner runs them, checks the device, and reports failures back.
+- Fork-only logic goes into its own helper file; `chat_screen.dart`, `channel_chat_screen.dart` and `map_screen.dart` have mixed line endings and are edited byte-safely; a change to a mechanism described in `CLAUDE.md` updates that paragraph in the same change.
+
 ## Commit & Pull Request Guidelines
 - Keep commit subjects short and action-focused; PRs should describe behavior changes, link issues, include screenshots for UI changes, and call out BLE protocol changes explicitly.
 
