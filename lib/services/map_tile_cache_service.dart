@@ -400,35 +400,65 @@ class MapTileCacheService extends ChangeNotifier {
   static const int defaultMaxZoom = 15;
 
   final AppSettingsService appSettingsService;
-  final BaseCacheManager cacheManager;
-  late final TileProvider tileProvider;
+
+  /// Where the tile records live on Windows and Linux
+  /// (`storage/map_tile_cache_database.dart`); null leaves the choice to
+  /// flutter_cache_manager, which is sqflite on Android, iOS and macOS.
+  final CacheInfoRepository? recordRepository;
+
+  /// Whether reading the inventory may delete the files no record names.
+  /// Off for the session in which the JSON index was moved into the
+  /// database, in case the move missed a record.
+  final bool sweepOrphanedFiles;
+
+  final BaseCacheManager? _injectedCacheManager;
   Future<bool> Function()? restrictedBulkDownloadAuthorizer;
+
+  /// Created on first use, not by `main()`: opening the record repository
+  /// is the map's cost, and a launch that never shows a map pays nothing.
+  late final BaseCacheManager cacheManager =
+      _injectedCacheManager ??
+      RateLimitedTileCacheManager(
+        _cacheConfig(),
+        throttledHost: yandexTileHost,
+        maxRequestsPerSecond: yandexMaxRequestsPerSecond,
+      );
+
+  late final TileProvider tileProvider = CachedNetworkTileProvider(
+    cacheManager: cacheManager,
+    urlSigner: signTileUrl,
+    headersFor: headersForUrl,
+    // Seeded so TileLayer's putIfAbsent leaves the agent alone.
+    headers: {'User-Agent': userAgent},
+  );
 
   MapTileCacheService({
     required this.appSettingsService,
     BaseCacheManager? cacheManager,
-  }) : cacheManager =
-           cacheManager ??
-           RateLimitedTileCacheManager(
-             Config(
-               cacheKey,
-               stalePeriod: cacheLifetime,
-               maxNrOfCacheObjects: 200000,
-               fileService: ForcedFreshnessFileService(
-                 lifetime: cacheLifetime,
-               ),
-             ),
-             throttledHost: yandexTileHost,
-             maxRequestsPerSecond: yandexMaxRequestsPerSecond,
-           ) {
-    tileProvider = CachedNetworkTileProvider(
-      cacheManager: this.cacheManager,
-      urlSigner: signTileUrl,
-      headersFor: headersForUrl,
-      // Seeded so TileLayer's putIfAbsent leaves the agent alone.
-      headers: {'User-Agent': userAgent},
-    );
+    this.recordRepository,
+    this.sweepOrphanedFiles = true,
+  }) : _injectedCacheManager = cacheManager {
     appSettingsService.addListener(_handleSettingsChanged);
+  }
+
+  Config _cacheConfig() {
+    final repo = recordRepository;
+    final fileService = ForcedFreshnessFileService(lifetime: cacheLifetime);
+    if (repo == null) {
+      return Config(
+        cacheKey,
+        stalePeriod: cacheLifetime,
+        maxNrOfCacheObjects: 200000,
+        fileService: fileService,
+      );
+    }
+    return Config(
+      cacheKey,
+      stalePeriod: cacheLifetime,
+      maxNrOfCacheObjects: 200000,
+      repo: repo,
+      fileService: fileService,
+    );
   }
 
   MapRasterSourceDefinition get source {
@@ -655,7 +685,9 @@ class MapTileCacheService extends ChangeNotifier {
     final repo = _concreteCacheManager.config.repo;
     await repo.open();
     final objects = await repo.getAllObjects();
-    sweepOrphanedCacheFilesOnce(_concreteCacheManager.config, objects);
+    if (sweepOrphanedFiles) {
+      sweepOrphanedCacheFilesOnce(_concreteCacheManager.config, objects);
+    }
     final tiles = <CachedTileInfo>[];
     int totalBytes = 0;
 

@@ -100,6 +100,55 @@ class _MessageHistoryMigrationScreen extends StatelessWidget {
   }
 }
 
+/// A notice for a startup task that runs once and takes a moment, such as
+/// the map tile index moving into its database, put up before the app
+/// itself starts. The texts are the caller's, English with a Russian twin,
+/// since no localization is loaded at that point.
+class StartupNoticeApp extends StatelessWidget {
+  const StartupNoticeApp({
+    super.key,
+    required this.message,
+    required this.messageRussian,
+  });
+
+  final String message;
+  final String messageRussian;
+
+  @override
+  Widget build(BuildContext context) {
+    final isRussian =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru';
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        colorSchemeSeed: const Color(0xFF03A9E6),
+      ),
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 24),
+                  Text(
+                    isRussian ? messageRussian : message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class StartupFailureReport {
   StartupFailureReport({
     required this.code,

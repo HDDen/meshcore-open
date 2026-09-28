@@ -1,22 +1,37 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/storage/map_tile_cache_database.dart';
 
 // What the map tile cache asks of its record repository, pinned on the JSON
-// repository flutter_cache_manager uses on Windows and Linux today, so that a
-// repository of our own can be held to the same behaviour: what a record
+// repository flutter_cache_manager used on Windows and Linux, and held
+// against the database repository that replaced it there: what a record
 // keeps, how it is found, what the cleanup queries answer, how the cache
-// manager drives it, and how the JSON index lies on disk, which is what a
-// move out of that index has to read.
+// manager drives it, and how the JSON index lies on disk, which is what the
+// move out of that index reads.
 
 typedef OpenRepository = Future<CacheInfoRepository> Function();
 
-void main() {
+Future<String?> _sqliteProblem() async {
+  try {
+    final database = MapTileCacheDatabase.withExecutor(
+      NativeDatabase.memory(),
+    );
+    await database.countRecords();
+    await database.close();
+    return null;
+  } catch (error) {
+    return 'sqlite3 is not available to this test host: $error';
+  }
+}
+
+Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final skip = await _sqliteProblem();
   const pathProvider = MethodChannel('plugins.flutter.io/path_provider');
   late Directory tempDir;
 
@@ -116,6 +131,26 @@ void main() {
       expect(read.length, stored.length);
     });
   });
+
+  group('database repository', () {
+    // One database per test, shared by every repository the test opens, so
+    // that records written through one instance are read through the next.
+    MapTileCacheDatabase? database;
+
+    setUp(() => database = null);
+
+    tearDown(() async {
+      await database?.close();
+      database = null;
+    });
+
+    repositoryContract(() async {
+      database ??= MapTileCacheDatabase.withExecutor(NativeDatabase.memory());
+      final repo = MapTileCacheRepository(database!);
+      await repo.open();
+      return repo;
+    });
+  }, skip: skip);
 }
 
 CacheObject record(

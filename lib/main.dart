@@ -45,6 +45,7 @@ import 'services/wardrive_service.dart';
 import 'storage/prefs_manager.dart';
 import 'storage/message_history_storage.dart';
 import 'storage/message_history_maintenance.dart';
+import 'storage/map_tile_cache_database.dart';
 import 'storage/message_store.dart';
 import 'storage/channel_message_store.dart';
 import 'storage/mco_image_gallery_store.dart';
@@ -123,6 +124,24 @@ Future<void> _startApplication() async {
   if (historyMigrated) {
     await MessageHistoryStorage.instance.restartAfterMigration();
   }
+  // Windows and Linux only: the map tile records in their own database, the
+  // JSON index moved into it once, behind a notice while that takes.
+  _setStartupStage('MCO-STARTUP-109', 'Map tile index');
+  final mapTileRepository = await MapTileCacheRepository.openForThisPlatform(
+    onImportStarted: () async {
+      runApp(
+        const StartupNoticeApp(
+          message:
+              'Moving the map tile index into its database. '
+              'This happens once and takes a moment…',
+          messageRussian:
+              'Перенос индекса кэша карты в его базу данных. '
+              'Это делается один раз и займёт немного времени…',
+        ),
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    },
+  );
   _setStartupStage('MCO-STARTUP-102', 'Message compression model');
   await MeshCompressor.instance.initialize();
 
@@ -139,6 +158,8 @@ Future<void> _startApplication() async {
   );
   final mapTileCacheService = MapTileCacheService(
     appSettingsService: appSettingsService,
+    recordRepository: mapTileRepository,
+    sweepOrphanedFiles: mapTileRepository?.sweepOrphanedFiles ?? true,
   );
   final chatTextScaleService = ChatTextScaleService();
   final translationService = TranslationService(appSettingsService);
