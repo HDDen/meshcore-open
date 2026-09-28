@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
@@ -107,53 +105,60 @@ class AirActivityDot extends StatefulWidget {
   State<AirActivityDot> createState() => AirActivityDotState();
 }
 
-class AirActivityDotState extends State<AirActivityDot> {
-  Timer? _timer;
-  bool _blink = true;
+class AirActivityDotState extends State<AirActivityDot>
+    with SingleTickerProviderStateMixin {
+  /// One blink: on for the first half of the period, off for the second.
+  static const Duration _period = Duration(milliseconds: 800);
+
+  // A ticker, not a periodic timer with setState: a timer kept scheduling a
+  // frame every 400 ms for the app bar of every route in the stack, seen or
+  // not, while TickerMode mutes a ticker under a route that is not on top.
+  // Created in initState, as PulseDot's is: a lazy initializer would run on
+  // first access, which can be dispose(), where creating a ticker throws.
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    if (widget.active) _startTimer();
+    _controller = AnimationController(vsync: this, duration: _period);
+    if (widget.active) _controller.repeat();
   }
 
   @override
   void didUpdateWidget(covariant AirActivityDot oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.active && !oldWidget.active) {
-      _startTimer();
+      _controller.repeat();
     } else if (!widget.active && oldWidget.active) {
-      _stopTimer();
-      _blink = true;
+      _controller.stop();
+      _controller.value = 0;
     }
-  }
-
-  void _startTimer() {
-    _timer ??= Timer.periodic(const Duration(milliseconds: 400), (_) {
-      if (!mounted) return;
-      setState(() => _blink = !_blink);
-    });
-  }
-
-  void _stopTimer() {
-    _timer?.cancel();
-    _timer = null;
   }
 
   @override
   void dispose() {
-    _stopTimer();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final on = widget.active && _blink;
     final scheme = Theme.of(context).colorScheme;
-    return PulseDot(
-      color: on ? MeshPalette.blue : scheme.outline,
-      size: 11,
-      animate: false,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        // Which half of the period this is, read a hair past the frame time:
+        // `repeat` takes the phase as a fraction of the period, and that
+        // division can come out a hair under a half, or under a whole, where
+        // it should land on it, which would show the wrong half for a frame.
+        final half = ((_controller.value + 1e-6) * 2).floor();
+        final on = widget.active && half.isEven;
+        return PulseDot(
+          color: on ? MeshPalette.blue : scheme.outline,
+          size: 11,
+          animate: false,
+        );
+      },
     );
   }
 }

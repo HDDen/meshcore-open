@@ -1609,6 +1609,20 @@ A retry sees the choice as it is at that moment, not as it was when the message 
 
 Both sides log to `AppDebugLogService` (through `appLogger`, tag `Connector`), because a path that simply vanished says nothing about who dropped it: `clearContactPath` announces the reset the app sends, `_handlePathUpdated` announces the one the node reports, and the `Refreshing contact …` line that follows carries the new device path. Keep the pair symmetric — a reset logged on one side only is worse than neither, since silence then reads as evidence.
 
+### Air activity dot
+
+`AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
+radio-stats frame showed the node's airtime growing
+(`radioStatsAirActivityPulse`), which the stats poll (`_pollingInterval`,
+30 s by default) refreshes: it says the air was busy in the last poll window
+and cannot be more current than the poll, which is left alone on purpose, a
+poll every two seconds costing both radios more than the frames it would
+save. The blink is an `AnimationController` with an 800 ms period, on for
+the first half, not a periodic timer with `setState`: a timer ticked on
+under a route that is not on top, one frame every 400 ms for the app bar of
+every route in the stack, while a ticker is muted there by `TickerMode` and
+stops with the widget (`test/widgets/air_activity_dot_test.dart`).
+
 ### Answers to neighbour and telemetry requests
 
 The neighbours and telemetry screens learn their request's tag from the `RESP_CODE_SENT` the node gives for it, and the repeater's answer (`PUSH_CODE_BINARY_RESPONSE`) repeats that tag. The node answers every command in turn, so a direct message, a room post or another request written meanwhile brings its own SENT, before the request's or after it. Both screens used to keep the tag of the last SENT and dropped the answer whenever another send fell in between; the telemetry screen also armed its timeout on every SENT, a request pending or not, so a message sent while it was open ended in a false timeout. `RequestSentTags` (`helpers/request_sent_tags.dart`, tested in `test/helpers/request_sent_tags_test.dart`) keeps every tag seen while the request waits, which cannot mix answers up, because the companion passes on the answer to its latest binary request only (`pending_req`). The estimates those SENTs carry set the timeout: the first replaces the fallback, a later one can only push the deadline back. The 10-second fallback is armed once the request is out, not before, so waiting for the command lock does not use it up; the telemetry screen had none and without a SENT waited for good. A new request drops the tags while its route is being prepared, so nothing that arrives before it goes out counts, while an answer arriving after a timeout is still taken.
