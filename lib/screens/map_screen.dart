@@ -48,6 +48,7 @@ import '../helpers/estimated_repeater_map.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
+import '../helpers/last_value_memo.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/utf8_length_limiter.dart';
@@ -198,7 +199,7 @@ class _MapScreenState extends State<MapScreen>
   String _searchQuery = '';
   bool _wardrivePanelCollapsed = false;
   List<_GuessedLocation> _cachedGuessedLocations = [];
-  String _guessedLocationsCacheKey = '';
+  int? _guessedLocationsCacheKey;
   bool _locatedRepeaterRefreshBusy = false;
   String _locatedRepeaterRefreshKey = '';
   int _seenLocatedRepeaterRecalculateRequest = 0;
@@ -219,6 +220,29 @@ class _MapScreenState extends State<MapScreen>
   VoidCallback? _wardriveServiceListener;
   PageRoute<dynamic>? _observedRoute;
   bool _isCurrentRouteActive = false;
+  // The tree the last build produced, handed back while another page covers
+  // the map, so a notification then costs nothing; didPopNext builds anew.
+  Widget? _lastBuiltBody;
+  // The search field rebuilds the map through _searchQuery; it waits for
+  // the typing to pause.
+  Timer? _searchDebounce;
+  static const Duration _searchDelay = Duration(milliseconds: 300);
+  // Derivations of the wardrive samples, kept while the samples list and the
+  // settings they read stay: the service builds a new list at every change
+  // of the samples or of the ignore list, so the list itself is the version.
+  final LastValueMemo<
+    (List<WardriveSample>, String?, int?, int),
+    List<WardriveSample>
+  >
+  _selectedCoverageMemo = LastValueMemo();
+  final LastValueMemo<(List<WardriveSample>, int), List<Polygon>>
+  _coveragePolygonsMemo = LastValueMemo();
+  final LastValueMemo<(List<WardriveSample>, int), List<WardriveSample>>
+  _repeaterCoverageMemo = LastValueMemo();
+  final LastValueMemo<(List<WardriveSample>, int), List<Polygon>>
+  _repeaterPolygonsMemo = LastValueMemo();
+  final LastValueMemo<List<WardriveSample>, List<LatLng>> _samplePointsMemo =
+      LastValueMemo();
   bool _wardriveScreenWakelockActive = false;
   DateTime? _wardriveDiscoveryRetryAt;
   DateTime? _lastFollowedWardriveLocationAt;
@@ -308,6 +332,7 @@ class _MapScreenState extends State<MapScreen>
   void dispose() {
     appRouteObserver.unsubscribe(this);
     _removeMapSnackBarOverlay();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     _pathEditController.dispose();
@@ -332,6 +357,7 @@ class _MapScreenState extends State<MapScreen>
     setState(() {
       _selectedKey = contact.publicKeyHex;
       _selectedGuessPos = guessedPosition;
+      _searchDebounce?.cancel();
       _searchQuery = '';
       _searchController.clear();
       _searchFocus.unfocus();
@@ -355,6 +381,8 @@ class _MapScreenState extends State<MapScreen>
   @override
   void didPopNext() {
     _isCurrentRouteActive = true;
+    // Whatever changed while another page covered the map is built now.
+    if (mounted) setState(() {});
     _syncWardriveScreenWakelock();
     _syncWardriveFollowMe();
     final zoom = MapSessionZoom.value;
@@ -596,18 +624,32 @@ class _MapScreenState extends State<MapScreen>
           return const SizedBox.shrink();
         }
 
+        // Under another page the map is not seen: the last tree is handed
+        // back as it is, and the return (didPopNext) builds anew once. A
+        // dialog or a sheet over the map is no page to the route observer.
+        final lastBuilt = _lastBuiltBody;
+        if (!_isCurrentRouteActive && lastBuilt != null) return lastBuilt;
+
         final tileCache = context.read<MapTileCacheService>();
         final isDesktop = _isDesktopPlatform(defaultTargetPlatform);
         final settings = settingsService.settings;
         final servSettings = context.watch<SettingsSectionsService>();
+        // Built once per build: the merge of the node's contacts with the
+        // discovered ones costs a millisecond at a thousand nodes.
+        final allContacts = connector.allContacts;
         final connectorSnapshot = _MapConnectorSnapshot.fromConnector(
           connector,
+          allContacts,
         );
         // Only the set of routes matters here: a record refreshed by another
         // advert copy moves `version` but not `routesVersion`.
         final pathHistoryVersion = pathHistory.routesVersion;
-        final allContacts = connector.allContacts;
-        final locateRepeaterCandidates = _locateRepeaterCandidates(allContacts);
+        // The candidates feed the repeater search, which reads them only
+        // while it is on.
+        final locateRepeaterCandidates =
+            servSettings.locateUnknownRepeatersEnabled
+            ? _locateRepeaterCandidates(allContacts)
+            : const <McoContactLocationCandidate>[];
         _maybeRefreshLocatedRepeaters(
           connector: connector,
           settings: settings,
@@ -697,17 +739,34 @@ class _MapScreenState extends State<MapScreen>
 
         // Compute guessed locations with caching
         final maxRangeKm = _estimateLoRaRangeKm(connector);
-        final filteredKeys = guessCandidates
-            .map((c) => '${c.publicKeyHex}:${c.path.join("-")}')
-            .join(',');
-        final anchorKeys = allContactsWithLocation
-            .map(
-              (c) =>
-                  '${c.publicKeyHex}:${c.latitude}:${c.longitude}:${PathHelper.formatHopHex(c.path.isNotEmpty ? c.path.sublist(max(0, c.path.length - c.pathHashWidth)) : const [])}',
-            )
-            .join(',');
-        final cacheKey =
-            '$filteredKeys|$anchorKeys|$pathHistoryVersion:${connector.currentFreqHz}:${connector.currentSf}:${connector.currentBwHz}:${connector.currentTxPower}:${settings.mapShowGuessedLocations}';
+        // The same inputs as ever, hashed instead of joined into a string of
+        // a hundred kilobytes per build: each candidate's key and path, each
+        // anchor's key, position and last hop, the routes and the radio.
+        final cacheKey = Object.hash(
+          Object.hashAll([
+            for (final c in guessCandidates)
+              Object.hash(c.publicKeyHex, _bytesSignature(c.path)),
+          ]),
+          Object.hashAll([
+            for (final c in allContactsWithLocation)
+              Object.hash(
+                c.publicKeyHex,
+                c.latitude,
+                c.longitude,
+                _bytesSignature(
+                  c.path.isNotEmpty
+                      ? c.path.sublist(max(0, c.path.length - c.pathHashWidth))
+                      : const <int>[],
+                ),
+              ),
+          ]),
+          pathHistoryVersion,
+          connector.currentFreqHz,
+          connector.currentSf,
+          connector.currentBwHz,
+          connector.currentTxPower,
+          settings.mapShowGuessedLocations,
+        );
         if (cacheKey != _guessedLocationsCacheKey) {
           _guessedLocationsCacheKey = cacheKey;
           _cachedGuessedLocations = settings.mapShowGuessedLocations
@@ -781,8 +840,17 @@ class _MapScreenState extends State<MapScreen>
           }
         }
         final wardrive = _wardriveService!;
-        final selectedCoverageSamples = _selectedWardriveCoverageSamples(
-          wardrive,
+        // Derived from the samples once per change of the list or of the
+        // selection; the service builds a new list at every change, so the
+        // list itself is the version.
+        final selectedCoverageSamples = _selectedCoverageMemo.of(
+          (
+            wardrive.recentSamples,
+            _selectedWardriveCoverageHash,
+            _selectedWardriveCoveragePrecision,
+            wardrive.coveragePrecision,
+          ),
+          () => _selectedWardriveCoverageSamples(wardrive),
         );
         final hasSelectedCoverage = selectedCoverageSamples.isNotEmpty;
         final wardriveAnsweredKeys = hasSelectedCoverage
@@ -819,20 +887,30 @@ class _MapScreenState extends State<MapScreen>
               )
             : const <Polyline>[];
         final wardriveCoveragePolygons = wardrive.hasMapState
-            ? WardriveCoverageHelper.buildPolygons(
-                wardrive.recentSamples,
-                coveragePrecision: wardrive.coveragePrecision,
+            ? _coveragePolygonsMemo.of(
+                (wardrive.recentSamples, wardrive.coveragePrecision),
+                () => WardriveCoverageHelper.buildPolygons(
+                  wardrive.recentSamples,
+                  coveragePrecision: wardrive.coveragePrecision,
+                ),
               )
             : const <Polygon>[];
-        final repeaterCoverageSamples = _wardriveRepeaterCoverageSamples(
-          wardrive,
+        final repeaterCoverageSamples = _repeaterCoverageMemo.of(
+          (
+            wardrive.recentSamples,
+            Object.hashAllUnordered(_wardriveCoverageRepeaterKeys),
+          ),
+          () => _wardriveRepeaterCoverageSamples(wardrive),
         );
         final repeaterCoveragePolygons = repeaterCoverageSamples.isEmpty
             ? const <Polygon>[]
-            : WardriveCoverageHelper.buildFixedColorPolygons(
-                repeaterCoverageSamples,
-                color: MapPalette.selected,
-                coveragePrecision: wardrive.coveragePrecision,
+            : _repeaterPolygonsMemo.of(
+                (repeaterCoverageSamples, wardrive.coveragePrecision),
+                () => WardriveCoverageHelper.buildFixedColorPolygons(
+                  repeaterCoverageSamples,
+                  color: MapPalette.selected,
+                  coveragePrecision: wardrive.coveragePrecision,
+                ),
               );
         final repeaterCoveragePolylines = repeaterCoverageSamples.isEmpty
             ? const <Polyline>[]
@@ -861,9 +939,13 @@ class _MapScreenState extends State<MapScreen>
         LatLng center = const LatLng(0, 0);
         double initialZoom = 10.0;
         final wardriveSamplePoints = wardrive.hasMapState
-            ? wardrive.recentSamples
-                  .map((sample) => LatLng(sample.latitude, sample.longitude))
-                  .toList()
+            ? _samplePointsMemo.of(
+                wardrive.recentSamples,
+                () => [
+                  for (final sample in wardrive.recentSamples)
+                    LatLng(sample.latitude, sample.longitude),
+                ],
+              )
             : const <LatLng>[];
         final hasMapContent =
             contactsWithLocation.isNotEmpty ||
@@ -1046,7 +1128,7 @@ class _MapScreenState extends State<MapScreen>
             .where((c) => c.type == advTypeRepeater)
             .length;
 
-        return PopScope(
+        final built = PopScope(
           canPop: allowBack,
           child: Scaffold(
             appBar: AppBar(
@@ -1380,7 +1462,6 @@ class _MapScreenState extends State<MapScreen>
                         ..._buildNodeMarkersCached(
                           visibleContacts,
                           settings,
-                          connectorSnapshot.contactsSignature,
                           connectorSnapshot.batterySignature,
                           _freshness,
                           settings.mapTimeFilterHours,
@@ -1516,6 +1597,8 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         );
+        _lastBuiltBody = built;
+        return built;
       },
     );
   }
@@ -3264,6 +3347,7 @@ class _MapScreenState extends State<MapScreen>
         answeredKeys: wardriveAnsweredKeys,
       );
       final marker = Marker(
+        key: ValueKey('guess:${guess.contact.publicKeyHex}'),
         point: guess.position,
         width: 48,
         height: 48,
@@ -3371,7 +3455,6 @@ class _MapScreenState extends State<MapScreen>
   List<Marker> _buildNodeMarkersCached(
     List<Contact> contacts,
     AppSettings settings,
-    int contactsSignature,
     int batterySignature,
     _Freshness freshness,
     double timeFilterHours,
@@ -3399,8 +3482,10 @@ class _MapScreenState extends State<MapScreen>
             Object.hashAll(_pathTraceHopWidths),
           )
         : 0;
+    // The overlap prefixes are cut at the node's hash width.
+    final pathHashWidth = context.read<MeshCoreConnector>().pathHashByteWidth;
     final key = _NodeMarkersCacheKey(
-      contactsSignature: contactsSignature,
+      pathHashWidth: pathHashWidth,
       visibleContactsSignature: visibleContactsSignature,
       batterySignature: batterySignature,
       freshness: freshness,
@@ -3507,6 +3592,7 @@ class _MapScreenState extends State<MapScreen>
       if (showLabels) {
         targetMarkers.add(
           _buildNodeLabelMarker(
+            key: ValueKey('label:${contact.publicKeyHex}'),
             point: LatLng(contact.latitude!, contact.longitude!),
             label: overlap
                 ? "${contact.publicKeyHex.substring(0, 2)}:${contact.name}"
@@ -4063,6 +4149,7 @@ class _MapScreenState extends State<MapScreen>
     );
     final size = selected ? 46.0 : (dot ? 22.0 : 40.0);
     return Marker(
+      key: ValueKey('node:${contact.publicKeyHex}'),
       point: LatLng(contact.latitude!, contact.longitude!),
       width: size,
       height: size,
@@ -4131,6 +4218,7 @@ class _MapScreenState extends State<MapScreen>
         ? 46.0
         : 42.0;
     return Marker(
+      key: ValueKey('cluster:${members.first.publicKeyHex}:$count'),
       point: center,
       width: size,
       height: size,
@@ -4301,8 +4389,13 @@ class _MapScreenState extends State<MapScreen>
     return polylines;
   }
 
-  Marker _buildNodeLabelMarker({required LatLng point, required String label}) {
+  Marker _buildNodeLabelMarker({
+    required LatLng point,
+    required String label,
+    Key? key,
+  }) {
     return Marker(
+      key: key,
       point: point,
       width: 120,
       height: 24,
@@ -4492,6 +4585,7 @@ class _MapScreenState extends State<MapScreen>
                               icon: const Icon(Icons.close, size: 18),
                               onPressed: () {
                                 setState(() {
+                                  _searchDebounce?.cancel();
                                   _searchQuery = '';
                                   _searchController.clear();
                                 });
@@ -4515,7 +4609,14 @@ class _MapScreenState extends State<MapScreen>
                     ),
                     cursorColor: MapPalette.selected,
                     onChanged: (value) {
-                      setState(() => _searchQuery = value);
+                      // The list under the field is drawn by the whole map,
+                      // so it follows the typing once it pauses.
+                      _searchDebounce?.cancel();
+                      _searchDebounce = Timer(_searchDelay, () {
+                        _searchDebounce = null;
+                        if (!mounted || _searchQuery == value) return;
+                        setState(() => _searchQuery = value);
+                      });
                     },
                   ),
                 ),
@@ -4843,6 +4944,7 @@ class _MapScreenState extends State<MapScreen>
       _mapController.move(guess.position, max(_zoom, 13));
     } else {
       setState(() {
+        _searchDebounce?.cancel();
         _searchQuery = '';
         _searchController.clear();
         _searchFocus.unfocus();
@@ -5433,6 +5535,7 @@ class _MapScreenState extends State<MapScreen>
             : MapPalette.shared);
     final markerIcon = style?.icon ?? Icons.flag;
     return Marker(
+      key: ValueKey('shared:${marker.id}'),
       point: marker.position,
       width: 60,
       height: 60,
@@ -7726,24 +7829,21 @@ int _mapContactSignature(Contact contact) {
 
 class _MapConnectorSnapshot {
   final MeshCoreConnector connector;
-  final int contactsSignature;
   final int markerSignature;
   final int batterySignature;
   final int uiSignature;
 
   const _MapConnectorSnapshot({
     required this.connector,
-    required this.contactsSignature,
     required this.markerSignature,
     required this.batterySignature,
     required this.uiSignature,
   });
 
-  factory _MapConnectorSnapshot.fromConnector(MeshCoreConnector connector) {
-    final allContacts = connector.allContacts;
-    final contactsSignature = Object.hashAll(
-      allContacts.map(_mapContactSignature),
-    );
+  factory _MapConnectorSnapshot.fromConnector(
+    MeshCoreConnector connector,
+    List<Contact> allContacts,
+  ) {
     final batterySignature = Object.hashAll(
       allContacts
           .where((contact) => contact.type == advTypeRepeater)
@@ -7827,7 +7927,6 @@ class _MapConnectorSnapshot {
 
     return _MapConnectorSnapshot(
       connector: connector,
-      contactsSignature: contactsSignature,
       markerSignature: Object.hashAll(markerParts),
       batterySignature: batterySignature,
       uiSignature: Object.hash(
@@ -7847,7 +7946,6 @@ class _MapConnectorSnapshot {
   @override
   bool operator ==(Object other) {
     return other is _MapConnectorSnapshot &&
-        contactsSignature == other.contactsSignature &&
         markerSignature == other.markerSignature &&
         batterySignature == other.batterySignature &&
         uiSignature == other.uiSignature;
@@ -7855,15 +7953,21 @@ class _MapConnectorSnapshot {
 
   @override
   int get hashCode => Object.hash(
-    contactsSignature,
     markerSignature,
     batterySignature,
     uiSignature,
   );
 }
 
+/// What the node markers are built from, as far as it changes between
+/// builds: the visible contacts with their age, the repeaters' battery
+/// readings and chemistry, the filters and the view flags, the selection,
+/// the zoom bucket, the path trace, the wardrive highlight and answers, the
+/// neighbour focus and the node's hash width, which cuts the overlap
+/// prefixes. Not the contacts off the map: an advert from one of them used
+/// to rebuild every marker.
 class _NodeMarkersCacheKey {
-  final int contactsSignature;
+  final int pathHashWidth;
   final int visibleContactsSignature;
   final int batterySignature;
   final _Freshness freshness;
@@ -7887,7 +7991,7 @@ class _NodeMarkersCacheKey {
   final int neighborFocusSignature;
 
   const _NodeMarkersCacheKey({
-    required this.contactsSignature,
+    required this.pathHashWidth,
     required this.visibleContactsSignature,
     required this.batterySignature,
     required this.freshness,
@@ -7914,7 +8018,7 @@ class _NodeMarkersCacheKey {
   @override
   bool operator ==(Object other) {
     return other is _NodeMarkersCacheKey &&
-        contactsSignature == other.contactsSignature &&
+        pathHashWidth == other.pathHashWidth &&
         visibleContactsSignature == other.visibleContactsSignature &&
         batterySignature == other.batterySignature &&
         freshness == other.freshness &&
@@ -7940,7 +8044,7 @@ class _NodeMarkersCacheKey {
 
   @override
   int get hashCode => Object.hashAll([
-    contactsSignature,
+    pathHashWidth,
     visibleContactsSignature,
     batterySignature,
     freshness,

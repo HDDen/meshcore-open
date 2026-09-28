@@ -96,6 +96,17 @@ Contact _node(int seed, String name, double latitude, double longitude) =>
       lastSeen: DateTime.now(),
     );
 
+Contact _nodeWithoutLocation(int seed, String name) => Contact(
+  publicKey: Uint8List.fromList(
+    List<int>.generate(32, (i) => i == 0 ? seed : (seed * 7 + i) & 0xFF),
+  ),
+  name: name,
+  type: advTypeChat,
+  pathLength: 0,
+  path: Uint8List(0),
+  lastSeen: DateTime.now(),
+);
+
 Map<String, Object?> _sample(String id, double latitude, double longitude) => {
   'id': id,
   'lat': latitude,
@@ -315,6 +326,145 @@ void main() {
     } finally {
       await _Harness.unmount(tester);
     }
+  });
+
+  // The work the build skips now: under another page the last tree is handed
+  // back untouched and built anew once on the return; the search waits for
+  // the typing to pause; an advert from a node off the map leaves the node
+  // markers as they are; the coverage polygons are reused while the samples
+  // stay. Observed through widget and marker identity.
+  group('the build skips work', () {
+    testWidgets('under another page the last tree is handed back untouched '
+        'and built anew once on the return', (tester) async {
+      try {
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [_node(1, 'Alice', 55.75, 37.62)],
+          zoom: 15,
+        );
+        MarkerLayer layer() => tester.widgetList<MarkerLayer>(
+          find.byType(MarkerLayer, skipOffstage: false),
+        ).first;
+        final shown = layer();
+
+        final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+        unawaited(
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => const Scaffold(body: Text('another page')),
+            ),
+          ),
+        );
+        await _pumpFrames(tester);
+        harness.connector.replace(_node(2, 'Bob', 55.80, 37.70));
+        await _pumpFrames(tester);
+
+        expect(identical(layer(), shown), isTrue, reason: 'not rebuilt');
+        expect(_markerPoints(tester), isNot(contains(bobPoint)));
+
+        navigator.pop();
+        await _pumpFrames(tester);
+
+        expect(identical(layer(), shown), isFalse, reason: 'built anew');
+        expect(_markerPoints(tester), contains(bobPoint));
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('the search waits for the typing to pause', (tester) async {
+      try {
+        await _Harness.pump(
+          tester,
+          nodes: [
+            _node(1, 'Alice', 55.75, 37.62),
+            _node(2, 'Bob', 55.80, 37.70),
+          ],
+          zoom: 10,
+        );
+
+        await tester.enterText(find.byType(TextField).first, 'ali');
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.text('Alice'), findsNothing, reason: 'still typing');
+
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+        expect(find.text('Alice'), findsOneWidget);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('an advert from a node off the map leaves the node markers '
+        'as they are', (tester) async {
+      try {
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [_node(1, 'Alice', 55.75, 37.62)],
+          zoom: 15,
+        );
+        Marker aliceMarker() => tester
+            .widgetList<MarkerLayer>(
+              find.byType(MarkerLayer, skipOffstage: false),
+            )
+            .expand((layer) => layer.markers)
+            .firstWhere((marker) => marker.point == alicePoint);
+        final before = aliceMarker();
+        expect(before.key, isNotNull);
+
+        // A node without a position is on no map, only in the lists.
+        harness.connector.replace(_nodeWithoutLocation(3, 'Carol'));
+        await _pumpFrames(tester);
+
+        expect(identical(aliceMarker(), before), isTrue);
+
+        harness.connector.replace(_node(1, 'Alicia', 55.75, 37.62));
+        await _pumpFrames(tester);
+
+        expect(identical(aliceMarker(), before), isFalse);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('the coverage polygons are reused while the samples stay', (
+      tester,
+    ) async {
+      try {
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [_node(1, 'Alice', 55.75, 37.62)],
+          zoom: 15,
+        );
+        await harness.wardrive.importSamplesJson(
+          jsonEncode([_sample('s1', 55.75, 37.62)]),
+        );
+        harness.wardrive.showMapState();
+        await _pumpFrames(tester);
+        List<Polygon> polygons() => tester
+            .widgetList<PolygonLayer>(
+              find.byType(PolygonLayer, skipOffstage: false),
+            )
+            .first
+            .polygons;
+        final before = polygons();
+        expect(before, isNotEmpty);
+
+        // A notification that changes nothing about the samples.
+        harness.connector.replace(_node(2, 'Bob', 55.80, 37.70));
+        await _pumpFrames(tester);
+        expect(identical(polygons(), before), isTrue);
+
+        await harness.wardrive.importSamplesJson(
+          jsonEncode([_sample('s2', 55.95, 37.95)]),
+        );
+        await _pumpFrames(tester);
+        expect(identical(polygons(), before), isFalse);
+        expect(polygons().length, before.length + 1);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
   });
 
   testWidgets('the wardrive coverage follows the samples', (tester) async {
