@@ -130,6 +130,10 @@ class MapTileCacheDatabase extends GeneratedDatabase {
             setup: (db) {
               db.execute('PRAGMA journal_mode = WAL');
               db.execute('PRAGMA synchronous = NORMAL');
+              // The log is reused after a checkpoint, never shrunk by
+              // itself; this cuts it back to the auto-checkpoint size once
+              // it has grown past it, which only the one-time move does.
+              db.execute('PRAGMA journal_size_limit = 4194304');
             },
           ),
         ),
@@ -368,6 +372,12 @@ LIMIT 100 OFFSET ?
       }
     });
     final added = await countRecords() - before;
+    // The move is one transaction the size of the index, and in WAL mode
+    // that leaves a log as large as the database, reused but never shrunk
+    // by itself: 39 MB on the first machine. A checkpoint with TRUNCATE
+    // folds it into the file and cuts it to nothing; outside WAL it does
+    // nothing at all.
+    await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
     await index.delete();
     // The temporary file of an atomic write the package never finished.
     final temporary = File('${index.path}.tmp');
@@ -439,6 +449,11 @@ class MapTileCacheRepository implements CacheInfoRepository {
         // applies: a database that cannot open leaves the index in place.
         await database.countRecords();
       }
+      // The app never closes this database, so a session leaves its log
+      // behind, recovered at the next open but kept at the size of the
+      // largest transaction it ever held. Folding it now, before the map
+      // reads anything, cuts it to nothing at every launch.
+      await database.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
       return MapTileCacheRepository(
         database,
         sweepOrphanedFiles: sweepOrphanedFiles,

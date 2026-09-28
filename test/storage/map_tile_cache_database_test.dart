@@ -246,6 +246,33 @@ Future<void> main() async {
       expect(result.fileWasCorrupt, isFalse);
     }, skip: skip);
 
+    test('the move leaves no write-ahead log behind', () async {
+      final file = await writeIndex([_record(osm), _record(stadia)]);
+      final databaseFile = File(
+        '${tempDir.path}${Platform.pathSeparator}tiles.sqlite',
+      );
+      final database = MapTileCacheDatabase.withExecutor(
+        NativeDatabase(
+          databaseFile,
+          setup: (db) {
+            db.execute('PRAGMA journal_mode = WAL');
+            db.execute('PRAGMA journal_size_limit = 4194304');
+          },
+        ),
+      );
+      addTearDown(database.close);
+
+      await database.importLegacyIndex(file);
+
+      expect(await database.countRecords(), 2);
+      final log = File('${databaseFile.path}-wal');
+      expect(
+        !log.existsSync() || log.lengthSync() == 0,
+        isTrue,
+        reason: 'the log is truncated once the move is committed',
+      );
+    }, skip: skip);
+
     test('the temporary file of an unfinished write goes with the index',
         () async {
       final file = await writeIndex([_record(osm)]);
