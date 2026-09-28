@@ -30,6 +30,7 @@ import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
+import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
 import '../helpers/direct_flood_repeats.dart';
@@ -4957,6 +4958,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void handleFrameForTest(List<int> data) => _handleFrame(data);
 
+  /// Hands the connector its settings without [initialize], which also
+  /// starts the notification plugin a test host does not have.
+  @visibleForTesting
+  void attachAppSettingsServiceForTest(AppSettingsService service) {
+    _appSettingsService = service;
+  }
+
   @visibleForTesting
   static bool shouldIgnoreLateTcpConnectError({
     required bool manualDisconnect,
@@ -5889,6 +5897,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactCacheLoadFuture = null;
     _clearDirectEchoKey('new session');
     _directFloodRepeats.clear();
+    _heardChannelPackets.clear();
     _directEchoAckUnsupported = false;
     _unscopedSendUnsupported = false;
     _stoppedSendAcks.clear();
@@ -6168,6 +6177,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _conversationLoadFutures.clear();
     _clearDirectEchoKey('disconnect');
     _directFloodRepeats.clear();
+    _heardChannelPackets.clear();
     _setSelfPublicKey(null);
     _selfName = null;
     _selfLatitude = null;
@@ -9042,6 +9052,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       packetHash: packetHash,
     );
     channelMessages[index] = updated;
+    _recordOwnChannelPacket(channelIndex, updated, timestampSeconds);
     unawaited(_channelMessageStore.saveChannelMessage(channelIndex, updated));
     notifyListeners();
   }
@@ -10282,6 +10293,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _clearSharedMessageHistoryState();
       _clearDirectEchoKey('node changed');
       _directFloodRepeats.clear();
+      _heardChannelPackets.clear();
       _contactRegions.clear();
     }
 
@@ -13213,9 +13225,34 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     if (parsed != null && parsed.channelIndex != null) {
       _lastChannelMsgRxTime = parsed.receivedAt;
+      final channelIndex = parsed.channelIndex!;
+      final timestampSeconds = parsed.timestamp.millisecondsSinceEpoch ~/ 1000;
+      // The node hands over the packet it decrypted; the radio logged the
+      // same packet already, so this is usually its second copy.
+      final heardKey = _channelCopiesTakeOldPath(channelIndex)
+          ? null
+          : HeardChannelPackets.textKey(
+              channelIndex: channelIndex,
+              timestampSeconds: timestampSeconds,
+              senderName: parsed.senderName,
+              rawText: parsed.rawText ?? parsed.text,
+            );
+      if (heardKey != null &&
+          await _foldHeardChannelCopy(
+            heardKey,
+            channelIndex,
+            receivedAt: DateTime.now(),
+            pathBytes: parsed.pathBytes,
+            pathLength: parsed.pathLength,
+            pathHashWidth: parsed.pathHashWidth,
+            snr: parsed.snr,
+            sourceLabel: localSourceLabel,
+          )) {
+        return;
+      }
       final contentHash = _computeContentHash(
-        parsed.channelIndex!,
-        parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
+        channelIndex,
+        timestampSeconds,
         '${parsed.senderName}: ${parsed.text}',
       );
       var message = parsed.copyWith(
@@ -13247,7 +13284,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         pathBytes: message.pathBytes,
         pathHashWidth: message.pathHashWidth,
       );
-      final isNew = await _addChannelMessage(message.channelIndex!, message);
+      final isNew = await _addChannelMessage(
+        message.channelIndex!,
+        message,
+        heardKey: heardKey,
+      );
       _maybeIncrementChannelUnread(message, isNew: isNew);
       notifyListeners();
       if (isNew && !message.isOutgoing) {
@@ -13298,6 +13339,27 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final dataFrame = parseChannelDataReceivedFrame(frame);
     if (dataFrame == null) return;
 
+    final contentHash = _computeChannelDataHash(
+      dataFrame.channelIndex,
+      dataFrame.dataType,
+      dataFrame.payload,
+    );
+    final heardKey = _channelCopiesTakeOldPath(dataFrame.channelIndex)
+        ? null
+        : contentHash;
+    if (heardKey != null &&
+        await _foldHeardChannelCopy(
+          heardKey,
+          dataFrame.channelIndex,
+          receivedAt: DateTime.now(),
+          pathLength: dataFrame.pathLength,
+          pathHashWidth: dataFrame.pathHashWidth,
+          snr: dataFrame.snr,
+          sourceLabel: localSourceLabel,
+        )) {
+      return;
+    }
+
     final decoded = ChannelBinaryDataHelper.tryDecodeInbound(
       dataType: dataFrame.dataType,
       payload: dataFrame.payload,
@@ -13318,7 +13380,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           unknown,
           dataFrame,
           localSourceLabel: localSourceLabel,
+          heardKey: heardKey,
         );
+      } else if (heardKey != null) {
+        _heardChannelPackets.abandon(heardKey);
       }
       return;
     }
@@ -13329,11 +13394,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     final receivedAt = DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
-    final contentHash = _computeChannelDataHash(
-      dataFrame.channelIndex,
-      dataFrame.dataType,
-      dataFrame.payload,
-    );
     final compression = decoded != null
         ? _incomingBinaryCompression(decoded)
         : _incomingAppDataCompression(appData!);
@@ -13401,7 +13461,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           : null,
       pathHashWidth: message.pathHashWidth,
     );
-    final isNew = await _addChannelMessage(dataFrame.channelIndex, message);
+    final isNew = await _addChannelMessage(
+      dataFrame.channelIndex,
+      message,
+      heardKey: heardKey,
+    );
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
     if (isNew && !message.isOutgoing) {
@@ -13431,6 +13495,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     UnknownChannelAppData unknown,
     ChannelDataReceivedFrame dataFrame, {
     String? localSourceLabel,
+    String? heardKey,
   }) async {
     final receivedAt = DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
@@ -13460,7 +13525,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       message.receivedAt,
       pathHashWidth: message.pathHashWidth,
     );
-    final isNew = await _addChannelMessage(dataFrame.channelIndex, message);
+    final isNew = await _addChannelMessage(
+      dataFrame.channelIndex,
+      message,
+      heardKey: heardKey,
+    );
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
   }
@@ -13468,6 +13537,133 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Expected MAC and ciphertext of our recent channel sends, so an echo the
   /// frame limit cut short is still recognised. See [ChannelEchoRecovery].
   final ChannelEchoRecovery _channelEchoRecovery = ChannelEchoRecovery();
+
+  /// The channel packets heard lately, by the identity every copy of one
+  /// packet shares, and what each became, so a copy is folded into its
+  /// message before decoding, verification and the rest of the receive path
+  /// (see [HeardChannelPackets] and [_foldHeardChannelCopy]). The channels
+  /// the do-not-filter setting lists never use it: their packets take the
+  /// whole path every time, as they always did.
+  final HeardChannelPackets _heardChannelPackets = HeardChannelPackets();
+
+  /// Copies folded into their message by the short path.
+  @visibleForTesting
+  int heardChannelCopiesMerged = 0;
+
+  /// Copies of an applied reaction dropped by the short path.
+  @visibleForTesting
+  int heardChannelReactionCopiesDropped = 0;
+
+  bool _channelCopiesTakeOldPath(int channelIndex) =>
+      _isChannelListedInDoNotFilterSetting(_channelDisplayName(channelIndex));
+
+  /// The data type and payload of a decrypted GRP_DATA packet, or null when
+  /// the bytes are shorter than their length byte claims.
+  ({int dataType, Uint8List payload})? _groupDataOf(Uint8List decryptedBytes) {
+    if (decryptedBytes.length < 3) return null;
+    final length = decryptedBytes[2];
+    if (3 + length > decryptedBytes.length) return null;
+    return (
+      dataType: decryptedBytes[0] | (decryptedBytes[1] << 8),
+      payload: Uint8List.sublistView(decryptedBytes, 3, 3 + length),
+    );
+  }
+
+  /// Folds a copy of a channel packet heard before into what its first copy
+  /// became: nothing for a reaction, the route, the reading, the region and
+  /// one more repeat for a message. Returns false when the packet is new, or
+  /// when its message is no longer loaded, and the copy has to take the whole
+  /// receive path; that path then settles the claim [key] holds, so a copy
+  /// arriving meanwhile waits for it rather than processing the packet again.
+  Future<bool> _foldHeardChannelCopy(
+    String key,
+    int channelIndex, {
+    required DateTime receivedAt,
+    Uint8List? pathBytes,
+    int? pathLength,
+    int? pathHashWidth,
+    double? snr,
+    int? rssi,
+    String? packetRegion,
+    bool packetRegionInfoAvailable = false,
+    bool packetRegionNotMatched = false,
+    String? sourceLabel,
+  }) async {
+    final claimed = _heardChannelPackets.claim(key);
+    if (claimed == null) return false;
+    switch (await claimed) {
+      case null:
+        return false;
+      case HeardAsReaction():
+        heardChannelReactionCopiesDropped++;
+        return true;
+      case HeardAsMessage(:final messageId):
+        final messages = _channelMessages[channelIndex];
+        if (messages == null) return false;
+        // From the end: a copy follows its packet within seconds.
+        final index = messages.lastIndexWhere(
+          (message) => message.messageId == messageId,
+        );
+        if (index < 0) return false;
+        final existing = messages[index];
+        // Only what a copy can add; the text, the id and the hash are the
+        // stored message's own.
+        final copy = ChannelMessage(
+          senderName: existing.senderName,
+          text: existing.text,
+          timestamp: existing.timestamp,
+          receivedAt: receivedAt,
+          isOutgoing: false,
+          status: ChannelMessageStatus.sent,
+          pathLength: pathLength,
+          pathHashWidth: pathHashWidth,
+          pathBytes: pathBytes,
+          snr: snr,
+          rssi: rssi,
+          channelIndex: channelIndex,
+          packetRegion: packetRegion,
+          packetRegionInfoAvailable: packetRegionInfoAvailable,
+          packetRegionNotMatched: packetRegionNotMatched,
+          packetHash: existing.packetHash,
+          sourceLabel: sourceLabel,
+        );
+        final merged = _mergeChannelRepeat(messages, index, copy);
+        if (merged.receivedAt != existing.receivedAt) {
+          messages.sort(_compareChannelMessages);
+        }
+        heardChannelCopiesMerged++;
+        await _channelMessageStore.saveChannelMessage(channelIndex, merged);
+        notifyListeners();
+        return true;
+    }
+  }
+
+  /// Records our own packet under the key its copies will carry, so its
+  /// first echo folds in by the short path: a text send by the name and the
+  /// text the node puts on the air, a data send by the hash of its payload.
+  void _recordOwnChannelPacket(
+    int channelIndex,
+    ChannelMessage message,
+    int timestampSeconds,
+  ) {
+    if (_channelCopiesTakeOldPath(channelIndex)) return;
+    final rawText = message.rawText;
+    final String? key;
+    if (rawText != null) {
+      final selfName = _selfName;
+      if (selfName == null) return;
+      key = HeardChannelPackets.textKey(
+        channelIndex: channelIndex,
+        timestampSeconds: timestampSeconds,
+        senderName: selfName,
+        rawText: rawText,
+      );
+    } else {
+      key = message.packetHash;
+    }
+    if (key == null) return;
+    _heardChannelPackets.record(key, HeardAsMessage(message.messageId));
+  }
 
   bool get _recoverLongPacketEchoes =>
       _appSettingsService?.settings.recoverLongPacketEchoes ?? true;
@@ -14105,6 +14301,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           if (packet.payloadType == _payloadTypeGroupData) {
             if (_countImageChunkRepeat(channel.index, decryptedBytes)) return;
             final packetRegion = _resolvePacketRegion(packet);
+            final groupData = _groupDataOf(decryptedBytes);
+            final heardKey =
+                groupData == null || _channelCopiesTakeOldPath(channel.index)
+                ? null
+                : _computeChannelDataHash(
+                    channel.index,
+                    groupData.dataType,
+                    groupData.payload,
+                  );
+            if (heardKey != null &&
+                await _foldHeardChannelCopy(
+                  heardKey,
+                  channel.index,
+                  receivedAt: DateTime.now(),
+                  pathBytes: packet.pathBytes,
+                  pathLength: packet.isFlood ? packet.hopCount : 0,
+                  pathHashWidth: packet.pathHashWidth,
+                  snr: snr,
+                  rssi: rssi,
+                  packetRegion: packetRegion.region,
+                  packetRegionInfoAvailable: true,
+                  packetRegionNotMatched: packetRegion.notMatched,
+                )) {
+              return;
+            }
             final parsedMessage = _parseLogRxChannelData(
               packet,
               channel.index,
@@ -14115,7 +14336,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               packetRegionInfoAvailable: true,
               packetRegionNotMatched: packetRegion.notMatched,
             );
-            if (parsedMessage == null) return;
+            if (parsedMessage == null) {
+              if (heardKey != null) _heardChannelPackets.abandon(heardKey);
+              return;
+            }
             final message = await _verifyInboundChannelMessage(parsedMessage);
 
             _updateContactLastMessageAtByName(
@@ -14128,7 +14352,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               pathBytes: message.pathBytes,
               pathHashWidth: message.pathHashWidth,
             );
-            final isNew = await _addChannelMessage(channel.index, message);
+            final isNew = await _addChannelMessage(
+              channel.index,
+              message,
+              heardKey: heardKey,
+            );
             _maybeIncrementChannelUnread(message, isNew: isNew);
             notifyListeners();
             if (isNew) {
@@ -14159,6 +14387,32 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
           final text = decrypted.readCString();
           final parsed = _splitSenderText(text);
+          final packetRegion = _resolvePacketRegion(packet);
+          // Recognised before decoding, by the text as it travelled.
+          final heardKey = _channelCopiesTakeOldPath(channel.index)
+              ? null
+              : HeardChannelPackets.textKey(
+                  channelIndex: channel.index,
+                  timestampSeconds: timestampRaw,
+                  senderName: parsed.senderName,
+                  rawText: parsed.text,
+                );
+          if (heardKey != null &&
+              await _foldHeardChannelCopy(
+                heardKey,
+                channel.index,
+                receivedAt: DateTime.now(),
+                pathBytes: packet.pathBytes,
+                pathLength: packet.isFlood ? packet.hopCount : 0,
+                pathHashWidth: packet.pathHashWidth,
+                snr: snr,
+                rssi: rssi,
+                packetRegion: packetRegion.region,
+                packetRegionInfoAvailable: true,
+                packetRegionNotMatched: packetRegion.notMatched,
+              )) {
+            return;
+          }
           final decoded = MessageTextCodec.tryDecodeKnownCompressionDetails(
             parsed.text,
           );
@@ -14183,7 +14437,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
           final logRxMcmpMessage = decoded?.mcmpMessage;
           final logRxMCOtxtMessage = decoded?.mcotxtMessage;
-          final packetRegion = _resolvePacketRegion(packet);
           final unverifiedMessage = ChannelMessage(
             senderKey: null,
             senderName: parsed.senderName,
@@ -14236,7 +14489,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             pathBytes: message.pathBytes,
             pathHashWidth: message.pathHashWidth,
           );
-          final isNew = await _addChannelMessage(channel.index, message);
+          final isNew = await _addChannelMessage(
+            channel.index,
+            message,
+            heardKey: heardKey,
+          );
           _maybeIncrementChannelUnread(message, isNew: isNew);
           notifyListeners();
           if (isNew) {
@@ -15353,10 +15610,41 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _ParsedText(senderName: 'Unknown', text: text);
   }
 
+  /// Stores [message], new or merged into the copy of it already there, and
+  /// returns whether it was new. Under [heardKey], the claim the copy holds
+  /// in the heard map is settled with what the message became, and abandoned
+  /// when nothing was stored or applied, a failure included.
   Future<bool> _addChannelMessage(
     int channelIndex,
     ChannelMessage message, {
     bool awaitPersistence = true,
+    String? heardKey,
+  }) async {
+    if (heardKey == null) {
+      return _storeChannelMessage(
+        channelIndex,
+        message,
+        awaitPersistence: awaitPersistence,
+      );
+    }
+    final claim = HeardChannelClaim(_heardChannelPackets, heardKey);
+    try {
+      return await _storeChannelMessage(
+        channelIndex,
+        message,
+        awaitPersistence: awaitPersistence,
+        claim: claim,
+      );
+    } finally {
+      claim.abandonIfOpen();
+    }
+  }
+
+  Future<bool> _storeChannelMessage(
+    int channelIndex,
+    ChannelMessage message, {
+    bool awaitPersistence = true,
+    HeardChannelClaim? claim,
   }) async {
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
@@ -15381,11 +15669,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         reactionIdentifier,
       );
 
-      if (isDuplicate) return false;
+      if (isDuplicate) {
+        claim?.settle(const HeardAsReaction());
+        return false;
+      }
 
       // New reaction - process it
       final changedMessage = _processReaction(messages, reactionInfo);
       if (changedMessage != null) {
+        // Settled before the write: a copy arriving during it is a copy of
+        // an applied reaction and has nothing to add.
+        claim?.settle(const HeardAsReaction());
         appLogger.info('Adding channel reaction, id: $reactionIdentifier');
         await _channelMessageStore.saveChannelMessage(
           channelIndex,
@@ -15546,62 +15840,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     var isNew = true;
     if (existingIndex >= 0) {
       isNew = false;
-      final existing = messages[existingIndex];
-      final mergedPathBytes = _selectPreferredPathBytes(
-        existing.pathBytes,
-        processedMessage.pathBytes,
-      );
-      final mergedPathVariants = _mergePathVariants(
-        existing.pathVariants,
-        processedMessage.pathVariants,
-      );
-      final mergedPathObservations = ChannelPathSignalHelper.merge(
-        existing.pathObservations,
-        processedMessage.pathObservations,
-      );
-      final mergedPathLength = _mergePathLength(
-        existing.pathLength,
-        processedMessage.pathLength,
-        mergedPathBytes.length,
-      );
-      final newRepeatCount = existing.repeatCount + 1;
-      final promotedFromPending =
-          newRepeatCount == 1 &&
-          existing.status == ChannelMessageStatus.pending;
-      final promotedFromClient =
-          processedMessage.sourceLabel != null && !existing.isOutgoing;
-      _cancelChannelNoRetransmissionWarning(existing.messageId);
-      messages[existingIndex] = existing.copyWith(
-        receivedAt: ChannelMessageTimelineHelper.earliestReceivedAt(
-          existing,
-          processedMessage,
-        ),
-        repeatCount: newRepeatCount,
-        pathLength: mergedPathLength,
-        pathHashWidth: existing.pathHashWidth ?? processedMessage.pathHashWidth,
-        pathBytes: mergedPathBytes,
-        pathVariants: mergedPathVariants,
-        pathObservations: mergedPathObservations,
-        packetRegion: existing.packetRegion ?? processedMessage.packetRegion,
-        packetRegionInfoAvailable:
-            existing.packetRegionInfoAvailable ||
-            processedMessage.packetRegionInfoAvailable,
-        packetRegionNotMatched:
-            existing.packetRegionNotMatched ||
-            processedMessage.packetRegionNotMatched,
-        packetHash: existing.packetHash ?? processedMessage.packetHash,
-        isOutgoing: existing.isOutgoing || promotedFromClient,
-        sourceLabel: existing.sourceLabel ?? processedMessage.sourceLabel,
-        // Mark as sent when first repeat is heard
-        status: promotedFromPending || promotedFromClient
-            ? ChannelMessageStatus.sent
-            : existing.status,
-        noRetransmissionWarningSeconds: null,
-      );
-      if (promotedFromPending) {
-        _retriableChannelMessageSends.remove(existing.messageId);
-        _pendingChannelSentQueue.remove(existing.messageId);
-      }
+      _mergeChannelRepeat(messages, existingIndex, processedMessage);
     } else {
       messages.add(processedMessage);
     }
@@ -15609,6 +15848,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final storedMessage = existingIndex >= 0
         ? messages[existingIndex]
         : processedMessage;
+    // A reaction that matched nothing is stored as text but not settled, so
+    // a later copy still looks for a target that arrived in between.
+    if (reactionInfo == null) {
+      claim?.settle(HeardAsMessage(storedMessage.messageId));
+    }
     messages.sort(_compareChannelMessages);
     if (_activeChannelIndex != channelIndex) {
       _trimChannelHistoryWindow(channelIndex);
@@ -15671,6 +15915,73 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       },
     );
     return changedMessage;
+  }
+
+  /// Folds [incoming], a copy of the message at [existingIndex], into it:
+  /// the route, the readings, the region and one more repeat, and the
+  /// promotion of a pending send or of a proxied client's message to sent.
+  /// Stores the merged message in [messages] and returns it.
+  ChannelMessage _mergeChannelRepeat(
+    List<ChannelMessage> messages,
+    int existingIndex,
+    ChannelMessage incoming,
+  ) {
+    final existing = messages[existingIndex];
+    final mergedPathBytes = _selectPreferredPathBytes(
+      existing.pathBytes,
+      incoming.pathBytes,
+    );
+    final mergedPathVariants = _mergePathVariants(
+      existing.pathVariants,
+      incoming.pathVariants,
+    );
+    final mergedPathObservations = ChannelPathSignalHelper.merge(
+      existing.pathObservations,
+      incoming.pathObservations,
+    );
+    final mergedPathLength = _mergePathLength(
+      existing.pathLength,
+      incoming.pathLength,
+      mergedPathBytes.length,
+    );
+    final newRepeatCount = existing.repeatCount + 1;
+    final promotedFromPending =
+        newRepeatCount == 1 && existing.status == ChannelMessageStatus.pending;
+    final promotedFromClient =
+        incoming.sourceLabel != null && !existing.isOutgoing;
+    _cancelChannelNoRetransmissionWarning(existing.messageId);
+    final merged = existing.copyWith(
+      receivedAt: ChannelMessageTimelineHelper.earliestReceivedAt(
+        existing,
+        incoming,
+      ),
+      repeatCount: newRepeatCount,
+      pathLength: mergedPathLength,
+      pathHashWidth: existing.pathHashWidth ?? incoming.pathHashWidth,
+      pathBytes: mergedPathBytes,
+      pathVariants: mergedPathVariants,
+      pathObservations: mergedPathObservations,
+      packetRegion: existing.packetRegion ?? incoming.packetRegion,
+      packetRegionInfoAvailable:
+          existing.packetRegionInfoAvailable ||
+          incoming.packetRegionInfoAvailable,
+      packetRegionNotMatched:
+          existing.packetRegionNotMatched || incoming.packetRegionNotMatched,
+      packetHash: existing.packetHash ?? incoming.packetHash,
+      isOutgoing: existing.isOutgoing || promotedFromClient,
+      sourceLabel: existing.sourceLabel ?? incoming.sourceLabel,
+      // Mark as sent when first repeat is heard
+      status: promotedFromPending || promotedFromClient
+          ? ChannelMessageStatus.sent
+          : existing.status,
+      noRetransmissionWarningSeconds: null,
+    );
+    messages[existingIndex] = merged;
+    if (promotedFromPending) {
+      _retriableChannelMessageSends.remove(existing.messageId);
+      _pendingChannelSentQueue.remove(existing.messageId);
+    }
+    return merged;
   }
 
   int _findChannelRepeatIndex(

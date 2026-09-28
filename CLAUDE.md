@@ -995,6 +995,51 @@ per keystroke (`_composerEncoding`), so the compressor does not run twice. A pac
 and nothing here can help it; direct messages are out of reach too, their ciphertext needs the
 node's private key.
 
+### Copies of a channel packet
+
+The companion logs every packet its radio hears before it processes it
+(`Dispatcher::checkRecv`), so a channel packet the node delivers as
+`CHANNEL_MSG_RECV` reaches the app twice, as the RX-log copy first and as the
+frame after it, and every repeater in range adds one more RX-log copy. Every
+copy used to go through the whole receive path, decryption, MCMP or MCOtxt
+decoding, the reply anchor, the Ed25519 check, the contact's last-message
+write, the reaction parse, the quote resolution against the history, the
+repeat scan, the history sort and the awaited history write, and was
+recognised as a repeat only at the end, by the processed text.
+`helpers/heard_channel_packets.dart` keeps the packets heard in the last ten
+minutes by the identity every copy of one packet shares, which is what can be
+read without decoding: the channel, the packet timestamp, the sender name and
+the text as it travelled for a text packet, the hash the connector already
+computes over channel, data type and payload for a data packet. The four
+receive paths (the channel text and data frames, the RX-log text and data
+branches of `_handleLogRxData`) look a packet up right after decryption, or
+after `fromFrame`, and a known copy is folded into its message by
+`_foldHeardChannelCopy`: the route, the reading, the region and one more
+repeat through `_mergeChannelRepeat`, the merge the whole path uses as well,
+then the row is saved and the connector notifies; a copy of an applied
+reaction is dropped. A packet not in the map is claimed and processed as
+before, and `_addChannelMessage` settles the claim with the message the packet
+was stored as or merged into, or as a reaction, or abandons it when nothing
+was stored, so a copy arriving during that processing waits for the outcome
+(five seconds at most) instead of processing the packet again; the wait is
+also what keeps two copies of one reaction, inside one history write, from
+being applied twice. Our own sends are recorded when the packet timestamp is
+known (`_recordOwnChannelPacket`), so the first echo is a copy too.
+
+What the map does not do. It merges nothing the old rule would not merge:
+the key is the packet itself, where `_isChannelRepeat` takes any same-text
+message of the sender within thirty seconds of packet time and an exact copy
+at any time while the message is loaded. A copy the map misses, a message
+trimmed from memory, a packet the node re-encoded, a copy after ten minutes,
+takes the old path and its rules. A reaction that matched nothing is not
+recorded, so a later copy can still find a target that arrived in between.
+The channels listed in `doNotFilterMessagesOnChannels` never use it: their
+packets take the whole path every time, since a technical channel such as a
+node's TerminalCLI sends what a copy cannot predict. A copy no longer touches
+the contact's `lastMessageAt`, which the first receipt sets.
+`heardChannelCopiesMerged` and `heardChannelReactionCopiesDropped` count the
+short path for the tests (`test/connector/channel_packet_copies_test.dart`).
+
 ### Direct echo recovery (experimental, off by default)
 
 The same RX log shows a direct message *to us* before it arrives: the

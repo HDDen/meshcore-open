@@ -9,6 +9,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
 import 'package:meshcore_open/helpers/reaction_helper.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -99,6 +100,23 @@ Uint8List _rxLogTextFrame({
     _channelHash(psk),
     ...ChannelEchoRecovery.encryptedPayloadFor(psk, plaintext),
   ]);
+}
+
+Uint8List _key(int first) => Uint8List.fromList(
+  List<int>.generate(32, (i) => i == 0 ? first : (i * 7 + first) & 0xFF),
+);
+
+/// RESP_CODE_CONTACT for a chat contact with no route.
+Uint8List _contactFrame(Uint8List key, String name) {
+  final data = ByteData(1 + 32 + 3 + 64 + 32 + 4 + 12);
+  final bytes = data.buffer.asUint8List();
+  bytes[0] = respCodeContact;
+  bytes.setRange(1, 33, key);
+  bytes[33] = advTypeChat;
+  bytes[35] = 0xFF; // path unknown
+  bytes.setRange(100, 100 + name.length, name.codeUnits);
+  data.setUint32(132, 1700000000, Endian.little);
+  return bytes;
 }
 
 /// Lets the receive paths run to the end: they await verification and the
@@ -449,6 +467,291 @@ Future<void> main() async {
       expect(messages.single.text, 'hello');
       expect(messages.single.reactions[emoji], hasLength(1));
       expect(connector.channels.single.unreadCount, 1);
+    });
+  });
+
+  // The short path: a copy of a packet heard before is folded into its
+  // message by the heard map, before decoding, verification and the rest of
+  // the receive path. Observable through the connector's counters, the
+  // contact's last-message time and what a copy of a reply keeps.
+  group('the short path', () {
+    test('the second and every later copy of a packet fold in without the '
+        'receive path', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      expect(connector.heardChannelCopiesMerged, 0);
+
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      expect(connector.heardChannelCopiesMerged, 1);
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+          hops: const [
+            [0x22],
+          ],
+          snr: 2.5,
+          rssi: -101,
+        ),
+      );
+      await _settle();
+      expect(connector.heardChannelCopiesMerged, 2);
+
+      final message = connector
+          .getLoadedChannelMessages(connector.channels.single)
+          .single;
+      expect(message.repeatCount, 2);
+      expect(message.pathBytes, [0x22]);
+      expect(message.pathObservations, hasLength(2));
+      expect(message.snr, 2.5);
+      expect(message.rssi, -101);
+    });
+
+    test('a copy heard while the first copy is still being processed waits '
+        'for it and folds in', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+
+      final messages = connector.getLoadedChannelMessages(
+        connector.channels.single,
+      );
+      expect(messages, hasLength(1));
+      expect(messages.single.repeatCount, 1);
+      expect(connector.heardChannelCopiesMerged, 1);
+    });
+
+    test('a copy of a reply keeps the text and the target the first copy '
+        'resolved', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Bob',
+          text: 'hello world',
+        ),
+      );
+      await _settle();
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp + 5,
+          senderName: 'Alice',
+          text: '@[Bob] >hello\nnice',
+        ),
+      );
+      await _settle();
+      final channel = connector.channels.single;
+      final reply = connector
+          .getLoadedChannelMessages(channel)
+          .firstWhere((message) => message.senderName == 'Alice');
+      expect(reply.replyToSenderName, 'Bob');
+      final textBefore = reply.text;
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp + 5,
+          senderName: 'Alice',
+          text: '@[Bob] >hello\nnice',
+          hops: const [
+            [0x22],
+          ],
+        ),
+      );
+      await _settle();
+
+      final messages = connector.getLoadedChannelMessages(channel);
+      expect(messages, hasLength(2));
+      final replyAfter = messages.firstWhere(
+        (message) => message.senderName == 'Alice',
+      );
+      expect(replyAfter.text, textBefore);
+      expect(replyAfter.replyToSenderName, 'Bob');
+      expect(replyAfter.repeatCount, 1);
+      expect(connector.heardChannelCopiesMerged, 1);
+    });
+
+    test('copies of an applied reaction are dropped before the receive path',
+        () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      final emoji = ReactionHelper.reactionEmojis.first;
+      final reaction = ReactionHelper.encodeReaction(
+        ReactionHelper.computeReactionHash(_timestamp, 'Alice', 'hello'),
+        ReactionHelper.emojiToIndex(emoji)!,
+      );
+
+      // Back to back: the copies wait for the first copy's outcome.
+      for (final hops in const <List<List<int>>>[
+        [],
+        [
+          [0x22],
+        ],
+        [
+          [0x33],
+        ],
+      ]) {
+        connector.handleFrameForTest(
+          _rxLogTextFrame(
+            psk: psk,
+            timestampSeconds: _timestamp + 20,
+            senderName: 'Bob',
+            text: reaction,
+            hops: hops,
+          ),
+        );
+      }
+      await _settle();
+
+      final messages = connector.getLoadedChannelMessages(
+        connector.channels.single,
+      );
+      expect(messages, hasLength(1));
+      expect(messages.single.reactions[emoji], hasLength(1));
+      expect(connector.heardChannelReactionCopiesDropped, 2);
+      expect(connector.heardChannelCopiesMerged, 0);
+    });
+
+    test('a contact\'s last message time is the first copy\'s', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      connector.handleFrameForTest(_contactFrame(_key(0x33), 'Alice'));
+      await _settle();
+      expect(connector.contacts.map((contact) => contact.name).toList(), [
+        'Alice',
+      ]);
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      final first = connector.contacts.single.lastMessageAt;
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+          hops: const [
+            [0x22],
+          ],
+        ),
+      );
+      await _settle();
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+
+      expect(connector.contacts.single.lastMessageAt, first);
+      expect(connector.heardChannelCopiesMerged, 2);
+    });
+
+    test('a channel the do-not-filter setting lists keeps the whole path',
+        () async {
+      final settings = AppSettingsService();
+      await settings.updateSettings(
+        settings.settings.copyWith(
+          notificationsEnabled: false,
+          notifyOnNewChannelMessage: false,
+          doNotFilterMessagesOnChannels: 'Test',
+        ),
+      );
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      connector.attachAppSettingsServiceForTest(settings);
+
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+          hops: const [
+            [0x22],
+          ],
+        ),
+      );
+      await _settle();
+
+      final messages = connector.getLoadedChannelMessages(
+        connector.channels.single,
+      );
+      expect(messages, hasLength(1));
+      expect(messages.single.repeatCount, 2);
+      expect(connector.heardChannelCopiesMerged, 0);
     });
   });
 }
