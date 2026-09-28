@@ -80,7 +80,9 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
       return;
     }
     if (value == null) {
-      await PrefsManager.instance.remove(key);
+      if (PrefsManager.instance.containsKey(key)) {
+        await PrefsManager.instance.remove(key);
+      }
     } else {
       await write(key, value);
     }
@@ -338,10 +340,14 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
       keyForWidgetTextColor,
       keyForUrlImages,
     ];
+    final prefs = PrefsManager.instance;
     for (final prefix in prefixes) {
       final nameKey = channelStorageKey(prefix, channelIndex);
-      if (nameKey != null) await PrefsManager.instance.remove(nameKey);
-      await PrefsManager.instance.remove('$prefix$channelIndex');
+      if (nameKey != null && prefs.containsKey(nameKey)) {
+        await prefs.remove(nameKey);
+      }
+      final indexKey = '$prefix$channelIndex';
+      if (prefs.containsKey(indexKey)) await prefs.remove(indexKey);
     }
   }
 }

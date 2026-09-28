@@ -2,8 +2,11 @@ import 'dart:convert';
 
 import '../models/channel_group.dart';
 import '../utils/app_logger.dart';
-import 'prefs_manager.dart';
+import 'node_state.dart';
 
+/// Channel groups, the groups shown expanded and the manual screen order,
+/// per node: three `node_state` rows, or the preference keys they always
+/// had where there is no database.
 class ChannelGroupStore {
   static const String _keyPrefix = 'channel_groups';
   static const String _expandedKeyPrefix = 'channel_groups_expanded';
@@ -17,14 +20,27 @@ class ChannelGroupStore {
   String get expandedKeyFor => '$_expandedKeyPrefix$publicKeyHex';
   String get screenOrderKeyFor => '$_screenOrderKeyPrefix$publicKeyHex';
 
+  Future<String?> _read(String name, String preferenceKey) => NodeState.read(
+    nodeKey: publicKeyHex,
+    name: name,
+    preferenceKey: preferenceKey,
+  );
+
+  Future<void> _write(String name, String preferenceKey, String value) =>
+      NodeState.write(
+        nodeKey: publicKeyHex,
+        name: name,
+        preferenceKey: preferenceKey,
+        value: value,
+      );
+
   Future<List<ChannelGroup>> loadGroups() async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load channel groups.');
       return [];
     }
 
-    final prefs = PrefsManager.instance;
-    final jsonString = prefs.getString(keyFor);
+    final jsonString = await _read(_keyPrefix, keyFor);
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
@@ -50,9 +66,8 @@ class ChannelGroupStore {
       return;
     }
 
-    final prefs = PrefsManager.instance;
     final encoded = jsonEncode(groups.map((group) => group.toJson()).toList());
-    await prefs.setString(keyFor, encoded);
+    await _write(_keyPrefix, keyFor, encoded);
   }
 
   Future<Set<String>> loadExpandedGroupNames() async {
@@ -63,8 +78,7 @@ class ChannelGroupStore {
       return <String>{};
     }
 
-    final prefs = PrefsManager.instance;
-    final jsonString = prefs.getString(expandedKeyFor);
+    final jsonString = await _read(_expandedKeyPrefix, expandedKeyFor);
     if (jsonString == null || jsonString.isEmpty) {
       return <String>{};
     }
@@ -91,8 +105,7 @@ class ChannelGroupStore {
       return;
     }
 
-    final prefs = PrefsManager.instance;
-    await prefs.setString(expandedKeyFor, jsonEncode(names.toList()));
+    await _write(_expandedKeyPrefix, expandedKeyFor, jsonEncode(names.toList()));
   }
 
   Future<List<String>> loadScreenOrder() async {
@@ -103,8 +116,7 @@ class ChannelGroupStore {
       return [];
     }
 
-    final prefs = PrefsManager.instance;
-    final jsonString = prefs.getString(screenOrderKeyFor);
+    final jsonString = await _read(_screenOrderKeyPrefix, screenOrderKeyFor);
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
@@ -131,7 +143,6 @@ class ChannelGroupStore {
       return;
     }
 
-    final prefs = PrefsManager.instance;
-    await prefs.setString(screenOrderKeyFor, jsonEncode(order));
+    await _write(_screenOrderKeyPrefix, screenOrderKeyFor, jsonEncode(order));
   }
 }

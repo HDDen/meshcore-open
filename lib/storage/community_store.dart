@@ -2,15 +2,17 @@ import 'dart:convert';
 
 import '../models/community.dart';
 import '../utils/app_logger.dart';
-import 'prefs_manager.dart';
+import 'node_state.dart';
 
-/// Persists communities to local storage using SharedPreferences.
+/// Persists communities per node: a `node_state` row named `communities`
+/// holding one JSON array, or the preference key `communities_v1<node>`
+/// where there is no database.
 ///
-/// Communities are stored as a JSON array under a single key.
 /// Each community contains its secret K, so this data should
 /// be considered sensitive (though device encryption handles security).
 class CommunityStore {
   static const String _keyPrefix = 'communities_v1';
+  static const String _stateName = 'communities';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -24,22 +26,16 @@ class CommunityStore {
       appLogger.warn('Public key hex is not set. Cannot load communities.');
       return [];
     }
-    final prefs = PrefsManager.instance;
-    String? jsonString = prefs.getString(keyFor);
+    String? jsonString = await NodeState.read(
+      nodeKey: publicKeyHex,
+      name: _stateName,
+      preferenceKey: keyFor,
+    );
     if (jsonString == null || jsonString.isEmpty) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(_keyPrefix);
-      prefs.remove(_keyPrefix);
-      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating communities from legacy key $_keyPrefix to scoped key $keyFor',
-        );
-        await prefs.setString(keyFor, legacyJsonString);
-        jsonString = legacyJsonString;
-      }
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
+      jsonString = await NodeState.takeOverLegacyPreference(
+        legacyKey: _keyPrefix,
+        preferenceKey: keyFor,
+      );
     }
     if (jsonString == null || jsonString.isEmpty) {
       return [];
@@ -69,9 +65,13 @@ class CommunityStore {
       appLogger.warn('Public key hex is not set. Cannot save communities.');
       return;
     }
-    final prefs = PrefsManager.instance;
     final jsonList = communities.map((c) => c.toJson()).toList();
-    await prefs.setString(keyFor, jsonEncode(jsonList));
+    await NodeState.write(
+      nodeKey: publicKeyHex,
+      name: _stateName,
+      preferenceKey: keyFor,
+      value: jsonEncode(jsonList),
+    );
   }
 
   /// Add a new community

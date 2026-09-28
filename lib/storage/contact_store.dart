@@ -3,8 +3,14 @@ import 'dart:typed_data';
 
 import '../models/contact.dart';
 import '../utils/app_logger.dart';
+import 'message_history_storage.dart';
+import 'node_state.dart';
 import 'prefs_manager.dart';
 
+/// The contacts a node holds. They live in the `node_contacts` table of the
+/// database, one row per contact holding the JSON [_toJson] writes; the web
+/// build, and a process that never opened the database such as a unit test,
+/// keep the whole list in preferences under `contacts<node>` as before.
 class ContactStore {
   static const String _keyPrefix = 'contacts';
 
@@ -14,27 +20,89 @@ class ContactStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
+  /// Per node, the rows the database holds, as the very contacts last loaded
+  /// or written. The connector saves its whole list on every advert it hears
+  /// and every message it stores, and an update replaces a contact rather
+  /// than changing it, so a save writes only the contacts that are not
+  /// identical to these, and deletes only against a list a load had seen.
+  final Map<String, Map<String, Contact>> _stored = {};
+
+  /// Database writes run one after another, each measured against what the
+  /// one before it left.
+  Future<void> _writes = Future.value();
+
   Future<List<Contact>> loadContacts({bool allowLegacyMigration = true}) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load contacts.');
       return [];
     }
+    final storage = MessageHistoryStorage.instance;
+    if (!storage.hasDatabase) {
+      return _loadFromPreferences(allowLegacyMigration: allowLegacyMigration);
+    }
+    final node = publicKeyHex;
+    await _writes;
+    final contacts = <Contact>[];
+    for (final row in await storage.loadNodeContacts(node)) {
+      try {
+        contacts.add(_fromJson(jsonDecode(row) as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed stored contact: $e');
+      }
+    }
+    _stored[node] = {for (final contact in contacts) contact.publicKeyHex: contact};
+    return contacts;
+  }
+
+  Future<void> saveContacts(List<Contact> contacts) {
+    if (publicKeyHex.isEmpty) {
+      appLogger.warn('Public key hex is not set. Cannot save contacts.');
+      return Future.value();
+    }
+    if (!MessageHistoryStorage.instance.hasDatabase) {
+      final jsonList = contacts.map(_toJson).toList();
+      return PrefsManager.instance.setString(keyFor, jsonEncode(jsonList));
+    }
+    // The node and the list as they are now: the caller hands in its live
+    // list, and the node may change before this write gets its turn.
+    final node = publicKeyHex;
+    final snapshot = List<Contact>.of(contacts);
+    final write = _writes.then((_) => _writeRows(node, snapshot));
+    _writes = write.catchError((Object _) {});
+    return write;
+  }
+
+  Future<void> _writeRows(String node, List<Contact> contacts) async {
+    final stored = _stored[node];
+    final next = {
+      for (final contact in contacts) contact.publicKeyHex: contact,
+    };
+    await MessageHistoryStorage.instance.writeNodeContacts(
+      nodeKey: node,
+      upserts: {
+        for (final entry in next.entries)
+          if (!identical(stored?[entry.key], entry.value))
+            entry.key: jsonEncode(_toJson(entry.value)),
+      },
+      deleteKeys: [
+        if (stored != null)
+          for (final key in stored.keys)
+            if (!next.containsKey(key)) key,
+      ],
+    );
+    _stored[node] = next;
+  }
+
+  Future<List<Contact>> _loadFromPreferences({
+    required bool allowLegacyMigration,
+  }) async {
     final prefs = PrefsManager.instance;
     String? jsonString = prefs.getString(keyFor);
     if ((jsonString == null || jsonString.isEmpty) && allowLegacyMigration) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(_keyPrefix);
-      prefs.remove(_keyPrefix);
-      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating contacts from legacy key $_keyPrefix to scoped key $keyFor',
-        );
-        await prefs.setString(keyFor, legacyJsonString);
-        jsonString = legacyJsonString;
-      }
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
+      jsonString = await NodeState.takeOverLegacyPreference(
+        legacyKey: _keyPrefix,
+        preferenceKey: keyFor,
+      );
     }
     if (jsonString == null || jsonString.isEmpty) {
       return [];
@@ -56,16 +124,6 @@ class ContactStore {
       }
     }
     return contacts;
-  }
-
-  Future<void> saveContacts(List<Contact> contacts) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn('Public key hex is not set. Cannot save contacts.');
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final jsonList = contacts.map(_toJson).toList();
-    await prefs.setString(keyFor, jsonEncode(jsonList));
   }
 
   Map<String, dynamic> _toJson(Contact contact) {

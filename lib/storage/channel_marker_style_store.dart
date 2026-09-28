@@ -45,7 +45,9 @@ class ChannelMarkerStyleStore {
       return;
     }
     if (styles.isEmpty) {
-      await PrefsManager.instance.remove(keyFor);
+      if (PrefsManager.instance.containsKey(keyFor)) {
+        await PrefsManager.instance.remove(keyFor);
+      }
       return;
     }
     final persisted = <String, dynamic>{

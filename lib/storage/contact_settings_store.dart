@@ -46,7 +46,7 @@ class ContactSettingsStore {
     if (enabled == null) {
       // Attempt migration from legacy unscoped key on first load
       enabled = prefs.getBool(oldKey);
-      prefs.remove(oldKey);
+      if (prefs.containsKey(oldKey)) prefs.remove(oldKey);
       if (enabled != null) {
         appLogger.info(
           'Migrating contact settings from legacy key $oldKey to scoped key $key',
@@ -342,7 +342,7 @@ class ContactSettingsStore {
     final prefs = PrefsManager.instance;
     final key = '${keyForCyr2Lat}profile_$contactKeyHex';
     if (profileId == null) {
-      await prefs.remove(key);
+      if (prefs.containsKey(key)) await prefs.remove(key);
     } else {
       await prefs.setString(key, profileId);
     }

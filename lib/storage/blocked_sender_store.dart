@@ -140,7 +140,9 @@ class BlockedSenderStore {
 
   Future<void> save(Map<String, BlockedSenderRule> rules) async {
     if (rules.isEmpty) {
-      await PrefsManager.instance.remove(_key);
+      if (PrefsManager.instance.containsKey(_key)) {
+        await PrefsManager.instance.remove(_key);
+      }
       return;
     }
     final persisted = <String, dynamic>{

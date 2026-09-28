@@ -16,6 +16,10 @@ Future<void> _init(Map<String, Object> values) async {
 }
 
 void main() {
+  // PrefsManager.initialize looks for the preferences file through
+  // path_provider on Windows and Linux, which needs the binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('community store keeps valid communities next to a bad one', () async {
     final community = Community.create(id: 'c1', name: 'Ops');
     await _init({

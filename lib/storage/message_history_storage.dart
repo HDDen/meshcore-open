@@ -121,6 +121,7 @@ class MessageHistoryStorage {
       }
       await _moveDiscoveredContacts(prefs, database);
       await _moveWardriveData(prefs, database);
+      await _moveNodeCollections(prefs, database);
 
       await _refreshCaches();
       _initialized = true;
@@ -237,6 +238,9 @@ class MessageHistoryStorage {
       ..addAll(
         await _database!.markerStorageKeys(MessageHistoryKind.direct.index),
       );
+    _nodeNames
+      ..clear()
+      ..addAll(await _database!.readNodeStateByName(_nodeIdentityStateName));
   }
 
   Future<void> restartAfterMigration() async {
@@ -582,6 +586,348 @@ class MessageHistoryStorage {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // The collections a node keeps: contacts, channels, path histories,
+  // delivery observations and the small per-node values, moved out of their
+  // preference blobs once and read and written by their stores through the
+  // methods after the move.
+
+  static const String _nodeIdentityStateName = 'node_identity';
+  static const String _deliveryObservationsKey = 'delivery_observations';
+  static final RegExp _nodeContactsKey = RegExp(r'^contacts([0-9a-fA-F]{10})$');
+  static final RegExp _nodeChannelsKey = RegExp(r'^channels([0-9a-fA-F]{10})$');
+  static final RegExp _scopedPathHistoryKey = RegExp(
+    r'^path_history_([0-9a-fA-F]{10})_([0-9a-fA-F]{64})$',
+  );
+  static final RegExp _sharedPathHistoryKey = RegExp(
+    r'^path_history_([0-9a-fA-F]{64})$',
+  );
+
+  /// The per-node preference keys that become `node_state` rows: the key is
+  /// the prefix with the node appended, the row name is the value.
+  static const Map<String, String> _nodeStateKeyPrefixes = {
+    'channel_order_': 'channel_order',
+    'channel_groups_expanded': 'channel_groups_expanded',
+    'channel_screen_order': 'channel_screen_order',
+    'channel_groups': 'channel_groups',
+    'contact_groups': 'contact_groups',
+    'communities_v1': 'communities',
+    'node_identity_': 'node_identity',
+  };
+
+  /// App-wide preference keys that become `node_state` rows under the empty
+  /// node key, named as the key.
+  static const List<String> _appStateKeys = [
+    'repeater_passwords',
+    'repeater_auto_clock_sync_after_login',
+  ];
+
+  /// The node's own name per node key, read once at startup so that
+  /// `NodeIdentityStore.loadName` stays synchronous, as the connector reads
+  /// it while naming offline scopes.
+  final Map<String, String> _nodeNames = {};
+
+  /// Moves the node collections out of preferences, once, in one
+  /// transaction, and removes the keys after the commit; a row already in a
+  /// table wins, so a move cut short between the two runs again without
+  /// touching newer rows, and a failure leaves every key for the next launch.
+  /// A path history written before the keys carried a node goes under the
+  /// empty node key, the shared row every node reads until it saves its own,
+  /// which is what the preference fallback did. An element that is not a
+  /// record is skipped; a blob that is not JSON at all stays where it is.
+  /// The bare keys of the time before scoping (`contacts`, `channels` and
+  /// the like) are left alone: only the preference form of the stores ever
+  /// read them.
+  Future<void> _moveNodeCollections(
+    SharedPreferences prefs,
+    MessageHistoryDatabase database,
+  ) async {
+    final contacts = <NodeContactRow>[];
+    final channels = <NodeChannelRow>[];
+    final histories = <PathHistoryRow>[];
+    final observations = <String>[];
+    final state = <NodeStateRow>[];
+    final moved = <String>[];
+    var skipped = 0;
+
+    String? stringOf(String key) {
+      final value = prefs.get(key);
+      return value is String ? value : null;
+    }
+
+    List<dynamic>? listOf(String key) {
+      final value = stringOf(key);
+      if (value == null) return null;
+      try {
+        final decoded = jsonDecode(value);
+        return decoded is List ? decoded : null;
+      } on FormatException {
+        return null;
+      }
+    }
+
+    for (final key in prefs.getKeys()) {
+      var match = _nodeContactsKey.firstMatch(key);
+      if (match != null) {
+        final entries = listOf(key);
+        if (entries == null) continue;
+        for (final entry in entries) {
+          final contactKey = _discoveredContactKey(entry);
+          if (contactKey == null) {
+            skipped++;
+            continue;
+          }
+          contacts.add((
+            nodeKey: match.group(1)!.toLowerCase(),
+            contactKey: contactKey,
+            contactJson: jsonEncode(entry),
+          ));
+        }
+        moved.add(key);
+        continue;
+      }
+      match = _nodeChannelsKey.firstMatch(key);
+      if (match != null) {
+        final entries = listOf(key);
+        if (entries == null) continue;
+        for (final entry in entries) {
+          final index = entry is Map ? entry['index'] : null;
+          if (index is! int) {
+            skipped++;
+            continue;
+          }
+          channels.add((
+            nodeKey: match.group(1)!.toLowerCase(),
+            channelIndex: index,
+            channelJson: jsonEncode(entry),
+          ));
+        }
+        moved.add(key);
+        continue;
+      }
+      match = _scopedPathHistoryKey.firstMatch(key);
+      final shared = match == null ? _sharedPathHistoryKey.firstMatch(key) : null;
+      if (match != null || shared != null) {
+        final value = stringOf(key);
+        if (value == null) continue;
+        Object? decoded;
+        try {
+          decoded = jsonDecode(value);
+        } on FormatException {
+          decoded = null;
+        }
+        if (decoded is Map) {
+          histories.add((
+            nodeKey: match?.group(1)?.toLowerCase() ?? '',
+            contactKey: (match?.group(2) ?? shared!.group(1)!).toLowerCase(),
+            historyJson: value,
+          ));
+        } else {
+          skipped++;
+        }
+        moved.add(key);
+        continue;
+      }
+      if (key == _deliveryObservationsKey) {
+        final entries = listOf(key);
+        if (entries == null) continue;
+        final records = entries.whereType<Map>().toList();
+        final start = records.length > 100 ? records.length - 100 : 0;
+        for (final record in records.sublist(start)) {
+          observations.add(jsonEncode(record));
+        }
+        skipped += entries.length - records.length;
+        moved.add(key);
+        continue;
+      }
+      var matched = false;
+      for (final prefix in _nodeStateKeyPrefixes.entries) {
+        final node = RegExp(
+          '^${RegExp.escape(prefix.key)}([0-9a-fA-F]{10})\$',
+        ).firstMatch(key);
+        if (node == null) continue;
+        final value = stringOf(key);
+        if (value != null) {
+          state.add((
+            nodeKey: node.group(1)!.toLowerCase(),
+            name: prefix.value,
+            value: value,
+          ));
+          moved.add(key);
+        }
+        matched = true;
+        break;
+      }
+      if (matched) continue;
+      if (_appStateKeys.contains(key)) {
+        final value = stringOf(key);
+        if (value == null) continue;
+        state.add((nodeKey: '', name: key, value: value));
+        moved.add(key);
+      }
+    }
+    if (moved.isEmpty) return;
+    try {
+      await database.importNodeCollections(
+        contacts: contacts,
+        channels: channels,
+        histories: histories,
+        observations: observations,
+        state: state,
+      );
+      for (final key in moved) {
+        await prefs.remove(key);
+      }
+      developer.log(
+        'Moved ${contacts.length} contacts, ${channels.length} channels, '
+        '${histories.length} path histories, ${observations.length} delivery '
+        'observations and ${state.length} node values out of ${moved.length} '
+        'preference keys into the database'
+        '${skipped > 0 ? ', skipped $skipped unreadable elements' : ''}',
+        name: 'MessageHistoryMigration',
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'The node collections stay in preferences for now: $error',
+        name: 'MessageHistoryMigration',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<List<String>> loadNodeContacts(String nodeKey) async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readNodeContacts(nodeKey.toLowerCase());
+  }
+
+  Future<void> writeNodeContacts({
+    required String nodeKey,
+    required Map<String, String> upserts,
+    required List<String> deleteKeys,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.writeNodeContacts(
+      nodeKey: nodeKey.toLowerCase(),
+      upserts: upserts,
+      deleteKeys: deleteKeys,
+    );
+  }
+
+  Future<List<String>> loadNodeChannels(String nodeKey) async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readNodeChannels(nodeKey.toLowerCase());
+  }
+
+  Future<void> writeNodeChannels({
+    required String nodeKey,
+    required Map<int, String> upserts,
+    required List<int> deleteIndexes,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.writeNodeChannels(
+      nodeKey: nodeKey.toLowerCase(),
+      upserts: upserts,
+      deleteIndexes: deleteIndexes,
+    );
+  }
+
+  /// The history of [nodeKey] for the contact, else the shared one; the
+  /// empty node key reads the shared row alone.
+  Future<String?> loadPathHistoryJson(String nodeKey, String contactKey) async {
+    _requireInitialized();
+    if (kIsWeb) return null;
+    return _database!.readPathHistory(
+      nodeKey.toLowerCase(),
+      contactKey.toLowerCase(),
+    );
+  }
+
+  Future<void> savePathHistoryJson({
+    required String nodeKey,
+    required String contactKey,
+    required String historyJson,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.writePathHistory(
+      nodeKey: nodeKey.toLowerCase(),
+      contactKey: contactKey.toLowerCase(),
+      historyJson: historyJson,
+    );
+  }
+
+  Future<void> deletePathHistory(String nodeKey, String contactKey) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.deletePathHistory(
+      nodeKey.toLowerCase(),
+      contactKey.toLowerCase(),
+    );
+  }
+
+  Future<void> clearPathHistories() async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.clearPathHistories();
+  }
+
+  Future<List<String>> loadDeliveryObservations() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readDeliveryObservations();
+  }
+
+  Future<void> replaceDeliveryObservations(List<String> observations) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.replaceDeliveryObservations(observations);
+  }
+
+  Future<String?> readNodeState(String nodeKey, String name) async {
+    _requireInitialized();
+    if (kIsWeb) return null;
+    return _database!.readNodeState(nodeKey.toLowerCase(), name);
+  }
+
+  Future<void> writeNodeState({
+    required String nodeKey,
+    required String name,
+    required String value,
+  }) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.writeNodeState(
+      nodeKey: nodeKey.toLowerCase(),
+      name: name,
+      value: value,
+    );
+  }
+
+  Future<void> deleteNodeState(String nodeKey, String name) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.deleteNodeState(nodeKey.toLowerCase(), name);
+  }
+
+  /// The node's own name as last saved, from the cache read at startup.
+  String? nodeName(String nodeKey) => _nodeNames[nodeKey.toLowerCase()];
+
+  Future<void> saveNodeName(String nodeKey, String name) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    _nodeNames[nodeKey.toLowerCase()] = name;
+    await _database!.writeNodeState(
+      nodeKey: nodeKey.toLowerCase(),
+      name: _nodeIdentityStateName,
+      value: name,
+    );
+  }
+
   Future<bool> insertWardriveSample(
     WardriveSampleRow row, {
     required int cap,
@@ -675,6 +1021,7 @@ class MessageHistoryStorage {
       keys.clear();
     }
     _directMarkerKeys.clear();
+    _nodeNames.clear();
     _initialized = false;
   }
 

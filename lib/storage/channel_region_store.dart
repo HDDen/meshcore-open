@@ -11,6 +11,14 @@ class ChannelRegionStore with ChannelNameKeyedStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
+  /// Reads and never writes: the connector loads every channel's region at
+  /// the handshake and again per synced channel, and on Windows and Linux
+  /// each write rewrites the whole preferences file, so a load that tidied
+  /// the stored value cost several full rewrites per named channel and
+  /// connection. A value stored under the slot number of the time before
+  /// the keys carried the channel name is read as it is; [saveRegion] moves
+  /// it, and a stored value that only needs trimming is trimmed on the way
+  /// out.
   Future<String> loadRegion(int channelIndex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
@@ -23,22 +31,9 @@ class ChannelRegionStore with ChannelNameKeyedStore {
     if (key == null) return '';
     String? region = prefs.getString(key);
     if (region == null && allowsLegacyIndexMigration) {
-      final legacyKey = '$keyFor$channelIndex';
-      region = prefs.getString(legacyKey);
-      if (region != null) {
-        await prefs.setString(key, region);
-        await prefs.remove(legacyKey);
-      }
+      region = prefs.getString('$keyFor$channelIndex');
     }
-    final normalized = region?.trim() ?? '';
-    if (normalized.isEmpty) {
-      await clearRegion(channelIndex);
-      return '';
-    }
-    if (normalized != region) {
-      await prefs.setString(key, normalized);
-    }
-    return normalized;
+    return region?.trim() ?? '';
   }
 
   Future<String> saveRegion(int channelIndex, String region) async {
@@ -59,13 +54,17 @@ class ChannelRegionStore with ChannelNameKeyedStore {
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return '';
     await prefs.setString(key, normalized);
+    final legacyKey = '$keyFor$channelIndex';
+    if (prefs.containsKey(legacyKey)) await prefs.remove(legacyKey);
     return normalized;
   }
 
   Future<void> clearRegion(int channelIndex) async {
     final prefs = PrefsManager.instance;
     final key = channelStorageKey(keyFor, channelIndex);
-    if (key != null) await prefs.remove(key);
-    await prefs.remove('$keyFor$channelIndex');
+    // A removal of a key that is not there still rewrites the whole file.
+    if (key != null && prefs.containsKey(key)) await prefs.remove(key);
+    final legacyKey = '$keyFor$channelIndex';
+    if (prefs.containsKey(legacyKey)) await prefs.remove(legacyKey);
   }
 }

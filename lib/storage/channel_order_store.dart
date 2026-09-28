@@ -1,9 +1,13 @@
 import 'dart:convert';
 import '../utils/app_logger.dart';
-import 'prefs_manager.dart';
+import 'node_state.dart';
 
+/// The user's channel order per node: a `node_state` row named
+/// `channel_order`, or the preference key `channel_order_<node>` where there
+/// is no database.
 class ChannelOrderStore {
   static const String _keyPrefix = 'channel_order_';
+  static const String _stateName = 'channel_order';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -16,8 +20,12 @@ class ChannelOrderStore {
       appLogger.warn('Public key hex is not set. Cannot save channel order.');
       return;
     }
-    final prefs = PrefsManager.instance;
-    await prefs.setString(keyFor, jsonEncode(order));
+    await NodeState.write(
+      nodeKey: publicKeyHex,
+      name: _stateName,
+      preferenceKey: keyFor,
+      value: jsonEncode(order),
+    );
   }
 
   Future<List<int>> loadChannelOrder({bool allowLegacyMigration = true}) async {
@@ -25,19 +33,16 @@ class ChannelOrderStore {
       appLogger.warn('Public key hex is not set. Cannot load channel order.');
       return [];
     }
-    final prefs = PrefsManager.instance;
-    String? jsonString = prefs.getString(keyFor);
+    String? jsonString = await NodeState.read(
+      nodeKey: publicKeyHex,
+      name: _stateName,
+      preferenceKey: keyFor,
+    );
     if ((jsonString == null || jsonString.isEmpty) && allowLegacyMigration) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(_keyPrefix);
-      prefs.remove(_keyPrefix);
-      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating channel order from legacy key $_keyPrefix to scoped key $keyFor',
-        );
-        await prefs.setString(keyFor, legacyJsonString);
-        jsonString = legacyJsonString;
-      }
+      jsonString = await NodeState.takeOverLegacyPreference(
+        legacyKey: _keyPrefix,
+        preferenceKey: keyFor,
+      );
     }
     if (jsonString == null || jsonString.isEmpty) {
       return [];

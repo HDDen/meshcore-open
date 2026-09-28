@@ -204,6 +204,22 @@ class LegacyQuarantineRetryResult {
 
 /// One wardrive sample as the `wardrive_samples` table takes it: the JSON the
 /// store reads back, plus the columns its queries order and filter by.
+typedef NodeContactRow = ({
+  String nodeKey,
+  String contactKey,
+  String contactJson,
+});
+
+typedef NodeChannelRow = ({String nodeKey, int channelIndex, String channelJson});
+
+typedef PathHistoryRow = ({
+  String nodeKey,
+  String contactKey,
+  String historyJson,
+});
+
+typedef NodeStateRow = ({String nodeKey, String name, String value});
+
 typedef WardriveSampleRow = ({
   String id,
   int timestampMs,
@@ -413,6 +429,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureContactSettingsTable();
     await _ensureDiscoveredContactsTable();
     await _ensureWardriveTables();
+    await _ensureNodeCollectionTables();
   }
 
   Future<void> _ensureLegacyRejectedMessagesTable() async {
@@ -633,6 +650,358 @@ ON CONFLICT(public_key_hex) DO NOTHING
             Variable<String>(entry.key),
             Variable<String>(entry.value),
           ],
+        );
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // The collections a node keeps, formerly one preference blob each: the
+  // contacts and channels of a node one row per item, a contact's path
+  // history one row per contact, the delivery observations one row each,
+  // and the small per-node collections (channel order and groups, contact
+  // groups, communities, the node's name) as one JSON value per node and
+  // name in `node_state`, app-wide values under the empty node key. Every
+  // JSON is what the store always wrote; the columns are only what the
+  // queries need.
+
+  Future<void> _ensureNodeCollectionTables() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS node_contacts (
+  node_key TEXT NOT NULL,
+  contact_key TEXT NOT NULL,
+  contact_json TEXT NOT NULL,
+  PRIMARY KEY (node_key, contact_key)
+)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS node_channels (
+  node_key TEXT NOT NULL,
+  channel_index INTEGER NOT NULL,
+  channel_json TEXT NOT NULL,
+  PRIMARY KEY (node_key, channel_index)
+)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS contact_path_history (
+  node_key TEXT NOT NULL,
+  contact_key TEXT NOT NULL,
+  history_json TEXT NOT NULL,
+  PRIMARY KEY (node_key, contact_key)
+)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS delivery_observations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  observation_json TEXT NOT NULL
+)
+''');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS node_state (
+  node_key TEXT NOT NULL,
+  name TEXT NOT NULL,
+  value TEXT NOT NULL,
+  PRIMARY KEY (node_key, name)
+)
+''');
+  }
+
+  /// A node's contacts, in the order their rows were first written: an
+  /// update keeps its row, so this is the order the list keeps.
+  Future<List<String>> readNodeContacts(String nodeKey) async {
+    final rows = await customSelect(
+      'SELECT contact_json FROM node_contacts WHERE node_key = ? ORDER BY rowid',
+      variables: [Variable<String>(nodeKey)],
+    ).get();
+    return [for (final row in rows) row.read<String>('contact_json')];
+  }
+
+  /// Writes [upserts] (contact JSON by public key) and removes [deleteKeys]
+  /// of one node, in one transaction.
+  Future<void> writeNodeContacts({
+    required String nodeKey,
+    required Map<String, String> upserts,
+    required List<String> deleteKeys,
+  }) async {
+    if (upserts.isEmpty && deleteKeys.isEmpty) return;
+    await transaction(() async {
+      for (final key in deleteKeys) {
+        await customUpdate(
+          'DELETE FROM node_contacts WHERE node_key = ? AND contact_key = ?',
+          variables: [Variable<String>(nodeKey), Variable<String>(key)],
+          updateKind: UpdateKind.delete,
+        );
+      }
+      for (final entry in upserts.entries) {
+        await customInsert(
+          '''
+INSERT INTO node_contacts (node_key, contact_key, contact_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, contact_key) DO UPDATE SET contact_json = excluded.contact_json
+''',
+          variables: [
+            Variable<String>(nodeKey),
+            Variable<String>(entry.key),
+            Variable<String>(entry.value),
+          ],
+        );
+      }
+    });
+  }
+
+  /// A node's channels in slot order, as JSON.
+  Future<List<String>> readNodeChannels(String nodeKey) async {
+    final rows = await customSelect(
+      '''
+SELECT channel_json FROM node_channels
+WHERE node_key = ? ORDER BY channel_index
+''',
+      variables: [Variable<String>(nodeKey)],
+    ).get();
+    return [for (final row in rows) row.read<String>('channel_json')];
+  }
+
+  Future<void> writeNodeChannels({
+    required String nodeKey,
+    required Map<int, String> upserts,
+    required List<int> deleteIndexes,
+  }) async {
+    if (upserts.isEmpty && deleteIndexes.isEmpty) return;
+    await transaction(() async {
+      for (final index in deleteIndexes) {
+        await customUpdate(
+          'DELETE FROM node_channels WHERE node_key = ? AND channel_index = ?',
+          variables: [Variable<String>(nodeKey), Variable<int>(index)],
+          updateKind: UpdateKind.delete,
+        );
+      }
+      for (final entry in upserts.entries) {
+        await customInsert(
+          '''
+INSERT INTO node_channels (node_key, channel_index, channel_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, channel_index) DO UPDATE SET channel_json = excluded.channel_json
+''',
+          variables: [
+            Variable<String>(nodeKey),
+            Variable<int>(entry.key),
+            Variable<String>(entry.value),
+          ],
+        );
+      }
+    });
+  }
+
+  /// A contact's path history for [nodeKey], or the shared row under the
+  /// empty node key, which is where the histories written before the keys
+  /// carried a node went: every node reads it until it saves its own.
+  Future<String?> readPathHistory(String nodeKey, String contactKey) async {
+    final rows = await customSelect(
+      '''
+SELECT node_key, history_json FROM contact_path_history
+WHERE contact_key = ? AND node_key IN (?, '')
+''',
+      variables: [Variable<String>(contactKey), Variable<String>(nodeKey)],
+    ).get();
+    String? shared;
+    for (final row in rows) {
+      if (row.read<String>('node_key') == nodeKey) {
+        return row.read<String>('history_json');
+      }
+      shared = row.read<String>('history_json');
+    }
+    return shared;
+  }
+
+  Future<void> writePathHistory({
+    required String nodeKey,
+    required String contactKey,
+    required String historyJson,
+  }) async {
+    await customInsert(
+      '''
+INSERT INTO contact_path_history (node_key, contact_key, history_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, contact_key) DO UPDATE SET history_json = excluded.history_json
+''',
+      variables: [
+        Variable<String>(nodeKey),
+        Variable<String>(contactKey),
+        Variable<String>(historyJson),
+      ],
+    );
+  }
+
+  /// Removes the contact's history of [nodeKey] and the shared one.
+  Future<void> deletePathHistory(String nodeKey, String contactKey) async {
+    await customUpdate(
+      '''
+DELETE FROM contact_path_history
+WHERE contact_key = ? AND node_key IN (?, '')
+''',
+      variables: [Variable<String>(contactKey), Variable<String>(nodeKey)],
+      updateKind: UpdateKind.delete,
+    );
+  }
+
+  Future<void> clearPathHistories() => customUpdate(
+    'DELETE FROM contact_path_history',
+    updateKind: UpdateKind.delete,
+  );
+
+  Future<List<String>> readDeliveryObservations() async {
+    final rows = await customSelect(
+      'SELECT observation_json FROM delivery_observations ORDER BY id',
+    ).get();
+    return [for (final row in rows) row.read<String>('observation_json')];
+  }
+
+  /// Replaces the observations with [observations], in one transaction; the
+  /// service hands over its whole capped list.
+  Future<void> replaceDeliveryObservations(List<String> observations) async {
+    await transaction(() async {
+      await customUpdate(
+        'DELETE FROM delivery_observations',
+        updateKind: UpdateKind.delete,
+      );
+      for (final observation in observations) {
+        await customInsert(
+          'INSERT INTO delivery_observations (observation_json) VALUES (?)',
+          variables: [Variable<String>(observation)],
+        );
+      }
+    });
+  }
+
+  Future<String?> readNodeState(String nodeKey, String name) async {
+    final row = await customSelect(
+      'SELECT value FROM node_state WHERE node_key = ? AND name = ?',
+      variables: [Variable<String>(nodeKey), Variable<String>(name)],
+    ).getSingleOrNull();
+    return row?.read<String>('value');
+  }
+
+  /// The value named [name] of every node that has one, by node key.
+  Future<Map<String, String>> readNodeStateByName(String name) async {
+    final rows = await customSelect(
+      'SELECT node_key, value FROM node_state WHERE name = ?',
+      variables: [Variable<String>(name)],
+    ).get();
+    return {
+      for (final row in rows)
+        row.read<String>('node_key'): row.read<String>('value'),
+    };
+  }
+
+  Future<void> writeNodeState({
+    required String nodeKey,
+    required String name,
+    required String value,
+  }) async {
+    await customInsert(
+      '''
+INSERT INTO node_state (node_key, name, value) VALUES (?, ?, ?)
+ON CONFLICT(node_key, name) DO UPDATE SET value = excluded.value
+''',
+      variables: [
+        Variable<String>(nodeKey),
+        Variable<String>(name),
+        Variable<String>(value),
+      ],
+    );
+  }
+
+  Future<void> deleteNodeState(String nodeKey, String name) async {
+    await customUpdate(
+      'DELETE FROM node_state WHERE node_key = ? AND name = ?',
+      variables: [Variable<String>(nodeKey), Variable<String>(name)],
+      updateKind: UpdateKind.delete,
+    );
+  }
+
+  /// Moves the preference form of the node collections over, once, in one
+  /// transaction. A row already there wins: the transaction and the
+  /// removal of the keys are two steps, and a launch cut short between them
+  /// runs the move again against rows that are newer than the keys. The
+  /// observations are taken only into an empty table, for the same reason.
+  Future<void> importNodeCollections({
+    required List<NodeContactRow> contacts,
+    required List<NodeChannelRow> channels,
+    required List<PathHistoryRow> histories,
+    required List<String> observations,
+    required List<NodeStateRow> state,
+  }) async {
+    await transaction(() async {
+      for (final row in contacts) {
+        await customUpdate(
+          '''
+INSERT INTO node_contacts (node_key, contact_key, contact_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, contact_key) DO NOTHING
+''',
+          variables: [
+            Variable<String>(row.nodeKey),
+            Variable<String>(row.contactKey),
+            Variable<String>(row.contactJson),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+      for (final row in channels) {
+        await customUpdate(
+          '''
+INSERT INTO node_channels (node_key, channel_index, channel_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, channel_index) DO NOTHING
+''',
+          variables: [
+            Variable<String>(row.nodeKey),
+            Variable<int>(row.channelIndex),
+            Variable<String>(row.channelJson),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+      for (final row in histories) {
+        await customUpdate(
+          '''
+INSERT INTO contact_path_history (node_key, contact_key, history_json)
+VALUES (?, ?, ?)
+ON CONFLICT(node_key, contact_key) DO NOTHING
+''',
+          variables: [
+            Variable<String>(row.nodeKey),
+            Variable<String>(row.contactKey),
+            Variable<String>(row.historyJson),
+          ],
+          updateKind: UpdateKind.insert,
+        );
+      }
+      if (observations.isNotEmpty) {
+        final count = await customSelect(
+          'SELECT COUNT(*) AS n FROM delivery_observations',
+        ).getSingle();
+        if (count.read<int>('n') == 0) {
+          for (final observation in observations) {
+            await customInsert(
+              'INSERT INTO delivery_observations (observation_json) VALUES (?)',
+              variables: [Variable<String>(observation)],
+            );
+          }
+        }
+      }
+      for (final row in state) {
+        await customUpdate(
+          '''
+INSERT INTO node_state (node_key, name, value) VALUES (?, ?, ?)
+ON CONFLICT(node_key, name) DO NOTHING
+''',
+          variables: [
+            Variable<String>(row.nodeKey),
+            Variable<String>(row.name),
+            Variable<String>(row.value),
+          ],
+          updateKind: UpdateKind.insert,
         );
       }
     });

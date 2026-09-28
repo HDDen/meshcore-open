@@ -1,8 +1,10 @@
 import 'dart:convert';
 import '../models/contact_group.dart';
 import '../utils/app_logger.dart';
-import 'prefs_manager.dart';
+import 'node_state.dart';
 
+/// Contact groups per node: a `node_state` row named `contact_groups`, or
+/// the preference key `contact_groups<node>` where there is no database.
 class ContactGroupStore {
   static const String _keyPrefix = 'contact_groups';
 
@@ -17,22 +19,16 @@ class ContactGroupStore {
       appLogger.warn('Public key hex is not set. Cannot load contact groups.');
       return [];
     }
-    final prefs = PrefsManager.instance;
-    String? jsonString = prefs.getString(keyFor);
+    String? jsonString = await NodeState.read(
+      nodeKey: publicKeyHex,
+      name: _keyPrefix,
+      preferenceKey: keyFor,
+    );
     if (jsonString == null || jsonString.isEmpty) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(_keyPrefix);
-      prefs.remove(_keyPrefix);
-      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating channel messages from legacy key $_keyPrefix to scoped key $keyFor',
-        );
-        await prefs.setString(keyFor, legacyJsonString);
-        jsonString = legacyJsonString;
-      }
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
+      jsonString = await NodeState.takeOverLegacyPreference(
+        legacyKey: _keyPrefix,
+        preferenceKey: keyFor,
+      );
     }
     if (jsonString == null || jsonString.isEmpty) {
       return [];
@@ -57,8 +53,12 @@ class ContactGroupStore {
       appLogger.warn('Public key hex is not set. Cannot save contact groups.');
       return;
     }
-    final prefs = PrefsManager.instance;
     final encoded = jsonEncode(groups.map((group) => group.toJson()).toList());
-    await prefs.setString(keyFor, encoded);
+    await NodeState.write(
+      nodeKey: publicKeyHex,
+      name: _keyPrefix,
+      preferenceKey: keyFor,
+      value: encoded,
+    );
   }
 }
