@@ -72,6 +72,19 @@ void main() {
       expect(link!.regionScope, 'ru-south');
     });
 
+    test('reads a link shared into a chat, hashtag name and region', () {
+      final link = ChannelQrLink.tryParse(
+        'meshcore://channel/add?name=%23public_mco&secret=cbf8c4bc9379ab17b216721171f3ba89&region_scope=ru-kda',
+      );
+      expect(link!.name, '#public_mco');
+      expect(link.isHashtag, isTrue);
+      expect(
+        Channel.formatPskHex(link.psk).toLowerCase(),
+        'cbf8c4bc9379ab17b216721171f3ba89',
+      );
+      expect(link.regionScope, 'ru-kda');
+    });
+
     test('a hashtag link without a secret derives the key from the name', () {
       final link = ChannelQrLink.tryParse('meshcore://channel/add?name=%23test');
       expect(link, isNotNull);
