@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/path_history.dart';
+import 'package:meshcore_open/models/path_selection.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -13,8 +14,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 // A route the recipient returns (the node's PUSH_CODE_PATH_UPDATED, then its
 // answer to the contact re-read the app asks for) becomes the contact's route
 // and joins its history once, a record already there refreshed rather than
-// added twice, while an override the user set outlives it. Pinned before
-// automatic routing credits that route as having just carried a message.
+// added twice, while an override the user set outlives it. The last two
+// tests are the change: the history credits that route as having just
+// worked, a record already there keeping what it had.
 
 final _key = Uint8List.fromList(List<int>.generate(32, (i) => 0xAA + i));
 
@@ -158,5 +160,35 @@ void main() {
     final contact = connector.contacts.single;
     expect(contact.pathOverride, -1);
     expect(contact.path, [0x33]);
+  });
+
+  test('the returned route is credited as having just worked', () async {
+    await returnRoute([0x33]);
+
+    final record = paths
+        .getRecentPaths(connector.contacts.single.publicKeyHex)
+        .single;
+    expect(record.pathBytes, [0x33]);
+    expect(record.successCount, 1);
+    expect(record.timestamp, isNotNull);
+  });
+
+  test('a route the history holds keeps its failures and gains the '
+      'success', () async {
+    final keyHex = connector.contacts.single.publicKeyHex;
+    paths.recordPathResult(
+      keyHex,
+      const PathSelection(pathBytes: [0x33], hopCount: 1, useFlood: false),
+      success: false,
+    );
+    await pumpEventQueue();
+    expect(paths.getRecentPaths(keyHex).single.timestamp, isNull);
+
+    await returnRoute([0x33]);
+
+    final record = paths.getRecentPaths(keyHex).single;
+    expect(record.failureCount, 1);
+    expect(record.successCount, 1);
+    expect(record.timestamp, isNotNull);
   });
 }

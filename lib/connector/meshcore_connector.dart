@@ -4481,28 +4481,29 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  PathSelection? _selectAutoPathForAttempt(
+  /// A route from the history for a direct message's retry, or null when the
+  /// history has none. The history is loaded first: `getRecentPaths` answers
+  /// a history not read yet with an empty list, and the attempt would miss
+  /// its turn at the history.
+  Future<PathSelection?> _selectAutoPathForAttempt(
     String contactPubKeyHex, {
     required int attemptIndex,
     required int maxRetries,
     List<PathSelection> recentSelections = const [],
-  }) {
-    final hasKnownPaths =
-        _pathHistoryService?.getRecentPaths(contactPubKeyHex).isNotEmpty ??
-        false;
-    if (!hasKnownPaths) {
-      return null;
-    }
+  }) async {
+    final service = _pathHistoryService;
+    if (service == null) return null;
+    await service.ensureLoaded([contactPubKeyHex]);
+    if (service.getRecentPaths(contactPubKeyHex).isEmpty) return null;
 
-    final selection = _pathHistoryService?.selectPathForAttempt(
+    final selection = service.selectPathForAttempt(
       contactPubKeyHex,
       attemptIndex: attemptIndex,
       maxRetries: maxRetries,
       recentSelections: recentSelections,
     );
-    if (selection != null) {
-      _pathHistoryService?.recordPathAttempt(contactPubKeyHex, selection);
-    }
+    if (selection.useFlood) return null;
+    service.recordPathAttempt(contactPubKeyHex, selection);
     return selection;
   }
 
@@ -10197,9 +10198,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // Refresh just this specific contact instead of all contacts.
         // This avoids race conditions with _preserveContactsOnRefresh flag
         // that can occur when using refreshContactsSinceLastmod().
-        getContactByKey(pubKey);
+        unawaited(_creditReturnedRoute(pubKey));
       }
     }
+  }
+
+  /// Re-reads the contact whose route the node just took from the
+  /// recipient's answer, and credits that route in the history as having
+  /// just worked: the answer came back along the route our packet took to
+  /// the recipient. The node reports the route (PUSH_CODE_PATH_UPDATED) and
+  /// the acknowledgement in its wake before the re-read returns, so the
+  /// credit `_recordPathResult` gives a flood delivery at the acknowledgement
+  /// found no route yet.
+  Future<void> _creditReturnedRoute(Uint8List pubKey) async {
+    final contact = await _fetchContactSnapshotFromDevice(pubKey);
+    if (contact == null || contact.pathLength < 0) return;
+    _recordPathResult(
+      contact.publicKeyHex,
+      PathSelection(
+        pathBytes: contact.path,
+        hopCount: contact.pathLength,
+        useFlood: false,
+      ),
+      true,
+      null,
+    );
   }
 
   void _handleSelfInfo(Uint8List frame) {

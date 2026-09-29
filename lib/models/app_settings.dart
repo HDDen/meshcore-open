@@ -674,7 +674,7 @@ class AppSettings {
     this.notifyOnNewAdvert = true,
     this.autoSendZeroHopAdvertOnGpsUpdate = false,
     this.gpsIntervalSeconds = 900,
-    this.autoRouteRotationEnabled = true,
+    this.autoRouteRotationEnabled = false,
     this.maxRouteWeight = 5.0,
     this.initialRouteWeight = 3.0,
     this.routeWeightSuccessIncrement = 0.5,
@@ -1013,7 +1013,7 @@ class AppSettings {
       gpsIntervalSeconds:
           (json['gps_interval_seconds'] as num?)?.toInt() ?? 900,
       autoRouteRotationEnabled:
-          json['auto_route_rotation_enabled'] as bool? ?? true,
+          json['auto_route_rotation_enabled'] as bool? ?? false,
       maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
       initialRouteWeight:
           (json['initial_route_weight'] as num?)?.toDouble() ?? 3.0,

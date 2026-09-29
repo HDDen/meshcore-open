@@ -39,6 +39,12 @@ typedef AckHashMapping = ({
   PathSelection? pathSelection,
 });
 
+/// What the node needs before an attempt: its route written, its route
+/// cleared so the attempt floods, or nothing.
+enum _NodeRouteStep { none, write, clear }
+
+typedef _AttemptRoute = ({PathSelection selection, _NodeRouteStep step});
+
 class RetryServiceConfig {
   /// Sends one attempt; [useFlood] says how the attempt is routed, which the
   /// connector needs to scope a flood send with the contact's region.
@@ -74,7 +80,11 @@ class RetryServiceConfig {
   final AppDebugLogService? debugLogService;
   final void Function(String, PathSelection, bool, int?)? recordPathResult;
   final void Function(String, int, int, int)? onDeliveryObserved;
-  final PathSelection? Function(
+
+  /// A route from the contact's history for an attempt after the node's own
+  /// route went unanswered, or null when there is none to offer. It may load
+  /// the history first, hence the future.
+  final FutureOr<PathSelection?> Function(
     String contactKey,
     int attemptIndex,
     int maxRetries,
@@ -414,26 +424,82 @@ class MessageRetryService extends ChangeNotifier {
     }
   }
 
-  PathSelection? _selectPathForAttempt(Message message, Contact contact) {
-    final config = _config;
-    if (config == null) return null;
-    final autoRotationEnabled =
-        config.appSettingsService?.settings.autoRouteRotationEnabled == true;
-    if (!autoRotationEnabled ||
-        contact.pathOverride != null ||
-        config.selectRetryPath == null) {
-      return null;
-    }
+  static const PathSelection _floodSelection = PathSelection(
+    pathBytes: [],
+    hopCount: -1,
+    useFlood: true,
+  );
 
-    final recentSelections = List<PathSelection>.from(
-      _attemptPathHistory[message.messageId] ?? const <PathSelection>[],
-    );
-    return config.selectRetryPath!(
+  bool get _rotatesRoutes =>
+      _config?.appSettingsService?.settings.autoRouteRotationEnabled == true;
+
+  static bool _sameRoute(PathSelection a, PathSelection b) =>
+      a.useFlood == b.useFlood &&
+      a.hopCount == b.hopCount &&
+      listEquals(a.pathBytes, b.pathBytes);
+
+  /// Whether no retry follows this attempt, by the test [_handleTimeout]
+  /// schedules one with.
+  bool _isLastAttempt(Message message, Contact contact) =>
+      message.retryCount >= maxRetries - 1 ||
+      !_textFitsAttempt(message, contact, message.retryCount + 1);
+
+  /// The route of this attempt and what the node needs before it, or null
+  /// when a route from the history is due ([_historyRoute]).
+  ///
+  /// The user's choice wins: a forced flood clears the route the last answer
+  /// left on the node before every attempt, a pinned route is written before
+  /// every attempt, the last one included. Otherwise the route is the node's
+  /// own and is not written back, the node sending by it anyway and saving
+  /// its whole contact table after every write. With no route every attempt
+  /// floods with nothing to clear, the history unused, until the recipient's
+  /// answer gives the node one. With a route the attempts go by it, and once
+  /// it went unanswered in this message `autoRouteRotationEnabled` moves the
+  /// next ones to the history. The last attempt floods either way, the
+  /// node's route cleared first, so that the answer brings a fresh one.
+  _AttemptRoute? _plannedRoute(Message message, Contact contact) {
+    if (contact.pathOverride != null) {
+      final chosen = resolvePathSelection(contact);
+      return (
+        selection: chosen,
+        step: chosen.useFlood ? _NodeRouteStep.clear : _NodeRouteStep.write,
+      );
+    }
+    final holdsRoute = contact.pathLength >= 0;
+    if (_isLastAttempt(message, contact)) {
+      return (
+        selection: _floodSelection,
+        step: holdsRoute ? _NodeRouteStep.clear : _NodeRouteStep.none,
+      );
+    }
+    if (!holdsRoute) {
+      return (selection: _floodSelection, step: _NodeRouteStep.none);
+    }
+    final nodeRoute = resolvePathSelection(contact);
+    final tried =
+        _attemptPathHistory[message.messageId] ?? const <PathSelection>[];
+    if (!_rotatesRoutes || !tried.any((s) => _sameRoute(s, nodeRoute))) {
+      return (selection: nodeRoute, step: _NodeRouteStep.none);
+    }
+    return null;
+  }
+
+  /// A route from the history, written to the node before the attempt, or
+  /// the node's own route again when the history offers no other.
+  Future<_AttemptRoute> _historyRoute(Message message, Contact contact) async {
+    final nodeRoute = resolvePathSelection(contact);
+    final picked = await _config?.selectRetryPath?.call(
       contact.publicKeyHex,
       message.retryCount,
       maxRetries,
-      recentSelections,
+      List<PathSelection>.of(
+        _attemptPathHistory[message.messageId] ?? const <PathSelection>[],
+      ),
     );
+    if (picked == null || picked.useFlood || _sameRoute(picked, nodeRoute)) {
+      return (selection: nodeRoute, step: _NodeRouteStep.none);
+    }
+    return (selection: picked, step: _NodeRouteStep.write);
   }
 
   void _recordAttemptPathHistory(String messageId, PathSelection selection) {
@@ -462,34 +528,27 @@ class MessageRetryService extends ChangeNotifier {
         config.findContact?.call(queuedContact.publicKeyHex) ?? queuedContact;
     _pendingContacts[messageId] = contact;
 
-    final effectiveSelection = _selectPathForAttempt(message, contact);
-
-    if (effectiveSelection != null) {
-      final updatedMessage = message.copyWith(
-        pathLength: effectiveSelection.useFlood
-            ? -1
-            : effectiveSelection.hopCount,
-        pathBytes: effectiveSelection.useFlood
-            ? Uint8List(0)
-            : Uint8List.fromList(effectiveSelection.pathBytes),
-      );
-      _pendingMessages[messageId] = updatedMessage;
-    } else if (message.retryCount > 0) {
-      // No schedule entry for this retry — re-resolve path from current contact
-      // state so user's path override changes are picked up between retries.
-      final resolved = resolvePathSelection(contact);
-      final updatedMessage = message.copyWith(
-        pathLength: resolved.useFlood ? -1 : resolved.hopCount,
-        pathBytes: Uint8List.fromList(resolved.pathBytes),
-      );
-      _pendingMessages[messageId] = updatedMessage;
+    var route = _plannedRoute(message, contact);
+    if (route == null) {
+      route = await _historyRoute(message, contact);
+      // The pick may have waited for the history to load.
+      if (_pendingMessages[messageId]?.retryCount != message.retryCount ||
+          _resolvedMessages.contains(messageId) ||
+          _sendingPaused ||
+          sendingGeneration != _sendingGeneration) {
+        return;
+      }
     }
+    final selection = route.selection;
+    final useFlood = selection.useFlood;
 
-    // Re-read after potential schedule update
-    final effectiveMessage = _pendingMessages[messageId] ?? message;
     final attemptStartedAt = DateTime.now();
-    final hopCount = effectiveMessage.pathLength ?? -1;
-    final progressMessage = effectiveMessage.copyWith(
+    final hopCount = useFlood ? -1 : selection.hopCount;
+    final progressMessage = (_pendingMessages[messageId] ?? message).copyWith(
+      pathLength: hopCount,
+      pathBytes: useFlood
+          ? Uint8List(0)
+          : Uint8List.fromList(selection.pathBytes),
       deliveryProgressTotalSteps: hopCount >= 0 ? hopCount + 1 : 0,
       deliveryProgressCompletedSteps: 0,
     );
@@ -497,29 +556,17 @@ class MessageRetryService extends ChangeNotifier {
     _retireProgressTracker(messageId);
     config.updateMessage(progressMessage);
 
-    final bool useFlood = effectiveSelection != null
-        ? effectiveSelection.useFlood
-        : (effectiveMessage.pathLength != null &&
-              effectiveMessage.pathLength! < 0);
-
-    // Sync path settings with device before sending
-    if (config.setContactPath != null && config.clearContactPath != null) {
-      final List<int> pathBytes = effectiveSelection != null
-          ? effectiveSelection.pathBytes
-          : effectiveMessage.pathBytes;
-      final int hopCount = effectiveSelection != null
-          ? effectiveSelection.hopCount
-          : (effectiveMessage.pathLength ?? 0);
-
-      if (useFlood) {
-        await config.clearContactPath!(contact);
-      } else if (effectiveMessage.pathLength != null) {
-        await config.setContactPath!(
+    switch (route.step) {
+      case _NodeRouteStep.write:
+        await config.setContactPath?.call(
           contact,
-          Uint8List.fromList(pathBytes),
-          hopCount,
+          Uint8List.fromList(selection.pathBytes),
+          selection.hopCount,
         );
-      }
+      case _NodeRouteStep.clear:
+        await config.clearContactPath?.call(contact);
+      case _NodeRouteStep.none:
+        break;
     }
 
     // Re-validate after async gap — a timer or ACK could have resolved/retried
@@ -539,9 +586,7 @@ class MessageRetryService extends ChangeNotifier {
     }
     if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
 
-    if (effectiveSelection != null) {
-      _recordAttemptPathHistory(messageId, effectiveSelection);
-    }
+    _recordAttemptPathHistory(messageId, selection);
 
     final attempt = message.retryCount;
     final timestampSeconds = message.timestamp.millisecondsSinceEpoch ~/ 1000;
@@ -945,11 +990,11 @@ class MessageRetryService extends ChangeNotifier {
       _pendingMessages[messageId] = failedMessage;
 
       // A route the user pinned outranks this cleanup. Every other automatic
-      // path decision steps aside for an override — `_selectPathForAttempt`
-      // bails on it, and `resolvePathSelection` lets it win over `forceFlood`
-      // — while this branch would send CMD_RESET_PATH to the node and drop it
-      // back to flood behind the user's back. Forcing flood is a choice as
-      // much as picking hops is, so any non-null override stops it.
+      // path decision steps aside for an override (`_plannedRoute` takes it
+      // before anything else, and `resolvePathSelection` lets it win over
+      // `forceFlood`), while this branch would send CMD_RESET_PATH to the node
+      // and drop it back to flood behind the user's back. Forcing flood is a
+      // choice as much as picking hops is, so any non-null override stops it.
       if (config?.appSettingsService?.settings.clearPathOnMaxRetry == true &&
           contact.pathOverride == null &&
           config?.clearContactPath != null) {

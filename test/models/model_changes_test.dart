@@ -453,6 +453,17 @@ void main() {
       },
     );
 
+    test('automatic route switching is off unless stored on', () {
+      expect(AppSettings().autoRouteRotationEnabled, isFalse);
+      expect(AppSettings.fromJson(const {}).autoRouteRotationEnabled, isFalse);
+      expect(
+        AppSettings.fromJson(const {
+          'auto_route_rotation_enabled': true,
+        }).autoRouteRotationEnabled,
+        isTrue,
+      );
+    });
+
     test('copyWith works for maxRouteWeight', () {
       final settings = AppSettings();
       final updated = settings.copyWith(maxRouteWeight: 8.0);

@@ -500,6 +500,32 @@ class AppSettingsScreen extends StatelessWidget {
           onChanged: settingsService.setJumpToOldestUnread,
         ),
         const Divider(height: 1, indent: 16),
+        // Every direct message makes this many attempts, whatever the route
+        // switch below says, so the count stays in view with it off.
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          leading: const Icon(Icons.replay, size: 20),
+          title: Text(context.l10n.appSettings_maxMessageRetries),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.appSettings_maxMessageRetriesSubtitle),
+              Slider(
+                value: settingsService.settings.maxMessageRetries.toDouble(),
+                min: 2,
+                max: 10,
+                divisions: 8,
+                label: settingsService.settings.maxMessageRetries.toString(),
+                onChanged: (value) =>
+                    settingsService.setMaxMessageRetries(value.toInt()),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
         SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -639,31 +665,6 @@ class AppSettingsScreen extends StatelessWidget {
                                   .toStringAsFixed(1),
                               onChanged: (value) => settingsService
                                   .setRouteWeightFailureDecrement(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(context.l10n.appSettings_maxMessageRetries),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_maxMessageRetriesSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService.settings.maxMessageRetries
-                                  .toDouble(),
-                              min: 2,
-                              max: 10,
-                              divisions: 8,
-                              label: settingsService.settings.maxMessageRetries
-                                  .toString(),
-                              onChanged: (value) => settingsService
-                                  .setMaxMessageRetries(value.toInt()),
                             ),
                           ],
                         ),

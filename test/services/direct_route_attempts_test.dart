@@ -1,22 +1,27 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
+import 'package:meshcore_open/models/path_selection.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// How each attempt of a direct message goes out, pinned before automatic
-// routing floods until the recipient returns a route and stops writing the
-// node's own route back to it. What stays: a forced flood floods every
-// attempt and clears the route the node holds first, a pinned route goes out
-// on every attempt, the last included, and is never cleared, an attempt takes
-// the contact as it is when the attempt starts (the route the node holds, a
-// route the recipient returned meanwhile, a choice the user made meanwhile),
-// and an acknowledgement of an earlier attempt credits that attempt's route.
+// How each attempt of a direct message goes out. What stays: a forced flood
+// floods every attempt and clears the route the node holds first, a pinned
+// route goes out on every attempt, the last included, and is never cleared,
+// an attempt takes the contact as it is when the attempt starts (the route
+// the node holds, a route the recipient returned meanwhile, a choice the user
+// made meanwhile), and an acknowledgement of an earlier attempt credits that
+// attempt's route. The last groups are the change: with no route on the node
+// every attempt floods without clearing and the history is left alone, the
+// node's own route is sent as it stands rather than written back, the switch
+// on moves the attempts after it to the history, the switch off keeps them
+// on it, and the last attempt goes out as an auto-flood.
 
 const _sentAtSeconds = 1700000000;
 final _selfKey = Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i));
@@ -26,10 +31,11 @@ Contact _contact({
   List<int> path = const [],
   int? pathOverride,
   List<int>? pathOverrideBytes,
+  int type = advTypeChat,
 }) => Contact(
   publicKey: Uint8List.fromList(List<int>.generate(32, (i) => 0xAA + i)),
   name: 'Bob',
-  type: advTypeChat,
+  type: type,
   pathLength: pathLength,
   path: Uint8List.fromList(path),
   pathOverride: pathOverride,
@@ -43,15 +49,32 @@ String _hex(List<int> bytes) =>
     bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
 /// The connector as the retry service sees it: the contact as the node holds
-/// it, which writing or clearing a route changes, and what reached the node,
-/// in order.
+/// it, which writing or clearing a route changes, its route history, best
+/// first, and what reached the node or the history, in order.
 class _Node {
   _Node(this.contact);
 
   Contact contact;
+  final history = <List<int>>[];
   final log = <String>[];
   final credits = <String>[];
   final messages = <String, Message>{};
+
+  /// The history's pick for attempt [attempt]: the best route not among
+  /// [tried], else the best one.
+  PathSelection? pick(int attempt, List<PathSelection> tried) {
+    log.add('pick $attempt');
+    if (history.isEmpty) return null;
+    final route = history.firstWhere(
+      (candidate) => !tried.any((s) => listEquals(s.pathBytes, candidate)),
+      orElse: () => history.first,
+    );
+    return PathSelection(
+      pathBytes: route,
+      hopCount: route.length,
+      useFlood: false,
+    );
+  }
 
   /// The recipient's answer to a flood left [route] on the node, and the app
   /// read it back (PUSH_CODE_PATH_UPDATED, then the contact re-read).
@@ -94,9 +117,25 @@ MessageRetryService _serviceFor(_Node node, {AppSettingsService? settings}) {
         '${success ? 'worked' : 'failed'} '
         '${selection.useFlood ? 'flood' : _hex(selection.pathBytes)}',
       ),
+      selectRetryPath: (_, attempt, _, tried) => node.pick(attempt, tried),
     ),
   );
   return service;
+}
+
+/// App settings with the route switch at [rotation] and clearing on the
+/// last failure at [clearOnLastFailure].
+Future<AppSettingsService> _settings({
+  bool rotation = true,
+  bool clearOnLastFailure = false,
+}) async {
+  SharedPreferences.setMockInitialValues({});
+  PrefsManager.reset();
+  await PrefsManager.initialize();
+  final settings = AppSettingsService();
+  await settings.setAutoRouteRotationEnabled(rotation);
+  await settings.setClearPathOnMaxRetry(clearOnLastFailure);
+  return settings;
 }
 
 /// Sends [text] to the node's contact and lets its first attempt go out.
@@ -171,12 +210,8 @@ void main() {
 
     test('outlives the last failure with clearing on the last failure '
         'switched on', () async {
-      SharedPreferences.setMockInitialValues({});
-      PrefsManager.reset();
-      await PrefsManager.initialize();
-      final settings = AppSettingsService();
+      final settings = await _settings(clearOnLastFailure: true);
       addTearDown(settings.dispose);
-      await settings.setClearPathOnMaxRetry(true);
 
       final node = _Node(_contact(pathOverride: 1, pathOverrideBytes: [0x42]));
       final service = _serviceFor(node, settings: settings)..setMaxRetries(2);
@@ -263,5 +298,175 @@ void main() {
 
     expect(node.message('hi').status, MessageStatus.delivered);
     expect(node.credits, ['failed 10', 'worked 10']);
+  });
+
+  group('automatic routing, no route on the node', () {
+    test('every attempt floods without clearing, the history left '
+        'alone', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact())..history.add([0x44]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(3);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+      await _noAck(service, 'hi', 1);
+
+      expect(node.log, ['send 0 flood', 'send 1 flood', 'send 2 flood']);
+    });
+
+    test('the route the recipient returns is taken as it stands', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact())..history.add([0x44]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(3);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      node.returnRoute([0x33]);
+      await _noAck(service, 'hi', 0);
+
+      expect(node.log, ['send 0 flood', 'send 1 route']);
+      expect(node.message('hi').pathBytes, [0x33]);
+    });
+
+    test('a room post floods the same way', () async {
+      final node = _Node(_contact(type: advTypeRoom));
+      final service = _serviceFor(node)..setMaxRetries(2);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+
+      expect(node.log, ['send 0 flood', 'send 1 flood']);
+    });
+  });
+
+  group('automatic routing, the switch on', () {
+    test('the first attempt takes the node\'s route as it stands, the next '
+        'ones the history, the last an auto-flood', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathLength: 1, path: [0x10]))
+        ..history.addAll([
+          [0x20],
+          [0x30],
+        ]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(4);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+      await _noAck(service, 'hi', 1);
+      await _noAck(service, 'hi', 2);
+
+      expect(node.log, [
+        'send 0 route',
+        'pick 1',
+        'set 20',
+        'send 1 route',
+        'pick 2',
+        'set 30',
+        'send 2 route',
+        'clear',
+        'send 3 flood',
+      ]);
+    });
+
+    test('a route the history offers again is not written again', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathLength: 1, path: [0x10]))
+        ..history.add([0x20]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(4);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+      await _noAck(service, 'hi', 1);
+
+      expect(node.log, [
+        'send 0 route',
+        'pick 1',
+        'set 20',
+        'send 1 route',
+        'pick 2',
+        'send 2 route',
+      ]);
+    });
+
+    test('with an empty history the node\'s route comes again', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(3);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+
+      expect(node.log, ['send 0 route', 'pick 1', 'send 1 route']);
+    });
+
+    test('a pinned route is never swapped for the history', () async {
+      final settings = await _settings();
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathOverride: 1, pathOverrideBytes: [0x42]))
+        ..history.add([0x20]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(2);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+
+      expect(node.log, ['set 42', 'send 0 route', 'set 42', 'send 1 route']);
+    });
+  });
+
+  group('automatic routing, the switch off', () {
+    test('every attempt takes the node\'s route as it stands, the last an '
+        'auto-flood', () async {
+      final settings = await _settings(rotation: false);
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathLength: 1, path: [0x10]))
+        ..history.add([0x20]);
+      final service = _serviceFor(node, settings: settings)..setMaxRetries(3);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+      await _noAck(service, 'hi', 1);
+
+      expect(node.log, [
+        'send 0 route',
+        'send 1 route',
+        'clear',
+        'send 2 flood',
+      ]);
+    });
+
+    test('a text too long for the fifth attempt takes the auto-flood on its '
+        'fourth', () async {
+      final settings = await _settings(rotation: false);
+      addTearDown(settings.dispose);
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node, settings: settings);
+      addTearDown(service.dispose);
+      final text = 'a' * (maxTextPayloadBytesAfterFullLengthAttempts + 1);
+
+      await _send(service, node, text);
+      await _noAck(service, text, 0);
+      await _noAck(service, text, 1);
+      await _noAck(service, text, 2);
+
+      expect(node.log, [
+        'send 0 route',
+        'send 1 route',
+        'send 2 route',
+        'clear',
+        'send 3 flood',
+      ]);
+    });
   });
 }
