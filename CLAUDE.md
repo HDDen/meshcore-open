@@ -1646,6 +1646,21 @@ under a route that is not on top, one frame every 400 ms for the app bar of
 every route in the stack, while a ticker is muted there by `TickerMode` and
 stops with the widget (`test/widgets/air_activity_dot_test.dart`).
 
+Every screen has its own app bar and its own dot, and the quick switch
+replaces one screen with another, so the flag has to be the connector's
+answer for the whole window rather than something a widget keeps.
+`radioStatsAirActivityPulse` returns `_airtimeGrewInLastPoll`: the last stats
+frame of the polling run found the airtime grown over the frame before it,
+held until the next frame. It used to be true for two seconds after the
+frame, and only the dot on screen at that moment blinked for the window,
+its widget holding the answer it got; a dot built on a screen opened a few
+seconds later asked afresh and stayed dark. The first frame of a polling run
+lights nothing, its totals counting from the node's boot, and stopping the
+poll (`_stopRadioStatsPolling`, at a disconnect or when the last dot goes)
+starts the next run afresh. `_airtimeBumpStopwatch`, which the send path's
+radio-quiet wait reads, is left as it was
+(`test/connector/radio_air_activity_test.dart`).
+
 ### Answers to neighbour and telemetry requests
 
 The neighbours and telemetry screens learn their request's tag from the `RESP_CODE_SENT` the node gives for it, and the repeater's answer (`PUSH_CODE_BINARY_RESPONSE`) repeats that tag. The node answers every command in turn, so a direct message, a room post or another request written meanwhile brings its own SENT, before the request's or after it. Both screens used to keep the tag of the last SENT and dropped the answer whenever another send fell in between; the telemetry screen also armed its timeout on every SENT, a request pending or not, so a message sent while it was open ended in a false timeout. `RequestSentTags` (`helpers/request_sent_tags.dart`, tested in `test/helpers/request_sent_tags_test.dart`) keeps every tag seen while the request waits, which cannot mix answers up, because the companion passes on the answer to its latest binary request only (`pending_req`). The estimates those SENTs carry set the timeout: the first replaces the fallback, a later one can only push the deadline back. The 10-second fallback is armed once the request is out, not before, so waiting for the command lock does not use it up; the telemetry screen had none and without a SENT waited for good. A new request drops the tags while its route is being prepared, so nothing that arrives before it goes out counts, while an answer arriving after a timeout is still taken.

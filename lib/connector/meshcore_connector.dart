@@ -365,6 +365,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   CompanionRadioStats? _latestRadioStats;
   Stopwatch? _airtimeBumpStopwatch;
   int _prevTotalAirSecs = 0;
+
+  /// What the air-activity dot shows: whether the last radio-stats frame of
+  /// this polling run found the node's airtime grown over the frame before
+  /// it, held until the next frame. The first frame of a run has no frame
+  /// before it, its totals counting from the node's boot, so it lights
+  /// nothing; stopping the poll starts the next run afresh. The send path's
+  /// radio-quiet wait reads [_airtimeBumpStopwatch] instead, left as it was.
+  int? _airtimeBaselineSecs;
+  bool _airtimeGrewInLastPoll = false;
+
   int? _batteryMillivolts;
   double? _selfLatitude;
   double? _selfLongitude;
@@ -952,11 +962,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   bool get supportsCompanionRadioStats => (_firmwareVerCode ?? 0) >= 8;
 
-  bool get radioStatsAirActivityPulse {
-    final sw = _airtimeBumpStopwatch;
-    if (sw == null || !sw.isRunning) return false;
-    return sw.elapsed < const Duration(seconds: 2);
-  }
+  /// Whether the last poll window saw the air busy
+  /// ([_airtimeGrewInLastPoll]): every dot built in that window, on any
+  /// screen, reads the same answer until the next stats frame.
+  bool get radioStatsAirActivityPulse => _airtimeGrewInLastPoll;
 
   int? get currentFreqHz => _currentFreqHz;
   int? get currentBwHz => _currentBwHz;
@@ -6489,6 +6498,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _stopRadioStatsPolling() {
     _radioStatsPollTimer?.cancel();
     _radioStatsPollTimer = null;
+    _airtimeBaselineSecs = null;
+    _airtimeGrewInLastPoll = false;
   }
 
   void acquireRadioStatsPolling() {
@@ -10680,6 +10691,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _airtimeBumpStopwatch!.start();
     }
     _prevTotalAirSecs = total;
+    final baseline = _airtimeBaselineSecs;
+    _airtimeGrewInLastPoll = baseline != null && total > baseline;
+    _airtimeBaselineSecs = total;
     _latestRadioStats = stats;
     radioStatsNotifier.value = stats;
   }
