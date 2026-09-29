@@ -348,7 +348,14 @@ class _NeighborsScreenState extends State<NeighborsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final connector = context.watch<MeshCoreConnector>();
+    final connector = context.read<MeshCoreConnector>();
+    // Only what the screen shows of the connector: the repeater's name and
+    // routing, and the spreading factor its readings are scaled by. The
+    // fields rather than the contact, whose == compares keys alone.
+    context.select<MeshCoreConnector, (String, int?, int?)>((connector) {
+      final repeater = _resolveRepeater(connector);
+      return (repeater.name, repeater.pathOverride, connector.currentSf);
+    });
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
 

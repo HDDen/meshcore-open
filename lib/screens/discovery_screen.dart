@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/discovery_list.dart';
+import '../helpers/last_value_memo.dart';
 import '../helpers/zero_hop_device_discovery.dart';
 import '../l10n/l10n.dart';
 import '../l10n/contact_localization.dart';
 import '../models/contact.dart';
 import '../theme/mesh_theme.dart';
-import '../utils/contact_search.dart';
+import '../utils/contact_filter_types.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
@@ -44,6 +46,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// is shown dimmed instead of hidden, so the screen lists everything the
   /// request reached.
   Set<String> _discoveryResponders = const <String>{};
+
+  /// The rows, kept per input (see [discoveryRows]): most notifications of
+  /// the connector change none of them.
+  final LastValueMemo<Object, List<Contact>> _rowsMemo = LastValueMemo();
 
   @override
   void dispose() {
@@ -95,10 +101,31 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
     final discoveredContacts = connector.discoveredContacts;
     final knownKeys = connector.knownContactKeys;
-    final filteredAndSorted = _filterAndSortContacts(
-      discoveredContacts,
-      connector,
-      knownKeys,
+    final selfKey = connector.selfPublicKey;
+    final selfKeyHex = selfKey == null ? null : pubKeyToHex(selfKey);
+    // The known keys change only with the contact list, so its revision
+    // covers them. The responders are a live view that grows while a
+    // request runs, so its size goes into the key beside its identity.
+    final filteredAndSorted = _rowsMemo.of(
+      (
+        connector.discoveredRevision,
+        connector.contactsRevision,
+        selfKeyHex,
+        searchQuery,
+        typeFilter,
+        sortOption,
+        _discoveryResponders,
+        _discoveryResponders.length,
+      ),
+      () => discoveryRows(
+        discoveredContacts,
+        knownKeys: knownKeys,
+        responders: _discoveryResponders,
+        selfKeyHex: selfKeyHex,
+        query: searchQuery,
+        typeFilter: typeFilter,
+        sortOption: sortOption,
+      ),
     );
 
     return Scaffold(
@@ -622,67 +649,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         });
       },
     );
-  }
-
-  List<Contact> _filterAndSortContacts(
-    List<Contact> contacts,
-    MeshCoreConnector connector,
-    Set<String> knownKeys,
-  ) {
-    var filtered = contacts.where((contact) {
-      if (searchQuery.isEmpty) return true;
-      return matchesDiscoveryContactQuery(contact, searchQuery);
-    }).toList();
-
-    // The discovery list holds every advert heard, known contacts included;
-    // those belong to the contacts list and are hidden here, unless they
-    // answered the last discovery request.
-    filtered = filtered.where((contact) {
-      return !knownKeys.contains(contact.publicKeyHex) ||
-          _discoveryResponders.contains(contact.publicKeyHex);
-    }).toList();
-
-    // Filter out own node from the list
-    if (connector.selfPublicKey != null) {
-      final selfPubKeyHex = pubKeyToHex(connector.selfPublicKey!);
-      filtered = filtered.where((contact) {
-        return contact.publicKeyHex != selfPubKeyHex;
-      }).toList();
-    }
-
-    if (typeFilter != ContactTypeFilter.all) {
-      filtered = filtered.where(_matchesTypeFilter).toList();
-    }
-
-    switch (sortOption) {
-      case ContactSortOption.lastSeen:
-        filtered.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
-        break;
-      case ContactSortOption.name:
-        filtered.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
-        break;
-      default:
-        break;
-    }
-
-    return filtered;
-  }
-
-  bool _matchesTypeFilter(Contact contact) {
-    switch (typeFilter) {
-      case ContactTypeFilter.all:
-        return true;
-      case ContactTypeFilter.users:
-        return contact.type == advTypeChat;
-      case ContactTypeFilter.repeaters:
-        return contact.type == advTypeRepeater;
-      case ContactTypeFilter.rooms:
-        return contact.type == advTypeRoom;
-      default:
-        return false;
-    }
   }
 
   String _formatLastSeen(BuildContext context, DateTime lastSeen) {

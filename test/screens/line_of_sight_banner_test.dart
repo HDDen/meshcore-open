@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -17,7 +18,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 // stops rebuilding on every notification of the connector: it shows the
 // node's battery and the last SNR the radio reported, dashes while either is
 // unknown, and follows them when they change. The screen is opened with no
-// endpoints, so it runs no analysis and asks nothing of the network.
+// endpoints, so it runs no analysis and asks nothing of the network. The
+// last test is the change: a notification that changes neither reading
+// leaves the map as it was.
 
 CompanionRadioStats _stats(double snr) => CompanionRadioStats(
   noiseFloorDbm: -110,
@@ -171,6 +174,38 @@ void main() {
       expect(find.text('60%'), findsOneWidget);
       expect(find.text('83%'), findsNothing);
       expect(find.text('-2.5 dB'), findsOneWidget);
+    } finally {
+      await _Harness.unmount(tester);
+    }
+  });
+
+  testWidgets('a notification that changes neither reading leaves the map '
+      'as it was, and one that changes a reading rebuilds', (tester) async {
+    try {
+      final harness = await _Harness.pump(
+        tester,
+        battery: 83,
+        stats: _stats(7.5),
+      );
+      await tester.pump();
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+
+      harness.connector.notify();
+      await _pumpFrames(tester, frames: 2);
+      expect(
+        identical(tester.widget<FlutterMap>(find.byType(FlutterMap)), map),
+        isTrue,
+      );
+
+      harness.connector
+        ..battery = 82
+        ..notify();
+      await _pumpFrames(tester, frames: 2);
+      expect(
+        identical(tester.widget<FlutterMap>(find.byType(FlutterMap)), map),
+        isFalse,
+      );
+      expect(find.text('82%'), findsOneWidget);
     } finally {
       await _Harness.unmount(tester);
     }

@@ -45,6 +45,10 @@ class _FakeConnector extends MeshCoreConnector {
   final List<Contact> discovered = [];
   final Set<String> known = {};
 
+  /// Moves with every change the test makes, as the connector's list
+  /// versions do with every change of its lists.
+  int revision = 0;
+
   @override
   bool get hasReadableSession => true;
 
@@ -61,6 +65,12 @@ class _FakeConnector extends MeshCoreConnector {
   Set<String> get knownContactKeys => Set.unmodifiable(known);
 
   @override
+  int get discoveredRevision => revision;
+
+  @override
+  int get contactsRevision => revision;
+
+  @override
   Future<void> sendFrame(
     Uint8List frame, {
     String? channelSendQueueId,
@@ -68,7 +78,10 @@ class _FakeConnector extends MeshCoreConnector {
     bool waitForGenericAck = false,
   }) async {}
 
-  void notify() => notifyListeners();
+  void notify() {
+    revision++;
+    notifyListeners();
+  }
 }
 
 final AppLocalizations _l10n = lookupAppLocalizations(const Locale('en'));

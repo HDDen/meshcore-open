@@ -494,12 +494,12 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
         child: QuickSwitchBar(
           selectedIndex: 2,
           onDestinationSelected: (index) => _handleQuickSwitch(index, context),
-          contactsUnreadCount: context
-              .watch<MeshCoreConnector>()
-              .getTotalContactsUnreadCount(),
-          channelsUnreadCount: context
-              .watch<MeshCoreConnector>()
-              .getTotalChannelsUnreadCount(),
+          contactsUnreadCount: context.select<MeshCoreConnector, int>(
+            (connector) => connector.getTotalContactsUnreadCount(),
+          ),
+          channelsUnreadCount: context.select<MeshCoreConnector, int>(
+            (connector) => connector.getTotalChannelsUnreadCount(),
+          ),
           highContrast: true,
         ),
       ),
@@ -507,11 +507,14 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   }
 
   Widget _buildLinkBanner(bool isImperial) {
-    final connector = context.watch<MeshCoreConnector>();
+    // Only what the banner shows: watching the whole connector rebuilt the
+    // map, the terrain profile and the panels on every notification.
+    final (battery, snr) = context.select<MeshCoreConnector, (int?, double?)>(
+      (connector) =>
+          (connector.batteryPercent, connector.latestRadioStats?.lastSnrDb),
+    );
     final segment = _primarySegmentResult();
     final status = _losStatusFor(segment);
-    final battery = connector.batteryPercent;
-    final snr = connector.latestRadioStats?.lastSnrDb;
     return Positioned(
       top: 10,
       left: 12,

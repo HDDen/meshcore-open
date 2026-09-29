@@ -1517,6 +1517,29 @@ blocked it. A wheel tick is idle again at once, which is why the first rule,
 not the second, is what lets a desktop reader scroll up through a stream of
 relays (`test/helpers/chat_scroll_controller_test.dart`).
 
+### Screens that read a little of the connector
+
+Three screens used to watch the whole connector for a few of its values and
+rebuild on every notification, up to twenty a second under live radio. The
+discovery screen still watches it, its list changing with every advert, but
+derives its rows once per change of their inputs: `discoveryRows`
+(`helpers/discovery_list.dart`, the filtering and sorting the screen did
+inline) goes through `LastValueMemo`, keyed on `discoveredRevision`,
+`contactsRevision` (every change of the known keys comes with one of the
+contact list, the two being changed together), the node's key, the query,
+the filters and the set of nodes that answered the last discovery request,
+by identity and size, since that set is a live view that grows while the
+request runs. The line-of-sight map rebuilt its map, its terrain profile and
+its panels for a banner showing the battery and the last SNR; it selects
+those two, and the quick-switch bar's two unread counts, with
+`context.select`, so it rebuilds when one of them changes. The neighbours
+screen selects the repeater's name and routing and the spreading factor its
+readings are scaled by, the fields rather than the contact, since
+`Contact ==` compares keys alone and would miss a new route
+(`test/helpers/discovery_list_test.dart`,
+`test/screens/discovery_screen_test.dart`,
+`test/screens/line_of_sight_banner_test.dart`).
+
 ### Keys cut in the middle
 
 `MiddleEllipsisText` (`widgets/middle_ellipsis_text.dart`) shows public keys in the contacts and discovery lists and needs a monospace style. It computes the cut from the width of one character cell instead of laying out candidate strings. The cell is measured once per effective style and text scaler and shared by every instance; the text scaler is where the app's DPI setting (`uiScale`) lands, on top of the system font size. Measuring without it, as the widget once did, under-measures whenever either is above 100%, and the key then loses its tail instead of its middle.
