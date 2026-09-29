@@ -22,6 +22,10 @@ import 'mention_chip.dart';
 /// instead of handed to `Linkify` whole. URLs and `lat,lon` pairs are picked
 /// out span by span so they stay tappable alongside the chips and the styled
 /// runs.
+///
+/// A right-click is left to the chat bubble around the body, which opens the
+/// message's menu: a `Text.rich` does not compete for the click, and a
+/// listener of its own used to open the menu a second time.
 class FormattedMessageText extends StatefulWidget {
   const FormattedMessageText({
     super.key,
@@ -31,7 +35,6 @@ class FormattedMessageText extends StatefulWidget {
     required this.simplified,
     this.textScaler,
     this.leadingSpans = const [],
-    this.onSecondaryTap,
     this.markupEnabled = true,
   });
 
@@ -50,7 +53,6 @@ class FormattedMessageText extends StatefulWidget {
 
   /// Spans placed before the body — the reply chip, when there is one.
   final List<InlineSpan> leadingSpans;
-  final VoidCallback? onSecondaryTap;
 
   @override
   State<FormattedMessageText> createState() => _FormattedMessageTextState();
@@ -237,19 +239,9 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
 
   @override
   Widget build(BuildContext context) {
-    final body = Text.rich(
+    return Text.rich(
       TextSpan(style: widget.style, children: _spansFor(context)),
       textScaler: widget.textScaler,
-    );
-    if (widget.onSecondaryTap == null) return body;
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (event) {
-        if (event.buttons & kSecondaryMouseButton != 0) {
-          widget.onSecondaryTap!();
-        }
-      },
-      child: body,
     );
   }
 }

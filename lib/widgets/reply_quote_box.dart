@@ -266,7 +266,6 @@ class ReplyMentionText extends StatelessWidget {
   final bool simplified;
   final bool markupEnabled;
   final VoidCallback? onMentionTap;
-  final VoidCallback? onSecondaryTap;
 
   const ReplyMentionText({
     super.key,
@@ -280,7 +279,6 @@ class ReplyMentionText extends StatelessWidget {
     this.textScaler,
     this.markupEnabled = true,
     this.onMentionTap,
-    this.onSecondaryTap,
   });
 
   @override
@@ -300,7 +298,6 @@ class ReplyMentionText extends StatelessWidget {
       simplified: simplified,
       textScaler: textScaler,
       markupEnabled: markupEnabled,
-      onSecondaryTap: onSecondaryTap,
       leadingSpans: [
         WidgetSpan(
           alignment: chip.alignment,

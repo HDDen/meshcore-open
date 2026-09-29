@@ -3978,9 +3978,6 @@ class _MessageBubble extends StatelessWidget {
                                         simplified: simplifiedMentions,
                                         markupEnabled: markupEnabled,
                                         onMentionTap: onReplyMentionTap,
-                                        onSecondaryTap: PlatformInfo.isDesktop
-                                            ? onLongPress
-                                            : null,
                                       )
                                     : TranslatedMessageContent(
                                         displayText: translatedDisplayText,

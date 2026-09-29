@@ -15,6 +15,10 @@ class TranslatedMessageContent extends StatelessWidget {
   final TextStyle style;
   final TextStyle? originalStyle;
   final bool showOriginalFirst;
+
+  /// The bubble's right-click menu, for plain text only: on a desktop that is
+  /// a `SelectableText`, which takes the click for itself. A formatted body
+  /// leaves the click to the bubble ([FormattedMessageText]).
   final VoidCallback? onSecondaryTap;
 
   /// Explicit text scale for the linkified body (flutter_linkify ignores the
@@ -66,7 +70,6 @@ class TranslatedMessageContent extends StatelessWidget {
           .settings
           .simplifiedMentions,
       textScaler: textScaler,
-      onSecondaryTap: onSecondaryTap,
       markupEnabled: markupEnabled,
     );
   }
