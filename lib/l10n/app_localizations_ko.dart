@@ -6606,4 +6606,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => '노드 메모리가 가득 찼습니다';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

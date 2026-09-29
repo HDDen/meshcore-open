@@ -6959,4 +6959,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Паметта на възела е пълна';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

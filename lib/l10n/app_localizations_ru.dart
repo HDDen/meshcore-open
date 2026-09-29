@@ -6931,4 +6931,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Память ноды заполнена';
+
+  @override
+  String get channels_shareCopyLink => 'Копировать ссылку';
 }

@@ -6918,4 +6918,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Het geheugen van de node is vol';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

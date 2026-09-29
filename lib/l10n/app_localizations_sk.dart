@@ -6903,4 +6903,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Pamäť uzla je plná';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

@@ -6973,4 +6973,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'La mémoire du nœud est pleine';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

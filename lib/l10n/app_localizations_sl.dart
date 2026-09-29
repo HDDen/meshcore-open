@@ -6900,4 +6900,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Pomnilnik vozlišča je poln';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

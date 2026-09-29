@@ -11791,6 +11791,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The node memory is full'**
   String get contacts_addToNodeFull;
+
+  /// No description provided for @channels_shareCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get channels_shareCopyLink;
 }
 
 class _AppLocalizationsDelegate

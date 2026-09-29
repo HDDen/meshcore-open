@@ -232,7 +232,7 @@ class _ChannelShareScreenState extends State<ChannelShareScreen> {
             FilledButton.icon(
               onPressed: () => _copy(link, l10n.channels_shareLinkCopied),
               icon: const Icon(Icons.link),
-              label: Text(l10n.discoveredContacts_copyContact),
+              label: Text(l10n.channels_shareCopyLink),
             ),
           ],
         ),

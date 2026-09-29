@@ -3796,5 +3796,6 @@
     }
   },
   "contacts_addToNodeFailed": "Could not add it to the node memory",
-  "contacts_addToNodeFull": "The node memory is full"
+  "contacts_addToNodeFull": "The node memory is full",
+  "channels_shareCopyLink": "Copy link"
 }

@@ -15,6 +15,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
+import '../helpers/channel_qr_link.dart'; // channel-qr-paste
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -39,6 +40,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
 import '../widgets/node_memory_prompt.dart';
+import '../widgets/channel_link_import.dart'; // channel-qr-paste
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
@@ -483,6 +485,12 @@ class _ContactsScreenState extends State<ContactsScreen>
       return;
     }
     final text = clipboardData.text!.trim();
+    // channel-qr-paste: a channel link is added as a channel.
+    final channelLink = ChannelQrLink.tryParse(text);
+    if (channelLink != null) {
+      if (mounted) await ChannelLinkImport.confirmAndAdd(context, channelLink);
+      return;
+    }
     if (!text.startsWith('meshcore://')) {
       if (mounted) {
         showDismissibleSnackBar(

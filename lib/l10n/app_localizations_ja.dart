@@ -6600,4 +6600,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'ノードのメモリーがいっぱいです';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

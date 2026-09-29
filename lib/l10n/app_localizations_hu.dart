@@ -6936,4 +6936,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'A csomópont memóriája megtelt';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

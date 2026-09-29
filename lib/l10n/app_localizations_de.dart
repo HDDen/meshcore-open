@@ -6951,4 +6951,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Der Knotenspeicher ist voll';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

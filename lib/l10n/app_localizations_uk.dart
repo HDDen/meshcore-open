@@ -6950,4 +6950,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Пам\'ять ноди заповнена';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

@@ -6946,4 +6946,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'La memoria del nodo está llena';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

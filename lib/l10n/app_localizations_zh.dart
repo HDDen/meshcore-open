@@ -6468,4 +6468,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => '节点内存已满';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }

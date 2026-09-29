@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../helpers/channel_link_linkifier.dart'; // channel-qr-chat
 import '../helpers/coordinate_text.dart';
 import '../helpers/link_handler.dart';
 import '../helpers/mention_autocomplete.dart';
@@ -60,7 +61,11 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
     humanize: false,
     defaultToHttps: false,
   );
-  static const _linkifiers = [UrlLinkifier(), EmailLinkifier()];
+  static const _linkifiers = [
+    ChannelLinkLinkifier(), // channel-qr-chat
+    UrlLinkifier(),
+    EmailLinkifier(),
+  ];
 
   final List<TapGestureRecognizer> _recognizers = [];
   List<InlineSpan> _spans = const [];

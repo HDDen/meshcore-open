@@ -4,7 +4,10 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/l10n.dart';
 import '../utils/platform_info.dart';
+import '../helpers/channel_link_linkifier.dart'; // channel-qr-chat
+import '../helpers/channel_qr_link.dart'; // channel-qr-chat
 import '../helpers/snack_bar_builder.dart';
+import '../widgets/channel_link_import.dart'; // channel-qr-chat
 
 class LinkHandler {
   static TextStyle defaultLinkStyle(BuildContext context, TextStyle base) {
@@ -30,7 +33,11 @@ class LinkHandler {
   }) {
     final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
-    const linkifiers = [UrlLinkifier(), EmailLinkifier()];
+    const linkifiers = [
+      ChannelLinkLinkifier(), // channel-qr-chat
+      UrlLinkifier(),
+      EmailLinkifier(),
+    ];
     void onOpen(LinkableElement link) => handleLinkTap(context, link.url);
     // flutter_linkify 6.0.0 exposes textScaleFactor (double), not textScaler.
     final effectiveTextScaleFactor = (textScaler ?? TextScaler.noScaling).scale(
@@ -68,6 +75,12 @@ class LinkHandler {
   }
 
   static Future<void> handleLinkTap(BuildContext context, String url) async {
+    // channel-qr-chat: a channel shared into a chat is added, not browsed.
+    final channelLink = ChannelQrLink.tryParse(url);
+    if (channelLink != null) {
+      return ChannelLinkImport.confirmAndAdd(context, channelLink);
+    }
+
     // Show confirmation dialog
     final shouldOpen = await showDialog<bool>(
       context: context,

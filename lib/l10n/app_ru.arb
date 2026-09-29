@@ -2922,5 +2922,6 @@
   "contacts_addToNodeTitle": "Добавить в память ноды?",
   "contacts_addToNodeMessage": "{contactName} известен только приложению. Для входа, запросов, отправки контакта и сообщений он должен быть в памяти ноды.",
   "contacts_addToNodeFailed": "Не удалось добавить в память ноды",
-  "contacts_addToNodeFull": "Память ноды заполнена"
+  "contacts_addToNodeFull": "Память ноды заполнена",
+  "channels_shareCopyLink": "Копировать ссылку"
 }

@@ -6959,4 +6959,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get contacts_addToNodeFull => 'Pamięć węzła jest pełna';
+
+  @override
+  String get channels_shareCopyLink => 'Copy link';
 }
