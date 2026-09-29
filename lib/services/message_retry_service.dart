@@ -125,6 +125,13 @@ class MessageRetryService extends ChangeNotifier {
   /// can still mark it delivered.
   static const Duration _lateAckGracePeriod = Duration(seconds: 60);
 
+  /// The wait before the retry that follows attempt [retryCount]: a second,
+  /// doubled with each attempt. Tests shorten it.
+  @visibleForTesting
+  int Function(int retryCount) retryBackoffMs = _doublingBackoffMs;
+
+  static int _doublingBackoffMs(int retryCount) => 1000 * (1 << retryCount);
+
   int _maxRetries = 5;
   int get maxRetries => _maxRetries;
 
@@ -902,7 +909,7 @@ class MessageRetryService extends ChangeNotifier {
 
     if (message.retryCount < maxRetries - 1 &&
         _textFitsAttempt(message, contact, message.retryCount + 1)) {
-      final backoffMs = 1000 * (1 << message.retryCount);
+      final backoffMs = retryBackoffMs(message.retryCount);
 
       if (selection != null) {
         _recordPathResultFromMessage(

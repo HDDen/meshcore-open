@@ -4980,6 +4980,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _appSettingsService = service;
   }
 
+  /// Hands the connector the path histories without [initialize].
+  @visibleForTesting
+  void attachPathHistoryServiceForTest(PathHistoryService service) {
+    _pathHistoryService = service;
+  }
+
   @visibleForTesting
   static bool shouldIgnoreLateTcpConnectError({
     required bool manualDisconnect,
