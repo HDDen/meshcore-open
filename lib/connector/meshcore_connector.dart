@@ -3548,7 +3548,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       e: () => this,
       f: (a, b) =>
           ChannelBinaryDataHelper.tryDecodeAppData(dataType: a, payload: b),
-      g: (text, timestamp) => MCOtxtAppCodec.tryDecodeTextPayloadMessage(
+      g: (text, timestamp) => MessageTextCodec.tryDecodeKnownCompressionDetails(
         text,
         inheritedTimestamp: timestamp,
       ),
