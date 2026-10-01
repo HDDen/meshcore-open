@@ -12089,7 +12089,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (replyInfo == null || replyInfo.mentionedNode != replyToSenderName) {
       return text;
     }
-    if (contactReplyCarriesMcmpAnchor(contact, text)) {
+    if (contactReplyCarriesContainerAnchor(contact, text)) {
       return replyInfo.actualMessage;
     }
     return ExactQuoteHelper.splitQuoteLine(replyInfo.actualMessage)?.text ??
@@ -12097,9 +12097,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   /// Whether a reply in a direct or room chat travels with a container
-  /// anchor, which pins the quoted message and makes a quote line
-  /// redundant; see [channelReplyCarriesMcmpAnchor].
-  bool contactReplyCarriesMcmpAnchor(Contact contact, String text) {
+  /// anchor, which pins the quoted message and makes a quote line redundant.
+  ///
+  /// MCMP v3 and MCOtxt both carry that anchor in service fields, so exact
+  /// quote fragments must stay out of their text body.
+  bool contactReplyCarriesContainerAnchor(Contact contact, String text) {
     final key = contact.publicKeyHex;
     return _isMcmpSignableText(text) &&
         ((isContactMcmpEnabled(key) && contactMcmpVersion(key) == 3) ||
@@ -12236,10 +12238,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _groupTextPacketBytes(String text) =>
       5 + channelSenderPrefixBytes(_selfName) + utf8.encode(text).length;
 
-  /// Whether a channel reply will travel with an MCMP v3 reply anchor
+  /// Whether a channel reply will travel with a container reply anchor
   /// (quoted author + timestamp), which pins the quoted message exactly and
   /// makes a plain-text quote fragment redundant.
-  bool channelReplyCarriesMcmpAnchor(int channelIndex, String text) {
+  ///
+  /// MCMP v3 and MCOtxt both carry that anchor in service fields.
+  bool channelReplyCarriesContainerAnchor(int channelIndex, String text) {
     return _isMcmpSignableText(text) &&
         ((isChannelMcmpEnabled(channelIndex) &&
                 channelMcmpVersion(channelIndex) == 3) ||
@@ -12895,8 +12899,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return reverified.mcmpSignatureStatus;
   }
 
-  /// Resolves the MCMP reply anchor of an inbound DM/room message against the
-  /// stored conversation. Room posts match the transmitted "author name +
+  /// Resolves the container reply anchor of an inbound DM/room message against
+  /// the stored conversation. Room posts match the transmitted "author name +
   /// timestamp" pair; direct messages carry an empty author name (both
   /// identities are known) and resolve by timestamp alone.
   Message _resolveContactReplyReference(Message message, Contact contact) {
@@ -12997,7 +13001,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return message;
     }
     final settings = _appSettingsService?.settings;
-    final hasMcmpAnchor = message.containerReplyTimestamp != null;
+    final hasContainerAnchor = message.containerReplyTimestamp != null;
     final quotesAsMentions = settings?.incomingQuoteAsMentions ?? false;
     final history = _conversations[contact.publicKeyHex] ?? const <Message>[];
     String? authorOf(Message candidate) =>
@@ -13006,7 +13010,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ExactQuoteHelper.parsesFragment(
           quotesAsMentions: quotesAsMentions,
           exactQuoteEnabled: settings?.exactQuote ?? true,
-          hasMcmpAnchor: hasMcmpAnchor,
+          hasMcmpAnchor: hasContainerAnchor,
         )
         ? ExactQuoteHelper.resolveReplyWith(
             body: replyInfo.actualMessage,
@@ -13035,7 +13039,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     var replyToText = message.replyToText;
     // Only a bare mention falls back to the author's newest message: an
     // anchor that resolved to nothing stays a name, as in a channel.
-    if (!hasMcmpAnchor && replyToMessageId == null) {
+    if (!hasContainerAnchor && replyToMessageId == null) {
       var original = exactQuote?.quoted;
       if (exactQuote == null) {
         for (var i = history.length - 1; i >= 0; i--) {
@@ -15818,7 +15822,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // when it is cut out; the two settings that govern quoting meet there
       // rather than here.
       final quoteSettings = _appSettingsService?.settings;
-      final hasMcmpAnchor = message.containerReplyTimestamp != null;
+      final hasContainerAnchor = message.containerReplyTimestamp != null;
       final quotesAsMentions =
           !message.isOutgoing &&
           (quoteSettings?.incomingQuoteAsMentions ?? false);
@@ -15826,7 +15830,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           ExactQuoteHelper.parsesFragment(
             quotesAsMentions: quotesAsMentions,
             exactQuoteEnabled: quoteSettings?.exactQuote ?? true,
-            hasMcmpAnchor: hasMcmpAnchor,
+            hasMcmpAnchor: hasContainerAnchor,
           )
           ? ExactQuoteHelper.resolveReply(
               body: replyInfo.actualMessage,
@@ -15853,7 +15857,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if ((replyToSenderName == null || replyToText == null) &&
           message.containerReplyTimestamp == null) {
         // Fallback for incoming/legacy messages where only the @mention
-        // exists. Messages with an MCMP reply anchor must never fall back to
+        // exists. Messages with a container reply anchor must never fall back to
         // "most recent from this sender": if the anchor did not resolve, a
         // name-only reply banner is more honest than a wrong quote.
         final originalMessage = exactQuote == null

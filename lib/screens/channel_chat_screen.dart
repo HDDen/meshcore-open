@@ -470,7 +470,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final draft = _composerBodyText(_textController.text);
     final showPlainReplyInComposer =
         settings.exactQuote &&
-        !connector.channelReplyCarriesMcmpAnchor(
+        !connector.channelReplyCarriesContainerAnchor(
           widget.channel.index,
           draft.isEmpty ? 'x' : draft,
         );
@@ -4192,11 +4192,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }) {
     final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
-    // MCMP v3 carries its own exact reply anchor, so a text fragment would
-    // only waste payload.
+    // MCMP v3 and MCOtxt carry their own exact reply anchor, so a text
+    // fragment would only waste payload.
     final enabled =
         settings.exactQuote &&
-        !connector.channelReplyCarriesMcmpAnchor(widget.channel.index, text);
+        !connector.channelReplyCarriesContainerAnchor(
+          widget.channel.index,
+          text,
+        );
     return ExactQuoteHelper.formatReply(
       senderName: senderName,
       text: text,

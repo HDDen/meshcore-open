@@ -649,7 +649,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final draft = _composerBodyText(_textController.text);
     final showPlainReplyInComposer =
         settings.exactQuote &&
-        !connector.contactReplyCarriesMcmpAnchor(
+        !connector.contactReplyCarriesContainerAnchor(
           _resolveContact(connector),
           draft.isEmpty ? 'x' : draft,
         );
@@ -764,7 +764,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // fragment would only cost payload.
     final enabled =
         settings.exactQuote &&
-        !connector.contactReplyCarriesMcmpAnchor(
+        !connector.contactReplyCarriesContainerAnchor(
           contact,
           text.isEmpty ? 'x' : text,
         );
