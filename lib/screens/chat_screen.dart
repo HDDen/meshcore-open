@@ -738,6 +738,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final replyingTo = _replyingToMessage;
     final authorName = _replyingToAuthor;
     if (replyingTo == null || authorName == null) return text;
+    final contact = _resolveContact(connector);
+    if (connector.contactReplyCarriesContainerAnchor(
+      contact,
+      text.isEmpty ? 'x' : text,
+    )) {
+      return text;
+    }
     return _formatReply(
       connector,
       senderName: authorName,

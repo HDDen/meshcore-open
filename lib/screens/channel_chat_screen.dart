@@ -4174,6 +4174,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   String _applyReplyMention(String text, {String? quoteFragment}) {
     final replyingTo = _replyingToMessage;
     if (replyingTo == null) return text;
+    final connector = context.read<MeshCoreConnector>();
+    if (connector.channelReplyCarriesContainerAnchor(
+      widget.channel.index,
+      text.isEmpty ? 'x' : text,
+    )) {
+      return text;
+    }
     return _formatReply(
       senderName: replyingTo.senderName,
       text: text,

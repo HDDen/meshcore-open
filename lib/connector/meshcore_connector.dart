@@ -7623,6 +7623,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         mcotxtPlainFallback = true;
       }
     }
+    final containerText = (mcmpV3Applies || mcotxtApplies)
+        ? _containerReplyBody(text, replyToSenderName)
+        : text;
     Uint8List? mcmpSignature;
     if (mcmpV3Applies && channelMcmpUseSign(channel.index)) {
       // Signing round-trips to the node (up to a few seconds). Show the
@@ -7632,7 +7635,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       ChannelMessage? signingPlaceholder;
       if (pendingMessageId == null) {
         signingPlaceholder = ChannelMessage.outgoing(
-          text,
+          containerText,
           _selfName ?? 'Me',
           channel.index,
           originalText: originalText,
@@ -7654,7 +7657,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         senderName: _selfName ?? 'Me',
         timestamp: mcmpV3Timestamp!,
         hasSenderNameInBody: false,
-        text: text,
+        text: containerText,
         replyAuthorName: containerReplyAuthorName,
         replyTimestamp: containerReplyTimestamp,
       );
@@ -7689,7 +7692,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                 senderName: _selfName ?? 'Me',
               )
             : ChannelBinaryDataHelper.tryEncodeOutbound(
-                text: text,
+                text: containerText,
                 senderName: _selfName ?? 'Me',
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
                 mcotxtEnabled: mcotxtApplies,
@@ -7709,7 +7712,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final isMcoImageBinary =
         binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
         binaryOutbound?.kind == ChannelBinaryDataKind.mcoImageV4;
-    final messageText = binaryOutbound?.canonicalText ?? text;
+    final messageText =
+        binaryOutbound?.canonicalText ??
+        ((mcmpV3Applies || mcotxtApplies) ? containerText : text);
     final String outboundText;
     if (isMcoImageBinary) {
       outboundText = messageText;
@@ -7717,7 +7722,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // Text transport carries the signed body in the mcmp3: Base91 wrapper;
       // the sender name stays in the outer "Name: text" layer (no bit2).
       final wrapped = McmpAppCodec.encodeTextTransport(
-        text: text,
+        text: containerText,
         timestamp: mcmpV3Timestamp!,
         signature: mcmpSignature,
         replyAuthorName: containerReplyAuthorName,
@@ -7736,7 +7741,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
     } else if (mcotxtApplies && binaryOutbound == null) {
       outboundText = MCOtxtAppCodec.encodeTextTransport(
-        text: text,
+        text: containerText,
         timestamp: mcotxtTimestamp!,
         replyAuthorName: containerReplyAuthorName,
         replyTimestamp: containerReplyTimestamp,
@@ -8692,6 +8697,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
     // The preview follows the "plain when smaller" choice the commit will
     // make; the queued text stays as typed and the commit recomputes it.
+    final mcmpV3Applies =
+        mcoImageV3 == null &&
+        isChannelMcmpEnabled(channel.index) &&
+        channelMcmpVersion(channel.index) == 3 &&
+        _isMcmpSignableText(text);
     var mcotxtApplies =
         mcoImageV3 == null &&
         isChannelMCOtxtEnabled(channel.index) &&
@@ -8708,6 +8718,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           )
         : null;
     if (plainFallback != null) mcotxtApplies = false;
+    final containerText = (mcmpV3Applies || mcotxtApplies)
+        ? _containerReplyBody(text, replyToSenderName)
+        : text;
     var outboundText =
         plainFallback ?? prepareChannelOutboundText(channel.index, text);
     final binaryOutbound = mcoImageV3 != null
@@ -8715,12 +8728,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             image: mcoImageV3,
             senderName: _selfName ?? 'Me',
           )
-            : ChannelBinaryDataHelper.tryEncodeOutbound(
-                text: text,
-                senderName: _selfName ?? 'Me',
-                mcmpEnabled: isChannelMcmpEnabled(channel.index),
-                mcotxtEnabled: mcotxtApplies,
-                mcmpVersion: channelMcmpVersion(channel.index),
+        : ChannelBinaryDataHelper.tryEncodeOutbound(
+            text: containerText,
+            senderName: _selfName ?? 'Me',
+            mcmpEnabled: isChannelMcmpEnabled(channel.index),
+            mcotxtEnabled: mcotxtApplies,
+            mcmpVersion: channelMcmpVersion(channel.index),
             mcmpUseSign: channelMcmpUseSign(channel.index),
             timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
             replyAuthorName: replyToSenderName,
@@ -8735,7 +8748,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           );
     if (binaryOutbound == null && mcotxtApplies) {
       outboundText = MCOtxtAppCodec.encodeTextTransport(
-        text: text,
+        text: containerText,
         timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         replyAuthorName: replyToSenderName,
         replyTimestamp: replyToTimestamp,
@@ -8745,7 +8758,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final usesBinaryCompressedText =
         binaryOutbound?.kind == ChannelBinaryDataKind.mcmp ||
         binaryOutbound?.kind == ChannelBinaryDataKind.mcotxt;
-    final messageText = binaryOutbound?.canonicalText ?? text;
+    final messageText =
+        binaryOutbound?.canonicalText ??
+        ((mcmpV3Applies || mcotxtApplies) ? containerText : text);
     final compression = _channelCompressionMetadata(
       channel.index,
       uncompressedText ?? text,
@@ -8765,11 +8780,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final packetRegion = _displayPacketRegion(
       _outgoingChannelRegion(channel.index),
     );
-    final mcmpV3Applies =
-        mcoImageV3 == null &&
-        isChannelMcmpEnabled(channel.index) &&
-        channelMcmpVersion(channel.index) == 3 &&
-        _isMcmpSignableText(text);
     final baseMessage = ChannelMessage.outgoing(
       messageText,
       _selfName ?? 'Me',
@@ -12054,9 +12064,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) {
     if (replyToSenderName == null) return text;
     final mention = '@[$replyToSenderName] ';
-    if (!text.startsWith(mention)) return text;
-    final rest = text.substring(mention.length);
-    if (ExactQuoteHelper.splitQuoteLine(rest) != null) return text;
+    final hasMention = text.startsWith(mention);
+    final rest = hasMention ? text.substring(mention.length) : text;
+    if (hasMention && ExactQuoteHelper.splitQuoteLine(rest) != null) {
+      return text;
+    }
     final settings = _appSettingsService?.settings;
     final enabled = settings?.exactQuote ?? false;
     return ExactQuoteHelper.formatReplyWith(
@@ -12073,6 +12085,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
       outboundCharMap: contactCyr2LatCharMap(contact),
     );
+  }
+
+  String _containerReplyBody(String text, String? replyToSenderName) {
+    if (replyToSenderName == null) return text;
+    final mention = '@[$replyToSenderName] ';
+    return text.startsWith(mention) ? text.substring(mention.length) : text;
   }
 
   /// What a reply of ours shows: its text without the `@[author]` mention
@@ -12168,10 +12186,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final hasReplyPair = replyToSenderName != null && replyToTimestamp != null;
     final replyAuthorName = hasReplyPair ? replyToSenderName : null;
     final replyTimestamp = hasReplyPair ? replyToTimestamp : null;
+    final containerText = _containerReplyBody(text, replyToSenderName);
     final int mcotxtBytes;
     if (ChannelBinaryDataHelper.canSend) {
       final envelope = ChannelBinaryDataHelper.mcotxtAppPayloadLength(
-        text,
+        containerText,
         senderName,
         replyAuthorName: replyAuthorName,
         replyTimestamp: replyTimestamp,
@@ -12181,7 +12200,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     } else {
       mcotxtBytes = _groupTextPacketBytes(
         MCOtxtAppCodec.encodeTextTransport(
-          text: text,
+          text: containerText,
           timestamp: timestamp,
           replyAuthorName: replyAuthorName,
           replyTimestamp: replyTimestamp,
@@ -12214,12 +12233,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) {
     if (replyToSenderName == null) return text;
     final mention = '@[$replyToSenderName] ';
-    if (!text.startsWith(mention)) return text;
+    final hasMention = text.startsWith(mention);
+    final body = hasMention ? text.substring(mention.length) : text;
+    if (hasMention && ExactQuoteHelper.splitQuoteLine(body) != null) {
+      return text;
+    }
     final settings = _appSettingsService?.settings;
     final enabled = settings?.exactQuote ?? false;
     return ExactQuoteHelper.formatReply(
       senderName: replyToSenderName,
-      text: text.substring(mention.length),
+      text: body,
       quotedText: replyToText,
       quotedMessageId: replyToMessageId,
       // Read only for the fragment, and merged anew on every call: with the
@@ -15804,15 +15827,36 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ? message.copyWith(wasBlocked: true)
         : message;
 
+    if (processedMessage.containerReplyTimestamp != null &&
+        processedMessage.replyToMessageId == null &&
+        processedMessage.replyToText == null) {
+      final containerReference = _resolveChannelReplyAnchor(
+        channelIndex,
+        processedMessage.containerReplyAuthorName,
+        processedMessage.containerReplyTimestamp,
+      );
+      if (containerReference != null) {
+        processedMessage = processedMessage.copyWith(
+          replyToMessageId: containerReference.messageId,
+          replyToSenderName:
+              processedMessage.replyToSenderName ??
+              containerReference.senderName,
+          replyToText: containerReference.text,
+        );
+      }
+    }
+
     final hasExplicitReplyContext =
-        message.replyToMessageId != null ||
-        message.replyToSenderName != null ||
-        message.replyToText != null ||
-        message.containerReplyTimestamp != null;
-    if (replyInfo != null && (!message.isOutgoing || hasExplicitReplyContext)) {
-      var replyToMessageId = message.replyToMessageId;
-      var replyToSenderName = message.replyToSenderName;
-      var replyToText = message.replyToText;
+        processedMessage.replyToMessageId != null ||
+        processedMessage.replyToSenderName != null ||
+        processedMessage.replyToText != null ||
+        processedMessage.containerReplyTimestamp != null;
+    if (replyInfo != null &&
+        (!processedMessage.isOutgoing || hasExplicitReplyContext)) {
+      final replySource = processedMessage;
+      var replyToMessageId = replySource.replyToMessageId;
+      var replyToSenderName = replySource.replyToSenderName;
+      var replyToText = replySource.replyToText;
 
       // Plain-text replies may carry an exact-quote fragment (">first chars"
       // on its own line) so the mention resolves to the message it was
@@ -15822,9 +15866,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // when it is cut out; the two settings that govern quoting meet there
       // rather than here.
       final quoteSettings = _appSettingsService?.settings;
-      final hasContainerAnchor = message.containerReplyTimestamp != null;
+      final hasContainerAnchor = replySource.containerReplyTimestamp != null;
       final quotesAsMentions =
-          !message.isOutgoing &&
+          !replySource.isOutgoing &&
           (quoteSettings?.incomingQuoteAsMentions ?? false);
       final exactQuote =
           ExactQuoteHelper.parsesFragment(
@@ -15855,7 +15899,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           replyInfo.actualMessage;
 
       if ((replyToSenderName == null || replyToText == null) &&
-          message.containerReplyTimestamp == null) {
+          replySource.containerReplyTimestamp == null) {
         // Fallback for incoming/legacy messages where only the @mention
         // exists. Messages with a container reply anchor must never fall back to
         // "most recent from this sender": if the anchor did not resolve, a
@@ -15878,58 +15922,59 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
       // Create new message with reply metadata
       processedMessage = ChannelMessage(
-        senderKey: message.senderKey,
-        senderName: message.senderName,
+        senderKey: replySource.senderKey,
+        senderName: replySource.senderName,
         text: messageBody,
-        originalText: message.originalText,
-        translatedText: message.translatedText,
-        translatedLanguageCode: message.translatedLanguageCode,
-        translationStatus: message.translationStatus,
-        translationModelId: message.translationModelId,
-        wasMcmpCompressed: message.wasMcmpCompressed,
-        compressionType: message.compressionType,
-        compressionSavingsPercent: message.compressionSavingsPercent,
-        compressionOriginalBytes: message.compressionOriginalBytes,
-        compressionPayloadBytes: message.compressionPayloadBytes,
-        mcmpSignatureStatus: message.mcmpSignatureStatus,
-        containerTimestamp: message.containerTimestamp,
-        containerSenderName: message.containerSenderName,
-        mcmpIsSigned: message.mcmpIsSigned,
-        mcmpSignature: message.mcmpSignature,
-        containerReplyAuthorName: message.containerReplyAuthorName,
-        containerReplyTimestamp: message.containerReplyTimestamp,
-        verifiedSenderKeyHex: message.verifiedSenderKeyHex,
-        mcmpNameCollision: message.mcmpNameCollision,
-        wasBinaryTransport: message.wasBinaryTransport,
-        wasBlocked: blockedNow || message.wasBlocked,
-        binaryPacketBytes: message.binaryPacketBytes,
-        rawText: message.rawText,
-        rawPayload: message.rawPayload,
-        timestamp: message.timestamp,
-        receivedAt: message.receivedAt,
-        sentByRadioAt: message.sentByRadioAt,
-        isOutgoing: message.isOutgoing,
-        status: message.status,
-        repeats: message.repeats,
-        repeatCount: message.repeatCount,
-        pathLength: message.pathLength,
-        pathHashWidth: message.pathHashWidth,
-        pathBytes: message.pathBytes,
-        pathVariants: message.pathVariants,
-        pathObservations: message.pathObservations,
-        channelIndex: message.channelIndex,
-        packetRegion: message.packetRegion,
-        packetRegionInfoAvailable: message.packetRegionInfoAvailable,
-        packetRegionNotMatched: message.packetRegionNotMatched,
-        noRetransmissionWarningSeconds: message.noRetransmissionWarningSeconds,
-        messageId: message.messageId,
-        packetHash: message.packetHash,
+        originalText: replySource.originalText,
+        translatedText: replySource.translatedText,
+        translatedLanguageCode: replySource.translatedLanguageCode,
+        translationStatus: replySource.translationStatus,
+        translationModelId: replySource.translationModelId,
+        wasMcmpCompressed: replySource.wasMcmpCompressed,
+        compressionType: replySource.compressionType,
+        compressionSavingsPercent: replySource.compressionSavingsPercent,
+        compressionOriginalBytes: replySource.compressionOriginalBytes,
+        compressionPayloadBytes: replySource.compressionPayloadBytes,
+        mcmpSignatureStatus: replySource.mcmpSignatureStatus,
+        containerTimestamp: replySource.containerTimestamp,
+        containerSenderName: replySource.containerSenderName,
+        mcmpIsSigned: replySource.mcmpIsSigned,
+        mcmpSignature: replySource.mcmpSignature,
+        containerReplyAuthorName: replySource.containerReplyAuthorName,
+        containerReplyTimestamp: replySource.containerReplyTimestamp,
+        verifiedSenderKeyHex: replySource.verifiedSenderKeyHex,
+        mcmpNameCollision: replySource.mcmpNameCollision,
+        wasBinaryTransport: replySource.wasBinaryTransport,
+        wasBlocked: blockedNow || replySource.wasBlocked,
+        binaryPacketBytes: replySource.binaryPacketBytes,
+        rawText: replySource.rawText,
+        rawPayload: replySource.rawPayload,
+        timestamp: replySource.timestamp,
+        receivedAt: replySource.receivedAt,
+        sentByRadioAt: replySource.sentByRadioAt,
+        isOutgoing: replySource.isOutgoing,
+        status: replySource.status,
+        repeats: replySource.repeats,
+        repeatCount: replySource.repeatCount,
+        pathLength: replySource.pathLength,
+        pathHashWidth: replySource.pathHashWidth,
+        pathBytes: replySource.pathBytes,
+        pathVariants: replySource.pathVariants,
+        pathObservations: replySource.pathObservations,
+        channelIndex: replySource.channelIndex,
+        packetRegion: replySource.packetRegion,
+        packetRegionInfoAvailable: replySource.packetRegionInfoAvailable,
+        packetRegionNotMatched: replySource.packetRegionNotMatched,
+        noRetransmissionWarningSeconds:
+            replySource.noRetransmissionWarningSeconds,
+        messageId: replySource.messageId,
+        packetHash: replySource.packetHash,
         replyToMessageId: replyToMessageId,
         replyToSenderName: replyToSenderName ?? replyInfo.mentionedNode,
         replyToText: replyToText,
         replyIsExact: replyIsExact,
-        reactions: message.reactions,
-        sourceLabel: message.sourceLabel,
+        reactions: replySource.reactions,
+        sourceLabel: replySource.sourceLabel,
       );
     }
 
