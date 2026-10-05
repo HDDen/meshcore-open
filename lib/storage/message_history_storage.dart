@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/wardrive_sample.dart';
+import 'data_root.dart';
 import 'message_history_database.dart';
 import 'prefs_manager.dart';
 
@@ -259,9 +260,13 @@ class MessageHistoryStorage {
     if (kIsWeb) return;
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return;
     await _database?.close();
+    // The arguments the app was started with, or a `--data-dir` profile
+    // would restart in another folder. The lock goes first; the new process
+    // waits for it.
+    await releaseDataRootLock();
     await Process.start(
       Platform.resolvedExecutable,
-      Platform.executableArguments,
+      DataRoot.launchArguments,
       mode: ProcessStartMode.detached,
     );
     exit(0);

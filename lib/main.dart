@@ -17,6 +17,7 @@ import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
 import 'models/image_codec_support.dart';
+import 'screens/data_folder_problem_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/startup_error_screen.dart';
 import 'screens/message_history_database_screen.dart';
@@ -42,6 +43,7 @@ import 'package:mco_service/mco_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
+import 'storage/data_root.dart';
 import 'storage/prefs_manager.dart';
 import 'storage/message_history_storage.dart';
 import 'storage/message_history_maintenance.dart';
@@ -59,18 +61,30 @@ import 'widgets/image_send_codec_binding.dart';
 String _startupErrorCode = 'MCO-STARTUP-001';
 String _startupStage = 'Flutter initialization';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     if (PlatformInfo.isIOS) {
       await FlutterBluePlus.setOptions(restoreState: true);
     }
+    // Before anything reads or writes a file: on Windows and Linux every
+    // path the app asks for is redirected into the data folder.
+    _setStartupStage('MCO-STARTUP-110', 'Data folder');
+    final dataRoot = await prepareDataRoot(args);
+    if (dataRoot is DataRootProblem) {
+      runApp(DataFolderProblemApp(problem: dataRoot));
+      return;
+    }
     await _startApplication();
   } catch (error, stackTrace) {
     String? dataPath;
     try {
-      dataPath = (await getApplicationSupportDirectory()).path;
+      // Windows and Linux never ask for a system folder, which would create
+      // one: the data folder is the answer, once it has been chosen.
+      dataPath = PlatformInfo.isWindows || PlatformInfo.isLinux
+          ? DataRoot.path
+          : (await getApplicationSupportDirectory()).path;
     } catch (_) {
       // The startup report remains useful even when the platform path lookup
       // was part of the failure.

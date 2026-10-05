@@ -6934,4 +6934,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channels_shareCopyLink => 'Копировать ссылку';
+
+  @override
+  String get dataFolder_inUseTitle => 'Папка данных уже занята';
+
+  @override
+  String dataFolder_inUseBody(String path) {
+    return 'Эту папку данных использует другая запущенная копия приложения:\n$path\n\nЗакройте ту копию и запустите приложение снова.';
+  }
+
+  @override
+  String get dataFolder_unavailableTitle => 'Папку данных нельзя использовать';
+
+  @override
+  String dataFolder_unavailableBody(String path) {
+    return 'Приложение хранит данные в этой папке, но не может её создать или записать в неё:\n$path\n\nПеренесите приложение в папку, куда есть право записи.';
+  }
+
+  @override
+  String get dataFolder_missingPath =>
+      'В параметре --data-dir не указана папка. Он пишется так: --data-dir=<путь>.';
+
+  @override
+  String get dataFolder_otherFolderHint =>
+      'При запуске копии приложения можно задать свою папку данных: --data-dir=<путь>. Относительный путь считается от папки приложения.';
+
+  @override
+  String dataFolder_details(String error) {
+    return 'Подробности: $error';
+  }
 }

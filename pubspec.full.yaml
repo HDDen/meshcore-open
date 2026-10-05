@@ -48,6 +48,11 @@ dependencies:
   mco_service:
     path: packages/mco_service_stub
   shared_preferences: ^2.2.2
+  # The data folder of Windows and Linux hands its path provider to these
+  # stores (lib/storage/data_root_io.dart).
+  shared_preferences_linux: ^2.4.1
+  shared_preferences_platform_interface: ^2.4.2
+  shared_preferences_windows: ^2.4.1
   drift: ^2.34.3
   drift_flutter: ^0.3.1
   uuid: ^4.3.3
@@ -71,6 +76,12 @@ dependencies:
   gpx: ^2.3.0
   archive: ^4.0.9
   path_provider: ^2.1.5
+  # The data folder of Windows and Linux redirects path_provider
+  # (lib/storage/data_root_io.dart).
+  path: ^1.9.1
+  path_provider_linux: ^2.2.1
+  path_provider_platform_interface: ^2.1.2
+  path_provider_windows: ^2.3.0
   share_plus: ^13.1.0
   file_selector: ^1.0.3
   image_picker: ^1.2.2

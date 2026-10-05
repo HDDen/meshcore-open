@@ -6903,4 +6903,33 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get channels_shareCopyLink => 'Copy link';
+
+  @override
+  String get dataFolder_inUseTitle => 'The data folder is already in use';
+
+  @override
+  String dataFolder_inUseBody(String path) {
+    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+  }
+
+  @override
+  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+
+  @override
+  String dataFolder_unavailableBody(String path) {
+    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+  }
+
+  @override
+  String get dataFolder_missingPath =>
+      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+
+  @override
+  String get dataFolder_otherFolderHint =>
+      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+
+  @override
+  String dataFolder_details(String error) {
+    return 'Details: $error';
+  }
 }

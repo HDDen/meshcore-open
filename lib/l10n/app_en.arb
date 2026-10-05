@@ -3797,5 +3797,36 @@
   },
   "contacts_addToNodeFailed": "Could not add it to the node memory",
   "contacts_addToNodeFull": "The node memory is full",
-  "channels_shareCopyLink": "Copy link"
+  "channels_shareCopyLink": "Copy link",
+  "dataFolder_inUseTitle": "The data folder is already in use",
+  "dataFolder_inUseBody": "Another running copy of the app is using this data folder:\n{path}\n\nClose that copy, then start the app again.",
+  "@dataFolder_inUseBody": {
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "D:\\MCO\\userdata"
+      }
+    }
+  },
+  "dataFolder_unavailableTitle": "The data folder cannot be used",
+  "dataFolder_unavailableBody": "The app keeps its data in this folder, but cannot create it or write to it:\n{path}\n\nMove the app to a folder you can write to.",
+  "@dataFolder_unavailableBody": {
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "D:\\MCO\\userdata"
+      }
+    }
+  },
+  "dataFolder_missingPath": "The --data-dir parameter names no folder. It is written as --data-dir=<path>.",
+  "dataFolder_otherFolderHint": "A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app's folder.",
+  "dataFolder_details": "Details: {error}",
+  "@dataFolder_details": {
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Access is denied."
+      }
+    }
+  }
 }

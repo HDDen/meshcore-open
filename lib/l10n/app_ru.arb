@@ -2923,5 +2923,12 @@
   "contacts_addToNodeMessage": "{contactName} известен только приложению. Для входа, запросов, отправки контакта и сообщений он должен быть в памяти ноды.",
   "contacts_addToNodeFailed": "Не удалось добавить в память ноды",
   "contacts_addToNodeFull": "Память ноды заполнена",
-  "channels_shareCopyLink": "Копировать ссылку"
+  "channels_shareCopyLink": "Копировать ссылку",
+  "dataFolder_inUseTitle": "Папка данных уже занята",
+  "dataFolder_inUseBody": "Эту папку данных использует другая запущенная копия приложения:\n{path}\n\nЗакройте ту копию и запустите приложение снова.",
+  "dataFolder_unavailableTitle": "Папку данных нельзя использовать",
+  "dataFolder_unavailableBody": "Приложение хранит данные в этой папке, но не может её создать или записать в неё:\n{path}\n\nПеренесите приложение в папку, куда есть право записи.",
+  "dataFolder_missingPath": "В параметре --data-dir не указана папка. Он пишется так: --data-dir=<путь>.",
+  "dataFolder_otherFolderHint": "При запуске копии приложения можно задать свою папку данных: --data-dir=<путь>. Относительный путь считается от папки приложения.",
+  "dataFolder_details": "Подробности: {error}"
 }

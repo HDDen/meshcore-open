@@ -11797,6 +11797,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy link'**
   String get channels_shareCopyLink;
+
+  /// No description provided for @dataFolder_inUseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The data folder is already in use'**
+  String get dataFolder_inUseTitle;
+
+  /// No description provided for @dataFolder_inUseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Another running copy of the app is using this data folder:\n{path}\n\nClose that copy, then start the app again.'**
+  String dataFolder_inUseBody(String path);
+
+  /// No description provided for @dataFolder_unavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The data folder cannot be used'**
+  String get dataFolder_unavailableTitle;
+
+  /// No description provided for @dataFolder_unavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app keeps its data in this folder, but cannot create it or write to it:\n{path}\n\nMove the app to a folder you can write to.'**
+  String dataFolder_unavailableBody(String path);
+
+  /// No description provided for @dataFolder_missingPath.
+  ///
+  /// In en, this message translates to:
+  /// **'The --data-dir parameter names no folder. It is written as --data-dir=<path>.'**
+  String get dataFolder_missingPath;
+
+  /// No description provided for @dataFolder_otherFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.'**
+  String get dataFolder_otherFolderHint;
+
+  /// No description provided for @dataFolder_details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details: {error}'**
+  String dataFolder_details(String error);
 }
 
 class _AppLocalizationsDelegate

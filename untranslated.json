@@ -1,65 +1,177 @@
 {
   "bg": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "de": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "es": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "fr": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "hu": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "it": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "ja": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "ko": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "nl": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "pl": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "pt": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "sk": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "sl": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "sv": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "uk": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ],
 
   "zh": [
-    "channels_shareCopyLink"
+    "channels_shareCopyLink",
+    "dataFolder_inUseTitle",
+    "dataFolder_inUseBody",
+    "dataFolder_unavailableTitle",
+    "dataFolder_unavailableBody",
+    "dataFolder_missingPath",
+    "dataFolder_otherFolderHint",
+    "dataFolder_details"
   ]
 }
