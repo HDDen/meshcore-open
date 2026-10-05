@@ -2930,5 +2930,19 @@
   "dataFolder_unavailableBody": "Приложение хранит данные в этой папке, но не может её создать или записать в неё:\n{path}\n\nПеренесите приложение в папку, куда есть право записи.",
   "dataFolder_missingPath": "В параметре --data-dir не указана папка. Он пишется так: --data-dir=<путь>.",
   "dataFolder_otherFolderHint": "При запуске копии приложения можно задать свою папку данных: --data-dir=<путь>. Относительный путь считается от папки приложения.",
-  "dataFolder_details": "Подробности: {error}"
+  "dataFolder_details": "Подробности: {error}",
+  "dataTransfer_offerTitle": "Найдены данные прежней установки",
+  "dataTransfer_offerBody": "Раньше приложение хранило данные в системных папках. Их можно скопировать в эту папку данных:\n{target}",
+  "dataTransfer_offerSources": "Откуда копировать:",
+  "dataTransfer_offerSize": "Объём: {size}",
+  "dataTransfer_offerSizeCounting": "Объём: подсчёт…",
+  "dataTransfer_offerCopiedBefore": "Эти данные уже копировались:",
+  "dataTransfer_offerNote": "Исходные папки останутся как есть. Перед копированием закройте другие запущенные копии приложения.",
+  "dataTransfer_copy": "Скопировать",
+  "dataTransfer_startEmpty": "Начать с пустыми данными",
+  "dataTransfer_progressTitle": "Копирование данных",
+  "dataTransfer_progress": "Скопировано {copied} из {total}",
+  "dataTransfer_progressNote": "Если закрыть окно, копирование прервётся, и при следующем запуске перенос будет предложен снова.",
+  "dataTransfer_failedTitle": "Не удалось скопировать данные",
+  "dataTransfer_failedBody": "Исходные папки не изменились. При следующем запуске перенос будет предложен снова; перед этим закройте другие копии приложения."
 }

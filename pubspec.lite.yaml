@@ -55,6 +55,9 @@ dependencies:
   shared_preferences_windows: ^2.4.1
   drift: ^2.34.3
   drift_flutter: ^0.3.1
+  # A snapshot of the old databases when the data folder takes them over
+  # (lib/storage/data_transfer_io.dart).
+  sqlite3: ^3.5.2
   uuid: ^4.3.3
   flutter_map: ^8.2.2
   latlong2: ^0.9.1

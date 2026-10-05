@@ -3828,5 +3828,47 @@
         "example": "Access is denied."
       }
     }
-  }
+  },
+  "dataTransfer_offerTitle": "Data of an earlier installation found",
+  "dataTransfer_offerBody": "Earlier the app kept its data in the system folders. They can be copied into this data folder:\n{target}",
+  "@dataTransfer_offerBody": {
+    "placeholders": {
+      "target": {
+        "type": "String",
+        "example": "D:\\MCO\\userdata"
+      }
+    }
+  },
+  "dataTransfer_offerSources": "Copied from:",
+  "dataTransfer_offerSize": "Size: {size}",
+  "@dataTransfer_offerSize": {
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "1.5 GB"
+      }
+    }
+  },
+  "dataTransfer_offerSizeCounting": "Size: counting…",
+  "dataTransfer_offerCopiedBefore": "These data have already been copied:",
+  "dataTransfer_offerNote": "The original folders stay as they are. Close other running copies of the app before copying.",
+  "dataTransfer_copy": "Copy",
+  "dataTransfer_startEmpty": "Start with empty data",
+  "dataTransfer_progressTitle": "Copying data",
+  "dataTransfer_progress": "Copied {copied} of {total}",
+  "@dataTransfer_progress": {
+    "placeholders": {
+      "copied": {
+        "type": "String",
+        "example": "120.5 MB"
+      },
+      "total": {
+        "type": "String",
+        "example": "1.5 GB"
+      }
+    }
+  },
+  "dataTransfer_progressNote": "Closing the window stops the copy; the next start offers it again.",
+  "dataTransfer_failedTitle": "The data could not be copied",
+  "dataTransfer_failedBody": "The original folders were not changed. The next start offers the copy again; close other copies of the app first."
 }

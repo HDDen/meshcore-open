@@ -1558,7 +1558,10 @@ A v4 figure can also be **text** (`MCOImageV4Text`, extended sub-opcode `15` use
 `ReceivedImageStore.load()` deliberately restores sizes, not bytes — reattaching a few hundred
 images must not read tens of MB of PNG on the startup path — so an entry comes back with
 `pngStored` / `receiverPreviewStored` re-derived from the files actually on disk and both byte
-slots null. `ensurePng` and `ensureReceiverPreview` read them back on demand.
+slots null. `ensurePng` and `ensureReceiverPreview` read them back on demand. It writes a
+sidecar back only when that repair changed the record: rewriting every one, each a flushed
+write and a rename, held a Windows launch about half a second an image where an antivirus
+watched the writes of a new executable (`test/services/received_image_store_test.dart`).
 
 An outgoing entry has **two** pictures: the sender's own 512×512 crop in the PNG slot (written
 by `registerOutgoing`; it is the backdrop of the placeholder and what a tap on the

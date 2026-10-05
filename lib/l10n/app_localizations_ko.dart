@@ -6638,4 +6638,56 @@ class AppLocalizationsKo extends AppLocalizations {
   String dataFolder_details(String error) {
     return 'Details: $error';
   }
+
+  @override
+  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+
+  @override
+  String dataTransfer_offerBody(String target) {
+    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+  }
+
+  @override
+  String get dataTransfer_offerSources => 'Copied from:';
+
+  @override
+  String dataTransfer_offerSize(String size) {
+    return 'Size: $size';
+  }
+
+  @override
+  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+
+  @override
+  String get dataTransfer_offerCopiedBefore =>
+      'These data have already been copied:';
+
+  @override
+  String get dataTransfer_offerNote =>
+      'The original folders stay as they are. Close other running copies of the app before copying.';
+
+  @override
+  String get dataTransfer_copy => 'Copy';
+
+  @override
+  String get dataTransfer_startEmpty => 'Start with empty data';
+
+  @override
+  String get dataTransfer_progressTitle => 'Copying data';
+
+  @override
+  String dataTransfer_progress(String copied, String total) {
+    return 'Copied $copied of $total';
+  }
+
+  @override
+  String get dataTransfer_progressNote =>
+      'Closing the window stops the copy; the next start offers it again.';
+
+  @override
+  String get dataTransfer_failedTitle => 'The data could not be copied';
+
+  @override
+  String get dataTransfer_failedBody =>
+      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
 }

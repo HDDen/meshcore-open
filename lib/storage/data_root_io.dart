@@ -12,6 +12,8 @@ import 'package:shared_preferences_windows/shared_preferences_windows.dart';
 
 import 'data_root_core.dart';
 
+export 'data_transfer_io.dart';
+
 /// The byte the lock covers, past anything written to the file, so that the
 /// process id at its start stays readable while another copy holds the lock.
 const int _lockedByte = 4096;
@@ -120,11 +122,13 @@ Future<DataRootOutcome> lockDataRoot(
       await Future<void>.delayed(const Duration(milliseconds: 200));
     }
   }
+  // Not flushed: the process id only tells a later isolate of this process
+  // that the lock is its own, through the system's cache, and a flush on
+  // every launch is a wait on the disk.
   try {
     await handle.truncate(0);
     await handle.setPosition(0);
     await handle.writeString('$pid\n');
-    await handle.flush();
   } on FileSystemException catch (error) {
     await handle.close();
     return DataRootUnavailable(folder, error: error);

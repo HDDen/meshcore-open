@@ -6963,4 +6963,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String dataFolder_details(String error) {
     return 'Подробности: $error';
   }
+
+  @override
+  String get dataTransfer_offerTitle => 'Найдены данные прежней установки';
+
+  @override
+  String dataTransfer_offerBody(String target) {
+    return 'Раньше приложение хранило данные в системных папках. Их можно скопировать в эту папку данных:\n$target';
+  }
+
+  @override
+  String get dataTransfer_offerSources => 'Откуда копировать:';
+
+  @override
+  String dataTransfer_offerSize(String size) {
+    return 'Объём: $size';
+  }
+
+  @override
+  String get dataTransfer_offerSizeCounting => 'Объём: подсчёт…';
+
+  @override
+  String get dataTransfer_offerCopiedBefore => 'Эти данные уже копировались:';
+
+  @override
+  String get dataTransfer_offerNote =>
+      'Исходные папки останутся как есть. Перед копированием закройте другие запущенные копии приложения.';
+
+  @override
+  String get dataTransfer_copy => 'Скопировать';
+
+  @override
+  String get dataTransfer_startEmpty => 'Начать с пустыми данными';
+
+  @override
+  String get dataTransfer_progressTitle => 'Копирование данных';
+
+  @override
+  String dataTransfer_progress(String copied, String total) {
+    return 'Скопировано $copied из $total';
+  }
+
+  @override
+  String get dataTransfer_progressNote =>
+      'Если закрыть окно, копирование прервётся, и при следующем запуске перенос будет предложен снова.';
+
+  @override
+  String get dataTransfer_failedTitle => 'Не удалось скопировать данные';
+
+  @override
+  String get dataTransfer_failedBody =>
+      'Исходные папки не изменились. При следующем запуске перенос будет предложен снова; перед этим закройте другие копии приложения.';
 }

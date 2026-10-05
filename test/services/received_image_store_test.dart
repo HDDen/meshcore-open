@@ -100,6 +100,17 @@ Uint8List _payload(int length, [int seed = 0]) {
   );
 }
 
+/// Counts the sidecar writes a store makes.
+class _CountingBlobs extends InMemoryReceivedImageBlobStore {
+  int sidecarWrites = 0;
+
+  @override
+  Future<void> writeSidecar(String streamId, String json) {
+    sidecarWrites++;
+    return super.writeSidecar(streamId, json);
+  }
+}
+
 typedef _Rig = ({
   ReceivedImageStore store,
   _FakeDecoder decoder,
@@ -754,6 +765,67 @@ void main() {
         ReceivedImageState.reassembled,
       );
       expect(store.entryFor('lostPng')!.state, ReceivedImageState.evicted);
+      store.dispose();
+    });
+
+    test('a load writes back only the records it repairs', () async {
+      final blobs = _CountingBlobs();
+      final h = _build(blobs: blobs);
+      final entry = await _completeOne(h);
+      await h.store.settle();
+      final first = ReceivedImageStore(
+        blobs: blobs,
+        decoder: _FakeDecoder(),
+        clock: h.clock,
+      );
+      await first.load();
+      first.dispose();
+      blobs.sidecarWrites = 0;
+
+      final second = ReceivedImageStore(
+        blobs: blobs,
+        decoder: _FakeDecoder(),
+        clock: h.clock,
+      );
+      await second.load();
+
+      expect(blobs.sidecarWrites, 0);
+      expect(
+        second.entryFor(entry.streamId)!.state,
+        ReceivedImageState.decoded,
+      );
+      second.dispose();
+    });
+
+    test('a record the load repairs is written back', () async {
+      final blobs = _CountingBlobs();
+      await blobs.writeSidecar(
+        'partial00000001',
+        jsonEncode({
+          'streamId': 'partial00000001',
+          'senderPrefix': 1,
+          'imgId': 1,
+          'channelIndex': 0,
+          'firstSeenMs': DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
+          'state': 'receiving',
+          'receivedChunks': 1,
+          'totalChunks': 2,
+        }),
+      );
+      blobs.sidecarWrites = 0;
+      final store = ReceivedImageStore(
+        blobs: blobs,
+        decoder: _FakeDecoder(availability: ImageCodecAvailability.disabled),
+        clock: () => DateTime.utc(2026, 1, 1, 1),
+      );
+
+      await store.load();
+
+      expect(blobs.sidecarWrites, 1);
+      final stored =
+          jsonDecode((await blobs.readSidecars())['partial00000001']!)
+              as Map<String, dynamic>;
+      expect(stored['state'], ReceivedImageState.failedIncomplete.name);
       store.dispose();
     });
   });

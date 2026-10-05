@@ -7,7 +7,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "de": [
@@ -18,7 +32,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "es": [
@@ -29,7 +57,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "fr": [
@@ -40,7 +82,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "hu": [
@@ -51,7 +107,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "it": [
@@ -62,7 +132,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "ja": [
@@ -73,7 +157,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "ko": [
@@ -84,7 +182,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "nl": [
@@ -95,7 +207,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "pl": [
@@ -106,7 +232,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "pt": [
@@ -117,7 +257,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "sk": [
@@ -128,7 +282,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "sl": [
@@ -139,7 +307,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "sv": [
@@ -150,7 +332,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "uk": [
@@ -161,7 +357,21 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ],
 
   "zh": [
@@ -172,6 +382,20 @@
     "dataFolder_unavailableBody",
     "dataFolder_missingPath",
     "dataFolder_otherFolderHint",
-    "dataFolder_details"
+    "dataFolder_details",
+    "dataTransfer_offerTitle",
+    "dataTransfer_offerBody",
+    "dataTransfer_offerSources",
+    "dataTransfer_offerSize",
+    "dataTransfer_offerSizeCounting",
+    "dataTransfer_offerCopiedBefore",
+    "dataTransfer_offerNote",
+    "dataTransfer_copy",
+    "dataTransfer_startEmpty",
+    "dataTransfer_progressTitle",
+    "dataTransfer_progress",
+    "dataTransfer_progressNote",
+    "dataTransfer_failedTitle",
+    "dataTransfer_failedBody"
   ]
 }

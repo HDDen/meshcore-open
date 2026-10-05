@@ -7,3 +7,15 @@ Future<DataRootOutcome> prepareDataRoot(List<String> args) async {
 }
 
 Future<void> releaseDataRootLock() async {}
+
+/// No data folder, so nothing to copy into one.
+Future<DataTransferOffer?> findDataTransferOffer({
+  LegacyDataLocations? legacy,
+}) async => null;
+
+Future<int> measureDataTransfer(DataTransferOffer offer) async => 0;
+
+Future<void> transferData(
+  DataTransferOffer offer, {
+  void Function(int copied, int total)? onProgress,
+}) => throw UnsupportedError('The web build has no data folder.');

@@ -18,6 +18,7 @@ import 'utils/platform_info.dart';
 import 'connector/meshcore_connector.dart';
 import 'models/image_codec_support.dart';
 import 'screens/data_folder_problem_screen.dart';
+import 'screens/data_transfer_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/startup_error_screen.dart';
 import 'screens/message_history_database_screen.dart';
@@ -55,6 +56,7 @@ import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/app_route_observer.dart';
+import 'utils/startup_timing.dart';
 import 'widgets/edge_swipe_pop.dart';
 import 'widgets/image_send_codec_binding.dart';
 
@@ -62,6 +64,7 @@ String _startupErrorCode = 'MCO-STARTUP-001';
 String _startupStage = 'Flutter initialization';
 
 Future<void> main(List<String> args) async {
+  StartupTiming.start(args);
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
@@ -74,6 +77,14 @@ Future<void> main(List<String> args) async {
     final dataRoot = await prepareDataRoot(args);
     if (dataRoot is DataRootProblem) {
       runApp(DataFolderProblemApp(problem: dataRoot));
+      unawaited(StartupTiming.finish('data folder problem shown'));
+      return;
+    }
+    // A new data folder is offered the data an earlier installation left in
+    // the system folders, before any store opens a file in it.
+    _setStartupStage('MCO-STARTUP-111', 'Data transfer');
+    if (!await offerDataTransfer()) {
+      unawaited(StartupTiming.finish('data transfer failure shown'));
       return;
     }
     await _startApplication();
@@ -100,6 +111,7 @@ Future<void> main(List<String> args) async {
         ),
       ),
     );
+    unawaited(StartupTiming.finish('startup error $_startupErrorCode'));
   }
 }
 
@@ -160,6 +172,7 @@ Future<void> _startApplication() async {
   await MeshCompressor.instance.initialize();
 
   // Initialize services
+  StartupTiming.mark('  service objects');
   final storage = StorageService();
   final connector = MeshCoreConnector();
   final pathHistoryService = PathHistoryService(storage);
@@ -191,6 +204,7 @@ Future<void> _startApplication() async {
   // (after the constructions) without those two starting out wrong.
   _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
+  StartupTiming.mark('  private settings module');
   await settingsSectionsService.initialize();
   mapTileCacheService.restrictedBulkDownloadAuthorizer =
       settingsSectionsService.authorizeRestrictedMapBulkDownload;
@@ -216,6 +230,7 @@ Future<void> _startApplication() async {
     );
   });
 
+  StartupTiming.mark('  image services');
   // ---- image messages (AEIC over GRP_DATA) --------------------------------
   // The codec owns the ONNX decoder; the store owns received-image state and
   // the decode queue; the reassembler/transport pair is the receive path the
@@ -298,22 +313,30 @@ Future<void> _startApplication() async {
       debugPrint('Failed to open notification settings: $error');
     }
   }
+  StartupTiming.mark('  background service');
   await backgroundService.initialize();
   backgroundService.setLanguageOverrideProvider(
     () => appSettingsService.settings.languageOverride,
   );
+  StartupTiming.mark('  third-party licenses');
   _registerThirdPartyLicenses();
 
   _setStartupStage('MCO-STARTUP-105', 'Local models and application state');
   await chatTextScaleService.initialize();
+  StartupTiming.mark('  translation models');
   await translationService.refreshDownloadedModels();
+  StartupTiming.mark('  image codec models');
   await imageCodecService.refreshDownloadedModels();
+  StartupTiming.mark('  received images');
   await receivedImageStore.load();
+  StartupTiming.mark('  view state');
   await uiViewStateService.initialize();
+  StartupTiming.mark('  timeout prediction');
   await timeoutPredictionService.initialize();
   unawaited(MCOImageGalleryStore().ensureBundledPacksInstalled());
 
   // Wire up connector with services
+  StartupTiming.mark('  connector wiring');
   connector.initialize(
     retryService: retryService,
     pathHistoryService: pathHistoryService,
@@ -352,12 +375,15 @@ Future<void> _startApplication() async {
 
   _setStartupStage('MCO-STARTUP-106', 'Contacts and channel settings');
   await connector.loadContactCache();
+  StartupTiming.mark('  channel settings');
   await connector.loadChannelSettings();
+  StartupTiming.mark('  cached channels');
   await connector.loadCachedChannels();
 
   // Load persisted channel messages
   _setStartupStage('MCO-STARTUP-107', 'Message history');
   await connector.loadAllChannelMessages();
+  StartupTiming.mark('  unread state');
   await connector.loadUnreadState();
 
   _setStartupStage('MCO-STARTUP-108', 'User interface');
@@ -383,11 +409,17 @@ Future<void> _startApplication() async {
       imageReassembler: imageReassembler,
     ),
   );
+  if (StartupTiming.enabled) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(StartupTiming.finish('first frame'));
+    });
+  }
 }
 
 void _setStartupStage(String code, String stage) {
   _startupErrorCode = code;
   _startupStage = stage;
+  StartupTiming.mark('$code $stage');
 }
 
 /// [ReceivedImageDecoder] over [ImageCodecService].

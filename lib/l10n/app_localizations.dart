@@ -11839,6 +11839,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details: {error}'**
   String dataFolder_details(String error);
+
+  /// No description provided for @dataTransfer_offerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data of an earlier installation found'**
+  String get dataTransfer_offerTitle;
+
+  /// No description provided for @dataTransfer_offerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n{target}'**
+  String dataTransfer_offerBody(String target);
+
+  /// No description provided for @dataTransfer_offerSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied from:'**
+  String get dataTransfer_offerSources;
+
+  /// No description provided for @dataTransfer_offerSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {size}'**
+  String dataTransfer_offerSize(String size);
+
+  /// No description provided for @dataTransfer_offerSizeCounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: counting…'**
+  String get dataTransfer_offerSizeCounting;
+
+  /// No description provided for @dataTransfer_offerCopiedBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'These data have already been copied:'**
+  String get dataTransfer_offerCopiedBefore;
+
+  /// No description provided for @dataTransfer_offerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The original folders stay as they are. Close other running copies of the app before copying.'**
+  String get dataTransfer_offerNote;
+
+  /// No description provided for @dataTransfer_copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get dataTransfer_copy;
+
+  /// No description provided for @dataTransfer_startEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with empty data'**
+  String get dataTransfer_startEmpty;
+
+  /// No description provided for @dataTransfer_progressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying data'**
+  String get dataTransfer_progressTitle;
+
+  /// No description provided for @dataTransfer_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {copied} of {total}'**
+  String dataTransfer_progress(String copied, String total);
+
+  /// No description provided for @dataTransfer_progressNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the window stops the copy; the next start offers it again.'**
+  String get dataTransfer_progressNote;
+
+  /// No description provided for @dataTransfer_failedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The data could not be copied'**
+  String get dataTransfer_failedTitle;
+
+  /// No description provided for @dataTransfer_failedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The original folders were not changed. The next start offers the copy again; close other copies of the app first.'**
+  String get dataTransfer_failedBody;
 }
 
 class _AppLocalizationsDelegate

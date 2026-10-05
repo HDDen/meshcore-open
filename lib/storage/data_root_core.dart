@@ -19,6 +19,19 @@ abstract final class DataRoot {
   static const String defaultFolderName = 'userdata';
   static const String lockFileName = 'profile.lock';
 
+  /// The window size the Windows runner keeps, read before Dart starts.
+  static const String windowStateFileName = 'window_state.txt';
+
+  /// The state of the copy of an earlier installation's data.
+  static const String transferStateFileName = 'migration.json';
+
+  /// Files that do not make a data folder used: the lock and the window size
+  /// are written before anyone is asked anything.
+  static const Set<String> housekeepingFiles = {
+    lockFileName,
+    windowStateFileName,
+  };
+
   /// The folders of a portable data folder, one per kind of directory the
   /// app asks path_provider for.
   static const String supportFolder = 'support';
@@ -131,4 +144,165 @@ final class DataRootUnavailable extends DataRootProblem {
 
   final Object? error;
   final bool missingPath;
+}
+
+/// What the app left in the system folders before it had a data folder, and
+/// how its copy into one is done. The names come from
+/// `windows/runner/Runner.rc` (CompanyName, ProductName), from
+/// `linux/CMakeLists.txt` (APPLICATION_ID, BINARY_NAME) and from the stores;
+/// a test keeps them equal.
+abstract final class LegacyData {
+  static const String windowsCompany = 'com.meshcore';
+  static const String windowsProduct = 'meshcore_open (Advanced mod)';
+  static const String linuxApplicationId = 'com.monitormx.mcoadvanced';
+  static const String linuxExecutableName = 'mco_advanced';
+
+  /// Left in the old support folder by every copy: when, and where to.
+  static const String copiedMarkerFileName = 'COPIED_TO_PORTABLE.txt';
+
+  /// The index of flutter_cache_manager's default cache, whose files lie in
+  /// the system temporary folder among those of every other Flutter app:
+  /// neither is copied, and the link previews are fetched again.
+  static const String sharedImageCacheIndex = 'libCachedImageData.json';
+
+  /// Databases copied as a snapshot, not file by file: an earlier copy of the
+  /// app may still have them open and be writing.
+  static const List<String> databases = [
+    'message_history.sqlite',
+    'map_tile_cache.sqlite',
+  ];
+
+  /// The map tile files, in the temporary folder, and the database naming
+  /// them: flutter_cache_manager before 3.4.2 left files no record named.
+  static const String tileFolder = 'map_tile_cache';
+  static const String tileDatabase = 'map_tile_cache.sqlite';
+
+  static const List<String> modelFolders = [
+    'image_codec_models',
+    'translation_models',
+  ];
+}
+
+/// The system folders an earlier installation kept its data in.
+class LegacyDataLocations {
+  const LegacyDataLocations({
+    required this.support,
+    required this.temporary,
+    this.cache,
+    this.documents,
+  });
+
+  final String support;
+  final String temporary;
+  final String? cache;
+  final String? documents;
+}
+
+/// The folders the platform's path provider answered before the data
+/// folder, from [environment] as that provider read it. [systemTemp] is the
+/// Windows temporary folder, [documents] the user's documents folder, and
+/// [exists] whether a folder is there: on Linux the plugin used a folder
+/// named after the executable when the one named after the application id
+/// was missing. Null when the environment names no home.
+LegacyDataLocations? legacyDataLocations({
+  required bool windows,
+  required Map<String, String> environment,
+  required String systemTemp,
+  required String? documents,
+  required bool Function(String path) exists,
+  required p.Context context,
+}) {
+  String? variable(String name) {
+    final value = environment[name];
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  if (windows) {
+    final roaming = variable('APPDATA');
+    if (roaming == null) return null;
+    final local = variable('LOCALAPPDATA');
+    return LegacyDataLocations(
+      support: context.join(
+        roaming,
+        LegacyData.windowsCompany,
+        LegacyData.windowsProduct,
+      ),
+      temporary: systemTemp,
+      cache: local == null
+          ? null
+          : context.join(
+              local,
+              LegacyData.windowsCompany,
+              LegacyData.windowsProduct,
+            ),
+      documents: documents,
+    );
+  }
+  final home = variable('HOME');
+  String? base(String name, List<String> fallback) =>
+      variable(name) ??
+      (home == null ? null : context.joinAll([home, ...fallback]));
+  final dataHome = base('XDG_DATA_HOME', ['.local', 'share']);
+  if (dataHome == null) return null;
+  final byId = context.join(dataHome, LegacyData.linuxApplicationId);
+  final byName = context.join(dataHome, LegacyData.linuxExecutableName);
+  final cacheHome = base('XDG_CACHE_HOME', ['.cache']);
+  return LegacyDataLocations(
+    support: !exists(byId) && exists(byName) ? byName : byId,
+    temporary: variable('TMPDIR') ?? '/tmp',
+    cache: cacheHome == null
+        ? null
+        : context.join(cacheHome, LegacyData.linuxApplicationId),
+    documents: documents,
+  );
+}
+
+/// One earlier copy of the old data, as the marker records it.
+class DataTransferRecord {
+  const DataTransferRecord(this.at, this.target);
+
+  final DateTime at;
+  final String target;
+}
+
+/// The copy offered at this start: from [legacy] into the data folder
+/// [target]. [sources] are the folders that exist, for the user to see.
+class DataTransferOffer {
+  const DataTransferOffer({
+    required this.target,
+    required this.legacy,
+    required this.sources,
+    this.copiedBefore = const [],
+  });
+
+  final String target;
+  final LegacyDataLocations legacy;
+  final List<String> sources;
+  final List<DataTransferRecord> copiedBefore;
+}
+
+/// The marker's opening lines, written when the marker is created.
+const String copiedMarkerHeader =
+    '# The data in this folder was copied into the data folder of a '
+    'portable copy of the app.\n'
+    '# This folder can be deleted once that copy works. Removing this file '
+    'makes new copies offer the transfer without the note below.\n'
+    '# Copies made (UTC time, data folder):\n';
+
+String copiedMarkerLine(DateTime at, String target) =>
+    '${at.toUtc().toIso8601String()}\t$target\n';
+
+/// The copies a marker records; lines it cannot read are skipped.
+List<DataTransferRecord> parseCopiedMarker(String text) {
+  final records = <DataTransferRecord>[];
+  for (final line in text.split('\n')) {
+    if (line.startsWith('#')) continue;
+    final tab = line.indexOf('\t');
+    if (tab < 0) continue;
+    final at = DateTime.tryParse(line.substring(0, tab));
+    final target = line.substring(tab + 1).trimRight();
+    if (at == null || target.isEmpty) continue;
+    records.add(DataTransferRecord(at, target));
+  }
+  return records;
 }

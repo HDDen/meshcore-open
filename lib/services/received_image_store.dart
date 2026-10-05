@@ -776,7 +776,7 @@ class ReceivedImageStore extends ChangeNotifier {
   ///   decoded   -> evicted if the PNG is gone
   Future<void> load() async {
     final sidecars = await blobs.readSidecars();
-    for (final raw in sidecars.values) {
+    for (final MapEntry(key: storedId, value: raw) in sidecars.entries) {
       Map<String, dynamic> json;
       try {
         final decoded = jsonDecode(raw);
@@ -837,7 +837,7 @@ class ReceivedImageStore extends ChangeNotifier {
       _entries[entry.streamId] = entry;
       _byKey[entry.key] = entry.streamId;
       _publish(entry);
-      await _persist(entry);
+      await _persist(entry, stored: storedId == entry.streamId ? raw : null);
     }
     await evictToBudget();
     _notify();
@@ -1790,9 +1790,15 @@ class ReceivedImageStore extends ChangeNotifier {
     _notify();
   }
 
-  Future<void> _persist(ReceivedImageEntry entry) async {
+  /// Writes the sidecar of [entry], unless it is already on disk as [stored]:
+  /// the startup scan repairs a few records and leaves the rest as they were,
+  /// and rewriting every one, each a flushed write and a rename, kept the
+  /// launch waiting on the disk.
+  Future<void> _persist(ReceivedImageEntry entry, {String? stored}) async {
+    final json = jsonEncode(entry.toJson());
+    if (json == stored) return;
     try {
-      await blobs.writeSidecar(entry.streamId, jsonEncode(entry.toJson()));
+      await blobs.writeSidecar(entry.streamId, json);
     } catch (error) {
       debugPrint('received_image_store: sidecar write failed: $error');
     }
