@@ -83,6 +83,9 @@ class DataRootSelection {
 /// [context] is the path style of the platform, handed in so both styles can
 /// be tested anywhere. Where [portable] is false the app keeps the system
 /// directories and the argument is ignored. The last `--data-dir` wins.
+/// The Windows runner repeats these rules (`DataFolder` in
+/// `windows/runner/main.cpp`) to find the window size before Dart starts, so
+/// a change here goes there too.
 DataRootSelection selectDataRoot({
   required List<String> args,
   required String executablePath,
