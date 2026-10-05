@@ -306,3 +306,27 @@ List<DataTransferRecord> parseCopiedMarker(String text) {
   }
   return records;
 }
+
+/// The old data offered for deletion at a start after their copy.
+class DataCleanupOffer {
+  const DataCleanupOffer({
+    required this.target,
+    required this.folders,
+    required this.copiedFolders,
+  });
+
+  /// The data folder the old data were copied into.
+  final String target;
+
+  /// Old folders named after the app, deleted whole.
+  final List<String> folders;
+
+  /// Old folders others may share, the tiles in the temporary folder and the
+  /// models in the documents: only the files with a copy in the data folder
+  /// go, and the folder with them when that empties it. Keys are the old
+  /// folders, values their copies in the data folder.
+  final Map<String, String> copiedFolders;
+
+  /// Every old folder, for the user to see.
+  List<String> get items => [...folders, ...copiedFolders.keys];
+}

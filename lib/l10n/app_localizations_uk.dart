@@ -7034,4 +7034,26 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get dataTransfer_failedBody =>
       'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+
+  @override
+  String get dataCleanup_title => 'Delete the old data?';
+
+  @override
+  String get dataCleanup_body =>
+      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+
+  @override
+  String get dataCleanup_note =>
+      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+
+  @override
+  String get dataCleanup_keep => 'Keep';
+
+  @override
+  String get dataCleanup_progress => 'Deleting the old data…';
+
+  @override
+  String dataCleanup_partial(int count) {
+    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+  }
 }

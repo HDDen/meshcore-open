@@ -7014,4 +7014,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get dataTransfer_failedBody =>
       'Исходные папки не изменились. При следующем запуске перенос будет предложен снова; перед этим закройте другие копии приложения.';
+
+  @override
+  String get dataCleanup_title => 'Удалить старые данные?';
+
+  @override
+  String get dataCleanup_body =>
+      'При одном из прошлых запусков данные скопированы в эту папку данных. Оригиналы остались в системных папках, их можно удалить, если здесь всё на месте:';
+
+  @override
+  String get dataCleanup_note =>
+      'Другим новым копиям приложения эти данные больше не будут предложены. Из общих временной папки и «Документов» удаляются только файлы, скопированные сюда.';
+
+  @override
+  String get dataCleanup_keep => 'Оставить';
+
+  @override
+  String get dataCleanup_progress => 'Удаление старых данных…';
+
+  @override
+  String dataCleanup_partial(int count) {
+    return 'Не удалось очистить часть старых папок ($count): их файлы может держать другая запущенная копия приложения. При следующем запуске вопрос повторится.';
+  }
 }

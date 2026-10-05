@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider_linux/path_provider_linux.dart';
 import 'package:path_provider_windows/path_provider_windows.dart';
@@ -13,6 +14,13 @@ import 'data_root_core.dart';
 /// The suffix of a folder of the data folder while the transfer fills it;
 /// renamed into place once everything is copied.
 const String _partial = '.partial';
+
+/// Set when this process copied the old data: the question of deleting them
+/// waits for a later start, once the copy has been used.
+bool _transferredThisRun = false;
+
+@visibleForTesting
+void resetDataTransferForTesting() => _transferredThisRun = false;
 
 /// A transfer that failed; [message] is shown to the user.
 class DataTransferException implements Exception {
@@ -152,6 +160,7 @@ Future<void> transferData(
       onError: failures.sendPort,
     );
     await finished.future;
+    _transferredThisRun = true;
   } on DataTransferException {
     _clearDataFolder(offer.target);
     rethrow;
@@ -458,5 +467,200 @@ void _appendCopiedMarker(String support, String root) {
     );
   } on FileSystemException {
     // Nothing to undo.
+  }
+}
+
+/// The old data that may be deleted at this start, or null. Offered after a
+/// finished copy into this data folder, at a later start than the copy, until
+/// the data are deleted or kept; when they are gone already, as another copy
+/// may have deleted them, the question is settled without asking.
+Future<DataCleanupOffer?> findDataCleanupOffer() async {
+  final root = DataRoot.path;
+  if (DataRoot.mode != DataRootMode.portable ||
+      root == null ||
+      _transferredThisRun) {
+    return null;
+  }
+  final state = readTransferState(root);
+  if (state == null ||
+      state['state'] != 'done' ||
+      state['cleanup'] != 'pending') {
+    return null;
+  }
+  final offer = _cleanupOffer(root, state['sources']);
+  if (offer.items.isEmpty) {
+    _setCleanup(root, 'done');
+    return null;
+  }
+  return offer;
+}
+
+/// The folder names the app's own system folders had; a recorded support or
+/// cache folder with another name is never deleted, so a damaged state file
+/// cannot point the deletion anywhere else.
+const Set<String> _ownFolderNames = {
+  LegacyData.windowsProduct,
+  LegacyData.linuxApplicationId,
+  LegacyData.linuxExecutableName,
+};
+
+DataCleanupOffer _cleanupOffer(String root, Object? sources) {
+  String? recorded(String key) {
+    if (sources is! Map) return null;
+    final value = sources[key];
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
+  bool usable(String folder) =>
+      Directory(folder).existsSync() &&
+      !p.equals(folder, root) &&
+      !p.isWithin(folder, root) &&
+      !p.isWithin(root, folder);
+
+  final folders = <String>[
+    for (final key in const ['support', 'cache'])
+      if (recorded(key) case final folder?
+          when _ownFolderNames.contains(p.basename(folder)) && usable(folder))
+        folder,
+  ];
+  final copiedFolders = <String, String>{
+    if (recorded('temporary') case final temporary?
+        when usable(p.join(temporary, LegacyData.tileFolder)))
+      p.join(temporary, LegacyData.tileFolder): p.join(
+        root,
+        DataRoot.temporaryFolder,
+        LegacyData.tileFolder,
+      ),
+    if (recorded('documents') case final documents?)
+      for (final name in LegacyData.modelFolders)
+        if (usable(p.join(documents, name)))
+          p.join(documents, name): p.join(root, DataRoot.documentsFolder, name),
+  };
+  return DataCleanupOffer(
+    target: root,
+    folders: folders,
+    copiedFolders: copiedFolders,
+  );
+}
+
+/// Counts the bytes the deletion would free, in a background isolate.
+Future<int> measureDataCleanup(DataCleanupOffer offer) {
+  final folders = offer.folders;
+  final copiedFolders = offer.copiedFolders;
+  return Isolate.run(() {
+    var total = 0;
+    for (final folder in folders) {
+      for (final file in _filesUnder(folder)) {
+        total += _length(file.path);
+      }
+    }
+    copiedFolders.forEach((old, copy) {
+      for (final file in _copiedFilesUnder(old, copy)) {
+        total += _length(file.path);
+      }
+    });
+    return total;
+  });
+}
+
+/// Deletes the old data in a background isolate and answers the old folders
+/// still holding something it was asked to delete: a file another running
+/// copy of the app keeps open stays, and so does its folder. With nothing
+/// left the question is settled, otherwise it comes again at the next start.
+Future<List<String>> deleteOldData(DataCleanupOffer offer) async {
+  final folders = offer.folders;
+  final copiedFolders = offer.copiedFolders;
+  final remaining = await Isolate.run(
+    () => _deleteOldData(folders, copiedFolders),
+  );
+  if (remaining.isEmpty) _setCleanup(offer.target, 'done');
+  return remaining;
+}
+
+/// Keeps the old data, and the question is not asked again.
+Future<void> declineDataCleanup(DataCleanupOffer offer) async {
+  _setCleanup(offer.target, 'declined');
+}
+
+List<String> _deleteOldData(
+  List<String> folders,
+  Map<String, String> copiedFolders,
+) {
+  final remaining = <String>[];
+  for (final item in folders) {
+    final folder = Directory(item);
+    try {
+      folder.deleteSync(recursive: true);
+    } on FileSystemException {
+      _deleteFiles(folder, _entitiesUnder(folder));
+    }
+    if (folder.existsSync()) {
+      remaining.add(item);
+      continue;
+    }
+    // A Windows company folder left empty, never a Linux data or cache home.
+    final parent = folder.parent;
+    if (p.basename(parent.path) != LegacyData.windowsCompany) continue;
+    try {
+      if (parent.listSync().isEmpty) parent.deleteSync();
+    } on FileSystemException {
+      // Whatever else lives there keeps it.
+    }
+  }
+  copiedFolders.forEach((old, copy) {
+    final files = _copiedFilesUnder(old, copy).toList();
+    _deleteFiles(Directory(old), files);
+    if (files.any((file) => file.existsSync())) remaining.add(old);
+  });
+  return remaining;
+}
+
+/// Deletes [entities] under [folder], then the folders that leaves empty,
+/// deepest first and [folder] last. What is held open, or not empty, stays.
+void _deleteFiles(Directory folder, List<FileSystemEntity> entities) {
+  for (final entity in entities) {
+    if (entity is Directory) continue;
+    try {
+      entity.deleteSync();
+    } on FileSystemException {
+      // Held open by another program; the caller reports the folder.
+    }
+  }
+  final children = _entitiesUnder(folder).whereType<Directory>().toList()
+    ..sort((a, b) => b.path.length.compareTo(a.path.length));
+  for (final child in [...children, folder]) {
+    try {
+      if (child.existsSync() && child.listSync().isEmpty) child.deleteSync();
+    } on FileSystemException {
+      // Not empty after all.
+    }
+  }
+}
+
+List<FileSystemEntity> _entitiesUnder(Directory folder) {
+  try {
+    return folder.listSync(recursive: true, followLinks: false);
+  } on FileSystemException {
+    return const [];
+  }
+}
+
+Iterable<File> _filesUnder(String folder) =>
+    _entitiesUnder(Directory(folder)).whereType<File>();
+
+/// The files under [old] whose copy, at the same relative path, is in [copy].
+Iterable<File> _copiedFilesUnder(String old, String copy) =>
+    _filesUnder(old).where(
+      (file) =>
+          File(p.join(copy, p.relative(file.path, from: old))).existsSync(),
+    );
+
+void _setCleanup(String root, String value) {
+  final state = readTransferState(root);
+  if (state == null) return;
+  try {
+    _writeTransferState(root, {...state, 'cleanup': value});
+  } on FileSystemException {
+    // Asked again at the next start.
   }
 }

@@ -11923,6 +11923,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The original folders were not changed. The next start offers the copy again; close other copies of the app first.'**
   String get dataTransfer_failedBody;
+
+  /// No description provided for @dataCleanup_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the old data?'**
+  String get dataCleanup_title;
+
+  /// No description provided for @dataCleanup_body.
+  ///
+  /// In en, this message translates to:
+  /// **'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:'**
+  String get dataCleanup_body;
+
+  /// No description provided for @dataCleanup_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.'**
+  String get dataCleanup_note;
+
+  /// No description provided for @dataCleanup_keep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get dataCleanup_keep;
+
+  /// No description provided for @dataCleanup_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting the old data…'**
+  String get dataCleanup_progress;
+
+  /// No description provided for @dataCleanup_partial.
+  ///
+  /// In en, this message translates to:
+  /// **'Some old folders could not be emptied ({count}): another running copy of the app may hold their files. The next start asks again.'**
+  String dataCleanup_partial(int count);
 }
 
 class _AppLocalizationsDelegate

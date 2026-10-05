@@ -87,6 +87,10 @@ Future<void> main(List<String> args) async {
       unawaited(StartupTiming.finish('data transfer failure shown'));
       return;
     }
+    // Asked here rather than over the app: the connection to the last node
+    // starts with the app and moves its screens over any dialog.
+    _setStartupStage('MCO-STARTUP-112', 'Old data cleanup');
+    await offerDataCleanup();
     await _startApplication();
   } catch (error, stackTrace) {
     String? dataPath;

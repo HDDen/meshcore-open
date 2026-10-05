@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../storage/data_root.dart';
+import '../utils/byte_size.dart';
 
 /// Offers the copy of an earlier installation's data into a new data folder
 /// and runs it, each screen put up before the settings load. Returns false
@@ -95,7 +96,7 @@ class _DataTransferOfferAppState extends State<DataTransferOfferApp> {
           builder: (context, snapshot) {
             final size = snapshot.data;
             if (size != null) {
-              return Text(l10n.dataTransfer_offerSize(_formatBytes(size)));
+              return Text(l10n.dataTransfer_offerSize(formatByteSize(size)));
             }
             if (snapshot.hasError) return const SizedBox.shrink();
             return Text(l10n.dataTransfer_offerSizeCounting);
@@ -161,8 +162,8 @@ class DataTransferProgressApp extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   l10n.dataTransfer_progress(
-                    _formatBytes(copied),
-                    _formatBytes(total),
+                    formatByteSize(copied),
+                    formatByteSize(total),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -212,6 +213,180 @@ class DataTransferFailedApp extends StatelessWidget {
               ServicesBinding.instance.exitApplication(AppExitType.required),
             ),
             child: Text(l10n.common_close),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Asks whether the old data copied into this data folder at an earlier start
+/// may go from the system folders, and deletes them while a screen says so,
+/// all before the settings load. Asked before the app rather than over it:
+/// the connection to the last node starts with the app and moves its screens
+/// over any dialog. A window closed on the question decides nothing, and the
+/// question comes again at the next start.
+Future<void> offerDataCleanup() async {
+  final offer = await findDataCleanupOffer();
+  if (offer == null) return;
+
+  final decision = Completer<bool>();
+  runApp(
+    DataCleanupOfferApp(
+      offer: offer,
+      size: measureDataCleanup(offer),
+      onDecided: (delete) {
+        if (!decision.isCompleted) decision.complete(delete);
+      },
+    ),
+  );
+  if (!await decision.future) {
+    await declineDataCleanup(offer);
+    return;
+  }
+
+  runApp(const DataCleanupProgressApp());
+  final remaining = await deleteOldData(offer);
+  if (remaining.isEmpty) return;
+
+  final acknowledged = Completer<void>();
+  runApp(
+    DataCleanupPartialApp(
+      remaining: remaining,
+      onContinue: () {
+        if (!acknowledged.isCompleted) acknowledged.complete();
+      },
+    ),
+  );
+  await acknowledged.future;
+}
+
+/// The question: which old folders, how much they hold, delete or keep.
+class DataCleanupOfferApp extends StatefulWidget {
+  const DataCleanupOfferApp({
+    super.key,
+    required this.offer,
+    required this.size,
+    required this.onDecided,
+  });
+
+  final DataCleanupOffer offer;
+
+  /// The bytes the deletion frees, counted while the question is on screen.
+  final Future<int> size;
+
+  /// True for deleting, false for keeping.
+  final void Function(bool delete) onDecided;
+
+  @override
+  State<DataCleanupOfferApp> createState() => _DataCleanupOfferAppState();
+}
+
+class _DataCleanupOfferAppState extends State<DataCleanupOfferApp> {
+  bool _decided = false;
+
+  void _decide(bool delete) {
+    if (_decided) return;
+    setState(() => _decided = true);
+    widget.onDecided(delete);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _StartupFrame(
+      icon: Icons.delete_sweep_outlined,
+      builder: (context, l10n, theme) => [
+        Text(
+          l10n.dataCleanup_title,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 16),
+        Text(l10n.dataCleanup_body),
+        const SizedBox(height: 12),
+        for (final item in widget.offer.items) Text(item),
+        const SizedBox(height: 12),
+        FutureBuilder<int>(
+          future: widget.size,
+          builder: (context, snapshot) {
+            final bytes = snapshot.data;
+            if (bytes != null) {
+              return Text(l10n.dataTransfer_offerSize(formatByteSize(bytes)));
+            }
+            if (snapshot.hasError) return const SizedBox.shrink();
+            return Text(l10n.dataTransfer_offerSizeCounting);
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(l10n.dataCleanup_note, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 24),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            OutlinedButton(
+              onPressed: _decided ? null : () => _decide(false),
+              child: Text(l10n.dataCleanup_keep),
+            ),
+            FilledButton(
+              onPressed: _decided ? null : () => _decide(true),
+              child: Text(l10n.common_delete),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// The deletion running.
+class DataCleanupProgressApp extends StatelessWidget {
+  const DataCleanupProgressApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _StartupFrame(
+      icon: Icons.delete_sweep_outlined,
+      builder: (context, l10n, theme) => [
+        Text(
+          l10n.dataCleanup_progress,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 24),
+        const LinearProgressIndicator(),
+      ],
+    );
+  }
+}
+
+/// What the deletion could not remove; the app goes on when the user has
+/// seen it, and the question comes again at the next start.
+class DataCleanupPartialApp extends StatelessWidget {
+  const DataCleanupPartialApp({
+    super.key,
+    required this.remaining,
+    required this.onContinue,
+  });
+
+  final List<String> remaining;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return _StartupFrame(
+      icon: Icons.warning_amber_outlined,
+      alert: true,
+      builder: (context, l10n, theme) => [
+        Text(l10n.dataCleanup_partial(remaining.length)),
+        const SizedBox(height: 12),
+        for (final folder in remaining) Text(folder),
+        const SizedBox(height: 24),
+        Align(
+          child: FilledButton(
+            onPressed: onContinue,
+            child: Text(l10n.common_continue),
           ),
         ),
       ],
@@ -284,15 +459,6 @@ class _StartupFrame extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatBytes(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  final kb = bytes / 1024;
-  if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
-  final mb = kb / 1024;
-  if (mb < 1024) return '${mb.toStringAsFixed(1)} MB';
-  return '${(mb / 1024).toStringAsFixed(2)} GB';
 }
 
 String _formatTime(DateTime at) {

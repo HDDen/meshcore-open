@@ -3870,5 +3870,19 @@
   },
   "dataTransfer_progressNote": "Closing the window stops the copy; the next start offers it again.",
   "dataTransfer_failedTitle": "The data could not be copied",
-  "dataTransfer_failedBody": "The original folders were not changed. The next start offers the copy again; close other copies of the app first."
+  "dataTransfer_failedBody": "The original folders were not changed. The next start offers the copy again; close other copies of the app first.",
+  "dataCleanup_title": "Delete the old data?",
+  "dataCleanup_body": "At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:",
+  "dataCleanup_note": "Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.",
+  "dataCleanup_keep": "Keep",
+  "dataCleanup_progress": "Deleting the old data…",
+  "dataCleanup_partial": "Some old folders could not be emptied ({count}): another running copy of the app may hold their files. The next start asks again.",
+  "@dataCleanup_partial": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  }
 }

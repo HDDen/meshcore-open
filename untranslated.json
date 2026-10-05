@@ -21,7 +21,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "de": [
@@ -46,7 +52,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "es": [
@@ -71,7 +83,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "fr": [
@@ -96,7 +114,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "hu": [
@@ -121,7 +145,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "it": [
@@ -146,7 +176,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "ja": [
@@ -171,7 +207,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "ko": [
@@ -196,7 +238,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "nl": [
@@ -221,7 +269,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "pl": [
@@ -246,7 +300,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "pt": [
@@ -271,7 +331,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "sk": [
@@ -296,7 +362,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "sl": [
@@ -321,7 +393,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "sv": [
@@ -346,7 +424,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "uk": [
@@ -371,7 +455,13 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ],
 
   "zh": [
@@ -396,6 +486,12 @@
     "dataTransfer_progress",
     "dataTransfer_progressNote",
     "dataTransfer_failedTitle",
-    "dataTransfer_failedBody"
+    "dataTransfer_failedBody",
+    "dataCleanup_title",
+    "dataCleanup_body",
+    "dataCleanup_note",
+    "dataCleanup_keep",
+    "dataCleanup_progress",
+    "dataCleanup_partial"
   ]
 }

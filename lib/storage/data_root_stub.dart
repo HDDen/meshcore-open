@@ -19,3 +19,11 @@ Future<void> transferData(
   DataTransferOffer offer, {
   void Function(int copied, int total)? onProgress,
 }) => throw UnsupportedError('The web build has no data folder.');
+
+Future<DataCleanupOffer?> findDataCleanupOffer() async => null;
+
+Future<int> measureDataCleanup(DataCleanupOffer offer) async => 0;
+
+Future<List<String>> deleteOldData(DataCleanupOffer offer) async => const [];
+
+Future<void> declineDataCleanup(DataCleanupOffer offer) async {}
