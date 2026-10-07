@@ -34,6 +34,9 @@ but also for Windows and iOS (as .ipa files)
 10. **Live path tracing and delivery progress** — the app listens to repeater retransmissions of
     its own packets, so a path trace fills in hop by hop while it is still running, and an
     outgoing direct message shows how far it has travelled.
+11. **Portable data folder** on Windows and Linux: the app keeps everything in `userdata` next
+    to the executable, so a copy moves together with its data, and several copies or profiles
+    run side by side, each connected to its own node.
 
 - **Repository:** <https://github.com/HDDen/meshcore-open>
 - **Telegram group:** <https://t.me/mcoadvanced>
@@ -407,6 +410,48 @@ decoded human-readable text case-insensitively, includes shared history accordin
 settings, streams newest-first results in bounded batches, and opens the conversation scrolled
 to the selected message. Windows and Linux users can open it with `Ctrl+F`.
 
+### Portable data folder (Windows and Linux)
+
+On Windows and Linux the app keeps everything it writes in one folder, `userdata`, next to the
+executable: settings, the message history and the other databases, map tiles (downloaded offline
+regions included), received images, the GIF cache and the image codec models. A copy of the app
+moves together with its data, a backup is a copy of that folder taken while the app is closed,
+and nothing goes into the system folders or the registry, apart from the notification
+registration Windows asks for, one per data folder; the registration of earlier versions
+is removed once no such version is running. The folder has to be writable: an app started from `Program Files`
+shows an error screen instead of starting, and should be moved to a folder you can write to.
+
+Several copies of the app run side by side without sharing anything, each connected to its own
+node. One copy can also keep several profiles: start it with `--data-dir=<path>`, an absolute
+path or one relative to the app's folder, for example from a shortcut:
+
+```
+mco_advanced.exe --data-dir=node-868
+./mco_advanced --data-dir="/home/me/mesh data/node-868"
+```
+
+Every profile has its own data folder, and two profiles of one copy can run at the same time.
+Each copy and profile shows its notifications under an identity of its own, named after its
+folder, so a click on a notification opens the copy that showed it, and Windows lists the
+copies apart in its notification settings.
+A start on a folder another running copy already uses shows a notice instead of the app: close
+that copy, or give the new one another `--data-dir`.
+
+**Moving from an earlier version.** Earlier builds kept their data in the system folders
+(`%APPDATA%\com.meshcore\meshcore_open (Advanced mod)` on Windows,
+`~/.local/share/com.monitormx.mcoadvanced` on Linux). The first start of a new data folder on
+such a machine offers to copy the old data into it, showing where from and how much. The
+originals stay as they are, so an older build keeps working on them; "Start with empty data"
+skips the copy. Close other running copies of the app before copying. At a later start the app
+asks whether the old folders may be deleted now: only its own folders and the files it copied
+are removed, "Keep" ends the question, and the old data can be deleted by hand at any time.
+
+macOS, Android and iOS keep their data where they always did.
+
+If the app starts slowly, run it once with `--loading-timing`: it appends the duration of every
+startup step to `loading_timing.txt` next to the executable, which is worth attaching to a
+report.
+
 ### Smaller additions
 
 - **Channel groups** and custom channel ordering, plus contact groups
@@ -424,8 +469,8 @@ Ready-made builds are published in the
 - **Android** — APKs split per CPU architecture (`arm64-v8a`, `armeabi-v7a`, `x86_64`) so the
   download stays small
 - **iOS** — `.ipa` packages
-- **Windows** — desktop build
-- **Linux** — desktop build
+- **Windows** — desktop build, portable: its data lives in `userdata` next to the executable
+- **Linux** — desktop build, portable in the same way
 
 ## Platform support
 

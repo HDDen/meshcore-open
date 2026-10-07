@@ -12,8 +12,12 @@ import '../widgets/mco_image_message.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/message_url_image_helper.dart';
+import '../helpers/legacy_notification_registry.dart';
 import '../helpers/reaction_helper.dart';
+import '../helpers/windows_notification_identity.dart';
 import '../l10n/app_localizations.dart';
+import '../storage/data_root.dart';
+import '../utils/app_logger.dart';
 import '../utils/platform_info.dart';
 
 typedef NotificationTapHandler = FutureOr<void> Function(String payload);
@@ -104,16 +108,22 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    const windowsSettings = WindowsInitializationSettings(
+    // One identity per data folder, or a click on a toast may reach another
+    // running copy of the app; see WindowsNotificationIdentity.
+    final windowsIdentity = WindowsNotificationIdentity.forDataFolder(
+      DataRoot.mode == DataRootMode.portable ? DataRoot.path : null,
       appName: 'MeshCore Open',
-      appUserModelId: 'org.meshcore.open.app',
-      guid: 'e7ea8f85-72f5-4f36-91f6-038f740ccf86',
+    );
+    final windowsSettings = WindowsInitializationSettings(
+      appName: windowsIdentity.displayName,
+      appUserModelId: windowsIdentity.appUserModelId,
+      guid: windowsIdentity.guid,
     );
     const linuxSettings = LinuxInitializationSettings(
       defaultActionName: 'Open notification',
     );
 
-    const initSettings = InitializationSettings(
+    final initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
       macOS: macSettings,
@@ -139,6 +149,30 @@ class NotificationService {
       await _handleLaunchNotificationTap();
     } catch (e) {
       debugPrint('Error initializing notifications: $e');
+      return;
+    }
+    if (PlatformInfo.isWindows &&
+        windowsIdentity.guid != WindowsNotificationIdentity.legacyGuid) {
+      unawaited(_removeLegacyNotificationIdentity());
+    }
+  }
+
+  /// The registry entries of the identity earlier builds used go once no
+  /// such build is running; nothing waits for the answer.
+  Future<void> _removeLegacyNotificationIdentity() async {
+    try {
+      final outcome = await LegacyNotificationRegistry.removeWhenUnused();
+      if (outcome != LegacyNotificationCleanup.absent) {
+        appLogger.info(
+          'Legacy notification identity ${outcome.name}',
+          tag: 'Notifications',
+        );
+      }
+    } catch (error) {
+      appLogger.warn(
+        'Legacy notification identity not removed: $error',
+        tag: 'Notifications',
+      );
     }
   }
 
