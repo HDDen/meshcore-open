@@ -11959,6 +11959,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some old folders could not be emptied ({count}): another running copy of the app may hold their files. The next start asks again.'**
   String dataCleanup_partial(int count);
+
+  /// No description provided for @settings_modSettingsExactQuoteLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Use for the author\'s latest message too'**
+  String get settings_modSettingsExactQuoteLatest;
+
+  /// No description provided for @settings_modSettingsExactQuoteLatestDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.'**
+  String get settings_modSettingsExactQuoteLatestDscr;
 }
 
 class _AppLocalizationsDelegate

@@ -383,6 +383,25 @@ class ModSettingsScreen extends StatelessWidget {
                 ),
                 if (settings.exactQuote)
                   MeshCard(
+                    padding: EdgeInsets.zero,
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      secondary: const Icon(Icons.reply, size: 20),
+                      title: Text(
+                        context.l10n.settings_modSettingsExactQuoteLatest,
+                      ),
+                      subtitle: Text(
+                        context.l10n.settings_modSettingsExactQuoteLatestDscr,
+                      ),
+                      value: settings.exactQuoteLatest,
+                      onChanged: settingsService.setExactQuoteLatest,
+                    ),
+                  ),
+                if (settings.exactQuote)
+                  MeshCard(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

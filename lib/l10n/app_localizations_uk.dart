@@ -7056,4 +7056,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String dataCleanup_partial(int count) {
     return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
   }
+
+  @override
+  String get settings_modSettingsExactQuoteLatest =>
+      'Use for the author\'s latest message too';
+
+  @override
+  String get settings_modSettingsExactQuoteLatestDscr =>
+      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
 }

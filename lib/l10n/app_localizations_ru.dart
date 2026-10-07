@@ -7036,4 +7036,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String dataCleanup_partial(int count) {
     return 'Не удалось очистить часть старых папок ($count): их файлы может держать другая запущенная копия приложения. При следующем запуске вопрос повторится.';
   }
+
+  @override
+  String get settings_modSettingsExactQuoteLatest =>
+      'Использовать и для последнего сообщения';
+
+  @override
+  String get settings_modSettingsExactQuoteLatestDscr =>
+      'Если выключено, ответ на последнее сообщение автора несёт только упоминание. Если включено, корректно обрабатывается случай, когда последнее сообщение у вас и остальных - рассинхронизировано и является разными сообщениями.';
 }

@@ -16,18 +16,23 @@ const _history = <_Entry>[
   (author: 'Vasya', text: 'Fine', id: 'v2'),
 ];
 
-String _format(List<_Entry> history, {required bool enabled}) =>
-    ExactQuoteHelper.formatReplyWith(
-      senderName: 'Vasya',
-      text: 'ok',
-      quotedText: 'Where do we meet tomorrow?',
-      quotedMessageId: 'v1',
-      history: history,
-      authorOf: _authorOf,
-      idOf: _idOf,
-      enabled: enabled,
-      maxFragmentBytes: 30,
-    );
+String _format(
+  List<_Entry> history, {
+  required bool enabled,
+  bool fragmentForLatest = false,
+  String quotedId = 'v1',
+}) => ExactQuoteHelper.formatReplyWith(
+  senderName: 'Vasya',
+  text: 'ok',
+  quotedText: _history.firstWhere((entry) => entry.id == quotedId).text,
+  quotedMessageId: quotedId,
+  history: history,
+  authorOf: _authorOf,
+  idOf: _idOf,
+  enabled: enabled,
+  fragmentForLatest: fragmentForLatest,
+  maxFragmentBytes: 30,
+);
 
 void main() {
   test('with the quote off the history is not consulted', () {
@@ -39,6 +44,24 @@ void main() {
     expect(
       _format(_history, enabled: true),
       '@[Vasya] >Where do we meet tomorrow?\nok',
+    );
+    expect(_format(_history, enabled: true, quotedId: 'v2'), '@[Vasya] ok');
+  });
+
+  test('with the fragment spent on the latest message too, the history is '
+      'not consulted either', () {
+    expect(
+      _format(const [], enabled: true, fragmentForLatest: true),
+      '@[Vasya] >Where do we meet tomorrow?\nok',
+    );
+    expect(
+      _format(
+        const [],
+        enabled: true,
+        fragmentForLatest: true,
+        quotedId: 'v2',
+      ),
+      '@[Vasya] >Fine\nok',
     );
   });
 }

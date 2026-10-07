@@ -3884,5 +3884,7 @@
         "example": "2"
       }
     }
-  }
+  },
+  "settings_modSettingsExactQuoteLatest": "Use for the author's latest message too",
+  "settings_modSettingsExactQuoteLatestDscr": "Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages."
 }

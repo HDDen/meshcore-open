@@ -138,9 +138,12 @@ class ExactQuoteHelper {
   /// when the mention alone would not identify the quoted message.
   ///
   /// [enabled] is false when the user turned the feature off or when the
-  /// message travels as MCMP v3, which already carries an exact anchor. No
-  /// fragment is spent when [quotedMessageId] is the newest message from
-  /// [senderName] in [history] either — a bare mention resolves to it anyway.
+  /// message travels as MCMP v3, which already carries an exact anchor. With
+  /// [fragmentForLatest] off no fragment is spent when [quotedMessageId] is
+  /// the newest message from [senderName] in [history] either, a bare
+  /// mention resolving to it; on, the newest message is quoted like any
+  /// other, since a receiver's newest message from that author need not be
+  /// the sender's, and [history] goes unread.
   ///
   /// [maxFragmentBytes] is the airtime budget for the fragment, measured on the
   /// wire: bytes rather than characters, and counted after cyr2lat
@@ -162,6 +165,7 @@ class ExactQuoteHelper {
     required String? quotedMessageId,
     required List<ChannelMessage> history,
     required bool enabled,
+    required bool fragmentForLatest,
     required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
     String? quoteFragment,
@@ -174,6 +178,7 @@ class ExactQuoteHelper {
     authorOf: (message) => message.senderName,
     idOf: (message) => message.messageId,
     enabled: enabled,
+    fragmentForLatest: fragmentForLatest,
     maxFragmentBytes: maxFragmentBytes,
     outboundCharMap: outboundCharMap,
     quoteFragment: quoteFragment,
@@ -192,6 +197,7 @@ class ExactQuoteHelper {
     required String? Function(T message) authorOf,
     required String Function(T message) idOf,
     required bool enabled,
+    required bool fragmentForLatest,
     required int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
     String? quoteFragment,
@@ -205,6 +211,7 @@ class ExactQuoteHelper {
             history,
             authorOf,
             idOf,
+            fragmentForLatest,
             maxFragmentBytes,
             outboundCharMap,
           )
@@ -327,15 +334,18 @@ class ExactQuoteHelper {
     List<T> history,
     String? Function(T message) authorOf,
     String Function(T message) idOf,
+    bool fragmentForLatest,
     int maxFragmentBytes,
     Map<String, String>? outboundCharMap,
   ) {
     if (quotedText == null || quotedText.isEmpty) return null;
-    for (var i = history.length - 1; i >= 0; i--) {
-      final candidate = history[i];
-      if (authorOf(candidate) != senderName) continue;
-      if (idOf(candidate) == quotedMessageId) return null;
-      break;
+    if (!fragmentForLatest) {
+      for (var i = history.length - 1; i >= 0; i--) {
+        final candidate = history[i];
+        if (authorOf(candidate) != senderName) continue;
+        if (idOf(candidate) == quotedMessageId) return null;
+        break;
+      }
     }
     return _buildFragment(quotedText, maxFragmentBytes, outboundCharMap);
   }

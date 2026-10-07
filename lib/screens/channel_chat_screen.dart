@@ -4212,12 +4212,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       text: text,
       quotedText: quotedText,
       quotedMessageId: quotedMessageId,
-      // Read only when a fragment can be due: with shared history on, the
-      // getter merges it anew on every call.
-      history: enabled
+      // Read only when it decides anything, whether the quoted message is
+      // the author's latest: with shared history on, the getter merges it
+      // anew on every call.
+      history: enabled && !settings.exactQuoteLatest
           ? connector.getChannelMessages(widget.channel)
           : const <ChannelMessage>[],
       enabled: enabled,
+      fragmentForLatest: settings.exactQuoteLatest,
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.channelCyr2LatCharMap(widget.channel.index),
       quoteFragment: quoteFragment,

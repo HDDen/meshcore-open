@@ -12071,17 +12071,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     final settings = _appSettingsService?.settings;
     final enabled = settings?.exactQuote ?? false;
+    final fragmentForLatest = settings?.exactQuoteLatest ?? true;
     return ExactQuoteHelper.formatReplyWith(
       senderName: replyToSenderName,
       text: rest,
       quotedText: replyToText,
       quotedMessageId: replyToMessageId,
-      // Read only for the fragment, and merged anew on every call: with the
-      // quote off no fragment is spent and the history is not fetched.
-      history: enabled ? getMessages(contact) : const [],
+      // Read only when it decides whether a fragment is due, and merged anew
+      // on every call: with the quote off, or spent on the latest message
+      // too, the history is not fetched.
+      history: enabled && !fragmentForLatest ? getMessages(contact) : const [],
       authorOf: (message) => contactMessageAuthorName(contact, message)?.trim(),
       idOf: (message) => message.messageId,
       enabled: enabled,
+      fragmentForLatest: fragmentForLatest,
       maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
       outboundCharMap: contactCyr2LatCharMap(contact),
     );
@@ -12240,15 +12243,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     final settings = _appSettingsService?.settings;
     final enabled = settings?.exactQuote ?? false;
+    final fragmentForLatest = settings?.exactQuoteLatest ?? true;
     return ExactQuoteHelper.formatReply(
       senderName: replyToSenderName,
       text: body,
       quotedText: replyToText,
       quotedMessageId: replyToMessageId,
-      // Read only for the fragment, and merged anew on every call: with the
-      // quote off no fragment is spent and the history is not fetched.
-      history: enabled ? getChannelMessages(channel) : const [],
+      // Read only when it decides whether a fragment is due, and merged anew
+      // on every call: with the quote off, or spent on the latest message
+      // too, the history is not fetched.
+      history: enabled && !fragmentForLatest
+          ? getChannelMessages(channel)
+          : const [],
       enabled: enabled,
+      fragmentForLatest: fragmentForLatest,
       maxFragmentBytes: settings?.exactQuoteLimit ?? 0,
       outboundCharMap: channelCyr2LatCharMap(channel.index),
     );

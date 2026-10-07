@@ -221,6 +221,11 @@ class AppSettings {
   /// tell which message is being answered when it is not the sender's latest.
   final bool exactQuote;
 
+  /// Spends that fragment on the sender's latest message too, where the
+  /// mention alone would resolve to it; off, such a reply carries the
+  /// mention alone.
+  final bool exactQuoteLatest;
+
   /// Wire bytes that quote fragment may spend.
   final int exactQuoteLimit;
 
@@ -647,6 +652,7 @@ class AppSettings {
     this.channelsUnreadSorting = false,
     this.incomingQuoteAsMentions = false,
     this.exactQuote = true,
+    this.exactQuoteLatest = true,
     this.exactQuoteLimit = defaultExactQuoteLimit,
     this.showLastHopSignal = true,
     this.recoverLongPacketEchoes = true,
@@ -792,6 +798,7 @@ class AppSettings {
       'channels_unread_sorting': channelsUnreadSorting,
       'incoming_quote_as_mentions': incomingQuoteAsMentions,
       'exact_quote': exactQuote,
+      'exact_quote_latest': exactQuoteLatest,
       'exact_quote_limit': exactQuoteLimit,
       'show_last_hop_signal': showLastHopSignal,
       'recover_long_packet_echoes': recoverLongPacketEchoes,
@@ -969,6 +976,7 @@ class AppSettings {
       incomingQuoteAsMentions:
           json['incoming_quote_as_mentions'] as bool? ?? false,
       exactQuote: json['exact_quote'] as bool? ?? true,
+      exactQuoteLatest: json['exact_quote_latest'] as bool? ?? true,
       exactQuoteLimit: normalizeExactQuoteLimit(json['exact_quote_limit']),
       showLastHopSignal: json['show_last_hop_signal'] as bool? ?? true,
       recoverLongPacketEchoes:
@@ -1187,6 +1195,7 @@ class AppSettings {
     bool? channelsUnreadSorting,
     bool? incomingQuoteAsMentions,
     bool? exactQuote,
+    bool? exactQuoteLatest,
     int? exactQuoteLimit,
     bool? showLastHopSignal,
     bool? recoverLongPacketEchoes,
@@ -1319,6 +1328,7 @@ class AppSettings {
       incomingQuoteAsMentions:
           incomingQuoteAsMentions ?? this.incomingQuoteAsMentions,
       exactQuote: exactQuote ?? this.exactQuote,
+      exactQuoteLatest: exactQuoteLatest ?? this.exactQuoteLatest,
       exactQuoteLimit: exactQuoteLimit ?? this.exactQuoteLimit,
       showLastHopSignal: showLastHopSignal ?? this.showLastHopSignal,
       recoverLongPacketEchoes:

@@ -14,17 +14,23 @@ const _history = <_Entry>[
   (author: 'Vasya', text: 'Fine', id: 'v2'),
 ];
 
-String _format(String senderName, String quotedId) {
+String _format(
+  String senderName,
+  String quotedId, {
+  bool fragmentForLatest = false,
+  List<_Entry> history = _history,
+}) {
   final quoted = _history.firstWhere((entry) => entry.id == quotedId);
   return ExactQuoteHelper.formatReplyWith(
     senderName: senderName,
     text: 'ok',
     quotedText: quoted.text,
     quotedMessageId: quoted.id,
-    history: _history,
+    history: history,
     authorOf: _authorOf,
     idOf: _idOf,
     enabled: true,
+    fragmentForLatest: fragmentForLatest,
     maxFragmentBytes: 30,
   );
 }
@@ -53,6 +59,22 @@ void main() {
 
     test('our own message is quoted under our name', () {
       expect(_format('Me', 'm1'), '@[Me] ok');
+    });
+
+    test('with the fragment wanted for the latest message too, the newest '
+        'message is quoted and the history goes unread', () {
+      expect(
+        _format('Vasya', 'v2', fragmentForLatest: true),
+        '@[Vasya] >Fine\nok',
+      );
+      expect(
+        _format('Vasya', 'v2', fragmentForLatest: true, history: const []),
+        '@[Vasya] >Fine\nok',
+      );
+      expect(
+        _format('Vasya', 'v1', fragmentForLatest: true, history: const []),
+        '@[Vasya] >Where do we meet tomorrow?\nok',
+      );
     });
 
     test('the receiver finds the quoted message by author and fragment', () {
@@ -93,6 +115,7 @@ void main() {
       authorOf: _authorOf,
       idOf: _idOf,
       enabled: true,
+      fragmentForLatest: false,
       maxFragmentBytes: 12,
     );
 
@@ -113,6 +136,7 @@ void main() {
       authorOf: _authorOf,
       idOf: _idOf,
       enabled: true,
+      fragmentForLatest: false,
       maxFragmentBytes: 12,
       quoteFragment: quoteFragment,
     );
@@ -168,10 +192,30 @@ void main() {
           authorOf: _authorOf,
           idOf: _idOf,
           enabled: true,
+          fragmentForLatest: false,
           maxFragmentBytes: 30,
           quoteFragment: 'Fin',
         ),
         '@[Vasya] ok',
+      );
+    });
+
+    test('a trimmed quote of the latest message goes out when wanted', () {
+      expect(
+        ExactQuoteHelper.formatReplyWith(
+          senderName: 'Vasya',
+          text: 'ok',
+          quotedText: 'Fine',
+          quotedMessageId: 'v2',
+          history: _history,
+          authorOf: _authorOf,
+          idOf: _idOf,
+          enabled: true,
+          fragmentForLatest: true,
+          maxFragmentBytes: 30,
+          quoteFragment: 'Fin',
+        ),
+        '@[Vasya] >Fin...\nok',
       );
     });
   });

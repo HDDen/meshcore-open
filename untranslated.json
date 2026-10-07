@@ -27,7 +27,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "de": [
@@ -58,7 +60,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "es": [
@@ -89,7 +93,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "fr": [
@@ -120,7 +126,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "hu": [
@@ -151,7 +159,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "it": [
@@ -182,7 +192,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "ja": [
@@ -213,7 +225,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "ko": [
@@ -244,7 +258,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "nl": [
@@ -275,7 +291,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "pl": [
@@ -306,7 +324,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "pt": [
@@ -337,7 +357,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "sk": [
@@ -368,7 +390,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "sl": [
@@ -399,7 +423,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "sv": [
@@ -430,7 +456,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "uk": [
@@ -461,7 +489,9 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ],
 
   "zh": [
@@ -492,6 +522,8 @@
     "dataCleanup_note",
     "dataCleanup_keep",
     "dataCleanup_progress",
-    "dataCleanup_partial"
+    "dataCleanup_partial",
+    "settings_modSettingsExactQuoteLatest",
+    "settings_modSettingsExactQuoteLatestDscr"
   ]
 }

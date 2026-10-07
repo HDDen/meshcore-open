@@ -145,9 +145,11 @@ identifies the message too well to lose), and marked with an ellipsis when it is
 message it came from. If the quoted message itself began with a quote or a mention of somebody
 else, that scaffolding is skipped so the excerpt starts at what the author actually wrote.
 
-Nothing is spent when the answer targets the sender's **newest** message: a bare mention already
-resolves to it, and the network is not asked to carry what it can infer. The same goes for MCMP v3
-messages, which already have an exact anchor of their own.
+An answer to the sender's **newest** message carries the excerpt as well by default: a bare mention
+resolves to the newest message the *reader* has from that author, which is the same one only while
+nobody posted in between and nothing was missed. A second switch under the first turns that off and
+sends such a reply with the mention alone, saving the bytes. Nothing is spent either way for
+MCMP v3 and MCOtxt messages, which already have an exact anchor of their own.
 
 On the receiving side the history is walked backwards for a message from that author whose text
 starts with the excerpt, retried through every known cyr2lat table when the reply itself arrived

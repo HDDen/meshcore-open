@@ -313,6 +313,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(exactQuote: value));
   }
 
+  Future<void> setExactQuoteLatest(bool value) async {
+    await updateSettings(_settings.copyWith(exactQuoteLatest: value));
+  }
+
   Future<void> setExactQuoteLimit(int value) async {
     await updateSettings(
       _settings.copyWith(

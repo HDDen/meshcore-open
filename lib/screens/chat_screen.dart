@@ -780,13 +780,17 @@ class _ChatScreenState extends State<ChatScreen> {
       text: text,
       quotedText: quotedText,
       quotedMessageId: quotedMessageId,
-      // Read only when a fragment can be due: with shared history on, the
-      // getter merges and sorts it anew on every call.
-      history: enabled ? connector.getMessages(contact) : const <Message>[],
+      // Read only when it decides anything, whether the quoted message is
+      // the author's latest: with shared history on, the getter merges and
+      // sorts it anew on every call.
+      history: enabled && !settings.exactQuoteLatest
+          ? connector.getMessages(contact)
+          : const <Message>[],
       authorOf: (message) =>
           connector.contactMessageAuthorName(contact, message)?.trim(),
       idOf: (message) => message.messageId,
       enabled: enabled,
+      fragmentForLatest: settings.exactQuoteLatest,
       maxFragmentBytes: settings.exactQuoteLimit,
       outboundCharMap: connector.contactCyr2LatCharMap(contact),
       quoteFragment: quoteFragment,
