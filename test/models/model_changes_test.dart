@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_path_signal_helper.dart';
@@ -15,6 +16,8 @@ import 'package:meshcore_open/storage/channel_settings_store.dart';
 import 'package:meshcore_open/storage/contact_discovery_store.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/storage/message_history_database.dart';
+import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/message_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,14 +84,39 @@ Uint8List _buildChannelMessageFrameV3({
   return Uint8List.fromList(writer.toBytes());
 }
 
-void main() {
+MessageHistoryDatabase _memoryDatabase() =>
+    MessageHistoryDatabase.withExecutor(NativeDatabase.memory());
+
+Future<String?> _sqliteProblem() async {
+  try {
+    final database = _memoryDatabase();
+    await database.customSelect('SELECT 1').get();
+    await database.close();
+    return null;
+  } catch (error) {
+    return 'sqlite3 is not available to this test host: $error';
+  }
+}
+
+/// Opens the history storage over an in-memory database. The message stores
+/// read through it since the move to SQLite, and the preference histories
+/// written before this call are what its one-time import takes.
+Future<void> _openHistoryStorage() =>
+    MessageHistoryStorage.instance.initializeAndMigrate(
+      databaseFactory: _memoryDatabase,
+    );
+
+Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final skip = await _sqliteProblem();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
   });
+
+  tearDown(() => MessageHistoryStorage.instance.resetForTesting());
 
   group('ChannelMessage.fromFrame — V3 packed path decoding', () {
     test(
@@ -603,11 +631,13 @@ void main() {
           jsonEncode(messageJson),
         );
 
+        await _openHistoryStorage();
         final messages = await store.loadMessages(contactKeyHex);
         expect(messages, hasLength(1));
         expect(messages.first.pathLength, equals(0));
         expect(messages.first.pathBytes, isEmpty);
       },
+      skip: skip,
     );
 
     test(
@@ -641,6 +671,7 @@ void main() {
           jsonEncode(messageJson),
         );
 
+        await _openHistoryStorage();
         final messages = await store.loadChannelMessages(channelIndex);
         expect(messages, hasLength(1));
         expect(messages.first.pathLength, equals(1));
@@ -664,6 +695,7 @@ void main() {
         expect(movedMessages.first.text, equals('Hello'));
         expect(movedMessages.first.channelIndex, equals(5));
       },
+      skip: skip,
     );
 
     test('ChannelMessageStore preserves signal per observed path', () async {
@@ -693,6 +725,7 @@ void main() {
         ],
       );
 
+      await _openHistoryStorage();
       await store.saveChannelMessages(channel.index, [message]);
       final loaded = await store.loadChannelMessages(channel.index);
 
@@ -726,7 +759,7 @@ void main() {
         )?.rssi,
         -94,
       );
-    });
+    }, skip: skip);
 
     test(
       'channel settings follow the channel name when its slot changes',

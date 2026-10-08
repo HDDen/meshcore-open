@@ -110,6 +110,17 @@ class Message {
   /// for an incoming one. Only such a message carries a region, below.
   final bool sentByFlood;
 
+  /// The route the acknowledged attempt of this outgoing message took, from
+  /// our end, the first hop nearest to us, in [deliveryPathHashWidth] bytes
+  /// per hop: the route the attempt whose ACK came back was sent along, or
+  /// the route the recipient returned with the ACK of a flood. Empty for a
+  /// delivery without repeaters; null while no acknowledgement named one,
+  /// which is also what a message stored before the field reads as. Set
+  /// once and never cleared: the message's `pathBytes` follow the latest
+  /// attempt, which is not always the delivered one.
+  final Uint8List? deliveryPathBytes;
+  final int? deliveryPathHashWidth;
+
   /// The region the flood packet was scoped to, held as `ChannelMessage`
   /// holds it: the region name, or null with [packetRegionInfoAvailable] set
   /// for a plain flood, or [packetRegionNotMatched] when the transport code
@@ -182,6 +193,8 @@ class Message {
     List<ChannelPathObservation>? floodPathObservations,
     this.floodPathHashWidth,
     this.sentByFlood = false,
+    this.deliveryPathBytes,
+    this.deliveryPathHashWidth,
     this.packetRegion,
     this.packetRegionInfoAvailable = false,
     this.packetRegionNotMatched = false,
@@ -223,6 +236,8 @@ class Message {
     List<ChannelPathObservation>? floodPathObservations,
     int? floodPathHashWidth,
     bool? sentByFlood,
+    Uint8List? deliveryPathBytes,
+    int? deliveryPathHashWidth,
     Object? packetRegion = _unset,
     bool? packetRegionInfoAvailable,
     bool? packetRegionNotMatched,
@@ -356,6 +371,9 @@ class Message {
           floodPathObservations ?? this.floodPathObservations,
       floodPathHashWidth: floodPathHashWidth ?? this.floodPathHashWidth,
       sentByFlood: sentByFlood ?? this.sentByFlood,
+      deliveryPathBytes: deliveryPathBytes ?? this.deliveryPathBytes,
+      deliveryPathHashWidth:
+          deliveryPathHashWidth ?? this.deliveryPathHashWidth,
       packetRegion: packetRegion == _unset
           ? this.packetRegion
           : packetRegion as String?,

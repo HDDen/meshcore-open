@@ -533,6 +533,12 @@ class MessageStore {
           : ChannelPathSignalHelper.encode(msg.floodPathObservations),
       'floodPathHashWidth': msg.floodPathHashWidth,
       'sentByFlood': msg.sentByFlood,
+      // An empty route is a delivery without repeaters and is written as
+      // such; only an unknown one is null.
+      'deliveryPathBytes': msg.deliveryPathBytes == null
+          ? null
+          : base64Encode(msg.deliveryPathBytes!),
+      'deliveryPathHashWidth': msg.deliveryPathHashWidth,
       'packetRegion': msg.packetRegion,
       'packetRegionInfoAvailable': msg.packetRegionInfoAvailable,
       'packetRegionNotMatched': msg.packetRegionNotMatched,
@@ -680,6 +686,12 @@ class MessageStore {
       ),
       floodPathHashWidth: json['floodPathHashWidth'] as int?,
       sentByFlood: json['sentByFlood'] as bool? ?? false,
+      deliveryPathBytes: json['deliveryPathBytes'] is String
+          ? Uint8List.fromList(
+              base64Decode(json['deliveryPathBytes'] as String),
+            )
+          : null,
+      deliveryPathHashWidth: json['deliveryPathHashWidth'] as int?,
       packetRegion: json['packetRegion'] as String?,
       packetRegionInfoAvailable:
           json['packetRegionInfoAvailable'] as bool? ?? false,
