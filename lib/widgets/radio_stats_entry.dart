@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
@@ -105,60 +108,74 @@ class AirActivityDot extends StatefulWidget {
   State<AirActivityDot> createState() => AirActivityDotState();
 }
 
-class AirActivityDotState extends State<AirActivityDot>
-    with SingleTickerProviderStateMixin {
-  /// One blink: on for the first half of the period, off for the second.
-  static const Duration _period = Duration(milliseconds: 800);
+class AirActivityDotState extends State<AirActivityDot> {
+  /// One blink: on for one half-period, off for the next.
+  static const Duration _half = Duration(milliseconds: 400);
 
-  // A ticker, not a periodic timer with setState: a timer kept scheduling a
-  // frame every 400 ms for the app bar of every route in the stack, seen or
-  // not, while TickerMode mutes a ticker under a route that is not on top.
-  // Created in initState, as PulseDot's is: a lazy initializer would run on
-  // first access, which can be dispose(), where creating a ticker throws.
-  late final AnimationController _controller;
+  // A timer, not a ticker: a repeating AnimationController runs the whole
+  // frame pipeline sixty times a second for a dot that changes 2.5 times a
+  // second, and kept the UI thread busy for every poll window after a send.
+  // The timer runs only while TickerMode allows frames, the signal that
+  // muted the ticker under a route that is not on top, so a covered app bar
+  // asks for no frames either.
+  Timer? _timer;
+  bool _on = false;
+  ValueListenable<bool>? _tickerMode;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: _period);
-    if (widget.active) _controller.repeat();
+    _on = widget.active;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final mode = TickerMode.getNotifier(context);
+    if (!identical(mode, _tickerMode)) {
+      _tickerMode?.removeListener(_syncTimer);
+      _tickerMode = mode..addListener(_syncTimer);
+    }
+    _syncTimer();
   }
 
   @override
   void didUpdateWidget(covariant AirActivityDot oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active && !oldWidget.active) {
-      _controller.repeat();
-    } else if (!widget.active && oldWidget.active) {
-      _controller.stop();
-      _controller.value = 0;
+    if (widget.active != oldWidget.active) {
+      _on = widget.active;
+      _syncTimer();
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _tickerMode?.removeListener(_syncTimer);
+    _timer?.cancel();
     super.dispose();
+  }
+
+  /// Runs the timer while the dot is active and frames are allowed. The
+  /// phase is kept across a pause, so nothing here rebuilds: the TickerMode
+  /// notifier fires during another widget's build, where setState is not
+  /// allowed, and a paused dot is not on screen anyway.
+  void _syncTimer() {
+    final run = widget.active && (_tickerMode?.value ?? true);
+    if (run) {
+      _timer ??= Timer.periodic(_half, (_) => setState(() => _on = !_on));
+    } else {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        // Which half of the period this is, read a hair past the frame time:
-        // `repeat` takes the phase as a fraction of the period, and that
-        // division can come out a hair under a half, or under a whole, where
-        // it should land on it, which would show the wrong half for a frame.
-        final half = ((_controller.value + 1e-6) * 2).floor();
-        final on = widget.active && half.isEven;
-        return PulseDot(
-          color: on ? MeshPalette.blue : scheme.outline,
-          size: 11,
-          animate: false,
-        );
-      },
+    return PulseDot(
+      color: widget.active && _on ? MeshPalette.blue : scheme.outline,
+      size: 11,
+      animate: false,
     );
   }
 }

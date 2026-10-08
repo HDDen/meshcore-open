@@ -1695,11 +1695,20 @@ radio-stats frame showed the node's airtime growing
 30 s by default) refreshes: it says the air was busy in the last poll window
 and cannot be more current than the poll, which is left alone on purpose, a
 poll every two seconds costing both radios more than the frames it would
-save. The blink is an `AnimationController` with an 800 ms period, on for
-the first half, not a periodic timer with `setState`: a timer ticked on
-under a route that is not on top, one frame every 400 ms for the app bar of
-every route in the stack, while a ticker is muted there by `TickerMode` and
-stops with the widget (`test/widgets/air_activity_dot_test.dart`).
+save. The blink is a 400 ms `Timer.periodic` toggling the half, run only
+while the dot is active and `TickerMode.getNotifier(context)` allows frames,
+not an `AnimationController`: a repeating controller ticks the whole frame
+pipeline sixty times a second for a dot that changes 2.5 times a second, and
+a DevTools profile of the app sitting idle after a send (2026-10-08) put 95%
+of the UI isolate's samples into that ticker, several percent of CPU for
+every poll window the dot blinked, while the connector did not appear at
+all. The timer's own problem, which the ticker had been chosen for, is
+answered by the same signal that muted the ticker: a timer ticked on under
+a route that is not on top, one frame every 400 ms for the app bar of every
+route in the stack, so the timer stops when the notifier says frames are
+off, keeps its phase, and starts again when it says on, without rebuilding
+from the notifier's callback, which fires during another widget's build
+(`test/widgets/air_activity_dot_test.dart`).
 
 Every screen has its own app bar and its own dot, and the quick switch
 replaces one screen with another, so the flag has to be the connector's

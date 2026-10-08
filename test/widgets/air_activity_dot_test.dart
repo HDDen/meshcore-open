@@ -4,16 +4,17 @@ import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:meshcore_open/widgets/radio_stats_entry.dart';
 
-// What the air-activity dot promises, pinned before its blinking moves off a
-// timer. Active, it blinks with a 400 ms half-period, blue then the outline
-// colour; inactive, it stays the outline colour and never changes; becoming
-// inactive stops the blink at once, becoming active starts it. The tests read
-// the colour the dot hands its [PulseDot], so what drives the blink can
-// change underneath; they read the phase from the first change rather than
-// from the first frame, so a blink that starts a frame later still passes.
-// The samples land on the blink's boundaries, where the dot has to be
-// deterministic. The last test is the change: under another route the dot
-// asks for no frames.
+// What the air-activity dot promises, whatever drives the blink: a timer, a
+// ticker, and a timer again, gated by TickerMode. Active, it blinks with a
+// 400 ms half-period, blue then the outline colour; inactive, it stays the
+// outline colour and never changes; becoming inactive stops the blink at
+// once, becoming active starts it. The tests read the colour the dot hands
+// its [PulseDot], so what drives the blink can change underneath; they read
+// the phase from the first change rather than from the first frame, so a
+// blink that starts a frame later still passes. The samples land on the
+// blink's boundaries, where the dot has to be deterministic. The last test
+// is what the ticker gave and the timer has to keep: under another route the
+// dot asks for no frames.
 
 Widget _dot({required bool active}) => MaterialApp(
   home: Scaffold(body: Center(child: AirActivityDot(active: active))),
