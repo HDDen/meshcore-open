@@ -325,14 +325,22 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   Text.rich(
                     TextSpan(
                       children: [
-                        const TextSpan(text: '\u2191'),
+                        // A hair of space between each arrow and its number.
+                        const TextSpan(
+                          text: '\u2191',
+                          style: TextStyle(letterSpacing: 2),
+                        ),
                         ...signalReadingSpans(
                           snr: reading.requestSnr,
                           rssi: null,
                           spreadingFactor: connector.currentSf,
                           afterHopList: false,
                         ),
-                        const TextSpan(text: '   \u2193'),
+                        const TextSpan(text: '   '),
+                        const TextSpan(
+                          text: '\u2193',
+                          style: TextStyle(letterSpacing: 2),
+                        ),
                         ...signalReadingSpans(
                           snr: reading.snr,
                           rssi: reading.rssi,
