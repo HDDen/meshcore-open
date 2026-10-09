@@ -29,7 +29,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "de": [
@@ -62,7 +66,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "es": [
@@ -95,7 +103,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "fr": [
@@ -128,7 +140,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "hu": [
@@ -161,7 +177,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "it": [
@@ -194,7 +214,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "ja": [
@@ -227,7 +251,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "ko": [
@@ -260,7 +288,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "nl": [
@@ -293,7 +325,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "pl": [
@@ -326,7 +362,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "pt": [
@@ -359,7 +399,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "sk": [
@@ -392,7 +436,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "sl": [
@@ -425,7 +473,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "sv": [
@@ -458,7 +510,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "uk": [
@@ -491,7 +547,11 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ],
 
   "zh": [
@@ -524,6 +584,10 @@
     "dataCleanup_progress",
     "dataCleanup_partial",
     "settings_modSettingsExactQuoteLatest",
-    "settings_modSettingsExactQuoteLatestDscr"
+    "settings_modSettingsExactQuoteLatestDscr",
+    "channelPath_deliveryConfirmedPath",
+    "channelPath_deliveryPathUnknown",
+    "channelPath_deliveredDirectly",
+    "channelPath_incompletePathsNote"
   ]
 }

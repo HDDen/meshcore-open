@@ -2850,6 +2850,9 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context) => ChannelMessagePathScreen(
           message: pathMessage,
           incompletePaths: message.directEchoObservations,
+          showDeliveryPath: message.isOutgoing,
+          deliveryPathBytes: message.deliveryPathBytes,
+          deliveryPathHashWidth: message.deliveryPathHashWidth,
         ),
       ),
     );

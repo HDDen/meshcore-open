@@ -7043,4 +7043,19 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
       'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+
+  @override
+  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+
+  @override
+  String get channelPath_deliveryPathUnknown =>
+      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+
+  @override
+  String get channelPath_deliveredDirectly =>
+      'Delivered directly, without repeaters';
+
+  @override
+  String get channelPath_incompletePathsNote =>
+      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
 }

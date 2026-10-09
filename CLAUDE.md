@@ -77,7 +77,7 @@ All screens are fully implemented (no remaining placeholders).
 | `chat_screen.dart` | Direct (private) messaging with a contact |
 | `channel_chat_screen.dart` | Group messaging inside a named channel |
 | `channels_screen.dart` | List and manage channels (add/edit/delete) |
-| `channel_message_path_screen.dart` | Hop-by-hop route a channel message took, with map overlay |
+| `channel_message_path_screen.dart` | Hop-by-hop route a channel message took, with map overlay; for a direct message or room post also the route its delivery was confirmed along |
 
 ### Contacts / Neighbors
 | Screen | Purpose |
@@ -1176,7 +1176,12 @@ remaining path in travel order, hash width, SNR, RSSI) on
 **Incomplete paths.** The path screen opened from a direct chat receives
 those observations as `incompletePaths` and lists them under a section of
 that name ahead of *Other observed paths*, one card each in the order heard,
-hops sender-side first with the signal reading. The map button opens the
+hops sender-side first with the signal reading. A line under the header
+(`channelPath_incompletePathsNote`, en and ru) says why they are
+incomplete: a direct packet carries only the hops still ahead of it, each
+repeater removing itself from the remaining path, so the full route the
+sender set is heard only in the sender's own transmission, and the node's
+own delivery carries none. The map button opens the
 route through `ChannelMessagePathMapScreen`, handing it the *inverted* path,
 because that screen draws a direct message's stored route from our end and
 reverses it for display. The copy button puts the inverted route on the
@@ -1215,13 +1220,29 @@ A direct message that travels by flood shows the relay counter channel messages 
 - **With direct echo recovery on**, `_directFloodIdentity` decrypts every flood TXT_MSG copy that involves our hash with the key the option keeps in RAM. The shared secret works both ways, so our own copies decrypt as well as copies addressed to us. A decrypted copy is named by the other party's key and the sender timestamp and binds only to the message with that identity.
 - **Without the key**, an outgoing message binds the first unclaimed copy from our one-byte hash to its recipient's once `RESP_CODE_SENT` said flood. `_handleMessageSent` reads that `is_flood` byte, and `MessageRetryService.sentMessageForAck` names the message it matched. Two different messages waiting on one pair of hashes are refused, while the attempts of one message count as one. An incoming message binds, at delivery, the earliest unclaimed copy from its sender's hash to ours that took the hop count the CONTACT_MSG_RECV frame reports, since the node hands messages over in the order it heard them.
 
-Heard packets are remembered for ten minutes and a flood send waits two for its first copy; all of it is dropped with the session. `_processIncomingMessage` reads the frame's path byte before the message's path is replaced by the contact's route, and a sender's retry, being a packet of its own, binds to the message it repeats. The retry service writes back its own stale copy of a pending message, so `_updateMessage` keeps the stored count when that one is ahead: the count only grows within an attempt.
+Heard packets are remembered for ten minutes and a flood send waits two for its first copy; all of it is dropped with the session. `_processIncomingMessage` reads the frame's path byte for the binding, and a sender's retry, being a packet of its own, binds to the message it repeats. The retry service writes back its own stale copy of a pending message, so `_updateMessage` keeps the stored count when that one is ahead: the count only grows within an attempt.
 
 The count belongs to the latest attempt, from the moment that attempt is planned. Every attempt is a packet of its own: the retry service bumps `retryCount` and writes the message back as soon as it schedules a retry, before the backoff, the radio-quiet wait and the send, and `_updateMessage` reads that change of attempt number as the start of a new count, taking the copy's zero instead of keeping the stored count, and telling the helper (`planAttempt`) so that the earlier attempt's copies stop counting at once rather than at `RESP_CODE_SENT`. The helper tags each bound packet with its attempt (`expectOutgoing(attempt:)`, the retry service's `retryCount`; for an incoming message the binding order, so the sender's delivered retry becomes the latest and restarts the count too) and marks every other packet of the message superseded for good, so a restart at the same number cannot revive them. A copy of an earlier attempt heard later still adds its route, but `DirectFloodHit.currentAttempt` is false and it neither counts nor writes its region onto the message. The region line keeps the attempt that last went out: the planning write-back restarts the count but leaves the region, because an acknowledgement of the earlier attempt can still arrive during the backoff and cancel the retry, and the delivered message used to read *unknown*. The retry itself reads the contact's choice as it is at that moment (`_sendMessageDirect` looks it up per attempt), and `_stampDirectFloodSend` replaces the line at the retry's `RESP_CODE_SENT` with that same choice, unless a copy of the retry was already heard while the default scope loaded (`DirectFloodRepeats.heardCopyOf`), so a region changed between attempts still reaches both the packet and the bubble. With the echo-recovery key the attempt is read out of the plaintext (`_directFloodAttemptOf`: the low two bits of the flags byte, or the byte the firmware appends after the text's terminator past three), so a decrypted copy binds only to the expectation of its own attempt; without the key a new attempt takes the place of the older expectations of the same message, since copies of a send arrive within seconds of it or not at all.
 
 The same message shows the region line channel bubbles have, `Region: …` on its own line above the time under `showMessageRegion`, but only when it travelled by flood: `Message.sentByFlood`, set from the `is_flood` byte of `RESP_CODE_SENT` for an outgoing message and from the CONTACT_MSG_RECV path byte for an incoming one, since a message on a known route carries no scope at all. The three region fields mirror `ChannelMessage`'s (`packetRegion`, `packetRegionInfoAvailable`, `packetRegionNotMatched`), persisted by `message_store`, and the bubble words them as the channel bubble does: the name, *no matches* for a transport code no known region produces, *unset* for a plain flood, *unknown* while nothing was read. The exact answer comes from a heard copy of the packet: the helper keeps each copy's first transport code with its payload and hands both back on binding, and `_withDirectFloodCopy` resolves them through `_resolveTransportCodeRegion`, which tries the node's default scope after the known regions, because a flood direct message goes out under that scope and the region screen does not add it to the list (a channel packet heard under it is named the same way now). An outgoing message shows the contact's own region, else the node's default scope, as soon as the node confirms the flood send (`_stampDirectFloodSend`), and a relayed copy replaces that assumption with what the packet carried. An incoming one shows the region of the copy the node delivered, which the RX log carries as well, or *unknown* when no copy was heard, such as a packet too long for the log. `_updateMessage` keeps the stored flag and region when the retry service writes back a copy without them, as it keeps the count.
 
 Each heard copy also leaves its route. `Message.floodPathObservations` holds one `ChannelPathObservation` per distinct route with the SNR and RSSI of that reception, written sender first as the RX log gives it, and `floodPathHashWidth` the hash width they are written in; `message_store` puts them into the message JSON, which lives in the SQLite row like everything else on a message. The helper keeps every copy of a packet it has not tied to a message yet, so an incoming message receives the routes heard before its delivery when it binds, the delivered copy's included; later copies, and every copy of an outgoing message, go straight onto the message. `_openMessagePath` hands them to the path screen as `pathVariants` and `pathObservations`, turned around hop by hop for an incoming message (`ChannelPathSignalHelper.reverseHops`) because that screen reads a direct message's routes from our end, and the screen takes the longest route as the primary one, as it does for a channel message. `_updateMessage` keeps the longer stored list, for the same reason it keeps the count.
+
+### The path of an incoming direct message
+
+An incoming direct message or room post keeps the path of its own packet,
+as the node reports it in the CONTACT_MSG_RECV frame's path byte: `0xFF` for
+a packet routed to us, which the repeaters stripped of its route on the way,
+stored as `pathLength` 0 with no hop bytes, the path screen's *Direct* with
+no hop list; otherwise the hop count of a flood, with the hash width in the
+top two bits, stored as `pathLength` with no bytes either, the routes
+themselves coming from the RX-log copies (`floodPathObservations`). Until
+2026-10-09 the connector wrote the contact's route onto every incoming
+message, so a message received directly showed, as its repeater hops, the
+route the node held for the contact, a pinned one included; only a message
+another client sent through us still takes the contact's route, as our own
+sends do (`test/connector/incoming_message_path_test.dart`). Messages stored
+before keep the route they were given.
 
 ### Direct send failures
 
@@ -1686,6 +1707,72 @@ Every attempt of a direct message or a room post takes its route when it starts 
 The node's own route is never written back before an attempt. The node sends by it anyway, every `CMD_ADD_UPDATE_CONTACT` makes the node save its whole contact table five seconds later (`dirty_contacts_expiry`), and a write could put back a route the node had just replaced with the one the recipient returned. The writes left are the pin, a route from the history and the clears. Before, the rotation started on the first attempt, where the node's route counted for no more than any other, the *Flood (авто)* state went to the history from the second attempt once the history had loaded, and the flood came only as the fifth attempt, which a long text never reaches. The pick waits for the history now (`_selectAutoPathForAttempt` awaits `ensureLoaded`), because `getRecentPaths` answers a history not read yet with an empty list.
 
 A route the recipient returns is credited in the history as having just worked: `_handlePathUpdated` re-reads the contact through `_fetchContactSnapshotFromDevice` and hands its route to `_recordPathResult` as a success, the answer having come along the route our packet took. The node pushes PATH_UPDATED and, right after it, SEND_CONFIRMED for the acknowledgement the answer carried, and the re-read returns after both, so the flood attribution `_recordPathResult` gives at the acknowledgement always found the contact still without the route. Moving a pin to the route the recipient returned was considered and left out: the node keeps the last good route itself, and the app would be steering it (`test/services/direct_route_attempts_test.dart`, `test/connector/returned_route_test.dart`).
+
+### The route a direct message was delivered along
+
+An outgoing direct message or room post keeps the route its delivery was
+confirmed along (`Message.deliveryPathBytes`, hops of
+`deliveryPathHashWidth` bytes from our end; empty for a delivery without
+repeaters, null while no acknowledgement named one; persisted by
+`message_store`), apart from `pathBytes`, which follow the latest attempt.
+The two differ whenever the acknowledged attempt is not the latest one:
+attempt k went by route A and its acknowledgement came after attempt k+1 had
+gone out by route B. Every attempt has an ACK hash of its own, the firmware
+hashing the timestamp, the attempt byte and the text, and the retry service
+keeps the route of each attempt under its hash from the moment the attempt
+is made (`_expectedAttempts`, then `AckHashMapping` once RESP_CODE_SENT
+confirmed the hash, the node's `is_flood` byte overriding the plan), so
+`handleAckReceived` reports which attempt a PUSH_CODE_SEND_CONFIRMED answered
+(`AcknowledgedAttempt`) and the connector's `_recordDeliveryRoute` writes the
+route. Which route depends on the acknowledgement's carrier. A flood is
+answered with a path return, the path our packet took with the ACK inside
+it: the node stores the path, pushes PUSH_CODE_PATH_UPDATED and, in the next
+frame, PUSH_CODE_SEND_CONFIRMED (`onContactPathRecv`), and the app learns the
+path from the contact re-read the push starts. `_handlePathUpdated` keeps
+that re-read with the frame's number (`_lastReturnedRoute`,
+`_companionFrameSequence`), and an acknowledgement in the frame right after
+it takes the route the re-read brings back. A bare acknowledgement answers
+an attempt sent along a route, and the route recorded is that attempt's,
+never the contact's current one, which may be a later attempt's. A send
+stopped by hand keeps its attempts' routes in `_stoppedSendAcks` for the
+same purpose, and `_updateMessage` keeps a stored route the retry service's
+copy lacks. When nothing can be read, the message keeps no route rather than
+a guess. The firmware hashes only the two low bits of the attempt number, so
+attempts k and k+4 share a hash, and the retry service keeps every attempt
+sent under a hash, newest first. The carrier tells the usual pair apart, the
+first attempt from the auto-flood last one. Two routed attempts four apart,
+which rotation can produce from the sixth attempt on, are told apart by the
+acknowledgement packet itself: a bare ACK travels in the clear, six bytes,
+the hash and then the attempt number the recipient copied from behind the
+text of our packet, where the firmware writes it from the fifth attempt on
+(before that the byte is padding), and the node logs the packet
+(PUSH_CODE_LOG_RX_DATA) in the frame right before PUSH_CODE_SEND_CONFIRMED.
+`_handleLogRxData` keeps that byte for one frame (`_lastHeardAck`), and
+`MessageRetryService.acknowledgedAttemptIndex` picks the attempt: a byte of
+four or more names it, a smaller one means one of the first four, and no
+byte, or one naming no attempt sent, leaves the newest. An acknowledgement
+inside a path return is encrypted, but a flood needs no attempt. A South
+Edition node that sends a direct message transformed (`cyr2lat.contacts`,
+`mcotxt.send.dm`) reports in RESP_CODE_SENT and PUSH_CODE_SEND_CONFIRMED the
+hash of the text the app handed over, since the app computes that one
+itself, while the acknowledgement on the air names the text that went out;
+the two then differ, the RX-log acknowledgement is not paired, and the newest
+attempt is taken (firmware `helpers/TextMessageAck`, 2026-10-09; before
+that fix no delivery of a transformed message was ever confirmed in the app)
+(`test/services/direct_route_attempts_test.dart`,
+`test/connector/delivery_route_test.dart`).
+
+The path screen shows the route for an outgoing message under a header of
+its own right after the message details (`showDeliveryPath`,
+`deliveryPathBytes` and `deliveryPathHashWidth` on `ChannelMessagePathScreen`,
+handed over by the direct chat's `_openMessagePath`): the hops as the
+repeater-hops section draws them, with a map button in the header that opens
+the map on that route alone; a line for a delivery without repeaters; and a
+placeholder while no acknowledgement named a route, which also covers a
+delivery whose route could not be read. The repeater-hops section below it
+keeps showing the message's own path, the latest attempt's. An incoming
+message and a channel message get no section
+(`test/screens/channel_message_path_screen_test.dart`).
 
 ### Air activity dot
 

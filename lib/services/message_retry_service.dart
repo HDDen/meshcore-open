@@ -39,6 +39,27 @@ typedef AckHashMapping = ({
   PathSelection? pathSelection,
 });
 
+/// What a PUSH_CODE_SEND_CONFIRMED resolved to: the message it delivered,
+/// its recipient, and the route of the attempt whose ACK hash it carried,
+/// null when the hash matched the message but no attempt of it (a mapping
+/// that aged out). The route is what the attempt went by, as the node
+/// confirmed it: a flood is a flood whatever the plan was.
+typedef AcknowledgedAttempt = ({
+  String messageId,
+  String contactKeyHex,
+  PathSelection? selection,
+});
+
+/// An attempt handed to the node, keyed by the ACK hash the app computed for
+/// it, until RESP_CODE_SENT confirms the hash: its message, its number and
+/// the route it went by, taken when the attempt was made. A SENT that
+/// arrives after the next attempt was planned still names its own attempt.
+typedef _ExpectedAttempt = ({
+  String messageId,
+  int attempt,
+  PathSelection selection,
+});
+
 /// What the node needs before an attempt: its route written, its route
 /// cleared so the attempt floods, or nothing.
 enum _NodeRouteStep { none, write, clear }
@@ -154,13 +175,17 @@ class MessageRetryService extends ChangeNotifier {
   /// container would produce a new timestamp and invalidate the signature.
   final Map<String, String> _preparedOutboundTexts = {};
   final Map<String, List<PathSelection>> _attemptPathHistory = {};
-  final Map<String, AckHashMapping> _ackHashToMessageId = {};
+  /// The attempts sent under each ACK hash, newest first. The firmware
+  /// hashes only the two low bits of the attempt number, so attempts k and
+  /// k+4 of one message share a hash, and an acknowledgement is matched to
+  /// one of them by [acknowledgedAttemptIndex].
+  final Map<String, List<AckHashMapping>> _ackHashToMessageId = {};
   final Map<String, List<int>> _expectedAckHashes = {};
   final List<_AckHistoryEntry> _ackHistory = [];
   final Map<String, List<String>> _sendQueue = {};
   final Set<String> _activeMessages = {};
   final Set<String> _resolvedMessages = {};
-  final Map<String, String> _expectedHashToMessageId = {};
+  final Map<String, _ExpectedAttempt> _expectedAttempts = {};
   final Map<String, DirectMessageProgressTracker> _progressTrackers = {};
   final Map<String, List<Uint8List>> _retiredProgressPayloads = {};
   bool _sendingPaused = false;
@@ -609,7 +634,11 @@ class MessageRetryService extends ChangeNotifier {
         selfPubKey,
       );
       final expectedHashHex = expectedHash.toRadixString(16).padLeft(8, '0');
-      _expectedHashToMessageId[expectedHashHex] = messageId;
+      _expectedAttempts[expectedHashHex] = (
+        messageId: messageId,
+        attempt: attempt,
+        selection: selection,
+      );
 
       final shortText = message.text.length > 20
           ? '${message.text.substring(0, 20)}...'
@@ -693,7 +722,10 @@ class MessageRetryService extends ChangeNotifier {
     );
   }
 
-  bool updateMessageFromSent(int ackHash, int timeoutMs) {
+  /// [isFlood] is the node's word on how the attempt went out, from
+  /// RESP_CODE_SENT: a flood is recorded as one whatever the plan was, since
+  /// that is what the recipient answers with a path return.
+  bool updateMessageFromSent(int ackHash, int timeoutMs, {bool? isFlood}) {
     // Firmware sets expected_ack = 0 for CLI/command sends (TXT_TYPE_CLI_DATA).
     // No ACK will ever be issued for these, so arming a retry timer is wrong.
     if (ackHash == 0) return false;
@@ -704,7 +736,8 @@ class MessageRetryService extends ChangeNotifier {
     final ackHashHex = ackHash.toRadixString(16).padLeft(8, '0');
 
     // Try hash-based matching (fixes LoRa message drops causing mismatches)
-    String? messageId = _expectedHashToMessageId.remove(ackHashHex);
+    final expected = _expectedAttempts.remove(ackHashHex);
+    String? messageId = expected?.messageId;
     Contact? contact;
 
     if (messageId != null) {
@@ -729,19 +762,19 @@ class MessageRetryService extends ChangeNotifier {
       }
     }
 
-    if (messageId == null || contact == null) {
+    if (messageId == null || contact == null || expected == null) {
       debugPrint('No pending message found for ACK hash: $ackHashHex');
       return false;
     }
 
     final message = _pendingMessages[messageId]!;
     _armProgressTracker(messageId, message, contact);
-    _ackHashToMessageId[ackHashHex] = (
+    _ackHashToMessageId.putIfAbsent(ackHashHex, () => []).insert(0, (
       messageId: messageId,
       timestamp: DateTime.now(),
-      attemptIndex: message.retryCount,
-      pathSelection: _selectionFromMessage(message),
-    );
+      attemptIndex: expected.attempt,
+      pathSelection: isFlood == true ? _floodSelection : expected.selection,
+    ));
 
     // Add this ACK hash to the list of expected ACKs for this message (for history)
     _expectedAckHashes[messageId] ??= [];
@@ -787,18 +820,53 @@ class MessageRetryService extends ChangeNotifier {
   /// acknowledgement awaited.
   bool isTracking(String messageId) => _pendingMessages.containsKey(messageId);
 
-  /// The ACK hashes the attempts of [messageId] have been waiting for, for a
-  /// caller that stops tracking it but still wants to recognise a late one.
-  List<int> expectedAckHashesFor(String messageId) =>
-      List.unmodifiable(_expectedAckHashes[messageId] ?? const <int>[]);
+  /// The acknowledgements the attempts of [messageId] have been waiting
+  /// for, one entry per attempt with its number and the route it went by,
+  /// the attempts sharing a hash newest first, for a caller that stops
+  /// tracking the message but still wants to recognise a late one.
+  List<({int ackHash, int attempt, PathSelection? selection})> expectedAcksFor(
+    String messageId,
+  ) => [
+    for (final ackHash in _expectedAckHashes[messageId] ?? const <int>[])
+      for (final mapping in _mappingsOf(ackHash))
+        if (mapping.messageId == messageId)
+          (
+            ackHash: ackHash,
+            attempt: mapping.attemptIndex,
+            selection: mapping.pathSelection,
+          ),
+  ];
+
+  List<AckHashMapping> _mappingsOf(int ackHash) =>
+      _ackHashToMessageId[ackHash.toRadixString(16).padLeft(8, '0')] ??
+      const [];
+
+  /// Among attempts that share one ACK hash, newest first by their numbers
+  /// in [attemptNumbers], the index of the one an acknowledgement answers.
+  /// [ackAttemptByte] is the fifth byte of the acknowledgement packet, when
+  /// the RX log showed it. From the fifth attempt on the sender appends the
+  /// attempt number after the text and the recipient copies it into that
+  /// byte; before that the byte is the padding behind the text. A byte of
+  /// four or more names its attempt, a smaller one says the attempt was one
+  /// of the first four, and no byte, or one naming no attempt sent, leaves
+  /// the newest, as before the byte was read.
+  static int acknowledgedAttemptIndex(
+    List<int> attemptNumbers,
+    int? ackAttemptByte,
+  ) {
+    if (ackAttemptByte == null || attemptNumbers.length < 2) return 0;
+    final index = ackAttemptByte >= 4
+        ? attemptNumbers.indexOf(ackAttemptByte)
+        : attemptNumbers.indexWhere((attempt) => attempt < 4);
+    return index < 0 ? 0 : index;
+  }
 
   /// The pending message and recipient a RESP_CODE_SENT with [ackHash] was
   /// matched to by [updateMessageFromSent], or null. The connector follows
   /// the relays of a flood send from here, since only the node's answer says
   /// the packet went out by flood.
   ({Message message, Contact contact})? sentMessageForAck(int ackHash) {
-    final ackHashHex = ackHash.toRadixString(16).padLeft(8, '0');
-    final messageId = _ackHashToMessageId[ackHashHex]?.messageId;
+    final messageId = _mappingsOf(ackHash).firstOrNull?.messageId;
     if (messageId == null) return null;
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
@@ -910,10 +978,13 @@ class MessageRetryService extends ChangeNotifier {
 
   void _cleanupMessage(String messageId) {
     _moveAckHashesToHistory(messageId);
-    _ackHashToMessageId.removeWhere(
-      (_, mapping) => mapping.messageId == messageId,
+    for (final mappings in _ackHashToMessageId.values) {
+      mappings.removeWhere((mapping) => mapping.messageId == messageId);
+    }
+    _ackHashToMessageId.removeWhere((_, mappings) => mappings.isEmpty);
+    _expectedAttempts.removeWhere(
+      (_, expected) => expected.messageId == messageId,
     );
-    _expectedHashToMessageId.removeWhere((_, msgId) => msgId == messageId);
     final contactKey = _pendingContacts[messageId]?.publicKeyHex;
     _pendingMessages.remove(messageId);
     _pendingContacts.remove(messageId);
@@ -1068,7 +1139,15 @@ class MessageRetryService extends ChangeNotifier {
     return false;
   }
 
-  void handleAckReceived(int ackHash, int tripTimeMs) {
+  /// Marks the message an acknowledgement belongs to delivered and reports
+  /// what it answered, null when nothing pending matched. [ackAttemptByte]
+  /// is the attempt byte of the acknowledgement packet when the RX log
+  /// showed it (see [acknowledgedAttemptIndex]).
+  AcknowledgedAttempt? handleAckReceived(
+    int ackHash,
+    int tripTimeMs, {
+    int? ackAttemptByte,
+  }) {
     final config = _config;
     String? matchedMessageId;
     int? matchedAttemptIndex;
@@ -1077,19 +1156,18 @@ class MessageRetryService extends ChangeNotifier {
 
     // Clean up old ACK hash mappings (older than 15 minutes)
     final cutoffTime = DateTime.now().subtract(const Duration(minutes: 15));
-    final hashesToRemove = <String>[];
-    for (var entry in _ackHashToMessageId.entries) {
-      if (entry.value.timestamp.isBefore(cutoffTime)) {
-        hashesToRemove.add(entry.key);
-      }
+    for (final mappings in _ackHashToMessageId.values) {
+      mappings.removeWhere((mapping) => mapping.timestamp.isBefore(cutoffTime));
     }
-    for (var hash in hashesToRemove) {
-      _ackHashToMessageId.remove(hash);
-    }
+    _ackHashToMessageId.removeWhere((_, mappings) => mappings.isEmpty);
 
     // Use direct O(1) lookup via ACK hash mapping
-    final mapping = _ackHashToMessageId[ackHashHex];
-    if (mapping != null) {
+    final mappings = _ackHashToMessageId[ackHashHex];
+    if (mappings != null && mappings.isNotEmpty) {
+      final mapping = mappings[acknowledgedAttemptIndex(
+        [for (final entry in mappings) entry.attemptIndex],
+        ackAttemptByte,
+      )];
       matchedMessageId = mapping.messageId;
       matchedAttemptIndex = mapping.attemptIndex;
       matchedPathSelection = mapping.pathSelection;
@@ -1117,8 +1195,10 @@ class MessageRetryService extends ChangeNotifier {
     if (matchedMessageId != null) {
       final message = _pendingMessages[matchedMessageId];
       if (message == null) {
-        _ackHashToMessageId.remove(ackHashHex);
-        return;
+        _ackHashToMessageId[ackHashHex]?.removeWhere(
+          (mapping) => mapping.messageId == matchedMessageId,
+        );
+        return null;
       }
       final contact = _pendingContacts[matchedMessageId];
       final ackedAttempt = matchedAttemptIndex ?? message.retryCount;
@@ -1179,6 +1259,12 @@ class MessageRetryService extends ChangeNotifier {
       }
 
       notifyListeners();
+      if (contact == null) return null;
+      return (
+        messageId: matchedMessageId,
+        contactKeyHex: contact.publicKeyHex,
+        selection: matchedPathSelection,
+      );
     } else {
       if (_checkAckHistory(ackHash)) {
         config?.debugLogService?.info(
@@ -1193,6 +1279,7 @@ class MessageRetryService extends ChangeNotifier {
         debugPrint('No matching message found for ACK: $ackHashHex');
       }
     }
+    return null;
   }
 
   String? getContactKeyForAckHash(int ackHash) {
@@ -1254,6 +1341,7 @@ class MessageRetryService extends ChangeNotifier {
     _preparedOutboundTexts.clear();
     _attemptPathHistory.clear();
     _expectedAckHashes.clear();
+    _expectedAttempts.clear();
     _ackHistory.clear();
     _ackHashToMessageId.clear();
     _sendQueue.clear();

@@ -7044,4 +7044,20 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
       'Если выключено, ответ на последнее сообщение автора несёт только упоминание. Если включено, корректно обрабатывается случай, когда последнее сообщение у вас и остальных - рассинхронизировано и является разными сообщениями.';
+
+  @override
+  String get channelPath_deliveryConfirmedPath =>
+      'Доставка подтверждена по пути';
+
+  @override
+  String get channelPath_deliveryPathUnknown =>
+      'Для сообщения пока не получено подтверждения доставки, либо не удалось получить маршрут.';
+
+  @override
+  String get channelPath_deliveredDirectly =>
+      'Доставлено напрямую, без репитеров';
+
+  @override
+  String get channelPath_incompletePathsNote =>
+      'Пакеты личных сообщений хранят только оставшиеся хопы, а не полные маршруты: каждый следующий репитер вычитает себя из оставшегося пути.';
 }

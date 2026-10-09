@@ -42,11 +42,23 @@ class ChannelMessagePathScreen extends StatelessWidget {
   /// each the tail of the sender's route (see `DirectEchoRecovery`). Only a
   /// direct chat passes them; a channel message has none.
   final List<DirectEchoObservation> incompletePaths;
+
+  /// The route an outgoing direct message or room post was delivered along,
+  /// shown in a section of its own while [showDeliveryPath] is set: null
+  /// while no acknowledgement named one, empty for a delivery without
+  /// repeaters (see `Message.deliveryPathBytes`). A channel message and an
+  /// incoming message have none.
+  final bool showDeliveryPath;
+  final Uint8List? deliveryPathBytes;
+  final int? deliveryPathHashWidth;
   const ChannelMessagePathScreen({
     super.key,
     required this.message,
     this.channelMessage = false,
     this.incompletePaths = const [],
+    this.showDeliveryPath = false,
+    this.deliveryPathBytes,
+    this.deliveryPathHashWidth,
   });
 
   @override
@@ -143,12 +155,26 @@ class ChannelMessagePathScreen extends StatelessWidget {
                   effectiveHopCount: effectiveHopCount,
                 ),
                 const SizedBox(height: 16),
+                if (showDeliveryPath) ...[
+                  _buildDeliveryPathSection(context, l10n, connector),
+                  const SizedBox(height: 16),
+                ],
                 if (incompletePaths.isNotEmpty) ...[
                   SectionHeader(
                     l10n.channelPath_incompletePaths,
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   ),
-                  const SizedBox(height: 8),
+                  // Why the paths are incomplete: a direct packet carries
+                  // only the hops still ahead of it.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(
+                      l10n.channelPath_incompletePathsNote,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                   _buildIncompletePaths(context),
                   const SizedBox(height: 16),
                 ],
@@ -557,22 +583,102 @@ class ChannelMessagePathScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNoHopCard(BuildContext context, AppLocalizations l10n) {
+  Widget _buildNoHopCard(BuildContext context, AppLocalizations l10n) =>
+      _buildNoteCard(
+        context,
+        Icons.route_outlined,
+        l10n.channelPath_noHopDetails,
+      );
+
+  /// A one-line card: an icon and a sentence in the muted colour.
+  Widget _buildNoteCard(BuildContext context, IconData icon, String text) {
     final scheme = Theme.of(context).colorScheme;
     return MeshCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [
-          Icon(Icons.route_outlined, size: 20, color: scheme.onSurfaceVariant),
+          Icon(icon, size: 20, color: scheme.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              l10n.channelPath_noHopDetails,
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
+            child: Text(text, style: TextStyle(color: scheme.onSurfaceVariant)),
           ),
         ],
+      ),
+    );
+  }
+
+  /// The route the delivery of an outgoing direct message or room post was
+  /// confirmed along (`Message.deliveryPathBytes`), under a header of its
+  /// own with the map button: the hops as the repeater-hops section draws
+  /// them, a line for a delivery without repeaters, and the placeholder
+  /// while no acknowledgement has named a route. The message's own path,
+  /// drawn below, is the latest attempt's, which is not always the
+  /// delivered one.
+  Widget _buildDeliveryPathSection(
+    BuildContext context,
+    AppLocalizations l10n,
+    MeshCoreConnector connector,
+  ) {
+    final route = deliveryPathBytes ?? Uint8List(0);
+    final width = (deliveryPathHashWidth ?? connector.pathHashByteWidth)
+        .clamp(1, 4)
+        .toInt();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          l10n.channelPath_deliveryConfirmedPath,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          trailing: IconButton(
+            icon: const Icon(Icons.map_outlined, size: 20),
+            tooltip: l10n.channelPath_viewMap,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            onPressed: route.isEmpty
+                ? null
+                : () => _openDeliveryPathMap(context, route, width),
+          ),
+        ),
+        if (deliveryPathBytes == null)
+          _buildNoteCard(
+            context,
+            Icons.hourglass_empty,
+            l10n.channelPath_deliveryPathUnknown,
+          )
+        else if (route.isEmpty)
+          _buildNoteCard(
+            context,
+            Icons.trending_flat,
+            l10n.channelPath_deliveredDirectly,
+          )
+        else
+          _buildHopTimeline(
+            context,
+            _buildPathHops(route, connector, l10n, width),
+            l10n,
+            observation: null,
+            showLastHopSignal: false,
+            spreadingFactor: connector.currentSf,
+          ),
+      ],
+    );
+  }
+
+  /// Opens the map on the delivery route alone, drawn from our end as an
+  /// outgoing message's route is.
+  void _openDeliveryPathMap(BuildContext context, Uint8List route, int width) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChannelMessagePathMapScreen(
+          message: message.copyWith(
+            pathBytes: route,
+            pathVariants: const [],
+            pathHashWidth: width,
+          ),
+          channelMessage: channelMessage,
+        ),
       ),
     );
   }

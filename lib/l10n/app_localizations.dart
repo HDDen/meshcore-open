@@ -11971,6 +11971,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.'**
   String get settings_modSettingsExactQuoteLatestDscr;
+
+  /// No description provided for @channelPath_deliveryConfirmedPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery confirmed via path'**
+  String get channelPath_deliveryConfirmedPath;
+
+  /// No description provided for @channelPath_deliveryPathUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'No delivery confirmation has been received for this message yet, or the route could not be determined.'**
+  String get channelPath_deliveryPathUnknown;
+
+  /// No description provided for @channelPath_deliveredDirectly.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered directly, without repeaters'**
+  String get channelPath_deliveredDirectly;
+
+  /// No description provided for @channelPath_incompletePathsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.'**
+  String get channelPath_incompletePathsNote;
 }
 
 class _AppLocalizationsDelegate

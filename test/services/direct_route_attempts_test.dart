@@ -21,7 +21,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 // every attempt floods without clearing and the history is left alone, the
 // node's own route is sent as it stands rather than written back, the switch
 // on moves the attempts after it to the history, the switch off keeps them
-// on it, and the last attempt goes out as an auto-flood.
+// on it, and the last attempt goes out as an auto-flood. The last group is
+// the attempts that share an ACK hash, the first and the fifth: all are
+// kept, and the acknowledgement packet's attempt byte, when the RX log
+// showed it, says which one was answered.
 
 const _sentAtSeconds = 1700000000;
 final _selfKey = Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i));
@@ -467,6 +470,154 @@ void main() {
         'clear',
         'send 3 flood',
       ]);
+    });
+  });
+  group('the acknowledged attempt', () {
+    test('is reported with the route of the attempt whose hash came back, '
+        'not the latest one', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      // The recipient's answer to something else leaves another route on
+      // the node, and the retry goes by it.
+      node.returnRoute([0x33]);
+      await _noAck(service, 'hi', 0);
+      expect(node.message('hi').pathBytes, [0x33]);
+
+      final acknowledged = service.handleAckReceived(_ackHash('hi', 0), 1200);
+      await pumpEventQueue();
+
+      expect(acknowledged, isNotNull);
+      expect(acknowledged!.messageId, node.message('hi').messageId);
+      expect(acknowledged.contactKeyHex, node.contact.publicKeyHex);
+      expect(acknowledged.selection?.useFlood, isFalse);
+      expect(acknowledged.selection?.pathBytes, [0x10]);
+      expect(node.message('hi').status, MessageStatus.delivered);
+    });
+
+    test('is a flood when the node said the attempt flooded, whatever the '
+        'plan was', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      expect(
+        service.updateMessageFromSent(_ackHash('hi', 0), 1, isFlood: true),
+        isTrue,
+      );
+
+      final acknowledged = service.handleAckReceived(_ackHash('hi', 0), 1200);
+
+      expect(acknowledged?.selection?.useFlood, isTrue);
+    });
+
+    test('is nothing for an acknowledgement nothing waits for', () {
+      final node = _Node(_contact());
+      final service = _serviceFor(node);
+      addTearDown(service.dispose);
+
+      expect(service.handleAckReceived(_ackHash('hi', 0), 1200), isNull);
+    });
+
+    test('is handed, with its route, to a caller that stops tracking the '
+        'message', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      expect(service.updateMessageFromSent(_ackHash('hi', 0), 1), isTrue);
+
+      final expected = service.expectedAcksFor(node.message('hi').messageId);
+
+      expect(expected.map((e) => e.ackHash), [_ackHash('hi', 0)]);
+      expect(expected.single.selection?.pathBytes, [0x10]);
+    });
+  });
+  group('attempts sharing an ACK hash', () {
+    /// Five attempts of 'hi': the fifth shares the first one's hash, and
+    /// goes by the route the node took meanwhile, 0x33, where the first
+    /// four went by 0x10.
+    Future<MessageRetryService> fiveAttempts(_Node node) async {
+      final service = _serviceFor(node)..setMaxRetries(6);
+      addTearDown(service.dispose);
+      await _send(service, node, 'hi');
+      for (var attempt = 0; attempt < 4; attempt++) {
+        if (attempt == 3) node.returnRoute([0x33]);
+        await _noAck(service, 'hi', attempt);
+      }
+      expect(node.log.last, 'send 4 route');
+      expect(node.message('hi').pathBytes, [0x33]);
+      expect(_ackHash('hi', 4), _ackHash('hi', 0));
+      expect(service.updateMessageFromSent(_ackHash('hi', 4), 1), isTrue);
+      return service;
+    }
+
+    test('are listed newest first, each with its route', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = await fiveAttempts(node);
+
+      final expected = service.expectedAcksFor(node.message('hi').messageId);
+
+      expect(expected.map((e) => e.attempt).toList(), [4, 0, 1, 2, 3]);
+      expect(expected[0].ackHash, expected[1].ackHash);
+      expect(expected[0].selection?.pathBytes, [0x33]);
+      expect(expected[1].selection?.pathBytes, [0x10]);
+    });
+
+    test('an acknowledgement whose attempt byte is below four answers the '
+        'first attempt', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = await fiveAttempts(node);
+
+      final acknowledged = service.handleAckReceived(
+        _ackHash('hi', 0),
+        1200,
+        ackAttemptByte: 0,
+      );
+
+      expect(acknowledged?.selection?.pathBytes, [0x10]);
+      expect(node.message('hi').status, MessageStatus.delivered);
+    });
+
+    test('an acknowledgement whose attempt byte is four answers the '
+        'fifth', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = await fiveAttempts(node);
+
+      final acknowledged = service.handleAckReceived(
+        _ackHash('hi', 0),
+        1200,
+        ackAttemptByte: 4,
+      );
+
+      expect(acknowledged?.selection?.pathBytes, [0x33]);
+    });
+
+    test('an acknowledgement without an attempt byte answers the '
+        'newest', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = await fiveAttempts(node);
+
+      final acknowledged = service.handleAckReceived(_ackHash('hi', 0), 1200);
+
+      expect(acknowledged?.selection?.pathBytes, [0x33]);
+    });
+
+    test('an attempt byte naming no attempt sent leaves the newest', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = await fiveAttempts(node);
+
+      final acknowledged = service.handleAckReceived(
+        _ackHash('hi', 0),
+        1200,
+        ackAttemptByte: 9,
+      );
+
+      expect(acknowledged?.selection?.pathBytes, [0x33]);
     });
   });
 }

@@ -3582,71 +3582,74 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _loadChannelOrder();
 
     // Initialize retry service callbacks
-    _retryService?.initialize(
-      RetryServiceConfig(
-        sendMessage: _sendMessageDirect,
-        addMessage: _addMessage,
-        updateMessage: _updateMessage,
-        findContact: getContactByPubKeyHex,
-        clearContactPath: clearContactPath,
-        setContactPath: setContactPath,
-        calculateTimeout:
-            (
-              pathLength,
-              messageBytes, {
-              String? contactKey,
-              int? deviceTimeoutMs,
-            }) => calculateTimeout(
-              pathLength: pathLength,
-              messageBytes: messageBytes,
-              contactKey: contactKey,
-              deviceTimeoutMs: deviceTimeoutMs,
-            ),
-        calculatePhysicsMaxTimeout:
-            (pathLength, pathBytes, messageBytes, attempt) =>
-                _calculatePhysicsMaxTimeout(
-                  pathLength: pathLength,
-                  pathBytes: pathBytes,
-                  messageBytes: messageBytes,
-                  attempt: attempt,
-                ),
-        getSelfPublicKey: () => _selfPublicKey,
-        // The retry service computes wire-facing values (ACK hashes); it must
-        // never see the size-estimation signature placeholder.
-        prepareContactOutboundText: (contact, text) =>
-            prepareContactOutboundText(
-              contact,
-              text,
-              estimateSignatureOverhead: false,
-            ),
-        appSettingsService: appSettingsService,
-        debugLogService: _appDebugLogService,
-        recordPathResult: _recordPathResult,
-        selectRetryPath:
-            (contactKey, attemptIndex, maxRetries, recentSelections) =>
-                _selectAutoPathForAttempt(
-                  contactKey,
-                  attemptIndex: attemptIndex,
-                  maxRetries: maxRetries,
-                  recentSelections: recentSelections,
-                ),
-        onDeliveryObserved: (contactKey, pathLength, messageBytes, tripTimeMs) {
-          final secSinceRx = DateTime.now()
-              .difference(_lastRxBeforeFrame)
-              .inSeconds;
-          _timeoutPredictionService?.recordObservation(
-            contactKey: contactKey,
-            pathLength: pathLength,
-            messageBytes: messageBytes,
-            tripTimeMs: tripTimeMs,
-            secondsSinceLastRx: secSinceRx,
-          );
-        },
-      ),
-    );
+    _retryService?.initialize(_retryServiceConfig());
     final maxRetries = _appSettingsService?.settings.maxMessageRetries ?? 5;
     _retryService?.setMaxRetries(maxRetries);
   }
+
+  /// The connector's side of the retry service: how an attempt goes out,
+  /// where the messages are kept, and what the connector knows about
+  /// contacts, routes and timeouts.
+  RetryServiceConfig _retryServiceConfig() => RetryServiceConfig(
+    sendMessage: _sendMessageDirect,
+    addMessage: _addMessage,
+    updateMessage: _updateMessage,
+    findContact: getContactByPubKeyHex,
+    clearContactPath: clearContactPath,
+    setContactPath: setContactPath,
+    calculateTimeout:
+        (
+          pathLength,
+          messageBytes, {
+          String? contactKey,
+          int? deviceTimeoutMs,
+        }) => calculateTimeout(
+          pathLength: pathLength,
+          messageBytes: messageBytes,
+          contactKey: contactKey,
+          deviceTimeoutMs: deviceTimeoutMs,
+        ),
+    calculatePhysicsMaxTimeout:
+        (pathLength, pathBytes, messageBytes, attempt) =>
+            _calculatePhysicsMaxTimeout(
+              pathLength: pathLength,
+              pathBytes: pathBytes,
+              messageBytes: messageBytes,
+              attempt: attempt,
+            ),
+    getSelfPublicKey: () => _selfPublicKey,
+    // The retry service computes wire-facing values (ACK hashes); it must
+    // never see the size-estimation signature placeholder.
+    prepareContactOutboundText: (contact, text) =>
+        prepareContactOutboundText(
+          contact,
+          text,
+          estimateSignatureOverhead: false,
+        ),
+    appSettingsService: _appSettingsService,
+    debugLogService: _appDebugLogService,
+    recordPathResult: _recordPathResult,
+    selectRetryPath:
+        (contactKey, attemptIndex, maxRetries, recentSelections) =>
+            _selectAutoPathForAttempt(
+              contactKey,
+              attemptIndex: attemptIndex,
+              maxRetries: maxRetries,
+              recentSelections: recentSelections,
+            ),
+    onDeliveryObserved: (contactKey, pathLength, messageBytes, tripTimeMs) {
+      final secSinceRx = DateTime.now()
+          .difference(_lastRxBeforeFrame)
+          .inSeconds;
+      _timeoutPredictionService?.recordObservation(
+        contactKey: contactKey,
+        pathLength: pathLength,
+        messageBytes: messageBytes,
+        tripTimeMs: tripTimeMs,
+        secondsSinceLastRx: secSinceRx,
+      );
+    },
+  );
 
   void _handleSettingsSectionsChanged() {
     final fragmentedFramesEnabled = _southFrameFragmentsEnabled;
@@ -4212,18 +4215,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       if (index != -1) {
         // The retry service writes back its own copy of a pending message,
-        // which never sees what the RX log added meanwhile: the flood relays
-        // counted and their routes, the flood routing and the packet's
-        // region. The routes only grow and the other two are only ever set,
-        // so the stored ones are kept when the copy is behind; the count
-        // grows within an attempt only. A copy with another attempt number
-        // is a retry being planned: its count starts from the copy's zero,
-        // and the helper stops counting the earlier attempt's copies now, not
-        // when the retry finally leaves the radio. The region stays the one
-        // the last attempt went out under until the retry's RESP_CODE_SENT
-        // stamps its own: an acknowledgement of that attempt can still arrive
-        // during the backoff and cancel the retry, and the delivered message
-        // would otherwise show an unknown region.
+        // which never sees what the connector added meanwhile: the flood
+        // relays counted and their routes, the flood routing and the
+        // packet's region from the RX log, and the route the delivery was
+        // confirmed along. The routes only grow and the rest is only ever
+        // set, so the stored ones are kept when the copy is behind; the
+        // count grows within an attempt only. A copy with another attempt
+        // number is a retry being planned: its count starts from the copy's
+        // zero, and the helper stops counting the earlier attempt's copies
+        // now, not when the retry finally leaves the radio. The region stays
+        // the one the last attempt went out under until the retry's
+        // RESP_CODE_SENT stamps its own: an acknowledgement of that attempt
+        // can still arrive during the backoff and cancel the retry, and the
+        // delivered message would otherwise show an unknown region.
         final stored = messages[index];
         var updated = message;
         if (message.floodPathObservations.length <
@@ -4242,6 +4246,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             packetRegion: stored.packetRegion,
             packetRegionInfoAvailable: true,
             packetRegionNotMatched: stored.packetRegionNotMatched,
+          );
+        }
+        if (stored.deliveryPathBytes != null &&
+            message.deliveryPathBytes == null) {
+          updated = updated.copyWith(
+            deliveryPathBytes: stored.deliveryPathBytes,
+            deliveryPathHashWidth: stored.deliveryPathHashWidth,
           );
         }
         if (message.isOutgoing && message.retryCount != stored.retryCount) {
@@ -4985,6 +4996,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void attachPathHistoryServiceForTest(PathHistoryService service) {
     _pathHistoryService = service;
+  }
+
+  /// Hands the connector a retry service without [initialize], wired to the
+  /// same callbacks.
+  @visibleForTesting
+  void attachRetryServiceForTest(MessageRetryService service) {
+    _retryService = service;
+    service.initialize(_retryServiceConfig());
   }
 
   @visibleForTesting
@@ -5923,6 +5942,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _directEchoAckUnsupported = false;
     _unscopedSendUnsupported = false;
     _stoppedSendAcks.clear();
+    _lastReturnedRoute = null;
+    _lastHeardAck = null;
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
     _setSelfPublicKey(null);
@@ -8855,10 +8876,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return pending.inputText;
   }
 
-  /// The message behind each ACK hash a stopped send was waiting for, so a
-  /// confirmation that arrives after all still marks it delivered.
-  final Map<String, ({String contactKeyHex, String messageId})>
-  _stoppedSendAcks = {};
+  /// The message behind each ACK hash a stopped send was waiting for, with
+  /// the attempts sent under that hash and their routes, newest first, so a
+  /// confirmation that arrives after all still marks it delivered and
+  /// records the route.
+  final Map<String, _StoppedSend> _stoppedSendAcks = {};
+
+  /// A bare acknowledgement the radio heard, kept for one frame: the node
+  /// logs a packet before it processes it, so the PUSH_CODE_SEND_CONFIRMED
+  /// for this acknowledgement is the next frame, and the packet's fifth
+  /// byte, the attempt number the recipient copied from our packet, tells
+  /// apart the attempts that share a hash
+  /// (`MessageRetryService.acknowledgedAttemptIndex`). An acknowledgement
+  /// inside a path return is encrypted and never gets here, but a flood
+  /// needs no attempt: its route is the one returned.
+  ({int ackHash, int? attemptByte, int atFrame})? _lastHeardAck;
+
+  /// Counts the node's frames, so that a PUSH_CODE_PATH_UPDATED can be told
+  /// to have come in the frame right before a PUSH_CODE_SEND_CONFIRMED.
+  int _companionFrameSequence = 0;
+
+  /// The route the node last took from a recipient's answer: whose, in
+  /// which frame it was announced, and the contact as read back from the
+  /// node afterwards (see [_recordDeliveryRoute]).
+  ({String contactKeyHex, int atFrame, Future<Contact?> contact})?
+  _lastReturnedRoute;
 
   /// Whether the retry service is still working on [messageId]: attempts
   /// ahead, or an acknowledgement awaited.
@@ -8877,13 +8919,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> stopSending(Contact contact, Message message) async {
     final retryService = _retryService;
     if (retryService != null) {
-      for (final ackHash in retryService.expectedAckHashesFor(
-        message.messageId,
-      )) {
-        _stoppedSendAcks[ackHashToHex(ackHash)] = (
-          contactKeyHex: contact.publicKeyHex,
-          messageId: message.messageId,
-        );
+      for (final expected in retryService.expectedAcksFor(message.messageId)) {
+        _stoppedSendAcks
+            .putIfAbsent(
+              ackHashToHex(expected.ackHash),
+              () => (
+                contactKeyHex: contact.publicKeyHex,
+                messageId: message.messageId,
+                attempts: [],
+              ),
+            )
+            .attempts
+            .add((attempt: expected.attempt, selection: expected.selection));
       }
       while (_stoppedSendAcks.length > 64) {
         _stoppedSendAcks.remove(_stoppedSendAcks.keys.first);
@@ -9925,6 +9972,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? localSourceLabel,
   }) {
     if (frame.isEmpty) return;
+    _companionFrameSequence++;
     if (notifyExtensions) {
       _settingsSectionsService?.mcoX2(frame);
     }
@@ -10185,32 +10233,35 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handlePathUpdated(Uint8List frame) {
     // Frame format: [0]=code, [1-32]=pub_key
-    if (frame.length >= 33 && _pathHistoryService != null) {
-      final pubKey = Uint8List.fromList(frame.sublist(1, 33));
-      final contact = _contacts.cast<Contact?>().firstWhere(
-        (c) => c != null && listEquals(c.publicKey, pubKey),
-        orElse: () => null,
-      );
-
-      if (contact != null) {
-        // The node's own decision, not ours. The new path arrives with the
-        // contact refresh below, which logs it as "Refreshing contact ...";
-        // this line is what says who started it.
-        appLogger.info(
-          'Node announced a path change for ${contact.name}, re-reading it '
-          '(override=${contact.pathOverride})',
-          tag: 'Connector',
-        );
-        _pathHistoryService!.handlePathUpdated(
-          contact,
-          initialWeight: _initialRouteWeight,
-        );
-        // Refresh just this specific contact instead of all contacts.
-        // This avoids race conditions with _preserveContactsOnRefresh flag
-        // that can occur when using refreshContactsSinceLastmod().
-        unawaited(_creditReturnedRoute(pubKey));
-      }
-    }
+    if (frame.length < 33) return;
+    final pubKey = Uint8List.fromList(frame.sublist(1, 33));
+    final contact = _contacts.cast<Contact?>().firstWhere(
+      (c) => c != null && listEquals(c.publicKey, pubKey),
+      orElse: () => null,
+    );
+    if (contact == null) return;
+    // The node's own decision, not ours. The new path arrives with the
+    // contact refresh below, which logs it as "Refreshing contact ...";
+    // this line is what says who started it.
+    appLogger.info(
+      'Node announced a path change for ${contact.name}, re-reading it '
+      '(override=${contact.pathOverride})',
+      tag: 'Connector',
+    );
+    _pathHistoryService?.handlePathUpdated(
+      contact,
+      initialWeight: _initialRouteWeight,
+    );
+    // Refresh just this specific contact instead of all contacts.
+    // This avoids race conditions with _preserveContactsOnRefresh flag
+    // that can occur when using refreshContactsSinceLastmod(). The re-read
+    // is kept with the frame's number: an acknowledgement in the very next
+    // frame came inside the same path return (`_recordDeliveryRoute`).
+    _lastReturnedRoute = (
+      contactKeyHex: contact.publicKeyHex,
+      atFrame: _companionFrameSequence,
+      contact: _creditReturnedRoute(pubKey),
+    );
   }
 
   /// Re-reads the contact whose route the node just took from the
@@ -10219,10 +10270,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// the recipient. The node reports the route (PUSH_CODE_PATH_UPDATED) and
   /// the acknowledgement in its wake before the re-read returns, so the
   /// credit `_recordPathResult` gives a flood delivery at the acknowledgement
-  /// found no route yet.
-  Future<void> _creditReturnedRoute(Uint8List pubKey) async {
+  /// found no route yet. Returns the contact as read back, null when the
+  /// node did not answer in time.
+  Future<Contact?> _creditReturnedRoute(Uint8List pubKey) async {
     final contact = await _fetchContactSnapshotFromDevice(pubKey);
-    if (contact == null || contact.pathLength < 0) return;
+    if (contact == null || contact.pathLength < 0) return contact;
     _recordPathResult(
       contact.publicKeyHex,
       PathSelection(
@@ -10233,6 +10285,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       true,
       null,
     );
+    return contact;
   }
 
   void _handleSelfInfo(Uint8List frame) {
@@ -11424,8 +11477,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     if (message != null) {
       final effectiveReceivedAt = receivedAt ?? DateTime.now();
-      // Read off the frame now: the message's own path is replaced by the
-      // contact's route below.
+      // The hop count of a flood packet, null for one routed to us.
       final floodHops = echo == null ? _floodHopCountOf(frame) : null;
       if (localSourceLabel != null) {
         message = message.copyWith(
@@ -11455,10 +11507,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (getContactByPubKeyHex(contact.publicKeyHex) == null) {
           contact = _restoreDiscoveredContact(contact);
         }
-        message = message.copyWith(
-          pathLength: contact.pathLength < 0 ? -1 : contact.pathLength,
-          pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
-        );
+        // A message another client sent through us went out along the route
+        // the node holds for the contact, as our own sends do. An incoming
+        // message keeps the path of its own packet, read from the frame: the
+        // route the node or the user holds for the contact is the route of
+        // our sends, and says nothing about how the contact's packet reached
+        // us; it used to be written here, so a message received directly
+        // showed the pinned route on its path screen.
+        if (message.isOutgoing) {
+          message = message.copyWith(
+            pathLength: contact.pathLength < 0 ? -1 : contact.pathLength,
+            pathBytes: contact.pathLength < 0 ? Uint8List(0) : contact.path,
+          );
+        }
         // receivedAt is the app-local conversation order. During the initial
         // queue drain it preserves the companion's FIFO response sequence.
         if (!message.isOutgoing) {
@@ -11731,7 +11792,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             mcmpMessage?.replyAuthorName ?? mcotxtMessage?.replyAuthorName,
         containerReplyTimestamp:
             mcmpMessage?.replyTimestamp ?? mcotxtMessage?.replyTimestamp,
-        pathLength: pathLength == 0xFF ? -1 : (pathLength & 0x3F),
+        // The node writes 0xFF for a packet routed to us, whose route the
+        // repeaters consumed on the way, so it is direct with no hops known;
+        // a flood packet reports the hops it travelled, the hash width packed
+        // into the top two bits. The frame carries no hop bytes either way.
+        pathLength: pathLength == 0xFF ? 0 : (pathLength & 0x3F),
         pathBytes: Uint8List(0),
         fourByteRoomContactKey: roomAuthorPrefix,
       );
@@ -14385,6 +14450,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
       final raw = reader.readRemainingBytes();
       final packet = _parseRawPacket(raw);
+      if (packet?.payloadType == payloadTypeACK) {
+        _noteHeardAck(packet!);
+        return;
+      }
       if (packet?.payloadType == payloadTypeTXTMSG) {
         if (packet!.isFlood) {
           _countDirectFloodCopy(packet, snr: snr, rssi: rssi);
@@ -14796,7 +14865,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
       final retryService = _retryService;
       if (retryService != null &&
-          retryService.updateMessageFromSent(ackHash, timeoutMs)) {
+          retryService.updateMessageFromSent(
+            ackHash,
+            timeoutMs,
+            isFlood: isFlood,
+          )) {
         if (isFlood) {
           final sent = retryService.sentMessageForAck(ackHash);
           _expectDirectFloodRelays(sent);
@@ -14910,10 +14983,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
 
+      // The acknowledgement packet itself, when the RX log showed it in
+      // the frame before, names the attempt from the fifth on.
+      final heard = _lastHeardAck;
+      final ackAttemptByte =
+          heard != null &&
+              heard.ackHash == ackHash &&
+              heard.atFrame == _companionFrameSequence - 1
+          ? heard.attemptByte
+          : null;
       // Handle ACK in retry service
-      if (_retryService != null) {
-        _retryService!.handleAckReceived(ackHash, tripTimeMs);
-      }
+      final acknowledged = _retryService?.handleAckReceived(
+        ackHash,
+        tripTimeMs,
+        ackAttemptByte: ackAttemptByte,
+      );
       // A send stopped by hand is no longer the retry service's, but its
       // acknowledgement is still worth the double tick.
       final stopped = _stoppedSendAcks.remove(ackHashToHex(ackHash));
@@ -14933,6 +15017,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           tag: 'Connector',
         );
       }
+      final delivered =
+          acknowledged ??
+          (stopped == null ? null : _stoppedAttempt(stopped, ackAttemptByte));
+      if (delivered != null) {
+        unawaited(
+          _recordDeliveryRoute(
+            delivered,
+            confirmedAtFrame: _companionFrameSequence,
+          ),
+        );
+      }
     } catch (e) {
       appLogger.warn('Error handling send confirmed frame: $e');
       // Fallback to old behavior
@@ -14947,6 +15042,114 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     }
+  }
+
+  /// The attempt of a stopped send an acknowledgement answers, picked among
+  /// the attempts sharing the hash as the retry service picks one.
+  AcknowledgedAttempt _stoppedAttempt(
+    _StoppedSend stopped,
+    int? ackAttemptByte,
+  ) {
+    final attempts = stopped.attempts;
+    final index = MessageRetryService.acknowledgedAttemptIndex(
+      [for (final attempt in attempts) attempt.attempt],
+      ackAttemptByte,
+    );
+    return (
+      messageId: stopped.messageId,
+      contactKeyHex: stopped.contactKeyHex,
+      selection: index < attempts.length ? attempts[index].selection : null,
+    );
+  }
+
+  void _noteHeardAck(_RawPacket packet) {
+    final payload = packet.payload;
+    if (payload.length < 4) return;
+    _lastHeardAck = (
+      ackHash:
+          payload[0] |
+          (payload[1] << 8) |
+          (payload[2] << 16) |
+          (payload[3] << 24),
+      attemptByte: payload.length >= 5 ? payload[4] : null,
+      atFrame: _companionFrameSequence,
+    );
+  }
+
+  /// Writes the route [delivered] was delivered along into the message
+  /// (`Message.deliveryPathBytes`), once its acknowledgement named the
+  /// attempt. The acknowledgement's carrier decides which route that is.
+  /// One that came inside a path return answers a flood: the recipient
+  /// returned the path our packet took, the node reports it as
+  /// PUSH_CODE_PATH_UPDATED in the frame right before
+  /// PUSH_CODE_SEND_CONFIRMED (`onContactPathRecv` writes the two in a row),
+  /// and the route is what the re-read that push started brings back. A
+  /// bare acknowledgement answers an attempt sent along a route, and the
+  /// route is that attempt's, as the retry service kept it under the ACK
+  /// hash, not the contact's current one, which may be a later attempt's.
+  /// The firmware hashes only the two low bits of the attempt number, so
+  /// attempts k and k+4 share a hash: the carrier tells the usual pair
+  /// apart, the first attempt from the auto-flood last one, and two routed
+  /// attempts four apart, which rotation can produce from the sixth attempt
+  /// on, are told apart by the acknowledgement packet's attempt byte, read
+  /// from the RX log ([_lastHeardAck]). When nothing can be read, the
+  /// message keeps no route rather than a guess.
+  Future<void> _recordDeliveryRoute(
+    AcknowledgedAttempt delivered, {
+    required int confirmedAtFrame,
+  }) async {
+    final Uint8List route;
+    final int width;
+    final String source;
+    final returned = _lastReturnedRoute;
+    if (returned != null &&
+        returned.contactKeyHex == delivered.contactKeyHex &&
+        returned.atFrame == confirmedAtFrame - 1) {
+      final contact = await returned.contact;
+      if (contact == null || contact.pathLength < 0) {
+        appLogger.info(
+          'Delivery confirmed by a path return whose route could not be '
+          'read back; the message keeps no delivery route',
+          tag: 'Connector',
+        );
+        return;
+      }
+      route = Uint8List.fromList(contact.path);
+      width = contact.pathHashWidth;
+      source = 'the route the recipient returned';
+    } else {
+      final selection = delivered.selection;
+      if (selection == null ||
+          selection.useFlood ||
+          (selection.hopCount > 0 && selection.pathBytes.isEmpty)) {
+        appLogger.info(
+          'Delivery confirmed by a bare acknowledgement of an attempt with '
+          'no route known; the message keeps no delivery route',
+          tag: 'Connector',
+        );
+        return;
+      }
+      route = Uint8List.fromList(selection.pathBytes);
+      width = selection.hopCount > 0
+          ? Contact.inferPathHashWidth(selection.hopCount, route.length)
+          : _pathHashByteWidth;
+      source = 'the route of the attempt';
+    }
+    _updateStoredContactMessage(
+      delivered.contactKeyHex,
+      delivered.messageId,
+      (current) => current.deliveryPathBytes != null
+          ? current
+          : current.copyWith(
+              deliveryPathBytes: route,
+              deliveryPathHashWidth: width,
+            ),
+    );
+    final hex = route.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final hops = route.isEmpty
+        ? 'no repeaters'
+        : '${route.length ~/ width} hops, $hex';
+    appLogger.info('Delivery confirmed along $source: $hops', tag: 'Connector');
   }
 
   bool _handleRepeaterCommandSent(int ackHash, int timeoutMs) {
@@ -17432,6 +17635,14 @@ class _RawPacket {
   int get hopCount => pathLenRaw & 63;
   int get pathHashWidth => ((pathLenRaw >> 6) & 0x03) + 1;
 }
+
+/// A send stopped by hand: the message, its recipient and the attempts sent
+/// under one ACK hash, newest first, with the route each went by.
+typedef _StoppedSend = ({
+  String contactKeyHex,
+  String messageId,
+  List<({int attempt, PathSelection? selection})> attempts,
+});
 
 class _PacketRegionResolution {
   final String? region;
