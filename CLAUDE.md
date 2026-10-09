@@ -68,7 +68,7 @@ All screens are fully implemented (no remaining placeholders).
 | `scanner_screen.dart` | BLE device scan and connect — main entry point |
 | `tcp_screen.dart` | Connect to a MeshCore device over TCP/IP |
 | `usb_screen.dart` | Connect to a MeshCore device over USB serial |
-| `discovery_screen.dart` | Browse discovered mesh nodes not yet in contacts; a contact that answered the last discovery request is listed dimmed, without actions |
+| `discovery_screen.dart` | Browse discovered mesh nodes not yet in contacts; a discovery request sent from the screen lists the nodes that answer it above a rule, a contact the node holds among them dimmed and without actions, and leaves the list as it was below |
 | `chrome_required_screen.dart` | Web gate for non-Chrome browsers (BLE unavailable) |
 
 ### Chat / Messaging
@@ -1605,7 +1605,22 @@ inline) goes through `LastValueMemo`, keyed on `discoveredRevision`,
 contact list, the two being changed together), the node's key, the query,
 the filters and the set of nodes that answered the last discovery request,
 by identity and size, since that set is a live view that grows while the
-request runs. The line-of-sight map rebuilt its map, its terrain profile and
+request runs, and the keys of the discovered list as that request went out.
+A request sent from the screen splits the list in two (`discoverySections`):
+above, the nodes that answered the latest one, a contact the node holds
+among them, dimmed, since the request reached it; a rule labelled
+`discoveredContacts_previouslyHeard` (en and ru); below, the list as it was
+before the request, which never lists a contact the node holds and leaves
+out a node first heard through its answer, so a node listed before that
+answered again stands in both parts and one heard only through its answer
+above alone. The rule shows only with something under it, and the split
+stays until the screen is left. An answered card carries, under the key, how
+the node heard our request (its SNR, the answer's second byte, behind an up
+arrow) and how our radio heard its answer (SNR and RSSI off the companion's
+push frame, behind a down arrow): `ZeroHopDeviceDiscovery.responderReadings`,
+the first copy's, drawn by `signalReadingSpans` on the colour scale of a
+channel bubble's hop list. The line-of-sight map rebuilt
+its map, its terrain profile and
 its panels for a banner showing the battery and the last SNR; it selects
 those two, and the quick-switch bar's two unread counts, with
 `context.select`, so it rebuilds when one of them changes. The neighbours

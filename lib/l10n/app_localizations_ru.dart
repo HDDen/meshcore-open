@@ -7060,4 +7060,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get channelPath_incompletePathsNote =>
       'Пакеты личных сообщений хранят только оставшиеся хопы, а не полные маршруты: каждый следующий репитер вычитает себя из оставшегося пути.';
+
+  @override
+  String get discoveredContacts_previouslyHeard => 'ранее услышанные узлы';
 }

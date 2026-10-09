@@ -7028,4 +7028,7 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get channelPath_incompletePathsNote =>
       'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+
+  @override
+  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
 }

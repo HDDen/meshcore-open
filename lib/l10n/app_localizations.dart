@@ -11995,6 +11995,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.'**
   String get channelPath_incompletePathsNote;
+
+  /// No description provided for @discoveredContacts_previouslyHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'previously heard nodes'**
+  String get discoveredContacts_previouslyHeard;
 }
 
 class _AppLocalizationsDelegate

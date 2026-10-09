@@ -8,6 +8,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/discovery_list.dart';
 import '../helpers/last_value_memo.dart';
+import '../helpers/signal_reading_text.dart';
 import '../helpers/zero_hop_device_discovery.dart';
 import '../l10n/l10n.dart';
 import '../l10n/contact_localization.dart';
@@ -15,6 +16,7 @@ import '../models/contact.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/contact_filter_types.dart';
 import '../widgets/app_bar.dart';
+import '../widgets/labeled_divider.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
@@ -47,9 +49,21 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// request reached.
   Set<String> _discoveryResponders = const <String>{};
 
-  /// The rows, kept per input (see [discoveryRows]): most notifications of
-  /// the connector change none of them.
-  final LastValueMemo<Object, List<Contact>> _rowsMemo = LastValueMemo();
+  /// What our radio made of each answer to the last request, by key: the
+  /// same live view, read when an answered card is drawn.
+  Map<String, DiscoveryReading> _discoveryReadings = const {};
+
+  /// The keys of the discovered list as the latest discovery request went
+  /// out, null while none was sent from this screen. From the request on
+  /// the nodes that answer it are listed in a part of their own above a
+  /// rule, and the list as it was before the request below: a node that was
+  /// there and answered again stands in both, one heard only through its
+  /// answer above alone.
+  Set<String>? _heardBeforeRequest;
+
+  /// The two parts of the list, kept per input (see [discoverySections]):
+  /// most notifications of the connector change neither.
+  final LastValueMemo<Object, DiscoverySections> _rowsMemo = LastValueMemo();
 
   @override
   void dispose() {
@@ -105,8 +119,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     final selfKeyHex = selfKey == null ? null : pubKeyToHex(selfKey);
     // The known keys change only with the contact list, so its revision
     // covers them. The responders are a live view that grows while a
-    // request runs, so its size goes into the key beside its identity.
-    final filteredAndSorted = _rowsMemo.of(
+    // request runs, so its size goes into the key beside its identity; the
+    // keys heard before the request are replaced whole with each request.
+    final heardBefore = _heardBeforeRequest;
+    final sections = _rowsMemo.of(
       (
         connector.discoveredRevision,
         connector.contactsRevision,
@@ -116,17 +132,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         sortOption,
         _discoveryResponders,
         _discoveryResponders.length,
+        heardBefore,
       ),
-      () => discoveryRows(
+      () => discoverySections(
         discoveredContacts,
         knownKeys: knownKeys,
         responders: _discoveryResponders,
+        heardBefore: heardBefore ?? const {},
         selfKeyHex: selfKeyHex,
         query: searchQuery,
         typeFilter: typeFilter,
         sortOption: sortOption,
       ),
     );
+    final answered = sections.answered;
+    final earlier = sections.earlier;
+    // The rule between the two parts: once a request was sent, and only
+    // with an earlier list under it to set apart.
+    final ruleRows = heardBefore != null && earlier.isNotEmpty ? 1 : 0;
+    // What the search hint counts: every node listed, once.
+    final listed = <String>{
+      for (final contact in answered) contact.publicKeyHex,
+      for (final contact in earlier) contact.publicKeyHex,
+    }.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -177,7 +205,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ),
       body: Column(
         children: [
-          _buildFilters(filteredAndSorted, connector),
+          _buildFilters(listed, connector),
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
@@ -186,7 +214,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       key: const ValueKey('empty_all'),
                       child: Text(l10n.contacts_noContacts),
                     )
-                  : filteredAndSorted.isEmpty
+                  : answered.isEmpty && earlier.isEmpty
                   ? Center(
                       key: const ValueKey('empty_filtered'),
                       child: Text(l10n.discoveredContacts_noMatching),
@@ -194,10 +222,19 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   : ListView.builder(
                       key: const ValueKey('list'),
                       padding: const EdgeInsets.only(bottom: 24),
-                      itemCount: filteredAndSorted.length,
+                      itemCount: answered.length + ruleRows + earlier.length,
                       itemBuilder: (context, index) {
-                        final contact = filteredAndSorted[index];
-                        final tile = _buildDiscoveryTile(
+                        // The nodes that answered, the rule, then the list
+                        // as it was before the request.
+                        if (ruleRows > 0 && index == answered.length) {
+                          return LabeledDivider(
+                            label: l10n.discoveredContacts_previouslyHeard,
+                          );
+                        }
+                        final contact = index < answered.length
+                            ? answered[index]
+                            : earlier[index - answered.length - ruleRows];
+                        return _buildDiscoveryTile(
                           context,
                           contact,
                           connector,
@@ -205,8 +242,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                           alreadyAdded: knownKeys.contains(
                             contact.publicKeyHex,
                           ),
+                          // The answer's reading, on the answered part only.
+                          reading: index < answered.length
+                              ? _discoveryReadings[contact.publicKeyHex]
+                              : null,
                         );
-                        return tile;
                       },
                     ),
             ),
@@ -222,6 +262,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     MeshCoreConnector connector,
     int index, {
     required bool alreadyAdded,
+    DiscoveryReading? reading,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final isChat = contact.type == advTypeChat;
@@ -276,6 +317,36 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
+                // How the node heard our discovery request (up) and how our
+                // radio heard its answer (down), in the readings and colours
+                // of a channel bubble's hop list.
+                if (reading != null) ...[
+                  const SizedBox(height: 3),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: '\u2191'),
+                        ...signalReadingSpans(
+                          snr: reading.requestSnr,
+                          rssi: null,
+                          spreadingFactor: connector.currentSf,
+                          afterHopList: false,
+                        ),
+                        const TextSpan(text: '   \u2193'),
+                        ...signalReadingSpans(
+                          snr: reading.snr,
+                          rssi: reading.rssi,
+                          spreadingFactor: connector.currentSf,
+                          afterHopList: false,
+                        ),
+                      ],
+                    ),
+                    style: MeshTheme.mono(
+                      fontSize: 10,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 5),
                 // 3. Type, the two advert markers, and when it was heard.
                 // The chip and the icons take their intrinsic width and the
@@ -371,6 +442,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       // A new request starts an empty answer list. It is read live: the
       // connector notifies on every reply and the screen watches it.
       _discoveryResponders = discovery.responderKeys;
+      _discoveryReadings = discovery.responderReadings;
+      // What the list held as the request went out: a node that answers
+      // and was not in here joins the answered part alone.
+      _heardBeforeRequest = {
+        for (final contact in connector.discoveredContacts)
+          contact.publicKeyHex,
+      };
     });
     try {
       await discovery.run();
@@ -548,39 +626,36 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Widget _buildFilters(
-    List<Contact> filteredAndSorted,
-    MeshCoreConnector connector,
-  ) {
+  Widget _buildFilters(int listed, MeshCoreConnector connector) {
     String hintText = "";
     switch (typeFilter) {
       case ContactTypeFilter.all:
         hintText = context.l10n.contacts_searchContacts(
-          filteredAndSorted.length,
+          listed,
           showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
         );
         break;
       case ContactTypeFilter.users:
         hintText = context.l10n.contacts_searchUsers(
-          filteredAndSorted.length,
+          listed,
           showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
         );
         break;
       case ContactTypeFilter.repeaters:
         hintText = context.l10n.contacts_searchRepeaters(
-          filteredAndSorted.length,
+          listed,
           showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
         );
         break;
       case ContactTypeFilter.rooms:
         hintText = context.l10n.contacts_searchRoomServers(
-          filteredAndSorted.length,
+          listed,
           showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
         );
         break;
       case ContactTypeFilter.favorites:
         hintText = context.l10n.contacts_searchFavorites(
-          filteredAndSorted.length,
+          listed,
           showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
         );
         break;

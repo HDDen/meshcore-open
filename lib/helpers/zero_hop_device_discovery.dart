@@ -7,6 +7,12 @@ import 'dart:typed_data';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 
+/// Both ends of a node's answer: [requestSnr], the SNR the node heard our
+/// request with, which it puts into the answer's second byte, times four;
+/// [snr] and [rssi], what our radio made of the answer, as the companion
+/// reports them ahead of the payload.
+typedef DiscoveryReading = ({double requestSnr, double snr, int rssi});
+
 /// Runs one full-key zero-hop discovery request and records matching replies.
 class ZeroHopDeviceDiscovery {
   static const responseWindow = Duration(seconds: 60);
@@ -17,6 +23,7 @@ class ZeroHopDeviceDiscovery {
   final MeshCoreConnector connector;
   final Random _random = Random();
   final Set<String> _responderKeys = <String>{};
+  final Map<String, DiscoveryReading> _readings = {};
 
   /// Public keys (hex) of every node that answered this request, known
   /// contacts included. The connector records those replies in its discovery
@@ -24,6 +31,11 @@ class ZeroHopDeviceDiscovery {
   /// the discovery screen shows a known contact only when it answered. A live
   /// view: it fills in while the request runs.
   Set<String> get responderKeys => UnmodifiableSetView(_responderKeys);
+
+  /// The reading of each answer by the node's key (hex), the first copy's
+  /// when one came twice. A live view like [responderKeys].
+  Map<String, DiscoveryReading> get responderReadings =>
+      UnmodifiableMapView(_readings);
 
   StreamSubscription<Uint8List>? _framesSubscription;
   Timer? _responseTimer;
@@ -76,6 +88,11 @@ class ZeroHopDeviceDiscovery {
 
   void cancel() {
     _cancelled = true;
+    // The response window ends with the request, here and at once: run()
+    // cancels the timer too, but only after the frame subscription's cancel
+    // has completed, which under a test's fake clock it never does in time.
+    _responseTimer?.cancel();
+    _responseTimer = null;
     final completion = _completion;
     if (completion != null && !completion.isCompleted) {
       completion.complete();
@@ -107,7 +124,19 @@ class ZeroHopDeviceDiscovery {
     final publicKey = Uint8List.fromList(
       frame.sublist(publicKeyOffset, publicKeyOffset + pubKeySize),
     );
-    _responderKeys.add(pubKeyToHex(publicKey));
+    final keyHex = pubKeyToHex(publicKey);
+    _responderKeys.add(keyHex);
+    // What our radio made of the answer, as the companion writes it ahead
+    // of the payload (SNR times four and RSSI, both signed bytes), and the
+    // SNR the node heard our request with, times four in the payload.
+    _readings.putIfAbsent(
+      keyHex,
+      () => (
+        requestSnr: frame[payloadOffset + 1].toSigned(8) / 4.0,
+        snr: frame[1].toSigned(8) / 4.0,
+        rssi: frame[2].toSigned(8),
+      ),
+    );
     connector.recordZeroHopDiscoveredContact(
       publicKey: publicKey,
       type: flags & 0x0F,

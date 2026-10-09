@@ -9,9 +9,10 @@ import 'package:meshcore_open/utils/contact_filter_types.dart';
 // The rows of the discovery screen as a pure function of its inputs, which
 // the screen now keeps per input instead of deriving on every notification
 // of the connector. The screen-level tests pin the same rules through the
-// widgets; here each rule is taken on its own, including the one the screen
-// cannot be driven into from outside: a known contact that answered the
-// last discovery request is listed.
+// widgets; here each rule is taken on its own, the split a discovery request
+// makes included: the nodes that answered above, a known contact among them,
+// and below the list as it was, without the nodes first heard through their
+// answer.
 
 Contact _node(
   int seed,
@@ -36,7 +37,6 @@ List<String> _names(Iterable<Contact> rows) => [for (final c in rows) c.name];
 List<Contact> _rows(
   List<Contact> discovered, {
   Set<String> knownKeys = const {},
-  Set<String> responders = const {},
   String? selfKeyHex,
   String query = '',
   ContactTypeFilter typeFilter = ContactTypeFilter.all,
@@ -44,8 +44,26 @@ List<Contact> _rows(
 }) => discoveryRows(
   discovered,
   knownKeys: knownKeys,
-  responders: responders,
   selfKeyHex: selfKeyHex,
+  query: query,
+  typeFilter: typeFilter,
+  sortOption: sortOption,
+);
+
+DiscoverySections _sections(
+  List<Contact> discovered, {
+  Set<String> knownKeys = const {},
+  Set<String> responders = const {},
+  Set<String> heardBefore = const {},
+  String query = '',
+  ContactTypeFilter typeFilter = ContactTypeFilter.all,
+  ContactSortOption sortOption = ContactSortOption.lastSeen,
+}) => discoverySections(
+  discovered,
+  knownKeys: knownKeys,
+  responders: responders,
+  heardBefore: heardBefore,
+  selfKeyHex: null,
   query: query,
   typeFilter: typeFilter,
   sortOption: sortOption,
@@ -58,21 +76,10 @@ void main() {
   final lounge = _node(5, 'Lounge', type: advTypeRoom, heardSecondsAgo: 60);
   final all = [alice, bob, relay, lounge];
 
-  test('a node the node holds is listed only when it answered the last '
-      'discovery request', () {
+  test('a node the node holds is not listed', () {
     expect(
       _names(_rows(all, knownKeys: {alice.publicKeyHex})),
       ['Lounge', 'Relay', 'bob'],
-    );
-    expect(
-      _names(
-        _rows(
-          all,
-          knownKeys: {alice.publicKeyHex},
-          responders: {alice.publicKeyHex},
-        ),
-      ),
-      ['Alice', 'Lounge', 'Relay', 'bob'],
     );
   });
 
@@ -126,5 +133,49 @@ void main() {
     final input = [bob, alice];
     _rows(input, sortOption: ContactSortOption.name);
     expect(_names(input), ['bob', 'Alice']);
+  });
+
+  test('a request puts the nodes that answered above, a known contact among '
+      'them, and leaves below the list as it was, without a node first heard '
+      'through its answer', () {
+    final sections = _sections(
+      all,
+      knownKeys: {relay.publicKeyHex},
+      responders: {relay.publicKeyHex, bob.publicKeyHex, lounge.publicKeyHex},
+      // Lounge is heard for the first time through its answer.
+      heardBefore: {alice.publicKeyHex, bob.publicKeyHex, relay.publicKeyHex},
+    );
+    expect(_names(sections.answered), ['Lounge', 'Relay', 'bob']);
+    expect(_names(sections.earlier), ['Alice', 'bob']);
+  });
+
+  test('without a request nothing has answered and the list is whole', () {
+    final sections = _sections(all);
+    expect(sections.answered, isEmpty);
+    expect(_names(sections.earlier), ['Alice', 'Lounge', 'Relay', 'bob']);
+  });
+
+  test('both parts take the filters and the order', () {
+    final heard = {for (final contact in all) contact.publicKeyHex};
+    final sections = _sections(
+      all,
+      responders: {relay.publicKeyHex, bob.publicKeyHex},
+      heardBefore: heard,
+      typeFilter: ContactTypeFilter.users,
+      sortOption: ContactSortOption.name,
+    );
+    expect(_names(sections.answered), ['bob']);
+    expect(_names(sections.earlier), ['Alice', 'bob']);
+    expect(
+      _names(
+        _sections(
+          all,
+          responders: {relay.publicKeyHex},
+          heardBefore: heard,
+          query: 'rel',
+        ).answered,
+      ),
+      ['Relay'],
+    );
   });
 }
