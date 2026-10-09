@@ -137,6 +137,36 @@ abstract final class DirectEchoRecovery {
         contact,
   ];
 
+  /// Whether an incoming message decrypted under the secret shared with
+  /// [contact] is one of our own, heard on its way to them. A contact whose
+  /// key starts with the byte ours starts with makes our packets to them
+  /// indistinguishable from theirs to us: the destination hash is ours, the
+  /// source hash is theirs, and the shared secret is the same in both
+  /// directions, so a copy a repeater relays decrypts as a message from
+  /// them. The node drops such a copy as a packet it has already seen; the
+  /// RX log carries it all the same, and a node that forgot the packet would
+  /// deliver it. Only the content tells: the packet time and the text of a
+  /// message we sent that contact, the text as decoded or as it went out.
+  static bool isOwnMessage({
+    required Uint8List selfPublicKey,
+    required Contact contact,
+    required int timestampSeconds,
+    required String text,
+    required Iterable<Message> conversation,
+  }) {
+    if (selfPublicKey.isEmpty || contact.publicKey.isEmpty) return false;
+    if (contact.publicKey[0] != selfPublicKey[0]) return false;
+    for (final message in conversation) {
+      if (!message.isOutgoing) continue;
+      if (message.timestamp.millisecondsSinceEpoch ~/ 1000 !=
+          timestampSeconds) {
+        continue;
+      }
+      if (message.text == text || message.rawText == text) return true;
+    }
+    return false;
+  }
+
   /// The MAC and ciphertext behind the two hash bytes.
   static Uint8List macAndCiphertext(DirectMessageEcho echo) =>
       Uint8List.fromList(echo.payload.sublist(2));

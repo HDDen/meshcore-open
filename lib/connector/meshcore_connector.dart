@@ -11526,13 +11526,36 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           message = message.copyWith(receivedAt: effectiveReceivedAt);
         }
       }
+      await _loadMessagesForContact(message.senderKeyHex);
+      // A contact whose key starts with the byte ours starts with makes our
+      // own packets to them look like theirs to us (the hashes and the
+      // shared secret are the same both ways): a copy a repeater relays,
+      // decoded from the RX log or delivered by a node that forgot it, came
+      // up as a message from them. Told apart by content, before anything
+      // is verified, counted, stored or acknowledged.
+      if (contact != null &&
+          !message.isOutgoing &&
+          !message.isCli &&
+          DirectEchoRecovery.isOwnMessage(
+            selfPublicKey: _selfPublicKey!,
+            contact: contact,
+            timestampSeconds: message.timestamp.millisecondsSinceEpoch ~/ 1000,
+            text: message.text,
+            conversation: _conversations[message.senderKeyHex] ?? const [],
+          )) {
+        appLogger.info(
+          'Ignoring our own message to ${contact.name} heard back as theirs '
+          '(both keys start with the same byte)',
+          tag: 'DirectEcho',
+        );
+        return;
+      }
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = await _applyContactMcmpVerification(message, contact);
       }
       if (contact != null) {
         _updateContactLastMessageAt(contact.publicKeyHex, effectiveReceivedAt);
       }
-      await _loadMessagesForContact(message.senderKeyHex);
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = _resolveContactReplyReference(message, contact);
         message = _resolveContactTextReply(message, contact);

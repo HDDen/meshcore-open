@@ -1156,6 +1156,21 @@ there: the duplicate check now finds the message instead of merely noticing
 it and calls `_mergeDirectEcho`; a new message from an echo is stamped by
 `DirectEchoRecovery.stampFirstEcho`; and after it is stored the ACK goes out.
 
+**Our own packets.** A contact whose key starts with the byte ours starts
+with makes our packets to them look, to us, like theirs: the destination
+hash is ours, the source hash is theirs, and the shared secret is the same
+both ways. The node drops the copy a repeater relays as a packet it has
+already seen (`Mesh::sendDirect` and `sendFlood` mark it), but the RX log
+carries it, and the echo branch decoded our own message as one from them,
+showed it with the route bar and acknowledged it (reported from the field
+on 2026-10-09). `_processIncomingMessage` therefore asks
+`DirectEchoRecovery.isOwnMessage` before an incoming message from such a
+contact is verified, counted, stored or acknowledged: the packet time and
+the text, decoded or as it went out, of a message we sent them name it as
+ours and it is dropped, the node's ordinary delivery included, in case the
+node forgot a packet it sent. Any other contact is never checked
+(`test/connector/own_message_echo_test.dart`).
+
 **Identity and progress.** The duplicate key is the one the receive path
 already uses — sender, packet timestamp in milliseconds, decoded text — so
 every later copy, a repeater's retransmission or the node's own delivery at
