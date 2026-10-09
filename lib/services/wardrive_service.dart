@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/wardrive_background_requirements.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
@@ -99,6 +100,8 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool _isUpdatingLocation = false;
   bool _screenWakelockEnabled = false;
   bool _runInBackgroundEnabled = false;
+  WardriveBackgroundRequirement? _backgroundRequirementMissing;
+  WardriveBackgroundRequirement? _lastBackgroundRequirementAsked;
   bool _continuousGpsEnabled = false;
   bool _resumeAfterForegroundPause = false;
   bool _followMeEnabled = false;
@@ -133,6 +136,13 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   bool get isUpdatingLocation => _isUpdatingLocation;
   bool get screenWakelockEnabled => _screenWakelockEnabled;
   bool get runInBackgroundEnabled => _runInBackgroundEnabled;
+
+  /// The requirement that keeps background wardriving off: the one still
+  /// missing after the last try to turn the option on, or the one found
+  /// revoked when a session started with the option on. Null while the
+  /// option is on, or was never refused.
+  WardriveBackgroundRequirement? get backgroundRequirementMissing =>
+      _backgroundRequirementMissing;
   bool get continuousGpsEnabled => _continuousGpsEnabled;
   bool get followMeEnabled => _followMeEnabled;
   int get discoveryRequestsSent => _discoveryRequestsSent;
@@ -308,15 +318,49 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> setRunInBackgroundEnabled(bool enabled) async {
-    if (_runInBackgroundEnabled == enabled) return;
-    if (enabled) {
-      await _foregroundService.ensureAndroidRequirements();
+  /// Turns background wardriving on or off. Off is immediate. On needs
+  /// every Android requirement met: then the option goes on and null comes
+  /// back. Otherwise one requirement is asked for, the first missing one
+  /// after the one asked last time (so a tap after a refused screen moves
+  /// on to the next permission, round the end), the option stays off, and
+  /// the requirement still missing after the user's return comes back for
+  /// the screen to name. No system screen opens by itself: each one is a
+  /// tap of the user's on the option.
+  Future<WardriveBackgroundRequirement?> setRunInBackgroundEnabled(
+    bool enabled,
+  ) async {
+    if (_runInBackgroundEnabled == enabled) return null;
+    if (!enabled) {
+      _runInBackgroundEnabled = false;
+      _backgroundRequirementMissing = null;
+      await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, false);
+      _syncBackgroundKeepAlive();
+      notifyListeners();
+      return null;
     }
-    _runInBackgroundEnabled = enabled;
-    await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, enabled);
+    var missing = await _foregroundService.missingAndroidRequirements();
+    if (missing.isNotEmpty) {
+      final asked = nextWardriveBackgroundRequirement(
+        missing,
+        _lastBackgroundRequirementAsked,
+      )!;
+      _lastBackgroundRequirementAsked = asked;
+      await _foregroundService.requestAndroidRequirement(asked);
+      missing = await _foregroundService.missingAndroidRequirements();
+      if (missing.isNotEmpty) {
+        final stillMissing = missing.contains(asked) ? asked : missing.first;
+        _backgroundRequirementMissing = stillMissing;
+        notifyListeners();
+        return stillMissing;
+      }
+    }
+    _runInBackgroundEnabled = true;
+    _backgroundRequirementMissing = null;
+    _lastBackgroundRequirementAsked = null;
+    await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, true);
     _syncBackgroundKeepAlive();
     notifyListeners();
+    return null;
   }
 
   Future<void> setContinuousGpsEnabled(bool enabled) async {
@@ -392,18 +436,34 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _startAndroidBackgroundServices() async {
+    // A requirement revoked since the option went on, a permission taken
+    // back in the phone's settings: the option goes off, the session runs
+    // in the foreground, and the panel names what is missing. Nothing is
+    // asked for here; that takes a tap on the option.
+    final missing = await _foregroundService.missingAndroidRequirements();
+    if (missing.isNotEmpty) {
+      await _turnBackgroundOff(missing: missing.first);
+      return;
+    }
     try {
-      await _foregroundService.ensureAndroidRequirements();
       await _backgroundService?.start(reason: 'wardrive');
       await _foregroundService.start();
     } catch (error) {
-      _runInBackgroundEnabled = false;
-      await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, false);
-      await _backgroundService?.stop(reason: 'wardrive');
-      await _foregroundService.stop();
+      await _turnBackgroundOff();
       _lastAutoDiscoveryError = _formatWardriveError(error);
       notifyListeners();
     }
+  }
+
+  Future<void> _turnBackgroundOff({
+    WardriveBackgroundRequirement? missing,
+  }) async {
+    _runInBackgroundEnabled = false;
+    _backgroundRequirementMissing = missing;
+    await PrefsManager.instance.setBool(_runInBackgroundEnabledKey, false);
+    await _backgroundService?.stop(reason: 'wardrive');
+    await _foregroundService.stop();
+    notifyListeners();
   }
 
   @override

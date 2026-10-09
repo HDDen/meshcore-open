@@ -3891,5 +3891,26 @@
   "channelPath_deliveryPathUnknown": "No delivery confirmation has been received for this message yet, or the route could not be determined.",
   "channelPath_deliveredDirectly": "Delivered directly, without repeaters",
   "channelPath_incompletePathsNote": "Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.",
-  "discoveredContacts_previouslyHeard": "previously heard nodes"
+  "discoveredContacts_previouslyHeard": "previously heard nodes",
+  "map_wardriveBackgroundNeeds": "Background mode needs {requirement}. Tap the option again for the next permission.",
+  "@map_wardriveBackgroundNeeds": {
+    "placeholders": {
+      "requirement": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveBackgroundOff": "Background mode is off, still needed: {requirement}.",
+  "@map_wardriveBackgroundOff": {
+    "placeholders": {
+      "requirement": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequirementNotifications": "the notification permission",
+  "map_wardriveRequirementLocationServices": "location services turned on",
+  "map_wardriveRequirementLocationAlways": "location access \u201cAll the time\u201d",
+  "map_wardriveRequirementBattery": "battery optimization turned off for the app",
+  "map_wardriveRequirementBackgroundActivity": "background activity allowed (not restricted in the battery settings)"
 }

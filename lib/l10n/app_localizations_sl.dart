@@ -7032,4 +7032,34 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+
+  @override
+  String map_wardriveBackgroundNeeds(String requirement) {
+    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+  }
+
+  @override
+  String map_wardriveBackgroundOff(String requirement) {
+    return 'Background mode is off, still needed: $requirement.';
+  }
+
+  @override
+  String get map_wardriveRequirementNotifications =>
+      'the notification permission';
+
+  @override
+  String get map_wardriveRequirementLocationServices =>
+      'location services turned on';
+
+  @override
+  String get map_wardriveRequirementLocationAlways =>
+      'location access “All the time”';
+
+  @override
+  String get map_wardriveRequirementBattery =>
+      'battery optimization turned off for the app';
+
+  @override
+  String get map_wardriveRequirementBackgroundActivity =>
+      'background activity allowed (not restricted in the battery settings)';
 }

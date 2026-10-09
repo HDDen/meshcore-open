@@ -1,5 +1,6 @@
 package com.meshcore.mcoadvanced
 
+import android.app.ActivityManager
 import android.content.Intent
 import android.content.Context
 import android.net.Uri
@@ -30,6 +31,9 @@ class WardriveForegroundFunctions(
                     "isIgnoringBatteryOptimizations" -> {
                         result.success(isIgnoringBatteryOptimizations())
                     }
+                    "isBackgroundRestricted" -> {
+                        result.success(isBackgroundRestricted())
+                    }
                     "openAppBackgroundSettings" -> {
                         openAppBackgroundSettings()
                         result.success(null)
@@ -52,6 +56,16 @@ class WardriveForegroundFunctions(
         val powerManager =
             activity.getSystemService(Context.POWER_SERVICE) as PowerManager
         return powerManager.isIgnoringBatteryOptimizations(activity.packageName)
+    }
+
+    // "Restricted" in the app's battery settings: on Android 13 and newer one
+    // of three states with the battery optimization exemption, on 9 to 12 a
+    // switch of its own beside it. Older Android has no such restriction.
+    private fun isBackgroundRestricted(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
+        val activityManager =
+            activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return activityManager.isBackgroundRestricted
     }
 
     private fun openAppBackgroundSettings() {

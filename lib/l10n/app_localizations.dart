@@ -12001,6 +12001,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'previously heard nodes'**
   String get discoveredContacts_previouslyHeard;
+
+  /// No description provided for @map_wardriveBackgroundNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Background mode needs {requirement}. Tap the option again for the next permission.'**
+  String map_wardriveBackgroundNeeds(String requirement);
+
+  /// No description provided for @map_wardriveBackgroundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Background mode is off, still needed: {requirement}.'**
+  String map_wardriveBackgroundOff(String requirement);
+
+  /// No description provided for @map_wardriveRequirementNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'the notification permission'**
+  String get map_wardriveRequirementNotifications;
+
+  /// No description provided for @map_wardriveRequirementLocationServices.
+  ///
+  /// In en, this message translates to:
+  /// **'location services turned on'**
+  String get map_wardriveRequirementLocationServices;
+
+  /// No description provided for @map_wardriveRequirementLocationAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'location access “All the time”'**
+  String get map_wardriveRequirementLocationAlways;
+
+  /// No description provided for @map_wardriveRequirementBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'battery optimization turned off for the app'**
+  String get map_wardriveRequirementBattery;
+
+  /// No description provided for @map_wardriveRequirementBackgroundActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'background activity allowed (not restricted in the battery settings)'**
+  String get map_wardriveRequirementBackgroundActivity;
 }
 
 class _AppLocalizationsDelegate

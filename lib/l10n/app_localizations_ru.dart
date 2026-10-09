@@ -7063,4 +7063,34 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get discoveredContacts_previouslyHeard => 'ранее услышанные узлы';
+
+  @override
+  String map_wardriveBackgroundNeeds(String requirement) {
+    return 'Для фонового режима нужно: $requirement. Нажмите пункт ещё раз, чтобы перейти к следующему разрешению.';
+  }
+
+  @override
+  String map_wardriveBackgroundOff(String requirement) {
+    return 'Фоновый режим выключен, не хватает: $requirement.';
+  }
+
+  @override
+  String get map_wardriveRequirementNotifications =>
+      'разрешение на уведомления';
+
+  @override
+  String get map_wardriveRequirementLocationServices =>
+      'включённая геолокация телефона';
+
+  @override
+  String get map_wardriveRequirementLocationAlways =>
+      'доступ к геолокации «Всегда»';
+
+  @override
+  String get map_wardriveRequirementBattery =>
+      'отключённая оптимизация батареи для приложения';
+
+  @override
+  String get map_wardriveRequirementBackgroundActivity =>
+      'разрешённая фоновая активность (без ограничения в настройках батареи)';
 }

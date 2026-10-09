@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../connector/meshcore_protocol.dart';
 import '../helpers/wardrive_coverage_helper.dart';
+import '../helpers/wardrive_background_requirements.dart';
 import '../l10n/l10n.dart';
 import '../services/wardrive_service.dart';
 import '../utils/platform_info.dart';
@@ -181,6 +182,19 @@ class WardriveStatusPanel extends StatelessWidget {
           Text(
             context.l10n.map_wardriveAutoDiscoveryError(
               wardrive.lastAutoDiscoveryError!,
+            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        // Background mode refused or revoked: the requirement behind it.
+        if (wardrive.backgroundRequirementMissing != null)
+          Text(
+            context.l10n.map_wardriveBackgroundOff(
+              wardriveBackgroundRequirementText(
+                context.l10n,
+                wardrive.backgroundRequirementMissing!,
+              ),
             ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.error,

@@ -34,7 +34,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "de": [
@@ -72,7 +79,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "es": [
@@ -110,7 +124,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "fr": [
@@ -148,7 +169,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "hu": [
@@ -186,7 +214,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "it": [
@@ -224,7 +259,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "ja": [
@@ -262,7 +304,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "ko": [
@@ -300,7 +349,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "nl": [
@@ -338,7 +394,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "pl": [
@@ -376,7 +439,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "pt": [
@@ -414,7 +484,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "sk": [
@@ -452,7 +529,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "sl": [
@@ -490,7 +574,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "sv": [
@@ -528,7 +619,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "uk": [
@@ -566,7 +664,14 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ],
 
   "zh": [
@@ -604,6 +709,13 @@
     "channelPath_deliveryPathUnknown",
     "channelPath_deliveredDirectly",
     "channelPath_incompletePathsNote",
-    "discoveredContacts_previouslyHeard"
+    "discoveredContacts_previouslyHeard",
+    "map_wardriveBackgroundNeeds",
+    "map_wardriveBackgroundOff",
+    "map_wardriveRequirementNotifications",
+    "map_wardriveRequirementLocationServices",
+    "map_wardriveRequirementLocationAlways",
+    "map_wardriveRequirementBattery",
+    "map_wardriveRequirementBackgroundActivity"
   ]
 }

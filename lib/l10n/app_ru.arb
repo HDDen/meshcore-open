@@ -2957,5 +2957,26 @@
   "channelPath_deliveryPathUnknown": "Для сообщения пока не получено подтверждения доставки, либо не удалось получить маршрут.",
   "channelPath_deliveredDirectly": "Доставлено напрямую, без репитеров",
   "channelPath_incompletePathsNote": "Пакеты личных сообщений хранят только оставшиеся хопы, а не полные маршруты: каждый следующий репитер вычитает себя из оставшегося пути.",
-  "discoveredContacts_previouslyHeard": "ранее услышанные узлы"
+  "discoveredContacts_previouslyHeard": "ранее услышанные узлы",
+  "map_wardriveBackgroundNeeds": "Для фонового режима нужно: {requirement}. Нажмите пункт ещё раз, чтобы перейти к следующему разрешению.",
+  "@map_wardriveBackgroundNeeds": {
+    "placeholders": {
+      "requirement": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveBackgroundOff": "Фоновый режим выключен, не хватает: {requirement}.",
+  "@map_wardriveBackgroundOff": {
+    "placeholders": {
+      "requirement": {
+        "type": "String"
+      }
+    }
+  },
+  "map_wardriveRequirementNotifications": "разрешение на уведомления",
+  "map_wardriveRequirementLocationServices": "включённая геолокация телефона",
+  "map_wardriveRequirementLocationAlways": "доступ к геолокации «Всегда»",
+  "map_wardriveRequirementBattery": "отключённая оптимизация батареи для приложения",
+  "map_wardriveRequirementBackgroundActivity": "разрешённая фоновая активность (без ограничения в настройках батареи)"
 }

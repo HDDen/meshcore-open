@@ -30,7 +30,7 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
-import '../services/wardrive_foreground_service.dart';
+import '../helpers/wardrive_background_requirements.dart';
 import '../services/wardrive_service.dart';
 import '../services/wardrive_sample_store.dart';
 import '../services/wardrive_upload_service.dart';
@@ -1812,18 +1812,29 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Future<void> _toggleWardriveInBackground(WardriveService wardrive) async {
+    final enable = !wardrive.runInBackgroundEnabled;
+    final WardriveBackgroundRequirement? missing;
     try {
-      await wardrive.setRunInBackgroundEnabled(
-        !wardrive.runInBackgroundEnabled,
-      );
+      missing = await wardrive.setRunInBackgroundEnabled(enable);
     } catch (error) {
-      if (error is WardriveRequirementNotCompletedException) return;
       if (!mounted) return;
       _showMapSnackBar(
         content: Text(error.toString()),
         backgroundColor: Colors.red,
       );
+      return;
     }
+    if (!mounted || missing == null) return;
+    // The option stays off: what the phone still has to allow, for the user
+    // to grant on the screen just shown or on the next tap.
+    _showMapSnackBar(
+      content: Text(
+        context.l10n.map_wardriveBackgroundNeeds(
+          wardriveBackgroundRequirementText(context.l10n, missing),
+        ),
+      ),
+      backgroundColor: MeshPalette.warn,
+    );
   }
 
   Future<void> _toggleWardriveContinuousGps(WardriveService wardrive) async {
