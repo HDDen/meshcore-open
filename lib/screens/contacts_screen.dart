@@ -16,6 +16,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-paste
+import '../helpers/contact_link.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -41,6 +42,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
 import '../widgets/node_memory_prompt.dart';
 import '../widgets/channel_link_import.dart'; // channel-qr-paste
+import '../widgets/contact_link_import.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
@@ -489,6 +491,13 @@ class _ContactsScreenState extends State<ContactsScreen>
     final channelLink = ChannelQrLink.tryParse(text);
     if (channelLink != null) {
       if (mounted) await ChannelLinkImport.confirmAndAdd(context, channelLink);
+      return;
+    }
+    // The MeshCore app's contact link is added as the shared contact card
+    // adds one; an advert goes to the node below, as it always did.
+    final contactLink = ContactLink.tryParse(text);
+    if (contactLink is ContactAddLink) {
+      if (mounted) await ContactLinkImport.confirmAndAdd(context, contactLink);
       return;
     }
     if (!text.startsWith('meshcore://')) {

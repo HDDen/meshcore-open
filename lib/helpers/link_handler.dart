@@ -4,10 +4,12 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/l10n.dart';
 import '../utils/platform_info.dart';
-import '../helpers/channel_link_linkifier.dart'; // channel-qr-chat
 import '../helpers/channel_qr_link.dart'; // channel-qr-chat
+import '../helpers/contact_link.dart';
+import '../helpers/mesh_link_linkifier.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/channel_link_import.dart'; // channel-qr-chat
+import '../widgets/contact_link_import.dart';
 
 class LinkHandler {
   static TextStyle defaultLinkStyle(BuildContext context, TextStyle base) {
@@ -34,7 +36,7 @@ class LinkHandler {
     final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
     const linkifiers = [
-      ChannelLinkLinkifier(), // channel-qr-chat
+      MeshLinkLinkifier(),
       UrlLinkifier(),
       EmailLinkifier(),
     ];
@@ -79,6 +81,11 @@ class LinkHandler {
     final channelLink = ChannelQrLink.tryParse(url);
     if (channelLink != null) {
       return ChannelLinkImport.confirmAndAdd(context, channelLink);
+    }
+    // A contact shared into a chat is added as from its card.
+    final contactLink = ContactLink.tryParse(url);
+    if (contactLink != null) {
+      return ContactLinkImport.confirmAndAdd(context, contactLink);
     }
 
     // Show confirmation dialog
