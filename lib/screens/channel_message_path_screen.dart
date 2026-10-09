@@ -724,7 +724,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
     required int? spreadingFactor,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final hexPrefix = _formatPrefix(hop.prefix);
+    final hexPrefix = hop.hashLabel;
     final locationText = hop.hasLocation
         ? '${hop.position!.latitude.toStringAsFixed(5)}, '
               '${hop.position!.longitude.toStringAsFixed(5)}'
@@ -741,7 +741,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    AvatarCircle(name: hop.displayLabel, size: 36),
+                    AvatarCircle(name: hop.name, size: 36),
                     Positioned(
                       right: -4,
                       top: -4,
@@ -790,7 +790,7 @@ class ChannelMessagePathScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hop.displayLabel,
+                    hop.name,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -1143,7 +1143,7 @@ class _ChannelMessagePathMapScreenState
       }
       locatedHops++;
       points.add(hop.position!);
-      labels.add(hop.contact?.name ?? _formatPrefix(hop.prefix));
+      labels.add(hop.contact?.name ?? hop.hashLabel);
       confirmed.add(true);
       rowIdx.add(i);
       gapBefore.add(pendingGap);
@@ -1834,7 +1834,7 @@ class _ChannelMessagePathMapScreenState
         markers.add(
           _buildNodeLabelMarker(
             point: point,
-            label: hop.contact?.name ?? _formatPrefix(hop.prefix),
+            label: hop.contact?.name ?? hop.hashLabel,
           ),
         );
       }
@@ -1908,7 +1908,7 @@ class _ChannelMessagePathMapScreenState
       for (final hop in entry.hops) {
         if (!hop.hasLocation) continue;
         final key =
-            '${hop.prefix}|${hop.position!.latitude.toStringAsFixed(5)},'
+            '${hop.hashLabel}|${hop.position!.latitude.toStringAsFixed(5)},'
             '${hop.position!.longitude.toStringAsFixed(5)}';
         if (!seenInPath.add(key)) continue;
         nodes.putIfAbsent(key, () => _SharedNode(hop)).paths.add(entry.display);
@@ -1918,7 +1918,7 @@ class _ChannelMessagePathMapScreenState
     for (final node in nodes.values) {
       final hop = node.hop;
       final point = hop.position!;
-      final label = _formatPrefix(hop.prefix);
+      final label = hop.hashLabel;
       final shared = node.paths.length > 1;
 
       markers.add(
@@ -2079,12 +2079,12 @@ class _ChannelMessagePathMapScreenState
       cardHeight = max(176.0, min(maxHeight, estimatedHeight));
     }
 
-    final hopUseCount = <int, int>{};
+    final hopUseCount = <String, int>{};
     if (combined) {
       for (final entry in entries) {
         if (_hiddenPathIds.contains(entry.display.id)) continue;
-        for (final prefix in entry.hops.map((h) => h.prefix).toSet()) {
-          hopUseCount.update(prefix, (v) => v + 1, ifAbsent: () => 1);
+        for (final hash in entry.hops.map((h) => h.hashLabel).toSet()) {
+          hopUseCount.update(hash, (v) => v + 1, ifAbsent: () => 1);
         }
       }
     }
@@ -2242,7 +2242,7 @@ class _ChannelMessagePathMapScreenState
   Widget _buildHopListView(
     List<_PathHop> hops,
     DisplayPath? selectedDisplay,
-    Map<int, int> hopUseCount,
+    Map<String, int> hopUseCount,
   ) {
     final l10n = context.l10n;
     if (hops.isEmpty) {
@@ -2267,7 +2267,7 @@ class _ChannelMessagePathMapScreenState
           itemBuilder: (context, index) {
             final hop = hops[index];
             final isFocused = _focusedHopIndex == hop.index;
-            final sharedCount = hopUseCount[hop.prefix] ?? 0;
+            final sharedCount = hopUseCount[hop.hashLabel] ?? 0;
             return InkWell(
               onTap: hop.hasLocation ? () => _onHopTapped(hop) : null,
               child: Container(
@@ -2388,15 +2388,16 @@ class _PathHop {
 
   bool get hasLocation => position != null;
 
-  String get displayLabel {
-    final prefixLabel = hopBytes != null && hopBytes!.isNotEmpty
-        ? hopBytes!
-              .map((b) => b.toRadixString(16).padLeft(2, '0'))
-              .join('')
-              .toUpperCase()
-        : _formatPrefix(prefix);
-    return '($prefixLabel) ${_resolveName(contact, l10n)}';
-  }
+  /// The hop hash as the packet carries it: every byte of a multi-byte hop,
+  /// where [prefix] keeps only the first one.
+  String get hashLabel => hopBytes != null && hopBytes!.isNotEmpty
+      ? PathHelper.formatHopHex(hopBytes!)
+      : _formatPrefix(prefix);
+
+  String get name => _resolveName(contact, l10n);
+
+  /// Name and hash in one line, for lists that do not show the hash apart.
+  String get displayLabel => '($hashLabel) $name';
 }
 
 class _ObservedPath {

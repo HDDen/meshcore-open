@@ -35,16 +35,22 @@ class _Connector extends MeshCoreConnector {
   }) async {}
 }
 
-/// An outgoing message whose latest attempt went by the hop 20.
-ChannelMessage _message({bool isOutgoing = true}) => ChannelMessage(
+/// An outgoing message whose latest attempt went by the hop 20, unless a test
+/// gives it another path.
+ChannelMessage _message({
+  bool isOutgoing = true,
+  Uint8List? path,
+  int? pathHashWidth,
+}) => ChannelMessage(
   senderName: 'Me',
   text: 'hi',
   timestamp: DateTime(2026, 10, 9, 12),
   receivedAt: DateTime(2026, 10, 9, 12),
   isOutgoing: isOutgoing,
   status: ChannelMessageStatus.sent,
-  pathLength: 1,
-  pathBytes: Uint8List.fromList([0x20]),
+  pathLength: path == null ? 1 : path.length ~/ (pathHashWidth ?? 1),
+  pathBytes: path ?? Uint8List.fromList([0x20]),
+  pathHashWidth: pathHashWidth,
 );
 
 Future<void> _pump(
@@ -55,6 +61,8 @@ Future<void> _pump(
   bool channelMessage = false,
   bool isOutgoing = true,
   List<DirectEchoObservation> incompletePaths = const [],
+  Uint8List? messagePath,
+  int? messagePathHashWidth,
 }) async {
   final connector = _Connector();
   final settings = AppSettingsService();
@@ -72,7 +80,11 @@ Future<void> _pump(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ChannelMessagePathScreen(
-          message: _message(isOutgoing: isOutgoing),
+          message: _message(
+            isOutgoing: isOutgoing,
+            path: messagePath,
+            pathHashWidth: messagePathHashWidth,
+          ),
           channelMessage: channelMessage,
           showDeliveryPath: showDeliveryPath,
           deliveryPathBytes: route,
@@ -131,10 +143,10 @@ void main() {
     final l10n = _l10n(tester);
 
     expect(_header(tester), findsOneWidget);
-    expect(find.textContaining('(12)'), findsOneWidget);
-    expect(find.textContaining('(34)'), findsOneWidget);
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('34'), findsOneWidget);
     // The message's own path, the latest attempt's, stays in its section.
-    expect(find.textContaining('(20)'), findsOneWidget);
+    expect(find.text('20'), findsOneWidget);
     expect(_mapButton(tester).onPressed, isNotNull);
 
     final details = tester.getTopLeft(
@@ -217,6 +229,32 @@ void main() {
     expect(
       find.text(_l10n(tester).channelPath_incompletePathsNote),
       findsNothing,
+    );
+  });
+
+  testWidgets('a multi-byte hop shows its whole hash once, under the name', (
+    tester,
+  ) async {
+    // Two 2-byte hops. The line under each name used to print only the
+    // first byte (BC, DE) while the name above read (BC88), (DE4B); now the
+    // whole hash is that line and the name stays plain.
+    await _pump(
+      tester,
+      channelMessage: true,
+      isOutgoing: false,
+      messagePath: Uint8List.fromList([0xBC, 0x88, 0xDE, 0x4B]),
+      messagePathHashWidth: 2,
+    );
+
+    expect(find.text('BC88'), findsOneWidget);
+    expect(find.text('DE4B'), findsOneWidget);
+    expect(find.textContaining('(BC88)'), findsNothing);
+    expect(find.textContaining('(DE4B)'), findsNothing);
+    expect(find.text('BC'), findsNothing);
+    expect(find.text('DE'), findsNothing);
+    expect(
+      find.text(_l10n(tester).channelPath_unknownRepeater),
+      findsNWidgets(2),
     );
   });
 }
