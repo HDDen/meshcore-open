@@ -44,6 +44,7 @@ import '../helpers/mcoimg_v4_codec.dart';
 import '../helpers/mention_autocomplete.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/channel_path_signal_helper.dart';
+import '../helpers/signal_reading_text.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
@@ -57,6 +58,7 @@ import '../services/chat_text_scale_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_bubble_box.dart';
+import '../widgets/mesh_ui.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/composer_text_builder.dart';
@@ -3586,6 +3588,25 @@ class _MessageBubble extends StatelessWidget {
     } else {
       packetRegionLabel = context.l10n.channels_messageRegionUnknown;
     }
+    // The route of a flood packet, drawn as the channel bubble draws its
+    // hop list under message tracing: the longest route heard among the
+    // copies of this message, sender first, with the reading of that copy.
+    // A message that took a known route shows none here, the route being
+    // the contact's.
+    final connector = context.read<MeshCoreConnector>();
+    final floodRoute = enableTracing && settingsService.settings.showHops
+        ? ChannelPathSignalHelper.longest(message.floodPathObservations)
+        : null;
+    final floodRouteHops = floodRoute == null
+        ? const <Uint8List>[]
+        : PathHelper.splitPathBytes(
+            floodRoute.pathBytes,
+            message.floodPathHashWidth ?? connector.pathHashByteWidth,
+          );
+    final showFloodRouteReading =
+        settingsService.settings.showLastHopSignal &&
+        floodRoute != null &&
+        (floodRoute.snr != null || floodRoute.rssi != null);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -4091,6 +4112,53 @@ class _MessageBubble extends StatelessWidget {
                               textScale: textScale,
                               color: metaColor,
                               errorColor: scheme.error,
+                            ),
+                          ),
+                        ],
+                        if (floodRoute != null &&
+                            (floodRouteHops.isNotEmpty ||
+                                showFloodRouteReading)) ...[
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: Wrap(
+                              spacing: 4,
+                              runSpacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                RouteChip(
+                                  isDirect: true,
+                                  hops: floodRouteHops.length,
+                                ),
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      if (floodRouteHops.isNotEmpty)
+                                        TextSpan(
+                                          text: context.l10n.channels_via(
+                                            floodRouteHops
+                                                .map(PathHelper.formatHopHex)
+                                                .join(','),
+                                          ),
+                                        ),
+                                      if (showFloodRouteReading)
+                                        ...signalReadingSpans(
+                                          snr: floodRoute.snr,
+                                          rssi: floodRoute.rssi,
+                                          spreadingFactor: connector.currentSf,
+                                          afterHopList:
+                                              floodRouteHops.isNotEmpty,
+                                        ),
+                                    ],
+                                  ),
+                                  style: MeshTheme.mono(
+                                    fontSize: 9.5 * textScale,
+                                    color: metaColor,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

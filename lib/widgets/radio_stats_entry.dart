@@ -120,7 +120,7 @@ class AirActivityDotState extends State<AirActivityDot> {
   // asks for no frames either.
   Timer? _timer;
   bool _on = false;
-  ValueListenable<bool>? _tickerMode;
+  ValueListenable<TickerModeData>? _tickerMode;
 
   @override
   void initState() {
@@ -131,7 +131,7 @@ class AirActivityDotState extends State<AirActivityDot> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final mode = TickerMode.getNotifier(context);
+    final mode = TickerMode.getValuesNotifier(context);
     if (!identical(mode, _tickerMode)) {
       _tickerMode?.removeListener(_syncTimer);
       _tickerMode = mode..addListener(_syncTimer);
@@ -160,7 +160,7 @@ class AirActivityDotState extends State<AirActivityDot> {
   /// notifier fires during another widget's build, where setState is not
   /// allowed, and a paused dot is not on screen anyway.
   void _syncTimer() {
-    final run = widget.active && (_tickerMode?.value ?? true);
+    final run = widget.active && (_tickerMode?.value.enabled ?? true);
     if (run) {
       _timer ??= Timer.periodic(_half, (_) => setState(() => _on = !_on));
     } else {

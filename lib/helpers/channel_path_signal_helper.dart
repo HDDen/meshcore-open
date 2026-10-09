@@ -85,6 +85,22 @@ abstract final class ChannelPathSignalHelper {
     ];
   }
 
+  /// The route with the most hop bytes, the first of them when several
+  /// have as many; null for no observations. It is the one a bubble draws
+  /// and the path screen takes as the primary route.
+  static ChannelPathObservation? longest(
+    List<ChannelPathObservation> observations,
+  ) {
+    ChannelPathObservation? longest;
+    for (final observation in observations) {
+      if (longest == null ||
+          observation.pathBytes.length > longest.pathBytes.length) {
+        longest = observation;
+      }
+    }
+    return longest;
+  }
+
   static ChannelPathObservation? find(
     List<ChannelPathObservation> observations,
     Uint8List pathBytes,
