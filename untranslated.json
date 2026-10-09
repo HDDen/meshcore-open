@@ -41,7 +41,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "de": [
@@ -86,7 +87,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "es": [
@@ -131,7 +133,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "fr": [
@@ -176,7 +179,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "hu": [
@@ -221,7 +225,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "it": [
@@ -266,7 +271,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "ja": [
@@ -311,7 +317,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "ko": [
@@ -356,7 +363,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "nl": [
@@ -401,7 +409,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "pl": [
@@ -446,7 +455,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "pt": [
@@ -491,7 +501,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "sk": [
@@ -536,7 +547,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "sl": [
@@ -581,7 +593,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "sv": [
@@ -626,7 +639,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "uk": [
@@ -671,7 +685,8 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ],
 
   "zh": [
@@ -716,6 +731,7 @@
     "map_wardriveRequirementLocationServices",
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
-    "map_wardriveRequirementBackgroundActivity"
+    "map_wardriveRequirementBackgroundActivity",
+    "settings_modSettingsSenderNameScale"
   ]
 }

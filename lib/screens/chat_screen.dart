@@ -3461,6 +3461,8 @@ class _MessageBubble extends StatelessWidget {
         ? null
         : '$compressionRatioPrefix$compressionTypeLabel';
     final scheme = Theme.of(context).colorScheme;
+    final senderNameScale = settingsService.settings.senderNameScale;
+    final senderNameGapScale = settingsService.settings.senderNameGapScale;
     final senderNameColor = settingsService.settings.monochromeSenderNames
         ? scheme.onSurface
         : _colorForName(senderName);
@@ -3664,22 +3666,26 @@ class _MessageBubble extends StatelessWidget {
                         if (!isOutgoing) ...[
                           Padding(
                             padding: isMediaMessage
-                                ? const EdgeInsets.only(
+                                ? EdgeInsets.only(
                                     left: 8,
                                     top: 4,
-                                    bottom: 4,
+                                    bottom: 4 * textScale * senderNameGapScale,
                                   )
                                 : EdgeInsets.zero,
                             child: Text(
                               senderName,
                               style: MeshTheme.mono(
-                                fontSize: 11,
+                                fontSize: 11 * textScale * senderNameScale,
                                 fontWeight: FontWeight.w700,
                                 color: senderNameColor,
                               ),
                             ),
                           ),
-                          if (!isMediaMessage) const SizedBox(height: 2),
+                          // The gap under the name grows with the name.
+                          if (!isMediaMessage)
+                            SizedBox(
+                              height: 2 * textScale * senderNameGapScale,
+                            ),
                         ],
                         if (replyQuote != null) ...[
                           replyQuote!,

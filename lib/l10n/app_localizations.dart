@@ -12043,6 +12043,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'background activity allowed (not restricted in the battery settings)'**
   String get map_wardriveRequirementBackgroundActivity;
+
+  /// No description provided for @settings_modSettingsSenderNameScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name size'**
+  String get settings_modSettingsSenderNameScale;
 }
 
 class _AppLocalizationsDelegate

@@ -218,6 +218,47 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setMonochromeSenderNames,
                   ),
                 ),
+                MeshCard(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.format_size, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context.l10n.settings_modSettingsSenderNameScale,
+                            ),
+                          ),
+                          Text(
+                            '${settings.senderNameScalePercent}%',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      // The sizes are not evenly spaced (25, 50, then 100 to
+                      // 400 by 25), so the slider runs over their indexes.
+                      Slider(
+                        value: AppSettings.senderNameScaleOptions
+                            .indexOf(settings.senderNameScalePercent)
+                            .clamp(0, AppSettings.senderNameScaleOptions.length - 1)
+                            .toDouble(),
+                        min: 0,
+                        max: (AppSettings.senderNameScaleOptions.length - 1)
+                            .toDouble(),
+                        divisions: AppSettings.senderNameScaleOptions.length - 1,
+                        label: '${settings.senderNameScalePercent}%',
+                        onChanged: (value) {
+                          settingsService.setSenderNameScalePercent(
+                            AppSettings.senderNameScaleOptions[value.round()],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsMessaging),
                 MeshCard(
                   padding: EdgeInsets.zero,

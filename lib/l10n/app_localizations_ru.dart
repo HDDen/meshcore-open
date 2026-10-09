@@ -7093,4 +7093,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get map_wardriveRequirementBackgroundActivity =>
       'разрешённая фоновая активность (без ограничения в настройках батареи)';
+
+  @override
+  String get settings_modSettingsSenderNameScale => 'Размер имён отправителей';
 }

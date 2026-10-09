@@ -7121,4 +7121,7 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get map_wardriveRequirementBackgroundActivity =>
       'background activity allowed (not restricted in the battery settings)';
+
+  @override
+  String get settings_modSettingsSenderNameScale => 'Sender name size';
 }

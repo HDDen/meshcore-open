@@ -2978,5 +2978,6 @@
   "map_wardriveRequirementLocationServices": "включённая геолокация телефона",
   "map_wardriveRequirementLocationAlways": "доступ к геолокации «Всегда»",
   "map_wardriveRequirementBattery": "отключённая оптимизация батареи для приложения",
-  "map_wardriveRequirementBackgroundActivity": "разрешённая фоновая активность (без ограничения в настройках батареи)"
+  "map_wardriveRequirementBackgroundActivity": "разрешённая фоновая активность (без ограничения в настройках батареи)",
+  "settings_modSettingsSenderNameScale": "Размер имён отправителей"
 }

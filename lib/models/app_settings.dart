@@ -200,6 +200,49 @@ class AppSettings {
   final bool showMcoImagePackReplacements;
   final double mcoImageReplacementsScale;
   final int mcoImageReplacementsLottieScalePercent;
+
+  /// The size of sender names in channel and room bubbles, in percent of
+  /// their own size, on top of the chat zoom and the DPI setting.
+  final int senderNameScalePercent;
+
+  /// The sizes the sender-name slider offers: not evenly spaced, so a
+  /// stored value is snapped to the nearest of them.
+  static const List<int> senderNameScaleOptions = [
+    25,
+    50,
+    100,
+    125,
+    150,
+    175,
+    200,
+    225,
+    250,
+    275,
+    300,
+    325,
+    350,
+    375,
+    400,
+  ];
+
+  static int snapSenderNameScalePercent(int value) {
+    var nearest = senderNameScaleOptions.first;
+    for (final option in senderNameScaleOptions) {
+      if ((option - value).abs() < (nearest - value).abs()) nearest = option;
+    }
+    return nearest;
+  }
+
+  /// The factor a sender name's font size takes.
+  double get senderNameScale => senderNameScalePercent / 100;
+
+  /// The factor the gap under a sender name takes: the name's own, and
+  /// above the default size a third more, so a name made larger stands a
+  /// little further from the text than its size alone would put it; at the
+  /// default size and below the gap follows the name exactly.
+  double get senderNameGapScale =>
+      senderNameScalePercent > 100 ? senderNameScale * 1.3 : senderNameScale;
+
   final bool mcoImageScaleNearestNeighbor;
   final int mcoImageReplacementsSharpness;
 
@@ -641,6 +684,7 @@ class AppSettings {
     this.showMcoImagePackReplacements = true,
     this.mcoImageReplacementsScale = 1.0,
     this.mcoImageReplacementsLottieScalePercent = 50,
+    this.senderNameScalePercent = 100,
     this.mcoImageScaleNearestNeighbor = true,
     this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
@@ -787,6 +831,7 @@ class AppSettings {
       'mco_image_replacements_scale': mcoImageReplacementsScale,
       'mco_image_replacements_lottie_scale_percent':
           mcoImageReplacementsLottieScalePercent,
+      'sender_name_scale_percent': senderNameScalePercent,
       'mco_image_scale_nearest_neighbor': mcoImageScaleNearestNeighbor,
       'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
@@ -960,6 +1005,9 @@ class AppSettings {
                   50)
               .clamp(10, 100)
               .toInt(),
+      senderNameScalePercent: snapSenderNameScalePercent(
+        (json['sender_name_scale_percent'] as num?)?.toInt() ?? 100,
+      ),
       mcoImageScaleNearestNeighbor:
           json['mco_image_scale_nearest_neighbor'] as bool? ?? true,
       mcoImageReplacementsSharpness:
@@ -1184,6 +1232,7 @@ class AppSettings {
     bool? showMcoImagePackReplacements,
     double? mcoImageReplacementsScale,
     int? mcoImageReplacementsLottieScalePercent,
+    int? senderNameScalePercent,
     bool? mcoImageScaleNearestNeighbor,
     int? mcoImageReplacementsSharpness,
     double? uiScale,
@@ -1311,6 +1360,8 @@ class AppSettings {
       mcoImageReplacementsLottieScalePercent:
           mcoImageReplacementsLottieScalePercent ??
           this.mcoImageReplacementsLottieScalePercent,
+      senderNameScalePercent:
+          senderNameScalePercent ?? this.senderNameScalePercent,
       mcoImageScaleNearestNeighbor:
           mcoImageScaleNearestNeighbor ?? this.mcoImageScaleNearestNeighbor,
       mcoImageReplacementsSharpness:

@@ -263,6 +263,14 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setSenderNameScalePercent(int value) async {
+    await updateSettings(
+      _settings.copyWith(
+        senderNameScalePercent: AppSettings.snapSenderNameScalePercent(value),
+      ),
+    );
+  }
+
   Future<void> setMcoImageScaleNearestNeighbor(bool value) async {
     await updateSettings(
       _settings.copyWith(mcoImageScaleNearestNeighbor: value),
