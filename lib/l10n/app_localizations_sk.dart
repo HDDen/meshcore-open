@@ -1722,6 +1722,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_sendGif => 'Odoslať GIF';
 
   @override
+  String get chat_shareMyLocation => 'Zdieľať moju polohu';
+
+  @override
+  String get chat_noRadioLocation => 'Vaše rádio nemá nastavenú polohu';
+
+  @override
   String get chat_removeGif => 'Odstrániť GIF';
 
   @override
@@ -2236,6 +2242,10 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_label => 'Značka';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Ak použijete rovnaký štítok ako predtým, značka sa aktualizuje u príjemcov MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Bod záujmu';
@@ -4586,6 +4596,54 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Kontakt sa nepodarilo importovať.';
+
+  @override
+  String get discoveredContacts_export => 'Exportovať objavené kontakty';
+
+  @override
+  String get discoveredContacts_import => 'Importovať objavené kontakty';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Objavené kontakty boli exportované do $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Export objavených kontaktov zlyhal: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Bolo importovaných $count objavených kontaktov.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'V importovanom súbore sa nenašli žiadne kontakty.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Importované: $imported, preskočené (už známe): $skipped, nečitateľné záznamy: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Súbor nie je exportom objavených kontaktov.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Importovaný súbor je príliš veľký (maximum $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Import objavených kontaktov zlyhal: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Inzerát Zero Hop';

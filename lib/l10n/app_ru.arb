@@ -309,6 +309,8 @@
   "chat_replyingTo": "Ответ для {name}",
   "chat_replyTo": "Ответить {name}",
   "chat_location": "Местоположение",
+  "chat_noRadioLocation": "В вашем радио не задано местоположение",
+  "chat_shareMyLocation": "Поделиться моим местоположением",
   "chat_sendMessageTo": "Отправить сообщение {contactName}",
   "chat_typeMessage": "Напишите сообщение...",
   "chat_messageTooLong": "Сообщение слишком длинное (макс. {maxBytes} байт).",
@@ -413,6 +415,7 @@
   "map_shareMarkerHere": "Поделиться меткой здесь",
   "map_pinLabel": "Метка",
   "map_label": "Подпись",
+  "map_labelUpdateHint": "Если использовать ту же подпись, что и раньше, метка обновится у получателей MeshCore Open.",
   "map_pointOfInterest": "Точка интереса",
   "map_sendToContact": "Отправить контакту",
   "map_sendToChannel": "Отправить в канал",
@@ -1186,6 +1189,44 @@
   "discoveredContacts_addContact": "Добавить контакт",
   "discoveredContacts_Title": "Обнаруженные контакты",
   "discoveredContacts_deleteContact": "Удалить контакт",
+  "discoveredContacts_export": "Экспортировать обнаруженные контакты",
+  "discoveredContacts_import": "Импортировать обнаруженные контакты",
+  "discoveredContacts_exported": "Обнаруженные контакты экспортированы в {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Не удалось экспортировать обнаруженные контакты: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Импортировано {count} обнаруженных контактов.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "В файле импорта не найдены контакты.",
+  "discoveredContacts_importFailed": "Не удалось импортировать обнаруженные контакты: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Файл не является экспортом обнаруженных контактов.",
+  "discoveredContacts_importSummary": "Импортировано: {imported}, пропущено уже известных: {skipped}, нечитаемых записей: {invalid}.",
+  "discoveredContacts_importTooLarge": "Файл импорта слишком большой (максимум {maxMb} МБ).",
   "contactsSettings_overwriteOldestSubtitle": "Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.",
   "contactsSettings_evictDiscoveredContactsTitle": "Удалять обнаруженные контакты",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Если включено, приложение удаляет самые старые обнаруженные контакты, когда список обнаруженных достигает лимита в {limit} записей.",
@@ -1428,12 +1469,6 @@
   "scanner_linuxPairingPinTitle": "PIN‑код сопряжения Bluetooth",
   "repeater_cliQuickDiscovery": "Обнаружить Соседей",
   "repeater_cliQuickClockSync": "Синхронизация часов",
-  "@repeater_clockSyncAfterLogin": {
-    "description": "Repeater setting: auto sync device clock after successful login"
-  },
-  "@repeater_clockSyncAfterLoginSubtitle": {
-    "description": "Repeater setting subtitle: describes the clock sync after login behavior"
-  },
   "repeater_clockSyncAfterLogin": "Синхронизация часов после входа в систему",
   "repeater_clockSyncAfterLoginSubtitle": "Автоматически отправлять сообщение \"синхронизация времени\" после успешной авторизации.",
   "chat_sendMessage": "Отправить сообщение",

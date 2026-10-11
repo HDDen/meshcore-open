@@ -1652,6 +1652,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_sendGif => 'GIF 보내기';
 
   @override
+  String get chat_shareMyLocation => '내 위치 공유';
+
+  @override
+  String get chat_noRadioLocation => '무전기에 위치가 설정되어 있지 않습니다';
+
+  @override
   String get chat_removeGif => 'GIF 제거';
 
   @override
@@ -2150,6 +2156,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_label => '레이블';
+
+  @override
+  String get map_labelUpdateHint =>
+      '이전과 같은 레이블을 사용하면 MeshCore Open 수신자에게 표시된 마커가 업데이트됩니다.';
 
   @override
   String get map_pointOfInterest => '관심 지점';
@@ -4389,6 +4399,53 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => '연락처를 가져오지 못했습니다.';
+
+  @override
+  String get discoveredContacts_export => '발견된 연락처 내보내기';
+
+  @override
+  String get discoveredContacts_import => '발견된 연락처 가져오기';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '발견된 연락처를 $path(으)로 내보냈습니다.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '발견된 연락처 내보내기에 실패했습니다: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '발견된 연락처 $count개를 가져왔습니다.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => '가져오기 파일에서 연락처를 찾을 수 없습니다.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return '가져옴: $imported개, 건너뜀(이미 등록됨): $skipped개, 읽을 수 없는 항목: $invalid개.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      '이 파일은 발견된 연락처 내보내기 파일이 아닙니다.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return '가져오기 파일이 너무 큽니다(최대 ${maxMb}MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '발견된 연락처 가져오기에 실패했습니다: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => '제로 홉 어드버트';

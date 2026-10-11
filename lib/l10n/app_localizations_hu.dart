@@ -1724,6 +1724,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_sendGif => 'GIF küldése';
 
   @override
+  String get chat_shareMyLocation => 'Saját helyem megosztása';
+
+  @override
+  String get chat_noRadioLocation => 'A rádiónak nincs beállított helye';
+
+  @override
   String get chat_removeGif => 'GIF eltávolítása';
 
   @override
@@ -2235,6 +2241,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_label => 'Címke';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Ha ugyanazt a címkét használja, mint korábban, a jelölő frissül a MeshCore Open-t használó címzetteknél.';
 
   @override
   String get map_pointOfInterest => 'Érdekes pont';
@@ -4599,6 +4609,54 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Nem sikerült importálni a névjegyet.';
+
+  @override
+  String get discoveredContacts_export => 'Felfedezett kapcsolatok exportálása';
+
+  @override
+  String get discoveredContacts_import => 'Felfedezett kapcsolatok importálása';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'A felfedezett kapcsolatok exportálva ide: $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'A felfedezett kapcsolatok exportálása nem sikerült: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '$count felfedezett kapcsolat importálva.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Az importfájlban nem találhatók kapcsolatok.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Importálva: $imported, kihagyva már ismert: $skipped, olvashatatlan bejegyzés: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'A fájl nem felfedezett kapcsolatok exportja.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Az importfájl túl nagy (legfeljebb $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'A felfedezett kapcsolatok importálása nem sikerült: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Zero Hop hirdetés';

@@ -28,6 +28,7 @@ import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/battery_utils.dart';
 import '../utils/route_transitions.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../icons/los_icon.dart';
@@ -3120,21 +3121,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       return;
     }
 
-    // The whole `m:lat,lon|label|flags` text must fit in one message to
-    // either a contact or a channel, so the label gets what's left.
-    final maxMessageBytes = min(
-      maxContactMessageBytes(),
-      maxChannelMessageBytes(connector.selfName),
-    );
-    final label = await _promptForLabel(
+    // A map point is not the user's own position, so it keeps the point's
+    // default label; reusing one label would move earlier shared points.
+    final label = await showMarkerLabelDialog(
       context,
-      defaultLabel,
-      maxBytes: maxMessageBytes,
-      encode: (text) => _formatMarkerMessage(
-        position,
-        text.trim().replaceAll('|', '/'),
-        flags,
-      ),
+      lat: position.latitude,
+      lon: position.longitude,
+      defaultLabel: defaultLabel,
+      flags: flags,
+      confirmText: context.l10n.common_continue,
     );
     if (label == null || !mounted) return;
 
@@ -3149,53 +3144,6 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     );
   }
 
-  Future<String?> _promptForLabel(
-    BuildContext context,
-    String defaultLabel, {
-    required int maxBytes,
-    required String Function(String label) encode,
-  }) async {
-    final fixedBytes = utf8ByteLength(encode(''));
-    final fittedDefault = truncateUtf8(defaultLabel, maxBytes - fixedBytes);
-    final controller = TextEditingController(text: fittedDefault);
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: controller.text.length,
-    );
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.map_pinLabel),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: context.l10n.map_label,
-            border: const OutlineInputBorder(),
-          ),
-          inputFormatters: [
-            Utf8LengthLimitingTextInputFormatter(maxBytes, encoder: encode),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final label = controller.text.trim().replaceAll('|', '/');
-              Navigator.pop(
-                dialogContext,
-                label.isEmpty ? fittedDefault : label,
-              );
-            },
-            child: Text(context.l10n.common_continue),
-          ),
-        ],
-      ),
-    );
-  }
-
   bool _markerFits(BuildContext context, String markerText, int maxBytes) {
     if (utf8ByteLength(markerText) <= maxBytes) return true;
     showDismissibleSnackBar(
@@ -3205,11 +3153,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     return false;
   }
 
-  String _formatMarkerMessage(LatLng position, String label, String flags) {
-    final lat = position.latitude.toStringAsFixed(6);
-    final lon = position.longitude.toStringAsFixed(6);
-    return 'm:$lat,$lon|$label|$flags';
-  }
+  String _formatMarkerMessage(LatLng position, String label, String flags) =>
+      formatMarkerText(position.latitude, position.longitude, label, flags);
 
   Future<void> _showRecipientSheet({
     required BuildContext context,
@@ -3915,7 +3860,6 @@ int _mapContactSignature(Contact contact) {
     contact.lastSeen.millisecondsSinceEpoch,
     contact.lastMessageAt.millisecondsSinceEpoch,
     contact.isActive,
-    contact.wasPulled,
   );
 }
 

@@ -1721,6 +1721,12 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_sendGif => 'Pošlji GIF';
 
   @override
+  String get chat_shareMyLocation => 'Deli mojo lokacijo';
+
+  @override
+  String get chat_noRadioLocation => 'Vaš radio nima nastavljene lokacije';
+
+  @override
   String get chat_removeGif => 'Odstrani GIF';
 
   @override
@@ -2230,6 +2236,10 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_label => 'Oznaka';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Če uporabite enako oznako kot prej, se oznaka na zemljevidu posodobi pri prejemnikih MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Točka zanimivosti';
@@ -4584,6 +4594,54 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Kontakt ni bil uspešno uvožen.';
+
+  @override
+  String get discoveredContacts_export => 'Izvozi odkrite stike';
+
+  @override
+  String get discoveredContacts_import => 'Uvozi odkrite stike';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Odkriti stiki so izvoženi v $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Izvoz odkritih stikov ni uspel: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Uvoženih je bilo $count odkritih stikov.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'V uvozni datoteki ni bilo najdenih stikov.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Uvoženo: $imported, preskočeno (že znani): $skipped, neberljivi vnosi: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Datoteka ni izvoz odkritih stikov.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Uvozna datoteka je prevelika (največ $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Uvoz odkritih stikov ni uspel: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Oglas brez posrednikov';

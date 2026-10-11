@@ -453,6 +453,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "O seu rádio não tem localização definida",
+  "chat_shareMyLocation": "Compartilhar minha localização",
   "chat_location": "Localização",
   "chat_sendMessageTo": "Enviar uma mensagem para {contactName}",
   "@chat_sendMessageTo": {
@@ -689,6 +691,7 @@
   "map_shareMarkerHere": "Compartilhar marcador aqui",
   "map_pinLabel": "Rótulo de marcador",
   "map_label": "Rótulo",
+  "map_labelUpdateHint": "Usar o mesmo rótulo de antes atualizará o marcador para os destinatários do MeshCore Open.",
   "map_pointOfInterest": "Ponto de interesse",
   "map_sendToContact": "Enviar para o contato",
   "map_sendToChannel": "Enviar para o canal",
@@ -2017,6 +2020,44 @@
   "discoveredContacts_deleteContact": "Excluir Contato",
   "discoveredContacts_contactAdded": "Contato adicionado",
   "discoveredContacts_addContact": "Adicionar Contato",
+  "discoveredContacts_export": "Exportar contatos descobertos",
+  "discoveredContacts_import": "Importar contatos descobertos",
+  "discoveredContacts_exported": "Contatos descobertos exportados para {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Falha ao exportar contatos descobertos: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} contatos descobertos importados.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Nenhum contato encontrado no arquivo de importação.",
+  "discoveredContacts_importInvalidFile": "O arquivo não é uma exportação de contatos descobertos.",
+  "discoveredContacts_importSummary": "{imported} contatos descobertos importados. {skipped} já conhecidos e {invalid} entradas ilegíveis foram ignorados.",
+  "discoveredContacts_importTooLarge": "O arquivo de importação é grande demais (máximo {maxMb} MB).",
+  "discoveredContacts_importFailed": "Falha ao importar contatos descobertos: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "Quando a lista de contatos estiver cheia, o contato mais antigo não favoritado será substituído.",
   "contactsSettings_evictDiscoveredContactsTitle": "Remover contatos descobertos",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Quando ativado, o aplicativo remove os contatos descobertos mais antigos assim que a lista de descobertos atingir o limite de {limit} entradas.",

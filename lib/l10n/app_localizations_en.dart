@@ -1703,6 +1703,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_sendGif => 'Send GIF';
 
   @override
+  String get chat_shareMyLocation => 'Share my location';
+
+  @override
+  String get chat_noRadioLocation => 'Your radio has no location set';
+
+  @override
   String get chat_removeGif => 'Remove GIF';
 
   @override
@@ -2210,6 +2216,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get map_label => 'Label';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Using the same label as before will update the marker for MeshCore Open recipients.';
 
   @override
   String get map_pointOfInterest => 'Point of interest';
@@ -4538,6 +4548,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Failed to import contact.';
+
+  @override
+  String get discoveredContacts_export => 'Export discovered contacts';
+
+  @override
+  String get discoveredContacts_import => 'Import discovered contacts';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Exported discovered contacts to $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Failed to export discovered contacts: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Imported $count discovered contacts.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'No contacts found in import file.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Imported $imported discovered contacts. Skipped $skipped already known and $invalid unreadable entries.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'The file is not a discovered contacts export.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'The import file is too large (maximum $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Failed to import discovered contacts: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Zero Hop Advert';

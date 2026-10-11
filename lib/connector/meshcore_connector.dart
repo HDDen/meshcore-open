@@ -556,6 +556,34 @@ class MeshCoreConnector extends ChangeNotifier {
     return List.unmodifiable(_discoveredContacts);
   }
 
+  String exportDiscoveredContactsJson() {
+    return _discoveryContactStore.exportContactsJson(_discoveredContacts);
+  }
+
+  /// Imports an export file into this radio's discovered contacts. Throws
+  /// [FormatException] when the file is not a contacts list.
+  Future<DiscoveredContactsImportResult> importDiscoveredContactsJson(
+    String json,
+  ) async {
+    // The store is scoped to the connected radio; importing while
+    // disconnected would overwrite its saved list with only the import.
+    if (!isConnected) return DiscoveredContactsImportResult.empty;
+    final result = _discoveryContactStore.importContactsJson(
+      json: json,
+      existingContacts: _discoveredContacts,
+      knownContactKeys: _knownContactKeys,
+      selfPublicKeyHex: selfPublicKeyHex,
+    );
+    if (result.imported == 0) return result;
+
+    if (_evictDiscoveredContactsEnabled) {
+      _trimDiscoveredContactsToLimit(_discoveredContacts);
+    }
+    await _persistDiscoveredContacts();
+    notifyListeners();
+    return result;
+  }
+
   List<Channel> get channels => List.unmodifiable(_channels);
   bool get isConnected => _state == MeshCoreConnectionState.connected;
   bool get isLoadingContacts => _isLoadingContacts;

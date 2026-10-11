@@ -475,6 +475,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "Ihr Funkgerät hat keinen Standort festgelegt",
+  "chat_shareMyLocation": "Meinen Standort teilen",
   "chat_location": "Ort",
   "chat_sendMessageTo": "Nachricht an {contactName} senden",
   "@chat_sendMessageTo": {
@@ -711,6 +713,7 @@
   "map_shareMarkerHere": "Marker hier teilen",
   "map_pinLabel": "Pin-Beschriftung",
   "map_label": "Beschriftung",
+  "map_labelUpdateHint": "Wenn Sie denselben Namen verwenden wie zuvor, wird die Markierung bei MeshCore Open-Empfängern aktualisiert.",
   "map_pointOfInterest": "Punkt von Interesse",
   "map_sendToContact": "An Kontakt senden",
   "map_sendToChannel": "An Kanal senden",
@@ -2157,6 +2160,44 @@
   "common_deleteAll": "Alles löschen",
   "discoveredContacts_deleteContactAllContent": "Sind Sie sicher, dass Sie alle gefundenen Kontakte löschen möchten?",
   "discoveredContacts_deleteContactAll": "Alle entdeckten Kontakte löschen",
+  "discoveredContacts_export": "Entdeckte Kontakte exportieren",
+  "discoveredContacts_import": "Entdeckte Kontakte importieren",
+  "discoveredContacts_exported": "Entdeckte Kontakte exportiert nach {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Export von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} entdeckte Kontakte importiert.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Keine Kontakte in Importdatei gefunden.",
+  "discoveredContacts_importInvalidFile": "Die Datei ist kein Export entdeckter Kontakte.",
+  "discoveredContacts_importSummary": "{imported} entdeckte Kontakte importiert. {skipped} bereits bekannte und {invalid} unlesbare Einträge übersprungen.",
+  "discoveredContacts_importTooLarge": "Die Importdatei ist zu groß (maximal {maxMb} MB).",
+  "discoveredContacts_importFailed": "Import von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_showGuessedLocations": "Vermutete Knotenstandorte anzeigen",
   "map_guessedLocation": "Vermuteter Standort",
   "usbScreenSubtitle": "Wählen Sie ein erkanntes serielles Gerät aus und verbinden Sie es direkt mit Ihrem MeshCore-Knoten.",

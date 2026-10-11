@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
+import '../utils/app_logger.dart';
 import '../utils/platform_info.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
@@ -34,10 +35,12 @@ import '../services/received_image_store.dart';
 import '../services/translation_service.dart';
 import '../utils/image_save.dart';
 import '../utils/lora_airtime.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/received_image_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/empty_state.dart';
+
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
@@ -59,6 +62,7 @@ import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
 import 'region_management_screen.dart';
 import '../storage/region_store.dart';
+import '../utils/share_origin.dart';
 
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
@@ -1822,12 +1826,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<void> _saveImage(ReceivedImageEntry entry) async {
     final l10n = context.l10n;
+    final shareOrigin = shareOriginOf(context);
     final png = await context.read<ReceivedImageStore>().ensurePng(
       entry.streamId,
     );
     if (!mounted) return;
     final shareText = l10n.receivedImage_shareCaption(entry.bitstreamByteCount);
-    if (png == null || !await saveImagePng(png, entry, shareText: shareText)) {
+    if (png == null ||
+        !await saveImagePng(
+          png,
+          entry,
+          shareText: shareText,
+          sharePositionOrigin: shareOrigin,
+        )) {
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
@@ -2058,44 +2069,105 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.add_circle_outline),
-                    position: PopupMenuPosition.over,
-                    offset: Offset(0, showImageAction ? -112 : -64),
-                    tooltip: context.l10n.chat_selectSendAction,
-                    onSelected: (action) {
-                      switch (action) {
-                        case 'gif':
-                          _showGifPicker(context);
-                          break;
-                        case 'meshcore-image':
-                          _showImageSendPreview();
-                          break;
-                      }
+                  Builder(
+                    builder: (menuContext) {
+                      return IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        tooltip: context.l10n.chat_selectSendAction,
+                        onPressed: () async {
+                          final RenderBox button =
+                              menuContext.findRenderObject() as RenderBox;
+                          final RenderBox overlay =
+                              Overlay.of(menuContext).context.findRenderObject()
+                                  as RenderBox;
+                          final Offset buttonOffset = button.localToGlobal(
+                            Offset.zero,
+                            ancestor: overlay,
+                          );
+                          final items = <PopupMenuEntry<String>>[
+                            PopupMenuItem(
+                              value: 'gif',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.gif_box),
+                                  const SizedBox(width: 12),
+                                  Text(context.l10n.chat_sendGif),
+                                ],
+                              ),
+                            ),
+                          ];
+                          if (showImageAction) {
+                            items.add(
+                              PopupMenuItem(
+                                value: 'meshcore-image',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.image_outlined),
+                                    const SizedBox(width: 12),
+                                    Text(context.l10n.chat_sendImageLora),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          final selfConnector = context
+                              .read<MeshCoreConnector>();
+                          if (hasShareableLocation(
+                            selfConnector.selfLatitude,
+                            selfConnector.selfLongitude,
+                          )) {
+                            items.add(
+                              PopupMenuItem(
+                                value: 'send-my-location',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.my_location),
+                                    const SizedBox(width: 12),
+                                    Text(context.l10n.chat_shareMyLocation),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          final menuHeight =
+                              items.length * kMinInteractiveDimension + 16;
+                          final menuTop = (buttonOffset.dy - menuHeight).clamp(
+                            8.0,
+                            overlay.size.height,
+                          );
+                          final position = RelativeRect.fromLTRB(
+                            buttonOffset.dx,
+                            menuTop,
+                            overlay.size.width -
+                                buttonOffset.dx -
+                                button.size.width,
+                            overlay.size.height - buttonOffset.dy,
+                          );
+
+                          final selected = await showMenu<String>(
+                            context: menuContext,
+                            position: position,
+                            items: items,
+                          );
+                          if (!mounted || !menuContext.mounted) return;
+                          if (selected == null) return;
+                          switch (selected) {
+                            case 'gif':
+                              _showGifPicker(context);
+                              break;
+                            case 'meshcore-image':
+                              _showImageSendPreview();
+                              break;
+                            case 'send-my-location':
+                              await _shareMyLocation(
+                                context.read<MeshCoreConnector>(),
+                              );
+                              break;
+                          }
+                        },
+                      );
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'gif',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.gif_box),
-                            const SizedBox(width: 12),
-                            Text(context.l10n.chat_sendGif),
-                          ],
-                        ),
-                      ),
-                      if (showImageAction)
-                        PopupMenuItem(
-                          value: 'meshcore-image',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.image_outlined),
-                              const SizedBox(width: 12),
-                              Text(context.l10n.chat_sendImageLora),
-                            ],
-                          ),
-                        ),
-                    ],
                   ),
                   if (settings.translationEnabled)
                     MessageTranslationButton(
@@ -2251,6 +2323,56 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       onEnabledChanged: settingsService.setComposerTranslationEnabled,
       onLanguageSelected: settingsService.setTranslationTargetLanguageCode,
     );
+  }
+
+  /// Shares the radio's own position as a map marker on this channel. It is
+  /// not a reply, so any reply in progress stays open for the next message;
+  /// it shares the text send guard and cooldown.
+  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
+    final lat = connector.selfLatitude;
+    final lon = connector.selfLongitude;
+    if (!hasShareableLocation(lat, lon)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_noRadioLocation),
+      );
+      return;
+    }
+    final selfName = connector.selfName;
+    final label = await showMarkerLabelDialog(
+      context,
+      lat: lat!,
+      lon: lon!,
+      defaultLabel: selfName != null && selfName.isNotEmpty
+          ? selfName
+          : context.l10n.map_sharedPin,
+      flags: 'poi',
+      confirmText: context.l10n.common_share,
+    );
+    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
+    final now = DateTime.now();
+    if (_lastChannelSendAt != null &&
+        now.difference(_lastChannelSendAt!) < const Duration(seconds: 1)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_sendCooldown),
+      );
+      return;
+    }
+    _lastChannelSendAt = now;
+    _isSendingText = true;
+    try {
+      await connector.sendChannelMessage(
+        widget.channel,
+        formatMarkerText(lat, lon, label, 'poi'),
+      );
+    } catch (e) {
+      // A failed send (e.g. region scope rejected) is already marked failed
+      // on the message itself.
+      appLogger.warn('Sharing location failed: $e', tag: 'ChannelChat');
+    } finally {
+      _isSendingText = false;
+    }
   }
 
   Future<void> _sendMessage() async {

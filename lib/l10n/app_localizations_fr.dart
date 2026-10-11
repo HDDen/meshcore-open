@@ -1734,6 +1734,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_sendGif => 'Envoyer un GIF';
 
   @override
+  String get chat_shareMyLocation => 'Partager ma position';
+
+  @override
+  String get chat_noRadioLocation => 'Votre radio n\'a pas de position définie';
+
+  @override
   String get chat_removeGif => 'Supprimer le GIF';
 
   @override
@@ -2246,6 +2252,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_label => 'Étiquette';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Utiliser la même étiquette qu’avant mettra à jour le marqueur pour les destinataires utilisant MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Point d\'intérêt';
@@ -4618,6 +4628,54 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Échec de l\'importation du contact.';
+
+  @override
+  String get discoveredContacts_export => 'Exporter les contacts découverts';
+
+  @override
+  String get discoveredContacts_import => 'Importer les contacts découverts';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Contacts découverts exportés vers $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Impossible d\'exporter les contacts découverts: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '$count contacts découverts importés.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Aucun contact trouvé dans le fichier d\'importation.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return '$imported contacts découverts importés. $skipped déjà connus et $invalid entrées illisibles ignorés.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Le fichier n\'est pas un export de contacts découverts.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Le fichier d\'importation est trop volumineux (maximum $maxMb Mo).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Impossible d\'importer les contacts découverts: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Annonce Zero saut';

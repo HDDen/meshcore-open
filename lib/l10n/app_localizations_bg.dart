@@ -1735,6 +1735,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_sendGif => 'Изпрати GIF';
 
   @override
+  String get chat_shareMyLocation => 'Споделяне на моето местоположение';
+
+  @override
+  String get chat_noRadioLocation => 'Радиото ви няма зададено местоположение';
+
+  @override
   String get chat_removeGif => 'Премахни GIF';
 
   @override
@@ -2247,6 +2253,10 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_label => 'Етикет';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Ако използвате същия етикет като преди, маркерът ще се обнови за получателите с MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка на интерес';
@@ -4602,6 +4612,54 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Контактът не е успешно импортиран.';
+
+  @override
+  String get discoveredContacts_export => 'Експортирай откритите контакти';
+
+  @override
+  String get discoveredContacts_import => 'Импортирай откритите контакти';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Откритите контакти са експортирани в $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Неуспешно експортиране на откритите контакти: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Импортирани са $count открити контакта.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Във файла за импортиране не са намерени контакти.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Импортирани: $imported, пропуснати вече известни: $skipped, нечетими записи: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Файлът не е експорт на открити контакти.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Файлът за импортиране е твърде голям (максимум $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Неуспешно импортиране на откритите контакти: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Обява без скок';

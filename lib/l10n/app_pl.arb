@@ -464,6 +464,8 @@
     }
   },
   "chat_location": "Lokalizacja",
+  "chat_noRadioLocation": "Twoje radio nie ma ustawionej lokalizacji",
+  "chat_shareMyLocation": "Udostępnij moją lokalizację",
   "chat_sendMessageTo": "Wyślij wiadomość do {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -699,6 +701,7 @@
   "map_shareMarkerHere": "Udostępnij znacznik tutaj",
   "map_pinLabel": "Etykieta pinezki",
   "map_label": "Etykieta",
+  "map_labelUpdateHint": "Użycie tej samej etykiety co wcześniej zaktualizuje znacznik u odbiorców korzystających z MeshCore Open.",
   "map_pointOfInterest": "Punkt zainteresowań",
   "map_sendToContact": "Wyślij do kontaktu",
   "map_sendToChannel": "Wyślij do kanału",
@@ -2055,6 +2058,44 @@
   "contactsSettings_autoAddSensorsSubtitle": "Zezwól towarzyszowi na automatyczne dodawanie wykrytych czujników.",
   "discoveredContacts_noMatching": "Brak pasujących kontaktów",
   "discoveredContacts_deleteContact": "Usuń kontakt",
+  "discoveredContacts_export": "Eksportuj odkryte kontakty",
+  "discoveredContacts_import": "Importuj odkryte kontakty",
+  "discoveredContacts_exported": "Wyeksportowano odkryte kontakty do {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Nie udało się wyeksportować odkrytych kontaktów: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Zaimportowano {count} odkrytych kontaktów.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Nie znaleziono kontaktów w pliku importu.",
+  "discoveredContacts_importFailed": "Nie udało się zaimportować odkrytych kontaktów: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Ten plik nie jest eksportem odkrytych kontaktów.",
+  "discoveredContacts_importSummary": "Zaimportowano: {imported}, pominięto już znane: {skipped}, nieczytelne wpisy: {invalid}.",
+  "discoveredContacts_importTooLarge": "Plik importu jest zbyt duży (maksymalnie {maxMb} MB).",
   "contactsSettings_overwriteOldestSubtitle": "Gdy lista kontaktów jest pełna, najstarszy nieulubiony kontakt zostanie zastąpiony.",
   "contactsSettings_evictDiscoveredContactsTitle": "Usuwaj odkryte kontakty",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Gdy ta opcja jest włączona, aplikacja usuwa najstarsze odkryte kontakty, gdy lista odkrytych osiągnie limit {limit} wpisów.",
@@ -2297,12 +2338,6 @@
   "scanner_linuxPairingPinTitle": "Kod PIN parowania Bluetooth",
   "repeater_cliQuickClockSync": "Synchronizacja zegara",
   "repeater_cliQuickDiscovery": "Odkryj Sąsiadów",
-  "@repeater_clockSyncAfterLogin": {
-    "description": "Repeater setting: auto sync device clock after successful login"
-  },
-  "@repeater_clockSyncAfterLoginSubtitle": {
-    "description": "Repeater setting subtitle: describes the clock sync after login behavior"
-  },
   "repeater_clockSyncAfterLogin": "Synchronizacja zegara po zalogowaniu",
   "repeater_clockSyncAfterLoginSubtitle": "Automatycznie wysyłaj powiadomienie \"synchronizacja zegara\" po pomyślnym zalogowaniu.",
   "chat_sendMessage": "Wyślij wiadomość",

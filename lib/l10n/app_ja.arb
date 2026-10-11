@@ -624,6 +624,8 @@
   "channels_scanQrCodeComingSoon": "近日公開",
   "channels_enterHashtag": "ハッシュタグを入力してください",
   "channels_hashtagHint": "例：#チーム",
+  "chat_noRadioLocation": "無線機に位置情報が設定されていません",
+  "chat_shareMyLocation": "自分の位置情報を共有",
   "chat_noMessages": "まだメッセージは届いていません",
   "chat_sendMessageToStart": "開始するためにメッセージを送信してください",
   "chat_originalMessageNotFound": "元のメッセージが見つかりませんでした",
@@ -883,6 +885,7 @@
   "map_setAsMyLocation": "現在地として設定",
   "map_pinLabel": "ピンラベル",
   "map_label": "ラベル",
+  "map_labelUpdateHint": "以前と同じラベルを使うと、MeshCore Open の受信者側でマーカーが更新されます。",
   "map_pointOfInterest": "興味地点",
   "map_sendToContact": "連絡先へ送信",
   "map_sendToChannel": "チャンネルへ送信",
@@ -2246,6 +2249,44 @@
   "discoveredContacts_deleteContact": "発見された連絡先を削除",
   "discoveredContacts_deleteContactAll": "発見されたすべての連絡先を削除",
   "discoveredContacts_deleteContactAllContent": "本当に、見つけたすべての連絡先を削除してもよろしいですか？",
+  "discoveredContacts_export": "発見済みの連絡先をエクスポート",
+  "discoveredContacts_import": "発見済みの連絡先をインポート",
+  "discoveredContacts_exported": "発見済みの連絡先を {path} にエクスポートしました。",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "発見済みの連絡先のエクスポートに失敗しました: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} 件の発見済み連絡先をインポートしました。",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "インポートファイルに連絡先が見つかりませんでした。",
+  "discoveredContacts_importInvalidFile": "このファイルは発見済み連絡先のエクスポートではありません。",
+  "discoveredContacts_importSummary": "インポート: {imported} 件、スキップ（既知）: {skipped} 件、読み取れないエントリ: {invalid} 件。",
+  "discoveredContacts_importTooLarge": "インポートファイルが大きすぎます（最大 {maxMb} MB）。",
+  "discoveredContacts_importFailed": "発見済みの連絡先のインポートに失敗しました: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chat_sendCooldown": "再度送信する前に、しばらくお待ちください。",
   "appSettings_jumpToOldestUnread": "最も古い未読のメッセージへ移動",
   "appSettings_jumpToOldestUnreadSubtitle": "未読メッセージがあるチャットを開く際、「最新のメッセージ」ではなく、最初に未読のメッセージまでスクロールしてください。",

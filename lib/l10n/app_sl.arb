@@ -434,6 +434,8 @@
   "channels_sortAZ": "A do Z",
   "channels_sortLatestMessages": "Najnovejše sporočilo",
   "channels_sortUnread": "Nerešeno",
+  "chat_noRadioLocation": "Vaš radio nima nastavljene lokacije",
+  "chat_shareMyLocation": "Deli mojo lokacijo",
   "chat_noMessages": "Še ni sporočil.",
   "chat_sendMessageToStart": "Pošlji sporočilo za začetek.",
   "chat_originalMessageNotFound": "Opozorilo: Sporočilo ni bilo najdeno",
@@ -689,6 +691,7 @@
   "map_shareMarkerHere": "Delite točke tukaj.",
   "map_pinLabel": "Oznaka za pritrditev",
   "map_label": "Oznaka",
+  "map_labelUpdateHint": "Če uporabite enako oznako kot prej, se oznaka na zemljevidu posodobi pri prejemnikih MeshCore Open.",
   "map_pointOfInterest": "Točka zanimivosti",
   "map_sendToContact": "Pošlji v kontakt",
   "map_sendToChannel": "Pošlji v kanal",
@@ -2017,6 +2020,44 @@
   "discoveredContacts_Title": "Odkriti stiki",
   "discoveredContacts_searchHint": "Najdeni stiki po iskanju",
   "discoveredContacts_deleteContact": "Izbriši stik",
+  "discoveredContacts_export": "Izvozi odkrite stike",
+  "discoveredContacts_import": "Uvozi odkrite stike",
+  "discoveredContacts_exported": "Odkriti stiki so izvoženi v {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Izvoz odkritih stikov ni uspel: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Uvoženih je bilo {count} odkritih stikov.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "V uvozni datoteki ni bilo najdenih stikov.",
+  "discoveredContacts_importInvalidFile": "Datoteka ni izvoz odkritih stikov.",
+  "discoveredContacts_importSummary": "Uvoženo: {imported}, preskočeno (že znani): {skipped}, neberljivi vnosi: {invalid}.",
+  "discoveredContacts_importTooLarge": "Uvozna datoteka je prevelika (največ {maxMb} MB).",
+  "discoveredContacts_importFailed": "Uvoz odkritih stikov ni uspel: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "Ko je seznam stikov poln, bo najstarejši nestarševski stik zamenjan.",
   "contactsSettings_evictDiscoveredContactsTitle": "Odstrani odkrite stike",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Ko je ta možnost vklopljena, aplikacija odstrani najstarejše odkrite stike, ko seznam odkritih stikov doseže omejitev {limit} vnosov.",

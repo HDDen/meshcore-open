@@ -1629,6 +1629,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_sendGif => '发送 GIF';
 
   @override
+  String get chat_shareMyLocation => '分享我的位置';
+
+  @override
+  String get chat_noRadioLocation => '您的电台未设置位置';
+
+  @override
   String get chat_removeGif => '移除 GIF';
 
   @override
@@ -2118,6 +2124,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_label => '标签';
+
+  @override
+  String get map_labelUpdateHint => '使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。';
 
   @override
   String get map_pointOfInterest => '兴趣点';
@@ -4290,6 +4299,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => '导入联系人失败。';
+
+  @override
+  String get discoveredContacts_export => '导出已发现的联系人';
+
+  @override
+  String get discoveredContacts_import => '导入已发现的联系人';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '已将已发现的联系人导出到$path。';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '导出已发现的联系人失败：$error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '已导入$count个已发现的联系人。';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => '在导入文件中未找到联系人。';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return '已导入：$imported，已跳过（已存在）：$skipped，无法读取的条目：$invalid。';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile => '该文件不是已发现联系人的导出文件。';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return '导入文件过大（最大 $maxMb MB）。';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '导入已发现的联系人失败：$error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => '发送零跳广播';

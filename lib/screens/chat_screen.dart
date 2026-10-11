@@ -31,6 +31,7 @@ import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/chat_day_separator.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
@@ -491,10 +492,76 @@ class _ChatScreenState extends State<ChatScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              IconButton(
-                icon: const Icon(Icons.gif_box_outlined),
-                tooltip: context.l10n.chat_sendGif,
-                onPressed: () => _showGifPicker(context),
+              Builder(
+                builder: (menuContext) {
+                  return IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    tooltip: context.l10n.chat_selectSendAction,
+                    onPressed: () async {
+                      final RenderBox button =
+                          menuContext.findRenderObject() as RenderBox;
+                      final RenderBox overlay =
+                          Overlay.of(menuContext).context.findRenderObject()
+                              as RenderBox;
+                      final Offset buttonOffset = button.localToGlobal(
+                        Offset.zero,
+                        ancestor: overlay,
+                      );
+                      const menuHeight = 2 * kMinInteractiveDimension + 16;
+                      final menuTop = (buttonOffset.dy - menuHeight).clamp(
+                        8.0,
+                        overlay.size.height,
+                      );
+                      final position = RelativeRect.fromLTRB(
+                        buttonOffset.dx,
+                        menuTop,
+                        overlay.size.width -
+                            buttonOffset.dx -
+                            button.size.width,
+                        overlay.size.height - buttonOffset.dy,
+                      );
+
+                      final selected = await showMenu<String>(
+                        context: menuContext,
+                        position: position,
+                        items: [
+                          PopupMenuItem(
+                            value: 'gif',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.gif_box),
+                                const SizedBox(width: 12),
+                                Text(context.l10n.chat_sendGif),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'send-my-location',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.my_location),
+                                const SizedBox(width: 12),
+                                Text(context.l10n.chat_shareMyLocation),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                      if (!mounted || !menuContext.mounted) return;
+                      if (selected == null) return;
+                      switch (selected) {
+                        case 'gif':
+                          _showGifPicker(context);
+                          break;
+                        case 'send-my-location':
+                          await _shareMyLocation(
+                            context.read<MeshCoreConnector>(),
+                          );
+                          break;
+                      }
+                    },
+                  );
+                },
               ),
               if (settings.translationEnabled)
                 MessageTranslationButton(
@@ -665,6 +732,53 @@ class _ChatScreenState extends State<ChatScreen> {
       onEnabledChanged: settingsService.setComposerTranslationEnabled,
       onLanguageSelected: settingsService.setTranslationTargetLanguageCode,
     );
+  }
+
+  /// Shares the radio's own position as a map marker. Shares the text send
+  /// guard and cooldown so it can't race or flood alongside typed messages.
+  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
+    final lat = connector.selfLatitude;
+    final lon = connector.selfLongitude;
+    if (!hasShareableLocation(lat, lon)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_noRadioLocation),
+      );
+      return;
+    }
+    final selfName = connector.selfName;
+    final label = await showMarkerLabelDialog(
+      context,
+      lat: lat!,
+      lon: lon!,
+      defaultLabel: selfName != null && selfName.isNotEmpty
+          ? selfName
+          : context.l10n.map_sharedPin,
+      flags: 'poi',
+      confirmText: context.l10n.common_share,
+    );
+    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
+    final now = DateTime.now();
+    if (_lastTextSendAt != null &&
+        now.difference(_lastTextSendAt!) < const Duration(seconds: 1)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_sendCooldown),
+      );
+      return;
+    }
+    _lastTextSendAt = now;
+    _isSendingText = true;
+    try {
+      await connector.sendMessage(
+        _resolveContact(connector),
+        formatMarkerText(lat, lon, label, 'poi'),
+      );
+    } catch (e) {
+      appLogger.warn('Sharing location failed: $e', tag: 'Chat');
+    } finally {
+      _isSendingText = false;
+    }
   }
 
   Future<void> _sendMessage(MeshCoreConnector connector) async {

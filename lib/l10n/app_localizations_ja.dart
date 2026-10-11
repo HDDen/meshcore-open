@@ -1647,6 +1647,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_sendGif => 'GIF を送信';
 
   @override
+  String get chat_shareMyLocation => '自分の位置情報を共有';
+
+  @override
+  String get chat_noRadioLocation => '無線機に位置情報が設定されていません';
+
+  @override
   String get chat_removeGif => 'GIFを削除';
 
   @override
@@ -2144,6 +2150,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get map_label => 'ラベル';
+
+  @override
+  String get map_labelUpdateHint =>
+      '以前と同じラベルを使うと、MeshCore Open の受信者側でマーカーが更新されます。';
 
   @override
   String get map_pointOfInterest => '興味地点';
@@ -4377,6 +4387,53 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => '連絡先のインポートに失敗しました。';
+
+  @override
+  String get discoveredContacts_export => '発見済みの連絡先をエクスポート';
+
+  @override
+  String get discoveredContacts_import => '発見済みの連絡先をインポート';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '発見済みの連絡先を $path にエクスポートしました。';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '発見済みの連絡先のエクスポートに失敗しました: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '$count 件の発見済み連絡先をインポートしました。';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => 'インポートファイルに連絡先が見つかりませんでした。';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'インポート: $imported 件、スキップ（既知）: $skipped 件、読み取れないエントリ: $invalid 件。';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'このファイルは発見済み連絡先のエクスポートではありません。';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'インポートファイルが大きすぎます（最大 $maxMb MB）。';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '発見済みの連絡先のインポートに失敗しました: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'ゼロホップアドバート';

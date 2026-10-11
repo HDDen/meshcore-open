@@ -1734,6 +1734,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_sendGif => 'Отправить GIF';
 
   @override
+  String get chat_shareMyLocation => 'Поделиться моим местоположением';
+
+  @override
+  String get chat_noRadioLocation => 'В вашем радио не задано местоположение';
+
+  @override
   String get chat_removeGif => 'Удалить GIF';
 
   @override
@@ -2249,6 +2255,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_label => 'Подпись';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Если использовать ту же подпись, что и раньше, метка обновится у получателей MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка интереса';
@@ -4611,6 +4621,55 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Контакт не удалось импортировать';
+
+  @override
+  String get discoveredContacts_export =>
+      'Экспортировать обнаруженные контакты';
+
+  @override
+  String get discoveredContacts_import => 'Импортировать обнаруженные контакты';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Обнаруженные контакты экспортированы в $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Не удалось экспортировать обнаруженные контакты: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Импортировано $count обнаруженных контактов.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'В файле импорта не найдены контакты.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Импортировано: $imported, пропущено уже известных: $skipped, нечитаемых записей: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Файл не является экспортом обнаруженных контактов.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Файл импорта слишком большой (максимум $maxMb МБ).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Не удалось импортировать обнаруженные контакты: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Анонс без хопов';

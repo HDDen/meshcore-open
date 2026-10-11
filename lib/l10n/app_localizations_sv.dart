@@ -1709,6 +1709,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_sendGif => 'Skicka GIF';
 
   @override
+  String get chat_shareMyLocation => 'Dela min plats';
+
+  @override
+  String get chat_noRadioLocation => 'Din radio har ingen plats inställd';
+
+  @override
   String get chat_removeGif => 'Ta bort GIF';
 
   @override
@@ -2218,6 +2224,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_label => 'Etikett';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Om du använder samma etikett som tidigare uppdateras markören för mottagare med MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Plats av intresse';
@@ -4560,6 +4570,54 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Kontakt kunde inte importeras.';
+
+  @override
+  String get discoveredContacts_export => 'Exportera upptäckta kontakter';
+
+  @override
+  String get discoveredContacts_import => 'Importera upptäckta kontakter';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Upptäckta kontakter exporterades till $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Det gick inte att exportera upptäckta kontakter: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Importerade $count upptäckta kontakter.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Inga kontakter hittades i importfilen.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Importerade: $imported, hoppade över redan kända: $skipped, oläsliga poster: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Filen är inte en export av upptäckta kontakter.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Importfilen är för stor (högst $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Det gick inte att importera upptäckta kontakter: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Nollhoppsannons';
