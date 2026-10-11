@@ -46,7 +46,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
       if (_connector.state == MeshCoreConnectionState.disconnected) {
         _changedNavigation = false;
       } else if (_connector.state == MeshCoreConnectionState.connected &&
-          _connector.activeTransport == MeshCoreTransportType.bluetooth &&
+          // TCP lands here after an auto-reconnect: a dropped link popped
+          // back to this screen, and the TCP screen is no longer on the stack.
+          (_connector.activeTransport == MeshCoreTransportType.bluetooth ||
+              _connector.activeTransport == MeshCoreTransportType.tcp) &&
           isCurrentRoute &&
           !_changedNavigation) {
         _changedNavigation = true;

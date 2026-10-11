@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/region_store.dart';
@@ -89,7 +90,15 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
               ),
               itemCount: _regions.length + 1,
               itemBuilder: (context, index) {
-                if (index == 0) return _buildDefaultRegionTile(context);
+                if (index == 0) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildDefaultRegionTile(context),
+                      _buildRadioDefaultRegionTile(context),
+                    ],
+                  );
+                }
                 return _buildRegionTile(context, _regions[index - 1]);
               },
             ),
@@ -99,11 +108,16 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Widget _buildEmptyState(BuildContext context) {
     final l10n = context.l10n;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // The radio may hold a default region set by firmware or another
+            // client even when this app's list is empty; keep it clearable.
+            _buildRadioDefaultRegionTile(context),
+            const SizedBox(height: 16),
             const Icon(Icons.landscape, size: 48, color: MeshPalette.blue),
             const SizedBox(height: 16),
             Text(
@@ -132,9 +146,16 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Widget _buildDefaultRegionTile(BuildContext context) {
     final l10n = context.l10n;
     final connector = context.watch<MeshCoreConnector>();
-    final current = _regions.contains(connector.defaultRegion)
-        ? connector.defaultRegion
+    final canForceUnscoped = connector.supportsExplicitUnscopedFlood;
+    final appDefault = connector.defaultRegion;
+    final current =
+        _regions.contains(appDefault) ||
+            (appDefault == kUnscopedRegion && canForceUnscoped)
+        ? appDefault
         : '';
+    final radioDefault = connector.supportsDefaultFloodScope
+        ? connector.defaultFloodScopeName
+        : null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: DropdownButtonFormField<Region>(
@@ -148,14 +169,80 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         items: [
           DropdownMenuItem(
             value: '',
-            child: Text(l10n.settings_regionDefaultNone),
+            child: Text(
+              radioDefault == null
+                  ? l10n.settings_regionDefaultNone
+                  : l10n.settings_regionUseRadioDefault(radioDefault),
+            ),
           ),
+          if (canForceUnscoped)
+            DropdownMenuItem(
+              value: kUnscopedRegion,
+              child: Text(l10n.settings_regionNoRegion),
+            ),
           for (final region in _regions)
             DropdownMenuItem(value: region, child: Text(region)),
         ],
         onChanged: (value) => connector.setDefaultRegion(value ?? ''),
       ),
     );
+  }
+
+  /// The radio's own default flood scope (firmware ver 11+). Hidden on older
+  /// firmware, which has no such setting.
+  Widget _buildRadioDefaultRegionTile(BuildContext context) {
+    final l10n = context.l10n;
+    final connector = context.watch<MeshCoreConnector>();
+    if (!connector.supportsDefaultFloodScope) return const SizedBox.shrink();
+    final radioDefault = connector.defaultFloodScopeName ?? '';
+    final options = <Region>[
+      ..._regions,
+      if (radioDefault.isNotEmpty && !_regions.contains(radioDefault))
+        radioDefault,
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: DropdownButtonFormField<Region>(
+        key: ValueKey('radio-default-$radioDefault'),
+        initialValue: radioDefault,
+        decoration: InputDecoration(
+          labelText: l10n.settings_regionRadioDefault,
+          helperText: l10n.settings_regionRadioDefaultSubtitle,
+          helperMaxLines: 3,
+          border: const OutlineInputBorder(),
+        ),
+        items: [
+          DropdownMenuItem(
+            value: '',
+            child: Text(l10n.settings_regionDefaultNone),
+          ),
+          for (final region in options)
+            DropdownMenuItem(value: region, child: Text(region)),
+        ],
+        onChanged: (value) => _setRadioDefaultRegion(connector, value ?? ''),
+      ),
+    );
+  }
+
+  Future<void> _setRadioDefaultRegion(
+    MeshCoreConnector connector,
+    Region region,
+  ) async {
+    final l10n = context.l10n;
+    try {
+      await connector.setDefaultFloodScope(region);
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.settings_regionRadioDefaultUpdated),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.settings_regionRadioDefaultFailed),
+      );
+    }
   }
 
   void _showAddRegionDialog(BuildContext context) {

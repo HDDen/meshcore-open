@@ -107,7 +107,24 @@ When the radio hears an advertisement, the contact appears automatically if auto
 Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `meshcore://<hex>` URI from clipboard and imports it to the device.
 
 ### Import from Discovered Contacts
-Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). An overflow "Delete All" option clears all discovered contacts.
+Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). Its overflow menu has **Export discovered contacts**, **Import discovered contacts**, and "Delete All".
+
+### Scan for Nearby Nodes
+
+On the Discovered Contacts screen, tap the radar icon (**Scan for nearby nodes**) to ask nodes within direct radio range to identify themselves, instead of waiting for their next advert. The button appears only while connected to firmware with version code 8 or newer.
+
+- Repeaters and sensors answer. Room servers and companions usually don't.
+- Results appear live for about 12 seconds, sorted by signal. Each shows the node type, signal strength, how well the node heard you ("they heard us at … dB"), and either **Already in contacts** or an add button.
+- A node you haven't heard an advert from yet is added with a placeholder name; its real name appears after its next advert.
+- Repeaters limit how often they reply. If nothing answers, wait a minute and tap **Scan again**.
+
+### Export and Import Discovered Contacts
+
+Use the Discovered Contacts overflow menu to move the list of heard-but-not-added nodes between devices or radios.
+
+- **Export discovered contacts** writes `meshcore_discovered_contacts.json`. On desktop a save dialog opens; on mobile the OS share sheet opens. The file holds each node's public key, name, type, flags, GPS position, timestamps, and its last advert packet. It contains no private keys and no routing paths (a path is only valid from the radio that learned it). On web the file is shared or downloaded through the browser.
+- **Import discovered contacts** opens a file picker for a `.json` export (up to 2 MB) and requires a connected radio; imports go to that radio's discovered list. Nodes already in your contact list or discovered list, duplicates within the file, and your own node are skipped. Entries that can't be read (for example a public key that isn't 32 bytes) are skipped individually instead of failing the whole file. Imported nodes get no routing path, and future timestamps are clamped to now. When discovered-contact eviction is on, the list is trimmed back to its limit afterwards. A snackbar reports how many were imported, skipped, and unreadable, or that the file isn't a discovered-contacts export.
+- Imported nodes go into the discovered list of the radio you're connected to. When eviction of discovered contacts is on, the list is trimmed back to the 500 most recently seen nodes the next time it loads.
 
 ### Import from a QR Code
 

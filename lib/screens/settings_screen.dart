@@ -15,6 +15,7 @@ import '../services/app_debug_log_service.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
@@ -23,6 +24,7 @@ import '../widgets/radio_stats_entry.dart';
 import 'telemetry_screen.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
+import '../utils/share_origin.dart';
 
 /// Convert device coding-rate value (1-4 on some firmware, 5-8 on others)
 /// to the UI enum range (always 5-8).
@@ -796,6 +798,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _editNodeName(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
+    // The dialog's own context is gone after it pops, so report back
+    // through the screen's context.
+    final screenContext = context;
     final controller = TextEditingController(text: connector.selfName ?? '');
     showDialog(
       context: context,
@@ -807,7 +812,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             hintText: l10n.settings_nodeNameHint,
             border: const OutlineInputBorder(),
           ),
-          maxLength: 31,
+          inputFormatters: const [
+            Utf8LengthLimitingTextInputFormatter(maxRadioNameBytes),
+          ],
         ),
         actions: [
           TextButton(
@@ -825,9 +832,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Navigator.pop(context);
                         await connector.setNodeName(name);
                         await connector.refreshDeviceInfo();
-                        if (!context.mounted) return;
+                        if (!screenContext.mounted) return;
                         showDismissibleSnackBar(
-                          context,
+                          screenContext,
                           content: Text(l10n.settings_nodeNameUpdated),
                         );
                       },
@@ -936,7 +943,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Safe access to custom vars - may be null before device responds
     final customVars = connector.currentCustomVars ?? {};
     final bool hasGPS = customVars.containsKey("gps");
-    bool isGPSEnabled = customVars["gps"] == "1";
+    final bool initialGPSEnabled = customVars["gps"] == "1";
+    bool isGPSEnabled = initialGPSEnabled;
 
     final currentInterval = settingsService.resolvedGpsIntervalSeconds(
       customVars,
@@ -944,6 +952,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     intervalController.text = currentInterval.toString();
 
     String? intervalError;
+    String? locationError;
 
     showDialog(
       context: context,
@@ -967,9 +976,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: lonController,
+                onChanged: (_) {
+                  if (locationError != null) {
+                    setDialogState(() => locationError = null);
+                  }
+                },
                 decoration: InputDecoration(
                   labelText: l10n.settings_longitude,
                   border: const OutlineInputBorder(),
+                  errorText: locationError,
+                  errorMaxLines: 2,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -1000,14 +1016,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l10n.settings_locationGPSEnable,
                   subtitle: l10n.settings_locationGPSEnableSubtitle,
                   value: isGPSEnabled,
-                  onChanged: (value) async {
-                    setDialogState(() => isGPSEnabled = value);
-                    if (value) {
-                      await connector.setCustomVar("gps:1");
-                    } else {
-                      await connector.setCustomVar("gps:0");
-                    }
-                  },
+                  // Applied on Save so Cancel leaves the device untouched.
+                  onChanged: (value) =>
+                      setDialogState(() => isGPSEnabled = value),
                 ),
               ],
             ],
@@ -1019,6 +1030,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () async {
+                // Validate every field before closing so a typo doesn't
+                // discard the input or leave half the changes applied.
                 int? interval;
                 if (hasGPS) {
                   final intervalText = intervalController.text.trim();
@@ -1035,54 +1048,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 }
 
+                final latText = latController.text.trim();
+                final lonText = lonController.text.trim();
+                double? lat;
+                double? lon;
+                if (latText.isNotEmpty || lonText.isNotEmpty) {
+                  lat = latText.isNotEmpty
+                      ? double.tryParse(latText)
+                      : connector.selfLatitude;
+                  lon = lonText.isNotEmpty
+                      ? double.tryParse(lonText)
+                      : connector.selfLongitude;
+                  if (lat == null || lon == null) {
+                    setDialogState(() {
+                      locationError = l10n.settings_locationBothRequired;
+                    });
+                    return;
+                  }
+                  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                    setDialogState(() {
+                      locationError = l10n.settings_locationInvalid;
+                    });
+                    return;
+                  }
+                }
+
                 Navigator.pop(dialogContext);
 
+                var changed = false;
+                if (hasGPS && isGPSEnabled != initialGPSEnabled) {
+                  await connector.setCustomVar(
+                    isGPSEnabled ? "gps:1" : "gps:0",
+                  );
+                  changed = true;
+                }
                 if (interval != null) {
                   await settingsService.setGpsIntervalSeconds(
                     interval,
                     writeToDevice: (value) =>
                         connector.setCustomVar("gps_interval:$value"),
                   );
-                  await connector.refreshDeviceInfo();
-                  if (!context.mounted) return;
-                  showDismissibleSnackBar(
-                    context,
-                    content: Text(l10n.settings_locationUpdated),
-                  );
+                  changed = true;
                 }
-
-                final latText = latController.text.trim();
-                final lonText = lonController.text.trim();
-                if (latText.isEmpty && lonText.isEmpty) {
-                  return;
+                if (lat != null && lon != null) {
+                  await connector.setNodeLocation(lat: lat, lon: lon);
+                  changed = true;
                 }
-
-                final currentLat = connector.selfLatitude;
-                final currentLon = connector.selfLongitude;
-                final lat = latText.isNotEmpty
-                    ? double.tryParse(latText)
-                    : currentLat;
-                final lon = lonText.isNotEmpty
-                    ? double.tryParse(lonText)
-                    : currentLon;
-                if (lat == null || lon == null) {
-                  if (!context.mounted) return;
-                  showDismissibleSnackBar(
-                    context,
-                    content: Text(l10n.settings_locationBothRequired),
-                  );
-                  return;
-                }
-                if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-                  if (!context.mounted) return;
-                  showDismissibleSnackBar(
-                    context,
-                    content: Text(l10n.settings_locationInvalid),
-                  );
-                  return;
-                }
-
-                await connector.setNodeLocation(lat: lat, lon: lon);
+                if (!changed) return;
                 await connector.refreshDeviceInfo();
                 if (!context.mounted) return;
                 showDismissibleSnackBar(
@@ -1195,6 +1207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       filename,
       shareText,
       subject,
+      sharePositionOrigin: shareOriginOf(context),
     );
     if (!mounted) return;
     switch (result) {

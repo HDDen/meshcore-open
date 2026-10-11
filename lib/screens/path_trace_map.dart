@@ -110,6 +110,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   bool _showNodeLabels = true;
   Contact? _targetContact;
   Uint8List? _sentTagBytes;
+  // Tag the radio reported in RESP_CODE_SENT for the current trace; reset
+  // on every new trace so a late reply to an earlier one isn't accepted.
+  Uint8List? _sentAckTag;
   // Live path resolved at trace time; used by the response handler for
   // endpoint inference so it matches the path that was actually traced.
   Uint8List _tracedPath = Uint8List(0);
@@ -449,6 +452,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     );
 
     final sentTag = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    _sentAckTag = null;
     _sentTagBytes = Uint8List(4)
       ..[0] = sentTag & 0xFF
       ..[1] = (sentTag >> 8) & 0xFF
@@ -470,7 +474,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   void _setupFrameListener() {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    Uint8List tagData = Uint8List(4);
     // Listen for incoming text messages from the repeater
     _frameSubscription = connector.receivedFrames.listen((frame) {
       if (frame.isEmpty) return;
@@ -481,7 +484,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         if (code == respCodeSent && _awaitingTraceSent) {
           _awaitingTraceSent = false;
           frameBuffer.skipBytes(1); //reserved
-          tagData = frameBuffer.readBytes(4);
+          _sentAckTag = frameBuffer.readBytes(4);
           final timeoutMilliseconds = frameBuffer.readUInt32LE();
 
           // Start timeout timer for trace response
@@ -512,7 +515,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         if (frame.length >= 12 &&
             code == pushCodeTraceData &&
             (listEquals(frame.sublist(4, 8), _sentTagBytes) ||
-                listEquals(frame.sublist(4, 8), tagData))) {
+                listEquals(frame.sublist(4, 8), _sentAckTag))) {
           _timeoutTimer?.cancel();
           if (!mounted) return;
           _handleTraceResponse(frame);

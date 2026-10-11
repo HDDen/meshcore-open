@@ -112,7 +112,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 40 | CMD_GET_CUSTOM_VAR | Get custom variables |
 | 41 | CMD_SET_CUSTOM_VAR | Set a custom variable |
 | 50 | CMD_SEND_BINARY_REQ | Send binary request |
-| 54 | CMD_SET_FLOOD_SCOPE_KEY | Set flood routing scope (v8+; `cmdSetFloodScope` in the app) |
+| 54 | CMD_SET_FLOOD_SCOPE_KEY | Set flood routing scope (v8+; `cmdSetFloodScope` in the app). `[54,0,key16]` sets, `[54,0]` clears the override (radio default scope then applies), `[54,1]` sends unscoped (firmware code 12+) |
 | 55 | CMD_SEND_CONTROL_DATA | Send control data (e.g. zero-hop discovery, v8+) |
 | 56 | CMD_GET_STATS | Request companion radio stats |
 | 57 | CMD_SEND_ANON_REQ | Send anonymous request |
@@ -120,6 +120,8 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 59 | CMD_GET_AUTO_ADD_CONFIG | Get auto-add configuration |
 | 61 | CMD_SET_PATH_HASH_MODE | Set path hash width (bytes per hop) |
 | 62 | CMD_SEND_CHANNEL_DATA | Send GRP_DATA image chunks (firmware code 11+) |
+| 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Store the radio's default flood scope: `[63][name 31, NUL padded][key 16]`, or `[63]` to clear (firmware code 11+) |
+| 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Read the radio's default flood scope (firmware code 11+) |
 
 ## Response / Push Codes (Device → App)
 
@@ -146,6 +148,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 24 | RESP_CODE_STATS | Companion radio stats |
 | 25 | RESP_CODE_AUTO_ADD_CONFIG | Auto-add flags |
 | 27 | RESP_CODE_CHANNEL_DATA_RECV | Received GRP_DATA image chunk |
+| 28 | RESP_CODE_DEFAULT_FLOOD_SCOPE | `[28][name 31][key 16]`, or `[28]` alone when no default is set |
 | 0x80 | PUSH_CODE_ADVERT | Known contact re-seen |
 | 0x81 | PUSH_CODE_PATH_UPDATED | Better path found; carries the 32-byte public key of the updated contact |
 | 0x82 | PUSH_CODE_SEND_CONFIRMED | Delivery ACK from remote; carries ACK hash (4 bytes) + trip time (4 bytes) |
@@ -272,6 +275,6 @@ Reactions use `r:<four-hex message hash>:<two-hex emoji index>`. Channel replies
 
 ## Regions and image data
 
-Transport-routed raw packets include four transport-code bytes before packed path metadata. For transport floods, the app matches the first two code bytes against locally known region candidates using HMAC-SHA256 over `[payloadType][payload]`. Region scope keys are the first 16 bytes of SHA256 of `#<region>`. The name itself is not carried as plain text. Unknown or ambiguous matches remain null; see [regions](regions.md).
+Transport-routed raw packets include four transport-code bytes before packed path metadata. For transport floods, the app matches the first two code bytes against locally known region candidates using HMAC-SHA256 over `[payloadType][payload]`. Region scope keys are the first 16 bytes of SHA256 of `#<region>`. The radio's default flood scope is also a candidate, matched on the key the radio reports (it may have been set by another client). The name itself is not carried as plain text. Unknown or ambiguous matches remain null; see [regions](regions.md).
 
 Image chunks use `CMD_SEND_CHANNEL_DATA` (62), `RESP_CODE_CHANNEL_DATA_RECV` (27), and application data type `0xAE1C`. The framing, capacities, metadata byte, and XOR recovery algorithm are defined in [image_chunk_transport.dart](../lib/services/image_chunk_transport.dart), which is the source of truth. See [image messages](image-messages.md) for user requirements and limitations.

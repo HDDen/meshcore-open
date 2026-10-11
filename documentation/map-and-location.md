@@ -35,6 +35,8 @@ Location pins shared in chat messages are displayed as flags:
 
 Tap a pin to see its info. Options to "Hide" (session only) or "Remove" (persistent).
 
+Pins from the same sender in the same chat or channel with the same label (case-insensitive) are treated as one marker: a newer message moves it and keeps the earlier positions as its track. To update a pin you shared before, share again with the same label.
+
 ### Predicted / Guessed Locations
 
 Many contacts on the mesh don't have GPS hardware, so the map has no explicit coordinates for them. Instead of leaving these contacts invisible, the app **infers an approximate position** by analyzing the repeater path the contact's messages travel through. These inferred positions are displayed as markers with a `not_listed_location` icon and a muted grey or colored border, visually distinct from confirmed-location markers.
@@ -84,7 +86,7 @@ Opens a dialog showing: type, path (hop chain), coordinates, last-seen time, and
 
 ### Long-Press on Empty Map Area
 Shows a bottom sheet with:
-- **Share marker here**: Prompts for a label, then pick a DM contact or channel to send the location to. Wire format: `m:<lat>,<lon>|<label>|poi`
+- **Share marker here**: Prompts for a label (default: "Point of interest"), then pick a DM contact or channel to send the location to. Wire format: `m:<lat>,<lon>|<label>|poi`; a `|` in the label is replaced with `/` and line breaks with spaces. The label field shows a live byte counter so the whole pin fits in one message, and a hint that reusing a previous label updates that marker for MeshCore Open recipients. To share your radio's own position, use **Share my location** from the ⊕ menu in chat (see [Chat & Messaging](chat-and-messaging.md#input-bar))
 - **Set as my location**: Updates your device's advertised location
 
 ### Filter Dialog (FAB)

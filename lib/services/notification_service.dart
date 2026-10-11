@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../helpers/message_url_image_helper.dart';
@@ -624,6 +625,7 @@ class NotificationService {
   Future<void> cancelAll() async {
     _conversations.clear();
     await _notifications.cancelAll();
+    await _updateBadge(0);
   }
 
   Future<void> cancel(int id) async {
@@ -660,28 +662,22 @@ class NotificationService {
     }
   }
 
+  static const MethodChannel _badgeChannel = MethodChannel(
+    'meshcore_open/app_badge',
+  );
+
+  /// Sets the app icon badge to the current unread total.
+  Future<void> setAppBadge(int count) => _updateBadge(count);
+
   Future<void> _updateBadge(int count) async {
     if (PlatformInfo.isIOS || PlatformInfo.isMacOS) {
-      // On Apple platforms, set the badge number directly via a silent update.
-      final darwinDetails = DarwinNotificationDetails(
-        presentAlert: false,
-        presentSound: false,
-        presentBadge: true,
-        badgeNumber: count,
-      );
-      final details = NotificationDetails(
-        iOS: darwinDetails,
-        macOS: darwinDetails,
-      );
-      // Use a fixed ID so each update replaces the previous one.
-      await _notifications.show(
-        id: 'badge_update'.hashCode,
-        title: null,
-        body: null,
-        notificationDetails: details,
-      );
-      // Immediately cancel the silent notification so it doesn't appear in tray.
-      await _notifications.cancel(id: 'badge_update'.hashCode);
+      // Set natively: a silent notification cancelled right after show() is
+      // removed before iOS delivers it, so its badge number never applied.
+      try {
+        await _badgeChannel.invokeMethod<void>('setBadgeCount', count);
+      } catch (e) {
+        debugPrint('Failed to update app badge: $e');
+      }
     }
     // On Android, badge count is derived from active notifications,
     // so cancelling the specific notification above is sufficient.

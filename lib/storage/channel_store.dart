@@ -42,14 +42,22 @@ class ChannelStore {
       return [];
     }
 
+    final List<dynamic> jsonList;
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
-      return jsonList
-          .map((entry) => _fromJson(entry as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
+      jsonList = jsonDecode(jsonString) as List<dynamic>;
+    } catch (e) {
+      appLogger.warn('Stored channels are unreadable: $e');
       return [];
     }
+    final channels = <Channel>[];
+    for (final entry in jsonList) {
+      try {
+        channels.add(_fromJson(entry as Map<String, dynamic>));
+      } catch (e) {
+        appLogger.warn('Skipping malformed stored channel: $e');
+      }
+    }
+    return channels;
   }
 
   Future<void> saveChannels(List<Channel> channels) async {

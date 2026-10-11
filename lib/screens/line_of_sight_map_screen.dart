@@ -650,7 +650,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                   ? LosPalette.selected
                   : LosPalette.textMuted,
               icon: const Icon(Icons.layers_outlined),
-              tooltip: 'Map detail',
+              tooltip: context.l10n.losMapDetailTooltip,
               onPressed: () =>
                   setState(() => _showTerrainLayer = !_showTerrainLayer),
             ),
@@ -664,7 +664,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              tooltip: 'Units',
+              tooltip: context.l10n.losUnitsTooltip,
               onPressed: () => context.read<AppSettingsService>().setUnitSystem(
                 isImperial ? UnitSystem.metric : UnitSystem.imperial,
               ),
@@ -736,21 +736,25 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
           Row(
             children: [
               _summaryMetric(
-                'Distance',
+                context.l10n.losDistance,
                 segment == null
                     ? '--'
                     : '${_formatDistanceValue(segment.totalDistanceMeters, isImperial)} $distanceUnit',
               ),
               _summaryMetric(
-                segment?.isClear == true ? 'Clearance' : 'Blocked by',
+                segment?.isClear == true
+                    ? context.l10n.losClearance
+                    : context.l10n.losBlockedBy,
                 amount,
                 valueColor: color,
               ),
               _summaryMetric(
-                'Obstruction',
+                context.l10n.losObstruction,
                 worst == null
                     ? '--'
-                    : '${_formatDistanceValue(worst.distanceMeters, isImperial)} $distanceUnit from A',
+                    : context.l10n.losDistanceFromA(
+                        '${_formatDistanceValue(worst.distanceMeters, isImperial)} $distanceUnit',
+                      ),
               ),
             ],
           ),
@@ -840,18 +844,18 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                 if (isWorst)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
+                      horizontal: 7,
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: LosPalette.blocked,
                       borderRadius: BorderRadius.circular(99),
                     ),
-                    child: const Text(
-                      'WORST',
+                    child: Text(
+                      context.l10n.losWorstBadge,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 8,
+                        fontSize: 12,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -860,7 +864,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             ),
             const Spacer(),
             Text(
-              'Blocked ${_formatHeightValue(obstruction.obstructionMeters, isImperial)} $heightUnit',
+              context.l10n.losBlockedAmount(
+                '${_formatHeightValue(obstruction.obstructionMeters, isImperial)} $heightUnit',
+              ),
               style: const TextStyle(
                 color: LosPalette.textMuted,
                 fontSize: 11,
@@ -890,9 +896,9 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Selected obstruction',
-            style: TextStyle(
+          Text(
+            context.l10n.losSelectedObstructionTitle,
+            style: const TextStyle(
               color: LosPalette.text,
               fontSize: 14,
               fontWeight: FontWeight.w800,
@@ -904,19 +910,19 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             runSpacing: 10,
             children: [
               _detailValue(
-                'Blocked by',
+                context.l10n.losBlockedBy,
                 '${_formatHeightValue(obstruction.obstructionMeters, isImperial)} $heightUnit',
               ),
               _detailValue(
-                'From A',
+                context.l10n.losFromA,
                 '${_formatDistanceValue(obstruction.distanceMeters, isImperial)} $distanceUnit',
               ),
               _detailValue(
-                'From B',
+                context.l10n.losFromB,
                 '${_formatDistanceValue(segment.totalDistanceMeters - obstruction.distanceMeters, isImperial)} $distanceUnit',
               ),
               _detailValue(
-                'Elevation',
+                context.l10n.losElevation,
                 '${_formatHeightValue(obstruction.terrainMeters, isImperial)} $heightUnit',
               ),
             ],
@@ -927,7 +933,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             child: OutlinedButton.icon(
               onPressed: () => _centerOnObstruction(obstruction),
               icon: const Icon(Icons.center_focus_strong, size: 17),
-              label: const Text('Center on map'),
+              label: Text(context.l10n.losCenterOnMap),
             ),
           ),
         ],
@@ -1368,6 +1374,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
             terrainLabel: context.l10n.losLegendTerrain,
             losBeamLabel: context.l10n.losLegendLosBeam,
             radioHorizonLabel: context.l10n.losLegendRadioHorizon,
+            selectedLabel: context.l10n.losSelectedPill,
             selectedSampleIndex: _selectedObstruction?.sampleIndex,
           ),
         ),
@@ -1406,6 +1413,7 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
                     terrainLabel: context.l10n.losLegendTerrain,
                     losBeamLabel: context.l10n.losLegendLosBeam,
                     radioHorizonLabel: context.l10n.losLegendRadioHorizon,
+                    selectedLabel: context.l10n.losSelectedPill,
                     selectedSampleIndex: _selectedObstruction?.sampleIndex,
                   ),
                 ),
@@ -1675,13 +1683,15 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   String _statusLabel(_LosDisplayStatus status) {
     switch (status) {
       case _LosDisplayStatus.clear:
-        return 'Clear';
+        return context.l10n.losStatusClear;
       case _LosDisplayStatus.marginal:
-        return 'Marginal';
+        return context.l10n.losStatusMarginal;
       case _LosDisplayStatus.blocked:
-        return 'Blocked';
+        return context.l10n.losStatusBlocked;
       case _LosDisplayStatus.unknown:
-        return _loading ? 'Checking' : 'No result';
+        return _loading
+            ? context.l10n.losStatusCheckingShort
+            : context.l10n.losStatusNoResult;
     }
   }
 
@@ -1832,6 +1842,7 @@ class _LosProfilePainter extends CustomPainter {
   final String terrainLabel;
   final String losBeamLabel;
   final String radioHorizonLabel;
+  final String selectedLabel;
   final int? selectedSampleIndex;
 
   const _LosProfilePainter({
@@ -1842,6 +1853,7 @@ class _LosProfilePainter extends CustomPainter {
     required this.terrainLabel,
     required this.losBeamLabel,
     required this.radioHorizonLabel,
+    required this.selectedLabel,
     this.selectedSampleIndex,
   });
 
@@ -2128,7 +2140,7 @@ class _LosProfilePainter extends CustomPainter {
       final labelY = math.max(topPadding + 2, selectedPoint.dy - 27);
       _paintPill(
         canvas,
-        'Selected',
+        selectedLabel,
         Offset(
           selectedPoint.dx.clamp(42.0, size.width - 42).toDouble(),
           labelY,
@@ -2216,6 +2228,7 @@ class _LosProfilePainter extends CustomPainter {
         oldDelegate.terrainLabel != terrainLabel ||
         oldDelegate.losBeamLabel != losBeamLabel ||
         oldDelegate.radioHorizonLabel != radioHorizonLabel ||
+        oldDelegate.selectedLabel != selectedLabel ||
         oldDelegate.selectedSampleIndex != selectedSampleIndex;
   }
 
@@ -2259,7 +2272,7 @@ class _LosLegend extends StatelessWidget {
       _LegendEntry(terrainLabel, LosPalette.terrain),
       _LegendEntry(losBeamLabel, LosPalette.beam),
       _LegendEntry(radioHorizonLabel, LosPalette.horizon),
-      const _LegendEntry('Blocked', LosPalette.blocked),
+      _LegendEntry(context.l10n.losStatusBlocked, LosPalette.blocked),
     ];
 
     const swatchSize = 12.0;

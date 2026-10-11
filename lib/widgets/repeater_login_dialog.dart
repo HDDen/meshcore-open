@@ -52,6 +52,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
     final savedPassword = await _storage.getRepeaterPassword(
       widget.repeater.publicKeyHex,
     );
+    if (!mounted) return;
     if (savedPassword != null) {
       setState(() {
         _passwordController.text = savedPassword;
@@ -357,7 +358,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     obscureText: _obscurePassword,
                     // Firmware stores at most 15 bytes (CommonCLI.h password[16]).
                     inputFormatters: const [
-                      Utf8LengthLimitingTextInputFormatter(15),
+                      Utf8LengthLimitingTextInputFormatter(20),
                     ],
                     decoration: InputDecoration(
                       labelText: l10n.login_password,

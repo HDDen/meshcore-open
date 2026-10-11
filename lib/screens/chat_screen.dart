@@ -31,6 +31,7 @@ import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/chat_day_separator.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
@@ -47,6 +48,7 @@ import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/mesh_ui.dart';
 import 'telemetry_screen.dart';
 
@@ -82,6 +84,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+  // True while a send is awaiting outgoing translation, so a second tap
+  // can't send the same text again.
+  bool _isSendingText = false;
 
   @override
   void initState() {
@@ -435,14 +440,15 @@ class _ChatScreenState extends State<ChatScreen> {
               final startsDay =
                   messageIndex == reversedMessages.length - 1 ||
                   !isSameChatDay(
-                    reversedMessages[messageIndex + 1].timestamp,
-                    message.timestamp,
+                    reversedMessages[messageIndex + 1].receivedAt,
+                    message.receivedAt,
                   );
               final child = isUnreadAnchor || startsDay
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (startsDay) ChatDaySeparator(day: message.timestamp),
+                        if (startsDay)
+                          ChatDaySeparator(day: message.receivedAt),
                         if (isUnreadAnchor) const UnreadDivider(),
                         bubble,
                       ],
@@ -472,79 +478,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(MeshCoreConnector connector) {
-    Future<String?> promptForMarkerLabel(
-      BuildContext context, {
-      required double lat,
-      required double lon,
-      required String defaultLabel,
-      required String flags,
-    }) async {
-      final controller = TextEditingController(text: defaultLabel);
-      controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: controller.text.length,
-      );
-      final focusNode = FocusNode();
-
-      final latStr = lat.toStringAsFixed(6);
-      final lonStr = lon.toStringAsFixed(6);
-      final prefix = 'm:$latStr,$lonStr|';
-      final suffix = '|$flags';
-      final overheadBytes = utf8.encode(prefix + suffix).length;
-      final maxForContact = maxContactMessageBytes();
-      final maxForChannel = maxChannelMessageBytes(null);
-      final maxPayload = maxForContact < maxForChannel
-          ? maxForContact
-          : maxForChannel;
-      final allowedLabelBytes = (maxPayload - overheadBytes) > 0
-          ? (maxPayload - overheadBytes)
-          : 0;
-
-      try {
-        final result = await showDialog<String>(
-          context: context,
-          builder: (dialogContext) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (dialogContext.mounted) {
-                focusNode.requestFocus();
-                controller.selection = TextSelection(
-                  baseOffset: 0,
-                  extentOffset: controller.text.length,
-                );
-              }
-            });
-            return AlertDialog(
-              title: Text(dialogContext.l10n.map_pinLabel),
-              content: ByteCountedTextField(
-                focusNode: focusNode,
-                maxBytes: allowedLabelBytes,
-                controller: controller,
-                decoration: InputDecoration(
-                  helperText: dialogContext.l10n.map_labelUpdateHint,
-                  helperMaxLines: 3,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, null),
-                  child: Text(dialogContext.l10n.common_cancel),
-                ),
-                FilledButton(
-                  onPressed: () =>
-                      Navigator.pop(dialogContext, controller.text.trim()),
-                  child: Text(dialogContext.l10n.common_share),
-                ),
-              ],
-            );
-          },
-        );
-        return result;
-      } finally {
-        focusNode.dispose();
-        controller.dispose();
-      }
-    }
-
     final maxBytes = maxContactMessageBytes();
     final scheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
@@ -608,7 +541,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               children: [
                                 const Icon(Icons.my_location),
                                 const SizedBox(width: 12),
-                                Text(context.l10n.map_shareMarkerHere),
+                                Text(context.l10n.chat_shareMyLocation),
                               ],
                             ),
                           ),
@@ -621,38 +554,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           _showGifPicker(context);
                           break;
                         case 'send-my-location':
-                          final connector = context.read<MeshCoreConnector>();
-                          if (connector.selfLatitude == null ||
-                              connector.selfLongitude == null) {
-                            showDismissibleSnackBar(
-                              context,
-                              content: Text(
-                                context.l10n.map_connectToShareMarkers,
-                              ),
-                            );
-                            break;
-                          }
-                          final lat = connector.selfLatitude!;
-                          final lon = connector.selfLongitude!;
-                          final initialLabel =
-                              connector.selfName?.isNotEmpty == true
-                              ? connector.selfName!
-                              : context.l10n.map_sharedPin;
-                          final label = await promptForMarkerLabel(
-                            context,
-                            lat: lat,
-                            lon: lon,
-                            defaultLabel: initialLabel,
-                            flags: 'poi',
-                          );
-                          if (label == null || label.trim().isEmpty) break;
-                          if (!mounted || !menuContext.mounted) break;
-                          final connector2 = context.read<MeshCoreConnector>();
-                          final markerText =
-                              'm:${lat.toStringAsFixed(6)},${lon.toStringAsFixed(6)}|${label.trim()}|poi';
-                          connector2.sendMessage(
-                            _resolveContact(connector2),
-                            markerText,
+                          await _shareMyLocation(
+                            context.read<MeshCoreConnector>(),
                           );
                           break;
                       }
@@ -831,7 +734,64 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Shares the radio's own position as a map marker. Shares the text send
+  /// guard and cooldown so it can't race or flood alongside typed messages.
+  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
+    final lat = connector.selfLatitude;
+    final lon = connector.selfLongitude;
+    if (!hasShareableLocation(lat, lon)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_noRadioLocation),
+      );
+      return;
+    }
+    final selfName = connector.selfName;
+    final label = await showMarkerLabelDialog(
+      context,
+      lat: lat!,
+      lon: lon!,
+      defaultLabel: selfName != null && selfName.isNotEmpty
+          ? selfName
+          : context.l10n.map_sharedPin,
+      flags: 'poi',
+      confirmText: context.l10n.common_share,
+    );
+    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
+    final now = DateTime.now();
+    if (_lastTextSendAt != null &&
+        now.difference(_lastTextSendAt!) < const Duration(seconds: 1)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_sendCooldown),
+      );
+      return;
+    }
+    _lastTextSendAt = now;
+    _isSendingText = true;
+    try {
+      await connector.sendMessage(
+        _resolveContact(connector),
+        formatMarkerText(lat, lon, label, 'poi'),
+      );
+    } catch (e) {
+      appLogger.warn('Sharing location failed: $e', tag: 'Chat');
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
   Future<void> _sendMessage(MeshCoreConnector connector) async {
+    if (_isSendingText) return;
+    _isSendingText = true;
+    try {
+      await _sendMessageInner(connector);
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
+  Future<void> _sendMessageInner(MeshCoreConnector connector) async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
@@ -900,7 +860,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // end transform
 
-    _textController.clear();
+    // Keep anything the user typed while translation was running.
+    if (_textController.text.trim() == text) {
+      _textController.clear();
+    }
     _textFieldFocusNode.requestFocus();
     connector.sendMessage(
       _resolveContact(connector),
@@ -1813,6 +1776,10 @@ class _MessageBubble extends StatelessWidget {
                                     color: metaColor,
                                   ),
                                 ),
+                                if (message.hasFutureTimestamp)
+                                  FutureTimestampIndicator(
+                                    size: 16 * textScale,
+                                  ),
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 2),
                                   MessageStatusIcon(

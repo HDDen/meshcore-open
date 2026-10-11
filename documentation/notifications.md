@@ -77,6 +77,10 @@ Red numeric badges appear throughout the UI:
 - **Chat screen subtitle**: Shows unread count inline
 - Badges cap at "9999+" for display
 
+### App Icon Badge (iOS and macOS)
+
+The app icon (iOS) or dock icon (macOS) badge shows the total unread count. It is set directly by the app, so it clears when you read your messages, and it is re-synced to the real unread total whenever the app returns to the foreground. On Android the launcher badge comes from the active notifications instead.
+
 ### How Unread Counts Work
 
 - Stored per contact (by public key) and per channel, **scoped to the connected device's identity** (first 10 hex characters of its public key). Switching between different radios gives each its own independent unread state
@@ -128,6 +132,6 @@ Automatic incoming translation can also translate notification text when enabled
 |---|---|---|---|---|---|
 | Android | Yes | Yes (incl. watches) | Yes | Via notification number | Yes (foreground service) |
 | iOS | Yes | No | — | Yes (app badge) | No |
-| macOS | Yes | No | — | Yes | No |
+| macOS | Yes | No | — | Yes (dock badge) | No |
 | Windows | Yes | No | — | No | No |
 | Linux | Yes (if D-Bus available) | No | — | No | No |

@@ -52,7 +52,8 @@ A list of nodes heard passively over the air but not yet added as contacts. Each
 - Sort by last seen or name; filter by type
 - **Tap**: Import the contact (adds to your contact list)
 - **Long-press**: Add Contact, Copy `meshcore://` URI to clipboard, or Delete
-- Overflow menu → "Delete All" (with confirmation)
+- Overflow menu → "Export discovered contacts", "Import discovered contacts", or "Delete All" (with confirmation). See [Contacts](contacts.md#export-and-import-discovered-contacts)
+- Radar icon → **Scan for nearby nodes** (firmware version code 8+). See [Contacts](contacts.md#scan-for-nearby-nodes)
 - Already-known contacts and your own node are filtered out
 
 ---

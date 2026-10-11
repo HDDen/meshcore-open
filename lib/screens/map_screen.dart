@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +28,7 @@ import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/battery_utils.dart';
 import '../utils/route_transitions.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../icons/los_icon.dart';
@@ -37,11 +37,11 @@ import 'chat_screen.dart';
 import 'contacts_screen.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/mesh_ui.dart';
-import '../widgets/byte_count_input.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
 import '../helpers/guessed_location_estimator.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 import 'line_of_sight_map_screen.dart';
@@ -2641,7 +2641,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             flags: payload.flags,
             fromName: message.senderName,
             sourceLabel: channel.name.isEmpty
-                ? 'Channel ${channel.index}'
+                ? context.l10n.channels_channelIndex(channel.index)
                 : channel.name,
             timestamp: message.timestamp,
             isChannel: true,
@@ -3121,11 +3121,16 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       return;
     }
 
-    final initialLabel =
-        connector.selfName == null || connector.selfName!.isEmpty
-        ? defaultLabel
-        : connector.selfName!;
-    final label = await _promptForLabel(context, position, initialLabel, flags);
+    // A map point is not the user's own position, so it keeps the point's
+    // default label; reusing one label would move earlier shared points.
+    final label = await showMarkerLabelDialog(
+      context,
+      lat: position.latitude,
+      lon: position.longitude,
+      defaultLabel: defaultLabel,
+      flags: flags,
+      confirmText: context.l10n.common_continue,
+    );
     if (label == null || !mounted) return;
 
     final markerText = _formatMarkerMessage(position, label, flags);
@@ -3139,123 +3144,17 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     );
   }
 
-  Future<String?> _promptForLabel(
-    BuildContext context,
-    LatLng position,
-    String defaultLabel,
-    String flags,
-  ) async {
-    final controller = TextEditingController(text: defaultLabel);
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: controller.text.length,
+  bool _markerFits(BuildContext context, String markerText, int maxBytes) {
+    if (utf8ByteLength(markerText) <= maxBytes) return true;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_messageTooLong(maxBytes)),
     );
-    final focusNode = FocusNode();
-    // Compute available bytes for the label taking marker overhead into
-    // account. Use a conservative limit based on both contact and channel
-    // message maxima.
-    final lat = position.latitude.toStringAsFixed(6);
-    final lon = position.longitude.toStringAsFixed(6);
-    final prefix = 'm:$lat,$lon|';
-    final suffix = '|$flags';
-    final overheadBytes = utf8.encode(prefix + suffix).length;
-    final maxForContact = maxContactMessageBytes();
-    final maxForChannel = maxChannelMessageBytes(null);
-    final maxPayload = maxForContact < maxForChannel
-        ? maxForContact
-        : maxForChannel;
-    final allowedLabelBytes = (maxPayload - overheadBytes) > 0
-        ? (maxPayload - overheadBytes)
-        : 0;
-
-    try {
-      final result = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) {
-          final scheme = Theme.of(dialogContext).colorScheme;
-          // Request focus and ensure selection after the frame so the
-          // keyboard appears and text is selected for replacement.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (dialogContext.mounted) {
-              focusNode.requestFocus();
-              controller.selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: controller.text.length,
-              );
-            }
-          });
-          return AlertDialog(
-            title: Text(dialogContext.l10n.map_pinLabel),
-            content: ByteCountedTextField(
-              focusNode: focusNode,
-              maxBytes: allowedLabelBytes,
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: dialogContext.l10n.map_label,
-                helperText: dialogContext.l10n.map_labelUpdateHint,
-                helperMaxLines: 3,
-                helperStyle: TextStyle(
-                  color: _overlaySecondaryTextColor,
-                  fontSize: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(MeshRadii.md),
-                  borderSide: BorderSide(color: scheme.outlineVariant),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(MeshRadii.md),
-                  borderSide: BorderSide(color: scheme.outlineVariant),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(MeshRadii.md),
-                  borderSide: BorderSide(color: scheme.primary, width: 1.5),
-                ),
-                filled: true,
-                fillColor: scheme.surfaceContainerLow,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
-                ),
-              ),
-              onSubmitted: (_) {
-                final label = controller.text.trim().replaceAll('|', '/');
-                Navigator.pop(
-                  dialogContext,
-                  label.isEmpty ? defaultLabel : label,
-                );
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(dialogContext.l10n.common_cancel),
-              ),
-              TextButton(
-                onPressed: () {
-                  final label = controller.text.trim().replaceAll('|', '/');
-                  Navigator.pop(
-                    dialogContext,
-                    label.isEmpty ? defaultLabel : label,
-                  );
-                },
-                child: Text(dialogContext.l10n.common_continue),
-              ),
-            ],
-          );
-        },
-      );
-      return result;
-    } finally {
-      focusNode.dispose();
-      controller.dispose();
-    }
+    return false;
   }
 
-  String _formatMarkerMessage(LatLng position, String label, String flags) {
-    final lat = position.latitude.toStringAsFixed(6);
-    final lon = position.longitude.toStringAsFixed(6);
-    return 'm:$lat,$lon|$label|$flags';
-  }
+  String _formatMarkerMessage(LatLng position, String label, String flags) =>
+      formatMarkerText(position.latitude, position.longitude, label, flags);
 
   Future<void> _showRecipientSheet({
     required BuildContext context,
@@ -3327,6 +3226,13 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               title: Text(contact.name),
                               onTap: () {
                                 Navigator.pop(sheetContext);
+                                if (!_markerFits(
+                                  context,
+                                  markerText,
+                                  maxContactMessageBytes(),
+                                )) {
+                                  return;
+                                }
                                 liveConnector.sendMessage(contact, markerText);
                               },
                             );
@@ -3362,7 +3268,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                         ) {
                           final isPublic = _isPublicChannel(channel);
                           final label = channel.name.isEmpty
-                              ? 'Channel ${channel.index}'
+                              ? context.l10n.channels_channelIndex(
+                                  channel.index,
+                                )
                               : channel.name;
                           return ListTile(
                             leading: Icon(
@@ -3377,7 +3285,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               final canSend = isPublic
                                   ? await _confirmPublicShare(context, label)
                                   : true;
-                              if (canSend) {
+                              if (canSend &&
+                                  context.mounted &&
+                                  _markerFits(
+                                    context,
+                                    markerText,
+                                    maxChannelMessageBytes(
+                                      liveConnector.selfName,
+                                    ),
+                                  )) {
                                 liveConnector.sendChannelMessage(
                                   channel,
                                   markerText,

@@ -436,6 +436,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_regionDefaultNone => 'Ninguna';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Predeterminada de la radio ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Sin región (sin ámbito)';
+
+  @override
+  String get settings_regionRadioDefault => 'Región predeterminada de la radio';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Guardada en la radio. Las inundaciones enviadas sin región la usan, desde esta app y desde cualquier otra app conectada a la radio.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Región predeterminada de la radio actualizada';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'No se pudo actualizar la región predeterminada de la radio';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Gestión de Regiones';
 
   @override
@@ -709,7 +732,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Todos los nodos con los que hablas deben usar la misma frecuencia, ancho de banda, SF y CR.';
+      'Todos los nodos con los que hablas deben usar la misma frecuencia, ancho de banda y SF. La tasa de codificación (CR) puede ser distinta.';
 
   @override
   String get settings_frequency => 'Frecuencia (MHz)';
@@ -876,12 +899,34 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Contar también repetidores cercanos distintos';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count repetidores cercanos distintos',
+      one: '1 repetidor cercano',
+    );
+    return 'Considerar el mensaje como enviado cuando $_temp0 lo repitan, aunque no oigas que avance más.';
+  }
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Habilitar seguimiento de mensajes';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Mostrar metadatos detallados de enrutamiento y tiempo para los mensajes';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Región junto al número de saltos';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Mostrar la región de un mensaje de canal en la misma línea que su número de saltos en lugar de debajo.';
 
   @override
   String get appSettings_notifications => 'Notificaciones';
@@ -1604,6 +1649,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(predeterminada)';
 
   @override
+  String get channels_regionRadioDefaultSuffix =>
+      '(predeterminada de la radio)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Esta radio envía las inundaciones sin región en su región predeterminada: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Los mensajes de inundación de este canal solo los reenviarán los repetidores de la región seleccionada.';
 
@@ -1647,6 +1701,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chat_typeMessage => 'Escribe un mensaje...';
 
   @override
+  String get chat_futureTimestampWarning =>
+      'La hora de este mensaje está en el futuro, por lo que el reloj del remitente puede estar mal. Se muestra en el orden en que llegó.';
+
+  @override
   String chat_messageTooLong(int maxBytes) {
     return 'Mensaje demasiado largo (máximo $maxBytes bytes).';
   }
@@ -1670,6 +1728,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Enviar GIF';
+
+  @override
+  String get chat_shareMyLocation => 'Compartir mi ubicación';
+
+  @override
+  String get chat_noRadioLocation => 'Tu radio no tiene una ubicación definida';
 
   @override
   String get chat_removeGif => 'Quitar GIF';
@@ -4574,6 +4638,24 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se encontraron contactos en el archivo de importación.';
 
   @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Se importaron $imported contactos descubiertos. Se omitieron $skipped ya conocidos y $invalid entradas ilegibles.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'El archivo no es una exportación de contactos descubiertos.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'El archivo de importación es demasiado grande (máximo $maxMb MB).';
+  }
+
+  @override
   String discoveredContacts_importFailed(String error) {
     return 'Error al importar contactos descubiertos: $error';
   }
@@ -4865,6 +4947,53 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get discoveredContacts_deleteContactAllContent =>
       '¿Está seguro de que desea eliminar todos los contactos descubiertos!';
+
+  @override
+  String get discoveredContacts_scan => 'Buscar nodos cercanos';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Nodos cercanos';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Pide a los nodos dentro del alcance directo de radio que se identifiquen. Los repetidores y sensores responden. Los servidores de sala y los compañeros normalmente no.';
+
+  @override
+  String get discoveredContacts_scanning => 'Buscando…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nodos encontrados',
+      one: '1 nodo encontrado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Ningún nodo respondió. Los repetidores limitan la frecuencia de sus respuestas, así que inténtalo de nuevo en un minuto.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Buscar de nuevo';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'No se pudo enviar la solicitud de búsqueda.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Señal $snr dB · nos oyeron a $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Ya está en contactos';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'El nombre aparece tras su próximo anuncio';
 
   @override
   String get chat_sendCooldown =>
@@ -5555,5 +5684,105 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'No se pudo iniciar el modo de revisión: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Los canales aún se están cargando desde la radio. Inténtalo de nuevo cuando termine la sincronización.';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return 'El nombre es demasiado largo (máx. $maxBytes bytes).';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field: introduce un valor';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Detalle del mapa';
+
+  @override
+  String get losUnitsTooltip => 'Unidades';
+
+  @override
+  String get losDistance => 'Distancia';
+
+  @override
+  String get losClearance => 'Margen libre';
+
+  @override
+  String get losBlockedBy => 'Bloqueado por';
+
+  @override
+  String get losObstruction => 'Obstáculo';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return '$distance desde A';
+  }
+
+  @override
+  String get losWorstBadge => 'PEOR';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return 'Bloqueado $amount';
+  }
+
+  @override
+  String get losFromA => 'Desde A';
+
+  @override
+  String get losFromB => 'Desde B';
+
+  @override
+  String get losElevation => 'Elevación';
+
+  @override
+  String get losCenterOnMap => 'Centrar en el mapa';
+
+  @override
+  String get losStatusClear => 'Despejado';
+
+  @override
+  String get losStatusMarginal => 'Marginal';
+
+  @override
+  String get losStatusBlocked => 'Bloqueado';
+
+  @override
+  String get losStatusCheckingShort => 'Comprobando';
+
+  @override
+  String get losStatusNoResult => 'Sin resultado';
+
+  @override
+  String get losSelectedPill => 'Seleccionado';
+
+  @override
+  String get gif_tapToLoad => 'Toca para cargar el GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'No se puede cargar el GIF\nToca para reintentar';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Permiso de cámara denegado.\nActiva el acceso a la cámara en los ajustes.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'Cámara no compatible con este dispositivo.';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'No se pudo iniciar la cámara.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return 'No se pudo descargar el modelo de imagen: $error';
   }
 }

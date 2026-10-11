@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
+import '../utils/app_logger.dart';
 import '../utils/platform_info.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
@@ -34,6 +35,7 @@ import '../services/received_image_store.dart';
 import '../services/translation_service.dart';
 import '../utils/image_save.dart';
 import '../utils/lora_airtime.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/received_image_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
@@ -53,12 +55,14 @@ import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/mesh_ui.dart';
 import 'app_settings_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
 import 'region_management_screen.dart';
 import '../storage/region_store.dart';
+import '../utils/share_origin.dart';
 
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
@@ -98,6 +102,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   MeshCoreConnector? _connector;
   DateTime? _lastChannelSendAt;
+  // True while a send is awaiting outgoing translation, so a second tap
+  // can't send the same text again.
+  bool _isSendingText = false;
   bool _channelSkipNextBottomSnap = false;
   String? _unreadDividerMessageId;
 
@@ -343,8 +350,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         final defaultSuffix = ownRegion.isEmpty
                             ? ' ${context.l10n.channels_regionDefaultSuffix}'
                             : '';
+                        final radioDefault = connector.defaultFloodScopeName;
                         final regionText = region.isNotEmpty
                             ? ' • ${context.l10n.channels_regionSetTo(region)}$defaultSuffix'
+                            : radioDefault != null &&
+                                  connector.channelUsesRadioDefaultScope(
+                                    widget.channel.index,
+                                  )
+                            ? ' • ${context.l10n.channels_regionSetTo(radioDefault)} ${context.l10n.channels_regionRadioDefaultSuffix}'
                             : '';
                         return Text(
                           '$privacy$regionText',
@@ -449,13 +462,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   );
                   // Images are not ChannelMessages: they arrive as GRP_DATA
                   // chunks and are owned by ReceivedImageStore, so the two
-                  // sources are merged here in timestamp order and the list
+                  // sources are merged here in arrival (receivedAt) order and the list
                   // below indexes rows, not messages.
                   final rows = <_ChannelChatRow>[
                     for (final message in messages)
                       _ChannelChatRow(message: message),
                     ...imageRows,
-                  ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+                  ]..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
 
                   // Reverse rows so newest appear at bottom with reverse: true
                   final reversedRows = rows.reversed.toList();
@@ -547,15 +560,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   final startsDay =
                                       index == reversedRows.length - 1 ||
                                       !isSameChatDay(
-                                        reversedRows[index + 1].timestamp,
-                                        row.timestamp,
+                                        reversedRows[index + 1].receivedAt,
+                                        row.receivedAt,
                                       );
                                   if (isUnreadAnchor || startsDay) {
                                     return Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (startsDay)
-                                          ChatDaySeparator(day: row.timestamp),
+                                          ChatDaySeparator(day: row.receivedAt),
                                         if (isUnreadAnchor)
                                           const UnreadDivider(),
                                         bubble,
@@ -601,6 +614,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
+    final regionOnHopsLine = settingsService.settings.regionOnHopsLine;
     final isOutgoing = message.isOutgoing;
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
@@ -852,9 +866,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                _RouteRegionChips(
+                                  sameLine: regionOnHopsLine,
                                   children: [
                                     RouteChip(
                                       isDirect: (message.pathLength ?? -1) >= 0,
@@ -862,7 +875,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                     if (message.region?.isNotEmpty ?? false)
                                       Padding(
-                                        padding: const EdgeInsets.only(top: 2),
+                                        padding: regionOnHopsLine
+                                            ? EdgeInsets.zero
+                                            : const EdgeInsets.only(top: 2),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 6,
@@ -930,6 +945,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   color: metaColor,
                                 ),
                               ),
+                              if (message.hasFutureTimestamp) ...[
+                                const SizedBox(width: 4),
+                                FutureTimestampIndicator(size: 16 * textScale),
+                              ],
                               if (enableTracing &&
                                   !isOutgoing &&
                                   message.repeatCount > 0) ...[
@@ -1553,6 +1572,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         previewPng: previewPng,
         rate: aeicRatePointForUi(result.rate),
         chunkCount: chunkSet.dataChunkCount,
+        aspectCode: await _aspectCodeOf(sourceBytes),
       );
     } on Exception catch (error) {
       debugPrint('outgoing image registration failed: $error');
@@ -1806,12 +1826,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Future<void> _saveImage(ReceivedImageEntry entry) async {
     final l10n = context.l10n;
+    final shareOrigin = shareOriginOf(context);
     final png = await context.read<ReceivedImageStore>().ensurePng(
       entry.streamId,
     );
     if (!mounted) return;
     final shareText = l10n.receivedImage_shareCaption(entry.bitstreamByteCount);
-    if (png == null || !await saveImagePng(png, entry, shareText: shareText)) {
+    if (png == null ||
+        !await saveImagePng(
+          png,
+          entry,
+          shareText: shareText,
+          sharePositionOrigin: shareOrigin,
+        )) {
       if (!mounted) return;
       showDismissibleSnackBar(
         context,
@@ -2012,79 +2039,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Widget _buildInputBar() {
-    Future<String?> promptForMarkerLabel(
-      BuildContext context, {
-      required double lat,
-      required double lon,
-      required String defaultLabel,
-      required String flags,
-    }) async {
-      final controller = TextEditingController(text: defaultLabel);
-      controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: controller.text.length,
-      );
-      final focusNode = FocusNode();
-
-      final latStr = lat.toStringAsFixed(6);
-      final lonStr = lon.toStringAsFixed(6);
-      final prefix = 'm:$latStr,$lonStr|';
-      final suffix = '|$flags';
-      final overheadBytes = utf8.encode(prefix + suffix).length;
-      final maxForContact = maxContactMessageBytes();
-      final maxForChannel = maxChannelMessageBytes(null);
-      final maxPayload = maxForContact < maxForChannel
-          ? maxForContact
-          : maxForChannel;
-      final allowedLabelBytes = (maxPayload - overheadBytes) > 0
-          ? (maxPayload - overheadBytes)
-          : 0;
-
-      try {
-        final result = await showDialog<String>(
-          context: context,
-          builder: (dialogContext) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (dialogContext.mounted) {
-                focusNode.requestFocus();
-                controller.selection = TextSelection(
-                  baseOffset: 0,
-                  extentOffset: controller.text.length,
-                );
-              }
-            });
-            return AlertDialog(
-              title: Text(dialogContext.l10n.map_pinLabel),
-              content: ByteCountedTextField(
-                focusNode: focusNode,
-                maxBytes: allowedLabelBytes,
-                controller: controller,
-                decoration: InputDecoration(
-                  helperText: dialogContext.l10n.map_labelUpdateHint,
-                  helperMaxLines: 3,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, null),
-                  child: Text(dialogContext.l10n.common_cancel),
-                ),
-                FilledButton(
-                  onPressed: () =>
-                      Navigator.pop(dialogContext, controller.text.trim()),
-                  child: Text(dialogContext.l10n.common_share),
-                ),
-              ],
-            );
-          },
-        );
-        return result;
-      } finally {
-        focusNode.dispose();
-        controller.dispose();
-      }
-    }
-
     final connector = context.watch<MeshCoreConnector>();
     final maxBytes = maxChannelMessageBytes(connector.selfName);
     final settings = context.watch<AppSettingsService>().settings;
@@ -2156,10 +2110,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ),
                             );
                           }
-                          if (context.read<MeshCoreConnector>().selfLatitude !=
-                                  null &&
-                              context.read<MeshCoreConnector>().selfLongitude !=
-                                  null) {
+                          final selfConnector = context
+                              .read<MeshCoreConnector>();
+                          if (hasShareableLocation(
+                            selfConnector.selfLatitude,
+                            selfConnector.selfLongitude,
+                          )) {
                             items.add(
                               PopupMenuItem(
                                 value: 'send-my-location',
@@ -2167,7 +2123,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   children: [
                                     const Icon(Icons.my_location),
                                     const SizedBox(width: 12),
-                                    Text(context.l10n.map_shareMarkerHere),
+                                    Text(context.l10n.chat_shareMyLocation),
                                   ],
                                 ),
                               ),
@@ -2204,40 +2160,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               _showImageSendPreview();
                               break;
                             case 'send-my-location':
-                              final connector = context
-                                  .read<MeshCoreConnector>();
-                              if (connector.selfLatitude == null ||
-                                  connector.selfLongitude == null) {
-                                showDismissibleSnackBar(
-                                  context,
-                                  content: Text(
-                                    context.l10n.map_connectToShareMarkers,
-                                  ),
-                                );
-                                break;
-                              }
-                              final lat = connector.selfLatitude!;
-                              final lon = connector.selfLongitude!;
-                              final initialLabel =
-                                  connector.selfName?.isNotEmpty == true
-                                  ? connector.selfName!
-                                  : context.l10n.map_sharedPin;
-                              final label = await promptForMarkerLabel(
-                                context,
-                                lat: lat,
-                                lon: lon,
-                                defaultLabel: initialLabel,
-                                flags: 'poi',
-                              );
-                              if (label == null || label.trim().isEmpty) break;
-                              if (!mounted || !menuContext.mounted) break;
-                              final connector2 = context
-                                  .read<MeshCoreConnector>();
-                              final markerText =
-                                  'm:${lat.toStringAsFixed(6)},${lon.toStringAsFixed(6)}|${label.trim()}|poi';
-                              connector2.sendChannelMessage(
-                                widget.channel,
-                                markerText,
+                              await _shareMyLocation(
+                                context.read<MeshCoreConnector>(),
                               );
                               break;
                           }
@@ -2401,9 +2325,73 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  /// Shares the radio's own position as a map marker on this channel. It is
+  /// not a reply, so any reply in progress stays open for the next message;
+  /// it shares the text send guard and cooldown.
+  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
+    final lat = connector.selfLatitude;
+    final lon = connector.selfLongitude;
+    if (!hasShareableLocation(lat, lon)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_noRadioLocation),
+      );
+      return;
+    }
+    final selfName = connector.selfName;
+    final label = await showMarkerLabelDialog(
+      context,
+      lat: lat!,
+      lon: lon!,
+      defaultLabel: selfName != null && selfName.isNotEmpty
+          ? selfName
+          : context.l10n.map_sharedPin,
+      flags: 'poi',
+      confirmText: context.l10n.common_share,
+    );
+    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
+    final now = DateTime.now();
+    if (_lastChannelSendAt != null &&
+        now.difference(_lastChannelSendAt!) < const Duration(seconds: 1)) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_sendCooldown),
+      );
+      return;
+    }
+    _lastChannelSendAt = now;
+    _isSendingText = true;
+    try {
+      await connector.sendChannelMessage(
+        widget.channel,
+        formatMarkerText(lat, lon, label, 'poi'),
+      );
+    } catch (e) {
+      // A failed send (e.g. region scope rejected) is already marked failed
+      // on the message itself.
+      appLogger.warn('Sharing location failed: $e', tag: 'ChannelChat');
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
   Future<void> _sendMessage() async {
+    if (_isSendingText) return;
+    _isSendingText = true;
+    try {
+      await _sendMessageInner();
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
+  Future<void> _sendMessageInner() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+    // Capture the reply target now; the user may change it while the
+    // outgoing translation runs.
+    final replyTo = _replyingToMessage;
+    final replyRegion = _useReplyRegion ? replyTo?.region : null;
 
     final now = DateTime.now();
     if (_lastChannelSendAt != null &&
@@ -2447,10 +2435,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         }
       }
     }
-    if (_replyingToMessage != null) {
-      messageText = '@[${_replyingToMessage!.senderName}] $messageText';
+    if (replyTo != null) {
+      messageText = '@[${replyTo.senderName}] $messageText';
     }
-    final replyRegion = _useReplyRegion ? _replyingToMessage?.region : null;
 
     final maxBytes = maxChannelMessageBytes(connector.selfName);
     final outboundText = connector.prepareChannelOutboundText(
@@ -2474,9 +2461,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     // end transform
 
-    final replyTo = _replyingToMessage;
-    _textController.clear();
-    _cancelReply();
+    // Keep anything the user typed or a new reply picked during translation.
+    if (_textController.text.trim() == text) {
+      _textController.clear();
+    }
+    if (identical(_replyingToMessage, replyTo)) {
+      _cancelReply();
+    }
     _textFieldFocusNode.requestFocus();
     connector.sendChannelMessage(
       widget.channel,
@@ -2740,6 +2731,62 @@ class _RegionSelectDialog extends StatefulWidget {
 class _RegionSelectDialogState extends State<_RegionSelectDialog> {
   final RegionStore regionStore = RegionStore();
 
+  bool _canForceUnscoped(BuildContext context) =>
+      context.read<MeshCoreConnector>().supportsExplicitUnscopedFlood;
+
+  bool _hasOwnAssignment(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final index = widget.channel.index;
+    return connector.hasChannelRegion(index) ||
+        connector.isChannelExplicitlyUnscoped(index);
+  }
+
+  /// On firmware that cannot force an unscoped flood, explain that floods
+  /// without a region still use the radio's default region.
+  List<Widget> _buildRadioDefaultNote(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final radioDefault = connector.defaultFloodScopeName;
+    if (radioDefault == null || connector.supportsExplicitUnscopedFlood) {
+      return const [];
+    }
+    return [
+      const SizedBox(height: 8),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          context.l10n.channels_regionRadioDefaultApplies(radioDefault),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildUnscopedTile(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final selected = connector.isChannelExplicitlyUnscoped(
+      widget.channel.index,
+    );
+    return ListTile(
+      leading: Icon(
+        Icons.public_off,
+        color: selected ? MeshPalette.blue : null,
+      ),
+      title: Text(context.l10n.settings_regionNoRegion),
+      trailing: selected
+          ? const Icon(Icons.check, color: MeshPalette.blue)
+          : null,
+      tileColor: selected ? MeshPalette.blueBg : null,
+      onTap: () {
+        // Tapping the already-selected option clears it back to the default.
+        connector.setChannelRegion(
+          widget.channel.index,
+          selected ? '' : kUnscopedRegion,
+        );
+        Navigator.pop(context);
+      },
+    );
+  }
+
   List<Region> regions = [];
   int selectedIndex = -1;
 
@@ -2780,7 +2827,9 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+            ..._buildRadioDefaultNote(context),
             const SizedBox(height: 8),
+            if (_canForceUnscoped(context)) _buildUnscopedTile(context),
             if (regions.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(24),
@@ -2818,11 +2867,7 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed:
-                      context
-                          .read<MeshCoreConnector>()
-                          .getChannelRegion(widget.channel.index)
-                          .isEmpty
+                  onPressed: !_hasOwnAssignment(context)
                       ? null
                       : () {
                           context.read<MeshCoreConnector>().setChannelRegion(
@@ -3026,7 +3071,9 @@ class _ChannelChatRow {
 
   const _ChannelChatRow({this.message, this.image});
 
-  DateTime get timestamp => message?.timestamp ?? image!.firstSeen;
+  /// Local arrival time, used for ordering and day separators so a sender
+  /// clock running ahead cannot pin a row to the bottom (#584).
+  DateTime get receivedAt => message?.receivedAt ?? image!.firstSeen;
 
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.
@@ -3054,4 +3101,34 @@ ReceivedImageStrings _receivedImageStrings(BuildContext context) {
     decodeAgain: l10n.receivedImage_decodeAgain,
     openSettings: l10n.receivedImage_openSettings,
   );
+}
+
+/// A message's route chip and region chip: stacked by default, or side by
+/// side (wrapping on narrow bubbles) when "Region next to hop count" is on.
+class _RouteRegionChips extends StatelessWidget {
+  const _RouteRegionChips({required this.sameLine, required this.children});
+
+  final bool sameLine;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sameLine) {
+      // Flexible bounds the Wrap's width inside the bubble's Row so a long
+      // region name wraps under the hop chip instead of overflowing.
+      return Flexible(
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: children,
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+  }
 }
