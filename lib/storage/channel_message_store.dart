@@ -5,6 +5,7 @@ import 'package:meshcore_open/utils/app_logger.dart';
 import '../models/channel_message.dart';
 import '../models/translation_support.dart';
 import '../helpers/smaz.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ChannelMessageStore {
@@ -50,7 +51,8 @@ class ChannelMessageStore {
     final oldKey = '$_keyPrefix$channelIndex';
 
     String? jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) &&
+        canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(oldKey);
       prefs.remove(oldKey);

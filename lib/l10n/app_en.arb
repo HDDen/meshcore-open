@@ -1145,6 +1145,7 @@
   "map_setAsMyLocation": "Set as my location",
   "map_pinLabel": "Pin label",
   "map_label": "Label",
+  "map_labelUpdateHint": "Using the same label as before will update the marker for MeshCore Open recipients.",
   "map_pointOfInterest": "Point of interest",
   "map_sendToContact": "Send to contact",
   "map_sendToChannel": "Send to channel",
@@ -2683,6 +2684,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "Allow the companion to automatically add discovered sensors.",
   "contactsSettings_overwriteOldestTitle": "Overwrite Oldest",
   "contactsSettings_overwriteOldestSubtitle": "When the contact list is full, the oldest non-favorited contact will be replaced.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Evict discovered contacts",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "When enabled, the app removes the oldest discovered contacts once the discovery list reaches its limit of {limit} entries.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "Discovered Contacts",
   "discoveredContacts_noMatching": "No matching contacts",
   "discoveredContacts_searchHint": "Search discovered contacts",
@@ -3141,5 +3151,23 @@
         "type": "int"
       }
     }
-  }
+  },
+  "reviewMode_dialogTitle": "Enter review mode?",
+  "@reviewMode_dialogTitle": {"description": "Title of the review mode confirmation dialog"},
+  "reviewMode_dialogBody": "Review mode connects to a simulated radio with sample contacts, channels and messages. No real radio is needed.",
+  "@reviewMode_dialogBody": {"description": "Body of the review mode confirmation dialog"},
+  "reviewMode_confirm": "Enter",
+  "@reviewMode_confirm": {"description": "Confirm button of the review mode dialog"},
+  "reviewMode_cancel": "Cancel",
+  "@reviewMode_cancel": {"description": "Cancel button of the review mode dialog"},
+  "reviewMode_banner": "Review mode — simulated data",
+  "@reviewMode_banner": {"description": "Label of the banner shown while review mode is active"},
+  "reviewMode_sendTest": "Send test message",
+  "@reviewMode_sendTest": {"description": "Banner action that makes the simulated radio deliver a message"},
+  "reviewMode_testSent": "A test message will arrive shortly.",
+  "@reviewMode_testSent": {"description": "Snackbar shown after requesting a test message"},
+  "reviewMode_exit": "Exit",
+  "@reviewMode_exit": {"description": "Banner action that leaves review mode"},
+  "reviewMode_connectFailed": "Could not start review mode: {error}",
+  "@reviewMode_connectFailed": {"description": "Snackbar shown when review mode fails to connect", "placeholders": {"error": {"type": "String"}}}
 }

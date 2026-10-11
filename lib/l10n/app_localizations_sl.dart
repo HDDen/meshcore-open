@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2172,6 +2171,10 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_label => 'Oznaka';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Če uporabite enako oznako kot prej, se oznaka na zemljevidu posodobi pri prejemnikih MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Točka zanimivosti';
@@ -4807,6 +4810,15 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ko je seznam stikov poln, bo najstarejši nestarševski stik zamenjan.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Odstrani odkrite stike';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Ko je ta možnost vklopljena, aplikacija odstrani najstarejše odkrite stike, ko seznam odkritih stikov doseže omejitev $limit vnosov.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Odkriti stiki';
 
   @override
@@ -5494,5 +5506,35 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Nad 158 bajtov: poslano največ $count-krat';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Vstop v način pregleda?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Način pregleda se poveže s simuliranim radiem z vzorčnimi stiki, kanali in sporočili. Pravi radio ni potreben.';
+
+  @override
+  String get reviewMode_confirm => 'Vstopi';
+
+  @override
+  String get reviewMode_cancel => 'Prekliči';
+
+  @override
+  String get reviewMode_banner => 'Način pregleda — simulirani podatki';
+
+  @override
+  String get reviewMode_sendTest => 'Pošlji testno sporočilo';
+
+  @override
+  String get reviewMode_testSent => 'Kmalu bo prispelo testno sporočilo.';
+
+  @override
+  String get reviewMode_exit => 'Izhod';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Načina pregleda ni bilo mogoče zagnati: $error';
   }
 }

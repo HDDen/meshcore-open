@@ -699,6 +699,7 @@
   "map_shareMarkerHere": "Поділитись маркером тут",
   "map_pinLabel": "Мітка піна",
   "map_label": "Мітка",
+  "map_labelUpdateHint": "Якщо використати ту саму мітку, що й раніше, маркер оновиться в одержувачів MeshCore Open.",
   "map_pointOfInterest": "Точка інтересу",
   "map_sendToContact": "Надіслати контакту",
   "map_sendToChannel": "Надіслати в канал",
@@ -2063,6 +2064,8 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Коли список контактів заповнений, найстарший контакт без позначки улюбленого буде замінений.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Видаляти виявлені контакти",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Якщо ввімкнено, застосунок видаляє найстаріші виявлені контакти, коли список виявлених контактів досягає ліміту в {limit} записів.",
   "common_deleteAll": "Видалити все",
   "discoveredContacts_deleteContactAll": "Видалити всі виявлені контакти",
   "discoveredContacts_deleteContactAllContent": "Ви впевнені, що хочете видалити всі виявлені контакти?",
@@ -2890,6 +2893,13 @@
     }
   },
   "messageStatus_hopsNotReached": "Надіслано, але у відповідь почуто лише через {hops} з {required} ретрансляторів. Можливо, воно дійшло далі, ніж може почути ваше радіо.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "@messageStatus_hopsNotReached": {
     "placeholders": {
       "hops": {
@@ -3066,5 +3076,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Не вдалося зберегти зображення"
+  "receivedImage_saveFailed": "Не вдалося зберегти зображення",
+  "reviewMode_dialogTitle": "Увійти в режим перевірки?",
+  "reviewMode_dialogBody": "Режим перевірки підключається до імітованого радіо із прикладами контактів, каналів і повідомлень. Справжнє радіо не потрібне.",
+  "reviewMode_confirm": "Увійти",
+  "reviewMode_cancel": "Скасувати",
+  "reviewMode_banner": "Режим перевірки — імітовані дані",
+  "reviewMode_sendTest": "Тестове повідомлення",
+  "reviewMode_testSent": "Незабаром надійде тестове повідомлення.",
+  "reviewMode_exit": "Вийти",
+  "reviewMode_connectFailed": "Не вдалося запустити режим перевірки: {error}"
 }

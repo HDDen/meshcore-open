@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2190,6 +2189,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_label => 'Étiquette';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Utiliser la même étiquette qu’avant mettra à jour le marqueur pour les destinataires utilisant MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Point d\'intérêt';
@@ -4846,6 +4849,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Lorsque la liste de contacts est pleine, le contact le plus ancien non favori sera remplacé.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Évincer les contacts découverts';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Lorsque cette option est activée, l\'application supprime les contacts découverts les plus anciens dès que la liste de découverte atteint sa limite de $limit entrées.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Contacts découverts';
 
   @override
@@ -5537,5 +5549,35 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Plus de 158 octets : envoi au maximum $count fois';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Activer le mode revue ?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Le mode revue se connecte à une radio simulée avec des contacts, canaux et messages d\'exemple. Aucune radio réelle n\'est nécessaire.';
+
+  @override
+  String get reviewMode_confirm => 'Activer';
+
+  @override
+  String get reviewMode_cancel => 'Annuler';
+
+  @override
+  String get reviewMode_banner => 'Mode revue — données simulées';
+
+  @override
+  String get reviewMode_sendTest => 'Envoyer un message test';
+
+  @override
+  String get reviewMode_testSent => 'Un message test arrivera sous peu.';
+
+  @override
+  String get reviewMode_exit => 'Quitter';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Impossible de démarrer le mode revue : $error';
   }
 }

@@ -37,6 +37,7 @@ import 'chat_screen.dart';
 import 'contact_qr_scanner_screen.dart';
 import 'discovery_screen.dart';
 import 'map_screen.dart';
+import '../review_mode/review_mode_banner.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 
@@ -477,7 +478,12 @@ class _ContactsScreenState extends State<ContactsScreen>
             ),
           ],
         ),
-        body: _buildContactsBody(context, connector),
+        body: Column(
+          children: [
+            const ReviewModeBanner(),
+            Expanded(child: _buildContactsBody(context, connector)),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddContactSheet(context),
           child: const Icon(Icons.person_add),

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2173,6 +2172,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_label => 'Label';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Als je hetzelfde label als eerder gebruikt, wordt de markering bijgewerkt voor ontvangers met MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Interessepunt';
@@ -4798,6 +4801,15 @@ class AppLocalizationsNl extends AppLocalizations {
       'Wanneer de contactenlijst vol is, wordt de oudste niet-favoriete contactpersoon vervangen.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Ontdekte contacten verwijderen';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Indien ingeschakeld verwijdert de app de oudste ontdekte contacten zodra de lijst met ontdekte contacten de limiet van $limit items bereikt.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Ontdekte contacten';
 
   @override
@@ -5481,5 +5493,35 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Meer dan 158 bytes: maximaal $count keer verzonden';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Beoordelingsmodus starten?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'De beoordelingsmodus maakt verbinding met een gesimuleerde radio met voorbeeldcontacten, kanalen en berichten. Een echte radio is niet nodig.';
+
+  @override
+  String get reviewMode_confirm => 'Starten';
+
+  @override
+  String get reviewMode_cancel => 'Annuleren';
+
+  @override
+  String get reviewMode_banner => 'Beoordelingsmodus — gesimuleerde gegevens';
+
+  @override
+  String get reviewMode_sendTest => 'Testbericht sturen';
+
+  @override
+  String get reviewMode_testSent => 'Er komt zo een testbericht binnen.';
+
+  @override
+  String get reviewMode_exit => 'Afsluiten';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Beoordelingsmodus kon niet worden gestart: $error';
   }
 }

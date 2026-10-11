@@ -29,9 +29,8 @@
 /// with whoever implements export, not here.
 library;
 
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../services/received_image_store.dart';
@@ -618,36 +617,41 @@ class _ReceivedImageViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    // Light system bar icons over the black viewer, whatever the app theme.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Stack(
-                children: [
-                  InteractiveViewer(child: Image.memory(png)),
-                  if (synthesized)
-                    const Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: _SyntheticBanner(),
-                    ),
-                ],
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Stack(
+                  children: [
+                    InteractiveViewer(child: Image.memory(png)),
+                    if (synthesized)
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _SyntheticBanner(),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            if (synthesized)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SyntheticCaption(bytes: bytes, onDark: true),
-              ),
-          ],
+              if (synthesized)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _SyntheticCaption(bytes: bytes, onDark: true),
+                ),
+            ],
+          ),
         ),
       ),
     );

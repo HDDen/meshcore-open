@@ -711,6 +711,7 @@
   "map_shareMarkerHere": "Marker hier teilen",
   "map_pinLabel": "Pin-Beschriftung",
   "map_label": "Beschriftung",
+  "map_labelUpdateHint": "Wenn Sie denselben Namen verwenden wie zuvor, wird die Markierung bei MeshCore Open-Empfängern aktualisiert.",
   "map_pointOfInterest": "Punkt von Interesse",
   "map_sendToContact": "An Kontakt senden",
   "map_sendToChannel": "An Kanal senden",
@@ -2130,6 +2131,7 @@
   "contactsSettings_autoAddUsersTitle": "Automatische Hinzufügung von Benutzern",
   "settings_contactSettingsSubtitle": "Einstellungen für das Hinzufügen von Kontakten",
   "contactsSettings_autoAddSensorsTitle": "Automatisch Sensoren hinzufügen",
+  "contactsSettings_autoAddSensorsSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Sensoren hinzuzufügen",
   "contactsSettings_autoAddUsersSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Benutzer hinzuzufügen",
   "contactsSettings_autoAddRoomServersTitle": "Automatisch Raumservers hinzufügen",
   "contactsSettings_autoAddRoomServersSubtitle": "Ermöglichen Sie dem Begleiter, entdeckte Raumserver automatisch hinzuzufügen",
@@ -2143,8 +2145,16 @@
   "discoveredContacts_Title": "Entdeckte Kontakte",
   "discoveredContacts_copyContact": "Kontakt in die Zwischenablage kopieren",
   "contactsSettings_overwriteOldestTitle": "Überschreiben des Ältesten",
-  "contactsSettings_autoAddSensorsSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Sensoren hinzuzufügen",
   "contactsSettings_overwriteOldestSubtitle": "Wenn die Kontaktliste voll ist, wird der älteste nicht favorisierte Kontakt ersetzt.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Liste entdeckter Kontakte kürzen",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Wenn aktiviert, wird die Liste der entdeckten Kontakte auf {limit} Kontakte begrenzt.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Alles löschen",
   "discoveredContacts_deleteContactAllContent": "Sind Sie sicher, dass Sie alle gefundenen Kontakte löschen möchten?",
   "discoveredContacts_deleteContactAll": "Alle entdeckten Kontakte löschen",
@@ -3221,5 +3231,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Das Bild konnte nicht gespeichert werden"
+  "receivedImage_saveFailed": "Das Bild konnte nicht gespeichert werden",
+  "reviewMode_dialogTitle": "Prüfmodus aktivieren?",
+  "reviewMode_dialogBody": "Der Prüfmodus verbindet sich mit einem simulierten Radio mit Beispielkontakten, Kanälen und Nachrichten. Es wird kein echtes Radio benötigt.",
+  "reviewMode_confirm": "Aktivieren",
+  "reviewMode_cancel": "Abbrechen",
+  "reviewMode_banner": "Prüfmodus — simulierte Daten",
+  "reviewMode_sendTest": "Testnachricht senden",
+  "reviewMode_testSent": "Eine Testnachricht trifft in Kürze ein.",
+  "reviewMode_exit": "Beenden",
+  "reviewMode_connectFailed": "Prüfmodus konnte nicht gestartet werden: {error}"
 }

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2205,6 +2204,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get map_label => 'Etykieta';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Użycie tej samej etykiety co wcześniej zaktualizuje znacznik u odbiorców korzystających z MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Punkt zainteresowań';
@@ -4853,6 +4856,15 @@ class AppLocalizationsPl extends AppLocalizations {
       'Gdy lista kontaktów jest pełna, najstarszy nieulubiony kontakt zostanie zastąpiony.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Usuwaj odkryte kontakty';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Gdy ta opcja jest włączona, aplikacja usuwa najstarsze odkryte kontakty, gdy lista odkrytych osiągnie limit $limit wpisów.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Odkryte Kontakty';
 
   @override
@@ -5541,5 +5553,35 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Powyżej 158 bajtów: wysyłane maksymalnie $count razy';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Włączyć tryb recenzji?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Tryb recenzji łączy się z symulowanym radiem z przykładowymi kontaktami, kanałami i wiadomościami. Prawdziwe radio nie jest potrzebne.';
+
+  @override
+  String get reviewMode_confirm => 'Włącz';
+
+  @override
+  String get reviewMode_cancel => 'Anuluj';
+
+  @override
+  String get reviewMode_banner => 'Tryb recenzji — dane symulowane';
+
+  @override
+  String get reviewMode_sendTest => 'Wyślij wiadomość testową';
+
+  @override
+  String get reviewMode_testSent => 'Wiadomość testowa wkrótce nadejdzie.';
+
+  @override
+  String get reviewMode_exit => 'Wyjdź';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Nie udało się uruchomić trybu recenzji: $error';
   }
 }

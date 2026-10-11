@@ -35,6 +35,7 @@ import 'community_qr_scanner_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
 import 'settings_screen.dart';
+import '../review_mode/review_mode_banner.dart';
 
 class ChannelsScreen extends StatefulWidget {
   final bool hideBackButton;
@@ -166,172 +167,187 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            await context.read<MeshCoreConnector>().getChannels(force: true);
-          },
-          child: () {
-            final channels = connector.channels;
-            final waitingForFirstChannel =
-                connector.isLoadingChannels && channels.isEmpty;
+        body: Column(
+          children: [
+            const ReviewModeBanner(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await context.read<MeshCoreConnector>().getChannels(
+                    force: true,
+                  );
+                },
+                child: () {
+                  final channels = connector.channels;
+                  final waitingForFirstChannel =
+                      connector.isLoadingChannels && channels.isEmpty;
 
-            // Only block the list while the first channel is actively loading.
-            // If the initial sync aborts, show cached/partial channels instead
-            // of trapping the user behind an idle spinner.
-            if (waitingForFirstChannel) {
-              return const Center(child: CircularProgressIndicator());
-            }
+                  // Only block the list while the first channel is actively loading.
+                  // If the initial sync aborts, show cached/partial channels instead
+                  // of trapping the user behind an idle spinner.
+                  if (waitingForFirstChannel) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-            if (channels.isEmpty) {
-              return ListView(
-                children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height - 200,
-                    child: EmptyState(
-                      icon: Icons.tag,
-                      title: context.l10n.channels_noChannelsConfigured,
-                      action: FilledButton.icon(
-                        onPressed: () => _addPublicChannel(context, connector),
-                        icon: const Icon(Icons.public),
-                        label: Text(context.l10n.channels_addPublicChannel),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
+                  if (channels.isEmpty) {
+                    return ListView(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height - 200,
+                          child: EmptyState(
+                            icon: Icons.tag,
+                            title: context.l10n.channels_noChannelsConfigured,
+                            action: FilledButton.icon(
+                              onPressed: () =>
+                                  _addPublicChannel(context, connector),
+                              icon: const Icon(Icons.public),
+                              label: Text(
+                                context.l10n.channels_addPublicChannel,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
 
-            final filteredChannels = _filterAndSortChannels(
-              channels,
-              connector,
-              viewState,
-            );
+                  final filteredChannels = _filterAndSortChannels(
+                    channels,
+                    connector,
+                    viewState,
+                  );
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.channels_searchChannels,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (viewState.channelsSearchText.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.clear),
-                              tooltip: context.l10n.common_clearSearch,
-                              onPressed: () {
-                                _searchDebounce?.cancel();
-                                _searchDebounce = null;
-                                _searchController.clear();
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.channels_searchChannels,
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (viewState.channelsSearchText.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    tooltip: context.l10n.common_clearSearch,
+                                    onPressed: () {
+                                      _searchDebounce?.cancel();
+                                      _searchDebounce = null;
+                                      _searchController.clear();
+                                      context
+                                          .read<UiViewStateService>()
+                                          .setChannelsSearchText('');
+                                    },
+                                  ),
+                                _buildFilterButton(viewState),
+                              ],
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            _searchDebounce?.cancel();
+                            _searchDebounce = Timer(
+                              const Duration(milliseconds: 300),
+                              () {
+                                if (!mounted) return;
                                 context
                                     .read<UiViewStateService>()
-                                    .setChannelsSearchText('');
+                                    .setChannelsSearchText(value);
                               },
-                            ),
-                          _buildFilterButton(viewState),
-                        ],
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      _searchDebounce?.cancel();
-                      _searchDebounce = Timer(
-                        const Duration(milliseconds: 300),
-                        () {
-                          if (!mounted) return;
-                          context
-                              .read<UiViewStateService>()
-                              .setChannelsSearchText(value);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: filteredChannels.isEmpty
-                      ? LayoutBuilder(
-                          builder: (context, constraints) => ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight: constraints.maxHeight,
-                                ),
-                                child: EmptyState(
-                                  icon: Icons.search_off,
-                                  title: context.l10n.channels_noChannelsFound,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : (viewState.channelsSortOption ==
-                                ChannelSortOption.manual &&
-                            viewState.channelsSearchText.isEmpty)
-                      ? ReorderableListView.builder(
-                          padding: const EdgeInsets.only(
-                            left: 0,
-                            right: 0,
-                            top: 8,
-                            bottom: 88,
-                          ),
-                          buildDefaultDragHandles: false,
-                          itemCount: filteredChannels.length,
-                          onReorderItem: (oldIndex, newIndex) {
-                            final reordered = List<Channel>.from(
-                              filteredChannels,
-                            );
-                            final item = reordered.removeAt(oldIndex);
-                            reordered.insert(newIndex, item);
-                            unawaited(
-                              connector.setChannelOrder(
-                                reordered.map((c) => c.index).toList(),
-                              ),
-                            );
-                          },
-                          itemBuilder: (context, index) {
-                            final channel = filteredChannels[index];
-                            return _buildChannelTile(
-                              context,
-                              connector,
-                              channelMessageStore,
-                              channel,
-                              showDragHandle: true,
-                              dragIndex: index,
-                              listIndex: index,
-                            );
-                          },
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(
-                            left: 0,
-                            right: 0,
-                            top: 8,
-                            bottom: 88,
-                          ),
-                          itemCount: filteredChannels.length,
-                          itemBuilder: (context, index) {
-                            final channel = filteredChannels[index];
-                            return _buildChannelTile(
-                              context,
-                              connector,
-                              channelMessageStore,
-                              channel,
-                              listIndex: index,
                             );
                           },
                         ),
-                ),
-              ],
-            );
-          }(),
+                      ),
+                      Expanded(
+                        child: filteredChannels.isEmpty
+                            ? LayoutBuilder(
+                                builder: (context, constraints) => ListView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        minHeight: constraints.maxHeight,
+                                      ),
+                                      child: EmptyState(
+                                        icon: Icons.search_off,
+                                        title: context
+                                            .l10n
+                                            .channels_noChannelsFound,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : (viewState.channelsSortOption ==
+                                      ChannelSortOption.manual &&
+                                  viewState.channelsSearchText.isEmpty)
+                            ? ReorderableListView.builder(
+                                padding: const EdgeInsets.only(
+                                  left: 0,
+                                  right: 0,
+                                  top: 8,
+                                  bottom: 88,
+                                ),
+                                buildDefaultDragHandles: false,
+                                itemCount: filteredChannels.length,
+                                onReorderItem: (oldIndex, newIndex) {
+                                  final reordered = List<Channel>.from(
+                                    filteredChannels,
+                                  );
+                                  final item = reordered.removeAt(oldIndex);
+                                  reordered.insert(newIndex, item);
+                                  unawaited(
+                                    connector.setChannelOrder(
+                                      reordered.map((c) => c.index).toList(),
+                                    ),
+                                  );
+                                },
+                                itemBuilder: (context, index) {
+                                  final channel = filteredChannels[index];
+                                  return _buildChannelTile(
+                                    context,
+                                    connector,
+                                    channelMessageStore,
+                                    channel,
+                                    showDragHandle: true,
+                                    dragIndex: index,
+                                    listIndex: index,
+                                  );
+                                },
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.only(
+                                  left: 0,
+                                  right: 0,
+                                  top: 8,
+                                  bottom: 88,
+                                ),
+                                itemCount: filteredChannels.length,
+                                itemBuilder: (context, index) {
+                                  final channel = filteredChannels[index];
+                                  return _buildChannelTile(
+                                    context,
+                                    connector,
+                                    channelMessageStore,
+                                    channel,
+                                    listIndex: index,
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                }(),
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddChannelDialog(context),

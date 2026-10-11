@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2187,6 +2186,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get map_label => 'Beschriftung';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Wenn Sie denselben Namen verwenden wie zuvor, wird die Markierung bei MeshCore Open-Empfängern aktualisiert.';
 
   @override
   String get map_pointOfInterest => 'Punkt von Interesse';
@@ -4833,6 +4836,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn die Kontaktliste voll ist, wird der älteste nicht favorisierte Kontakt ersetzt.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Liste entdeckter Kontakte kürzen';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Wenn aktiviert, wird die Liste der entdeckten Kontakte auf $limit Kontakte begrenzt.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Entdeckte Kontakte';
 
   @override
@@ -5524,5 +5536,35 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Über 158 Byte: wird höchstens $count Mal gesendet';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Prüfmodus aktivieren?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Der Prüfmodus verbindet sich mit einem simulierten Radio mit Beispielkontakten, Kanälen und Nachrichten. Es wird kein echtes Radio benötigt.';
+
+  @override
+  String get reviewMode_confirm => 'Aktivieren';
+
+  @override
+  String get reviewMode_cancel => 'Abbrechen';
+
+  @override
+  String get reviewMode_banner => 'Prüfmodus — simulierte Daten';
+
+  @override
+  String get reviewMode_sendTest => 'Testnachricht senden';
+
+  @override
+  String get reviewMode_testSent => 'Eine Testnachricht trifft in Kürze ein.';
+
+  @override
+  String get reviewMode_exit => 'Beenden';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Prüfmodus konnte nicht gestartet werden: $error';
   }
 }

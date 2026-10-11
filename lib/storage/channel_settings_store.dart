@@ -1,4 +1,5 @@
 import '../utils/app_logger.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ChannelSettingsStore {
@@ -25,7 +26,7 @@ class ChannelSettingsStore {
     final key = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
     bool? enabled = prefs.getBool(key);
-    if (enabled == null) {
+    if (enabled == null && canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       enabled = prefs.getBool(oldKey);
       prefs.remove(oldKey);

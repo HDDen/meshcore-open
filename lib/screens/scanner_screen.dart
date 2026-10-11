@@ -15,6 +15,7 @@ import '../widgets/device_tile.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../review_mode/review_mode_entry.dart';
 import 'channels_screen.dart';
 import 'tcp_screen.dart';
 import 'usb_screen.dart';
@@ -103,7 +104,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 },
               )
             : null,
-        title: AdaptiveAppBarTitle(context.l10n.scanner_title),
+        title: ReviewModeLongPress(
+          child: AdaptiveAppBarTitle(context.l10n.scanner_title),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [

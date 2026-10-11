@@ -883,6 +883,7 @@
   "map_setAsMyLocation": "現在地として設定",
   "map_pinLabel": "ピンラベル",
   "map_label": "ラベル",
+  "map_labelUpdateHint": "以前と同じラベルを使うと、MeshCore Open の受信者側でマーカーが更新されます。",
   "map_pointOfInterest": "興味地点",
   "map_sendToContact": "連絡先へ送信",
   "map_sendToChannel": "チャンネルへ送信",
@@ -2228,6 +2229,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "利用者が、発見したセンサーを自動的に追加できるようにする。",
   "contactsSettings_overwriteOldestTitle": "最も古いものを上書きする",
   "contactsSettings_overwriteOldestSubtitle": "連絡先リストが満杯になった場合、最も古いかつ「お気に入り」ではない連絡先が削除されます。",
+  "contactsSettings_evictDiscoveredContactsTitle": "検出された連絡先を削除",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "有効にすると、検出された連絡先のリストが上限の{limit}件に達した際に、最も古い検出済み連絡先が削除されます。",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "連絡先が見つかった",
   "discoveredContacts_noMatching": "一致する連絡先が見つかりませんでした",
   "discoveredContacts_searchHint": "発見された連絡先を検索する",
@@ -3220,5 +3230,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "画像を保存できませんでした"
+  "receivedImage_saveFailed": "画像を保存できませんでした",
+  "reviewMode_dialogTitle": "レビューモードに入りますか？",
+  "reviewMode_dialogBody": "レビューモードでは、サンプルの連絡先、チャンネル、メッセージを備えたシミュレートされたデバイスに接続します。実際のデバイスは不要です。",
+  "reviewMode_confirm": "開始",
+  "reviewMode_cancel": "キャンセル",
+  "reviewMode_banner": "レビューモード — シミュレーションデータ",
+  "reviewMode_sendTest": "テストメッセージを送信",
+  "reviewMode_testSent": "まもなくテストメッセージが届きます。",
+  "reviewMode_exit": "終了",
+  "reviewMode_connectFailed": "レビューモードを開始できませんでした: {error}"
 }

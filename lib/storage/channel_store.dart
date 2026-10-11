@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../models/channel.dart';
 import '../utils/app_logger.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ChannelStore {
@@ -20,7 +21,8 @@ class ChannelStore {
     }
     final prefs = PrefsManager.instance;
     String? jsonString = prefs.getString(keyFor);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) &&
+        canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(_keyPrefix);
       prefs.remove(_keyPrefix);

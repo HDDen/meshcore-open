@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2190,6 +2189,10 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_label => 'Етикет';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Ако използвате същия етикет като преди, маркерът ще се обнови за получателите с MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка на интерес';
@@ -4821,6 +4824,15 @@ class AppLocalizationsBg extends AppLocalizations {
       'Когато списъкът с контакти е пълен, най-старият неключов контакт ще бъде заменен.';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Премахване на открити контакти';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Когато е включено, приложението премахва най-старите открити контакти, щом списъкът с открити контакти достигне лимита си от $limit записа.';
+  }
+
+  @override
   String get discoveredContacts_Title => 'Открити контакти';
 
   @override
@@ -5507,5 +5519,35 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return 'Над 158 байта: изпраща се най-много $count пъти';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => 'Вход в режим за преглед?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Режимът за преглед се свързва със симулирано радио с примерни контакти, канали и съобщения. Не е нужно реално радио.';
+
+  @override
+  String get reviewMode_confirm => 'Вход';
+
+  @override
+  String get reviewMode_cancel => 'Отказ';
+
+  @override
+  String get reviewMode_banner => 'Режим за преглед — симулирани данни';
+
+  @override
+  String get reviewMode_sendTest => 'Тестово съобщение';
+
+  @override
+  String get reviewMode_testSent => 'Скоро ще пристигне тестово съобщение.';
+
+  @override
+  String get reviewMode_exit => 'Изход';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return 'Режимът за преглед не можа да се стартира: $error';
   }
 }

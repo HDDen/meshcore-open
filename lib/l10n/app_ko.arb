@@ -865,6 +865,7 @@
   "map_setAsMyLocation": "내 위치로 설정",
   "map_pinLabel": "핀 라벨",
   "map_label": "레이블",
+  "map_labelUpdateHint": "이전과 같은 레이블을 사용하면 MeshCore Open 수신자에게 표시된 마커가 업데이트됩니다.",
   "map_pointOfInterest": "관심 지점",
   "map_sendToContact": "연락처로 보내기",
   "map_sendToChannel": "채널로 전송",
@@ -2133,6 +2134,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "애완동물이 발견한 센서를 자동으로 추가할 수 있도록 설정합니다.",
   "contactsSettings_overwriteOldestTitle": "가장 오래된 것을 덮어쓰기",
   "contactsSettings_overwriteOldestSubtitle": "연락처 목록이 가득 차면, 가장 오래된 (선호하지 않은) 연락처가 대체됩니다.",
+  "contactsSettings_evictDiscoveredContactsTitle": "발견된 연락처 삭제",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "활성화하면 발견된 연락처 목록이 {limit}개의 한도에 도달했을 때 가장 오래된 발견된 연락처를 삭제합니다.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "연락처 찾기",
   "discoveredContacts_noMatching": "일치하는 연락처가 없습니다.",
   "discoveredContacts_searchHint": "발견된 연락처 검색",
@@ -3220,5 +3230,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "이미지를 저장할 수 없습니다"
+  "receivedImage_saveFailed": "이미지를 저장할 수 없습니다",
+  "reviewMode_dialogTitle": "검토 모드로 들어갈까요?",
+  "reviewMode_dialogBody": "검토 모드는 샘플 연락처, 채널, 메시지가 있는 시뮬레이션 기기에 연결합니다. 실제 기기는 필요하지 않습니다.",
+  "reviewMode_confirm": "들어가기",
+  "reviewMode_cancel": "취소",
+  "reviewMode_banner": "검토 모드 — 시뮬레이션 데이터",
+  "reviewMode_sendTest": "테스트 메시지 보내기",
+  "reviewMode_testSent": "잠시 후 테스트 메시지가 도착합니다.",
+  "reviewMode_exit": "나가기",
+  "reviewMode_connectFailed": "검토 모드를 시작할 수 없습니다: {error}"
 }

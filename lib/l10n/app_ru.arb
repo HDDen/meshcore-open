@@ -413,6 +413,7 @@
   "map_shareMarkerHere": "Поделиться меткой здесь",
   "map_pinLabel": "Метка",
   "map_label": "Подпись",
+  "map_labelUpdateHint": "Если использовать ту же подпись, что и раньше, метка обновится у получателей MeshCore Open.",
   "map_pointOfInterest": "Точка интереса",
   "map_sendToContact": "Отправить контакту",
   "map_sendToChannel": "Отправить в канал",
@@ -1222,6 +1223,15 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Удалять обнаруженные контакты",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Если включено, приложение удаляет самые старые обнаруженные контакты, когда список обнаруженных достигает лимита в {limit} записей.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Удалить все",
   "discoveredContacts_deleteContactAllContent": "Вы уверены, что хотите удалить все обнаруженные контакты?",
   "discoveredContacts_deleteContactAll": "Удалить Все Обнаруженные Контакты",
@@ -2383,5 +2393,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Не удалось сохранить изображение"
+  "receivedImage_saveFailed": "Не удалось сохранить изображение",
+  "reviewMode_dialogTitle": "Войти в режим проверки?",
+  "reviewMode_dialogBody": "Режим проверки подключается к имитируемому радио с примерами контактов, каналов и сообщений. Реальное радио не требуется.",
+  "reviewMode_confirm": "Войти",
+  "reviewMode_cancel": "Отмена",
+  "reviewMode_banner": "Режим проверки — имитация данных",
+  "reviewMode_sendTest": "Тестовое сообщение",
+  "reviewMode_testSent": "Скоро придёт тестовое сообщение.",
+  "reviewMode_exit": "Выйти",
+  "reviewMode_connectFailed": "Не удалось запустить режим проверки: {error}"
 }

@@ -689,6 +689,7 @@
   "map_shareMarkerHere": "Delite točke tukaj.",
   "map_pinLabel": "Oznaka za pritrditev",
   "map_label": "Oznaka",
+  "map_labelUpdateHint": "Če uporabite enako oznako kot prej, se oznaka na zemljevidu posodobi pri prejemnikih MeshCore Open.",
   "map_pointOfInterest": "Točka zanimivosti",
   "map_sendToContact": "Pošlji v kontakt",
   "map_sendToChannel": "Pošlji v kanal",
@@ -2053,6 +2054,8 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Ko je seznam stikov poln, bo najstarejši nestarševski stik zamenjan.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Odstrani odkrite stike",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Ko je ta možnost vklopljena, aplikacija odstrani najstarejše odkrite stike, ko seznam odkritih stikov doseže omejitev {limit} vnosov.",
   "common_deleteAll": "Izbriši vse",
   "discoveredContacts_deleteContactAllContent": "Ste prepričani, da želite izbrisati vse odkrite kontakte?",
   "discoveredContacts_deleteContactAll": "Izbriši vse odkrite kontakte",
@@ -2911,6 +2914,13 @@
     }
   },
   "messageStatus_hopsNotReached": "Poslano, a nazaj slišano le skozi {hops} od {required} ponoviteljev. Morda je odšlo še dlje, kot vaše radio sliši.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "@messageStatus_hopsNotReached": {
     "placeholders": {
       "hops": {
@@ -3087,5 +3097,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Slike ni bilo mogoče shraniti"
+  "receivedImage_saveFailed": "Slike ni bilo mogoče shraniti",
+  "reviewMode_dialogTitle": "Vstop v način pregleda?",
+  "reviewMode_dialogBody": "Način pregleda se poveže s simuliranim radiem z vzorčnimi stiki, kanali in sporočili. Pravi radio ni potreben.",
+  "reviewMode_confirm": "Vstopi",
+  "reviewMode_cancel": "Prekliči",
+  "reviewMode_banner": "Način pregleda — simulirani podatki",
+  "reviewMode_sendTest": "Pošlji testno sporočilo",
+  "reviewMode_testSent": "Kmalu bo prispelo testno sporočilo.",
+  "reviewMode_exit": "Izhod",
+  "reviewMode_connectFailed": "Načina pregleda ni bilo mogoče zagnati: {error}"
 }

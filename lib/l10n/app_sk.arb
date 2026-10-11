@@ -689,6 +689,7 @@
   "map_shareMarkerHere": "Zdieľte značku tu",
   "map_pinLabel": "Označka upozornenia",
   "map_label": "Značka",
+  "map_labelUpdateHint": "Ak použijete rovnaký štítok ako predtým, značka sa aktualizuje u príjemcov MeshCore Open.",
   "map_pointOfInterest": "Bod záujmu",
   "map_sendToContact": "Pošleť na kontakt",
   "map_sendToChannel": "Poslať do kanálu",
@@ -2053,6 +2054,15 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Keď je zoznam kontaktov plný, bude nahradený najstarší neoznačený kontakt.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Odstraňovať objavené kontakty",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Keď je táto možnosť zapnutá, aplikácia odstráni najstaršie objavené kontakty, keď zoznam objavených dosiahne limit {limit} záznamov.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_deleteContactAll": "Zmazať všetky objavené kontakty",
   "common_deleteAll": "Zmazať všetko",
   "discoveredContacts_deleteContactAllContent": "Ste si istí, že chcete zmazať všetky objavené kontakty?",
@@ -3087,5 +3097,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Nepodarilo sa uložiť obrázok"
+  "receivedImage_saveFailed": "Nepodarilo sa uložiť obrázok",
+  "reviewMode_dialogTitle": "Vstúpiť do režimu kontroly?",
+  "reviewMode_dialogBody": "Režim kontroly sa pripojí k simulovanému rádiu s ukážkovými kontaktmi, kanálmi a správami. Skutočné rádio nie je potrebné.",
+  "reviewMode_confirm": "Vstúpiť",
+  "reviewMode_cancel": "Zrušiť",
+  "reviewMode_banner": "Režim kontroly — simulované údaje",
+  "reviewMode_sendTest": "Poslať testovaciu správu",
+  "reviewMode_testSent": "Čoskoro príde testovacia správa.",
+  "reviewMode_exit": "Ukončiť",
+  "reviewMode_connectFailed": "Režim kontroly sa nepodarilo spustiť: {error}"
 }

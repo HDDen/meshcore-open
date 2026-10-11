@@ -690,6 +690,7 @@
   "map_shareMarkerHere": "Dela markeringen här",
   "map_pinLabel": "Fästetikett",
   "map_label": "Etikett",
+  "map_labelUpdateHint": "Om du använder samma etikett som tidigare uppdateras markören för mottagare med MeshCore Open.",
   "map_pointOfInterest": "Plats av intresse",
   "map_sendToContact": "Skicka till kontakt",
   "map_sendToChannel": "Skicka till kanal",
@@ -2054,6 +2055,8 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "När kontaktlistan är full ersätts den äldsta icke-favoriterade kontakten.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Rensa upptäckta kontakter",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "När detta är aktiverat tar appen bort de äldsta upptäckta kontakterna när listan över upptäckta kontakter når sin gräns på {limit} poster.",
   "common_deleteAll": "Ta bort alla",
   "discoveredContacts_deleteContactAllContent": "Är du säker på att du vill ta bort alla upptäckta kontakter?",
   "discoveredContacts_deleteContactAll": "Ta bort alla upptäckta kontakter",
@@ -2905,6 +2908,13 @@
     }
   },
   "messageStatus_hopsNotReached": "Skickat, men endast hört tillbaka via {hops} av {required} repeatrar. Det kan ha kommit längre än din radio kan höra.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "@messageStatus_hopsNotReached": {
     "placeholders": {
       "hops": {
@@ -3081,5 +3091,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Kunde inte spara bilden"
+  "receivedImage_saveFailed": "Kunde inte spara bilden",
+  "reviewMode_dialogTitle": "Aktivera granskningsläge?",
+  "reviewMode_dialogBody": "Granskningsläget ansluter till en simulerad radio med exempelkontakter, kanaler och meddelanden. Ingen riktig radio behövs.",
+  "reviewMode_confirm": "Aktivera",
+  "reviewMode_cancel": "Avbryt",
+  "reviewMode_banner": "Granskningsläge — simulerad data",
+  "reviewMode_sendTest": "Skicka testmeddelande",
+  "reviewMode_testSent": "Ett testmeddelande kommer snart.",
+  "reviewMode_exit": "Avsluta",
+  "reviewMode_connectFailed": "Det gick inte att starta granskningsläget: {error}"
 }

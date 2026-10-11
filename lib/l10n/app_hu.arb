@@ -865,6 +865,7 @@
   "map_setAsMyLocation": "Beállítás helyemként",
   "map_pinLabel": "Kitűzött címke",
   "map_label": "Címke",
+  "map_labelUpdateHint": "Ha ugyanazt a címkét használja, mint korábban, a jelölő frissül a MeshCore Open-t használó címzetteknél.",
   "map_pointOfInterest": "Érdekes pont",
   "map_sendToContact": "Elküldés a kapcsolattartónak",
   "map_sendToChannel": "Küldés a csatornára",
@@ -2133,6 +2134,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "Engedélyezze a társ számára a felfedezett érzékelők automatikus hozzáadását.",
   "contactsSettings_overwriteOldestTitle": "A legrégebbi felülírása",
   "contactsSettings_overwriteOldestSubtitle": "Amikor a névjegylista megtelik, a legrégebbi, nem kedvenc névjegy lecserélődik.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Felfedezett kapcsolatok eltávolítása",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Ha engedélyezve van, az alkalmazás eltávolítja a legrégebbi felfedezett kapcsolatokat, amint a felfedezési lista eléri a(z) {limit} bejegyzéses korlátot.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "Felfedezett kapcsolatok",
   "discoveredContacts_noMatching": "Nincsenek megfelelő névjegyek",
   "discoveredContacts_searchHint": "Keresés a talált névjegyek között",
@@ -3125,5 +3135,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "A képet nem sikerült elmenteni"
+  "receivedImage_saveFailed": "A képet nem sikerült elmenteni",
+  "reviewMode_dialogTitle": "Belép az áttekintő módba?",
+  "reviewMode_dialogBody": "Az áttekintő mód egy szimulált rádióhoz csatlakozik, mintakapcsolatokkal, csatornákkal és üzenetekkel. Nincs szükség valódi rádióra.",
+  "reviewMode_confirm": "Belépés",
+  "reviewMode_cancel": "Mégsem",
+  "reviewMode_banner": "Áttekintő mód — szimulált adatok",
+  "reviewMode_sendTest": "Tesztüzenet küldése",
+  "reviewMode_testSent": "Hamarosan megérkezik egy tesztüzenet.",
+  "reviewMode_exit": "Kilépés",
+  "reviewMode_connectFailed": "Az áttekintő mód nem indítható el: {error}"
 }

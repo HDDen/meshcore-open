@@ -689,6 +689,7 @@
   "map_shareMarkerHere": "Compartilhar marcador aqui",
   "map_pinLabel": "Rótulo de marcador",
   "map_label": "Rótulo",
+  "map_labelUpdateHint": "Usar o mesmo rótulo de antes atualizará o marcador para os destinatários do MeshCore Open.",
   "map_pointOfInterest": "Ponto de interesse",
   "map_sendToContact": "Enviar para o contato",
   "map_sendToChannel": "Enviar para o canal",
@@ -2053,6 +2054,15 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Quando a lista de contatos estiver cheia, o contato mais antigo não favoritado será substituído.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Remover contatos descobertos",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Quando ativado, o aplicativo remove os contatos descobertos mais antigos assim que a lista de descobertos atingir o limite de {limit} entradas.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Excluir Tudo",
   "discoveredContacts_deleteContactAll": "Excluir Todos os Contatos Descobertos",
   "discoveredContacts_deleteContactAllContent": "Tem certeza de que deseja excluir todos os contatos descobertos?",
@@ -3086,5 +3096,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Não foi possível guardar a imagem"
+  "receivedImage_saveFailed": "Não foi possível guardar a imagem",
+  "reviewMode_dialogTitle": "Entrar no modo de revisão?",
+  "reviewMode_dialogBody": "O modo de revisão conecta-se a um rádio simulado com contatos, canais e mensagens de exemplo. Não é necessário um rádio real.",
+  "reviewMode_confirm": "Entrar",
+  "reviewMode_cancel": "Cancelar",
+  "reviewMode_banner": "Modo de revisão — dados simulados",
+  "reviewMode_sendTest": "Enviar mensagem de teste",
+  "reviewMode_testSent": "Uma mensagem de teste chegará em breve.",
+  "reviewMode_exit": "Sair",
+  "reviewMode_connectFailed": "Não foi possível iniciar o modo de revisão: {error}"
 }

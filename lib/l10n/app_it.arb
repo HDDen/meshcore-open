@@ -756,6 +756,7 @@
   "map_shareMarkerHere": "Condividi segnaposto qui",
   "map_pinLabel": "Etichetta pin",
   "map_label": "Etichetta",
+  "map_labelUpdateHint": "Usando la stessa etichetta di prima, il segnaposto verrà aggiornato per i destinatari che usano MeshCore Open.",
   "map_pointOfInterest": "Punto di interesse",
   "map_sendToContact": "Invia a contatto",
   "map_sendToChannel": "Invia al canale",
@@ -2184,6 +2185,15 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "Quando l'elenco dei contatti è pieno, il contatto più vecchio non tra i preferiti verrà sostituito.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Rimuovi i contatti scoperti",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Se abilitato, l'app rimuove i contatti scoperti più vecchi quando l'elenco dei contatti scoperti raggiunge il limite di {limit} voci.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Elimina tutto",
   "discoveredContacts_deleteContactAllContent": "Sei sicuro di voler eliminare tutti i contatti scoperti?",
   "discoveredContacts_deleteContactAll": "Eliminare tutti i contatti scoperti",
@@ -3220,5 +3230,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "Impossibile salvare l'immagine"
+  "receivedImage_saveFailed": "Impossibile salvare l'immagine",
+  "reviewMode_dialogTitle": "Entrare nella modalità revisione?",
+  "reviewMode_dialogBody": "La modalità revisione si connette a una radio simulata con contatti, canali e messaggi di esempio. Non serve una radio reale.",
+  "reviewMode_confirm": "Entra",
+  "reviewMode_cancel": "Annulla",
+  "reviewMode_banner": "Modalità revisione — dati simulati",
+  "reviewMode_sendTest": "Invia messaggio di prova",
+  "reviewMode_testSent": "A breve arriverà un messaggio di prova.",
+  "reviewMode_exit": "Esci",
+  "reviewMode_connectFailed": "Impossibile avviare la modalità revisione: {error}"
 }

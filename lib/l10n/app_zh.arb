@@ -716,6 +716,7 @@
   "map_shareMarkerHere": "在此分享标记",
   "map_pinLabel": "标签",
   "map_label": "标签",
+  "map_labelUpdateHint": "使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。",
   "map_pointOfInterest": "兴趣点",
   "map_sendToContact": "发送给联系人",
   "map_sendToChannel": "发送到频道",
@@ -2058,6 +2059,8 @@
     }
   },
   "contactsSettings_overwriteOldestSubtitle": "当联系人列表已满时，将替换最老的非收藏联系人。",
+  "contactsSettings_evictDiscoveredContactsTitle": "清除已发现的联系人",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "启用后，当已发现联系人列表达到 {limit} 条的上限时，应用会移除最旧的已发现联系人。",
   "common_deleteAll": "删除全部",
   "discoveredContacts_deleteContactAllContent": "您确定要删除所有发现的联系人吗？",
   "discoveredContacts_deleteContactAll": "删除所有发现的联系人",
@@ -2915,6 +2918,13 @@
     }
   },
   "messageStatus_hopsNotReached": "已发送，但只有 {hops} 个中继器（共 {required} 个）回传。它可能已经到达你的无线电收不到的范围之外。",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "@messageStatus_hopsNotReached": {
     "placeholders": {
       "hops": {
@@ -3091,5 +3101,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "无法保存图片"
+  "receivedImage_saveFailed": "无法保存图片",
+  "reviewMode_dialogTitle": "进入审核模式？",
+  "reviewMode_dialogBody": "审核模式会连接到模拟设备，其中包含示例联系人、频道和消息。无需真实设备。",
+  "reviewMode_confirm": "进入",
+  "reviewMode_cancel": "取消",
+  "reviewMode_banner": "审核模式 — 模拟数据",
+  "reviewMode_sendTest": "发送测试消息",
+  "reviewMode_testSent": "测试消息即将送达。",
+  "reviewMode_exit": "退出",
+  "reviewMode_connectFailed": "无法启动审核模式：{error}"
 }

@@ -54,6 +54,8 @@ import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
 import '../storage/message_store.dart';
 import '../storage/unread_store.dart';
+import '../review_mode/review_mode_storage.dart';
+import '../review_mode/review_radio.dart';
 import '../utils/app_logger.dart';
 import '../utils/battery_utils.dart';
 import '../utils/platform_info.dart';
@@ -140,7 +142,7 @@ enum MeshCoreConnectionState {
   disconnecting,
 }
 
-enum MeshCoreTransportType { bluetooth, usb, tcp }
+enum MeshCoreTransportType { bluetooth, usb, tcp, review }
 
 class RepeaterBatterySnapshot {
   final int millivolts;
@@ -178,7 +180,7 @@ class MeshCoreConnector extends ChangeNotifier {
   // continuously from the whole mesh, so without a bound this list grows for
   // as long as the app stays connected. When full, the stalest node (oldest
   // lastSeen) is evicted to make room for a newly heard one.
-  static const int _maxDiscoveredContacts = 500;
+  static const int maxDiscoveredContacts = 500;
 
   MeshCoreConnectionState _state = MeshCoreConnectionState.disconnected;
   BluetoothDevice? _device;
@@ -208,6 +210,9 @@ class MeshCoreConnector extends ChangeNotifier {
   StreamSubscription<Uint8List>? _usbFrameSubscription;
   final MeshCoreTcpConnector _tcpConnector = MeshCoreTcpConnector();
   MeshCoreTransportType _activeTransport = MeshCoreTransportType.bluetooth;
+  ReviewRadio? _reviewRadio;
+  StreamSubscription<Uint8List>? _reviewFrameSubscription;
+  int _reviewConnectGeneration = 0;
 
   final List<ScanResult> _scanResults = [];
   final List<ScanResult> _linuxSystemScanResults = [];
@@ -458,6 +463,9 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get isTcpTransportConnected =>
       _state == MeshCoreConnectionState.connected &&
       _activeTransport == MeshCoreTransportType.tcp;
+  bool get isReviewMode =>
+      _activeTransport == MeshCoreTransportType.review &&
+      _state != MeshCoreConnectionState.disconnected;
 
   String get deviceDisplayName {
     if (_selfName != null && _selfName!.isNotEmpty) {
@@ -1368,16 +1376,32 @@ class MeshCoreConnector extends ChangeNotifier {
 
   Future<void> _loadDiscoveredContactCache() async {
     final cached = await _discoveryContactStore.loadContacts();
-    // Trim a previously-saved oversized list down to the freshest entries so a
-    // device that grew unbounded before the cap existed recovers on load.
-    if (cached.length > _maxDiscoveredContacts) {
-      cached.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
-      cached.removeRange(_maxDiscoveredContacts, cached.length);
+    // When eviction is enabled, trim a previously-saved oversized list down to
+    // the freshest entries so a device that grew unbounded before the cap
+    // existed recovers on load.
+    if (_evictDiscoveredContactsEnabled &&
+        _trimDiscoveredContactsToLimit(cached)) {
       unawaited(_discoveryContactStore.saveContacts(cached));
     }
     _discoveredContacts
       ..clear()
       ..addAll(cached);
+  }
+
+  bool get _evictDiscoveredContactsEnabled =>
+      _appSettingsService?.settings.evictDiscoveredContactsEnabled ?? true;
+
+  bool _trimDiscoveredContactsToLimit(List<Contact> contacts) {
+    if (contacts.length <= maxDiscoveredContacts) return false;
+    contacts.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
+    contacts.removeRange(maxDiscoveredContacts, contacts.length);
+    return true;
+  }
+
+  Future<void> trimDiscoveredContactsToLimit() async {
+    if (!_trimDiscoveredContactsToLimit(_discoveredContacts)) return;
+    await _persistDiscoveredContacts();
+    notifyListeners();
   }
 
   Future<void> loadChannelSettings({int? maxChannels}) async {
@@ -2220,6 +2244,121 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  Future<void> connectReview() async {
+    if (_state == MeshCoreConnectionState.connecting ||
+        _state == MeshCoreConnectionState.connected) {
+      _appDebugLogService?.warn(
+        'connectReview ignored: already $_state',
+        tag: 'Review',
+      );
+      return;
+    }
+
+    _appDebugLogService?.info('connectReview: starting', tag: 'Review');
+
+    await _awaitActiveDisconnect();
+    // The await is a suspension point: another connect may have claimed the
+    // connector while this one was waiting for the teardown.
+    if (_state == MeshCoreConnectionState.connecting ||
+        _state == MeshCoreConnectionState.connected) {
+      _appDebugLogService?.warn(
+        'connectReview ignored: already $_state after disconnect wait',
+        tag: 'Review',
+      );
+      return;
+    }
+
+    await stopScan();
+    _cancelReconnectTimer();
+    _manualDisconnect = false;
+    _resetConnectionHandshakeState();
+    _activeTransport = MeshCoreTransportType.review;
+    _setState(MeshCoreConnectionState.connecting);
+
+    // A disconnect (or a newer connect) bumps the generation, so this attempt
+    // can tell after every await whether it still owns the connector.
+    final generation = ++_reviewConnectGeneration;
+    bool isCancelled() =>
+        generation != _reviewConnectGeneration ||
+        _activeTransport != MeshCoreTransportType.review ||
+        _state == MeshCoreConnectionState.disconnecting ||
+        _state == MeshCoreConnectionState.disconnected;
+
+    try {
+      // Every review session starts from a clean slate.
+      await beginReviewModeSession(_appSettingsService);
+      if (isCancelled()) return;
+      await _reviewFrameSubscription?.cancel();
+      _reviewFrameSubscription = null;
+      _reviewRadio?.dispose();
+      final radio = reviewRadioFactoryForTest?.call() ?? ReviewRadio();
+      _reviewRadio = radio;
+      _reviewFrameSubscription = radio.frames.listen(
+        _handleFrame,
+        onError: (error, stackTrace) {
+          _appDebugLogService?.error(
+            'Review radio error: $error',
+            tag: 'Review',
+          );
+          unawaited(disconnect(manual: false));
+        },
+      );
+
+      _setState(MeshCoreConnectionState.connected);
+      unawaited(_backgroundService?.start());
+      _pendingInitialChannelSync = true;
+      _pendingInitialQueuedMessageSync = true;
+      _pendingInitialContactsSync = true;
+      await _requestDeviceInfo();
+      _startBatteryPolling();
+      if (_radioStatsPollRefCount > 0) _startRadioStatsPolling();
+
+      var gotSelfInfo = await _waitForSelfInfo(
+        timeout: const Duration(seconds: 3),
+      );
+      if (isCancelled()) return;
+      if (!gotSelfInfo) {
+        await refreshDeviceInfo();
+        gotSelfInfo = await _waitForSelfInfo(
+          timeout: const Duration(seconds: 3),
+        );
+      }
+      if (isCancelled()) return;
+      if (!gotSelfInfo) {
+        throw StateError(
+          'Timed out waiting for SELF_INFO during review connect',
+        );
+      }
+
+      await syncTime();
+      if (!isCancelled() && isConnected) {
+        radio.start();
+      }
+    } catch (error) {
+      if (isCancelled()) {
+        _appDebugLogService?.info(
+          'Ignoring review connect error after cancellation: $error',
+          tag: 'Review',
+        );
+        return;
+      }
+      _appDebugLogService?.error(
+        'Review connection error: $error',
+        tag: 'Review',
+      );
+      await disconnect(manual: false);
+      rethrow;
+    }
+  }
+
+  @visibleForTesting
+  ReviewRadio Function()? reviewRadioFactoryForTest;
+
+  void sendReviewTestMessage() {
+    if (!isReviewMode) return;
+    _reviewRadio?.sendTestMessage();
+  }
+
   @visibleForTesting
   void handleFrameForTest(List<int> data) => _handleFrame(data);
 
@@ -2971,6 +3110,7 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get _shouldGateInitialChannelSync =>
       _activeTransport == MeshCoreTransportType.usb ||
       _activeTransport == MeshCoreTransportType.tcp ||
+      _activeTransport == MeshCoreTransportType.review ||
       (_activeTransport == MeshCoreTransportType.bluetooth &&
           PlatformInfo.isWeb);
 
@@ -3066,6 +3206,7 @@ class MeshCoreConnector extends ChangeNotifier {
       MeshCoreTransportType.bluetooth => 'BLE',
       MeshCoreTransportType.usb => 'USB',
       MeshCoreTransportType.tcp => 'TCP',
+      MeshCoreTransportType.review => 'Review',
     };
 
     _appDebugLogService?.info(
@@ -3094,6 +3235,12 @@ class MeshCoreConnector extends ChangeNotifier {
     _usbFrameSubscription = null;
     await _usbManager.disconnect();
     await _tcpConnector.disconnect();
+    final wasReviewMode = transportAtDisconnect == MeshCoreTransportType.review;
+    _reviewConnectGeneration++;
+    await _reviewFrameSubscription?.cancel();
+    _reviewFrameSubscription = null;
+    _reviewRadio?.dispose();
+    _reviewRadio = null;
 
     await _notifySubscription?.cancel();
     _notifySubscription = null;
@@ -3171,6 +3318,12 @@ class MeshCoreConnector extends ChangeNotifier {
     _reactionSendQueueSequence = 0;
 
     _activeTransport = MeshCoreTransportType.bluetooth;
+    if (wasReviewMode) {
+      // Write the debounced unread counts now so they cannot land after the
+      // review data has been deleted.
+      await _unreadStore.flush();
+      await endReviewModeSession(_appSettingsService);
+    }
 
     _setState(MeshCoreConnectionState.disconnected);
     _appDebugLogService?.info(
@@ -3209,6 +3362,12 @@ class MeshCoreConnector extends ChangeNotifier {
         await Future<void>.delayed(const Duration(milliseconds: 10));
       } else if (_activeTransport == MeshCoreTransportType.tcp) {
         await _tcpConnector.write(data);
+      } else if (_activeTransport == MeshCoreTransportType.review) {
+        final radio = _reviewRadio;
+        if (radio == null) {
+          throw Exception("Review radio not available");
+        }
+        radio.handle(data);
       } else {
         if (_rxCharacteristic == null) {
           throw Exception("MeshCore RX characteristic not available");
@@ -7567,6 +7726,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _contactsFullController.close();
     _usbManager.dispose();
     _tcpConnector.dispose();
+    _reviewFrameSubscription?.cancel();
+    _reviewRadio?.dispose();
 
     // Flush pending unread writes before disposal
     _unreadStore.flush();
@@ -8057,8 +8218,10 @@ class MeshCoreConnector extends ChangeNotifier {
       flags: 0,
     );
 
-    if (_discoveredContacts.length >= _maxDiscoveredContacts) {
-      _evictStalestDiscoveredContact();
+    if (_evictDiscoveredContactsEnabled) {
+      while (_discoveredContacts.length >= maxDiscoveredContacts) {
+        _evictStalestDiscoveredContact();
+      }
     }
     _discoveredContacts.add(disContact);
 

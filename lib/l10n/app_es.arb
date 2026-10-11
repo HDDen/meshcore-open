@@ -711,6 +711,7 @@
   "map_shareMarkerHere": "Compartir marcador aquí",
   "map_pinLabel": "Etiqueta del pin",
   "map_label": "Etiqueta",
+  "map_labelUpdateHint": "Si usas la misma etiqueta que antes, el marcador se actualizará para los destinatarios de MeshCore Open.",
   "map_pointOfInterest": "Punto de interés",
   "map_sendToContact": "Enviar a contacto",
   "map_sendToChannel": "Enviar a canal",
@@ -2145,6 +2146,15 @@
   "discoveredContacts_searchHint": "Buscar contactos descubiertos",
   "discoveredContacts_addContact": "Agregar contacto",
   "contactsSettings_overwriteOldestSubtitle": "Cuando la lista de contactos esté llena, se reemplazará el contacto no favorito más antiguo.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Expulsar contactos descubiertos",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Si está activado, la aplicación elimina los contactos descubiertos más antiguos cuando la lista de descubrimiento alcanza su límite de {limit} entradas.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Eliminar todo",
   "discoveredContacts_deleteContactAll": "Eliminar Todos los Contactos Descubiertos",
   "discoveredContacts_deleteContactAllContent": "¿Está seguro de que desea eliminar todos los contactos descubiertos!",
@@ -3220,5 +3230,14 @@
       }
     }
   },
-  "receivedImage_saveFailed": "No se pudo guardar la imagen"
+  "receivedImage_saveFailed": "No se pudo guardar la imagen",
+  "reviewMode_dialogTitle": "¿Entrar en el modo de revisión?",
+  "reviewMode_dialogBody": "El modo de revisión se conecta a una radio simulada con contactos, canales y mensajes de ejemplo. No se necesita una radio real.",
+  "reviewMode_confirm": "Entrar",
+  "reviewMode_cancel": "Cancelar",
+  "reviewMode_banner": "Modo de revisión — datos simulados",
+  "reviewMode_sendTest": "Enviar mensaje de prueba",
+  "reviewMode_testSent": "En breve llegará un mensaje de prueba.",
+  "reviewMode_exit": "Salir",
+  "reviewMode_connectFailed": "No se pudo iniciar el modo de revisión: {error}"
 }

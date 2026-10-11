@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2065,6 +2064,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_label => '标签';
+
+  @override
+  String get map_labelUpdateHint => '使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。';
 
   @override
   String get map_pointOfInterest => '兴趣点';
@@ -4470,6 +4472,14 @@ class AppLocalizationsZh extends AppLocalizations {
       '当联系人列表已满时，将替换最老的非收藏联系人。';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle => '清除已发现的联系人';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return '启用后，当已发现联系人列表达到 $limit 条的上限时，应用会移除最旧的已发现联系人。';
+  }
+
+  @override
   String get discoveredContacts_Title => '已发现的联系人';
 
   @override
@@ -5121,5 +5131,34 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String chat_longMessageRetryNote(int count) {
     return '超过158字节：最多发送 $count 次';
+  }
+
+  @override
+  String get reviewMode_dialogTitle => '进入审核模式？';
+
+  @override
+  String get reviewMode_dialogBody => '审核模式会连接到模拟设备，其中包含示例联系人、频道和消息。无需真实设备。';
+
+  @override
+  String get reviewMode_confirm => '进入';
+
+  @override
+  String get reviewMode_cancel => '取消';
+
+  @override
+  String get reviewMode_banner => '审核模式 — 模拟数据';
+
+  @override
+  String get reviewMode_sendTest => '发送测试消息';
+
+  @override
+  String get reviewMode_testSent => '测试消息即将送达。';
+
+  @override
+  String get reviewMode_exit => '退出';
+
+  @override
+  String reviewMode_connectFailed(String error) {
+    return '无法启动审核模式：$error';
   }
 }

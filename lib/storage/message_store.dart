@@ -4,6 +4,7 @@ import '../models/message.dart';
 import '../models/translation_support.dart';
 import '../helpers/smaz.dart';
 import '../utils/app_logger.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class MessageStore {
@@ -38,7 +39,8 @@ class MessageStore {
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
     String? jsonString = prefs.getString(key);
-    if (jsonString == null || jsonString.isEmpty) {
+    if ((jsonString == null || jsonString.isEmpty) &&
+        canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(oldKey);
       prefs.remove(oldKey);
