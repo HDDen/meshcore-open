@@ -1487,6 +1487,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     if (choice == 'save') {
       await _saveSettings();
       if (!mounted || _hasChanges) return;
+    } else {
+      // Drop the PopScope guard so the pop below can't re-trigger this dialog.
+      setState(() => _hasChanges = false);
     }
     Navigator.of(context).pop();
   }
