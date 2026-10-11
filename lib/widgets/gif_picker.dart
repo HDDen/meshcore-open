@@ -183,7 +183,7 @@ class _GifPickerState extends State<GifPicker> {
           Text(
             context.l10n.gifPicker_poweredBy,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),

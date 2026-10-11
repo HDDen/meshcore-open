@@ -355,7 +355,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                             l10n.login_routing,
                             style: MeshTheme.accentLabel(
                               color: scheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                           ),
                           const Spacer(),
@@ -433,7 +433,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                           pathHashByteWidth: connector.pathHashByteWidth,
                         ),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),

@@ -423,7 +423,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                             l10n.login_routing,
                             style: MeshTheme.accentLabel(
                               color: scheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 13,
                             ),
                           ),
                           const Spacer(),
@@ -501,7 +501,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                           pathHashByteWidth: connector.pathHashByteWidth,
                         ),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),

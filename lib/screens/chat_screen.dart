@@ -24,22 +24,21 @@ import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
-import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/path_history_service.dart';
 import '../services/translation_service.dart';
+import '../widgets/chat_composer.dart';
+import '../widgets/chat_send_pipeline.dart';
 import '../widgets/chat_zoom_wrapper.dart';
-import '../widgets/byte_count_input.dart';
-import '../widgets/marker_label_dialog.dart';
+import '../widgets/message_bubble_frame.dart';
+import '../widgets/reaction_chips.dart';
 import '../widgets/chat_day_separator.dart';
 import 'channel_message_path_screen.dart';
 import 'map_screen.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
-import '../widgets/gif_picker.dart';
-import '../widgets/message_translation_button.dart';
 import '../widgets/routing_sheet.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -83,14 +82,18 @@ class _ChatScreenState extends State<ChatScreen> {
   MeshCoreConnector? _connector;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
-  DateTime? _lastTextSendAt;
-  // True while a send is awaiting outgoing translation, so a second tap
-  // can't send the same text again.
-  bool _isSendingText = false;
+  final ChatSendGuard _sendGuard = ChatSendGuard();
+
+  /// Contact keys of the chat screens currently on the navigation stack, in
+  /// push order. A room chat can push a nested ChatScreen for one of its
+  /// posters; when that one is popped, the room underneath must become the
+  /// active conversation again rather than none at all.
+  static final List<String> _activeContactStack = [];
 
   @override
   void initState() {
     super.initState();
+    _activeContactStack.add(widget.contact.publicKeyHex);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
@@ -179,7 +182,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _connector?.setActiveContact(null);
+    final index = _activeContactStack.lastIndexOf(widget.contact.publicKeyHex);
+    final wasTop = index == _activeContactStack.length - 1;
+    if (index >= 0) _activeContactStack.removeAt(index);
+    if (wasTop) {
+      // Restore whichever chat is now on top (e.g. the room this nested chat
+      // was opened from), or clear when this was the only one.
+      _connector?.setActiveContact(
+        _activeContactStack.isEmpty ? null : _activeContactStack.last,
+      );
+    }
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _textFieldFocusNode.dispose();
@@ -212,15 +224,26 @@ class _ChatScreenState extends State<ChatScreen> {
                       ContactRoutingSheet.show(context, contact: contact),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      pathLabel,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.normal,
-                        decoration: TextDecoration.underline,
-                        decorationStyle: TextDecorationStyle.dotted,
-                      ),
+                    child: Builder(
+                      builder: (context) {
+                        // Follows the chat text size, capped so the two-line
+                        // title still fits the app bar.
+                        final textScale = context
+                            .select<ChatTextScaleService, double>(
+                              (service) => service.scale,
+                            )
+                            .clamp(1.0, 1.3);
+                        return Text(
+                          pathLabel,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12 * textScale,
+                            fontWeight: FontWeight.normal,
+                            decoration: TextDecoration.underline,
+                            decorationStyle: TextDecorationStyle.dotted,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -478,363 +501,77 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(MeshCoreConnector connector) {
-    final maxBytes = maxContactMessageBytes();
-    final scheme = Theme.of(context).colorScheme;
-    final settings = context.watch<AppSettingsService>().settings;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.outlineVariant, width: 1)),
+    final keyHex = widget.contact.publicKeyHex;
+    final useEncoder =
+        connector.isContactSmazEnabled(keyHex) ||
+        connector.isContactCyr2LatEnabled(keyHex);
+    return ChatComposer(
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      maxBytes: maxContactMessageBytes(),
+      softLimitBytes: maxTextPayloadBytesAfterFullLengthAttempts,
+      softLimitNote: context.l10n.chat_longMessageRetryNote(
+        maxFullLengthTextAttempt + 1,
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Builder(
-                builder: (menuContext) {
-                  return IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    tooltip: context.l10n.chat_selectSendAction,
-                    onPressed: () async {
-                      final RenderBox button =
-                          menuContext.findRenderObject() as RenderBox;
-                      final RenderBox overlay =
-                          Overlay.of(menuContext).context.findRenderObject()
-                              as RenderBox;
-                      final Offset buttonOffset = button.localToGlobal(
-                        Offset.zero,
-                        ancestor: overlay,
-                      );
-                      const menuHeight = 2 * kMinInteractiveDimension + 16;
-                      final menuTop = (buttonOffset.dy - menuHeight).clamp(
-                        8.0,
-                        overlay.size.height,
-                      );
-                      final position = RelativeRect.fromLTRB(
-                        buttonOffset.dx,
-                        menuTop,
-                        overlay.size.width -
-                            buttonOffset.dx -
-                            button.size.width,
-                        overlay.size.height - buttonOffset.dy,
-                      );
-
-                      final selected = await showMenu<String>(
-                        context: menuContext,
-                        position: position,
-                        items: [
-                          PopupMenuItem(
-                            value: 'gif',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.gif_box),
-                                const SizedBox(width: 12),
-                                Text(context.l10n.chat_sendGif),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'send-my-location',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.my_location),
-                                const SizedBox(width: 12),
-                                Text(context.l10n.chat_shareMyLocation),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                      if (!mounted || !menuContext.mounted) return;
-                      if (selected == null) return;
-                      switch (selected) {
-                        case 'gif':
-                          _showGifPicker(context);
-                          break;
-                        case 'send-my-location':
-                          await _shareMyLocation(
-                            context.read<MeshCoreConnector>(),
-                          );
-                          break;
-                      }
-                    },
-                  );
-                },
-              ),
-              if (settings.translationEnabled)
-                MessageTranslationButton(
-                  enabled: settings.composerTranslationEnabled,
-                  languageCode: settings.translationTargetLanguageCode,
-                  onPressed: _showTranslationOptions,
-                ),
-              // No image button here: the image wire format is GRP_DATA, a
-              // channel primitive with no DM equivalent (see the note at the
-              // top of this file).
-              Expanded(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _textController,
-                  builder: (context, value, child) {
-                    final gifId = GifHelper.parseGif(value.text);
-                    if (gifId != null) {
-                      return Focus(
-                        autofocus: true,
-                        onKeyEvent: (node, event) {
-                          if (event is KeyDownEvent &&
-                              (event.logicalKey == LogicalKeyboardKey.enter ||
-                                  event.logicalKey ==
-                                      LogicalKeyboardKey.numpadEnter)) {
-                            _sendMessage(connector);
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
-                        },
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: GifMessage(
-                                  url:
-                                      'https://media.giphy.com/media/$gifId/giphy.gif',
-                                  backgroundColor:
-                                      scheme.surfaceContainerHighest,
-                                  fallbackTextColor: scheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                  maxSize: 160,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              tooltip: context.l10n.chat_removeGif,
-                              onPressed: () {
-                                _textController.clear();
-                                _textFieldFocusNode.requestFocus();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return ByteCountedTextField(
-                      maxBytes: maxBytes,
-                      softLimitBytes:
-                          maxTextPayloadBytesAfterFullLengthAttempts,
-                      softLimitNote: context.l10n.chat_longMessageRetryNote(
-                        maxFullLengthTextAttempt + 1,
-                      ),
-                      controller: _textController,
-                      focusNode: _textFieldFocusNode,
-                      hintText: context.l10n.chat_typeMessage,
-                      onSubmitted: (_) => _sendMessage(connector),
-                      encoder:
-                          (connector.isContactSmazEnabled(
-                                widget.contact.publicKeyHex,
-                              ) ||
-                              connector.isContactCyr2LatEnabled(
-                                widget.contact.publicKeyHex,
-                              ))
-                          ? (text) => connector.prepareContactOutboundText(
-                              widget.contact,
-                              text,
-                            )
-                          : null,
-                      decoration: InputDecoration(
-                        hintText: context.l10n.chat_typeMessage,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.md),
-                          borderSide: BorderSide(color: scheme.outlineVariant),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.md),
-                          borderSide: BorderSide(color: scheme.outlineVariant),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(MeshRadii.md),
-                          borderSide: BorderSide(
-                            color: scheme.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: scheme.surfaceContainerLow,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 6),
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _textController,
-                builder: (context, value, _) {
-                  final hasText = value.text.trim().isNotEmpty;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeInOut,
-                    child: IconButton.filled(
-                      icon: const Icon(Icons.send, size: 20),
-                      tooltip: context.l10n.chat_sendMessageTo(
-                        _resolveContact(connector).name,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: hasText
-                            ? scheme.primary
-                            : scheme.surfaceContainerHighest,
-                        foregroundColor: hasText
-                            ? scheme.onPrimary
-                            : scheme.onSurfaceVariant,
-                        minimumSize: const Size(40, 40),
-                        shape: const CircleBorder(),
-                      ),
-                      onPressed: hasText
-                          ? () {
-                              HapticFeedback.lightImpact();
-                              _sendMessage(connector);
-                            }
-                          : null,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+      encoder: useEncoder
+          ? (text) => connector.prepareContactOutboundText(widget.contact, text)
+          : null,
+      onSend: () => _sendMessage(connector),
+      sendTooltip: context.l10n.chat_sendMessageTo(
+        _resolveContact(connector).name,
+      ),
+      // No image action here: the image wire format is GRP_DATA, a channel
+      // primitive with no DM equivalent (see the note at the top of this
+      // file).
+      actionsBuilder: () => [
+        ChatComposerAction(
+          id: 'gif',
+          icon: Icons.gif_box,
+          label: context.l10n.chat_sendGif,
         ),
-      ),
-    );
-  }
-
-  void _showGifPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => GifPicker(
-        onGifSelected: (gifId) {
-          _textController.text = GifHelper.encodeGif(gifId);
-        },
-      ),
-    );
-  }
-
-  Future<void> _showTranslationOptions() async {
-    final settingsService = context.read<AppSettingsService>();
-    final settings = settingsService.settings;
-    await showMessageTranslationSheet(
-      context: context,
-      enabled: settings.composerTranslationEnabled,
-      selectedLanguageCode: settings.translationTargetLanguageCode,
-      onEnabledChanged: settingsService.setComposerTranslationEnabled,
-      onLanguageSelected: settingsService.setTranslationTargetLanguageCode,
+        ChatComposerAction(
+          id: 'send-my-location',
+          icon: Icons.my_location,
+          label: context.l10n.chat_shareMyLocation,
+        ),
+      ],
+      onAction: (action) {
+        if (!mounted) return;
+        switch (action) {
+          case 'gif':
+            showChatGifPicker(context, _textController);
+          case 'send-my-location':
+            _shareMyLocation(context.read<MeshCoreConnector>());
+        }
+      },
     );
   }
 
   /// Shares the radio's own position as a map marker. Shares the text send
   /// guard and cooldown so it can't race or flood alongside typed messages.
-  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
-    final lat = connector.selfLatitude;
-    final lon = connector.selfLongitude;
-    if (!hasShareableLocation(lat, lon)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_noRadioLocation),
-      );
-      return;
-    }
-    final selfName = connector.selfName;
-    final label = await showMarkerLabelDialog(
-      context,
-      lat: lat!,
-      lon: lon!,
-      defaultLabel: selfName != null && selfName.isNotEmpty
-          ? selfName
-          : context.l10n.map_sharedPin,
-      flags: 'poi',
-      confirmText: context.l10n.common_share,
+  Future<void> _shareMyLocation(MeshCoreConnector connector) {
+    return shareMyLocationMarker(
+      context: context,
+      connector: connector,
+      guard: _sendGuard,
+      send: (markerText) =>
+          connector.sendMessage(_resolveContact(connector), markerText),
     );
-    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
-    final now = DateTime.now();
-    if (_lastTextSendAt != null &&
-        now.difference(_lastTextSendAt!) < const Duration(seconds: 1)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_sendCooldown),
-      );
-      return;
-    }
-    _lastTextSendAt = now;
-    _isSendingText = true;
-    try {
-      await connector.sendMessage(
-        _resolveContact(connector),
-        formatMarkerText(lat, lon, label, 'poi'),
-      );
-    } catch (e) {
-      appLogger.warn('Sharing location failed: $e', tag: 'Chat');
-    } finally {
-      _isSendingText = false;
-    }
   }
 
-  Future<void> _sendMessage(MeshCoreConnector connector) async {
-    if (_isSendingText) return;
-    _isSendingText = true;
-    try {
-      await _sendMessageInner(connector);
-    } finally {
-      _isSendingText = false;
-    }
+  Future<void> _sendMessage(MeshCoreConnector connector) {
+    return _sendGuard.runExclusive(() => _sendMessageInner(connector));
   }
 
   Future<void> _sendMessageInner(MeshCoreConnector connector) async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+    if (!_sendGuard.checkCooldown(context)) return;
 
-    final now = DateTime.now();
-    if (_lastTextSendAt != null &&
-        now.difference(_lastTextSendAt!) < const Duration(seconds: 1)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_sendCooldown),
-      );
-      return;
-    }
-    _lastTextSendAt = now;
+    final translation = await translateOutgoingText(context, text);
+    if (translation == null || !mounted) return;
+    var outgoingText = translation.text;
 
-    final settings = context.read<AppSettingsService>().settings;
-    final translationService = context.read<TranslationService>();
-    var outgoingText = text;
-    String? originalText;
-    String? translatedLanguageCode;
-    String? translationModelId;
-    if (settings.translationEnabled) {
-      final targetLanguageCode = translationService.resolvedTargetLanguageCode(
-        Localizations.localeOf(context).languageCode,
-      );
-      if (translationService.shouldTranslateOutgoing(
-        text: text,
-        targetLanguageCode: targetLanguageCode,
-      )) {
-        final result = await translationService.translateOutgoingText(
-          text: text,
-          targetLanguageCode: targetLanguageCode,
-        );
-        if (!mounted) return;
-        if (result != null &&
-            result.status == MessageTranslationStatus.completed &&
-            result.translatedText.isNotEmpty) {
-          outgoingText = result.translatedText;
-          originalText = text;
-          translatedLanguageCode = result.targetLanguageCode;
-          translationModelId = result.modelId;
-        }
-      }
-    }
     final maxBytes = maxContactMessageBytes();
     final outboundText = connector.prepareContactOutboundText(
       _resolveContact(connector),
@@ -868,36 +605,23 @@ class _ChatScreenState extends State<ChatScreen> {
     connector.sendMessage(
       _resolveContact(connector),
       outgoingText,
-      originalText: originalText,
-      translatedLanguageCode: translatedLanguageCode,
-      translationModelId: translationModelId,
+      originalText: translation.originalText,
+      translatedLanguageCode: translation.languageCode,
+      translationModelId: translation.modelId,
     );
+    // Only a dispatched send starts the cooldown.
+    _sendGuard.markDispatched();
   }
 
   Future<void> _confirmClearChat(
     BuildContext context,
     MeshCoreConnector connector,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.contact_clearChat),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
+    final confirmed = await confirmClearChat(
+      context,
+      message: context.l10n.chat_clearChatConfirm,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       connector.clearMessagesForContact(widget.contact);
     }
   }
@@ -1020,7 +744,9 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
     connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
-    final contact = widget.contact;
+    // The live contact carries the current telemetry flags; widget.contact
+    // is the snapshot this screen was opened with.
+    final contact = _resolveContact(connector);
     bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
     bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
       contact.publicKeyHex,
@@ -1034,6 +760,18 @@ class _ChatScreenState extends State<ChatScreen> {
     bool teleBaseEnabled = contact.teleBaseEnabled;
     bool teleLocEnabled = contact.teleLocEnabled;
     bool teleEnvEnabled = contact.teleEnvEnabled;
+    // Each toggle is committed immediately, like the compression switches,
+    // so dismissing the dialog by tapping outside keeps the change. All three
+    // flags are sent every time so overlapping writes can't undo each other.
+    void commitTelemetryFlags() {
+      connector.setContactFlags(
+        contact,
+        teleBase: teleBaseEnabled,
+        teleLoc: teleLocEnabled,
+        teleEnv: teleEnvEnabled,
+      );
+    }
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -1147,6 +885,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleBaseEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleBaseEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
                 const Divider(height: 8),
@@ -1157,6 +896,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleLocEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleLocEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
                 const Divider(height: 8),
@@ -1167,6 +907,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleEnvEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleEnvEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
               ],
@@ -1174,15 +915,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                connector.setContactFlags(
-                  contact,
-                  teleBase: teleBaseEnabled,
-                  teleLoc: teleLocEnabled,
-                  teleEnv: teleEnvEnabled,
-                );
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: Text(context.l10n.common_close),
             ),
           ],
@@ -1341,7 +1074,7 @@ class _ChatScreenState extends State<ChatScreen> {
               title: Text(context.l10n.common_copy),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _copyMessageText(message.text);
+                copyChatMessageText(context, message.text);
               },
             ),
             if (canTranslateMessage)
@@ -1406,17 +1139,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  void _copyMessageText(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    // Android shows its own clipboard chip; the snackbar is redundant there
-    // and lingers over the input field after the chip dismisses.
-    if (PlatformInfo.isAndroid) return;
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.chat_messageCopied),
     );
   }
 
@@ -1503,39 +1225,14 @@ class _MessageBubble extends StatelessWidget {
       (connector) => connector.isContactUrlImagesEnabled(sourceId),
     );
 
-    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
-    final bubbleColor = isFailed
-        ? scheme.errorContainer
-        : isOutgoing
-        ? MeshPalette.me
-        : scheme.surfaceContainerLow;
-    final bubbleBorder = isFailed
-        ? scheme.error
-        : isOutgoing
-        ? MeshPalette.meBorder
-        : scheme.outlineVariant;
-    final textColor = isFailed
-        ? scheme.onErrorContainer
-        : isOutgoing
-        ? MeshPalette.meInk
-        : scheme.onSurface;
-    final metaColor = textColor.withValues(alpha: 0.65);
+    final colors = MessageBubbleColors.of(
+      scheme,
+      isOutgoing: isOutgoing,
+      isFailed: isFailed,
+    );
+    final textColor = colors.text;
+    final metaColor = colors.meta;
     const bodyFontSize = 14.0;
-
-    // Asymmetric radius: outgoing — top-left large, others also large; outgoing bottom-right tight.
-    final borderRadius = isOutgoing
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.lg),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.xs),
-          )
-        : const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.xs),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.lg),
-          );
 
     // Do not strip room-server author bytes here: the parser stores them in
     // fourByteRoomContactKey, so message.text is safe to render as-is.
@@ -1597,21 +1294,11 @@ class _MessageBubble extends StatelessWidget {
                     const SizedBox(width: 6),
                   ],
                   Flexible(
-                    child: Container(
-                      padding: gifId != null
-                          ? const EdgeInsets.all(4)
-                          : const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                      constraints: BoxConstraints(
-                        maxWidth: constraints.maxWidth * 0.72,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bubbleColor,
-                        borderRadius: borderRadius,
-                        border: Border.all(color: bubbleBorder, width: 1),
-                      ),
+                    child: MessageBubbleFrame(
+                      isOutgoing: isOutgoing,
+                      isFailed: isFailed,
+                      compact: gifId != null,
+                      maxWidth: constraints.maxWidth,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1627,9 +1314,9 @@ class _MessageBubble extends StatelessWidget {
                               child: Text(
                                 senderName,
                                 style: MeshTheme.mono(
-                                  fontSize: 11,
+                                  fontSize: 13 * textScale,
                                   fontWeight: FontWeight.w700,
-                                  color: _colorForName(senderName),
+                                  color: senderNameColor(senderName),
                                 ),
                               ),
                             ),
@@ -1725,7 +1412,7 @@ class _MessageBubble extends StatelessWidget {
                                       context.l10n.urlImage_possible,
                                       style: TextStyle(
                                         color: metaColor,
-                                        fontSize: 11 * textScale,
+                                        fontSize: 12 * textScale,
                                       ),
                                     ),
                                   ),
@@ -1749,7 +1436,7 @@ class _MessageBubble extends StatelessWidget {
                                       .maxMessageRetries,
                                 ),
                                 style: MeshTheme.mono(
-                                  fontSize: 9.5 * textScale,
+                                  fontSize: 12 * textScale,
                                   color: metaColor,
                                 ),
                               ),
@@ -1801,7 +1488,7 @@ class _MessageBubble extends StatelessWidget {
                                   const SizedBox(width: 2),
                                   Icon(
                                     Icons.speed,
-                                    size: 10 * textScale,
+                                    size: 14 * textScale,
                                     color: isOutgoing
                                         ? metaColor
                                         : scheme.tertiary,
@@ -1809,7 +1496,7 @@ class _MessageBubble extends StatelessWidget {
                                   Text(
                                     '${(message.tripTimeMs! / 1000).toStringAsFixed(1)}s',
                                     style: MeshTheme.mono(
-                                      fontSize: 11 * textScale,
+                                      fontSize: 12 * textScale,
                                       color: isOutgoing
                                           ? metaColor
                                           : scheme.tertiary,
@@ -1831,7 +1518,13 @@ class _MessageBubble extends StatelessWidget {
             const SizedBox(height: 4),
             Padding(
               padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
-              child: _buildReactionsDisplay(context, message, scheme),
+              child: ReactionChips(
+                reactions: message.reactions,
+                statuses: message.reactionStatuses,
+                onRetry: onRetryReaction == null
+                    ? null
+                    : (emoji) => onRetryReaction!(message, emoji),
+              ),
             ),
           ],
         ],
@@ -1905,104 +1598,7 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildReactionsDisplay(
-    BuildContext context,
-    Message message,
-    ColorScheme scheme,
-  ) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: message.reactions.entries.map((entry) {
-        final emoji = entry.key;
-        final count = entry.value.length;
-        final status = message.reactionStatuses[emoji];
-        final isPending =
-            status == MessageStatus.pending || status == MessageStatus.sent;
-        final isFailed = status == MessageStatus.failed;
-
-        return GestureDetector(
-          onTap: isFailed && onRetryReaction != null
-              ? () => onRetryReaction!(message, emoji)
-              : null,
-          child: Opacity(
-            opacity: isPending ? 0.5 : 1.0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isFailed
-                    ? scheme.errorContainer
-                    : scheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(MeshRadii.pill),
-                border: Border.all(
-                  color: isFailed ? scheme.error : scheme.outlineVariant,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    emoji,
-                    style: MeshTheme.emoji(fontSize: 16),
-                    textHeightBehavior: const TextHeightBehavior(
-                      applyHeightToFirstAscent: false,
-                      applyHeightToLastDescent: false,
-                    ),
-                  ),
-                  if (count > 1) ...[
-                    const SizedBox(width: 4),
-                    Text(
-                      '$count',
-                      style: MeshTheme.mono(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ],
-                  if (isPending) ...[
-                    const SizedBox(width: 2),
-                    SizedBox(
-                      width: 8,
-                      height: 8,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.5,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ],
-                  if (isFailed) ...[
-                    const SizedBox(width: 2),
-                    Icon(Icons.replay, size: 10, color: scheme.error),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildAvatar(String senderName) {
     return AvatarCircle(name: senderName, size: 32);
   }
-}
-
-/// Deterministic name-to-hue mapping consistent with [AvatarCircle].
-Color _colorForName(String name) {
-  const hues = [
-    MeshPalette.blue,
-    MeshPalette.magenta,
-    MeshPalette.signal,
-    MeshPalette.warn,
-    Color(0xFF8FA8F0),
-    Color(0xFF6FD9CE),
-  ];
-  var h = 0;
-  for (final c in name.codeUnits) {
-    h = (h * 31 + c) & 0x7fffffff;
-  }
-  return hues[h % hues.length];
 }

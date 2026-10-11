@@ -5779,4 +5779,405 @@ class AppLocalizationsBg extends AppLocalizations {
   String imageMessages_downloadFailedWithError(String error) {
     return 'Моделът за изображения не можа да се изтегли: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint =>
+      'Скриване: скрит, докато не напуснете картата.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Премахване: остава скрит, докато не го възстановите от менюто за филтър.';
+
+  @override
+  String get map_markerRemoved => 'Маркерът е премахнат';
+
+  @override
+  String get map_restoreRemovedMarkers =>
+      'Възстановяване на премахнатите маркери';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(int count) {
+    return '$count премахнати';
+  }
+
+  @override
+  String map_markersRestored(int count) {
+    return 'Възстановени маркери: $count';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Задаване като ваша локация?';
+
+  @override
+  String map_setLocationConfirmBody(String lat, String lon) {
+    return 'Вашият възел ще обявява тази позиция:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Задай локация';
+
+  @override
+  String get map_locationSetSuccess => 'Локацията на възела е обновена';
+
+  @override
+  String get map_locationSetFailed =>
+      'Устройството не потвърди новата локация. Опитайте отново.';
+
+  @override
+  String map_poiClusterTitle(int count) {
+    return '$count маркера тук';
+  }
+
+  @override
+  String map_poiClusterSemantics(int count) {
+    return '$count споделени маркера. Докоснете, за да ги видите.';
+  }
+
+  @override
+  String map_youWithMarkers(int count) {
+    return 'Вие и $count маркера';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(String label) {
+    return 'Споделен маркер: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(String name, String type, String status) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(int zoom) {
+    return 'Мащаб $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(String size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(String size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(int count) {
+    return 'Изтеглянето е отменено. Кеширани плочки: $count.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Районът е твърде голям';
+
+  @override
+  String mapCache_tooManyTiles(int count, int max) {
+    return 'Този район изисква $count плочки, повече от лимита от $max. Изберете по-малък район или по-малък максимален мащаб.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'Това изтрива всяко съобщение в този разговор от това устройство. Действието не може да бъде отменено.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'Това изтрива всяко съобщение в този канал от това устройство, включително получените изображения. Действието не може да бъде отменено.';
+
+  @override
+  String get channels_timeNow => 'сега';
+
+  @override
+  String channels_timeMinutes(int minutes) {
+    return '$minutesм';
+  }
+
+  @override
+  String channels_timeHours(int hours) {
+    return '$hoursч';
+  }
+
+  @override
+  String channels_timeDays(int days) {
+    return '$daysд';
+  }
+
+  @override
+  String channels_indexChip(int index) {
+    return 'CH $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Неизвестен';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'Локалният възел няма GPS фиксиране';
+
+  @override
+  String pathTrace_sendFailed(String error) {
+    return 'Пътната трасировка не можа да бъде изпратена: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'Данните за надморска височина изискват интернет връзка';
+
+  @override
+  String get losResultStale =>
+      'Остарял резултат: височината на антената е променена';
+
+  @override
+  String losSnrValue(String snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(String frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(String kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'Зареждане на телеметрия…';
+
+  @override
+  String telemetry_axisValue(String x, String y, String z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(String red, String green, String blue) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Няма връзка с радио. Свържете се и опитайте отново.';
+
+  @override
+  String get settings_requiresConnection =>
+      'Свържете се с радио, за да използвате това';
+
+  @override
+  String settings_txPowerInvalidRange(int min, int max) {
+    return 'Невалидна TX мощност (от $min до $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved =>
+      'Настройките на контакта са запазени';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Докоснете, за да превключите между процент и напрежение';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Копиране на публичния ключ';
+
+  @override
+  String get settings_locationClearHelper =>
+      'Оставете и двете полета празни, за да премахнете локацията си.';
+
+  @override
+  String get settings_locationCleared => 'Локацията е премахната';
+
+  @override
+  String get settings_regionFetchDiscovering =>
+      'Търсене на близки ретранслатори…';
+
+  @override
+  String settings_regionFetchProgress(int current, int total) {
+    return 'Запитване към ретранслатор $current от $total…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Все още няма известни ретранслатори. Добавете ретранслатор като контакт или изчакайте някой да обяви присъствие, после опитайте отново.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Нито един близък ретранслатор не отговори. Приближете се до ретранслатор и опитайте отново.';
+
+  @override
+  String appSettings_sourceSummary(String label, String description) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Маршрутизиране';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Съобщения с изображения';
+
+  @override
+  String get appSettings_showApiKey => 'Показване на API ключа';
+
+  @override
+  String get appSettings_hideApiKey => 'Скриване на API ключа';
+
+  @override
+  String get translation_defaultModelName => 'Модел';
+
+  @override
+  String translation_downloadProgressBytes(String fileName, String current) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    String fileName,
+    String current,
+    String total,
+    String percent,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(String size, String source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'Радиото е изключено';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Свържете се отново с радиото, за да изпращате команди, да опреснявате или да запазвате промени.';
+
+  @override
+  String get repeater_cliSend => 'Изпрати команда';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Копирай транскрипта';
+
+  @override
+  String get repeater_cliShareTranscript => 'Сподели транскрипта';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Транскриптът е копиран';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Да се изчисти ли историята на командите? Действието не може да бъде отменено.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Търсене на команди';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Няма съвпадащи команди';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Да се изчистят ли всички записи в дневника? Действието не може да бъде отменено.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Незапазени промени';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'Имате промени, които не са запазени в ретранслатора.';
+
+  @override
+  String get repeater_discardChanges => 'Отхвърли';
+
+  @override
+  String repeater_actionSentNoReply(String action) {
+    return '$action: командата е изпратена. Ретранслаторът не отговаря на тази команда.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(String setting, String value) {
+    return '$setting: $value не е валидна стойност';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(String value, int min, int max) {
+    return 'TX мощността $value е извън диапазона (от $min до $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(int length) {
+    return 'Частният ключ трябва да е точно $length шестнадесетични знака';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Рекламата не можа да бъде изпратена';
+
+  @override
+  String get contacts_manageGroups => 'Управление на групи';
+
+  @override
+  String community_shortId(String id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Свързан с';
+
+  @override
+  String get usbChooseSerialPort => 'Изберете сериен порт';
+
+  @override
+  String neighbors_durationSeconds(String seconds) {
+    return '$secondsс';
+  }
+
+  @override
+  String neighbors_durationMinutes(int minutes, String seconds) {
+    return '$minutesм $secondsс';
+  }
+
+  @override
+  String neighbors_durationHours(int hours, int minutes) {
+    return '$hoursч $minutesм';
+  }
 }

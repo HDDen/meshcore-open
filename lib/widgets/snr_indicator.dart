@@ -313,7 +313,7 @@ class _SNRIndicatorState extends State<SNRIndicator> {
                                       Text(
                                         '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
                                         style: MeshTheme.mono(
-                                          fontSize: 11,
+                                          fontSize: 12,
                                           color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),

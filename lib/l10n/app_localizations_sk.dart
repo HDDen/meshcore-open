@@ -5765,4 +5765,401 @@ class AppLocalizationsSk extends AppLocalizations {
   String imageMessages_downloadFailedWithError(String error) {
     return 'Model obrázkov sa nepodarilo stiahnuť: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint =>
+      'Skryť: značka zostane skrytá, kým neopustíte mapu.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Odstrániť: značka zostane skrytá, kým ju neobnovíte v ponuke filtra.';
+
+  @override
+  String get map_markerRemoved => 'Značka bola odstránená';
+
+  @override
+  String get map_restoreRemovedMarkers => 'Obnoviť odstránené značky';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(int count) {
+    return 'Odstránené: $count';
+  }
+
+  @override
+  String map_markersRestored(int count) {
+    return 'Obnovené značky: $count';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Nastaviť ako vašu polohu?';
+
+  @override
+  String map_setLocationConfirmBody(String lat, String lon) {
+    return 'Váš uzol bude oznamovať túto polohu:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Nastaviť polohu';
+
+  @override
+  String get map_locationSetSuccess => 'Poloha uzla bola aktualizovaná';
+
+  @override
+  String get map_locationSetFailed =>
+      'Zariadenie nepotvrdilo novú polohu. Skúste to znova.';
+
+  @override
+  String map_poiClusterTitle(int count) {
+    return 'Značiek tu: $count';
+  }
+
+  @override
+  String map_poiClusterSemantics(int count) {
+    return 'Zdieľané značky: $count. Klepnutím ich zobrazíte.';
+  }
+
+  @override
+  String map_youWithMarkers(int count) {
+    return 'Vy a značky: $count';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(String label) {
+    return 'Zdieľaná značka: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(String name, String type, String status) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(int zoom) {
+    return 'Priblíženie $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(String size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(String size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(int count) {
+    return 'Sťahovanie bolo zrušené. Uložených dlaždíc: $count.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Oblasť je príliš veľká';
+
+  @override
+  String mapCache_tooManyTiles(int count, int max) {
+    return 'Táto oblasť vyžaduje $count dlaždíc, čo je viac ako limit $max. Vyberte menšiu oblasť alebo znížte maximálne priblíženie.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'Týmto sa z tohto zariadenia vymažú všetky správy v tejto konverzácii. Túto akciu nie je možné vrátiť späť.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'Týmto sa z tohto zariadenia vymažú všetky správy v tomto kanáli vrátane prijatých obrázkov. Túto akciu nie je možné vrátiť späť.';
+
+  @override
+  String get channels_timeNow => 'teraz';
+
+  @override
+  String channels_timeMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String channels_timeHours(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String channels_timeDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String channels_indexChip(int index) {
+    return 'KAN $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Neznámy';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'Lokálny uzol nemá GPS fix';
+
+  @override
+  String pathTrace_sendFailed(String error) {
+    return 'Sledovanie cesty sa nepodarilo odoslať: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'Údaje o nadmorskej výške vyžadujú pripojenie k internetu';
+
+  @override
+  String get losResultStale => 'Zastarané: výška antény sa zmenila';
+
+  @override
+  String losSnrValue(String snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(String frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(String kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'Načítavajú sa telemetrické údaje…';
+
+  @override
+  String telemetry_axisValue(String x, String y, String z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(String red, String green, String blue) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Nie ste pripojení k rádiu. Pripojte sa a skúste to znova.';
+
+  @override
+  String get settings_requiresConnection => 'Na použitie pripojte rádio';
+
+  @override
+  String settings_txPowerInvalidRange(int min, int max) {
+    return 'Neplatný výkon TX ($min až $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved =>
+      'Nastavenia kontaktu boli uložené';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Klepnutím prepnete medzi percentami a napätím';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Kopírovať verejný kľúč';
+
+  @override
+  String get settings_locationClearHelper =>
+      'Ak chcete odstrániť svoju polohu, nechajte obe polia prázdne.';
+
+  @override
+  String get settings_locationCleared => 'Poloha bola odstránená';
+
+  @override
+  String get settings_regionFetchDiscovering => 'Hľadajú sa blízke opakovače…';
+
+  @override
+  String settings_regionFetchProgress(int current, int total) {
+    return 'Dopytuje sa opakovač $current z $total…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Zatiaľ nie sú známe žiadne opakovače. Pridajte opakovač medzi kontakty alebo počkajte na jeho oznam a skúste to znova.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Blízke opakovače neodpovedali. Priblížte sa k opakovaču a skúste to znova.';
+
+  @override
+  String appSettings_sourceSummary(String label, String description) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Smerovanie';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Obrazové správy';
+
+  @override
+  String get appSettings_showApiKey => 'Zobraziť API kľúč';
+
+  @override
+  String get appSettings_hideApiKey => 'Skryť API kľúč';
+
+  @override
+  String get translation_defaultModelName => 'Model';
+
+  @override
+  String translation_downloadProgressBytes(String fileName, String current) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    String fileName,
+    String current,
+    String total,
+    String percent,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(String size, String source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'Rádio je odpojené';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Znova sa pripojte k rádiu, aby ste mohli odosielať príkazy, obnovovať alebo ukladať zmeny.';
+
+  @override
+  String get repeater_cliSend => 'Odoslať príkaz';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Kopírovať prepis';
+
+  @override
+  String get repeater_cliShareTranscript => 'Zdieľať prepis';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Prepis bol skopírovaný';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Vymazať históriu príkazov? Túto akciu nie je možné vrátiť späť.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Hľadať príkazy';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Žiadne zodpovedajúce príkazy';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Vymazať všetky záznamy denníka? Túto akciu nie je možné vrátiť späť.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Neuložené zmeny';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'Máte zmeny, ktoré neboli uložené do opakovača.';
+
+  @override
+  String get repeater_discardChanges => 'Zahodiť';
+
+  @override
+  String repeater_actionSentNoReply(String action) {
+    return '$action: príkaz bol odoslaný. Opakovač na tento príkaz neodpovedá.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(String setting, String value) {
+    return '$setting: hodnota $value nie je platná';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(String value, int min, int max) {
+    return 'Výkon TX $value je mimo rozsah ($min až $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(int length) {
+    return 'Súkromný kľúč musí mať presne $length hexadecimálnych znakov';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Oznam sa nepodarilo odoslať';
+
+  @override
+  String get contacts_manageGroups => 'Spravovať skupiny';
+
+  @override
+  String community_shortId(String id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Pripojené k';
+
+  @override
+  String get usbChooseSerialPort => 'Vyberte sériový port';
+
+  @override
+  String neighbors_durationSeconds(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String neighbors_durationMinutes(int minutes, String seconds) {
+    return '${minutes}m ${seconds}s';
+  }
+
+  @override
+  String neighbors_durationHours(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
 }

@@ -5507,4 +5507,389 @@ class AppLocalizationsJa extends AppLocalizations {
   String imageMessages_downloadFailedWithError(String error) {
     return '画像モデルをダウンロードできませんでした：$error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint => '非表示:マップを離れるまで非表示になります。';
+
+  @override
+  String get map_markerRemoveHint => '削除:フィルターメニューから復元するまで非表示のままです。';
+
+  @override
+  String get map_markerRemoved => 'マーカーを削除しました';
+
+  @override
+  String get map_restoreRemovedMarkers => '削除したマーカーを復元';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(int count) {
+    return '$count件削除済み';
+  }
+
+  @override
+  String map_markersRestored(int count) {
+    return '$count件のマーカーを復元しました';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'この位置を自分の位置に設定しますか?';
+
+  @override
+  String map_setLocationConfirmBody(String lat, String lon) {
+    return 'ノードは次の位置をアドバートします:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => '位置を設定';
+
+  @override
+  String get map_locationSetSuccess => 'ノードの位置を更新しました';
+
+  @override
+  String get map_locationSetFailed => 'デバイスが新しい位置を確認しませんでした。もう一度お試しください。';
+
+  @override
+  String map_poiClusterTitle(int count) {
+    return 'ここに$count件のマーカー';
+  }
+
+  @override
+  String map_poiClusterSemantics(int count) {
+    return '共有マーカー$count件。タップして一覧を表示します。';
+  }
+
+  @override
+  String map_youWithMarkers(int count) {
+    return '自分と$count件のマーカー';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(String label) {
+    return '共有マーカー: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(String name, String type, String status) {
+    return '$name、$type、$status';
+  }
+
+  @override
+  String mapCache_zoomLevel(int zoom) {
+    return 'ズーム $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(String size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(String size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(int count) {
+    return 'ダウンロードをキャンセルしました。$count枚のタイルをキャッシュしました。';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'エリアが大きすぎます';
+
+  @override
+  String mapCache_tooManyTiles(int count, int max) {
+    return 'このエリアには$count枚のタイルが必要で、上限の$max枚を超えています。より小さいエリアを選ぶか、最大ズームを下げてください。';
+  }
+
+  @override
+  String get chat_clearChatConfirm => 'この会話のすべてのメッセージをこのデバイスから消去します。元に戻せません。';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'このチャンネルのすべてのメッセージを、受信した画像も含めてこのデバイスから消去します。元に戻せません。';
+
+  @override
+  String get channels_timeNow => '今';
+
+  @override
+  String channels_timeMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String channels_timeHours(int hours) {
+    return '$hours時間';
+  }
+
+  @override
+  String channels_timeDays(int days) {
+    return '$days日';
+  }
+
+  @override
+  String channels_indexChip(int index) {
+    return 'CH $index';
+  }
+
+  @override
+  String get reaction_unknownSender => '不明';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'ローカルノードにGPS測位がありません';
+
+  @override
+  String pathTrace_sendFailed(String error) {
+    return 'パストレースを送信できませんでした: $error';
+  }
+
+  @override
+  String get losErrorNoInternet => '標高データにはインターネット接続が必要です';
+
+  @override
+  String get losResultStale => '古い結果: アンテナ高が変更されました';
+
+  @override
+  String losSnrValue(String snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(String frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(String kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'テレメトリを読み込み中…';
+
+  @override
+  String telemetry_axisValue(String x, String y, String z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(String red, String green, String blue) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError => '無線機に接続されていません。接続してからもう一度お試しください。';
+
+  @override
+  String get settings_requiresConnection => '使用するには無線機に接続してください';
+
+  @override
+  String settings_txPowerInvalidRange(int min, int max) {
+    return 'TX出力が無効です($min~$max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => '連絡先設定を保存しました';
+
+  @override
+  String get settings_batteryToggleHint => 'タップでパーセントと電圧を切り替え';
+
+  @override
+  String get settings_publicKeyCopyHint => '公開鍵をコピー';
+
+  @override
+  String get settings_locationClearHelper => '位置情報を削除するには、両方の欄を空にしてください。';
+
+  @override
+  String get settings_locationCleared => '位置情報を削除しました';
+
+  @override
+  String get settings_regionFetchDiscovering => '近くのリピータを検索中…';
+
+  @override
+  String settings_regionFetchProgress(int current, int total) {
+    return 'リピータ $current/$total に問い合わせ中…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      '既知のリピータがまだありません。リピータを連絡先に追加するか、アドバートを待ってからもう一度お試しください。';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      '近くのリピータから応答がありませんでした。リピータに近づいてもう一度お試しください。';
+
+  @override
+  String appSettings_sourceSummary(String label, String description) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'ルーティング';
+
+  @override
+  String get appSettings_imageMessagesSection => '画像メッセージ';
+
+  @override
+  String get appSettings_showApiKey => 'APIキーを表示';
+
+  @override
+  String get appSettings_hideApiKey => 'APIキーを非表示';
+
+  @override
+  String get translation_defaultModelName => 'モデル';
+
+  @override
+  String translation_downloadProgressBytes(String fileName, String current) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    String fileName,
+    String current,
+    String total,
+    String percent,
+  ) {
+    return '$fileName: $current / $total MB($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(String size, String source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => '無線機が切断されました';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'コマンドの送信、更新、変更の保存を行うには、無線機に再接続してください。';
+
+  @override
+  String get repeater_cliSend => 'コマンドを送信';
+
+  @override
+  String get repeater_cliCopyTranscript => '履歴をコピー';
+
+  @override
+  String get repeater_cliShareTranscript => '履歴を共有';
+
+  @override
+  String get repeater_cliTranscriptCopied => '履歴をコピーしました';
+
+  @override
+  String get repeater_cliClearHistoryConfirm => 'コマンド履歴を消去しますか?元に戻せません。';
+
+  @override
+  String get repeater_cliSearchCommands => 'コマンドを検索';
+
+  @override
+  String get repeater_cliNoMatchingCommands => '一致するコマンドがありません';
+
+  @override
+  String get debugLog_clearConfirm => 'すべてのログを消去しますか?元に戻せません。';
+
+  @override
+  String get repeater_unsavedChangesTitle => '未保存の変更';
+
+  @override
+  String get repeater_unsavedChangesMessage => 'リピータに保存されていない変更があります。';
+
+  @override
+  String get repeater_discardChanges => '破棄';
+
+  @override
+  String repeater_actionSentNoReply(String action) {
+    return '$action: コマンドを送信しました。リピータはこのコマンドに応答しません。';
+  }
+
+  @override
+  String repeater_invalidSettingValue(String setting, String value) {
+    return '$setting: $valueは無効です';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(String value, int min, int max) {
+    return 'TX出力 $value は範囲外です($min~$max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(int length) {
+    return '秘密鍵は16進数でちょうど$length文字である必要があります';
+  }
+
+  @override
+  String get contacts_advertFailed => 'アドバートを送信できませんでした';
+
+  @override
+  String get contacts_manageGroups => 'グループを管理';
+
+  @override
+  String community_shortId(String id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => '接続先';
+
+  @override
+  String get usbChooseSerialPort => 'シリアルポートを選択';
+
+  @override
+  String neighbors_durationSeconds(String seconds) {
+    return '$seconds秒';
+  }
+
+  @override
+  String neighbors_durationMinutes(int minutes, String seconds) {
+    return '$minutes分$seconds秒';
+  }
+
+  @override
+  String neighbors_durationHours(int hours, int minutes) {
+    return '$hours時間$minutes分';
+  }
 }

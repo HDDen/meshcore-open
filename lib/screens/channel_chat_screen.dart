@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show mergeSort;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +13,6 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
-import '../utils/app_logger.dart';
 import '../utils/platform_info.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../connector/meshcore_protocol.dart';
@@ -26,7 +26,6 @@ import '../l10n/l10n.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/image_codec_support.dart' show aeicRatePointForUi;
-import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/image_chunk_transport.dart';
@@ -37,18 +36,19 @@ import '../utils/image_save.dart';
 import '../utils/lora_airtime.dart';
 import '../widgets/marker_label_dialog.dart';
 import '../widgets/received_image_message.dart';
-import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/empty_state.dart';
 
+import '../widgets/chat_composer.dart';
+import '../widgets/chat_send_pipeline.dart';
 import '../widgets/chat_zoom_wrapper.dart';
+import '../widgets/message_bubble_frame.dart';
+import '../widgets/reaction_chips.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
-import '../widgets/gif_picker.dart';
 import '../widgets/image_send_codec_binding.dart';
 import '../widgets/image_send_preview_sheet.dart';
-import '../widgets/message_translation_button.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -101,12 +101,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   int _imageSendTotal = 0;
 
   MeshCoreConnector? _connector;
-  DateTime? _lastChannelSendAt;
-  // True while a send is awaiting outgoing translation, so a second tap
-  // can't send the same text again.
-  bool _isSendingText = false;
+  final ChatSendGuard _sendGuard = ChatSendGuard();
   bool _channelSkipNextBottomSnap = false;
   String? _unreadDividerMessageId;
+  _TranscriptLayout? _transcriptLayout;
+  ReceivedImageStore? _watchedImageStore;
+  int _imageStoreVersion = 0;
+  ModalRoute<dynamic>? _route;
 
   @override
   void initState() {
@@ -148,7 +149,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     });
   }
 
-  // TODO: Reload communities when returning from another screen
+  /// Loads the community list; also re-run whenever a covering route pops
+  /// (see [_onCoveringRouteStatus]).
   Future<void> _loadCommunities() async {
     final connector = context.read<MeshCoreConnector>();
     _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
@@ -203,7 +205,28 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!identical(route, _route)) {
+      _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+      _route = route;
+      route?.secondaryAnimation?.addStatusListener(_onCoveringRouteStatus);
+    }
+  }
+
+  /// Reloads communities when a route pushed on top of this one is popped,
+  /// so a community joined or created elsewhere gets its badge and type here.
+  void _onCoveringRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && mounted) {
+      _loadCommunities();
+    }
+  }
+
+  @override
   void dispose() {
+    _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+    _watchedImageStore?.removeListener(_onImageStoreChanged);
     _connector?.setActiveChannel(null);
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
@@ -218,6 +241,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       _replyingToMessage = message;
       _useReplyRegion = message.region?.isNotEmpty ?? false;
     });
+    // Replying means typing next: open the keyboard on the composer.
+    _textFieldFocusNode.requestFocus();
   }
 
   void _cancelReply() {
@@ -288,14 +313,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: Colors.purple,
+                color: MeshPalette.magenta,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Theme.of(context).cardColor,
                   width: 2,
                 ),
               ),
-              child: const Icon(Icons.people, size: 8, color: Colors.white),
+              child: const Icon(Icons.people, size: 8, color: MeshPalette.ink),
             ),
           ),
       ],
@@ -439,9 +464,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               child: Consumer<MeshCoreConnector>(
                 builder: (context, connector, child) {
                   final messages = connector.getChannelMessages(widget.channel);
-                  final imageRows = _receivedImageRows(context);
+                  final layout = _transcriptLayoutFor(context, messages);
 
-                  if (messages.isEmpty && imageRows.isEmpty) {
+                  if (layout.length == 0) {
                     return EmptyState(
                       icon: widget.channel.isPublicChannel
                           ? Icons.public
@@ -460,40 +485,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   final urlImagesEnabled = connector.isChannelUrlImagesEnabled(
                     widget.channel.index,
                   );
-                  // Images are not ChannelMessages: they arrive as GRP_DATA
-                  // chunks and are owned by ReceivedImageStore, so the two
-                  // sources are merged here in arrival (receivedAt) order and the list
-                  // below indexes rows, not messages.
-                  final rows = <_ChannelChatRow>[
-                    for (final message in messages)
-                      _ChannelChatRow(message: message),
-                    ...imageRows,
-                  ]..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
-
-                  // Reverse rows so newest appear at bottom with reverse: true
-                  final reversedRows = rows.reversed.toList();
-                  final itemCount =
-                      reversedRows.length + (_isLoadingOlder ? 1 : 0);
-
-                  // Prune stale keys (deleted/cleared messages) to avoid
-                  // unbounded growth.
-                  final liveIds = reversedRows.map((r) => r.id).toSet();
-                  _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
-
-                  // Two messages can collide on messageId (same ms + name/text
-                  // hash). Only the first occurrence owns the shared GlobalKey
-                  // used for scroll-to-message; duplicates get a local key so
-                  // no two widgets share one GlobalKey.
-                  final seenIds = <String>{};
-                  final keyedIndices = <int>{};
-                  for (var i = 0; i < reversedRows.length; i++) {
-                    if (seenIds.add(reversedRows[i].id)) {
-                      keyedIndices.add(i);
-                    }
-                  }
+                  final rowCount = layout.length;
+                  final itemCount = rowCount + (_isLoadingOlder ? 1 : 0);
 
                   // Auto-scroll to bottom if user is already at bottom
                   WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
                     if (_channelSkipNextBottomSnap) {
                       _channelSkipNextBottomSnap = false;
                       return;
@@ -525,9 +522,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 ),
                               );
                             }
-                            final row = reversedRows[index];
+                            final row = layout.rowAt(index, messages);
                             final GlobalKey messageKey;
-                            if (keyedIndices.contains(index)) {
+                            if (layout.keyedIndices.contains(index)) {
                               messageKey = _messageKeys.putIfAbsent(
                                 row.id,
                                 GlobalKey.new,
@@ -558,9 +555,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           textScale,
                                         );
                                   final startsDay =
-                                      index == reversedRows.length - 1 ||
+                                      index == rowCount - 1 ||
                                       !isSameChatDay(
-                                        reversedRows[index + 1].receivedAt,
+                                        layout
+                                            .rowAt(index + 1, messages)
+                                            .receivedAt,
                                         row.receivedAt,
                                       );
                                   if (isUnreadAnchor || startsDay) {
@@ -641,15 +640,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       message.pathLength,
     );
 
-    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
-    final bubbleColor = isOutgoing
-        ? MeshPalette.me
-        : scheme.surfaceContainerLow;
-    final bubbleBorder = isOutgoing
-        ? MeshPalette.meBorder
-        : scheme.outlineVariant;
-    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
-    final metaColor = textColor.withValues(alpha: 0.65);
+    final colors = MessageBubbleColors.of(scheme, isOutgoing: isOutgoing);
+    final textColor = colors.text;
+    final metaColor = colors.meta;
     const bodyFontSize = 14.0;
 
     Widget buildTextContent() {
@@ -679,21 +672,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
     }
 
-    // Asymmetric radius matching chat_screen bubbles.
-    final borderRadius = isOutgoing
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.lg),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.xs),
-          )
-        : const BorderRadius.only(
-            topLeft: Radius.circular(MeshRadii.xs),
-            topRight: Radius.circular(MeshRadii.lg),
-            bottomLeft: Radius.circular(MeshRadii.lg),
-            bottomRight: Radius.circular(MeshRadii.lg),
-          );
-
     const maxSwipeOffset = 64.0;
     const replySwipeThreshold = 64.0;
     final messageBody = LayoutBuilder(
@@ -718,21 +696,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onSecondaryTapUp: PlatformInfo.isDesktop
                       ? (_) => _showMessageActions(message)
                       : null,
-                  child: Container(
-                    padding: gifId != null
-                        ? const EdgeInsets.all(4)
-                        : const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                    constraints: BoxConstraints(
-                      maxWidth: constraints.maxWidth * 0.72,
-                    ),
-                    decoration: BoxDecoration(
-                      color: bubbleColor,
-                      borderRadius: borderRadius,
-                      border: Border.all(color: bubbleBorder, width: 1),
-                    ),
+                  child: MessageBubbleFrame(
+                    isOutgoing: isOutgoing,
+                    compact: gifId != null,
+                    maxWidth: constraints.maxWidth,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -849,7 +816,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     context.l10n.urlImage_possible,
                                     style: TextStyle(
                                       color: metaColor,
-                                      fontSize: 11 * textScale,
+                                      fontSize: 12 * textScale,
                                     ),
                                   ),
                                 ),
@@ -895,7 +862,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           child: Text(
                                             _displayRegion(message.region!),
                                             style: MeshTheme.mono(
-                                              fontSize: 8.5 * textScale,
+                                              fontSize: 12 * textScale,
                                               color: metaColor,
                                             ),
                                           ),
@@ -916,7 +883,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: MeshTheme.mono(
-                                        fontSize: 9.5 * textScale,
+                                        fontSize: 12 * textScale,
                                         color: metaColor,
                                       ),
                                     ),
@@ -955,7 +922,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 const SizedBox(width: 6),
                                 Icon(
                                   Icons.repeat,
-                                  size: 11 * textScale,
+                                  size: 14 * textScale,
                                   color: metaColor,
                                 ),
                                 const SizedBox(width: 2),
@@ -1003,7 +970,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             const SizedBox(height: 4),
             Padding(
               padding: EdgeInsets.only(left: isOutgoing ? 0 : 42),
-              child: _buildReactionsDisplay(message),
+              child: ReactionChips(
+                reactions: message.reactions,
+                onTap: (_) => _showReactionsReport(message),
+              ),
             ),
           ],
         ],
@@ -1067,50 +1037,67 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
-  Widget _buildReplyPreview(ChannelMessage message, double textScale) {
-    final connector = context.read<MeshCoreConnector>();
-    final isOwnNode = message.replyToSenderName == connector.selfName;
-    final replyText = message.replyToText ?? '';
+  /// Decoded preview of quoted text: a GIF thumbnail, a location label, or
+  /// the text itself — never the raw `g:`/marker payload. Shared by the reply
+  /// quote inside bubbles and the "Replying to" banner above the composer.
+  Widget _buildReplyContent(
+    String replyText,
+    double textScale, {
+    required Color color,
+    int maxLines = 2,
+    double gifSize = 80,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
-
     final gifId = GifHelper.parseGif(replyText);
     final poi = parseMarkerText(replyText);
-
-    Widget contentPreview;
     if (gifId != null) {
-      contentPreview = ClipRRect(
+      return ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: GifMessage(
           url: 'https://media.giphy.com/media/$gifId/giphy.gif',
           backgroundColor: colorScheme.surfaceContainerHighest,
-          fallbackTextColor: previewTextColor,
-          maxSize: 80,
-        ),
-      );
-    } else if (poi != null) {
-      contentPreview = Row(
-        children: [
-          Icon(Icons.location_on_outlined, size: 14, color: previewTextColor),
-          const SizedBox(width: 4),
-          Text(
-            context.l10n.chat_location,
-            style: TextStyle(fontSize: 12 * textScale, color: previewTextColor),
-          ),
-        ],
-      );
-    } else {
-      contentPreview = Text(
-        replyText,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 12 * textScale,
-          color: previewTextColor,
-          fontStyle: FontStyle.italic,
+          fallbackTextColor: color,
+          maxSize: gifSize,
         ),
       );
     }
+    if (poi != null) {
+      return Row(
+        children: [
+          Icon(Icons.location_on_outlined, size: 16, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              context.l10n.chat_location,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12 * textScale, color: color),
+            ),
+          ),
+        ],
+      );
+    }
+    return Text(
+      replyText,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 12 * textScale,
+        color: color,
+        fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
+  Widget _buildReplyPreview(ChannelMessage message, double textScale) {
+    final connector = context.read<MeshCoreConnector>();
+    final isOwnNode = message.replyToSenderName == connector.selfName;
+    final colorScheme = Theme.of(context).colorScheme;
+    final contentPreview = _buildReplyContent(
+      message.replyToText ?? '',
+      textScale,
+      color: colorScheme.onSurface.withValues(alpha: 0.7),
+    );
 
     return GestureDetector(
       onTap: () => _scrollToMessage(message.replyToMessageId!),
@@ -1129,7 +1116,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             Text(
               context.l10n.chat_replyTo(message.replyToSenderName ?? ''),
               style: TextStyle(
-                fontSize: 11 * textScale,
+                fontSize: 12 * textScale,
                 fontWeight: FontWeight.bold,
                 color: isOwnNode ? colorScheme.primary : colorScheme.onSurface,
               ),
@@ -1139,54 +1126,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildReactionsDisplay(ChannelMessage message) {
-    final scheme = Theme.of(context).colorScheme;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: message.reactions.entries.map((entry) {
-        final emoji = entry.key;
-        final int count = entry.value.length;
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(MeshRadii.pill),
-            border: Border.all(color: scheme.outlineVariant, width: 1),
-          ),
-          child: InkWell(
-            onTap: () => _showReactionsReport(message),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  emoji,
-                  style: MeshTheme.emoji(fontSize: 16),
-                  textHeightBehavior: const TextHeightBehavior(
-                    applyHeightToFirstAscent: false,
-                    applyHeightToLastDescent: false,
-                  ),
-                ),
-                if (count > 1) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    '$count',
-                    style: MeshTheme.mono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
@@ -1235,7 +1174,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(reaction.senderName ?? '???')),
+                          Expanded(
+                            child: Text(
+                              reaction.senderName ??
+                                  context.l10n.reaction_unknownSender,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1388,8 +1332,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } on Exception catch (e) {
       debugPrint('image pick failed: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.chat_imagePickFailed)),
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_imagePickFailed),
       );
       return;
     }
@@ -1405,8 +1350,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     } on Exception catch (e) {
       debugPrint('image read failed: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.chat_imagePickFailed)),
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chat_imagePickFailed),
       );
       return;
     }
@@ -1437,19 +1383,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ImageSendPreviewResult result, {
     required Uint8List sourceBytes,
   }) async {
-    final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
 
     if (!connector.supportsChannelData) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.imageSend_deviceUnsupported)),
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.imageSend_deviceUnsupported),
       );
       return;
     }
     final senderPrefix = connector.imageSenderPrefix;
     if (senderPrefix == null) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.imageSend_deviceUnsupported)),
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.imageSend_deviceUnsupported),
       );
       return;
     }
@@ -1472,9 +1419,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         parity: result.includeParity,
       );
     } on ArgumentError {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.imageSend_tooLarge)));
+      if (!mounted) return;
+      showDismissibleSnackBar(context, content: Text(l10n.imageSend_tooLarge));
       return;
     }
+    if (!mounted) return;
 
     // Pace on the measured per-packet airtime when the radio parameters are
     // known; fall back to the base gap when they are not, rather than
@@ -1513,19 +1462,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         );
       }
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            sent
-                ? l10n.imageSend_sentConfirmation(chunkSet.blobs.length)
-                : l10n.imageSend_deviceUnsupported,
-          ),
+      showDismissibleSnackBar(
+        context,
+        content: Text(
+          sent
+              ? l10n.imageSend_sentConfirmation(chunkSet.blobs.length)
+              : l10n.imageSend_deviceUnsupported,
         ),
       );
     } on Exception catch (error) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.imageSend_sendFailed('$error'))),
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.imageSend_sendFailed('$error')),
       );
     } finally {
       if (mounted) {
@@ -1645,25 +1594,59 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
   }
 
-  /// Received/sent AEIC images for this channel, as transcript rows.
+  /// The merged, ordered transcript (messages + AEIC images), memoised.
   ///
-  /// Returns nothing when [ReceivedImageStore] is not registered, so a screen
-  /// test without the provider still renders.
-  /// [context] must be the context of the element currently building (the
-  /// `Consumer` builder's, not the `State`'s) — `watch` asserts on that.
-  List<_ChannelChatRow> _receivedImageRows(BuildContext context) {
-    final ReceivedImageStore store;
+  /// Sorting the whole transcript and rebuilding the key bookkeeping on every
+  /// connector notification is wasted work when this channel did not change
+  /// (most notifications are about other chats, contacts or radio state), so
+  /// the layout is only recomputed when the message list's identity, length or
+  /// ends change, or the image store notified.
+  ///
+  /// Returns no images when [ReceivedImageStore] is not registered, so a screen
+  /// test without the provider still renders. [context] must be the context
+  /// of the element currently building (the `Consumer` builder's, not the
+  /// `State`'s) — `watch` asserts on that.
+  _TranscriptLayout _transcriptLayoutFor(
+    BuildContext context,
+    List<ChannelMessage> messages,
+  ) {
+    ReceivedImageStore? store;
     try {
       store = context.watch<ReceivedImageStore>();
     } on ProviderNotFoundException {
-      return const <_ChannelChatRow>[];
+      store = null;
     }
-    return <_ChannelChatRow>[
-      for (final entry in store.entries)
-        if (entry.channelIndex == widget.channel.index)
-          _ChannelChatRow(image: entry),
-    ];
+    if (!identical(store, _watchedImageStore)) {
+      _watchedImageStore?.removeListener(_onImageStoreChanged);
+      _watchedImageStore = store;
+      store?.addListener(_onImageStoreChanged);
+      _imageStoreVersion++;
+    }
+    final cached = _transcriptLayout;
+    if (cached != null &&
+        cached.matches(messages, _imageStoreVersion, widget.channel.index)) {
+      return cached;
+    }
+    final images = store == null
+        ? const <ReceivedImageEntry>[]
+        : [
+            for (final entry in store.entries)
+              if (entry.channelIndex == widget.channel.index) entry,
+          ];
+    final layout = _TranscriptLayout.build(
+      messages: messages,
+      images: images,
+      imageVersion: _imageStoreVersion,
+      channelIndex: widget.channel.index,
+    );
+    // Prune stale keys (deleted/cleared messages) to avoid unbounded growth.
+    final liveIds = layout.ids.toSet();
+    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
+    _transcriptLayout = layout;
+    return layout;
   }
+
+  void _onImageStoreChanged() => _imageStoreVersion++;
 
   /// Bubble for one AEIC image, following the GIF-message precedent: minimal
   /// chrome, the renderer owns every state (receiving / decoding / failed) and
@@ -1901,18 +1884,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return context.l10n.receivedImage_senderPrefix(hex);
   }
 
-  void _showGifPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => GifPicker(
-        onGifSelected: (gifId) {
-          _textController.text = GifHelper.encodeGif(gifId);
-        },
-      ),
-    );
-  }
-
   Widget _buildAvatar(String senderName, double textScale) {
     return AvatarCircle(
       name: senderName,
@@ -1944,19 +1915,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 Text(
                   context.l10n.chat_replyingTo(message.senderName),
                   style: MeshTheme.mono(
-                    fontSize: 11 * textScale,
+                    fontSize: 12 * textScale,
                     fontWeight: FontWeight.w700,
                     color: scheme.primary,
                   ),
                 ),
-                Text(
+                _buildReplyContent(
                   message.text,
+                  textScale,
+                  color: scheme.onSurfaceVariant,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11 * textScale,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  gifSize: 48,
                 ),
               ],
             ),
@@ -1982,7 +1951,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   context.l10n.channels_regionSetTo(replyRegion!),
                   style:
                       MeshTheme.mono(
-                        fontSize: 10 * textScale,
+                        fontSize: 12 * textScale,
                         color: _useReplyRegion
                             ? scheme.onPrimaryContainer
                             : scheme.onSurfaceVariant,
@@ -2038,351 +2007,112 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  /// The `@[name] ` prefix a reply prepends to the outgoing text.
+  static String _replyPrefix(ChannelMessage replyTo) =>
+      '@[${replyTo.senderName}] ';
+
   Widget _buildInputBar() {
-    final connector = context.watch<MeshCoreConnector>();
-    final maxBytes = maxChannelMessageBytes(connector.selfName);
-    final settings = context.watch<AppSettingsService>().settings;
-    final showImageAction = settings.imageMessagesEnabled;
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.outlineVariant, width: 1)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_replyingToMessage != null)
-              Builder(
-                builder: (context) {
-                  final textScale = context
-                      .select<ChatTextScaleService, double>(
-                        (service) => service.scale,
-                      );
-                  return _buildReplyBanner(textScale);
-                },
-              ),
-            if (_imageSendTotal > 0) _buildImageSendProgress(scheme),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Builder(
-                    builder: (menuContext) {
-                      return IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        tooltip: context.l10n.chat_selectSendAction,
-                        onPressed: () async {
-                          final RenderBox button =
-                              menuContext.findRenderObject() as RenderBox;
-                          final RenderBox overlay =
-                              Overlay.of(menuContext).context.findRenderObject()
-                                  as RenderBox;
-                          final Offset buttonOffset = button.localToGlobal(
-                            Offset.zero,
-                            ancestor: overlay,
-                          );
-                          final items = <PopupMenuEntry<String>>[
-                            PopupMenuItem(
-                              value: 'gif',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.gif_box),
-                                  const SizedBox(width: 12),
-                                  Text(context.l10n.chat_sendGif),
-                                ],
-                              ),
-                            ),
-                          ];
-                          if (showImageAction) {
-                            items.add(
-                              PopupMenuItem(
-                                value: 'meshcore-image',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.image_outlined),
-                                    const SizedBox(width: 12),
-                                    Text(context.l10n.chat_sendImageLora),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          final selfConnector = context
-                              .read<MeshCoreConnector>();
-                          if (hasShareableLocation(
-                            selfConnector.selfLatitude,
-                            selfConnector.selfLongitude,
-                          )) {
-                            items.add(
-                              PopupMenuItem(
-                                value: 'send-my-location',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.my_location),
-                                    const SizedBox(width: 12),
-                                    Text(context.l10n.chat_shareMyLocation),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          final menuHeight =
-                              items.length * kMinInteractiveDimension + 16;
-                          final menuTop = (buttonOffset.dy - menuHeight).clamp(
-                            8.0,
-                            overlay.size.height,
-                          );
-                          final position = RelativeRect.fromLTRB(
-                            buttonOffset.dx,
-                            menuTop,
-                            overlay.size.width -
-                                buttonOffset.dx -
-                                button.size.width,
-                            overlay.size.height - buttonOffset.dy,
-                          );
-
-                          final selected = await showMenu<String>(
-                            context: menuContext,
-                            position: position,
-                            items: items,
-                          );
-                          if (!mounted || !menuContext.mounted) return;
-                          if (selected == null) return;
-                          switch (selected) {
-                            case 'gif':
-                              _showGifPicker(context);
-                              break;
-                            case 'meshcore-image':
-                              _showImageSendPreview();
-                              break;
-                            case 'send-my-location':
-                              await _shareMyLocation(
-                                context.read<MeshCoreConnector>(),
-                              );
-                              break;
-                          }
-                        },
-                      );
-                    },
-                  ),
-                  if (settings.translationEnabled)
-                    MessageTranslationButton(
-                      enabled: settings.composerTranslationEnabled,
-                      languageCode: settings.translationTargetLanguageCode,
-                      onPressed: _showTranslationOptions,
-                    ),
-                  Expanded(
-                    child: ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _textController,
-                      builder: (context, value, child) {
-                        final gifId = GifHelper.parseGif(value.text);
-                        if (gifId != null) {
-                          return Focus(
-                            autofocus: true,
-                            onKeyEvent: (node, event) {
-                              if (event is KeyDownEvent &&
-                                  (event.logicalKey ==
-                                          LogicalKeyboardKey.enter ||
-                                      event.logicalKey ==
-                                          LogicalKeyboardKey.numpadEnter)) {
-                                _sendMessage();
-                                return KeyEventResult.handled;
-                              }
-                              return KeyEventResult.ignored;
-                            },
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: GifMessage(
-                                      url:
-                                          'https://media.giphy.com/media/$gifId/giphy.gif',
-                                      backgroundColor:
-                                          scheme.surfaceContainerHighest,
-                                      fallbackTextColor: scheme.onSurface
-                                          .withValues(alpha: 0.6),
-                                      maxSize: 160,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  tooltip: context.l10n.chat_removeGif,
-                                  onPressed: () {
-                                    _textController.clear();
-                                    _textFieldFocusNode.requestFocus();
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        return ByteCountedTextField(
-                          maxBytes: maxBytes,
-                          controller: _textController,
-                          focusNode: _textFieldFocusNode,
-                          hintText: context.l10n.chat_typeMessage,
-                          onSubmitted: (_) => _sendMessage(),
-                          encoder:
-                              (connector.isChannelSmazEnabled(
-                                    widget.channel.index,
-                                  ) ||
-                                  connector.isChannelCyr2LatEnabled(
-                                    widget.channel.index,
-                                  ))
-                              ? (text) => connector.prepareChannelOutboundText(
-                                  widget.channel.index,
-                                  text,
-                                )
-                              : null,
-                          decoration: InputDecoration(
-                            hintText: context.l10n.chat_typeMessage,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(MeshRadii.md),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(MeshRadii.md),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(MeshRadii.md),
-                              borderSide: BorderSide(
-                                color: scheme.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: scheme.surfaceContainerLow,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 12,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, _) {
-                      final hasText = value.text.trim().isNotEmpty;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        child: IconButton.filled(
-                          icon: const Icon(Icons.send, size: 20),
-                          tooltip: context.l10n.chat_sendMessage,
-                          style: IconButton.styleFrom(
-                            backgroundColor: hasText
-                                ? scheme.primary
-                                : scheme.surfaceContainerHighest,
-                            foregroundColor: hasText
-                                ? scheme.onPrimary
-                                : scheme.onSurfaceVariant,
-                            minimumSize: const Size(40, 40),
-                            shape: const CircleBorder(),
-                          ),
-                          onPressed: hasText
-                              ? () {
-                                  HapticFeedback.lightImpact();
-                                  _sendMessage();
-                                }
-                              : null,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    // Only the fields the composer depends on, so unrelated connector
+    // notifications (adverts, other chats, radio stats) don't rebuild it.
+    final (selfName, useEncoder) = context
+        .select<MeshCoreConnector, (String?, bool)>(
+          (c) => (
+            c.selfName,
+            c.isChannelSmazEnabled(widget.channel.index) ||
+                c.isChannelCyr2LatEnabled(widget.channel.index),
+          ),
+        );
+    final showImageAction = context.select<AppSettingsService, bool>(
+      (s) => s.settings.imageMessagesEnabled,
     );
-  }
-
-  Future<void> _showTranslationOptions() async {
-    final settingsService = context.read<AppSettingsService>();
-    final settings = settingsService.settings;
-    await showMessageTranslationSheet(
-      context: context,
-      enabled: settings.composerTranslationEnabled,
-      selectedLanguageCode: settings.translationTargetLanguageCode,
-      onEnabledChanged: settingsService.setComposerTranslationEnabled,
-      onLanguageSelected: settingsService.setTranslationTargetLanguageCode,
+    final replyTo = _replyingToMessage;
+    // A reply's prefix is sent too, so it counts against the limit.
+    final replyPrefixBytes = replyTo == null
+        ? 0
+        : utf8.encode(_replyPrefix(replyTo)).length;
+    final maxBytes = math.max(
+      0,
+      maxChannelMessageBytes(selfName) - replyPrefixBytes,
+    );
+    final scheme = Theme.of(context).colorScheme;
+    return ChatComposer(
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      maxBytes: maxBytes,
+      encoder: useEncoder
+          ? (text) => context
+                .read<MeshCoreConnector>()
+                .prepareChannelOutboundText(widget.channel.index, text)
+          : null,
+      onSend: _sendMessage,
+      sendTooltip: context.l10n.chat_sendMessage,
+      header: [
+        if (replyTo != null)
+          Builder(
+            builder: (context) {
+              final textScale = context.select<ChatTextScaleService, double>(
+                (service) => service.scale,
+              );
+              return _buildReplyBanner(textScale);
+            },
+          ),
+        if (_imageSendTotal > 0) _buildImageSendProgress(scheme),
+      ],
+      actionsBuilder: () {
+        final connector = context.read<MeshCoreConnector>();
+        return [
+          ChatComposerAction(
+            id: 'gif',
+            icon: Icons.gif_box,
+            label: context.l10n.chat_sendGif,
+          ),
+          if (showImageAction)
+            ChatComposerAction(
+              id: 'meshcore-image',
+              icon: Icons.image_outlined,
+              label: context.l10n.chat_sendImageLora,
+            ),
+          if (hasShareableLocation(
+            connector.selfLatitude,
+            connector.selfLongitude,
+          ))
+            ChatComposerAction(
+              id: 'send-my-location',
+              icon: Icons.my_location,
+              label: context.l10n.chat_shareMyLocation,
+            ),
+        ];
+      },
+      onAction: (action) {
+        if (!mounted) return;
+        switch (action) {
+          case 'gif':
+            showChatGifPicker(context, _textController);
+          case 'meshcore-image':
+            _showImageSendPreview();
+          case 'send-my-location':
+            _shareMyLocation(context.read<MeshCoreConnector>());
+        }
+      },
     );
   }
 
   /// Shares the radio's own position as a map marker on this channel. It is
   /// not a reply, so any reply in progress stays open for the next message;
   /// it shares the text send guard and cooldown.
-  Future<void> _shareMyLocation(MeshCoreConnector connector) async {
-    final lat = connector.selfLatitude;
-    final lon = connector.selfLongitude;
-    if (!hasShareableLocation(lat, lon)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_noRadioLocation),
-      );
-      return;
-    }
-    final selfName = connector.selfName;
-    final label = await showMarkerLabelDialog(
-      context,
-      lat: lat!,
-      lon: lon!,
-      defaultLabel: selfName != null && selfName.isNotEmpty
-          ? selfName
-          : context.l10n.map_sharedPin,
-      flags: 'poi',
-      confirmText: context.l10n.common_share,
+  Future<void> _shareMyLocation(MeshCoreConnector connector) {
+    return shareMyLocationMarker(
+      context: context,
+      connector: connector,
+      guard: _sendGuard,
+      logTag: 'ChannelChat',
+      send: (markerText) =>
+          connector.sendChannelMessage(widget.channel, markerText),
     );
-    if (label == null || label.isEmpty || !mounted || _isSendingText) return;
-    final now = DateTime.now();
-    if (_lastChannelSendAt != null &&
-        now.difference(_lastChannelSendAt!) < const Duration(seconds: 1)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_sendCooldown),
-      );
-      return;
-    }
-    _lastChannelSendAt = now;
-    _isSendingText = true;
-    try {
-      await connector.sendChannelMessage(
-        widget.channel,
-        formatMarkerText(lat, lon, label, 'poi'),
-      );
-    } catch (e) {
-      // A failed send (e.g. region scope rejected) is already marked failed
-      // on the message itself.
-      appLogger.warn('Sharing location failed: $e', tag: 'ChannelChat');
-    } finally {
-      _isSendingText = false;
-    }
   }
 
-  Future<void> _sendMessage() async {
-    if (_isSendingText) return;
-    _isSendingText = true;
-    try {
-      await _sendMessageInner();
-    } finally {
-      _isSendingText = false;
-    }
+  Future<void> _sendMessage() {
+    return _sendGuard.runExclusive(_sendMessageInner);
   }
 
   Future<void> _sendMessageInner() async {
@@ -2393,50 +2123,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final replyTo = _replyingToMessage;
     final replyRegion = _useReplyRegion ? replyTo?.region : null;
 
-    final now = DateTime.now();
-    if (_lastChannelSendAt != null &&
-        now.difference(_lastChannelSendAt!) < const Duration(seconds: 1)) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.chat_sendCooldown),
-      );
-      return;
-    }
-    _lastChannelSendAt = now;
+    if (!_sendGuard.checkCooldown(context)) return;
 
     final connector = context.read<MeshCoreConnector>();
-    final settings = context.read<AppSettingsService>().settings;
-    final translationService = context.read<TranslationService>();
+    final translation = await translateOutgoingText(context, text);
+    if (translation == null || !mounted) return;
 
-    String messageText = text;
-    String? originalText;
-    String? translatedLanguageCode;
-    String? translationModelId;
-    if (settings.translationEnabled) {
-      final targetLanguageCode = translationService.resolvedTargetLanguageCode(
-        Localizations.localeOf(context).languageCode,
-      );
-      if (translationService.shouldTranslateOutgoing(
-        text: text,
-        targetLanguageCode: targetLanguageCode,
-      )) {
-        final result = await translationService.translateOutgoingText(
-          text: text,
-          targetLanguageCode: targetLanguageCode,
-        );
-        if (!mounted) return;
-        if (result != null &&
-            result.status == MessageTranslationStatus.completed &&
-            result.translatedText.isNotEmpty) {
-          messageText = result.translatedText;
-          originalText = text;
-          translatedLanguageCode = result.targetLanguageCode;
-          translationModelId = result.modelId;
-        }
-      }
-    }
+    String messageText = translation.text;
     if (replyTo != null) {
-      messageText = '@[${replyTo.senderName}] $messageText';
+      messageText = '${_replyPrefix(replyTo)}$messageText';
     }
 
     final maxBytes = maxChannelMessageBytes(connector.selfName);
@@ -2472,12 +2167,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     connector.sendChannelMessage(
       widget.channel,
       messageText,
-      originalText: originalText,
-      translatedLanguageCode: translatedLanguageCode,
-      translationModelId: translationModelId,
+      originalText: translation.originalText,
+      translatedLanguageCode: translation.languageCode,
+      translationModelId: translation.modelId,
       region: replyRegion,
       replyTo: replyTo,
     );
+    // Only a dispatched send starts the cooldown.
+    _sendGuard.markDispatched();
   }
 
   void _showMessagePathInfo(ChannelMessage message) {
@@ -2562,7 +2259,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               title: Text(context.l10n.common_copy),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _copyMessageText(message.text);
+                copyChatMessageText(context, message.text);
               },
             ),
             if (canTranslateMessage)
@@ -2632,38 +2329,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     connector.sendChannelMessage(widget.channel, reactionText);
   }
 
-  void _copyMessageText(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    // Android shows its own clipboard chip; the snackbar is redundant there
-    // and lingers over the input field after the chip dismisses.
-    if (PlatformInfo.isAndroid) return;
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.chat_messageCopied),
-    );
-  }
-
   Future<void> _confirmClearChat() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.contact_clearChat),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
+    final confirmed = await confirmClearChat(
+      context,
+      message: context.l10n.channels_clearChatConfirm,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       if (!mounted) return;
       context.read<MeshCoreConnector>().clearMessagesForChannel(
         widget.channel.index,
@@ -3078,6 +2749,108 @@ class _ChannelChatRow {
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.
   String get id => message?.messageId ?? 'aeic:${image!.streamId}';
+}
+
+/// Memoised ordering of a channel transcript, newest first.
+///
+/// Rows hold positions, not message objects: the connector replaces messages
+/// in place (status, repeats, reactions) without changing their order or id,
+/// so [rowAt] always reads the current object from the live list.
+class _TranscriptLayout {
+  final List<ChannelMessage> _source;
+  final int _sourceLength;
+  final String? _firstId;
+  final String? _lastId;
+  final int _imageVersion;
+  final int _channelIndex;
+
+  /// Newest first. `>= 0` is a message index; `< 0` is image `-(i + 1)`.
+  final List<int> _order;
+  final List<ReceivedImageEntry> _images;
+
+  /// Row ids, aligned with [_order].
+  final List<String> ids;
+
+  /// Two messages can collide on messageId (same ms + name/text hash). Only
+  /// the first occurrence owns the shared GlobalKey used for
+  /// scroll-to-message; duplicates get a local key so no two widgets share
+  /// one GlobalKey.
+  final Set<int> keyedIndices;
+
+  _TranscriptLayout._(
+    this._source,
+    this._sourceLength,
+    this._firstId,
+    this._lastId,
+    this._imageVersion,
+    this._channelIndex,
+    this._order,
+    this._images,
+    this.ids,
+    this.keyedIndices,
+  );
+
+  factory _TranscriptLayout.build({
+    required List<ChannelMessage> messages,
+    required List<ReceivedImageEntry> images,
+    required int imageVersion,
+    required int channelIndex,
+  }) {
+    DateTime timeOf(int code) =>
+        code >= 0 ? messages[code].receivedAt : images[-code - 1].firstSeen;
+    // Images are not ChannelMessages: they arrive as GRP_DATA chunks and are
+    // owned by ReceivedImageStore, so the two sources are merged here in
+    // arrival (receivedAt) order and the list indexes rows, not messages.
+    final order = <int>[
+      for (var i = 0; i < messages.length; i++) i,
+      for (var i = 0; i < images.length; i++) -(i + 1),
+    ];
+    // Stable ascending sort, then reversed so newest appear at the bottom of
+    // the reversed ListView.
+    mergeSort<int>(order, compare: (a, b) => timeOf(a).compareTo(timeOf(b)));
+    final reversed = order.reversed.toList(growable: false);
+    final ids = <String>[
+      for (final code in reversed)
+        code >= 0
+            ? messages[code].messageId
+            : 'aeic:${images[-code - 1].streamId}',
+    ];
+    final seen = <String>{};
+    final keyed = <int>{};
+    for (var i = 0; i < ids.length; i++) {
+      if (seen.add(ids[i])) keyed.add(i);
+    }
+    return _TranscriptLayout._(
+      messages,
+      messages.length,
+      messages.isEmpty ? null : messages.first.messageId,
+      messages.isEmpty ? null : messages.last.messageId,
+      imageVersion,
+      channelIndex,
+      reversed,
+      images,
+      ids,
+      keyed,
+    );
+  }
+
+  int get length => _order.length;
+
+  bool matches(List<ChannelMessage> messages, int imageVersion, int channel) {
+    return identical(messages, _source) &&
+        messages.length == _sourceLength &&
+        imageVersion == _imageVersion &&
+        channel == _channelIndex &&
+        (messages.isEmpty ? null : messages.first.messageId) == _firstId &&
+        (messages.isEmpty ? null : messages.last.messageId) == _lastId;
+  }
+
+  _ChannelChatRow rowAt(int index, List<ChannelMessage> messages) {
+    final code = _order[index];
+    return code >= 0
+        ? _ChannelChatRow(message: messages[code])
+        : _ChannelChatRow(image: _images[-code - 1]);
+  }
 }
 
 /// [ReceivedImageStrings] built from the app's localizations.

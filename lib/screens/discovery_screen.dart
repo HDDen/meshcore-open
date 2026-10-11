@@ -17,12 +17,11 @@ import '../utils/contact_search.dart';
 import '../utils/platform_info.dart';
 import '../utils/share_origin.dart';
 import '../widgets/app_bar.dart';
+import '../widgets/contact_visuals.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/node_scan_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
-
-enum DiscoverySortOption { lastSeen, name, type }
 
 class DiscoveryScreen extends StatefulWidget {
   const DiscoveryScreen({super.key});
@@ -35,10 +34,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String searchQuery = '';
   ContactSortOption sortOption = ContactSortOption.lastSeen;
-  bool showUnreadOnly = false;
   ContactTypeFilter typeFilter = ContactTypeFilter.all;
-  DiscoverySortOption discoverySortOption = DiscoverySortOption.lastSeen;
   Timer? _searchDebounce;
+  final DerivedListCache<Contact> _filteredCache = DerivedListCache<Contact>();
   ScaffoldMessengerState? _messenger;
 
   @override
@@ -53,41 +51,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
-  }
-
-  DateTime _resolveLastSeen(Contact contact) {
-    if (contact.type != advTypeChat) return contact.lastSeen;
-    return contact.lastMessageAt.isAfter(contact.lastSeen)
-        ? contact.lastMessageAt
-        : contact.lastSeen;
-  }
-
-  /// Node-type avatar color per design language.
-  Color _avatarColor(int type) {
-    switch (type) {
-      case advTypeRepeater:
-        return MeshPalette.warn;
-      case advTypeRoom:
-        return MeshPalette.magenta;
-      case advTypeSensor:
-        return const Color(0xFF4ACCC4); // teal
-      default:
-        return MeshPalette.blue;
-    }
-  }
-
-  /// Node-type avatar icon; null = show initials for chat nodes.
-  IconData? _avatarIcon(int type) {
-    switch (type) {
-      case advTypeRepeater:
-        return Icons.cell_tower;
-      case advTypeRoom:
-        return Icons.meeting_room;
-      case advTypeSensor:
-        return Icons.sensors;
-      default:
-        return null;
-    }
   }
 
   @override
@@ -231,8 +194,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             AvatarCircle(
               name: contact.name,
               size: 42,
-              color: isChat ? null : _avatarColor(contact.type),
-              icon: _avatarIcon(contact.type),
+              color: isChat ? null : contactTypeColor(contact.type),
+              icon: contactTypeIcon(contact.type),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -257,8 +220,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       const SizedBox(width: 6),
                       StatusChip(
                         label: contact.typeLabel(context.l10n).toUpperCase(),
-                        color: _avatarColor(contact.type),
-                        icon: _avatarIcon(contact.type),
+                        color: contactTypeColor(contact.type),
+                        icon: contactTypeIcon(contact.type),
                       ),
                     ],
                   ),
@@ -272,7 +235,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: MeshTheme.mono(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -281,20 +244,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                         const SizedBox(width: 6),
                         Icon(
                           Icons.location_on,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
                         ),
                       ],
                       if (contact.rawPacket != null) ...[
                         const SizedBox(width: 4),
                         Icon(
                           Icons.cell_tower,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
                         ),
                       ],
                     ],
@@ -303,21 +262,26 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            // Last seen time
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
+            // Last seen time. A width cap + wrapping keeps large text scales
+            // from overflowing without clamping the user's text size.
+            Flexible(
+              flex: 0,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.25,
                 ),
-              ),
-              child: Text(
-                _formatLastSeen(context, _resolveLastSeen(contact)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-                style: MeshTheme.mono(
-                  fontSize: 11,
-                  color: scheme.onSurfaceVariant,
+                child: Text(
+                  formatContactLastSeen(
+                    context.l10n,
+                    resolveContactLastSeen(contact),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: MeshTheme.mono(
+                    fontSize: 12.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -579,39 +543,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     List<Contact> filteredAndSorted,
     MeshCoreConnector connector,
   ) {
-    String hintText = "";
-    switch (typeFilter) {
-      case ContactTypeFilter.all:
-        hintText = context.l10n.contacts_searchContacts(
-          filteredAndSorted.length,
-          showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
-        );
-        break;
-      case ContactTypeFilter.users:
-        hintText = context.l10n.contacts_searchUsers(
-          filteredAndSorted.length,
-          showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
-        );
-        break;
-      case ContactTypeFilter.repeaters:
-        hintText = context.l10n.contacts_searchRepeaters(
-          filteredAndSorted.length,
-          showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
-        );
-        break;
-      case ContactTypeFilter.rooms:
-        hintText = context.l10n.contacts_searchRoomServers(
-          filteredAndSorted.length,
-          showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
-        );
-        break;
-      case ContactTypeFilter.favorites:
-        hintText = context.l10n.contacts_searchFavorites(
-          filteredAndSorted.length,
-          showUnreadOnly ? " ${context.l10n.contacts_unread}" : "",
-        );
-        break;
-    }
+    final count = filteredAndSorted.length;
+    final hintText = switch (typeFilter) {
+      ContactTypeFilter.users => context.l10n.contacts_searchUsers(count, ''),
+      ContactTypeFilter.repeaters => context.l10n.contacts_searchRepeaters(
+        count,
+        '',
+      ),
+      ContactTypeFilter.rooms => context.l10n.contacts_searchRoomServers(
+        count,
+        '',
+      ),
+      // Discovery offers no favorites filter; fall back to the generic hint.
+      _ => context.l10n.contacts_searchContacts(count, ''),
+    };
 
     return Column(
       children: [
@@ -683,26 +628,34 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     List<Contact> contacts,
     MeshCoreConnector connector,
   ) {
-    var filtered = contacts.where((contact) {
-      if (searchQuery.isEmpty) return true;
-      return matchesDiscoveryContactQuery(contact, searchQuery);
+    // knownContactKeys returns a fresh copy; read it once per build.
+    final knownKeys = connector.knownContactKeys;
+    final selfKey = connector.selfPublicKey;
+    final selfPubKeyHex = selfKey == null ? null : pubKeyToHex(selfKey);
+    return _filteredCache.get(contacts, [
+      searchQuery,
+      typeFilter,
+      sortOption,
+      selfPubKeyHex,
+      Object.hashAllUnordered(knownKeys),
+    ], () => _computeFilteredContacts(contacts, knownKeys, selfPubKeyHex));
+  }
+
+  List<Contact> _computeFilteredContacts(
+    List<Contact> contacts,
+    Set<String> knownKeys,
+    String? selfPubKeyHex,
+  ) {
+    final filtered = contacts.where((contact) {
+      if (searchQuery.isNotEmpty &&
+          !matchesDiscoveryContactQuery(contact, searchQuery)) {
+        return false;
+      }
+      if (knownKeys.contains(contact.publicKeyHex)) return false;
+      // Filter out own node from the list
+      if (contact.publicKeyHex == selfPubKeyHex) return false;
+      return _matchesTypeFilter(contact);
     }).toList();
-
-    filtered = filtered.where((contact) {
-      return !connector.knownContactKeys.contains(contact.publicKeyHex);
-    }).toList();
-
-    // Filter out own node from the list
-    if (connector.selfPublicKey != null) {
-      final selfPubKeyHex = pubKeyToHex(connector.selfPublicKey!);
-      filtered = filtered.where((contact) {
-        return contact.publicKeyHex != selfPubKeyHex;
-      }).toList();
-    }
-
-    if (typeFilter != ContactTypeFilter.all) {
-      filtered = filtered.where(_matchesTypeFilter).toList();
-    }
 
     switch (sortOption) {
       case ContactSortOption.lastSeen:
@@ -730,30 +683,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         return contact.type == advTypeRepeater;
       case ContactTypeFilter.rooms:
         return contact.type == advTypeRoom;
-      default:
-        return false;
+      case ContactTypeFilter.favorites:
+        // Not offered by the discovery filter menu.
+        return true;
     }
-  }
-
-  String _formatLastSeen(BuildContext context, DateTime lastSeen) {
-    final now = DateTime.now();
-    final diff = now.difference(lastSeen);
-
-    if (diff.isNegative || diff.inMinutes < 5) {
-      return context.l10n.contacts_lastSeenNow;
-    }
-    if (diff.inMinutes < 60) {
-      return context.l10n.contacts_lastSeenMinsAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      final hours = diff.inHours;
-      return hours == 1
-          ? context.l10n.contacts_lastSeenHourAgo
-          : context.l10n.contacts_lastSeenHoursAgo(hours);
-    }
-    final days = diff.inDays;
-    return days == 1
-        ? context.l10n.contacts_lastSeenDayAgo
-        : context.l10n.contacts_lastSeenDaysAgo(days);
   }
 }

@@ -145,7 +145,7 @@ class ByteCountedTextField extends StatelessWidget {
                           ? Text(
                               softLimitNote!,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: Theme.of(context).colorScheme.tertiary,
                               ),
                             )
@@ -154,7 +154,7 @@ class ByteCountedTextField extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       '$usedBytes / $maxBytes',
-                      style: TextStyle(fontSize: 11, color: counterColor),
+                      style: TextStyle(fontSize: 12, color: counterColor),
                     ),
                   ],
                 ),
