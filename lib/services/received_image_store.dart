@@ -1556,7 +1556,8 @@ class ReceivedImageStore extends ChangeNotifier {
 
   /// Brings the entry count inside [maxEntries], oldest first: failures, then
   /// entries with nothing left on disk, then undecoded incoming images. Never
-  /// touches outgoing images, a running decode or a stream still receiving.
+  /// touches an outgoing image that still has data on disk, a running decode
+  /// or a stream still receiving.
   Future<List<String>> _enforceEntryCap({String? protect}) async {
     final removed = <String>[];
     if (_entries.length <= maxEntries) return removed;
@@ -1573,7 +1574,14 @@ class ReceivedImageStore extends ChangeNotifier {
             .where(
               (e) =>
                   e.streamId != protect &&
-                  !e.isOutgoing &&
+                  // An outgoing image may go once nothing of it is left on
+                  // disk (age eviction only marks it evicted), or it failed;
+                  // otherwise frequent senders grow sidecars without bound.
+                  (!e.isOutgoing ||
+                      e.state.isFailure ||
+                      (e.state == ReceivedImageState.evicted &&
+                          !e.pngStored &&
+                          !e.bitstreamStored)) &&
                   (e.state.isFailure ||
                       e.state == ReceivedImageState.evicted ||
                       e.state == ReceivedImageState.reassembled ||

@@ -458,13 +458,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   );
                   // Images are not ChannelMessages: they arrive as GRP_DATA
                   // chunks and are owned by ReceivedImageStore, so the two
-                  // sources are merged here in timestamp order and the list
+                  // sources are merged here in arrival (receivedAt) order and the list
                   // below indexes rows, not messages.
                   final rows = <_ChannelChatRow>[
                     for (final message in messages)
                       _ChannelChatRow(message: message),
                     ...imageRows,
-                  ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+                  ]..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
 
                   // Reverse rows so newest appear at bottom with reverse: true
                   final reversedRows = rows.reversed.toList();
@@ -556,15 +556,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   final startsDay =
                                       index == reversedRows.length - 1 ||
                                       !isSameChatDay(
-                                        reversedRows[index + 1].timestamp,
-                                        row.timestamp,
+                                        reversedRows[index + 1].receivedAt,
+                                        row.receivedAt,
                                       );
                                   if (isUnreadAnchor || startsDay) {
                                     return Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (startsDay)
-                                          ChatDaySeparator(day: row.timestamp),
+                                          ChatDaySeparator(day: row.receivedAt),
                                         if (isUnreadAnchor)
                                           const UnreadDivider(),
                                         bubble,
@@ -2951,7 +2951,7 @@ class _ChannelChatRow {
 
   /// Local arrival time, used for ordering and day separators so a sender
   /// clock running ahead cannot pin a row to the bottom (#584).
-  DateTime get timestamp => message?.receivedAt ?? image!.firstSeen;
+  DateTime get receivedAt => message?.receivedAt ?? image!.firstSeen;
 
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.

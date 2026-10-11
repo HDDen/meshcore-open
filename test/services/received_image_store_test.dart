@@ -777,6 +777,35 @@ void main() {
       expect(await h.store.ensurePng(entry.streamId), isNotNull);
       expect(h.decoder.calls, 0);
     });
+
+    test('spent outgoing entries count toward maxEntries', () async {
+      final h = _build(maxEntries: 2, maxAge: const Duration(minutes: 10));
+      final ids = <String>[];
+      for (var i = 0; i < 4; i++) {
+        final entry = await h.store.registerOutgoing(
+          channelIndex: 1,
+          senderPrefix: kSelf,
+          imgId: 60 + i,
+          previewPng: Uint8List.fromList(List<int>.filled(64, i)),
+          rate: AeicRatePoint.ft32,
+          chunkCount: 2,
+        );
+        ids.add(entry.streamId);
+        h.advance(const Duration(seconds: 2));
+      }
+      // Fresh outgoing images keep their data and are never capped.
+      await h.store.evictToBudget();
+      expect(h.store.entries.length, 4);
+
+      // Past maxAge they are evicted (nothing left on disk), and the cap may
+      // then drop the oldest so sidecars cannot grow without bound.
+      h.advance(const Duration(minutes: 11));
+      await h.store.evictToBudget();
+      expect(h.store.entries.length, 2);
+      expect(h.store.entryFor(ids[0]), isNull);
+      expect(h.store.entryFor(ids[1]), isNull);
+      expect(h.store.entryFor(ids[3]), isNotNull);
+    });
   });
 
   group('processAutomatically (tap to process)', () {
