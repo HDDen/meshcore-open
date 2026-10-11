@@ -91,6 +91,7 @@ class AppSettings {
   final bool mapShowGuessedLocations;
   final bool mapClusterNodes;
   final bool enableMessageTracing;
+  final bool regionOnHopsLine;
   final Map<String, double>? mapCacheBounds;
   final int mapCacheMinZoom;
   final int mapCacheMaxZoom;
@@ -112,6 +113,10 @@ class AppSettings {
   final bool channelMinHopsEnabled;
   final int channelMinHops;
   final int channelMinHopsRetries;
+
+  /// When on, hearing the message repeated by at least [channelMinHops]
+  /// different first-hop repeaters also satisfies the channel resend.
+  final bool channelMinHopsCountRepeaters;
   final String themeMode;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
@@ -198,6 +203,7 @@ class AppSettings {
     this.mapShowGuessedLocations = true,
     this.mapClusterNodes = true,
     this.enableMessageTracing = false,
+    this.regionOnHopsLine = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -219,6 +225,7 @@ class AppSettings {
     this.channelMinHopsEnabled = false,
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
+    this.channelMinHopsCountRepeaters = false,
     this.themeMode = 'system',
     this.languageOverride,
     this.appDebugLogEnabled = false,
@@ -277,6 +284,7 @@ class AppSettings {
       'map_show_guessed_locations': mapShowGuessedLocations,
       'map_cluster_nodes': mapClusterNodes,
       'enable_message_tracing': enableMessageTracing,
+      'region_on_hops_line': regionOnHopsLine,
       'map_cache_bounds': mapCacheBounds,
       'map_cache_min_zoom': mapCacheMinZoom,
       'map_cache_max_zoom': mapCacheMaxZoom,
@@ -299,6 +307,7 @@ class AppSettings {
       'channel_min_hops_enabled': channelMinHopsEnabled,
       'channel_min_hops': channelMinHops,
       'channel_min_hops_retries': channelMinHopsRetries,
+      'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
       'theme_mode': themeMode,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
@@ -359,6 +368,7 @@ class AppSettings {
           json['map_show_guessed_locations'] as bool? ?? true,
       mapClusterNodes: json['map_cluster_nodes'] as bool? ?? true,
       enableMessageTracing: json['enable_message_tracing'] as bool? ?? false,
+      regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -389,6 +399,8 @@ class AppSettings {
       channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
+      channelMinHopsCountRepeaters:
+          json['channel_min_hops_count_repeaters'] as bool? ?? false,
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
@@ -500,6 +512,7 @@ class AppSettings {
     bool? mapShowGuessedLocations,
     bool? mapClusterNodes,
     bool? enableMessageTracing,
+    bool? regionOnHopsLine,
     Object? mapCacheBounds = _unset,
     int? mapCacheMinZoom,
     int? mapCacheMaxZoom,
@@ -521,6 +534,7 @@ class AppSettings {
     bool? channelMinHopsEnabled,
     int? channelMinHops,
     int? channelMinHopsRetries,
+    bool? channelMinHopsCountRepeaters,
     String? themeMode,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
@@ -564,6 +578,7 @@ class AppSettings {
           mapShowGuessedLocations ?? this.mapShowGuessedLocations,
       mapClusterNodes: mapClusterNodes ?? this.mapClusterNodes,
       enableMessageTracing: enableMessageTracing ?? this.enableMessageTracing,
+      regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
       mapCacheBounds: mapCacheBounds == _unset
           ? this.mapCacheBounds
           : mapCacheBounds as Map<String, double>?,
@@ -597,6 +612,8 @@ class AppSettings {
       channelMinHops: channelMinHops ?? this.channelMinHops,
       channelMinHopsRetries:
           channelMinHopsRetries ?? this.channelMinHopsRetries,
+      channelMinHopsCountRepeaters:
+          channelMinHopsCountRepeaters ?? this.channelMinHopsCountRepeaters,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
           ? this.languageOverride

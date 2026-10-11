@@ -47,6 +47,7 @@ import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/mesh_ui.dart';
 import 'telemetry_screen.dart';
 
@@ -82,6 +83,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+  // True while a send is awaiting outgoing translation, so a second tap
+  // can't send the same text again.
+  bool _isSendingText = false;
 
   @override
   void initState() {
@@ -435,14 +439,15 @@ class _ChatScreenState extends State<ChatScreen> {
               final startsDay =
                   messageIndex == reversedMessages.length - 1 ||
                   !isSameChatDay(
-                    reversedMessages[messageIndex + 1].timestamp,
-                    message.timestamp,
+                    reversedMessages[messageIndex + 1].receivedAt,
+                    message.receivedAt,
                   );
               final child = isUnreadAnchor || startsDay
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (startsDay) ChatDaySeparator(day: message.timestamp),
+                        if (startsDay)
+                          ChatDaySeparator(day: message.receivedAt),
                         if (isUnreadAnchor) const UnreadDivider(),
                         bubble,
                       ],
@@ -663,6 +668,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage(MeshCoreConnector connector) async {
+    if (_isSendingText) return;
+    _isSendingText = true;
+    try {
+      await _sendMessageInner(connector);
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
+  Future<void> _sendMessageInner(MeshCoreConnector connector) async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
@@ -731,7 +746,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // end transform
 
-    _textController.clear();
+    // Keep anything the user typed while translation was running.
+    if (_textController.text.trim() == text) {
+      _textController.clear();
+    }
     _textFieldFocusNode.requestFocus();
     connector.sendMessage(
       _resolveContact(connector),
@@ -1644,6 +1662,10 @@ class _MessageBubble extends StatelessWidget {
                                     color: metaColor,
                                   ),
                                 ),
+                                if (message.hasFutureTimestamp)
+                                  FutureTimestampIndicator(
+                                    size: 16 * textScale,
+                                  ),
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 2),
                                   MessageStatusIcon(

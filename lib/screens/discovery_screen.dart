@@ -15,6 +15,7 @@ import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/node_scan_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum DiscoverySortOption { lastSeen, name, type }
@@ -105,6 +106,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (connector.isConnected && connector.supportsNodeDiscover)
+            IconButton(
+              tooltip: l10n.discoveredContacts_scan,
+              icon: const Icon(Icons.radar),
+              onPressed: () => showNodeScanSheet(context, connector),
+            ),
           PopupMenuButton(
             itemBuilder: (context) => [
               PopupMenuItem(

@@ -40,6 +40,7 @@ import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
 import '../helpers/guessed_location_estimator.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 import 'line_of_sight_map_screen.dart';
@@ -2639,7 +2640,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             flags: payload.flags,
             fromName: message.senderName,
             sourceLabel: channel.name.isEmpty
-                ? 'Channel ${channel.index}'
+                ? context.l10n.channels_channelIndex(channel.index)
                 : channel.name,
             timestamp: message.timestamp,
             isChannel: true,
@@ -3119,7 +3120,22 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
       return;
     }
 
-    final label = await _promptForLabel(context, defaultLabel);
+    // The whole `m:lat,lon|label|flags` text must fit in one message to
+    // either a contact or a channel, so the label gets what's left.
+    final maxMessageBytes = min(
+      maxContactMessageBytes(),
+      maxChannelMessageBytes(connector.selfName),
+    );
+    final label = await _promptForLabel(
+      context,
+      defaultLabel,
+      maxBytes: maxMessageBytes,
+      encode: (text) => _formatMarkerMessage(
+        position,
+        text.trim().replaceAll('|', '/'),
+        flags,
+      ),
+    );
     if (label == null || !mounted) return;
 
     final markerText = _formatMarkerMessage(position, label, flags);
@@ -3135,9 +3151,13 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
 
   Future<String?> _promptForLabel(
     BuildContext context,
-    String defaultLabel,
-  ) async {
-    final controller = TextEditingController(text: defaultLabel);
+    String defaultLabel, {
+    required int maxBytes,
+    required String Function(String label) encode,
+  }) async {
+    final fixedBytes = utf8ByteLength(encode(''));
+    final fittedDefault = truncateUtf8(defaultLabel, maxBytes - fixedBytes);
+    final controller = TextEditingController(text: fittedDefault);
     controller.selection = TextSelection(
       baseOffset: 0,
       extentOffset: controller.text.length,
@@ -3152,6 +3172,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             hintText: context.l10n.map_label,
             border: const OutlineInputBorder(),
           ),
+          inputFormatters: [
+            Utf8LengthLimitingTextInputFormatter(maxBytes, encoder: encode),
+          ],
         ),
         actions: [
           TextButton(
@@ -3163,7 +3186,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               final label = controller.text.trim().replaceAll('|', '/');
               Navigator.pop(
                 dialogContext,
-                label.isEmpty ? defaultLabel : label,
+                label.isEmpty ? fittedDefault : label,
               );
             },
             child: Text(context.l10n.common_continue),
@@ -3171,6 +3194,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         ],
       ),
     );
+  }
+
+  bool _markerFits(BuildContext context, String markerText, int maxBytes) {
+    if (utf8ByteLength(markerText) <= maxBytes) return true;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_messageTooLong(maxBytes)),
+    );
+    return false;
   }
 
   String _formatMarkerMessage(LatLng position, String label, String flags) {
@@ -3249,6 +3281,13 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               title: Text(contact.name),
                               onTap: () {
                                 Navigator.pop(sheetContext);
+                                if (!_markerFits(
+                                  context,
+                                  markerText,
+                                  maxContactMessageBytes(),
+                                )) {
+                                  return;
+                                }
                                 liveConnector.sendMessage(contact, markerText);
                               },
                             );
@@ -3284,7 +3323,9 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                         ) {
                           final isPublic = _isPublicChannel(channel);
                           final label = channel.name.isEmpty
-                              ? 'Channel ${channel.index}'
+                              ? context.l10n.channels_channelIndex(
+                                  channel.index,
+                                )
                               : channel.name;
                           return ListTile(
                             leading: Icon(
@@ -3299,7 +3340,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               final canSend = isPublic
                                   ? await _confirmPublicShare(context, label)
                                   : true;
-                              if (canSend) {
+                              if (canSend &&
+                                  context.mounted &&
+                                  _markerFits(
+                                    context,
+                                    markerText,
+                                    maxChannelMessageBytes(
+                                      liveConnector.selfName,
+                                    ),
+                                  )) {
                                 liveConnector.sendChannelMessage(
                                   channel,
                                   markerText,

@@ -1117,10 +1117,15 @@ class ImageReassembler {
 
   _FinishOutcome? _assemble(_PendingImage entry, {required bool recovered}) {
     final first = entry.bodies[0];
-    // Chunk 0 must hold the metadata byte; anything shorter cannot
-    // be a chunk 0 from this framing, so keep waiting rather than guessing.
-    if (first == null || first.length < kImageChunkZeroMetadataBytes) {
-      return null;
+    if (first == null) return null;
+    // Chunk 0 must hold the metadata byte; anything shorter cannot be a chunk
+    // 0 from this framing. Every chunk is already here, so waiting would only
+    // leave the stream on "receiving" until the TTL reports it as incomplete.
+    if (first.length < kImageChunkZeroMetadataBytes) {
+      return const _FinishOutcome.failed(
+        ImageChunkStatus.unsupportedFormat,
+        ImageReassemblyFailureReason.unsupportedFormat,
+      );
     }
     final metadata = ImageStreamMetadata.decode(first[0]);
     final out = BytesBuilder();

@@ -442,6 +442,29 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_regionDefaultNone => 'Brak';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Domyślny region radia ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Brak regionu (bez ograniczenia)';
+
+  @override
+  String get settings_regionRadioDefault => 'Domyślny region radia';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Zapisany w radiu. Używają go floody wysłane bez regionu, z tej aplikacji i z każdej innej aplikacji połączonej z radiem.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Zaktualizowano domyślny region radia';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Nie udało się zaktualizować domyślnego regionu radia';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Zarządzanie Regionami';
 
   @override
@@ -716,7 +739,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Wszystkie węzły, z którymi rozmawiasz, muszą używać tej samej częstotliwości, przepustowości, SF i CR.';
+      'Wszystkie węzły, z którymi rozmawiasz, muszą używać tej samej częstotliwości, przepustowości i SF. Współczynnik kodowania (CR) może się różnić.';
 
   @override
   String get settings_frequency => 'Częstotliwość (MHz)';
@@ -886,11 +909,35 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Licz także różne pobliskie przekaźniki';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count różnego pobliskiego przekaźnika',
+      many: '$count różnych pobliskich przekaźników',
+      few: '$count różne pobliskie przekaźniki',
+      one: '1 pobliski przekaźnik',
+    );
+    return 'Uznaj wiadomość za wysłaną, gdy powtórzy ją $_temp0, nawet jeśli nie słyszysz, jak idzie dalej.';
+  }
+
+  @override
   String get appSettings_enableMessageTracing => 'Włącz śledzenie wiadomości';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Pokaż szczegółowe metadane trasowania i czasu dla wiadomości';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Region obok liczby hopów';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Pokaż region wiadomości kanału w tym samym wierszu co liczba hopów, zamiast pod nią.';
 
   @override
   String get appSettings_notifications => 'Powiadomienia';
@@ -1620,6 +1667,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(domyślny)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(domyślny radia)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'To radio wysyła floody bez regionu w swoim regionie domyślnym: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Wiadomości flood na tym kanale będą przekazywane tylko przez przekaźniki z wybranego regionu.';
 
@@ -1662,6 +1717,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chat_typeMessage => 'Wpisz wiadomość...';
+
+  @override
+  String get chat_futureTimestampWarning =>
+      'Czas tej wiadomości jest w przyszłości, więc zegar nadawcy może być błędny. Wiadomość jest pokazana w kolejności odbioru.';
 
   @override
   String chat_messageTooLong(int maxBytes) {
@@ -4860,6 +4919,55 @@ class AppLocalizationsPl extends AppLocalizations {
       'Czy na pewno chcesz usunąć wszystkie znalezione kontakty?';
 
   @override
+  String get discoveredContacts_scan => 'Skanuj pobliskie węzły';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Pobliskie węzły';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Prosi węzły w bezpośrednim zasięgu radia o zgłoszenie się. Odpowiadają przekaźniki i czujniki. Serwery pokoi i companiony zwykle nie.';
+
+  @override
+  String get discoveredContacts_scanning => 'Skanowanie…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Znaleziono $count węzła',
+      many: 'Znaleziono $count węzłów',
+      few: 'Znaleziono $count węzły',
+      one: 'Znaleziono 1 węzeł',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Żaden węzeł nie odpowiedział. Przekaźniki ograniczają częstotliwość odpowiedzi, więc spróbuj ponownie za minutę.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Skanuj ponownie';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Nie udało się wysłać żądania skanowania.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Sygnał $snr dB · usłyszeli nas z $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Już w kontaktach';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'Nazwa pojawi się po następnym ogłoszeniu';
+
+  @override
   String get chat_sendCooldown =>
       'Prosimy o chwilowe oczekiwanie przed ponownym wysłaniem.';
 
@@ -5549,5 +5657,105 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'Nie udało się uruchomić trybu recenzji: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Kanały są jeszcze wczytywane z radia. Spróbuj ponownie po zakończeniu synchronizacji.';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return 'Nazwa jest za długa (maks. $maxBytes bajtów).';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field: wpisz wartość';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Szczegóły mapy';
+
+  @override
+  String get losUnitsTooltip => 'Jednostki';
+
+  @override
+  String get losDistance => 'Odległość';
+
+  @override
+  String get losClearance => 'Prześwit';
+
+  @override
+  String get losBlockedBy => 'Zablokowane przez';
+
+  @override
+  String get losObstruction => 'Przeszkoda';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return '$distance od A';
+  }
+
+  @override
+  String get losWorstBadge => 'NAJGORSZA';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return 'Zablokowane $amount';
+  }
+
+  @override
+  String get losFromA => 'Od A';
+
+  @override
+  String get losFromB => 'Od B';
+
+  @override
+  String get losElevation => 'Wysokość';
+
+  @override
+  String get losCenterOnMap => 'Wyśrodkuj na mapie';
+
+  @override
+  String get losStatusClear => 'Wolne';
+
+  @override
+  String get losStatusMarginal => 'Graniczne';
+
+  @override
+  String get losStatusBlocked => 'Zablokowane';
+
+  @override
+  String get losStatusCheckingShort => 'Sprawdzanie';
+
+  @override
+  String get losStatusNoResult => 'Brak wyniku';
+
+  @override
+  String get losSelectedPill => 'Wybrano';
+
+  @override
+  String get gif_tapToLoad => 'Dotknij, aby wczytać GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'Nie można wczytać GIF-a\nDotknij, aby spróbować ponownie';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Odmowa dostępu do aparatu.\nWłącz dostęp do aparatu w ustawieniach.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'Aparat nie jest obsługiwany na tym urządzeniu.';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'Nie udało się uruchomić aparatu.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return 'Nie udało się pobrać modelu obrazów: $error';
   }
 }

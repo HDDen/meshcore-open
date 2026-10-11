@@ -526,6 +526,7 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
           png: png,
           synthesized: entry.synthesized,
           bytes: entry.bitstreamByteCount,
+          aspectRatio: entry.displayAspectRatio,
         ),
       ),
     );
@@ -609,10 +610,15 @@ class _ReceivedImageViewer extends StatelessWidget {
   /// the one in the transcript.
   final int bytes;
 
+  /// Source shape (w/h) to undo the sender's stretch, as in the bubble. Null
+  /// means square or unknown.
+  final double? aspectRatio;
+
   const _ReceivedImageViewer({
     required this.png,
     required this.synthesized,
     required this.bytes,
+    this.aspectRatio,
   });
 
   @override
@@ -634,7 +640,14 @@ class _ReceivedImageViewer extends StatelessWidget {
               Flexible(
                 child: Stack(
                   children: [
-                    InteractiveViewer(child: Image.memory(png)),
+                    InteractiveViewer(
+                      // fill inside the original aspect box: the exact
+                      // inverse of the sender's stretch, as in the bubble.
+                      child: AspectRatio(
+                        aspectRatio: aspectRatio ?? 1,
+                        child: Image.memory(png, fit: BoxFit.fill),
+                      ),
+                    ),
                     if (synthesized)
                       const Positioned(
                         left: 0,

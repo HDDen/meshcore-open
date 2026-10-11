@@ -15,6 +15,7 @@ class ReviewRadio {
     this.scheduledMessageInterval = const Duration(seconds: 45),
     this.ackDelay = const Duration(milliseconds: 1500),
     this.replyDelay = const Duration(seconds: 4),
+    this.firmwareVerCode = ReviewScript.firmwareVerCode,
   }) {
     _seedState();
   }
@@ -29,6 +30,13 @@ class ReviewRadio {
   final Duration scheduledMessageInterval;
   final Duration ackDelay;
   final Duration replyDelay;
+
+  /// FIRMWARE_VER_CODE reported in DEVICE_INFO (tests use older values to
+  /// exercise version gates).
+  final int firmwareVerCode;
+
+  // Default flood scope (CMD_SET/GET_DEFAULT_FLOOD_SCOPE): name field + key.
+  Uint8List? _defaultFloodScope;
 
   final StreamController<Uint8List> _controller =
       StreamController<Uint8List>.broadcast();
@@ -174,7 +182,7 @@ class ReviewRadio {
       case cmdDeviceQuery:
         _emit([
           ReviewFrames.deviceInfo(
-            firmwareVerCode: ReviewScript.firmwareVerCode,
+            firmwareVerCode: firmwareVerCode,
             maxContacts: ReviewScript.maxContacts,
             maxChannels: ReviewScript.maxChannels,
           ),
@@ -247,6 +255,25 @@ class ReviewRadio {
           ]),
         ]);
         break;
+      case cmdGetDefaultFloodScope when firmwareVerCode < 11:
+      case cmdSetDefaultFloodScope when firmwareVerCode < 11:
+        _emit([ReviewFrames.err()]);
+        break;
+      case cmdGetDefaultFloodScope:
+        _emit([
+          Uint8List.fromList([
+            respCodeDefaultFloodScope,
+            ...?_defaultFloodScope,
+          ]),
+        ]);
+        break;
+      case cmdSetDefaultFloodScope:
+        _defaultFloodScope =
+            frame.length >= 1 + defaultFloodScopeNameSize + floodScopeKeySize
+            ? Uint8List.fromList(frame.sublist(1))
+            : null;
+        _emit([ReviewFrames.ok()]);
+        break;
       case cmdGetStats:
         _emit([
           frame.length >= 2 && frame[1] == statsTypeRadio
@@ -299,6 +326,10 @@ class ReviewRadio {
       case cmdSendBinaryReq:
       case cmdSendAnonReq:
         _emit([ReviewFrames.err()]);
+        break;
+      case cmdSendControlData:
+        _emit([ReviewFrames.ok()]);
+        _handleNodeDiscover(frame);
         break;
       case cmdSendTelemetryReq:
         // The 4-byte "self" form is answered with a push the app does not
@@ -448,6 +479,44 @@ class ReviewRadio {
           ),
         );
         _emit([ReviewFrames.msgWaiting()]);
+      });
+    }
+  }
+
+  /// Pushes [frame] to the app as if the radio had sent it.
+  @visibleForTesting
+  void emitForTest(Uint8List frame) => _emit([frame]);
+
+  /// Answers a DISCOVER_REQ the way firmware repeaters and sensors do: one
+  /// zero-hop DISCOVER_RESP per matching node, echoing the request tag.
+  void _handleNodeDiscover(Uint8List frame) {
+    // [cmd][0x8<flags>][type mask][tag u32][since u32]
+    if (frame.length < 7 || (frame[1] >> 4) != controlSubtypeDiscoverReq) {
+      return;
+    }
+    final prefixOnly = (frame[1] & 0x01) != 0;
+    final typeMask = frame[2];
+    final tag = frame.sublist(3, 7);
+    var snrQuarterDb = 40;
+    for (final c in _contacts) {
+      if (c.type != advTypeRepeater && c.type != advTypeSensor) continue;
+      if ((typeMask & (1 << c.type)) == 0) continue;
+      final key = prefixOnly ? c.publicKey.sublist(0, 8) : c.publicKey;
+      final snr = snrQuarterDb;
+      snrQuarterDb -= 12;
+      _later(ackDelay, () {
+        _emit([
+          Uint8List.fromList([
+            pushCodeControlData,
+            snr & 0xFF,
+            (-60) & 0xFF,
+            0, // path_len: zero-hop
+            (controlSubtypeDiscoverResp << 4) | c.type,
+            (snr - 8) & 0xFF,
+            ...tag,
+            ...key,
+          ]),
+        ]);
       });
     }
   }

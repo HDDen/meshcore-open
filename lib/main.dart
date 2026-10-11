@@ -378,14 +378,22 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    widget.receivedImageStore.setForeground(state == AppLifecycleState.resumed);
+    // `inactive` is still on screen (iOS Control Center, a call banner, a Face
+    // ID prompt), so it must not cancel a decode and mark the image corrupt.
+    widget.receivedImageStore.setForeground(
+      state == AppLifecycleState.resumed || state == AppLifecycleState.inactive,
+    );
     // ~2.7 GiB resident in a backgrounded app is a low-memory-killer kill, so
     // unlike the translation stack the graph is dropped on background rather
-    // than held until the radio disconnects.
+    // than held until the radio disconnects. The store keeps its queue: the
+    // cancelled decode goes back on it and resumes when the app returns. Only
+    // a real memory warning (didHaveMemoryPressure) parks everything.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       unawaited(widget.imageCodecService.handleMemoryPressure());
-      unawaited(widget.receivedImageStore.handleMemoryPressure());
+    }
+    if (state == AppLifecycleState.resumed) {
+      widget.connector.syncAppBadge();
     }
   }
 

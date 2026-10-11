@@ -436,6 +436,29 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_regionDefaultNone => 'Няма';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'По подразбиране на радиото ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Без регион (без ограничение)';
+
+  @override
+  String get settings_regionRadioDefault => 'Регион на радиото по подразбиране';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Запазва се на радиото. Използва се от flood съобщения без регион — от това и от всяко друго приложение, свързано с радиото.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Регионът на радиото по подразбиране е обновен';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Регионът на радиото по подразбиране не можа да се обнови';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Регионално управление';
 
   @override
@@ -715,7 +738,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Всички възли, с които комуникирате, трябва да използват еднакви честота, честотна лента, SF и CR.';
+      'Всички възли, с които комуникирате, трябва да използват еднакви честота, честотна лента и SF. Скоростта на кодиране (CR) може да се различава.';
 
   @override
   String get settings_frequency => 'Честота (MHz)';
@@ -882,12 +905,34 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Отчитай и други близки повторители';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count различни близки повторители',
+      one: '1 близък повторител',
+    );
+    return 'Смятай съобщението за изпратено, когато го повторят $_temp0, дори да не чуваш как продължава нататък.';
+  }
+
+  @override
   String get appSettings_enableMessageTracing =>
       'Разрешаване на проследяване на съобщения';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Показване на подробни метаданни за маршрутизация и синхронизация за съобщения';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Регион до броя хопове';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Показвай региона на съобщението в канала на същия ред като броя хопове, а не под него.';
 
   @override
   String get appSettings_notifications => 'Уведомления';
@@ -1609,6 +1654,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(по подразбиране)';
 
   @override
+  String get channels_regionRadioDefaultSuffix =>
+      '(по подразбиране на радиото)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Това радио изпраща flood без регион в своя регион по подразбиране: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Разпространяваните в този канал съобщения ще се препращат само от повторители в избрания регион.';
 
@@ -1650,6 +1704,10 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_typeMessage => 'Въведете съобщение...';
+
+  @override
+  String get chat_futureTimestampWarning =>
+      'Часът на това съобщение е в бъдещето, така че часовникът на подателя може да е грешен. Показано е по реда на получаване.';
 
   @override
   String chat_messageTooLong(int maxBytes) {
@@ -4828,6 +4886,53 @@ class AppLocalizationsBg extends AppLocalizations {
       'Сигурни ли сте, че искате да изтриете всички открити контакти?';
 
   @override
+  String get discoveredContacts_scan => 'Сканиране за близки възли';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Близки възли';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Моли възлите в обхват на директна радиовръзка да се обявят. Отговарят повторители и сензори. Сървърите за стаи и компаньоните обикновено не отговарят.';
+
+  @override
+  String get discoveredContacts_scanning => 'Сканиране…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Намерени $count възела',
+      one: 'Намерен 1 възел',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Нито един възел не отговори. Повторителите ограничават честотата на отговорите, опитайте след минута.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Сканирай отново';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Заявката за сканиране не можа да се изпрати.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Сигнал $snr dB · чуха ни с $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Вече в контактите';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'Името се появява след следващата обява';
+
+  @override
   String get chat_sendCooldown =>
       'Моля, изчакайте малко, преди да изпратите отново.';
 
@@ -5515,5 +5620,105 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'Режимът за преглед не можа да се стартира: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Каналите все още се зареждат от радиото. Опитайте отново, когато синхронизацията приключи.';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return 'Името е твърде дълго (макс. $maxBytes байта).';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field: въведете стойност';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Детайл на картата';
+
+  @override
+  String get losUnitsTooltip => 'Единици';
+
+  @override
+  String get losDistance => 'Разстояние';
+
+  @override
+  String get losClearance => 'Просвет';
+
+  @override
+  String get losBlockedBy => 'Блокирано от';
+
+  @override
+  String get losObstruction => 'Препятствие';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return '$distance от A';
+  }
+
+  @override
+  String get losWorstBadge => 'НАЙ-ЛОШО';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return 'Блокирано $amount';
+  }
+
+  @override
+  String get losFromA => 'От A';
+
+  @override
+  String get losFromB => 'От B';
+
+  @override
+  String get losElevation => 'Височина';
+
+  @override
+  String get losCenterOnMap => 'Центрирай на картата';
+
+  @override
+  String get losStatusClear => 'Ясно';
+
+  @override
+  String get losStatusMarginal => 'Гранично';
+
+  @override
+  String get losStatusBlocked => 'Блокирано';
+
+  @override
+  String get losStatusCheckingShort => 'Проверка';
+
+  @override
+  String get losStatusNoResult => 'Няма резултат';
+
+  @override
+  String get losSelectedPill => 'Избрано';
+
+  @override
+  String get gif_tapToLoad => 'Докоснете, за да заредите GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'GIF не може да се зареди\nДокоснете за повторен опит';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Достъпът до камерата е отказан.\nМоля, разрешете достъп до камерата в настройките.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'Камерата не се поддържа на това устройство.';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'Камерата не можа да се стартира.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return 'Моделът за изображения не можа да се изтегли: $error';
   }
 }

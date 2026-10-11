@@ -434,6 +434,29 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_regionDefaultNone => 'Nincs';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Rádió alapértelmezése ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Nincs táj (korlátlan)';
+
+  @override
+  String get settings_regionRadioDefault => 'A rádió alapértelmezett tája';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'A rádión van tárolva. A táj nélkül küldött elárasztásokhoz ezt használja, ebből az alkalmazásból és a rádióhoz csatlakozó bármely másik alkalmazásból is.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'A rádió alapértelmezett tája frissítve';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Nem sikerült frissíteni a rádió alapértelmezett tájat';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Regionális Kezelés';
 
   @override
@@ -706,7 +729,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Az összes csomóponttal, amelyhez kapcsolódik, azonos frekvenciát, sávszélességet, SF-et és CR-t kell használni.';
+      'Az összes csomóponttal, amelyhez kapcsolódik, azonos frekvenciát, sávszélességet és SF-et kell használni. A kódolási arány (CR) eltérhet.';
 
   @override
   String get settings_frequency => 'Frekvencia (MHz)';
@@ -875,11 +898,33 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'A közeli különböző átjátszókat is számolja';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count különböző közeli átjátszó',
+      one: '1 közeli átjátszó',
+    );
+    return 'Az üzenetet elküldöttnek tekinti, ha $_temp0 továbbítja, még ha nem is hallja, hogy tovább halad.';
+  }
+
+  @override
   String get appSettings_enableMessageTracing => 'Üzenetkövetés engedélyezése';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Az üzenetek részletes útválasztási és időzítési metaadatainak megjelenítése';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Táj a ugrásszám mellett';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'A csatornaüzenet tája az ugrásszámmal azonos sorban jelenik meg, nem alatta.';
 
   @override
   String get appSettings_notifications => 'Értesítések';
@@ -1599,6 +1644,14 @@ class AppLocalizationsHu extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(alapértelmezett)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(rádió alapértelmezése)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Ez a rádió a táj nélküli elárasztásokat az alapértelmezett tájában küldi: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'A csatorna elárasztási üzeneteit csak a kiválasztott táj átjátszói továbbítják.';
 
@@ -1640,6 +1693,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_typeMessage => 'Írjon be egy üzenetet...';
+
+  @override
+  String get chat_futureTimestampWarning =>
+      'Az üzenet időpontja a jövőben van, ezért a feladó órája hibás lehet. Az érkezés sorrendjében látható.';
 
   @override
   String chat_messageTooLong(int maxBytes) {
@@ -4829,6 +4886,53 @@ class AppLocalizationsHu extends AppLocalizations {
       'Biztosan törli az összes felfedezett névjegyet?';
 
   @override
+  String get discoveredContacts_scan => 'Közeli csomópontok keresése';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Közeli csomópontok';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Felkéri a közvetlen rádiótávolságon belüli csomópontokat, hogy azonosítsák magukat. Az átjátszók és az érzékelők válaszolnak. A szobaszerverek és a kísérők általában nem.';
+
+  @override
+  String get discoveredContacts_scanning => 'Keresés…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count csomópont található',
+      one: '1 csomópont található',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Egy csomópont sem válaszolt. Az átjátszók korlátozzák a válaszok gyakoriságát, ezért próbálja újra egy perc múlva.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Keresés újra';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Nem sikerült elküldeni a keresési kérést.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Jel: $snr dB · ők $remoteSnr dB-lel hallottak minket';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Már a kapcsolatok között';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'A neve a következő hirdetése után jelenik meg';
+
+  @override
   String get chat_sendCooldown =>
       'Kérjük, várjon egy pillanatot, mielőtt újra elküldi.';
 
@@ -5511,5 +5615,105 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'Az áttekintő mód nem indítható el: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'A csatornák még töltődnek a rádióról. Próbálja újra, ha a szinkronizálás befejeződött.';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return 'A név túl hosszú (legfeljebb $maxBytes bájt).';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field: adjon meg értéket';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Térkép részletessége';
+
+  @override
+  String get losUnitsTooltip => 'Mértékegységek';
+
+  @override
+  String get losDistance => 'Távolság';
+
+  @override
+  String get losClearance => 'Szabad tér';
+
+  @override
+  String get losBlockedBy => 'Akadályozó';
+
+  @override
+  String get losObstruction => 'Akadály';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return '$distance A-tól';
+  }
+
+  @override
+  String get losWorstBadge => 'LEGROSSZABB';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return 'Takarás: $amount';
+  }
+
+  @override
+  String get losFromA => 'A-tól';
+
+  @override
+  String get losFromB => 'B-től';
+
+  @override
+  String get losElevation => 'Magasság';
+
+  @override
+  String get losCenterOnMap => 'Középre a térképen';
+
+  @override
+  String get losStatusClear => 'Szabad';
+
+  @override
+  String get losStatusMarginal => 'Határeset';
+
+  @override
+  String get losStatusBlocked => 'Takart';
+
+  @override
+  String get losStatusCheckingShort => 'Ellenőrzés';
+
+  @override
+  String get losStatusNoResult => 'Nincs eredmény';
+
+  @override
+  String get losSelectedPill => 'Kiválasztva';
+
+  @override
+  String get gif_tapToLoad => 'Koppintson a GIF betöltéséhez';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'A GIF nem tölthető be\nKoppintson az újrapróbáláshoz';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Kamera-engedély megtagadva.\nEngedélyezze a kamera hozzáférést a beállításokban.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'A kamera nem támogatott ezen az eszközön.';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'A kamera indítása sikertelen.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return 'A képmodell letöltése sikertelen: $error';
   }
 }

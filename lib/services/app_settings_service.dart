@@ -113,6 +113,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(enableMessageTracing: value));
   }
 
+  Future<void> setRegionOnHopsLine(bool value) async {
+    await updateSettings(_settings.copyWith(regionOnHopsLine: value));
+  }
+
   Future<void> setMapCacheBounds(Map<String, double>? value) async {
     await updateSettings(_settings.copyWith(mapCacheBounds: value));
   }
@@ -220,6 +224,12 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setChannelMinHopsRetries(int value) async {
     await updateSettings(_settings.copyWith(channelMinHopsRetries: value));
+  }
+
+  Future<void> setChannelMinHopsCountRepeaters(bool value) async {
+    await updateSettings(
+      _settings.copyWith(channelMinHopsCountRepeaters: value),
+    );
   }
 
   Future<void> setThemeMode(String value) async {

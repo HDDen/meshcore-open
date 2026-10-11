@@ -374,11 +374,14 @@ class ReceivedImageEntry {
 /// `received_images/<streamId>.aeic|.png|.json`. See
 /// `received_image_blob_store_io.dart`.
 abstract class ReceivedImageBlobStore {
-  Future<void> writeBitstream(String streamId, Uint8List bytes);
+  /// Returns false when the bytes could not be stored (disk full, unsafe id),
+  /// so the caller never records a file that is not there.
+  Future<bool> writeBitstream(String streamId, Uint8List bytes);
   Future<Uint8List?> readBitstream(String streamId);
   Future<void> deleteBitstream(String streamId);
 
-  Future<void> writePng(String streamId, Uint8List bytes);
+  /// Same contract as [writeBitstream].
+  Future<bool> writePng(String streamId, Uint8List bytes);
   Future<Uint8List?> readPng(String streamId);
   Future<void> deletePng(String streamId);
 
@@ -418,8 +421,9 @@ class InMemoryReceivedImageBlobStore implements ReceivedImageBlobStore {
   final Map<String, String> _sidecars = <String, String>{};
 
   @override
-  Future<void> writeBitstream(String streamId, Uint8List bytes) async {
+  Future<bool> writeBitstream(String streamId, Uint8List bytes) async {
     _bitstreams[streamId] = bytes;
+    return true;
   }
 
   @override
@@ -439,8 +443,9 @@ class InMemoryReceivedImageBlobStore implements ReceivedImageBlobStore {
   Future<int?> pngSize(String streamId) async => _pngs[streamId]?.length;
 
   @override
-  Future<void> writePng(String streamId, Uint8List bytes) async {
+  Future<bool> writePng(String streamId, Uint8List bytes) async {
     _pngs[streamId] = bytes;
+    return true;
   }
 
   @override
@@ -551,6 +556,11 @@ class ReceivedImageStore extends ChangeNotifier {
   /// Hard cap on stored PNGs.
   final int maxImages;
 
+  /// Hard cap on entries of any state. Undecoded entries hold no PNG, so
+  /// [maxImages] never counts them; without this a flood of one-packet images
+  /// grows the sidecars (and the startup scan) without bound.
+  final int maxEntries;
+
   /// Hard cap on total bytes across all stored files.
   final int maxBytes;
 
@@ -599,6 +609,10 @@ class ReceivedImageStore extends ChangeNotifier {
   /// Set by [handleMemoryPressure] so the decode it cancels is parked rather
   /// than reported as corrupt.
   bool _cancelRequested = false;
+
+  /// Set by [setForeground] when backgrounding cancels a running decode, so it
+  /// goes back on the queue instead of being reported as corrupt.
+  bool _backgroundCancelled = false;
   bool _foreground = true;
   bool _disposed = false;
 
@@ -606,6 +620,7 @@ class ReceivedImageStore extends ChangeNotifier {
     ReceivedImageBlobStore? blobs,
     this.decoder,
     this.maxImages = 200,
+    this.maxEntries = 400,
     this.maxBytes = 64 * 1024 * 1024,
     this.maxAge = const Duration(days: 30),
     this.burstCap = 3,
@@ -727,7 +742,7 @@ class ReceivedImageStore extends ChangeNotifier {
       }
 
       _entries[entry.streamId] = entry;
-      _byKey[entry.key] = entry.streamId;
+      _claimKey(entry);
       _publish(entry);
       await _persist(entry);
     }
@@ -877,9 +892,46 @@ class ReceivedImageStore extends ChangeNotifier {
     }
 
     final metadata = result.metadata;
+    // The reserved high rate (ft16) and any resolution but 512 cannot be
+    // decoded by the only model this build ships; storing them as
+    // `reassembled` would end in an endless "corrupt, retry" loop. Treat them
+    // like an undecodable metadata byte: nothing to retry, no bytes kept.
+    if (metadata != null &&
+        (metadata.rate != ImageCodecRatePoint.standard ||
+            metadata.squareSize != kImageCodecSquareSize)) {
+      _queue.remove(entry.streamId);
+      return _store(
+        entry.copyWith(
+          state: ReceivedImageState.failedCorrupt,
+          receivedChunks: result.chunkCount,
+          totalChunks: result.chunkCount,
+          bitstreamStored: false,
+          error: 'Unsupported image format.',
+        ),
+      );
+    }
+
+    final tracked = _entries.containsKey(entry.streamId);
     // Bitstream first, state second: a kill between the two must be
     // recoverable, and `reassembled` with no file on disk is a lie.
-    await blobs.writeBitstream(entry.streamId, result.data);
+    final written = await blobs.writeBitstream(entry.streamId, result.data);
+    if (tracked && !_entries.containsKey(entry.streamId)) {
+      // Deleted (message removed, channel cleared) while the write was in
+      // flight. Storing now would resurrect it with no message to show it.
+      await blobs.deleteBitstream(entry.streamId);
+      return entry;
+    }
+    if (!written) {
+      return _store(
+        entry.copyWith(
+          state: ReceivedImageState.failedCorrupt,
+          receivedChunks: result.chunkCount,
+          totalChunks: result.chunkCount,
+          bitstreamStored: false,
+          error: 'Could not save the image data.',
+        ),
+      );
+    }
 
     final updated = entry.copyWith(
       state: ReceivedImageState.reassembled,
@@ -900,9 +952,12 @@ class ReceivedImageStore extends ChangeNotifier {
       // Park it: the card shows "N bytes · M packets" and "Tap to process".
       // A 2.16 GiB decode is never started off the back of a radio packet
       // unless the user asked for that.
-      return _store(updated.copyWith(needsManualDecode: true));
+      final parked = await _store(updated.copyWith(needsManualDecode: true));
+      await _enforceEntryCap(protect: parked.streamId);
+      return parked;
     }
     final stored = await _store(updated);
+    await _enforceEntryCap(protect: stored.streamId);
     _enqueue(stored.streamId);
     return stored;
   }
@@ -965,6 +1020,7 @@ class ReceivedImageStore extends ChangeNotifier {
     required Uint8List previewPng,
     required AeicRatePoint rate,
     required int chunkCount,
+    int aspectCode = 0,
     DateTime? at,
   }) async {
     final now = at ?? _clock();
@@ -973,7 +1029,10 @@ class ReceivedImageStore extends ChangeNotifier {
       imgId: imgId,
       firstSeen: now,
     );
-    await blobs.writePng(streamId, previewPng);
+    // A failed write still shows the photo for this session (the bytes stay
+    // cached on the entry); the next launch then reports it as evicted rather
+    // than pointing at a file that was never written.
+    final pngWritten = await blobs.writePng(streamId, previewPng);
     final entry = ReceivedImageEntry(
       streamId: streamId,
       senderPrefix: senderPrefix,
@@ -984,10 +1043,13 @@ class ReceivedImageStore extends ChangeNotifier {
       receivedChunks: chunkCount,
       totalChunks: chunkCount,
       rate: rate,
+      // The preview is the same stretched 512x512 square the receiver gets,
+      // so the sender's bubble needs the source shape to undo it too.
+      aspectCode: aspectCode,
       metadataAssumed: false,
       isOutgoing: true,
-      pngStored: true,
-      pngByteCount: previewPng.length,
+      pngStored: pngWritten,
+      pngByteCount: pngWritten ? previewPng.length : 0,
       pngBytes: previewPng,
     );
     final stored = await _store(entry);
@@ -1003,7 +1065,12 @@ class ReceivedImageStore extends ChangeNotifier {
     if (_foreground == value) return;
     _foreground = value;
     if (!value) {
-      decoder?.cancelCodecJob();
+      // Only cancel OUR decode: the codec is shared with the send sheet, and an
+      // encode it is running is not this store's to stop.
+      if (_decodeInFlight) {
+        _backgroundCancelled = true;
+        decoder?.cancelCodecJob();
+      }
     } else {
       _parkedOnBusyDecoder = false;
       _kick();
@@ -1193,9 +1260,14 @@ class ReceivedImageStore extends ChangeNotifier {
     ReceivedImageDecoder decoder,
   ) async {
     final bitstream = await blobs.readBitstream(entry.streamId);
+    // Every await below is a window in which the user may delete the image
+    // (message removed, channel cleared). Re-read the live entry after each
+    // one and stop if it is gone, or the decode would store it back.
+    final live = _entries[entry.streamId];
+    if (live == null) return;
     if (bitstream == null || bitstream.isEmpty) {
       await _store(
-        entry.copyWith(
+        live.copyWith(
           state: ReceivedImageState.failedCorrupt,
           bitstreamStored: false,
           error: 'Bitstream missing.',
@@ -1205,49 +1277,34 @@ class ReceivedImageStore extends ChangeNotifier {
     }
     final started = _clock();
     _cancelRequested = false;
-    await _store(entry.copyWith(state: ReceivedImageState.decoding));
+    _backgroundCancelled = false;
+    await _store(live.copyWith(state: ReceivedImageState.decoding));
 
     ImageCodecResult? result;
+    Object? failure;
     try {
       result = await decoder.decodeBitstream(
         bitstream: bitstream,
-        ratePoint: entry.rate,
-        resolution: entry.resolution,
+        ratePoint: live.rate,
+        resolution: live.resolution,
       );
     } catch (error) {
-      final current = _entries[entry.streamId] ?? entry;
-      if (_cancelRequested) {
-        await _store(
-          current.copyWith(
-            state: ReceivedImageState.reassembled,
-            needsManualDecode: true,
-          ),
-        );
-      } else if (!_foreground) {
-        await _store(current.copyWith(state: ReceivedImageState.reassembled));
-      } else {
-        await _store(
-          current.copyWith(
-            state: ReceivedImageState.failedCorrupt,
-            error: error.toString(),
-          ),
-        );
-      }
-      return;
+      failure = error;
     }
 
-    final current = _entries[entry.streamId] ?? entry;
-    if (result == null) {
-      // canDecode false — the codec cannot run at all.
-      await _store(
-        current.copyWith(state: ReceivedImageState.decoderUnavailable),
-      );
-      return;
-    }
-    final png = result.pngBytes;
-    if (result.status != ImageCodecStatus.completed || png == null) {
+    final current = _entries[entry.streamId];
+    if (current == null) return;
+    final png = result?.pngBytes;
+    final completed =
+        failure == null &&
+        result != null &&
+        result.status == ImageCodecStatus.completed &&
+        png != null;
+
+    if (!completed) {
       if (_cancelRequested) {
-        // The codec reports a killed job as `failed`; the bitstream is fine.
+        // Memory pressure: the codec reports a killed job as `failed`, but
+        // the bitstream is fine. Park it behind a tap.
         await _store(
           current.copyWith(
             state: ReceivedImageState.reassembled,
@@ -1256,27 +1313,47 @@ class ReceivedImageStore extends ChangeNotifier {
         );
         return;
       }
+      if (_backgroundCancelled || !_foreground) {
+        // Backgrounded mid-decode: back to the front of the queue, so coming
+        // back to the app picks it up again.
+        await _store(current.copyWith(state: ReceivedImageState.reassembled));
+        if (!_queue.contains(current.streamId)) {
+          _queue.insert(0, current.streamId);
+        }
+        return;
+      }
+      if (failure == null && result == null) {
+        // canDecode false — the codec cannot run at all.
+        await _store(
+          current.copyWith(state: ReceivedImageState.decoderUnavailable),
+        );
+        return;
+      }
       await _store(
         current.copyWith(
           state: ReceivedImageState.failedCorrupt,
-          error: 'Decoder rejected the bitstream.',
+          error: failure?.toString() ?? 'Decoder rejected the bitstream.',
         ),
       );
       return;
     }
-    if (!_foreground) {
-      // Backgrounded mid-decode: keep the pixels, but do not claim a decode we
-      // may have half-cancelled.
-      await _store(current.copyWith(state: ReceivedImageState.reassembled));
+
+    // A completed result is a finished decode even if the app went to the
+    // background in the meantime; throwing the pixels away would only make
+    // the user wait for a second 2 GiB run.
+    final written = await blobs.writePng(current.streamId, png);
+    final afterWrite = _entries[entry.streamId];
+    if (afterWrite == null) {
+      await blobs.deletePng(current.streamId);
       return;
     }
-
-    await blobs.writePng(current.streamId, png);
     await _store(
-      current.copyWith(
+      afterWrite.copyWith(
         state: ReceivedImageState.decoded,
-        pngStored: true,
-        pngByteCount: png.length,
+        // A failed write keeps the pixels cached for this session; the next
+        // launch reports the image as evicted ("Decode again") instead.
+        pngStored: written,
+        pngByteCount: written ? png.length : 0,
         pngBytes: png,
         decodeMs: result.durationMs > 0
             ? result.durationMs
@@ -1288,7 +1365,7 @@ class ReceivedImageStore extends ChangeNotifier {
     // Without `protect` the freshly decoded image is the budget's own victim
     // whenever it is also the oldest: decode -> evict -> "Decode again" ->
     // evict, forever.
-    await evictToBudget(protect: current.streamId);
+    await evictToBudget(protect: afterWrite.streamId);
   }
 
   // ---- pixels --------------------------------------------------------------
@@ -1330,7 +1407,10 @@ class ReceivedImageStore extends ChangeNotifier {
   Future<void> deleteImage(String streamId) async {
     final entry = _entries.remove(streamId);
     _queue.remove(streamId);
-    if (entry != null) {
+    // Only unlink the key if it still points here: a newer image reusing the
+    // same sender/id/channel owns it now, and losing that mapping strands the
+    // newer one on "receiving" while its next chunk opens a third entry.
+    if (entry != null && _byKey[entry.key] == streamId) {
       _byKey.remove(entry.key);
     }
     await blobs.deletePng(streamId);
@@ -1468,8 +1548,48 @@ class ReceivedImageStore extends ChangeNotifier {
       }
     }
 
+    evicted.addAll(await _enforceEntryCap(protect: protect));
+
     if (evicted.isNotEmpty) _notify();
     return evicted;
+  }
+
+  /// Brings the entry count inside [maxEntries], oldest first: failures, then
+  /// entries with nothing left on disk, then undecoded incoming images. Never
+  /// touches outgoing images, a running decode or a stream still receiving.
+  Future<List<String>> _enforceEntryCap({String? protect}) async {
+    final removed = <String>[];
+    if (_entries.length <= maxEntries) return removed;
+    int rank(ReceivedImageEntry e) {
+      if (e.state.isFailure) return 0;
+      if (e.state == ReceivedImageState.evicted && !e.bitstreamStored) {
+        return 1;
+      }
+      return 2;
+    }
+
+    final victims =
+        _entries.values
+            .where(
+              (e) =>
+                  e.streamId != protect &&
+                  !e.isOutgoing &&
+                  (e.state.isFailure ||
+                      e.state == ReceivedImageState.evicted ||
+                      e.state == ReceivedImageState.reassembled ||
+                      e.state == ReceivedImageState.decoderUnavailable),
+            )
+            .toList()
+          ..sort((a, b) {
+            final byRank = rank(a).compareTo(rank(b));
+            return byRank != 0 ? byRank : a.firstSeen.compareTo(b.firstSeen);
+          });
+    for (final victim in victims) {
+      if (_entries.length <= maxEntries) break;
+      await deleteImage(victim.streamId);
+      removed.add(victim.streamId);
+    }
+    return removed;
   }
 
   // ---- plumbing ------------------------------------------------------------
@@ -1507,9 +1627,23 @@ class ReceivedImageStore extends ChangeNotifier {
 
   void _storeSync(ReceivedImageEntry entry) {
     _entries[entry.streamId] = entry;
-    _byKey[entry.key] = entry.streamId;
+    _claimKey(entry);
     _publish(entry);
     _notify();
+  }
+
+  /// Points the entry's key at it unless a newer image already holds the key.
+  /// Updating an old entry (eviction, a late decode) must not steal the key
+  /// back from a newer stream that reused the same 8-bit id.
+  void _claimKey(ReceivedImageEntry entry) {
+    final holderId = _byKey[entry.key];
+    if (holderId != null && holderId != entry.streamId) {
+      final holder = _entries[holderId];
+      if (holder != null && holder.firstSeen.isAfter(entry.firstSeen)) {
+        return;
+      }
+    }
+    _byKey[entry.key] = entry.streamId;
   }
 
   Future<void> _persist(ReceivedImageEntry entry) async {

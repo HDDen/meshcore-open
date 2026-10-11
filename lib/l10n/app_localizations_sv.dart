@@ -433,6 +433,29 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_regionDefaultNone => 'Ingen';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Radions standard ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Ingen region (utan begränsning)';
+
+  @override
+  String get settings_regionRadioDefault => 'Radions standardregion';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Sparas på radion. Floods som skickas utan region använder den, från den här appen och från alla andra appar som är anslutna till radion.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Radions standardregion uppdaterad';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Det gick inte att uppdatera radions standardregion';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Regionhantering';
 
   @override
@@ -699,7 +722,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Alla noder du kommunicerar med måste använda samma frekvens, bandbredd, SF och CR.';
+      'Alla noder du kommunicerar med måste använda samma frekvens, bandbredd och SF. Kodningshastigheten (CR) får skilja sig.';
 
   @override
   String get settings_frequency => 'Frekvens (MHz)';
@@ -866,11 +889,33 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Räkna även olika repeatrar i närheten';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count olika repeatrar i närheten',
+      one: '1 repeater i närheten',
+    );
+    return 'Betrakta meddelandet som skickat när $_temp0 upprepar det, även om du inte hör det färdas vidare.';
+  }
+
+  @override
   String get appSettings_enableMessageTracing => 'Aktivera meddelandespårning';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'Visa detaljerad routing- och tidsmetadata för meddelanden';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Region bredvid hoppantal';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Visa ett kanalmeddelandes region på samma rad som dess hoppantal i stället för under det.';
 
   @override
   String get appSettings_notifications => 'Notifieringar';
@@ -1582,6 +1627,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(standard)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(radions standard)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Den här radion skickar floods utan region i sin standardregion: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Flood-meddelanden i den här kanalen vidarebefordras bara av repeatrar i den valda regionen.';
 
@@ -1625,6 +1678,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_typeMessage => 'Skriv ett meddelande...';
+
+  @override
+  String get chat_futureTimestampWarning =>
+      'Det här meddelandets tid ligger i framtiden, så avsändarens klocka kan vara fel. Det visas i den ordning det kom in.';
 
   @override
   String chat_messageTooLong(int maxBytes) {
@@ -4789,6 +4846,53 @@ class AppLocalizationsSv extends AppLocalizations {
       'Är du säker på att du vill ta bort alla upptäckta kontakter?';
 
   @override
+  String get discoveredContacts_scan => 'Sök efter noder i närheten';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Noder i närheten';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Ber noder inom direkt radioräckvidd att identifiera sig. Repeatrar och sensorer svarar. Rumsservrar och companions gör det oftast inte.';
+
+  @override
+  String get discoveredContacts_scanning => 'Söker…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count noder hittades',
+      one: '1 nod hittades',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Inga noder svarade. Repeatrar begränsar hur ofta de svarar, så försök igen om en minut.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Sök igen';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Det gick inte att skicka sökförfrågan.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Signal $snr dB · de hörde oss med $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Finns redan i kontakter';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'Namnet visas efter nästa annons';
+
+  @override
   String get chat_sendCooldown =>
       'Vänligen vänta en stund innan du skickar igen.';
 
@@ -5472,5 +5576,104 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'Det gick inte att starta granskningsläget: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Kanalerna laddas fortfarande från radion. Försök igen när synkroniseringen är klar.';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return 'Namnet är för långt (max $maxBytes byte).';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field: ange ett värde';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Kartdetaljer';
+
+  @override
+  String get losUnitsTooltip => 'Enheter';
+
+  @override
+  String get losDistance => 'Avstånd';
+
+  @override
+  String get losClearance => 'Frigång';
+
+  @override
+  String get losBlockedBy => 'Blockeras av';
+
+  @override
+  String get losObstruction => 'Hinder';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return '$distance från A';
+  }
+
+  @override
+  String get losWorstBadge => 'VÄRST';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return 'Blockerad $amount';
+  }
+
+  @override
+  String get losFromA => 'Från A';
+
+  @override
+  String get losFromB => 'Från B';
+
+  @override
+  String get losElevation => 'Höjd';
+
+  @override
+  String get losCenterOnMap => 'Centrera på kartan';
+
+  @override
+  String get losStatusClear => 'Fri';
+
+  @override
+  String get losStatusMarginal => 'Marginell';
+
+  @override
+  String get losStatusBlocked => 'Blockerad';
+
+  @override
+  String get losStatusCheckingShort => 'Kontrollerar';
+
+  @override
+  String get losStatusNoResult => 'Inget resultat';
+
+  @override
+  String get losSelectedPill => 'Vald';
+
+  @override
+  String get gif_tapToLoad => 'Tryck för att ladda GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'Det gick inte att ladda GIF\nTryck för att försöka igen';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Kamerabehörighet nekades.\nAktivera kameraåtkomst i inställningarna.';
+
+  @override
+  String get qr_cameraUnsupported => 'Kameran stöds inte på den här enheten.';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'Det gick inte att starta kameran.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return 'Bildmodellen kunde inte laddas ned: $error';
   }
 }

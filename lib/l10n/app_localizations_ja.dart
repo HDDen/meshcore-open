@@ -416,6 +416,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_regionDefaultNone => 'なし';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return '無線機の既定（$region）';
+  }
+
+  @override
+  String get settings_regionNoRegion => '地域なし（スコープなし）';
+
+  @override
+  String get settings_regionRadioDefault => '無線機の既定の地域';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      '無線機に保存されます。地域を指定せずに送るフラッドは、このアプリや無線機に接続した他のアプリからでも、この地域を使います。';
+
+  @override
+  String get settings_regionRadioDefaultUpdated => '無線機の既定の地域を更新しました';
+
+  @override
+  String get settings_regionRadioDefaultFailed => '無線機の既定の地域を更新できませんでした';
+
+  @override
   String get settings_regionManagement_screenTitle => '地域管理';
 
   @override
@@ -673,7 +694,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      '通信するすべてのノードで、周波数・帯域幅・伝播係数・コーディング速度を揃える必要があります。';
+      '通信するすべてのノードで、周波数・帯域幅・伝播係数を揃える必要があります。コーディング速度（CR）は異なっていても構いません。';
 
   @override
   String get settings_frequency => '周波数 (MHz)';
@@ -839,11 +860,32 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get appSettings_channelMinHopsCountRepeaters => '近くの別のリピータも数える';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '近くの異なるリピータ $count 台',
+      one: '近くのリピータ 1 台',
+    );
+    return '$_temp0が再送したら、それ以上先に届くのが聞こえなくても送信済みとみなします。';
+  }
+
+  @override
   String get appSettings_enableMessageTracing => 'メッセージ追跡を有効にする';
 
   @override
   String get appSettings_enableMessageTracingSubtitle =>
       'メッセージの詳細な経路とタイミングのメタデータを表示します';
+
+  @override
+  String get appSettings_regionOnHopsLine => 'ホップ数の横に地域を表示';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'チャンネルメッセージの地域を、ホップ数の下ではなく同じ行に表示します。';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1525,6 +1567,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get channels_regionDefaultSuffix => '（デフォルト）';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '（無線機の既定）';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'この無線機は、地域なしのフラッドを既定の地域で送信します：$region。';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'このチャンネルのフラッドメッセージは、選択した地域内のリピータだけが転送します。';
 
@@ -1566,6 +1616,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chat_typeMessage => 'メッセージを入力してください…';
+
+  @override
+  String get chat_futureTimestampWarning =>
+      'このメッセージの時刻は未来です。送信者の時計がずれている可能性があります。届いた順に表示しています。';
 
   @override
   String chat_messageTooLong(int maxBytes) {
@@ -4591,6 +4645,51 @@ class AppLocalizationsJa extends AppLocalizations {
       '本当に、見つけたすべての連絡先を削除してもよろしいですか？';
 
   @override
+  String get discoveredContacts_scan => '近くのノードをスキャン';
+
+  @override
+  String get discoveredContacts_scanTitle => '近くのノード';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      '直接電波が届く範囲のノードに応答を求めます。リピータとセンサーが応答します。ルームサーバーやコンパニオンは通常応答しません。';
+
+  @override
+  String get discoveredContacts_scanning => 'スキャン中…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 件のノードが見つかりました',
+      one: '1 件のノードが見つかりました',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      '応答したノードはありません。リピータは応答頻度を制限しているため、1 分ほど待ってからもう一度お試しください。';
+
+  @override
+  String get discoveredContacts_scanAgain => 'もう一度スキャン';
+
+  @override
+  String get discoveredContacts_scanFailed => 'スキャン要求を送信できませんでした。';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return '信号 $snr dB ・ 相手の受信 $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'すでに連絡先にあります';
+
+  @override
+  String get discoveredContacts_scanNameLater => '次のアドバートの後に名前が表示されます';
+
+  @override
   String get chat_sendCooldown => '再度送信する前に、しばらくお待ちください。';
 
   @override
@@ -5252,5 +5351,103 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String reviewMode_connectFailed(String error) {
     return 'レビューモードを開始できませんでした: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'チャンネルは無線機からまだ読み込み中です。同期が完了してからもう一度お試しください。';
+
+  @override
+  String channels_nameTooLong(int maxBytes) {
+    return '名前が長すぎます（最大 $maxBytes バイト）。';
+  }
+
+  @override
+  String repeater_valueRequired(String field) {
+    return '$field：値を入力してください';
+  }
+
+  @override
+  String get losMapDetailTooltip => '地図の詳細';
+
+  @override
+  String get losUnitsTooltip => '単位';
+
+  @override
+  String get losDistance => '距離';
+
+  @override
+  String get losClearance => 'クリアランス';
+
+  @override
+  String get losBlockedBy => '遮蔽物';
+
+  @override
+  String get losObstruction => '障害物';
+
+  @override
+  String losDistanceFromA(String distance) {
+    return 'A から $distance';
+  }
+
+  @override
+  String get losWorstBadge => '最悪';
+
+  @override
+  String losBlockedAmount(String amount) {
+    return '遮断量 $amount';
+  }
+
+  @override
+  String get losFromA => 'A から';
+
+  @override
+  String get losFromB => 'B から';
+
+  @override
+  String get losElevation => '標高';
+
+  @override
+  String get losCenterOnMap => '地図の中心に表示';
+
+  @override
+  String get losStatusClear => 'クリア';
+
+  @override
+  String get losStatusMarginal => '境界';
+
+  @override
+  String get losStatusBlocked => '遮断';
+
+  @override
+  String get losStatusCheckingShort => '確認中';
+
+  @override
+  String get losStatusNoResult => '結果なし';
+
+  @override
+  String get losSelectedPill => '選択中';
+
+  @override
+  String get gif_tapToLoad => 'タップして GIF を読み込む';
+
+  @override
+  String get gif_loadFailedRetry => 'GIF を読み込めません\nタップして再試行';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'カメラの権限が拒否されました。\n設定でカメラへのアクセスを有効にしてください。';
+
+  @override
+  String get qr_cameraUnsupported => 'この端末ではカメラがサポートされていません。';
+
+  @override
+  String qr_cameraStartFailed(String details) {
+    return 'カメラを起動できませんでした。\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(String error) {
+    return '画像モデルをダウンロードできませんでした：$error';
   }
 }

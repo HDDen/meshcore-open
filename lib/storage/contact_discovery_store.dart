@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../models/contact.dart';
 import '../utils/app_logger.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ContactDiscoveryStore {
@@ -18,7 +19,7 @@ class ContactDiscoveryStore {
     if (publicKeyHex.isEmpty) return [];
     final prefs = PrefsManager.instance;
     var jsonStr = prefs.getString(keyFor);
-    if (jsonStr == null) {
+    if (jsonStr == null && canMigrateLegacyKeys(publicKeyHex)) {
       jsonStr = prefs.getString(_keyPrefix);
       if (jsonStr != null) {
         await prefs.setString(keyFor, jsonStr);
