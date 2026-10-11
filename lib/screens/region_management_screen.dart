@@ -36,6 +36,22 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   List<Region> _regions = [];
   bool _isFetchingRegions = false;
 
+  /// Completed when the user cancels an in-progress fetch; pending discovery
+  /// and region requests resolve immediately with no results.
+  Completer<void>? _fetchCancel;
+
+  /// Drives the fetch progress dialog: null while discovering, otherwise
+  /// (current repeater, total repeaters).
+  final ValueNotifier<(int, int)?> _fetchProgress = ValueNotifier(null);
+
+  @override
+  void dispose() {
+    final cancel = _fetchCancel;
+    if (cancel != null && !cancel.isCompleted) cancel.complete();
+    _fetchProgress.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +130,9 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Keep the app default visible so "No region (unscoped)" can be
+            // chosen before any region is added.
+            _buildDefaultRegionTile(context),
             // The radio may hold a default region set by firmware or another
             // client even when this app's list is empty; keep it clearable.
             _buildRadioDefaultRegionTile(context),
@@ -245,52 +264,105 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     }
   }
 
-  void _showAddRegionDialog(BuildContext context) {
-    final l10n = context.l10n;
-    final controller = TextEditingController();
-    showDialog(
+  Future<void> _showAddRegionDialog(BuildContext context) async {
+    final region = await showDialog<Region>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.settings_regionName),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textInputAction: TextInputAction.send,
-          onSubmitted: (_) => _handleAddRegion(controller.text, context),
-          decoration: InputDecoration(
-            hintText: l10n.settings_regionNameHint,
-            border: const OutlineInputBorder(),
-          ),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp("[a-z0-9-]")),
-          ],
-          maxLength: 30,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => _handleAddRegion(controller.text, context),
-            child: Text(l10n.common_add),
-          ),
-        ],
-      ),
+      builder: (_) => const _AddRegionDialog(),
     );
+    if (region == null || !mounted) return;
+    _handleAddRegion(region);
   }
 
   Future<void> _showFetchRegionsDialog() async {
     if (_isFetchingRegions) return;
+    final l10n = context.l10n;
+    final connector = context.read<MeshCoreConnector>();
+
+    if (!connector.isConnected) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.settings_notConnectedError),
+      );
+      return;
+    }
+    final knownRepeaters = connector.contacts
+        .where((contact) => contact.type == advTypeRepeater)
+        .toList();
+    if (knownRepeaters.isEmpty) {
+      await _showFetchMessage(l10n.settings_regionFetchNoRepeaters);
+      return;
+    }
 
     setState(() {
       _isFetchingRegions = true;
     });
+    final cancel = Completer<void>();
+    _fetchCancel = cancel;
+    _fetchProgress.value = null;
 
-    Set<Region> fetchedRegions = {};
+    BuildContext? progressContext;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          progressContext = dialogContext;
+          return PopScope(
+            canPop: false,
+            child: AlertDialog(
+              title: Text(l10n.settings_regionFetchRegions),
+              content: ValueListenableBuilder<(int, int)?>(
+                valueListenable: _fetchProgress,
+                builder: (context, progress, _) => Row(
+                  children: [
+                    const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 3),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        progress == null
+                            ? l10n.settings_regionFetchDiscovering
+                            : l10n.settings_regionFetchProgress(
+                                progress.$1,
+                                progress.$2,
+                              ),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (!cancel.isCompleted) cancel.complete();
+                    progressContext = null;
+                    Navigator.pop(dialogContext);
+                  },
+                  child: Text(l10n.common_cancel),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    _RegionFetchResult result;
     try {
-      fetchedRegions = await _fetchRegionsFromRepeaters();
+      result = await _fetchRegionsFromRepeaters(connector, cancel);
     } finally {
+      if (_fetchCancel == cancel) _fetchCancel = null;
+      // A fetch that fails instantly can finish before the progress dialog
+      // has built; let it build so it can be closed.
+      if (progressContext == null && !cancel.isCompleted) {
+        await WidgetsBinding.instance.endOfFrame;
+      }
+      final dialog = progressContext;
+      if (dialog != null && dialog.mounted) Navigator.pop(dialog);
       if (mounted) {
         setState(() {
           _isFetchingRegions = false;
@@ -299,8 +371,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     }
 
     if (!mounted) return;
-    final l10n = context.l10n;
-    final sortedRegions = fetchedRegions.toList()..sort();
+    if (cancel.isCompleted && result.regions.isEmpty) return;
+    if (!cancel.isCompleted && result.askedRepeaters == 0) {
+      await _showFetchMessage(l10n.settings_regionFetchNoneResponded);
+      return;
+    }
+    final sortedRegions = result.regions.toList()..sort();
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -345,9 +421,13 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                                     : null,
                                 onPressed: () {
                                   if (alreadyExists) {
-                                    _showDialogSnackBar(
-                                      context,
-                                      l10n.settings_regionFetchRegionsAlreadyExists,
+                                    // Screen context: the root
+                                    // ScaffoldMessenger, not the dialog's.
+                                    showDismissibleSnackBar(
+                                      this.context,
+                                      content: Text(
+                                        l10n.settings_regionFetchRegionsAlreadyExists,
+                                      ),
                                     );
                                     return;
                                   }
@@ -376,54 +456,46 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     );
   }
 
-  void _showDialogSnackBar(BuildContext context, String message) {
-    final overlay = Overlay.maybeOf(context);
-    if (overlay == null) return;
-
-    final theme = Theme.of(context);
-    final entry = OverlayEntry(
-      builder: (context) => Positioned(
-        left: 16,
-        right: 16,
-        bottom: 32,
-        child: SafeArea(
-          child: Material(
-            color: theme.colorScheme.inverseSurface,
-            elevation: 6,
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Text(
-                message,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onInverseSurface,
-                ),
-              ),
-            ),
+  Future<void> _showFetchMessage(String message) {
+    final l10n = context.l10n;
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.settings_regionFetchRegions),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.common_close),
           ),
-        ),
+        ],
       ),
     );
-
-    overlay.insert(entry);
-    Timer(const Duration(seconds: 3), entry.remove);
   }
 
-  Future<Set<Region>> _fetchRegionsFromRepeaters() async {
-    final connector = context.read<MeshCoreConnector>();
-    final repeaters = await _discoverNearbyRepeaters(connector);
+  Future<_RegionFetchResult> _fetchRegionsFromRepeaters(
+    MeshCoreConnector connector,
+    Completer<void> cancel,
+  ) async {
+    final repeaters = await _discoverNearbyRepeaters(connector, cancel);
     final regions = <Region>{};
+    var asked = 0;
 
     for (final repeater in repeaters) {
-      if (!mounted || !connector.isConnected) break;
-      regions.addAll(await _requestRegionsFromRepeater(connector, repeater));
+      if (!mounted || !connector.isConnected || cancel.isCompleted) break;
+      asked++;
+      _fetchProgress.value = (asked, repeaters.length);
+      regions.addAll(
+        await _requestRegionsFromRepeater(connector, repeater, cancel),
+      );
     }
 
-    return regions;
+    return _RegionFetchResult(regions: regions, askedRepeaters: asked);
   }
 
   Future<List<Contact>> _discoverNearbyRepeaters(
     MeshCoreConnector connector,
+    Completer<void> cancel,
   ) async {
     final repeaters = connector.contacts
         .where((contact) => contact.type == advTypeRepeater)
@@ -469,9 +541,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       }
     });
 
+    unawaited(cancel.future.then((_) => complete()));
+
     try {
       final payload = buildDiscoveryRequestPayload(tag, prefixOnly: true);
       await connector.sendFrame(buildSendControlDataFrame(payload));
+      if (completer.isCompleted) return <Contact>[];
       timeout = Timer(const Duration(seconds: 10), complete);
       final prefixes = await completer.future;
       return repeaters.where((contact) {
@@ -488,6 +563,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Future<Set<Region>> _requestRegionsFromRepeater(
     MeshCoreConnector connector,
     Contact repeater,
+    Completer<void> cancel,
   ) async {
     StreamSubscription<Uint8List>? subscription;
     Timer? timeout;
@@ -508,6 +584,8 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       timeout?.cancel();
       timeout = Timer(duration, () => complete(<Region>{}));
     }
+
+    unawaited(cancel.future.then((_) => complete(<Region>{})));
 
     try {
       final replyPath = Uint8List(0);
@@ -561,28 +639,27 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         pathHashWidth: connector.pathHashByteWidth,
       );
       await connector.sendFrame(frame);
-      final regions = await completer.future;
-      if (pathChangedForRequest && connector.isConnected) {
-        await _restoreRepeaterPath(
-          connector,
-          repeater,
-          originalPathLength,
-          originalPath,
-        );
-      }
-      return regions;
+      return await completer.future;
     } catch (_) {
-      timeout?.cancel();
-      subscription?.cancel();
-      if (pathChangedForRequest && connector.isConnected) {
-        await _restoreRepeaterPath(
-          connector,
-          repeater,
-          originalPathLength,
-          originalPath,
-        );
-      }
       return <Region>{};
+    } finally {
+      timeout?.cancel();
+      await subscription?.cancel();
+      // Always put the user's route back, whatever happened above. (The
+      // connector ignores path writes while disconnected, so nothing can be
+      // restored if the link dropped mid-request.)
+      if (pathChangedForRequest) {
+        try {
+          await _restoreRepeaterPath(
+            connector,
+            repeater,
+            originalPathLength,
+            originalPath,
+          );
+        } catch (_) {
+          // Best effort; the original path is still in the contact store.
+        }
+      }
     }
   }
 
@@ -616,9 +693,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         .toSet();
   }
 
-  void _handleAddRegion(Region region, BuildContext context) {
-    Navigator.pop(context);
-    _regionStore.addRegion(region);
+  void _handleAddRegion(Region region) {
+    // An empty name would collide with the '' "none" dropdown entry.
+    final trimmed = region.trim();
+    if (trimmed.isEmpty) return;
+    _regionStore.addRegion(trimmed);
     _loadRegions();
   }
 
@@ -683,6 +762,76 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RegionFetchResult {
+  final Set<Region> regions;
+  final int askedRepeaters;
+
+  const _RegionFetchResult({
+    required this.regions,
+    required this.askedRepeaters,
+  });
+}
+
+/// Region-name entry. Owns (and disposes) its controller and only enables
+/// Add once the trimmed name is non-empty; pops with that name.
+class _AddRegionDialog extends StatefulWidget {
+  const _AddRegionDialog();
+
+  @override
+  State<_AddRegionDialog> createState() => _AddRegionDialogState();
+}
+
+class _AddRegionDialogState extends State<_AddRegionDialog> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+    Navigator.pop(context, name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.settings_regionName),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textInputAction: TextInputAction.send,
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          hintText: l10n.settings_regionNameHint,
+          border: const OutlineInputBorder(),
+        ),
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.allow(RegExp("[a-z0-9-]")),
+        ],
+        maxLength: 30,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.common_cancel),
+        ),
+        ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) => TextButton(
+            onPressed: _controller.text.trim().isEmpty ? null : _submit,
+            child: Text(l10n.common_add),
+          ),
+        ),
+      ],
     );
   }
 }

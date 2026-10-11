@@ -457,7 +457,7 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
       textAlign: TextAlign.center,
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(fontSize: 11, color: color ?? widget.fallbackTextColor),
+      style: TextStyle(fontSize: 12, color: color ?? widget.fallbackTextColor),
     );
   }
 
@@ -547,20 +547,22 @@ class _SyntheticBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 18,
+      height: 20,
       alignment: Alignment.center,
       color: Colors.black.withValues(alpha: 0.62),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.auto_awesome, size: 11, color: Colors.white),
+          const Icon(Icons.auto_awesome, size: 12, color: Colors.white),
           const SizedBox(width: 4),
-          Text(
-            _kSyntheticBadge,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, color: Colors.white),
+          Flexible(
+            child: Text(
+              _kSyntheticBadge,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -590,7 +592,7 @@ class _SyntheticCaption extends StatelessWidget {
         // than none — it clips exactly where the warning was going.
         softWrap: true,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 12,
           color: onDark
               ? Colors.white70
               : Theme.of(context).colorScheme.onSurfaceVariant,

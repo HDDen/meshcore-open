@@ -5378,4 +5378,386 @@ class AppLocalizationsZh extends AppLocalizations {
   String imageMessages_downloadFailedWithError(String error) {
     return '无法下载图像模型：$error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint => '隐藏:离开地图前保持隐藏。';
+
+  @override
+  String get map_markerRemoveHint => '移除:在从筛选菜单中恢复之前保持隐藏。';
+
+  @override
+  String get map_markerRemoved => '标记已移除';
+
+  @override
+  String get map_restoreRemovedMarkers => '恢复已移除的标记';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(int count) {
+    return '已移除 $count 个';
+  }
+
+  @override
+  String map_markersRestored(int count) {
+    return '已恢复 $count 个标记';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => '设为你的位置?';
+
+  @override
+  String map_setLocationConfirmBody(String lat, String lon) {
+    return '你的节点将广播此位置:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => '设置位置';
+
+  @override
+  String get map_locationSetSuccess => '节点位置已更新';
+
+  @override
+  String get map_locationSetFailed => '设备未确认新位置。请重试。';
+
+  @override
+  String map_poiClusterTitle(int count) {
+    return '此处有 $count 个标记';
+  }
+
+  @override
+  String map_poiClusterSemantics(int count) {
+    return '$count 个共享标记。点按以查看列表。';
+  }
+
+  @override
+  String map_youWithMarkers(int count) {
+    return '你和 $count 个标记';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(String label) {
+    return '共享标记:$label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(String name, String type, String status) {
+    return '$name,$type,$status';
+  }
+
+  @override
+  String mapCache_zoomLevel(int zoom) {
+    return '缩放 $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(String size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(String size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(int count) {
+    return '下载已取消。已缓存 $count 个图块。';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => '区域过大';
+
+  @override
+  String mapCache_tooManyTiles(int count, int max) {
+    return '此区域需要 $count 个图块,超过 $max 的上限。请选择更小的区域或降低最大缩放级别。';
+  }
+
+  @override
+  String get chat_clearChatConfirm => '这将从此设备上清除此对话中的所有消息,且无法撤销。';
+
+  @override
+  String get channels_clearChatConfirm => '这将从此设备上清除此频道中的所有消息(包括已接收的图片),且无法撤销。';
+
+  @override
+  String get channels_timeNow => '刚刚';
+
+  @override
+  String channels_timeMinutes(int minutes) {
+    return '$minutes分钟';
+  }
+
+  @override
+  String channels_timeHours(int hours) {
+    return '$hours小时';
+  }
+
+  @override
+  String channels_timeDays(int days) {
+    return '$days天';
+  }
+
+  @override
+  String channels_indexChip(int index) {
+    return 'CH $index';
+  }
+
+  @override
+  String get reaction_unknownSender => '未知';
+
+  @override
+  String get pathMap_noSelfGpsFix => '本地节点没有 GPS 定位';
+
+  @override
+  String pathTrace_sendFailed(String error) {
+    return '无法发送路径追踪:$error';
+  }
+
+  @override
+  String get losErrorNoInternet => '海拔数据需要网络连接';
+
+  @override
+  String get losResultStale => '结果已过期:天线高度已更改';
+
+  @override
+  String losSnrValue(String snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(String frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(String kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => '正在加载遥测数据…';
+
+  @override
+  String telemetry_axisValue(String x, String y, String z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(String red, String green, String blue) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError => '未连接到电台。请连接后重试。';
+
+  @override
+  String get settings_requiresConnection => '请连接电台后使用';
+
+  @override
+  String settings_txPowerInvalidRange(int min, int max) {
+    return 'TX 功率无效($min 至 $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => '联系人设置已保存';
+
+  @override
+  String get settings_batteryToggleHint => '点按可在百分比和电压之间切换';
+
+  @override
+  String get settings_publicKeyCopyHint => '复制公钥';
+
+  @override
+  String get settings_locationClearHelper => '将两个字段都留空即可移除你的位置。';
+
+  @override
+  String get settings_locationCleared => '位置已移除';
+
+  @override
+  String get settings_regionFetchDiscovering => '正在查找附近的中继器…';
+
+  @override
+  String settings_regionFetchProgress(int current, int total) {
+    return '正在询问第 $current/$total 个中继器…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      '目前还没有已知的中继器。请将中继器添加为联系人,或等待其广播后重试。';
+
+  @override
+  String get settings_regionFetchNoneResponded => '附近没有中继器响应。请靠近中继器后重试。';
+
+  @override
+  String appSettings_sourceSummary(String label, String description) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => '路由';
+
+  @override
+  String get appSettings_imageMessagesSection => '图片消息';
+
+  @override
+  String get appSettings_showApiKey => '显示 API 密钥';
+
+  @override
+  String get appSettings_hideApiKey => '隐藏 API 密钥';
+
+  @override
+  String get translation_defaultModelName => '模型';
+
+  @override
+  String translation_downloadProgressBytes(String fileName, String current) {
+    return '$fileName:$current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    String fileName,
+    String current,
+    String total,
+    String percent,
+  ) {
+    return '$fileName:$current / $total MB($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(String size, String source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => '电台已断开连接';
+
+  @override
+  String get repeater_radioDisconnectedHint => '请重新连接电台以发送命令、刷新或保存更改。';
+
+  @override
+  String get repeater_cliSend => '发送命令';
+
+  @override
+  String get repeater_cliCopyTranscript => '复制记录';
+
+  @override
+  String get repeater_cliShareTranscript => '分享记录';
+
+  @override
+  String get repeater_cliTranscriptCopied => '记录已复制';
+
+  @override
+  String get repeater_cliClearHistoryConfirm => '清除命令历史?此操作无法撤销。';
+
+  @override
+  String get repeater_cliSearchCommands => '搜索命令';
+
+  @override
+  String get repeater_cliNoMatchingCommands => '没有匹配的命令';
+
+  @override
+  String get debugLog_clearConfirm => '清除所有日志条目?此操作无法撤销。';
+
+  @override
+  String get repeater_unsavedChangesTitle => '未保存的更改';
+
+  @override
+  String get repeater_unsavedChangesMessage => '你有尚未保存到中继器的更改。';
+
+  @override
+  String get repeater_discardChanges => '放弃';
+
+  @override
+  String repeater_actionSentNoReply(String action) {
+    return '$action:命令已发送。中继器不会回复此命令。';
+  }
+
+  @override
+  String repeater_invalidSettingValue(String setting, String value) {
+    return '$setting:$value 无效';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(String value, int min, int max) {
+    return 'TX 功率 $value 超出范围($min 至 $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(int length) {
+    return '私钥必须恰好为 $length 个十六进制字符';
+  }
+
+  @override
+  String get contacts_advertFailed => '无法发送广播';
+
+  @override
+  String get contacts_manageGroups => '管理分组';
+
+  @override
+  String community_shortId(String id) {
+    return 'ID:$id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => '已连接到';
+
+  @override
+  String get usbChooseSerialPort => '选择串口';
+
+  @override
+  String neighbors_durationSeconds(String seconds) {
+    return '$seconds秒';
+  }
+
+  @override
+  String neighbors_durationMinutes(int minutes, String seconds) {
+    return '$minutes分$seconds秒';
+  }
+
+  @override
+  String neighbors_durationHours(int hours, int minutes) {
+    return '$hours小时$minutes分';
+  }
 }

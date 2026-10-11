@@ -23,6 +23,7 @@ import '../utils/dialog_utils.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/emoji_utils.dart';
 import '../utils/route_transitions.dart';
+import '../widgets/contact_visuals.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
@@ -45,6 +46,17 @@ enum RoomLoginDestination { chat, management }
 
 enum ContactOperationType { import, export, zeroHopShare }
 
+/// An export/import/share awaiting its generic OK/ERR ack. The timer drops
+/// it if no ack arrives, so a stuck op can't consume a later unrelated ack.
+class _PendingContactOperation {
+  final ContactOperationType type;
+  final Timer timeout;
+
+  _PendingContactOperation(this.type, this.timeout);
+}
+
+const Duration _contactOperationTimeout = Duration(seconds: 5);
+
 class ContactsScreen extends StatefulWidget {
   final bool hideBackButton;
 
@@ -63,7 +75,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   String _loadedGroupScopeKeyHex = '';
   Timer? _searchDebounce;
 
-  final List<ContactOperationType> _pendingOperations = [];
+  final List<_PendingContactOperation> _pendingOperations = [];
+  final DerivedListCache<Contact> _filteredCache = DerivedListCache<Contact>();
 
   StreamSubscription<Uint8List>? _frameSubscription;
 
@@ -101,8 +114,84 @@ class _ContactsScreenState extends State<ContactsScreen>
     _searchDebounce?.cancel();
     _searchController.dispose();
     _frameSubscription?.cancel();
+    for (final op in _pendingOperations) {
+      op.timeout.cancel();
+    }
+    _pendingOperations.clear();
     _scopeSyncConnector?.removeListener(_handleConnectorScopeChange);
     super.dispose();
+  }
+
+  void _addPendingOperation(ContactOperationType type) {
+    late final _PendingContactOperation op;
+    op = _PendingContactOperation(
+      type,
+      Timer(_contactOperationTimeout, () {
+        if (!_pendingOperations.remove(op)) return;
+        _showOperationResult(type, success: false);
+      }),
+    );
+    _pendingOperations.add(op);
+  }
+
+  /// Removes the oldest pending operation of [type] (or of any type when
+  /// null) and returns its type, or null when nothing is pending.
+  ContactOperationType? _takePendingOperation([ContactOperationType? type]) {
+    final index = type == null
+        ? (_pendingOperations.isEmpty ? -1 : 0)
+        : _pendingOperations.indexWhere((op) => op.type == type);
+    if (index < 0) return null;
+    final op = _pendingOperations.removeAt(index);
+    op.timeout.cancel();
+    return op.type;
+  }
+
+  void _showOperationResult(
+    ContactOperationType type, {
+    required bool success,
+  }) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final String message;
+    switch (type) {
+      case ContactOperationType.import:
+        message = success
+            ? l10n.contacts_contactImported
+            : l10n.contacts_contactImportFailed;
+      case ContactOperationType.zeroHopShare:
+        message = success
+            ? l10n.contacts_zeroHopContactAdvertSent
+            : l10n.contacts_zeroHopContactAdvertFailed;
+      case ContactOperationType.export:
+        message = success
+            ? l10n.contacts_contactAdvertCopied
+            : l10n.contacts_contactAdvertCopyFailed;
+    }
+    showDismissibleSnackBar(context, content: Text(message));
+  }
+
+  Future<void> _sendSelfAdvert(
+    MeshCoreConnector connector, {
+    required bool flood,
+  }) async {
+    var sent = false;
+    try {
+      if (connector.isConnected) {
+        await connector.sendSelfAdvert(flood: flood);
+        sent = true;
+      }
+    } catch (e) {
+      appLogger.error('Self advert failed: $e', tag: 'ContactsScreen');
+    }
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(
+        sent
+            ? context.l10n.settings_advertisementSent
+            : context.l10n.contacts_advertFailed,
+      ),
+    );
   }
 
   void _handleConnectorScopeChange() {
@@ -182,12 +271,12 @@ class _ContactsScreenState extends State<ContactsScreen>
                 content: Text(context.l10n.contacts_invalidAdvertFormat),
               );
             }
-            _pendingOperations.remove(ContactOperationType.export);
+            _takePendingOperation(ContactOperationType.export);
             return;
           }
           final hexString = pubKeyToHex(advertPacket);
           Clipboard.setData(ClipboardData(text: "meshcore://$hexString"));
-          _pendingOperations.remove(ContactOperationType.export);
+          _takePendingOperation(ContactOperationType.export);
           if (mounted) {
             showDismissibleSnackBar(
               context,
@@ -199,50 +288,11 @@ class _ContactsScreenState extends State<ContactsScreen>
 
         // Generic OK/ERR acks carry no command correlation, so consume only
         // the oldest pending operation per ack instead of clearing all.
-        if (code == respCodeOk) {
+        if (code == respCodeOk || code == respCodeErr) {
           if (!mounted) return;
-          if (_pendingOperations.isEmpty) return;
-          final op = _pendingOperations.removeAt(0);
-          switch (op) {
-            case ContactOperationType.import:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactImported),
-              );
-            case ContactOperationType.zeroHopShare:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_zeroHopContactAdvertSent),
-              );
-            case ContactOperationType.export:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactAdvertCopied),
-              );
-          }
-        }
-
-        if (code == respCodeErr) {
-          if (!mounted) return;
-          if (_pendingOperations.isEmpty) return;
-          final op = _pendingOperations.removeAt(0);
-          switch (op) {
-            case ContactOperationType.import:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactImportFailed),
-              );
-            case ContactOperationType.zeroHopShare:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_zeroHopContactAdvertFailed),
-              );
-            case ContactOperationType.export:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactAdvertCopyFailed),
-              );
-          }
+          final op = _takePendingOperation();
+          if (op == null) return;
+          _showOperationResult(op, success: code == respCodeOk);
         }
       } catch (e) {
         appLogger.error(
@@ -256,11 +306,11 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<void> _contactExport(Uint8List pubKey) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final exportContactFrame = buildExportContactFrame(pubKey);
-    _pendingOperations.add(ContactOperationType.export);
+    _addPendingOperation(ContactOperationType.export);
     try {
       await connector.sendFrame(exportContactFrame, expectsGenericAck: true);
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.export);
+      _takePendingOperation(ContactOperationType.export);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -273,14 +323,14 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<void> _contactZeroHop(Uint8List pubKey) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final exportContactZeroHopFrame = buildZeroHopContact(pubKey);
-    _pendingOperations.add(ContactOperationType.zeroHopShare);
+    _addPendingOperation(ContactOperationType.zeroHopShare);
     try {
       await connector.sendFrame(
         exportContactZeroHopFrame,
         expectsGenericAck: true,
       );
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.zeroHopShare);
+      _takePendingOperation(ContactOperationType.zeroHopShare);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -326,11 +376,11 @@ class _ContactsScreenState extends State<ContactsScreen>
       }
       return;
     }
-    _pendingOperations.add(ContactOperationType.import);
+    _addPendingOperation(ContactOperationType.import);
     try {
       await connector.sendFrame(importContactFrame, expectsGenericAck: true);
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.import);
+      _takePendingOperation(ContactOperationType.import);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -355,7 +405,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       child: Scaffold(
         appBar: AppBar(
           title: AppBarTitle(context.l10n.contacts_title),
-          automaticallyImplyLeading: false,
+          automaticallyImplyLeading: !widget.hideBackButton,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
             PopupMenuButton(
@@ -410,13 +460,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       Text(context.l10n.contacts_zeroHopAdvert),
                     ],
                   ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: false),
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.settings_advertisementSent),
-                    ),
-                  },
+                  onTap: () => _sendSelfAdvert(connector, flood: false),
                 ),
                 PopupMenuItem(
                   child: Row(
@@ -426,13 +470,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       Text(context.l10n.contacts_floodAdvert),
                     ],
                   ),
-                  onTap: () => {
-                    connector.sendSelfAdvert(flood: true),
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.settings_advertisementSent),
-                    ),
-                  },
+                  onTap: () => _sendSelfAdvert(connector, flood: true),
                 ),
                 PopupMenuItem(
                   child: Row(
@@ -577,15 +615,106 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
   }
 
-  void _closeDropdownAndRun(BuildContext popupContext, VoidCallback action) {
-    final route = ModalRoute.of(popupContext);
-    if (route != null && route.isCurrent) {
-      Navigator.of(popupContext).pop();
+  /// Dropdown value that opens the group-management sheet instead of
+  /// selecting a group. Contains a NUL so it can't collide with a name.
+  static const String _manageGroupsValue = '\u0000manage_groups';
+
+  void _showManageGroupsSheet(BuildContext context, List<Contact> contacts) {
+    if (!_hasGroupStoreScope(context.read<MeshCoreConnector>())) {
+      _showGroupsUnavailableMessage(context);
+      return;
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      action();
-    });
+    showMeshSheet<void>(
+      context,
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        final scheme = Theme.of(sheetContext).colorScheme;
+        final groups = [
+          ..._groups,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        void closeThen(VoidCallback action) {
+          Navigator.pop(sheetContext);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            action();
+          });
+        }
+
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              BottomSheetHeader(title: l10n.contacts_manageGroups),
+              ListTile(
+                minTileHeight: 56,
+                leading: Icon(Icons.group_add, color: scheme.primary),
+                title: Text(
+                  l10n.contacts_newGroup,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                onTap: () =>
+                    closeThen(() => _showGroupEditor(this.context, contacts)),
+              ),
+              if (groups.isNotEmpty) const Divider(height: 1),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: groups.length,
+                  itemBuilder: (context, index) {
+                    final group = groups[index];
+                    return ListTile(
+                      minTileHeight: 56,
+                      leading: const Icon(Icons.group_outlined),
+                      title: Text(
+                        group.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      onTap: () => closeThen(
+                        () => _showGroupEditor(
+                          this.context,
+                          contacts,
+                          group: group,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l10n.contacts_editGroup,
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => closeThen(
+                              () => _showGroupEditor(
+                                this.context,
+                                contacts,
+                                group: group,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.contacts_deleteGroup,
+                            icon: Icon(Icons.delete, color: scheme.error),
+                            onPressed: () => closeThen(
+                              () => _confirmDeleteGroup(this.context, group),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildFilterButton(
@@ -615,7 +744,6 @@ class _ContactsScreenState extends State<ContactsScreen>
     List<Contact> contacts,
     List<ContactGroup> sortedGroups,
   ) {
-    final canManageGroups = _hasGroupStoreScope(connector);
     final selectedGroupName =
         _selectedGroupForName(viewState.contactsSelectedGroupName)?.name ??
         context.l10n.listFilter_all;
@@ -628,79 +756,39 @@ class _ContactsScreenState extends State<ContactsScreen>
       position: PopupMenuPosition.under,
       constraints: BoxConstraints.tightFor(width: menuWidth),
       onSelected: (String value) {
+        if (value == _manageGroupsValue) {
+          _showManageGroupsSheet(this.context, contacts);
+          return;
+        }
         viewState.setContactsSelectedGroupName(value);
       },
       itemBuilder: (menuContext) => [
         PopupMenuItem<String>(
           value: contactsAllGroupsValue,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(menuContext.l10n.listFilter_all),
-              IconButton(
-                tooltip: menuContext.l10n.contacts_newGroup,
-                icon: const Icon(Icons.group_add, size: 20),
-                onPressed: canManageGroups
-                    ? () => _closeDropdownAndRun(
-                        menuContext,
-                        () => _showGroupEditor(this.context, contacts),
-                      )
-                    : () => _closeDropdownAndRun(
-                        menuContext,
-                        () => _showGroupsUnavailableMessage(this.context),
-                      ),
-              ),
-            ],
-          ),
+          child: Text(menuContext.l10n.listFilter_all),
         ),
         ...sortedGroups.map((group) {
           return PopupMenuItem<String>(
             value: group.name,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(group.name, overflow: TextOverflow.ellipsis),
-                ),
-                IconButton(
-                  tooltip: menuContext.l10n.contacts_editGroup,
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: canManageGroups
-                      ? () => _closeDropdownAndRun(
-                          menuContext,
-                          () => _showGroupEditor(
-                            this.context,
-                            contacts,
-                            group: group,
-                          ),
-                        )
-                      : () => _closeDropdownAndRun(
-                          menuContext,
-                          () => _showGroupsUnavailableMessage(this.context),
-                        ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: menuContext.l10n.contacts_deleteGroup,
-                  icon: Icon(
-                    Icons.delete,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  onPressed: canManageGroups
-                      ? () => _closeDropdownAndRun(
-                          menuContext,
-                          () => _confirmDeleteGroup(this.context, group),
-                        )
-                      : () => _closeDropdownAndRun(
-                          menuContext,
-                          () => _showGroupsUnavailableMessage(this.context),
-                        ),
-                ),
-              ],
-            ),
+            child: Text(group.name, overflow: TextOverflow.ellipsis),
           );
         }),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          value: _manageGroupsValue,
+          child: Row(
+            children: [
+              const Icon(Icons.group_add),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  menuContext.l10n.contacts_manageGroups,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
       child: SizedBox(
         height: 48,
@@ -998,7 +1086,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         index: index,
                         contact: contact,
                         pathHashByteWidth: connector.pathHashByteWidth,
-                        lastSeen: _resolveLastSeen(contact),
+                        lastSeen: resolveContactLastSeen(contact),
                         unreadCount: unreadCount,
                         isFavorite: contact.isFavorite,
                         onTap: () => _openChat(context, contact),
@@ -1015,6 +1103,42 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   List<Contact> _filterAndSortContacts(
+    List<Contact> contacts,
+    MeshCoreConnector connector,
+    UiViewStateService viewState,
+  ) {
+    final selectedGroup = _selectedGroupForName(
+      viewState.contactsSelectedGroupName,
+    );
+    final selfKey = connector.selfPublicKey;
+    // Unread counts and last-message times change without the contact list
+    // changing, so they join the cache key only when they affect the result.
+    final unreadSignature = viewState.contactsShowUnreadOnly
+        ? [for (final c in contacts) connector.getUnreadCountForContact(c)]
+        : const <int>[];
+    final recentSignature =
+        viewState.contactsSortOption == ContactSortOption.recentMessages
+        ? [for (final c in contacts) _lastMessageTime(connector, c)]
+        : const <DateTime>[];
+    return _filteredCache.get(contacts, [
+      viewState.contactsSearchText,
+      viewState.contactsSelectedGroupName,
+      selectedGroup?.memberKeys ?? const <String>[],
+      selfKey == null ? null : pubKeyToHex(selfKey),
+      viewState.contactsTypeFilter,
+      viewState.contactsShowUnreadOnly,
+      viewState.contactsSortOption,
+      unreadSignature,
+      recentSignature,
+    ], () => _computeFilteredContacts(contacts, connector, viewState));
+  }
+
+  DateTime _lastMessageTime(MeshCoreConnector connector, Contact contact) {
+    final messages = connector.getMessages(contact);
+    return messages.isEmpty ? DateTime(1970) : messages.last.timestamp;
+  }
+
+  List<Contact> _computeFilteredContacts(
     List<Contact> contacts,
     MeshCoreConnector connector,
     UiViewStateService viewState,
@@ -1060,21 +1184,15 @@ class _ContactsScreenState extends State<ContactsScreen>
     switch (viewState.contactsSortOption) {
       case ContactSortOption.lastSeen:
         filtered.sort(
-          (a, b) => _resolveLastSeen(b).compareTo(_resolveLastSeen(a)),
+          (a, b) =>
+              resolveContactLastSeen(b).compareTo(resolveContactLastSeen(a)),
         );
         break;
       case ContactSortOption.recentMessages:
-        filtered.sort((a, b) {
-          final aMessages = connector.getMessages(a);
-          final bMessages = connector.getMessages(b);
-          final aLastMsg = aMessages.isEmpty
-              ? DateTime(1970)
-              : aMessages.last.timestamp;
-          final bLastMsg = bMessages.isEmpty
-              ? DateTime(1970)
-              : bMessages.last.timestamp;
-          return bLastMsg.compareTo(aLastMsg);
-        });
+        final lastMessageAt = {
+          for (final c in filtered) c: _lastMessageTime(connector, c),
+        };
+        filtered.sort((a, b) => lastMessageAt[b]!.compareTo(lastMessageAt[a]!));
         break;
       case ContactSortOption.name:
         filtered.sort(
@@ -1099,13 +1217,6 @@ class _ContactsScreenState extends State<ContactsScreen>
       case ContactTypeFilter.rooms:
         return contact.type == advTypeRoom;
     }
-  }
-
-  DateTime _resolveLastSeen(Contact contact) {
-    if (contact.type != advTypeChat) return contact.lastSeen;
-    return contact.lastMessageAt.isAfter(contact.lastSeen)
-        ? contact.lastMessageAt
-        : contact.lastSeen;
   }
 
   void _openChat(BuildContext context, Contact contact) {
@@ -1264,171 +1375,176 @@ class _ContactsScreenState extends State<ContactsScreen>
     final sortedContacts = List<Contact>.from(contacts)
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (builderContext, setDialogState) {
-          final filteredContacts = filterQuery.isEmpty
-              ? sortedContacts
-              : sortedContacts
-                    .where(
-                      (contact) => matchesContactQuery(contact, filterQuery),
-                    )
-                    .toList();
-          return AlertDialog(
-            title: Text(
-              isEditing
-                  ? context.l10n.contacts_editGroup
-                  : context.l10n.contacts_newGroup,
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.contacts_groupName,
-                        border: const OutlineInputBorder(),
+      builder: (dialogContext) => _DisposeControllerOnUnmount(
+        controller: nameController,
+        child: StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            final filteredContacts = filterQuery.isEmpty
+                ? sortedContacts
+                : sortedContacts
+                      .where(
+                        (contact) => matchesContactQuery(contact, filterQuery),
+                      )
+                      .toList();
+            return AlertDialog(
+              title: Text(
+                isEditing
+                    ? context.l10n.contacts_editGroup
+                    : context.l10n.contacts_newGroup,
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.contacts_groupName,
+                          border: const OutlineInputBorder(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: context.l10n.contacts_filterContacts,
-                        prefixIcon: const Icon(Icons.search),
-                        border: const OutlineInputBorder(),
-                        isDense: true,
+                      const SizedBox(height: 12),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: context.l10n.contacts_filterContacts,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            filterQuery = value.toLowerCase();
+                          });
+                        },
                       ),
-                      onChanged: (value) {
-                        setDialogState(() {
-                          filterQuery = value.toLowerCase();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: filteredContacts.isEmpty
-                          ? Center(
-                              child: Text(
-                                context.l10n.contacts_noContactsMatchFilter,
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: filteredContacts.isEmpty
+                            ? Center(
+                                child: Text(
+                                  context.l10n.contacts_noContactsMatchFilter,
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: filteredContacts.length,
+                                itemBuilder: (context, index) {
+                                  final contact = filteredContacts[index];
+                                  final isSelected = selectedKeys.contains(
+                                    contact.publicKeyHex,
+                                  );
+                                  return CheckboxListTile(
+                                    value: isSelected,
+                                    title: Text(contact.name),
+                                    subtitle: Text(
+                                      contact.typeLabel(context.l10n),
+                                    ),
+                                    onChanged: (value) {
+                                      setDialogState(() {
+                                        if (value == true) {
+                                          selectedKeys.add(
+                                            contact.publicKeyHex,
+                                          );
+                                        } else {
+                                          selectedKeys.remove(
+                                            contact.publicKeyHex,
+                                          );
+                                        }
+                                      });
+                                    },
+                                  );
+                                },
                               ),
-                            )
-                          : ListView.builder(
-                              itemCount: filteredContacts.length,
-                              itemBuilder: (context, index) {
-                                final contact = filteredContacts[index];
-                                final isSelected = selectedKeys.contains(
-                                  contact.publicKeyHex,
-                                );
-                                return CheckboxListTile(
-                                  value: isSelected,
-                                  title: Text(contact.name),
-                                  subtitle: Text(
-                                    contact.typeLabel(context.l10n),
-                                  ),
-                                  onChanged: (value) {
-                                    setDialogState(() {
-                                      if (value == true) {
-                                        selectedKeys.add(contact.publicKeyHex);
-                                      } else {
-                                        selectedKeys.remove(
-                                          contact.publicKeyHex,
-                                        );
-                                      }
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(context.l10n.common_cancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) {
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.contacts_groupNameRequired),
-                    );
-                    return;
-                  }
-                  if (name.toLowerCase() ==
-                      contactsAllGroupsValue.toLowerCase()) {
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(context.l10n.contacts_groupNameReserved),
-                    );
-                    return;
-                  }
-                  final exists = _groups.any((g) {
-                    if (isEditing && g.name == group.name) return false;
-                    return g.name.toLowerCase() == name.toLowerCase();
-                  });
-                  if (exists) {
-                    showDismissibleSnackBar(
-                      context,
-                      content: Text(
-                        context.l10n.contacts_groupAlreadyExists(name),
-                      ),
-                    );
-                    return;
-                  }
-                  setState(() {
-                    final viewState = context.read<UiViewStateService>();
-                    if (isEditing) {
-                      final index = _groups.indexWhere(
-                        (g) => g.name == group.name,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(context.l10n.common_cancel),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) {
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.contacts_groupNameRequired),
                       );
-                      if (index != -1) {
-                        final wasSelected =
-                            viewState.contactsSelectedGroupName == group.name;
-                        _groups[index] = ContactGroup(
-                          name: name,
-                          memberKeys: selectedKeys.toList(),
-                        );
-                        if (wasSelected) {
-                          viewState.setContactsSelectedGroupName(name);
-                        }
-                      }
-                    } else {
-                      _groups.add(
-                        ContactGroup(
-                          name: name,
-                          memberKeys: selectedKeys.toList(),
+                      return;
+                    }
+                    if (name.toLowerCase() ==
+                        contactsAllGroupsValue.toLowerCase()) {
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(context.l10n.contacts_groupNameReserved),
+                      );
+                      return;
+                    }
+                    final exists = _groups.any((g) {
+                      if (isEditing && g.name == group.name) return false;
+                      return g.name.toLowerCase() == name.toLowerCase();
+                    });
+                    if (exists) {
+                      showDismissibleSnackBar(
+                        context,
+                        content: Text(
+                          context.l10n.contacts_groupAlreadyExists(name),
                         ),
                       );
-                      viewState.setContactsSelectedGroupName(name);
+                      return;
                     }
-                    _ensureValidSelectedGroup();
-                  });
-                  await _saveGroups();
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext);
-                  }
-                },
-                child: Text(
-                  isEditing
-                      ? context.l10n.common_save
-                      : context.l10n.common_create,
+                    setState(() {
+                      final viewState = context.read<UiViewStateService>();
+                      if (isEditing) {
+                        final index = _groups.indexWhere(
+                          (g) => g.name == group.name,
+                        );
+                        if (index != -1) {
+                          final wasSelected =
+                              viewState.contactsSelectedGroupName == group.name;
+                          _groups[index] = ContactGroup(
+                            name: name,
+                            memberKeys: selectedKeys.toList(),
+                          );
+                          if (wasSelected) {
+                            viewState.setContactsSelectedGroupName(name);
+                          }
+                        }
+                      } else {
+                        _groups.add(
+                          ContactGroup(
+                            name: name,
+                            memberKeys: selectedKeys.toList(),
+                          ),
+                        );
+                        viewState.setContactsSelectedGroupName(name);
+                      }
+                      _ensureValidSelectedGroup();
+                    });
+                    await _saveGroups();
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
+                  },
+                  child: Text(
+                    isEditing
+                        ? context.l10n.common_save
+                        : context.l10n.common_create,
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1695,35 +1811,6 @@ class _ContactTile extends StatelessWidget {
     this.onManage,
   });
 
-  /// Node-type avatar color per design language.
-  Color _avatarColor() {
-    switch (contact.type) {
-      case advTypeRepeater:
-        return MeshPalette.warn;
-      case advTypeRoom:
-        return MeshPalette.magenta;
-      case advTypeSensor:
-        return const Color(0xFF4ACCC4); // teal
-      default:
-        return MeshPalette
-            .blue; // chat — AvatarCircle handles deterministic hue
-    }
-  }
-
-  /// Node-type avatar icon. Returns null for chat nodes so AvatarCircle shows initials.
-  IconData? _avatarIcon() {
-    switch (contact.type) {
-      case advTypeRepeater:
-        return Icons.cell_tower;
-      case advTypeRoom:
-        return Icons.meeting_room;
-      case advTypeSensor:
-        return Icons.sensors;
-      default:
-        return null; // chat uses initials
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -1755,8 +1842,8 @@ class _ContactTile extends StatelessWidget {
               AvatarCircle(
                 name: contact.name,
                 size: 42,
-                color: isChat ? null : _avatarColor(),
-                icon: _avatarIcon(),
+                color: isChat ? null : contactTypeColor(contact.type),
+                icon: contactTypeIcon(contact.type),
               ),
             const SizedBox(width: 12),
             // Main content
@@ -1784,16 +1871,14 @@ class _ContactTile extends StatelessWidget {
                       ),
                       if (isFavorite) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.star, size: 13, color: MeshPalette.warn),
+                        Icon(Icons.star, size: 16, color: MeshPalette.warn),
                       ],
                       if (contact.hasLocation) ...[
                         const SizedBox(width: 4),
                         Icon(
                           Icons.location_on,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
                         ),
                       ],
                     ],
@@ -1811,7 +1896,7 @@ class _ContactTile extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -1822,13 +1907,11 @@ class _ContactTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            // Trailing: time + unread badge
-            // Clamp text scale to prevent overflow in trailing section.
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
-                ),
+            // Trailing: time + unread badge. A width cap + wrapping keeps
+            // large text scales from overflowing without clamping them.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.25,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1840,12 +1923,12 @@ class _ContactTile extends StatelessWidget {
                     const SizedBox(height: 4),
                   ],
                   Text(
-                    _formatLastSeen(context, lastSeen),
-                    maxLines: 1,
+                    formatContactLastSeen(context.l10n, lastSeen),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
                     style: MeshTheme.mono(
-                      fontSize: 11,
+                      fontSize: 12.5,
                       color: unreadCount > 0
                           ? MeshPalette.blue
                           : scheme.onSurfaceVariant,
@@ -1868,28 +1951,34 @@ class _ContactTile extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _formatLastSeen(BuildContext context, DateTime lastSeen) {
-    final now = DateTime.now();
-    final diff = now.difference(lastSeen);
+/// Disposes [controller] when the dialog content unmounts, i.e. after the
+/// route's exit animation, so the TextField never sees a disposed controller.
+class _DisposeControllerOnUnmount extends StatefulWidget {
+  final TextEditingController controller;
+  final Widget child;
 
-    if (diff.isNegative || diff.inMinutes < 5) {
-      return context.l10n.contacts_lastSeenNow;
-    }
-    if (diff.inMinutes < 60) {
-      return context.l10n.contacts_lastSeenMinsAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      final hours = diff.inHours;
-      return hours == 1
-          ? context.l10n.contacts_lastSeenHourAgo
-          : context.l10n.contacts_lastSeenHoursAgo(hours);
-    }
-    final days = diff.inDays;
-    return days == 1
-        ? context.l10n.contacts_lastSeenDayAgo
-        : context.l10n.contacts_lastSeenDaysAgo(days);
+  const _DisposeControllerOnUnmount({
+    required this.controller,
+    required this.child,
+  });
+
+  @override
+  State<_DisposeControllerOnUnmount> createState() =>
+      _DisposeControllerOnUnmountState();
+}
+
+class _DisposeControllerOnUnmountState
+    extends State<_DisposeControllerOnUnmount> {
+  @override
+  void dispose() {
+    widget.controller.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // Wrap each contact tile with staggered entrance.

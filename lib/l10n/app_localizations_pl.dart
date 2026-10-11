@@ -5817,4 +5817,401 @@ class AppLocalizationsPl extends AppLocalizations {
   String imageMessages_downloadFailedWithError(String error) {
     return 'Nie udało się pobrać modelu obrazów: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint => 'Ukryj: ukryty do czasu opuszczenia mapy.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Usuń: pozostaje ukryty, dopóki nie przywrócisz go z menu filtrów.';
+
+  @override
+  String get map_markerRemoved => 'Znacznik usunięty';
+
+  @override
+  String get map_restoreRemovedMarkers => 'Przywróć usunięte znaczniki';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(int count) {
+    return 'Usunięto: $count';
+  }
+
+  @override
+  String map_markersRestored(int count) {
+    return 'Przywrócono znaczniki: $count';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Ustawić jako Twoją lokalizację?';
+
+  @override
+  String map_setLocationConfirmBody(String lat, String lon) {
+    return 'Twój węzeł będzie ogłaszał tę pozycję:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Ustaw lokalizację';
+
+  @override
+  String get map_locationSetSuccess => 'Zaktualizowano lokalizację węzła';
+
+  @override
+  String get map_locationSetFailed =>
+      'Urządzenie nie potwierdziło nowej lokalizacji. Spróbuj ponownie.';
+
+  @override
+  String map_poiClusterTitle(int count) {
+    return 'Znaczniki tutaj: $count';
+  }
+
+  @override
+  String map_poiClusterSemantics(int count) {
+    return 'Udostępnione znaczniki: $count. Dotknij, aby je wyświetlić.';
+  }
+
+  @override
+  String map_youWithMarkers(int count) {
+    return 'Ty i znaczniki: $count';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(String label) {
+    return 'Udostępniony znacznik: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(String name, String type, String status) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(int zoom) {
+    return 'Zoom $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(String size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(String size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(int count) {
+    return 'Pobieranie anulowane. Zapisano w pamięci podręcznej kafelki: $count.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Obszar zbyt duży';
+
+  @override
+  String mapCache_tooManyTiles(int count, int max) {
+    return 'Ten obszar wymaga $count kafelków, co przekracza limit $max. Wybierz mniejszy obszar lub zmniejsz maksymalny zoom.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'Spowoduje to usunięcie z tego urządzenia wszystkich wiadomości w tej rozmowie. Tej operacji nie można cofnąć.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'Spowoduje to usunięcie z tego urządzenia wszystkich wiadomości w tym kanale, w tym odebranych obrazów. Tej operacji nie można cofnąć.';
+
+  @override
+  String get channels_timeNow => 'teraz';
+
+  @override
+  String channels_timeMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String channels_timeHours(int hours) {
+    return '$hours godz.';
+  }
+
+  @override
+  String channels_timeDays(int days) {
+    return '$days d';
+  }
+
+  @override
+  String channels_indexChip(int index) {
+    return 'KN $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Nieznany';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'Lokalny węzeł nie ma pozycji GPS';
+
+  @override
+  String pathTrace_sendFailed(String error) {
+    return 'Nie udało się wysłać śledzenia trasy: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'Dane wysokościowe wymagają połączenia z internetem';
+
+  @override
+  String get losResultStale => 'Nieaktualne: zmieniono wysokość anteny';
+
+  @override
+  String losSnrValue(String snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(String frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(String kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'Wczytywanie telemetrii…';
+
+  @override
+  String telemetry_axisValue(String x, String y, String z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(String red, String green, String blue) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(String feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Brak połączenia z radiem. Połącz się i spróbuj ponownie.';
+
+  @override
+  String get settings_requiresConnection =>
+      'Połącz się z radiem, aby z tego korzystać';
+
+  @override
+  String settings_txPowerInvalidRange(int min, int max) {
+    return 'Nieprawidłowa moc TX (od $min do $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => 'Zapisano ustawienia kontaktu';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Dotknij, aby przełączyć między procentami a napięciem';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Kopiuj klucz publiczny';
+
+  @override
+  String get settings_locationClearHelper =>
+      'Pozostaw oba pola puste, aby usunąć swoją lokalizację.';
+
+  @override
+  String get settings_locationCleared => 'Lokalizacja usunięta';
+
+  @override
+  String get settings_regionFetchDiscovering =>
+      'Wyszukiwanie pobliskich przekaźników…';
+
+  @override
+  String settings_regionFetchProgress(int current, int total) {
+    return 'Odpytywanie przekaźnika $current z $total…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Nie są jeszcze znane żadne przekaźniki. Dodaj przekaźnik jako kontakt lub poczekaj, aż któryś się ogłosi, a następnie spróbuj ponownie.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Żaden pobliski przekaźnik nie odpowiedział. Zbliż się do przekaźnika i spróbuj ponownie.';
+
+  @override
+  String appSettings_sourceSummary(String label, String description) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Routing';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Wiadomości z obrazami';
+
+  @override
+  String get appSettings_showApiKey => 'Pokaż klucz API';
+
+  @override
+  String get appSettings_hideApiKey => 'Ukryj klucz API';
+
+  @override
+  String get translation_defaultModelName => 'Model';
+
+  @override
+  String translation_downloadProgressBytes(String fileName, String current) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    String fileName,
+    String current,
+    String total,
+    String percent,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(String size, String source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'Radio rozłączone';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Połącz się ponownie z radiem, aby wysyłać polecenia, odświeżać lub zapisywać zmiany.';
+
+  @override
+  String get repeater_cliSend => 'Wyślij polecenie';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Kopiuj zapis';
+
+  @override
+  String get repeater_cliShareTranscript => 'Udostępnij zapis';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Skopiowano zapis';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Wyczyścić historię poleceń? Tej operacji nie można cofnąć.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Szukaj poleceń';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Brak pasujących poleceń';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Wyczyścić wszystkie wpisy dziennika? Tej operacji nie można cofnąć.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Niezapisane zmiany';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'Masz zmiany, które nie zostały zapisane w przekaźniku.';
+
+  @override
+  String get repeater_discardChanges => 'Odrzuć';
+
+  @override
+  String repeater_actionSentNoReply(String action) {
+    return '$action: polecenie wysłane. Przekaźnik nie odpowiada na to polecenie.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(String setting, String value) {
+    return '$setting: $value jest nieprawidłowe';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(String value, int min, int max) {
+    return 'Moc TX $value jest poza zakresem (od $min do $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(int length) {
+    return 'Klucz prywatny musi mieć dokładnie $length znaków szesnastkowych';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Nie udało się wysłać ogłoszenia';
+
+  @override
+  String get contacts_manageGroups => 'Zarządzaj grupami';
+
+  @override
+  String community_shortId(String id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Połączono z';
+
+  @override
+  String get usbChooseSerialPort => 'Wybierz port szeregowy';
+
+  @override
+  String neighbors_durationSeconds(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String neighbors_durationMinutes(int minutes, String seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String neighbors_durationHours(int hours, int minutes) {
+    return '$hours godz. $minutes min';
+  }
 }

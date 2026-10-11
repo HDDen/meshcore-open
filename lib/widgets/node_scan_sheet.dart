@@ -9,6 +9,7 @@ import '../l10n/contact_localization.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../theme/mesh_theme.dart';
+import 'contact_visuals.dart';
 import 'mesh_ui.dart';
 
 /// Opens the nearby-node scan (#570): a zero-hop DISCOVER_REQ whose answers
@@ -180,7 +181,7 @@ class _NodeScanSheetState extends State<NodeScanSheet> {
     final known = _isKnownNode(contact);
     final inContacts = _isContact(response);
     final adding = _adding.contains(response.publicKeyHex);
-    final color = _typeColor(response.nodeType);
+    final color = contactTypeColor(response.nodeType);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -192,7 +193,7 @@ class _NodeScanSheetState extends State<NodeScanSheet> {
               name: contact.name,
               size: 42,
               color: color,
-              icon: _typeIcon(response.nodeType),
+              icon: contactTypeIcon(response.nodeType),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -217,7 +218,7 @@ class _NodeScanSheetState extends State<NodeScanSheet> {
                       StatusChip(
                         label: contact.typeLabel(l10n).toUpperCase(),
                         color: color,
-                        icon: _typeIcon(response.nodeType),
+                        icon: contactTypeIcon(response.nodeType),
                       ),
                     ],
                   ),
@@ -281,30 +282,4 @@ class _NodeScanSheetState extends State<NodeScanSheet> {
       widget.connector.discoveredContacts.any(
         (c) => c.publicKeyHex == contact.publicKeyHex,
       );
-
-  static Color _typeColor(int type) {
-    switch (type) {
-      case advTypeRepeater:
-        return MeshPalette.warn;
-      case advTypeRoom:
-        return MeshPalette.magenta;
-      case advTypeSensor:
-        return const Color(0xFF4ACCC4); // teal, as in the discovery list
-      default:
-        return MeshPalette.blue;
-    }
-  }
-
-  static IconData? _typeIcon(int type) {
-    switch (type) {
-      case advTypeRepeater:
-        return Icons.cell_tower;
-      case advTypeRoom:
-        return Icons.meeting_room;
-      case advTypeSensor:
-        return Icons.sensors;
-      default:
-        return null;
-    }
-  }
 }
