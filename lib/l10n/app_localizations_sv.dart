@@ -2164,7 +2164,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Om du använder samma etikett som tidigare uppdateras markören för mottagare med MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Plats av intresse';
@@ -4507,6 +4507,36 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Kontakt kunde inte importeras.';
+
+  @override
+  String get discoveredContacts_export => 'Exportera upptäckta kontakter';
+
+  @override
+  String get discoveredContacts_import => 'Importera upptäckta kontakter';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Upptäckta kontakter exporterades till $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Det gick inte att exportera upptäckta kontakter: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Importerade $count upptäckta kontakter.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Inga kontakter hittades i importfilen.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Det gick inte att importera upptäckta kontakter: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Nollhoppsannons';

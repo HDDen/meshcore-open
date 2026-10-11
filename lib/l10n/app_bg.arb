@@ -689,6 +689,7 @@
   "map_shareMarkerHere": "Споделете маркер тук",
   "map_pinLabel": "Етикет на пина",
   "map_label": "Етикет",
+  "map_labelUpdateHint": "Ако използвате същия етикет като преди, маркерът ще се обнови за получателите с MeshCore Open.",
   "map_pointOfInterest": "Точка на интерес",
   "map_sendToContact": "Изпрати на контакт",
   "map_sendToChannel": "Изпрати в канала",
@@ -2017,6 +2018,41 @@
   "discoveredContacts_copyContact": "Копирай контакт в клипборда",
   "discoveredContacts_deleteContact": "Изтрий контакт",
   "discoveredContacts_addContact": "Добави контакт",
+  "discoveredContacts_export": "Експортирай откритите контакти",
+  "discoveredContacts_import": "Импортирай откритите контакти",
+  "discoveredContacts_exported": "Откритите контакти са експортирани в {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Неуспешно експортиране на откритите контакти: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Импортирани са {count} открити контакта.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Във файла за импортиране не са намерени контакти.",
+  "discoveredContacts_importFailed": "Неуспешно импортиране на откритите контакти: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "Когато списъкът с контакти е пълен, най-старият неключов контакт ще бъде заменен.",
   "contactsSettings_evictDiscoveredContactsTitle": "Премахване на открити контакти",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Когато е включено, приложението премахва най-старите открити контакти, щом списъкът с открити контакти достигне лимита си от {limit} записа.",

@@ -2099,7 +2099,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      '이전과 같은 레이블을 사용하면 MeshCore Open 수신자에게 표시된 마커가 업데이트됩니다.';
 
   @override
   String get map_pointOfInterest => '관심 지점';
@@ -4339,6 +4339,35 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => '연락처를 가져오지 못했습니다.';
+
+  @override
+  String get discoveredContacts_export => '발견된 연락처 내보내기';
+
+  @override
+  String get discoveredContacts_import => '발견된 연락처 가져오기';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '발견된 연락처를 $path(으)로 내보냈습니다.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '발견된 연락처 내보내기에 실패했습니다: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '발견된 연락처 $count개를 가져왔습니다.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => '가져오기 파일에서 연락처를 찾을 수 없습니다.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '발견된 연락처 가져오기에 실패했습니다: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => '제로 홉 어드버트';

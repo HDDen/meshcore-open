@@ -2181,7 +2181,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Ha ugyanazt a címkét használja, mint korábban, a jelölő frissül a MeshCore Open-t használó címzetteknél.';
 
   @override
   String get map_pointOfInterest => 'Érdekes pont';
@@ -4546,6 +4546,36 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Nem sikerült importálni a névjegyet.';
+
+  @override
+  String get discoveredContacts_export => 'Felfedezett kapcsolatok exportálása';
+
+  @override
+  String get discoveredContacts_import => 'Felfedezett kapcsolatok importálása';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'A felfedezett kapcsolatok exportálva ide: $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'A felfedezett kapcsolatok exportálása nem sikerült: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '$count felfedezett kapcsolat importálva.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Az importfájlban nem találhatók kapcsolatok.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'A felfedezett kapcsolatok importálása nem sikerült: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Zero Hop hirdetés';

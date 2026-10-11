@@ -716,6 +716,7 @@
   "map_shareMarkerHere": "在此分享标记",
   "map_pinLabel": "标签",
   "map_label": "标签",
+  "map_labelUpdateHint": "使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。",
   "map_pointOfInterest": "兴趣点",
   "map_sendToContact": "发送给联系人",
   "map_sendToChannel": "发送到频道",
@@ -2022,6 +2023,41 @@
   "discoveredContacts_noMatching": "没有匹配的联系人",
   "discoveredContacts_Title": "已发现的联系人",
   "discoveredContacts_copyContact": "复制联系人到剪贴板",
+  "discoveredContacts_export": "导出已发现的联系人",
+  "discoveredContacts_import": "导入已发现的联系人",
+  "discoveredContacts_exported": "已将已发现的联系人导出到{path}。",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "导出已发现的联系人失败：{error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "已导入{count}个已发现的联系人。",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "在导入文件中未找到联系人。",
+  "discoveredContacts_importFailed": "导入已发现的联系人失败：{error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "当联系人列表已满时，将替换最老的非收藏联系人。",
   "contactsSettings_evictDiscoveredContactsTitle": "清除已发现的联系人",
   "contactsSettings_evictDiscoveredContactsSubtitle": "启用后，当已发现联系人列表达到 {limit} 条的上限时，应用会移除最旧的已发现联系人。",

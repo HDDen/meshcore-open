@@ -2175,7 +2175,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Als je hetzelfde label als eerder gebruikt, wordt de markering bijgewerkt voor ontvangers met MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Interessepunt';
@@ -4524,6 +4524,36 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Contact kon niet geïmporteerd worden.';
+
+  @override
+  String get discoveredContacts_export => 'Ontdekte contacten exporteren';
+
+  @override
+  String get discoveredContacts_import => 'Ontdekte contacten importeren';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Ontdekte contacten geëxporteerd naar $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Exporteren van ontdekte contacten mislukt: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '$count ontdekte contacten geïmporteerd.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Geen contacten gevonden in het importbestand.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Importeren van ontdekte contacten mislukt: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Zero-hop-advert';

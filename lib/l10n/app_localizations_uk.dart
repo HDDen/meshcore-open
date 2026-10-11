@@ -2183,7 +2183,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Якщо використати ту саму мітку, що й раніше, маркер оновиться в одержувачів MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка інтересу';
@@ -4555,6 +4555,36 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Контакт не вдалось імпортувати';
+
+  @override
+  String get discoveredContacts_export => 'Експортувати виявлені контакти';
+
+  @override
+  String get discoveredContacts_import => 'Імпортувати виявлені контакти';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Виявлені контакти експортовано до $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Не вдалося експортувати виявлені контакти: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Імпортовано $count виявлених контактів.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'У файлі імпорту не знайдено контактів.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Не вдалося імпортувати виявлені контакти: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Оголошення без ретрансляції';

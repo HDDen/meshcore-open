@@ -2174,7 +2174,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Če uporabite enako oznako kot prej, se oznaka na zemljevidu posodobi pri prejemnikih MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Točka zanimivosti';
@@ -4529,6 +4529,36 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get contacts_contactImportFailed => 'Kontakt ni bil uspešno uvožen.';
+
+  @override
+  String get discoveredContacts_export => 'Izvozi odkrite stike';
+
+  @override
+  String get discoveredContacts_import => 'Uvozi odkrite stike';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Odkriti stiki so izvoženi v $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Izvoz odkritih stikov ni uspel: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Uvoženih je bilo $count odkritih stikov.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'V uvozni datoteki ni bilo najdenih stikov.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Uvoz odkritih stikov ni uspel: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Oglas brez posrednikov';

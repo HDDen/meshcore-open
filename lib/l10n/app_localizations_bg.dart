@@ -2192,7 +2192,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_labelUpdateHint =>
-      'Using the same label as before will update the marker for MeshCore Open recipients.';
+      'Ако използвате същия етикет като преди, маркерът ще се обнови за получателите с MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка на интерес';
@@ -4548,6 +4548,36 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get contacts_contactImportFailed =>
       'Контактът не е успешно импортиран.';
+
+  @override
+  String get discoveredContacts_export => 'Експортирай откритите контакти';
+
+  @override
+  String get discoveredContacts_import => 'Импортирай откритите контакти';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Откритите контакти са експортирани в $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Неуспешно експортиране на откритите контакти: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Импортирани са $count открити контакта.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'Във файла за импортиране не са намерени контакти.';
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Неуспешно импортиране на откритите контакти: $error';
+  }
 
   @override
   String get contacts_zeroHopAdvert => 'Обява без скок';
