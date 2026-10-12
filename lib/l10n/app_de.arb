@@ -3395,5 +3395,55 @@
   "usbChooseSerialPort": "Serielle Schnittstelle wählen",
   "neighbors_durationSeconds": "{seconds} s",
   "neighbors_durationMinutes": "{minutes} Min. {seconds} s",
-  "neighbors_durationHours": "{hours} Std. {minutes} Min."
+  "neighbors_durationHours": "{hours} Std. {minutes} Min.",
+  "scanner_getNodeTitle": "Brauchst du einen neuen Node?",
+  "scanner_getNodeBody": "Im Hosentaschenformat, mit MeshCore, Dualband-GPS, wasserdicht und 5 Tage Akkulaufzeit.",
+  "scanner_getNodeAction": "Hier holen",
+  "scanner_getNodeDisclosure": "Affiliate-Link: Jeder Kauf unterstützt MeshCore Open.",
+  "networkMap_settingsSection": "Netzwerkkarte",
+  "networkMap_uploadTitle": "Teilen, was mein Funkgerät hört",
+  "networkMap_uploadExplanation": "Wenn dies aktiviert und dein Funkgerät verbunden ist, sendet die App eine kurze Zusammenfassung der Pakete, die dein Funkgerät empfängt, an die MeshCore-Open-Netzwerkkarte, damit alle sehen können, welche Repeater es gibt und wie sie verbunden sind. Gesendet werden Typ, Route, Hops, Signalstärke und Größe jedes Pakets sowie Repeater-Namen und ungefähre Standorte aus deren eigenen Adverts. Nie gesendet werden Nachrichtentexte, wer mit wem spricht, Kanalnamen, deine Kontakte oder dein genauer Standort: Standorte werden auf etwa 2 km gerundet, und deine App erhält jeden Tag eine neue zufällige ID.",
+  "networkMap_whatWeCollect": "Was wir erfassen",
+  "networkMap_promptTitle": "Beim Aufbau der Netzwerkkarte helfen?",
+  "networkMap_promptBody": "MeshCore Open kann teilen, was dein Funkgerät hört, und zwar mit der öffentlichen Netzwerkkarte unter map.meshcoreopen.org, damit alle sehen können, welche Repeater es gibt und wie sie verbunden sind.\n\nEs werden nie Nachrichtentexte, wer mit wem spricht, Kanalnamen, deine Kontakte oder dein genauer Standort gesendet. Standorte werden auf etwa 2 km gerundet.",
+  "networkMap_promptSettingsHint": "Du kannst dies jederzeit unter Einstellungen → App-Einstellungen → Netzwerkkarte ändern.",
+  "networkMap_promptAccept": "Teilen",
+  "networkMap_promptDecline": "Nein danke",
+  "networkMap_statusOff": "Aus. Es wird nichts gesendet.",
+  "networkMap_statusWaiting": "An. Warte auf eine Funkgerät-Verbindung.",
+  "networkMap_statusNothingSent": "An. Noch nichts gesendet.",
+  "networkMap_statusLastSent": "Zuletzt gesendet {time}. Heute {count} Pakete.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokal",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Beides",
+  "networkMap_zoomInHint": "Zoome hinein, um die Online-Netzwerkkarte zu sehen",
+  "networkMap_loadFailed": "Online-Netzwerkkarte konnte nicht geladen werden",
+  "networkMap_inYourContacts": "In deinen Kontakten",
+  "networkMap_status": "Status",
+  "networkMap_statusActive": "Aktiv in der letzten Stunde",
+  "networkMap_statusRecent": "Am letzten Tag gehört",
+  "networkMap_statusStale": "Zuletzt nicht gehört",
+  "networkMap_confirmed": "Bestätigt",
+  "networkMap_singleSource": "Einzelne Quelle, noch nicht bestätigt",
+  "networkMap_reports": "Meldungen",
+  "networkMap_locationEstimated": "Ungefährer Standort, geschätzt anhand der Empfänger",
+  "networkMap_locationAdvertised": "Ungefährer Standort, aus dem eigenen Advert",
+  "networkMap_heardByRadio": "Von deinem Funkgerät gehört",
+  "networkMap_inYourArea": "In deiner Nähe",
+  "networkMap_farAway": "Weit entfernt. Verwaltung ist nicht möglich.",
+  "networkMap_addToContacts": "Zu Kontakten hinzufügen",
+  "networkMap_manage": "Verwalten",
+  "networkMap_addedToContacts": "Zu Kontakten hinzugefügt",
+  "networkMap_addFailed": "Hinzufügen zu Kontakten fehlgeschlagen",
+  "networkMap_unnamed": "Unbenannter Repeater"
 }

@@ -28,6 +28,7 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 15. [Companion Radio Statistics](radio-statistics.md) - Noise, signal metrics, and airtime
 16. [Troubleshooting](troubleshooting.md) - BLE, USB, browser, and firmware issues
 17. [Review Mode](review-mode.md) - Simulated radio and reviewer instructions for Google Play and App Store review
+18. [Network Map](network-map.md) - Online repeater map, adding and managing repeaters from it, opt-in uploads, and hiding a repeater
 
 ## App Overview
 
@@ -55,6 +56,7 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 | Model downloads | Internet required |
 | GIF search/display and URL image previews | Internet required to retrieve content |
 | Map display | Cached tiles work offline; uncached tiles need internet |
+| Online network map and opt-in uploads | Internet required |
 | Terrain LOS analysis | Elevation lookup needs internet unless the required data is already cached |
 
 ## Keeping documentation current

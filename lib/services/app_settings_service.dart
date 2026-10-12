@@ -317,6 +317,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(imageMessagesEnabled: value));
   }
 
+  Future<void> setNetworkMapUploadEnabled(bool value) async {
+    await updateSettings(_settings.copyWith(networkMapUploadEnabled: value));
+  }
+
+  Future<void> setNetworkMapPromptShown(bool value) async {
+    await updateSettings(_settings.copyWith(networkMapPromptShown: value));
+  }
+
   /// See [AppSettings.imageProcessAutomatically]. `main.dart` mirrors this into
   /// `ReceivedImageStore.processAutomatically` on every settings change; the
   /// store applies it to future arrivals only, so flipping it does not

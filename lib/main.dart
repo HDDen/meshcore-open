@@ -23,6 +23,7 @@ import 'services/storage_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/app_settings_service.dart';
+import 'services/network_map/network_map_upload_service.dart';
 import 'services/notification_service.dart';
 import 'services/ble_debug_log_service.dart';
 import 'services/app_debug_log_service.dart';
@@ -168,6 +169,11 @@ void main() async {
     onImageSenderPrefix: (prefix) => imageReassembler.selfPrefix = prefix,
   );
 
+  final networkMapUploadService = NetworkMapUploadService(
+    connector: connector,
+    settings: appSettingsService,
+  );
+
   await connector.loadContactCache();
   await connector.loadCachedChannels();
   await connector.loadUnreadState();
@@ -189,6 +195,7 @@ void main() async {
       imageCodecService: imageCodecService,
       receivedImageStore: receivedImageStore,
       imageReassembler: imageReassembler,
+      networkMapUploadService: networkMapUploadService,
     ),
   );
 }
@@ -333,6 +340,7 @@ class MeshCoreApp extends StatefulWidget {
   final ImageCodecService imageCodecService;
   final ReceivedImageStore receivedImageStore;
   final ImageStreamReassembler imageReassembler;
+  final NetworkMapUploadService networkMapUploadService;
 
   const MeshCoreApp({
     super.key,
@@ -351,6 +359,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.imageCodecService,
     required this.receivedImageStore,
     required this.imageReassembler,
+    required this.networkMapUploadService,
   });
 
   @override
@@ -433,6 +442,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.timeoutPredictionService),
         ChangeNotifierProvider.value(value: widget.imageCodecService),
         ChangeNotifierProvider.value(value: widget.receivedImageStore),
+        ChangeNotifierProvider.value(value: widget.networkMapUploadService),
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {

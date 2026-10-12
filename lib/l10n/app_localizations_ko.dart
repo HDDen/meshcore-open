@@ -345,6 +345,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get scanner_enableBluetooth => '블루투스 켜기';
 
   @override
+  String get scanner_getNodeTitle => '새 노드가 필요하신가요?';
+
+  @override
+  String get scanner_getNodeBody =>
+      '지갑 크기에 MeshCore 구동, 듀얼 밴드 GPS, 방수, 5일 배터리.';
+
+  @override
+  String get scanner_getNodeAction => '여기서 구하기';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      '제휴 링크: 구매할 때마다 MeshCore Open을 후원하게 됩니다.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       '브라우저에서는 블루투스를 사용할 수 없습니다. 대신 USB로 연결하세요.';
 
@@ -5902,4 +5916,117 @@ class AppLocalizationsKo extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '$hours시간 $minutes분';
   }
+
+  @override
+  String get networkMap_settingsSection => '네트워크 지도';
+
+  @override
+  String get networkMap_uploadTitle => '내 라디오가 수신한 정보 공유';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      '이 기능을 켜고 라디오가 연결되어 있으면, 앱이 라디오가 수신한 패킷의 요약 정보를 MeshCore Open 네트워크 지도로 보내 어떤 리피터가 있고 서로 어떻게 연결되는지 모두가 볼 수 있게 합니다. 각 패킷의 종류, 경로, 홉 수, 신호 세기, 크기와 함께 리피터 자체 어드버트에 담긴 이름과 대략적인 위치를 보냅니다. 메시지 내용, 누가 누구와 대화하는지, 채널 이름, 연락처, 정확한 위치는 절대 보내지 않습니다. 위치는 약 2km 단위로 반올림되며, 앱 ID는 매일 새로운 무작위 값으로 바뀝니다.';
+
+  @override
+  String get networkMap_whatWeCollect => '수집하는 정보';
+
+  @override
+  String get networkMap_promptTitle => '네트워크 지도 만들기에 참여하시겠어요?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open은 라디오가 수신한 정보를 map.meshcoreopen.org의 공개 네트워크 지도와 공유하여, 어떤 리피터가 있고 서로 어떻게 연결되는지 모두가 볼 수 있게 할 수 있습니다.\n\n메시지 내용, 누가 누구와 대화하는지, 채널 이름, 연락처, 정확한 위치는 절대 보내지 않습니다. 위치는 약 2km 단위로 반올림됩니다.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      '설정 → 앱 설정 → 네트워크 지도에서 언제든지 변경할 수 있습니다.';
+
+  @override
+  String get networkMap_promptAccept => '공유';
+
+  @override
+  String get networkMap_promptDecline => '괜찮아요';
+
+  @override
+  String get networkMap_statusOff => '꺼짐. 아무것도 전송되지 않습니다.';
+
+  @override
+  String get networkMap_statusWaiting => '켜짐. 라디오 연결을 기다리는 중입니다.';
+
+  @override
+  String get networkMap_statusNothingSent => '켜짐. 아직 전송한 내용이 없습니다.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return '마지막 전송 $time. 오늘 패킷 $count개.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => '로컬';
+
+  @override
+  String get networkMap_sourceOnline => '온라인';
+
+  @override
+  String get networkMap_sourceBoth => '모두';
+
+  @override
+  String get networkMap_zoomInHint => '온라인 네트워크 지도를 보려면 확대하세요';
+
+  @override
+  String get networkMap_loadFailed => '온라인 네트워크 지도를 불러오지 못했습니다';
+
+  @override
+  String get networkMap_inYourContacts => '내 연락처에 있음';
+
+  @override
+  String get networkMap_status => '상태';
+
+  @override
+  String get networkMap_statusActive => '최근 1시간 이내 활동';
+
+  @override
+  String get networkMap_statusRecent => '최근 하루 이내 수신';
+
+  @override
+  String get networkMap_statusStale => '최근 수신 없음';
+
+  @override
+  String get networkMap_confirmed => '확인됨';
+
+  @override
+  String get networkMap_singleSource => '단일 출처, 아직 확인되지 않음';
+
+  @override
+  String get networkMap_reports => '보고';
+
+  @override
+  String get networkMap_locationEstimated => '대략적인 위치, 수신한 노드를 기준으로 추정';
+
+  @override
+  String get networkMap_locationAdvertised => '대략적인 위치, 자체 어드버트 기준';
+
+  @override
+  String get networkMap_heardByRadio => '내 라디오가 수신함';
+
+  @override
+  String get networkMap_inYourArea => '내 주변 지역';
+
+  @override
+  String get networkMap_farAway => '멀리 떨어져 있어 관리할 수 없습니다.';
+
+  @override
+  String get networkMap_addToContacts => '연락처에 추가';
+
+  @override
+  String get networkMap_manage => '관리';
+
+  @override
+  String get networkMap_addedToContacts => '연락처에 추가됨';
+
+  @override
+  String get networkMap_addFailed => '연락처에 추가하지 못했습니다';
+
+  @override
+  String get networkMap_unnamed => '이름 없는 리피터';
 }

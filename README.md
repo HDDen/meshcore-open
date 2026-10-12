@@ -6,7 +6,7 @@ Open-source Flutter client for MeshCore LoRa mesh networking devices.
 
 MeshCore Open is a cross-platform application for communicating with MeshCore LoRa mesh radios over Bluetooth Low Energy (BLE), USB serial, or TCP. The app enables long-range, off-grid communication through peer-to-peer messaging, public channels, and mesh networking capabilities.
 
-**Website:** [meshcoreopen.org](https://meshcoreopen.org/)
+**Website:** [meshcoreopen.org](https://meshcoreopen.org/) · **Network map:** [map.meshcoreopen.org](https://map.meshcoreopen.org/)
 
 <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/zjs81/meshcore-open">
         <img src="assets/badges/badge_obtainium.png" height="80" align="center" alt="Get it on Obtainium"/>

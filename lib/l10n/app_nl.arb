@@ -3161,5 +3161,55 @@
   "usbChooseSerialPort": "Seriële poort kiezen",
   "neighbors_durationSeconds": "{seconds}s",
   "neighbors_durationMinutes": "{minutes}m {seconds}s",
-  "neighbors_durationHours": "{hours}u {minutes}m"
+  "neighbors_durationHours": "{hours}u {minutes}m",
+  "scanner_getNodeTitle": "Een nieuwe node nodig?",
+  "scanner_getNodeBody": "Zo klein als een portemonnee, draait MeshCore, dual-band GPS, waterdicht, 5 dagen accuduur.",
+  "scanner_getNodeAction": "Haal er hier een",
+  "scanner_getNodeDisclosure": "Affiliatelink: elke aankoop steunt MeshCore Open.",
+  "networkMap_settingsSection": "Netwerkkaart",
+  "networkMap_uploadTitle": "Delen wat mijn radio hoort",
+  "networkMap_uploadExplanation": "Als dit aan staat en je radio verbonden is, stuurt de app een korte samenvatting van de pakketten die je radio hoort naar de MeshCore Open-netwerkkaart, zodat iedereen kan zien welke repeaters er zijn en hoe ze met elkaar verbonden zijn. Per pakket wordt het type, de route, het aantal hops, de signaalsterkte en de grootte verstuurd, plus repeaternamen en globale locaties uit hun eigen adverts. Er worden nooit berichttekst, wie met wie praat, kanaalnamen, je contacten of je exacte positie verstuurd: locaties worden afgerond op ongeveer 2 km en je app krijgt elke dag een nieuw willekeurig ID.",
+  "networkMap_whatWeCollect": "Wat we verzamelen",
+  "networkMap_promptTitle": "Helpen de netwerkkaart te bouwen?",
+  "networkMap_promptBody": "MeshCore Open kan delen wat je radio hoort met de openbare netwerkkaart op map.meshcoreopen.org, zodat iedereen kan zien welke repeaters er zijn en hoe ze met elkaar verbonden zijn.\n\nEr worden nooit berichttekst, wie met wie praat, kanaalnamen, je contacten of je exacte positie verstuurd. Locaties worden afgerond op ongeveer 2 km.",
+  "networkMap_promptSettingsHint": "Je kunt dit op elk moment wijzigen via Instellingen → App Instellingen → Netwerkkaart.",
+  "networkMap_promptAccept": "Delen",
+  "networkMap_promptDecline": "Nee, bedankt",
+  "networkMap_statusOff": "Uit. Er wordt niets verstuurd.",
+  "networkMap_statusWaiting": "Aan. Wachten op een radioverbinding.",
+  "networkMap_statusNothingSent": "Aan. Nog niets verstuurd.",
+  "networkMap_statusLastSent": "Laatst verstuurd {time}. {count} pakketten vandaag.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokaal",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Beide",
+  "networkMap_zoomInHint": "Zoom in om de online netwerkkaart te zien",
+  "networkMap_loadFailed": "Kan de online netwerkkaart niet laden",
+  "networkMap_inYourContacts": "In je contacten",
+  "networkMap_status": "Status",
+  "networkMap_statusActive": "Actief in het laatste uur",
+  "networkMap_statusRecent": "Gehoord in de afgelopen dag",
+  "networkMap_statusStale": "Onlangs niet gehoord",
+  "networkMap_confirmed": "Bevestigd",
+  "networkMap_singleSource": "Eén bron, nog niet bevestigd",
+  "networkMap_reports": "Meldingen",
+  "networkMap_locationEstimated": "Globale locatie, geschat op basis van wie het hoorde",
+  "networkMap_locationAdvertised": "Globale locatie, uit zijn eigen advert",
+  "networkMap_heardByRadio": "Gehoord door je radio",
+  "networkMap_inYourArea": "In jouw omgeving",
+  "networkMap_farAway": "Ver weg. Beheer bereikt het niet.",
+  "networkMap_addToContacts": "Toevoegen aan contacten",
+  "networkMap_manage": "Beheren",
+  "networkMap_addedToContacts": "Toegevoegd aan contacten",
+  "networkMap_addFailed": "Kan niet aan contacten toevoegen",
+  "networkMap_unnamed": "Naamloze repeater"
 }

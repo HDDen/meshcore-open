@@ -22,6 +22,7 @@ import '../utils/route_transitions.dart';
 import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/network_map_opt_in_dialog.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -62,6 +63,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MeshCoreConnector>().getChannels();
       _loadCommunities();
+      maybeShowNetworkMapOptInDialog(context);
     });
   }
 

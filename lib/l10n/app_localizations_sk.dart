@@ -361,6 +361,20 @@ class AppLocalizationsSk extends AppLocalizations {
   String get scanner_enableBluetooth => 'Povolte Bluetooth';
 
   @override
+  String get scanner_getNodeTitle => 'Potrebujete nový uzol?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Veľkosti peňaženky, beží na MeshCore, dvojpásmové GPS, vodotesný, batéria vydrží 5 dní.';
+
+  @override
+  String get scanner_getNodeAction => 'Kúpte si ho tu';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Partnerský odkaz: každý nákup podporuje MeshCore Open.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       'Funkcia Bluetooth nie je dostupná v prehliadači. Prepojte sa pomocou USB.';
 
@@ -6162,4 +6176,122 @@ class AppLocalizationsSk extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '${hours}h ${minutes}m';
   }
+
+  @override
+  String get networkMap_settingsSection => 'Sieťová mapa';
+
+  @override
+  String get networkMap_uploadTitle => 'Zdieľať, čo počuje moje rádio';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Keď je to zapnuté a rádio je pripojené, aplikácia odosiela na sieťovú mapu MeshCore Open stručný súhrn paketov, ktoré vaše rádio počuje, aby každý videl, aké opakovače existujú a ako sú prepojené. Odosiela typ, trasu, počet skokov, silu signálu a veľkosť každého paketu, ako aj názvy opakovačov a ich približnú polohu z ich vlastných inzerátov. Nikdy neodosiela text správ, kto s kým komunikuje, názvy kanálov, vaše kontakty ani vašu presnú polohu: polohy sa zaokrúhľujú na približne 2 km a aplikácia dostáva nové náhodné ID každý deň.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Čo zbierame';
+
+  @override
+  String get networkMap_promptTitle => 'Pomôcť budovať sieťovú mapu?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open môže zdieľať, čo vaše rádio počuje, s verejnou sieťovou mapou na map.meshcoreopen.org, aby každý videl, aké opakovače existujú a ako sú prepojené.\n\nNikdy neodosiela text správ, kto s kým komunikuje, názvy kanálov, vaše kontakty ani vašu presnú polohu. Polohy sa zaokrúhľujú na približne 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Môžete to kedykoľvek zmeniť v Nastavenia → Nastavenia aplikácie → Sieťová mapa.';
+
+  @override
+  String get networkMap_promptAccept => 'Zdieľať';
+
+  @override
+  String get networkMap_promptDecline => 'Nie, ďakujem';
+
+  @override
+  String get networkMap_statusOff => 'Vypnuté. Nič sa neodosiela.';
+
+  @override
+  String get networkMap_statusWaiting =>
+      'Zapnuté. Čaká sa na pripojenie rádia.';
+
+  @override
+  String get networkMap_statusNothingSent => 'Zapnuté. Zatiaľ nič neodoslané.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Naposledy odoslané $time. Dnes paketov: $count.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Lokálna';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Obe';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Priblížte, aby ste videli online sieťovú mapu';
+
+  @override
+  String get networkMap_loadFailed =>
+      'Online sieťovú mapu sa nepodarilo načítať';
+
+  @override
+  String get networkMap_inYourContacts => 'Vo vašich kontaktoch';
+
+  @override
+  String get networkMap_status => 'Stav';
+
+  @override
+  String get networkMap_statusActive => 'Aktívny za poslednú hodinu';
+
+  @override
+  String get networkMap_statusRecent => 'Počuť za posledný deň';
+
+  @override
+  String get networkMap_statusStale => 'Dlho nepočuť';
+
+  @override
+  String get networkMap_confirmed => 'Potvrdený';
+
+  @override
+  String get networkMap_singleSource => 'Jeden zdroj, zatiaľ nepotvrdený';
+
+  @override
+  String get networkMap_reports => 'Hlásenia';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Približná poloha, odhadnutá podľa toho, kto ho počul';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Približná poloha, z vlastného inzerátu';
+
+  @override
+  String get networkMap_heardByRadio => 'Počuté vaším rádiom';
+
+  @override
+  String get networkMap_inYourArea => 'Vo vašej oblasti';
+
+  @override
+  String get networkMap_farAway => 'Ďaleko. Správa ho nedosiahne.';
+
+  @override
+  String get networkMap_addToContacts => 'Pridať do kontaktov';
+
+  @override
+  String get networkMap_manage => 'Spravovať';
+
+  @override
+  String get networkMap_addedToContacts => 'Pridané do kontaktov';
+
+  @override
+  String get networkMap_addFailed => 'Nepodarilo sa pridať do kontaktov';
+
+  @override
+  String get networkMap_unnamed => 'Nepomenovaný opakovač';
 }
