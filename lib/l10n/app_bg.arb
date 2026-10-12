@@ -3260,5 +3260,55 @@
   "usbChooseSerialPort": "Изберете сериен порт",
   "neighbors_durationSeconds": "{seconds}с",
   "neighbors_durationMinutes": "{minutes}м {seconds}с",
-  "neighbors_durationHours": "{hours}ч {minutes}м"
+  "neighbors_durationHours": "{hours}ч {minutes}м",
+  "scanner_getNodeTitle": "Нуждаете се от нов възел?",
+  "scanner_getNodeBody": "Колкото портфейл, работи с MeshCore, двулентов GPS, водоустойчив, батерия за 5 дни.",
+  "scanner_getNodeAction": "Вземете го тук",
+  "scanner_getNodeDisclosure": "Партньорска връзка: всяка покупка подкрепя MeshCore Open.",
+  "networkMap_settingsSection": "Мрежова карта",
+  "networkMap_uploadTitle": "Споделяне на това, което чува моето радио",
+  "networkMap_uploadExplanation": "Когато това е включено и радиото е свързано, приложението изпраща към мрежовата карта на MeshCore Open кратко обобщение на пакетите, които радиото ви чува, за да може всеки да вижда кои повторители съществуват и как са свързани. Изпращат се типът, маршрутът, броят хопове, силата на сигнала и размерът на всеки пакет, както и имената на повторителите и приблизителното им местоположение от техните собствени обяви. Никога не се изпращат текст на съобщения, кой с кого говори, имена на канали, вашите контакти или точното ви местоположение: координатите се закръглят до около 2 км, а приложението получава нов случаен ID всеки ден.",
+  "networkMap_whatWeCollect": "Какво събираме",
+  "networkMap_promptTitle": "Ще помогнете ли за мрежовата карта?",
+  "networkMap_promptBody": "MeshCore Open може да споделя това, което радиото ви чува, с публичната мрежова карта на map.meshcoreopen.org, за да може всеки да вижда кои повторители съществуват и как са свързани.\n\nНикога не се изпращат текст на съобщения, кой с кого говори, имена на канали, вашите контакти или точното ви местоположение. Координатите се закръглят до около 2 км.",
+  "networkMap_promptSettingsHint": "Можете да промените това по всяко време в Настройки → Настройки на приложението → Мрежова карта.",
+  "networkMap_promptAccept": "Споделям",
+  "networkMap_promptDecline": "Не, благодаря",
+  "networkMap_statusOff": "Изключено. Нищо не се изпраща.",
+  "networkMap_statusWaiting": "Включено. Изчакване на връзка с радио.",
+  "networkMap_statusNothingSent": "Включено. Още нищо не е изпратено.",
+  "networkMap_statusLastSent": "Последно изпращане: {time}. Пакети днес: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Локална",
+  "networkMap_sourceOnline": "Онлайн",
+  "networkMap_sourceBoth": "И двете",
+  "networkMap_zoomInHint": "Увеличете, за да видите онлайн мрежовата карта",
+  "networkMap_loadFailed": "Онлайн мрежовата карта не можа да се зареди",
+  "networkMap_inYourContacts": "В контактите ви",
+  "networkMap_status": "Статус",
+  "networkMap_statusActive": "Активен през последния час",
+  "networkMap_statusRecent": "Чут през последното денонощие",
+  "networkMap_statusStale": "Отдавна не е чут",
+  "networkMap_confirmed": "Потвърден",
+  "networkMap_singleSource": "Един източник, още непотвърден",
+  "networkMap_reports": "Доклади",
+  "networkMap_locationEstimated": "Приблизително местоположение, изчислено по тези, които са го чули",
+  "networkMap_locationAdvertised": "Приблизително местоположение, от собствената му обява",
+  "networkMap_heardByRadio": "Чут от вашето радио",
+  "networkMap_inYourArea": "Във вашия район",
+  "networkMap_farAway": "Далече. Управлението няма да стигне до него.",
+  "networkMap_addToContacts": "Добави към контактите",
+  "networkMap_manage": "Управление",
+  "networkMap_addedToContacts": "Добавено към контактите",
+  "networkMap_addFailed": "Неуспешно добавяне към контактите",
+  "networkMap_unnamed": "Неназован повторител"
 }

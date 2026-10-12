@@ -360,6 +360,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get scanner_enableBluetooth => 'Увімкніть Bluetooth';
 
   @override
+  String get scanner_getNodeTitle => 'Потрібна нова нода?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Розміром з гаманець, працює на MeshCore, дводіапазонний GPS, водонепроникна, батареї вистачає на 5 днів.';
+
+  @override
+  String get scanner_getNodeAction => 'Придбати тут';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Партнерське посилання: кожна покупка підтримує MeshCore Open.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       'Bluetooth недоступний у браузері. Підключіться через USB.';
 
@@ -6202,4 +6216,123 @@ class AppLocalizationsUk extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '$hoursгод $minutesхв';
   }
+
+  @override
+  String get networkMap_settingsSection => 'Карта мережі';
+
+  @override
+  String get networkMap_uploadTitle => 'Ділитися тим, що чує мій радіомодуль';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Коли це ввімкнено і радіомодуль підключено, застосунок надсилає на карту мережі MeshCore Open короткий підсумок пакетів, які чує ваш радіомодуль, щоб усі могли бачити, які ретранслятори існують і як вони пов\'язані. Надсилаються тип, маршрут, кількість хопів, рівень сигналу та розмір кожного пакета, а також назви ретрансляторів і їхнє приблизне розташування з їхніх власних оголошень. Ніколи не надсилаються текст повідомлень, хто з ким спілкується, назви каналів, ваші контакти та ваше точне розташування: координати округлюються приблизно до 2 км, а застосунок щодня отримує новий випадковий ID.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Що ми збираємо';
+
+  @override
+  String get networkMap_promptTitle => 'Допомогти побудувати карту мережі?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open може ділитися тим, що чує ваш радіомодуль, з публічною картою мережі на map.meshcoreopen.org, щоб усі могли бачити, які ретранслятори існують і як вони пов\'язані.\n\nНіколи не надсилаються текст повідомлень, хто з ким спілкується, назви каналів, ваші контакти та ваше точне розташування. Координати округлюються приблизно до 2 км.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Це можна змінити будь-коли: Налаштування → Налаштування застосунку → Карта мережі.';
+
+  @override
+  String get networkMap_promptAccept => 'Ділитися';
+
+  @override
+  String get networkMap_promptDecline => 'Ні, дякую';
+
+  @override
+  String get networkMap_statusOff => 'Вимкнено. Нічого не надсилається.';
+
+  @override
+  String get networkMap_statusWaiting =>
+      'Ввімкнено. Очікування підключення радіомодуля.';
+
+  @override
+  String get networkMap_statusNothingSent =>
+      'Ввімкнено. Поки що нічого не надіслано.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Останнє надсилання: $time. Пакетів сьогодні: $count.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Локальна';
+
+  @override
+  String get networkMap_sourceOnline => 'Онлайн';
+
+  @override
+  String get networkMap_sourceBoth => 'Обидві';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Наблизьте, щоб побачити онлайн-карту мережі';
+
+  @override
+  String get networkMap_loadFailed =>
+      'Не вдалося завантажити онлайн-карту мережі';
+
+  @override
+  String get networkMap_inYourContacts => 'У ваших контактах';
+
+  @override
+  String get networkMap_status => 'Статус';
+
+  @override
+  String get networkMap_statusActive => 'Активний за останню годину';
+
+  @override
+  String get networkMap_statusRecent => 'Чутно за останню добу';
+
+  @override
+  String get networkMap_statusStale => 'Давно не чутно';
+
+  @override
+  String get networkMap_confirmed => 'Підтверджено';
+
+  @override
+  String get networkMap_singleSource => 'Одне джерело, ще не підтверджено';
+
+  @override
+  String get networkMap_reports => 'Звіти';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Приблизне розташування, оцінене за тими, хто його чув';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Приблизне розташування, з власного оголошення';
+
+  @override
+  String get networkMap_heardByRadio => 'Чує ваш радіомодуль';
+
+  @override
+  String get networkMap_inYourArea => 'У вашому районі';
+
+  @override
+  String get networkMap_farAway => 'Далеко. Керування недоступне.';
+
+  @override
+  String get networkMap_addToContacts => 'Додати до контактів';
+
+  @override
+  String get networkMap_manage => 'Керувати';
+
+  @override
+  String get networkMap_addedToContacts => 'Додано до контактів';
+
+  @override
+  String get networkMap_addFailed => 'Не вдалося додати до контактів';
+
+  @override
+  String get networkMap_unnamed => 'Ретранслятор без назви';
 }

@@ -365,6 +365,20 @@ class AppLocalizationsPl extends AppLocalizations {
   String get scanner_enableBluetooth => 'Włącz Bluetooth';
 
   @override
+  String get scanner_getNodeTitle => 'Potrzebujesz nowego węzła?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Wielkości portfela, z MeshCore, dwuzakresowy GPS, wodoodporny, bateria na 5 dni.';
+
+  @override
+  String get scanner_getNodeAction => 'Kup tutaj';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Link partnerski: każdy zakup wspiera MeshCore Open.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       'Bluetooth nie jest dostępny w przeglądarce. Połącz się przez USB.';
 
@@ -6214,4 +6228,122 @@ class AppLocalizationsPl extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '$hours godz. $minutes min';
   }
+
+  @override
+  String get networkMap_settingsSection => 'Mapa sieci';
+
+  @override
+  String get networkMap_uploadTitle => 'Udostępniaj to, co słyszy moje radio';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Gdy ta opcja jest włączona, a radio połączone, aplikacja wysyła krótkie podsumowanie pakietów słyszanych przez radio do mapy sieci MeshCore Open, aby każdy mógł zobaczyć, jakie repeatery istnieją i jak się łączą. Wysyłany jest typ, trasa, liczba skoków, siła sygnału i rozmiar każdego pakietu oraz nazwy repeaterów i przybliżone lokalizacje z ich własnych rozgłoszeń. Nigdy nie wysyła treści wiadomości, informacji o tym, kto z kim rozmawia, nazw kanałów, Twoich kontaktów ani Twojej dokładnej pozycji: lokalizacje są zaokrąglane do około 2 km, a aplikacja co dzień dostaje nowy losowy identyfikator.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Co zbieramy';
+
+  @override
+  String get networkMap_promptTitle => 'Pomóc w budowie mapy sieci?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open może udostępniać to, co słyszy Twoje radio, publicznej mapie sieci na map.meshcoreopen.org, aby każdy mógł zobaczyć, jakie repeatery istnieją i jak się łączą.\n\nNigdy nie wysyła treści wiadomości, informacji o tym, kto z kim rozmawia, nazw kanałów, Twoich kontaktów ani Twojej dokładnej pozycji. Lokalizacje są zaokrąglane do około 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Możesz to zmienić w dowolnym momencie w Ustawienia → Ustawienia aplikacji → Mapa sieci.';
+
+  @override
+  String get networkMap_promptAccept => 'Udostępnij';
+
+  @override
+  String get networkMap_promptDecline => 'Nie, dziękuję';
+
+  @override
+  String get networkMap_statusOff => 'Wyłączone. Nic nie jest wysyłane.';
+
+  @override
+  String get networkMap_statusWaiting =>
+      'Włączone. Oczekiwanie na połączenie z radiem.';
+
+  @override
+  String get networkMap_statusNothingSent =>
+      'Włączone. Nic jeszcze nie wysłano.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Ostatnio wysłano $time. Pakiety dzisiaj: $count.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Lokalna';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Obie';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Przybliż, aby zobaczyć mapę sieci online';
+
+  @override
+  String get networkMap_loadFailed => 'Nie udało się wczytać mapy sieci online';
+
+  @override
+  String get networkMap_inYourContacts => 'W Twoich kontaktach';
+
+  @override
+  String get networkMap_status => 'Stan';
+
+  @override
+  String get networkMap_statusActive => 'Aktywny w ostatniej godzinie';
+
+  @override
+  String get networkMap_statusRecent => 'Słyszany w ostatniej dobie';
+
+  @override
+  String get networkMap_statusStale => 'Dawno niesłyszany';
+
+  @override
+  String get networkMap_confirmed => 'Potwierdzony';
+
+  @override
+  String get networkMap_singleSource => 'Jedno źródło, jeszcze niepotwierdzone';
+
+  @override
+  String get networkMap_reports => 'Raporty';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Przybliżona lokalizacja, oszacowana na podstawie tego, kto go słyszał';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Przybliżona lokalizacja, z jego własnego rozgłoszenia';
+
+  @override
+  String get networkMap_heardByRadio => 'Słyszany przez Twoje radio';
+
+  @override
+  String get networkMap_inYourArea => 'W Twojej okolicy';
+
+  @override
+  String get networkMap_farAway => 'Daleko. Zarządzanie tam nie dotrze.';
+
+  @override
+  String get networkMap_addToContacts => 'Dodaj do kontaktów';
+
+  @override
+  String get networkMap_manage => 'Zarządzaj';
+
+  @override
+  String get networkMap_addedToContacts => 'Dodano do kontaktów';
+
+  @override
+  String get networkMap_addFailed => 'Nie udało się dodać do kontaktów';
+
+  @override
+  String get networkMap_unnamed => 'Repeater bez nazwy';
 }

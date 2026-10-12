@@ -63,6 +63,7 @@ import '../utils/platform_info.dart';
 import 'meshcore_uuids.dart';
 import 'meshcore_protocol.dart';
 import 'pending_command_replies.dart';
+import 'raw_packet.dart';
 
 class DirectRepeater {
   static const int maxAgeMinutes = 30; // Max age for direct repeater info
@@ -7044,10 +7045,7 @@ class MeshCoreConnector extends ChangeNotifier {
             return;
           }
 
-          final pktHash = _computePacketHash(
-            packet.payloadType,
-            packet.payload,
-          );
+          final pktHash = computePacketHash(packet.payloadType, packet.payload);
 
           final message = ChannelMessage(
             senderKey: null,
@@ -7635,7 +7633,7 @@ class MeshCoreConnector extends ChangeNotifier {
           routeType == _routeTransportDirect;
       final transportCodes = hasTransport ? reader.readBytes(4) : null;
       final pathLenRaw = reader.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
       final pathBytes = reader.readBytes(pathByteLen);
       final payload = reader.readBytes(reader.remaining);
 
@@ -7705,18 +7703,6 @@ class MeshCoreConnector extends ChangeNotifier {
       match = region;
     }
     return match;
-  }
-
-  /// Firmware-compatible packet hash: SHA256(payloadType + payload) -> first 8 bytes as hex.
-  String _computePacketHash(int payloadType, Uint8List payload) {
-    final input = Uint8List(1 + payload.length);
-    input[0] = payloadType;
-    input.setRange(1, input.length, payload);
-    final digest = crypto.sha256.convert(input).bytes;
-    return digest
-        .sublist(0, 8)
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
   }
 
   /// Content-based dedup hash for sync queue messages (no raw payload available).
@@ -8314,8 +8300,8 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       //final payloadVer = (header >> 6) & 0x03;
       final pathLenRaw = packet.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
-      final pathHashWidth = _decodePathHashWidth(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
+      final pathHashWidth = decodePathHashWidth(pathLenRaw);
       final pathBytes = packet.readBytes(pathByteLen);
       final payload = packet.readBytes(packet.remaining);
 
@@ -8357,8 +8343,8 @@ class MeshCoreConnector extends ChangeNotifier {
       }
       //final payloadVer = (header >> 6) & 0x03;
       final pathLenRaw = packet.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
-      pathHashWidth = _decodePathHashWidth(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
+      pathHashWidth = decodePathHashWidth(pathLenRaw);
       pathBytes = packet.readBytes(pathByteLen);
     } catch (e) {
       appLogger.warn('Malformed RX frame: $e', tag: 'Connector');
@@ -8860,20 +8846,6 @@ const int _routeTransportDirect = 0x03;
 
 const int _payloadTypeGroupText = 0x05;
 const int _cipherMacSize = 2;
-
-/// Decodes the firmware's encoded path_len byte into actual byte length.
-/// Bits 0-5: hash count (0-63), Bits 6-7: hash size code (0=1byte ... 3=4bytes).
-int _decodePathByteLen(int pathLenRaw) {
-  if (pathLenRaw == 0xFF || pathLenRaw == 0) return 0;
-  final hashCount = pathLenRaw & 63;
-  final hashSize = _decodePathHashWidth(pathLenRaw);
-  return hashCount * hashSize;
-}
-
-int _decodePathHashWidth(int pathLenRaw) {
-  if (pathLenRaw == 0xFF) return 1;
-  return ((pathLenRaw >> 6) & 0x03) + 1;
-}
 
 bool _isPathLenValidForMode(
   int pathLen,

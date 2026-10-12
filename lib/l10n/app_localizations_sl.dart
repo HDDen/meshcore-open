@@ -360,6 +360,20 @@ class AppLocalizationsSl extends AppLocalizations {
   String get scanner_enableBluetooth => 'Omogočite Bluetooth';
 
   @override
+  String get scanner_getNodeTitle => 'Potrebujete nov node?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Velikosti denarnice, poganja MeshCore, dvopasovni GPS, vodoodporen, baterija za 5 dni.';
+
+  @override
+  String get scanner_getNodeAction => 'Oglejte si ga tukaj';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Partnerska povezava: vsak nakup podpira MeshCore Open.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       'Funkcija Bluetooth v brskalniku ni na voljo. Povežite se preko USB-ja namesto tega.';
 
@@ -6164,4 +6178,122 @@ class AppLocalizationsSl extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '$hours h $minutes min';
   }
+
+  @override
+  String get networkMap_settingsSection => 'Omrežni zemljevid';
+
+  @override
+  String get networkMap_uploadTitle => 'Deli, kaj sliši moj radio';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Ko je to vklopljeno in je radio povezan, aplikacija na omrežni zemljevid MeshCore Open pošlje kratek povzetek paketov, ki jih sliši vaš radio, tako da vsi vidijo, kateri repeaterji obstajajo in kako so povezani. Pošlje vrsto, pot, število skokov, moč signala in velikost vsakega paketa ter imena in približne lokacije repeaterjev iz njihovih lastnih advertov. Nikoli ne pošlje besedila sporočil, kdo se s kom pogovarja, imen kanalov, vaših stikov ali vašega natančnega položaja: lokacije so zaokrožene na približno 2 km, aplikacija pa vsak dan dobi nov naključni ID.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Kaj zbiramo';
+
+  @override
+  String get networkMap_promptTitle => 'Pomagate graditi omrežni zemljevid?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open lahko deli, kaj sliši vaš radio, z javnim omrežnim zemljevidom na map.meshcoreopen.org, tako da vsi vidijo, kateri repeaterji obstajajo in kako so povezani.\n\nNikoli ne pošlje besedila sporočil, kdo se s kom pogovarja, imen kanalov, vaših stikov ali vašega natančnega položaja. Lokacije so zaokrožene na približno 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'To lahko kadar koli spremenite v Nastavitve → Nastavitve aplikacije → Omrežni zemljevid.';
+
+  @override
+  String get networkMap_promptAccept => 'Deli';
+
+  @override
+  String get networkMap_promptDecline => 'Ne, hvala';
+
+  @override
+  String get networkMap_statusOff => 'Izklopljeno. Nič se ne pošilja.';
+
+  @override
+  String get networkMap_statusWaiting =>
+      'Vklopljeno. Čakanje na povezavo z radiem.';
+
+  @override
+  String get networkMap_statusNothingSent => 'Vklopljeno. Še nič poslanega.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Nazadnje poslano $time. Paketov danes: $count.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Lokalno';
+
+  @override
+  String get networkMap_sourceOnline => 'Na spletu';
+
+  @override
+  String get networkMap_sourceBoth => 'Oboje';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Povečajte, da vidite spletni omrežni zemljevid';
+
+  @override
+  String get networkMap_loadFailed =>
+      'Spletnega omrežnega zemljevida ni bilo mogoče naložiti';
+
+  @override
+  String get networkMap_inYourContacts => 'V vaših stikih';
+
+  @override
+  String get networkMap_status => 'Stanje';
+
+  @override
+  String get networkMap_statusActive => 'Aktiven v zadnji uri';
+
+  @override
+  String get networkMap_statusRecent => 'Slišan v zadnjem dnevu';
+
+  @override
+  String get networkMap_statusStale => 'V zadnjem času ni bil slišan';
+
+  @override
+  String get networkMap_confirmed => 'Potrjeno';
+
+  @override
+  String get networkMap_singleSource => 'En vir, še ni potrjeno';
+
+  @override
+  String get networkMap_reports => 'Poročila';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Približna lokacija, ocenjena glede na to, kdo ga je slišal';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Približna lokacija, iz njegovega lastnega adverta';
+
+  @override
+  String get networkMap_heardByRadio => 'Sliši ga vaš radio';
+
+  @override
+  String get networkMap_inYourArea => 'V vaši bližini';
+
+  @override
+  String get networkMap_farAway => 'Daleč stran. Upravljanje ne bo doseglo.';
+
+  @override
+  String get networkMap_addToContacts => 'Dodaj med stike';
+
+  @override
+  String get networkMap_manage => 'Upravljaj';
+
+  @override
+  String get networkMap_addedToContacts => 'Dodano med stike';
+
+  @override
+  String get networkMap_addFailed => 'Dodajanje med stike ni uspelo';
+
+  @override
+  String get networkMap_unnamed => 'Repeater brez imena';
 }

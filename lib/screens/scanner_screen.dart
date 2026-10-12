@@ -13,6 +13,7 @@ import '../utils/app_logger.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/device_tile.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/get_node_banner.dart';
 import '../widgets/mesh_ui.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../review_mode/review_mode_entry.dart';
@@ -168,6 +169,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
           },
         ),
       ),
+      bottomNavigationBar: const GetNodeBanner(),
       floatingActionButton: Consumer<MeshCoreConnector>(
         builder: (context, connector, child) {
           final isScanning =

@@ -23,6 +23,8 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/network_map/network_map_api_client.dart';
+import '../services/ui_view_state_service.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/disconnect_navigation_mixin.dart';
@@ -30,6 +32,7 @@ import '../utils/battery_utils.dart';
 import '../utils/route_transitions.dart';
 import '../widgets/map_poi_cluster.dart';
 import '../widgets/marker_label_dialog.dart';
+import '../widgets/network_map_online_layer.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../icons/los_icon.dart';
@@ -80,6 +83,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
 
   final MapController _mapController = MapController();
   final MapMarkerService _markerService = MapMarkerService();
+  final NetworkMapOnlineController _online = NetworkMapOnlineController();
   final Set<String> _hiddenMarkerIds = {};
   Set<String> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
@@ -152,6 +156,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
   @override
   void dispose() {
     _ageTimer?.cancel();
+    _online.removeListener(_onOnlineChanged);
+    _online.dispose();
     _saveLastCamera();
     _searchController.dispose();
     _searchFocus.dispose();
@@ -209,10 +215,49 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
     });
   }
 
+  void _onOnlineChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool _showsOnline(MapSourceOption source) => source != MapSourceOption.local;
+
+  void _requestOnlineData() {
+    try {
+      _online.requestBounds(_mapController.camera.visibleBounds);
+    } catch (_) {
+      // Camera not ready yet; onMapReady requests once it is.
+    }
+  }
+
+  void _setMapSource(MapSourceOption source) {
+    context.read<UiViewStateService>().setMapSource(source);
+    if (_showsOnline(source)) {
+      _requestOnlineData();
+    } else {
+      _online.cancel();
+    }
+  }
+
+  void _showOnlineRepeater(
+    BuildContext context,
+    MeshCoreConnector connector,
+    NetworkMapRepeater repeater,
+  ) {
+    showNetworkMapRepeaterSheet(
+      context,
+      connector: connector,
+      repeater: repeater,
+      onManage: (contact) => contact.type == advTypeRoom
+          ? _showRoomLogin(context, contact, manage: true)
+          : _showRepeaterLogin(context, contact),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _loadRemovedMarkers();
+    _online.addListener(_onOnlineChanged);
     _ageTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) setState(() {});
     });
@@ -456,6 +501,11 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
         final pathHistoryVersion = context.select<PathHistoryService, int>(
           (service) => service.version,
         );
+        final mapSource = context.select<UiViewStateService, MapSourceOption>(
+          (service) => service.mapSource,
+        );
+        final showLocal = mapSource != MapSourceOption.online;
+        final showOnline = _showsOnline(mapSource);
         final settingsService = context.read<AppSettingsService>();
         final pathHistory = context.read<PathHistoryService>();
         final tileCache = context.read<MapTileCacheService>();
@@ -834,10 +884,16 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     onSecondaryTap: (_, latLng) {
                       _handleMapContextPress(context, connector, latLng);
                     },
+                    onMapReady: () {
+                      if (showOnline) _requestOnlineData();
+                    },
                     onMapEvent: (event) {
                       if (event is MapEventMoveEnd ||
-                          event is MapEventFlingAnimationEnd) {
+                          event is MapEventFlingAnimationEnd ||
+                          event is MapEventScrollWheelZoom ||
+                          event is MapEventDoubleTapZoomEnd) {
                         _saveLastCamera();
+                        if (showOnline) _requestOnlineData();
                       }
                     },
                     onPositionChanged: (camera, hasGesture) {
@@ -860,6 +916,15 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                       PolylineLayer(polylines: _polylines),
                     if (sharedMarkerPolylines.isNotEmpty)
                       PolylineLayer(polylines: sharedMarkerPolylines),
+                    if (showOnline)
+                      ...buildNetworkMapOnlineLayers(
+                        controller: _online,
+                        localMarkerKeys: showLocal
+                            ? {for (final c in visibleContacts) c.publicKeyHex}
+                            : const {},
+                        onTap: (repeater) =>
+                            _showOnlineRepeater(context, connector, repeater),
+                      ),
                     MarkerLayer(
                       markers: [
                         if (highlightPosition != null)
@@ -892,31 +957,33 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                               ),
                             ),
                           ),
-                        if (!settings.mapShowOverlaps &&
+                        if (showLocal &&
+                            !settings.mapShowOverlaps &&
                             (_zoom >= _guessedZoomThreshold ||
                                 _isBuildingPathTrace))
                           ..._buildGuessedMarker(
                             guessedLocations,
                             showLabels: _showNodeLabels,
                           ),
-                        ..._buildNodeMarkersCached(
-                          visibleContacts,
-                          settings,
-                          connectorSnapshot.contactsSignature,
-                          connectorSnapshot.batterySignature,
-                          _freshness,
-                          settings.mapTimeFilterHours,
-                          settings.mapKeyPrefixEnabled,
-                          settings.mapKeyPrefix,
-                          settings.mapShowDiscoveryContacts,
-                          Object.hashAllUnordered(
-                            settings.batteryChemistryByRepeaterId.entries.map(
-                              (entry) => Object.hash(entry.key, entry.value),
+                        if (showLocal)
+                          ..._buildNodeMarkersCached(
+                            visibleContacts,
+                            settings,
+                            connectorSnapshot.contactsSignature,
+                            connectorSnapshot.batterySignature,
+                            _freshness,
+                            settings.mapTimeFilterHours,
+                            settings.mapKeyPrefixEnabled,
+                            settings.mapKeyPrefix,
+                            settings.mapShowDiscoveryContacts,
+                            Object.hashAllUnordered(
+                              settings.batteryChemistryByRepeaterId.entries.map(
+                                (entry) => Object.hash(entry.key, entry.value),
+                              ),
                             ),
+                            showLabels: _showNodeLabels,
+                            selectedContact: selectedContact,
                           ),
-                          showLabels: _showNodeLabels,
-                          selectedContact: selectedContact,
-                        ),
                         ..._buildPoiAndSelfMarkers(
                           sharedMarkers,
                           selfPosition:
@@ -954,6 +1021,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                 if (!_isBuildingPathTrace)
                   _buildTopOverlay(
                     context,
+                    mapSource: mapSource,
                     connector: connector,
                     settingsService: settingsService,
                     allContacts: allContacts,
@@ -970,7 +1038,14 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
                     pinCount: sharedMarkers.length,
                   ),
                 if (_isBuildingPathTrace) _buildPathTraceOverlay(),
-                if (contactsWithLocation.isEmpty &&
+                if (showOnline &&
+                    !_isBuildingPathTrace &&
+                    selectedContact == null &&
+                    (_online.state == NetworkMapLoadState.zoomIn ||
+                        _online.state == NetworkMapLoadState.error))
+                  _buildOnlineHint(context, _online.state)
+                else if (showLocal &&
+                    contactsWithLocation.isEmpty &&
                     selectedContact == null &&
                     !_isBuildingPathTrace)
                   Positioned(
@@ -1823,6 +1898,7 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
 
   Widget _buildTopOverlay(
     BuildContext context, {
+    required MapSourceOption mapSource,
     required MeshCoreConnector connector,
     required AppSettingsService settingsService,
     required List<Contact> allContacts,
@@ -1945,6 +2021,8 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
             ],
           ),
           const SizedBox(height: 6),
+          _buildMapSourceSwitch(context, mapSource),
+          const SizedBox(height: 6),
           LayoutBuilder(
             builder: (context, constraints) {
               final chips = <Widget>[
@@ -2024,6 +2102,76 @@ class _MapScreenState extends State<MapScreen> with DisconnectNavigationMixin {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMapSourceSwitch(BuildContext context, MapSourceOption source) {
+    final l10n = context.l10n;
+    return Material(
+      color: _overlayPanelColor,
+      shape: StadiumBorder(side: BorderSide(color: _overlayBorderColor)),
+      clipBehavior: Clip.antiAlias,
+      child: SegmentedButton<MapSourceOption>(
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(
+          minimumSize: const Size(0, 46),
+          side: BorderSide.none,
+          foregroundColor: _overlaySecondaryTextColor,
+          selectedForegroundColor: _overlayPrimaryTextColor,
+          selectedBackgroundColor: MapPalette.selected.withValues(alpha: 0.34),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        segments: [
+          ButtonSegment(
+            value: MapSourceOption.local,
+            icon: const Icon(Icons.radio, size: 20),
+            label: Text(l10n.networkMap_sourceLocal),
+          ),
+          ButtonSegment(
+            value: MapSourceOption.online,
+            icon: const Icon(Icons.public, size: 20),
+            label: Text(l10n.networkMap_sourceOnline),
+          ),
+          ButtonSegment(
+            value: MapSourceOption.both,
+            icon: const Icon(Icons.layers, size: 20),
+            label: Text(l10n.networkMap_sourceBoth),
+          ),
+        ],
+        selected: {source},
+        onSelectionChanged: (selection) {
+          HapticFeedback.selectionClick();
+          _setMapSource(selection.first);
+        },
+      ),
+    );
+  }
+
+  Widget _buildOnlineHint(BuildContext context, NetworkMapLoadState state) {
+    final zoomIn = state == NetworkMapLoadState.zoomIn;
+    return Positioned(
+      left: 16,
+      right: 88,
+      bottom: 16,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(zoomIn ? Icons.zoom_in : Icons.cloud_off, size: 26),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  zoomIn
+                      ? context.l10n.networkMap_zoomInHint
+                      : context.l10n.networkMap_loadFailed,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

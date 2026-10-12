@@ -358,6 +358,20 @@ class AppLocalizationsHu extends AppLocalizations {
   String get scanner_enableBluetooth => 'Bluetooth engedélyezése';
 
   @override
+  String get scanner_getNodeTitle => 'Új csomópontra van szükséged?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Pénztárca méretű, MeshCore-t futtat, kétsávos GPS, vízálló, 5 napos akkumulátor.';
+
+  @override
+  String get scanner_getNodeAction => 'Itt szerezhetsz egyet';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Partnerlink: minden vásárlás a MeshCore Opent támogatja.';
+
+  @override
   String get scanner_bluetoothWebUnsupported =>
       'A Bluetooth nem érhető el a böngészőben. Inkább csatlakoztasson USB-n keresztül.';
 
@@ -6171,4 +6185,123 @@ class AppLocalizationsHu extends AppLocalizations {
   String neighbors_durationHours(int hours, int minutes) {
     return '$hours ó $minutes p';
   }
+
+  @override
+  String get networkMap_settingsSection => 'Hálózati térkép';
+
+  @override
+  String get networkMap_uploadTitle => 'Megosztom, amit a rádióm hall';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Ha ez be van kapcsolva és a rádió csatlakozik, az alkalmazás rövid összefoglalót küld a rádió által hallott csomagokról a MeshCore Open hálózati térképére, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz. Elküldi az egyes csomagok típusát, útvonalát, ugrásszámát, jelerősségét és méretét, valamint a repeaterek nevét és hozzávetőleges helyét a saját advertjeikből. Soha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet: a helyek kb. 2 km-re kerekítettek, az alkalmazásod pedig naponta új véletlenszerű azonosítót kap.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Mit gyűjtünk';
+
+  @override
+  String get networkMap_promptTitle => 'Segítesz a hálózati térkép építésében?';
+
+  @override
+  String get networkMap_promptBody =>
+      'A MeshCore Open megoszthatja, amit a rádiód hall, a nyilvános hálózati térképpel a map.meshcoreopen.org oldalon, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz.\n\nSoha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet. A helyek kb. 2 km-re kerekítettek.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Ezt bármikor módosíthatod: Beállítások → Alkalmazásbeállítások → Hálózati térkép.';
+
+  @override
+  String get networkMap_promptAccept => 'Megosztás';
+
+  @override
+  String get networkMap_promptDecline => 'Köszönöm, nem';
+
+  @override
+  String get networkMap_statusOff => 'Kikapcsolva. Semmi sem kerül elküldésre.';
+
+  @override
+  String get networkMap_statusWaiting =>
+      'Bekapcsolva. Várakozás a rádiókapcsolatra.';
+
+  @override
+  String get networkMap_statusNothingSent =>
+      'Bekapcsolva. Még nem ment el semmi.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Utoljára elküldve: $time. Ma $count csomag.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Helyi';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Mindkettő';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Nagyíts rá az online hálózati térkép megtekintéséhez';
+
+  @override
+  String get networkMap_loadFailed =>
+      'Nem sikerült betölteni az online hálózati térképet';
+
+  @override
+  String get networkMap_inYourContacts => 'A kapcsolataid között';
+
+  @override
+  String get networkMap_status => 'Állapot';
+
+  @override
+  String get networkMap_statusActive => 'Aktív az elmúlt órában';
+
+  @override
+  String get networkMap_statusRecent => 'Hallva az elmúlt napban';
+
+  @override
+  String get networkMap_statusStale => 'Mostanában nem hallható';
+
+  @override
+  String get networkMap_confirmed => 'Megerősítve';
+
+  @override
+  String get networkMap_singleSource => 'Egyetlen forrás, még nem megerősített';
+
+  @override
+  String get networkMap_reports => 'Jelentések';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Hozzávetőleges hely, a hallók alapján becsülve';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Hozzávetőleges hely, a saját advertjéből';
+
+  @override
+  String get networkMap_heardByRadio => 'A rádiód hallja';
+
+  @override
+  String get networkMap_inYourArea => 'A közeledben';
+
+  @override
+  String get networkMap_farAway => 'Messze van. A kezelés nem éri el.';
+
+  @override
+  String get networkMap_addToContacts => 'Hozzáadás a kapcsolatokhoz';
+
+  @override
+  String get networkMap_manage => 'Kezelés';
+
+  @override
+  String get networkMap_addedToContacts => 'Hozzáadva a kapcsolatokhoz';
+
+  @override
+  String get networkMap_addFailed => 'Nem sikerült hozzáadni a kapcsolatokhoz';
+
+  @override
+  String get networkMap_unnamed => 'Névtelen repeater';
 }

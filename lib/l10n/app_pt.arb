@@ -3260,5 +3260,55 @@
   "usbChooseSerialPort": "Escolher porta serial",
   "neighbors_durationSeconds": "{seconds}s",
   "neighbors_durationMinutes": "{minutes}m {seconds}s",
-  "neighbors_durationHours": "{hours}h {minutes}m"
+  "neighbors_durationHours": "{hours}h {minutes}m",
+  "scanner_getNodeTitle": "Precisa de um novo nó?",
+  "scanner_getNodeBody": "Do tamanho de uma carteira, roda MeshCore, GPS dual-band, à prova d'água, bateria para 5 dias.",
+  "scanner_getNodeAction": "Compre aqui",
+  "scanner_getNodeDisclosure": "Link de afiliado: cada compra apoia o MeshCore Open.",
+  "networkMap_settingsSection": "Mapa da rede",
+  "networkMap_uploadTitle": "Compartilhar o que meu rádio ouve",
+  "networkMap_uploadExplanation": "Quando isto está ativado e o seu rádio está conectado, o app envia um breve resumo dos pacotes que o seu rádio ouve para o mapa da rede do MeshCore Open, para que todos possam ver quais repetidores existem e como se conectam. Ele envia o tipo, a rota, os saltos, a intensidade do sinal e o tamanho de cada pacote, além dos nomes e localizações aproximadas dos repetidores, obtidos dos próprios anúncios. Nunca envia o texto das mensagens, quem fala com quem, nomes de canais, seus contactos nem a sua posição exata: as localizações são arredondadas para cerca de 2 km, e o seu app recebe um novo ID aleatório todos os dias.",
+  "networkMap_whatWeCollect": "O que coletamos",
+  "networkMap_promptTitle": "Ajudar a construir o mapa da rede?",
+  "networkMap_promptBody": "O MeshCore Open pode compartilhar o que o seu rádio ouve com o mapa público da rede em map.meshcoreopen.org, para que todos possam ver quais repetidores existem e como se conectam.\n\nNunca envia o texto das mensagens, quem fala com quem, nomes de canais, seus contactos nem a sua posição exata. As localizações são arredondadas para cerca de 2 km.",
+  "networkMap_promptSettingsHint": "Você pode mudar isso a qualquer momento em Configurações → Configurações do App → Mapa da rede.",
+  "networkMap_promptAccept": "Compartilhar",
+  "networkMap_promptDecline": "Não, obrigado",
+  "networkMap_statusOff": "Desativado. Nada é enviado.",
+  "networkMap_statusWaiting": "Ativado. Aguardando conexão com o rádio.",
+  "networkMap_statusNothingSent": "Ativado. Nada enviado ainda.",
+  "networkMap_statusLastSent": "Último envio {time}. {count} pacotes hoje.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Local",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Ambos",
+  "networkMap_zoomInHint": "Aproxime o zoom para ver o mapa da rede online",
+  "networkMap_loadFailed": "Não foi possível carregar o mapa da rede online",
+  "networkMap_inYourContacts": "Nos seus contactos",
+  "networkMap_status": "Estado",
+  "networkMap_statusActive": "Ativo na última hora",
+  "networkMap_statusRecent": "Ouvido no último dia",
+  "networkMap_statusStale": "Não ouvido recentemente",
+  "networkMap_confirmed": "Confirmado",
+  "networkMap_singleSource": "Fonte única, ainda não confirmado",
+  "networkMap_reports": "Relatórios",
+  "networkMap_locationEstimated": "Localização aproximada, estimada a partir de quem o ouviu",
+  "networkMap_locationAdvertised": "Localização aproximada, do próprio anúncio",
+  "networkMap_heardByRadio": "Ouvido pelo seu rádio",
+  "networkMap_inYourArea": "Na sua área",
+  "networkMap_farAway": "Muito longe. A gestão não chegará até ele.",
+  "networkMap_addToContacts": "Adicionar aos contactos",
+  "networkMap_manage": "Gerenciar",
+  "networkMap_addedToContacts": "Adicionado aos contactos",
+  "networkMap_addFailed": "Não foi possível adicionar aos contactos",
+  "networkMap_unnamed": "Repetidor sem nome"
 }

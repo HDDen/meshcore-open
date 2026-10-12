@@ -131,6 +131,12 @@ class AppSettings {
   final bool jumpToOldestUnread;
   final bool imageMessagesEnabled;
 
+  /// Opt-in upload of header-only packet records to the network map.
+  final bool networkMapUploadEnabled;
+
+  /// Whether the one-time network map opt-in dialog has been shown.
+  final bool networkMapPromptShown;
+
   /// Whether a received image is decoded as soon as it is reassembled.
   ///
   /// Off by default and deliberately so: a decode peaks around 2.16 GiB
@@ -239,6 +245,8 @@ class AppSettings {
     this.tcpServerPort = 0,
     this.jumpToOldestUnread = false,
     this.imageMessagesEnabled = false,
+    this.networkMapUploadEnabled = false,
+    this.networkMapPromptShown = false,
     this.imageProcessAutomatically = false,
     this.imageCodecEnabled = false,
     this.imageCodecSelectedModelId,
@@ -321,6 +329,8 @@ class AppSettings {
       'tcp_server_port': tcpServerPort,
       'jump_to_oldest_unread': jumpToOldestUnread,
       'image_messages_enabled': imageMessagesEnabled,
+      'network_map_upload_enabled': networkMapUploadEnabled,
+      'network_map_prompt_shown': networkMapPromptShown,
       'image_process_automatically': imageProcessAutomatically,
       'image_codec_enabled': imageCodecEnabled,
       'image_codec_selected_model_id': imageCodecSelectedModelId,
@@ -428,6 +438,9 @@ class AppSettings {
       tcpServerPort: json['tcp_server_port'] as int? ?? 0,
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
       imageMessagesEnabled: json['image_messages_enabled'] as bool? ?? false,
+      networkMapUploadEnabled:
+          json['network_map_upload_enabled'] as bool? ?? false,
+      networkMapPromptShown: json['network_map_prompt_shown'] as bool? ?? false,
       imageProcessAutomatically:
           json['image_process_automatically'] as bool? ?? false,
       imageCodecEnabled: json['image_codec_enabled'] as bool? ?? false,
@@ -548,6 +561,8 @@ class AppSettings {
     int? tcpServerPort,
     bool? jumpToOldestUnread,
     bool? imageMessagesEnabled,
+    bool? networkMapUploadEnabled,
+    bool? networkMapPromptShown,
     bool? imageProcessAutomatically,
     bool? imageCodecEnabled,
     Object? imageCodecSelectedModelId = _unset,
@@ -633,6 +648,10 @@ class AppSettings {
       tcpServerPort: tcpServerPort ?? this.tcpServerPort,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
       imageMessagesEnabled: imageMessagesEnabled ?? this.imageMessagesEnabled,
+      networkMapUploadEnabled:
+          networkMapUploadEnabled ?? this.networkMapUploadEnabled,
+      networkMapPromptShown:
+          networkMapPromptShown ?? this.networkMapPromptShown,
       imageProcessAutomatically:
           imageProcessAutomatically ?? this.imageProcessAutomatically,
       imageCodecEnabled: imageCodecEnabled ?? this.imageCodecEnabled,

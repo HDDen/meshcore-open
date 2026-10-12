@@ -3261,5 +3261,55 @@
   "usbChooseSerialPort": "Vyberte sériový port",
   "neighbors_durationSeconds": "{seconds}s",
   "neighbors_durationMinutes": "{minutes}m {seconds}s",
-  "neighbors_durationHours": "{hours}h {minutes}m"
+  "neighbors_durationHours": "{hours}h {minutes}m",
+  "scanner_getNodeTitle": "Potrebujete nový uzol?",
+  "scanner_getNodeBody": "Veľkosti peňaženky, beží na MeshCore, dvojpásmové GPS, vodotesný, batéria vydrží 5 dní.",
+  "scanner_getNodeAction": "Kúpte si ho tu",
+  "scanner_getNodeDisclosure": "Partnerský odkaz: každý nákup podporuje MeshCore Open.",
+  "networkMap_settingsSection": "Sieťová mapa",
+  "networkMap_uploadTitle": "Zdieľať, čo počuje moje rádio",
+  "networkMap_uploadExplanation": "Keď je to zapnuté a rádio je pripojené, aplikácia odosiela na sieťovú mapu MeshCore Open stručný súhrn paketov, ktoré vaše rádio počuje, aby každý videl, aké opakovače existujú a ako sú prepojené. Odosiela typ, trasu, počet skokov, silu signálu a veľkosť každého paketu, ako aj názvy opakovačov a ich približnú polohu z ich vlastných inzerátov. Nikdy neodosiela text správ, kto s kým komunikuje, názvy kanálov, vaše kontakty ani vašu presnú polohu: polohy sa zaokrúhľujú na približne 2 km a aplikácia dostáva nové náhodné ID každý deň.",
+  "networkMap_whatWeCollect": "Čo zbierame",
+  "networkMap_promptTitle": "Pomôcť budovať sieťovú mapu?",
+  "networkMap_promptBody": "MeshCore Open môže zdieľať, čo vaše rádio počuje, s verejnou sieťovou mapou na map.meshcoreopen.org, aby každý videl, aké opakovače existujú a ako sú prepojené.\n\nNikdy neodosiela text správ, kto s kým komunikuje, názvy kanálov, vaše kontakty ani vašu presnú polohu. Polohy sa zaokrúhľujú na približne 2 km.",
+  "networkMap_promptSettingsHint": "Môžete to kedykoľvek zmeniť v Nastavenia → Nastavenia aplikácie → Sieťová mapa.",
+  "networkMap_promptAccept": "Zdieľať",
+  "networkMap_promptDecline": "Nie, ďakujem",
+  "networkMap_statusOff": "Vypnuté. Nič sa neodosiela.",
+  "networkMap_statusWaiting": "Zapnuté. Čaká sa na pripojenie rádia.",
+  "networkMap_statusNothingSent": "Zapnuté. Zatiaľ nič neodoslané.",
+  "networkMap_statusLastSent": "Naposledy odoslané {time}. Dnes paketov: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokálna",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Obe",
+  "networkMap_zoomInHint": "Priblížte, aby ste videli online sieťovú mapu",
+  "networkMap_loadFailed": "Online sieťovú mapu sa nepodarilo načítať",
+  "networkMap_inYourContacts": "Vo vašich kontaktoch",
+  "networkMap_status": "Stav",
+  "networkMap_statusActive": "Aktívny za poslednú hodinu",
+  "networkMap_statusRecent": "Počuť za posledný deň",
+  "networkMap_statusStale": "Dlho nepočuť",
+  "networkMap_confirmed": "Potvrdený",
+  "networkMap_singleSource": "Jeden zdroj, zatiaľ nepotvrdený",
+  "networkMap_reports": "Hlásenia",
+  "networkMap_locationEstimated": "Približná poloha, odhadnutá podľa toho, kto ho počul",
+  "networkMap_locationAdvertised": "Približná poloha, z vlastného inzerátu",
+  "networkMap_heardByRadio": "Počuté vaším rádiom",
+  "networkMap_inYourArea": "Vo vašej oblasti",
+  "networkMap_farAway": "Ďaleko. Správa ho nedosiahne.",
+  "networkMap_addToContacts": "Pridať do kontaktov",
+  "networkMap_manage": "Spravovať",
+  "networkMap_addedToContacts": "Pridané do kontaktov",
+  "networkMap_addFailed": "Nepodarilo sa pridať do kontaktov",
+  "networkMap_unnamed": "Nepomenovaný opakovač"
 }
