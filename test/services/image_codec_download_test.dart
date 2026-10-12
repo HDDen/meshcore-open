@@ -631,15 +631,19 @@ void main() {
         final bundle = service.installedBundle;
         expect(bundle, isNotNull);
         expect(bundle!.decoderGraphPath, '${tempDir.path}/model.onnx');
-        expect(bundle.entropyGraphPath, '${tempDir.path}/entropy.onnx');
+        // The decoder keeps the path it was recorded with; its companions
+        // are joined with the separator the directory itself uses, a
+        // backslash on Windows.
+        final sep = Platform.pathSeparator;
+        expect(bundle.entropyGraphPath, '${tempDir.path}${sep}entropy.onnx');
         // Resolved by ROLE. Both entropy files end in `.onnx`, so a
         // position- or extension-based guess would be a coin flip, and handing
         // the decode-side graph to the encoder fails at the first run.
         expect(
           bundle.entropyDecodeGraphPath,
-          '${tempDir.path}/entropy_decode.onnx',
+          '${tempDir.path}${sep}entropy_decode.onnx',
         );
-        expect(bundle.tablesPath, '${tempDir.path}/cdf.bin');
+        expect(bundle.tablesPath, '${tempDir.path}${sep}cdf.bin');
         expect(bundle.isComplete, isTrue);
         expect(bundle.supportsDecode, isTrue);
         expect(service.needsModelUpgrade, isFalse);
@@ -682,7 +686,10 @@ void main() {
 
       final bundle = service.installedBundle;
       expect(bundle, isNotNull);
-      expect(bundle!.entropyGraphPath, '${tempDir.path}/entropy.onnx');
+      expect(
+        bundle!.entropyGraphPath,
+        '${tempDir.path}${Platform.pathSeparator}entropy.onnx',
+      );
       // No spec asset name is present in the record, and the heuristic must NOT
       // invent one: a filename that was never downloaded resolves to an opaque
       // ORT failure instead of a download prompt.

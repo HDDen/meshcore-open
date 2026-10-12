@@ -1001,6 +1001,17 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
     return bitstream;
   }
 
+  @override
+  Future<Uint8List?> decodePreview(Uint8List payload) async {
+    if (!canDecode) return null;
+    final result = await decodeBitstream(
+      bitstream: payload,
+      ratePoint: aeicRatePointForUi(kImageSendRatePoint),
+      resolution: kImageCodecSquareSize,
+    );
+    return result?.pngBytes;
+  }
+
   /// Encodes an already-decoded RGB image.
   ///
   /// [rgbBytes] must be exactly `512 * 512 * 3` packed 8-bit RGB. Anything else
@@ -1053,32 +1064,6 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
       rgbBytes: await _toSquareRgb(bytes),
       ratePoint: ratePoint ?? defaultRatePoint,
     );
-  }
-
-  /// [ImageSendCodec] entry point for the compose sheet's "as received"
-  /// preview: encode-side bytes in, displayable pixels out.
-  ///
-  /// Everything is folded into null — an unusable decoder, a rejected
-  /// bitstream, a throw from a missing entropy path — because the caller's
-  /// only recourse is the same in every case: keep showing the original.
-  @override
-  Future<Uint8List?> decodeToPng(
-    Uint8List bitstream,
-    ImageCodecRatePoint rate,
-  ) async {
-    try {
-      final result = await decodeBitstream(
-        bitstream: bitstream,
-        ratePoint: aeicRatePointForUi(rate),
-        resolution: kImageCodecSquareSize,
-      );
-      if (result == null || result.status != ImageCodecStatus.completed) {
-        return null;
-      }
-      return result.pngBytes;
-    } catch (_) {
-      return null;
-    }
   }
 
   /// Decodes a reassembled bitstream back to PNG bytes.

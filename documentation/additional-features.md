@@ -63,7 +63,7 @@ A list of nodes heard passively over the air but not yet added as contacts. Each
 An optional per-contact and per-channel text compression feature using the SMAZ algorithm (optimized for short English text).
 
 ### How to Enable
-- **Per contact**: Chat screen → info button → toggle "SMAZ compression"
+- **Per contact**: Chat screen → overflow menu → Contact Settings → toggle "SMAZ compression"
 - **Per channel**: Long-press channel → Edit → toggle "SMAZ compression"
 
 ### How It Works
@@ -95,10 +95,10 @@ A live QR scanner view with instruction text overlay.
 ## Channel Message Path Viewing
 
 ### How to Access
-In a channel chat, tap a message bubble (mobile) or use the "Path" action (desktop).
+In a channel chat, long-press a message (or right-click on desktop) and choose Path.
 
 ### What the User Sees
-- Summary card: sender, time, repeat count, path type, observed hops
+- Summary card: sender, time, repeat count, path type, observed hops, and region when known (see [Regions](regions.md))
 - "Other Observed Paths" section (if multiple paths detected)
 - "Repeater Hops" section listing each hop with hex prefix, resolved name, and GPS coordinates
 
@@ -133,7 +133,7 @@ Both logs support copy-all and clear operations.
 Automatically shown on web platforms when a non-Chromium browser is detected.
 
 ### What the User Sees
-A full-screen informational page explaining that Web Bluetooth requires a Chromium-based browser. No interactive elements — purely informational.
+A full-screen informational page explaining that the web client requires Chrome. On web the app connects over USB via Web Serial only; Bluetooth is not available in the browser. No interactive elements — purely informational.
 
 ---
 
@@ -191,17 +191,17 @@ An ML-based service that predicts expected delivery timeouts:
 ## On-Device Message Translation
 
 ### What It Is
-An optional on-device translation service powered by an embedded LLM (llamadart, running GGUF models). Translation runs entirely on-device — no data leaves the app.
+An optional on-device translation service powered by an embedded LLM (llamadart, running GGUF models). Translation inference runs on-device; messages are not uploaded for inference. Installing models requires internet access.
 
 ### How to Access
-Tap the translate button on any received message. On first use, the GGUF model file is downloaded and cached locally.
+Open App Settings → Translation, download/select a model, and enable translation. Then long-press an incoming message and choose "Translate message" (right-click on desktop). Automatic incoming translation is a separate toggle; pre-send translation has its own composer control.
 
 ### How It Works
 - Model files are managed by `TranslationFileStore`; download progress is shown in-place
 - Before translating, the source language is automatically detected using the `flutter_langdetect` package. If the detected language already matches the target language, translation is skipped
-- Translation runs via `TranslationService` using the llamadart CPU backend (arm64 and x64 on Android)
+- Translation runs via `TranslationService` using llamadart. Android APKs currently ship ARM64 only; backend support does not imply an x64 APK is distributed
 - Translated text is shown in `TranslatedMessageContent` as an inline overlay on the original message bubble
-- Each translation is cached; re-tapping shows the cached result without re-running inference
+- The translation is stored with the message, so it is shown again without re-running inference
 
 ---
 
@@ -260,3 +260,13 @@ On Android, a foreground service (`background_service.dart`) keeps the BLE conne
 ### User Impact
 - A persistent notification appears while the service is running
 - Messages are received and retry logic continues even when the app is not in the foreground
+
+## URL Image Previews
+
+Enable URL images per contact in Chat → overflow → Contact Settings, or per channel in Channels → long-press (right-click on desktop) → Edit. Supported references include direct PNG/JPEG/WebP URLs, pyx.li links, ibb.co sharing pages, and IPFS references/gateway URLs.
+
+The message sends a reference; image retrieval needs internet access and makes requests to the relevant host or gateway. This differs from [image packets transmitted over the mesh](image-messages.md). With previews disabled, the chat may indicate that a message contains a possible image URL.
+
+## Regions, Mesh Images, and Radio Statistics
+
+See [Regions](regions.md) for default scopes, per-message labels, and reply-region inheritance; [Image Messages](image-messages.md) for model installation and reconstruction; and [Companion Radio Statistics](radio-statistics.md) for connected-radio measurements.

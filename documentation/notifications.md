@@ -12,6 +12,7 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 - **Body**: Message text (reactions show "Reacted [emoji]", GIFs show "Sent a GIF")
 - **Priority**: High
 - **Android channel**: `messages`
+- **Android style**: conversation (MessagingStyle) showing the last few messages, with **Reply** and a hidden **Mark as read** action. When URL images are enabled, an image preview appears as the notification's thumbnail
 
 ### 2. Channel Message Notifications
 - **Triggered when**: A new message arrives on a non-muted channel
@@ -19,6 +20,7 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 - **Body**: `"<senderName>: <message text>"`
 - **Priority**: High
 - **Android channel**: `channel_messages`
+- **Android style**: group conversation with each sender shown by name, with **Reply**, **Mute channel**, and a hidden **Mark as read** action
 
 ### 3. Advertisement Notifications
 - **Triggered when**: A new node is discovered on the mesh for the first time
@@ -40,6 +42,36 @@ Notification text states:
 - **Connected**: the normal static background-service text
 - **Reconnecting**: `app_connectionLostReconnect`, retained while BLE automatic reconnect continues
 - **Engine/process unavailable**: `app_connectionLostBreaked`
+
+### Replying from Notifications, Watches, and Android Auto (Android)
+
+Message notifications can be answered without opening the app, from the notification shade, a paired Wear OS or Galaxy watch, or Android Auto (which reads messages aloud and takes voice replies).
+
+- **Reply** sends through the connected radio exactly like the chat screen: same length limits, SMAZ and Cyr2Lat handling, and retries. Your reply is then added to the notification.
+- **Replies over the message limit** are split at word boundaries into up to 3 messages. Longer replies are not sent; a "Reply not sent" notification asks you to open the app.
+- **Mark as read** clears the unread count on the phone only. MeshCore has no read receipts, so nothing is sent over the mesh.
+- **Mute channel** (phone and watch) mutes that channel, the same as the bell icon in the channel chat.
+- If the radio is disconnected, the conversation is no longer on the radio, the radio reports a send error, or the app isn't running, a "Reply not sent" notification explains why. The reply is not queued. If a split reply fails partway, earlier parts may already have been sent.
+- Replies are sent as typed; composer translation is not applied.
+
+iOS notifications do not have reply actions yet.
+
+### Android Auto
+
+MeshCore Open works in Android Auto as a notification-based messaging app. There is no MeshCore screen in the car; Android Auto provides the interface.
+
+- New direct and channel messages appear on the car display and can be read aloud.
+- Reply by voice or with a suggested reply; replies follow the rules above (splitting, failure notifications, no translation).
+- Android Auto shows **Reply** and **Mark as read**. **Mute channel** is marked as a mute action, but Android Auto only documents reply and mark-as-read for messaging apps, so mute may not appear in the car; use the phone, a watch, or the bell icon.
+- Setup: none beyond allowing MeshCore Open notifications. The app must be running with the radio connected, as for any notification.
+
+Limitations:
+
+- Only messages that arrive during the Android Auto session are shown; there is no conversation list or message history in the car.
+- You can reply to a received message, but you cannot start a new message by voice (for example, "send a MeshCore message to Public"). Android Auto does not currently offer this to third-party messaging apps.
+- Sideloaded or debug builds only appear in Android Auto when its developer setting **Unknown sources** is on.
+
+Testing with the Desktop Head Unit (DHU): enable Android Auto developer mode (tap **Version** about 10 times in Android Auto settings), turn on **Unknown sources**, choose **Start head unit server**, run `adb forward tcp:5277 tcp:5277`, then start `desktop-head-unit` from the SDK's `extras/google/auto` package. Use DHU 2.1 or newer; version 2.0 disconnects from current Android Auto releases.
 
 ### Notification Tap Behavior
 
@@ -73,15 +105,20 @@ Access via **App Settings → Notifications**:
 
 ### Per-Channel Muting
 
-Long-press a channel in the channels list → "Mute channel" / "Unmute channel". Muted channels do not generate OS notifications.
+Mute or unmute a channel from any of these places. Muted channels do not generate OS notifications.
+
+- The bell icon in the channel chat app bar
+- Long-press a channel in the channels list → "Mute channel" / "Unmute channel"
+- **Mute channel** on a channel notification (Android)
 
 There is no per-contact muting.
 
 ## Rate Limiting
 
 The notification system prevents notification storms:
-- **Minimum interval**: 3 seconds between individual notifications
-- **Batch window**: If multiple notifications arrive within 5 seconds, they are combined into a single summary notification on a fourth Android channel (`batch_summary`). The title is "MeshCore Activity" and the body lists the grouped counts (e.g., "2 messages, 1 channel message, 3 new nodes"). Batch summaries are Android-only; queued notifications that overflow the batch window are silently dropped on other platforms
+- **Minimum interval**: 3 seconds between alerts
+- **Messages**: each direct or channel message always updates its conversation notification, so Reply stays available. Messages arriving within 3 seconds of the last alert update silently instead of alerting again.
+- **Advertisements batch window**: If multiple advertisement notifications arrive within 5 seconds, they are combined into a single summary notification on a fourth Android channel (`batch_summary`). The title is "MeshCore Activity" and the body lists the count (e.g., "3 new nodes"). Batch summaries are Android-only; queued notifications that overflow the batch window are silently dropped on other platforms
 
 ## Notification Clearing
 
@@ -89,12 +126,16 @@ The notification system prevents notification storms:
 - **Opening a channel**: Cancels the channel notification and resets unread count
 - **Opening Contacts screen**: Cancels all advertisement notifications
 
+## Translation and image references
+
+Automatic incoming translation can also translate notification text when enabled with a ready local model. GIF and URL-image retrieval still need internet; receiving a notification does not make those references available offline. For image packet progress and reconstruction states, use [channel image chat](image-messages.md).
+
 ## Platform Support
 
-| Platform | Message Notifs | Badge | Background Service |
-|---|---|---|---|
-| Android | Yes | Via notification number | Yes (foreground service) |
-| iOS | Yes | Yes (app badge) | No |
-| macOS | Yes | Yes | No |
-| Windows | Yes | No | No |
-| Linux | Yes (if D-Bus available) | No | No |
+| Platform | Message Notifs | Reply / Mute Actions | Android Auto | Badge | Background Service |
+|---|---|---|---|---|---|
+| Android | Yes | Yes (incl. watches) | Yes | Via notification number | Yes (foreground service) |
+| iOS | Yes | No | — | Yes (app badge) | No |
+| macOS | Yes | No | — | Yes | No |
+| Windows | Yes | No | — | No | No |
+| Linux | Yes (if D-Bus available) | No | — | No | No |

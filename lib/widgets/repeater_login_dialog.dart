@@ -288,6 +288,9 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      titlePadding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       title: Row(
         children: [
           AvatarCircle(
@@ -376,6 +379,9 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                               ? Icons.visibility
                               : Icons.visibility_off,
                         ),
+                        tooltip: _obscurePassword
+                            ? l10n.login_showPassword
+                            : l10n.login_hidePassword,
                         onPressed: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
@@ -412,8 +418,13 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(),
-                  Row(
+                  ExpansionTile(
+                    title: Text(l10n.login_advanced),
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: EdgeInsets.zero,
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    shape: const Border(),
+                    collapsedShape: const Border(),
                     children: [
                       Text(
                         l10n.login_routing,
@@ -504,28 +515,30 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        repeater.pathLabel(
+                          context.l10n,
+                          pathHashByteWidth: connector.pathHashByteWidth,
+                        ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () => ContactRoutingSheet.show(
+                            context,
+                            contact: repeater,
+                          ),
+                          icon: const Icon(Icons.timeline, size: 18),
+                          label: Text(l10n.login_managePaths),
+                        ),
+                      ),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    repeater.pathLabel(
-                      context.l10n,
-                      pathHashByteWidth: connector.pathHashByteWidth,
-                    ),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () =>
-                          ContactRoutingSheet.show(context, contact: repeater),
-                      icon: const Icon(Icons.timeline, size: 18),
-                      label: Text(l10n.login_managePaths),
-                    ),
                   ),
                 ],
               ),

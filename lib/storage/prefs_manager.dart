@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,13 +41,18 @@ class PrefsManager {
   static Future<void> initialize() async {
     if (_instance != null) return;
     if (Platform.isWindows || Platform.isLinux) {
+      Directory? supportDirectory;
       try {
-        await prepareDesktopPreferencesFile(
-          await getApplicationSupportDirectory(),
-        );
+        supportDirectory = await getApplicationSupportDirectory();
       } on MissingPluginException {
         // No path_provider in this process (a unit test): there is no file
         // to look at, and the mock preferences need no repair.
+      } on FlutterError {
+        // No binding either, a plain `test()` without a widget binding: the
+        // platform channel cannot even be reached. Same answer.
+      }
+      if (supportDirectory != null) {
+        await prepareDesktopPreferencesFile(supportDirectory);
       }
     }
     _instance = await SharedPreferences.getInstance();

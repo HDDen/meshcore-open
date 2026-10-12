@@ -46,6 +46,11 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   @override
   bool get isUsbTransportConnected => fakeUsbTransportConnected;
 
+  // The offline-history button lists the node scopes of the message
+  // history, a storage no screen test opens.
+  @override
+  List<OfflineHistorySource> get offlineHistorySources => const [];
+
   @override
   Future<List<String>> listUsbPorts() async {
     if (listUsbPortsImpl != null) {

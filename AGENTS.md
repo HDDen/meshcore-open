@@ -16,7 +16,9 @@
 - Reboot: the UI sends `sendCliCommand('reboot')` (the raw `cmdReboot` code exists but no frame builder is wired in yet).
 - Companion radio format: `cmdSendTxtMsg` expects `[cmd][txt_type][attempt][timestamp x4][pub_key_prefix x6][text...]` (no flags/full pubkey). CLI commands use `txtTypeCliData` in the same format, and the app maps `forceFlood` to attempt `3` when sending.
 - Group text packets (`PAYLOAD_TYPE_GRP_TXT`): payload is `[channel_hash (1)][MAC (2)][encrypted data...]`. Decrypted data layout is `[timestamp x4][txt_type][text...]` where text is `"sender: message"` (see MeshCore `BaseChatMesh::sendGroupMessage`). Sender identity is not in the payload; use `PUSH_CODE_LOG_RX_DATA` raw packet path bytes for origin hash when available.
-- Identity hash: `PATH_HASH_SIZE` is 1 byte; it is the prefix of the public key (see `Identity::copyHashTo`). Flooded packets append this hash to the path as they traverse hops. Self-identification via log data should compare sender name and presence of self pubkey prefix within the path bytes.
+- Routing hashes are public-key prefixes. Firmware negotiation currently supports 1–3 bytes per hop; packed path metadata must be decoded before counting or reversing hops. Use per-path hash width, not a fixed one-byte stride. See [routing paths](documentation/routing-paths.md).
+- Regions: channel messages retain their send region; incoming regions are resolved from raw transport-flood codes against locally known names. Replies use a known original region by default, with an opt-out chip. See [regions](documentation/regions.md).
+- Images: channel GRP_DATA framing is defined in `lib/services/image_chunk_transport.dart`. Native codec/model requirements are documented in [image messages](documentation/image-messages.md).
 
 ## Build, Test, and Development Commands
 - `~/flutter/bin/flutter pub get` installs dependencies (or `flutter pub get` if Flutter is on PATH).
@@ -52,3 +54,6 @@ Use MCP agentmemory manually only when explicitly useful, for example:
 Do not save secrets, tokens, passwords, API keys, credentials, private personal data, or temporary/debug-only details.
 
 If agentmemory is unavailable, continue the task normally and mention that memory could not be read or saved.
+## Documentation maintenance
+
+Keep user instructions in `documentation/` and use [ble-protocol.md](documentation/ble-protocol.md) as the canonical protocol reference. Update affected guides, feature limitations, and screenshots when changing user-facing behavior. Read [CONTRIBUTING.md](CONTRIBUTING.md) for branch and review requirements.

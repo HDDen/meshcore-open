@@ -185,6 +185,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(mapShowGuessedLocations: value));
   }
 
+  Future<void> setMapClusterNodes(bool value) async {
+    await updateSettings(_settings.copyWith(mapClusterNodes: value));
+  }
+
   Future<void> setEnableMessageTracing(bool value) async {
     await updateSettings(_settings.copyWith(enableMessageTracing: value));
   }
@@ -526,6 +530,18 @@ class AppSettingsService extends ChangeNotifier {
             AppSettings.normalizeChannelResendTimeoutSeconds(value),
       ),
     );
+  }
+
+  Future<void> setChannelMinHopsEnabled(bool value) async {
+    await updateSettings(_settings.copyWith(channelMinHopsEnabled: value));
+  }
+
+  Future<void> setChannelMinHops(int value) async {
+    await updateSettings(_settings.copyWith(channelMinHops: value));
+  }
+
+  Future<void> setChannelMinHopsRetries(int value) async {
+    await updateSettings(_settings.copyWith(channelMinHopsRetries: value));
   }
 
   Future<void> setThemeMode(String value) async {

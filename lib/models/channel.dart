@@ -25,6 +25,9 @@ class Channel {
 
   bool get isEmpty => name.isEmpty && psk.every((b) => b == 0);
 
+  /// Key used for per-channel notification muting.
+  String get muteKey => name.isEmpty ? 'Channel $index' : name;
+
   bool get isPublicChannel => pskHex == publicChannelPsk;
 
   bool get isHashtagChannel => name.startsWith('#');

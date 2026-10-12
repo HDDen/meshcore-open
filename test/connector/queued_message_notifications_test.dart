@@ -513,11 +513,15 @@ Future<void> main() async {
 
       final call = plugin.shown.single;
       expect(_NotificationPlugin.argumentsOf(call)['body'], 'MCOimg');
+      // Every message notification is a MessagingStyle conversation (Android
+      // Auto and the reply actions need it), so the picture rides as the
+      // large icon rather than a big picture.
       final details = _NotificationPlugin.androidDetailsOf(call);
-      expect(details['style'], AndroidNotificationStyle.bigPicture.index);
+      expect(details['style'], AndroidNotificationStyle.messaging.index);
       final style = details['styleInformation'] as Map<Object?, Object?>;
-      expect(style['bigPicture'], isA<Uint8List>());
-      expect(style['bigPicture'] as Uint8List, isNotEmpty);
+      final messages = style['messages'] as List<Object?>;
+      expect(messages, hasLength(1));
+      expect((messages.single as Map<Object?, Object?>)['text'], 'MCOimg');
       expect(details['largeIcon'] as Uint8List, isNotEmpty);
 
       // Apple's attachment and the Windows toast take the picture as a file

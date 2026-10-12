@@ -34,6 +34,11 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   @override
   String? get activeTcpEndpoint => initialEndpoint;
 
+  // The offline-history button lists the node scopes of the message
+  // history, a storage no screen test opens.
+  @override
+  List<OfflineHistorySource> get offlineHistorySources => const [];
+
   @override
   Future<void> connectTcp({
     required String host,

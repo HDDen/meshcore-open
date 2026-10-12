@@ -601,7 +601,7 @@ class _MapScreenState extends State<MapScreen>
                   if (hasSelf)
                     IconButton(
                       icon: const Icon(Icons.my_location),
-                      tooltip: context.l10n.map_setAsMyLocation,
+                      tooltip: context.l10n.map_centerOnMe,
                       onPressed: () => _mapController.move(
                         selfPosition,
                         max(_zoom, 14),
@@ -3513,6 +3513,7 @@ class _MapScreenState extends State<MapScreen>
       showChatNodes: settings.mapShowChatNodes,
       showOtherNodes: settings.mapShowOtherNodes,
       isBuildingPathTrace: _isBuildingPathTrace,
+      clusterNodes: settings.mapClusterNodes,
       pathTraceSignature: pathTraceSignature,
       wardriveHighlightActive: wardriveHighlightActive,
       wardriveDisableClustering: wardriveDisableClustering,
@@ -3613,7 +3614,8 @@ class _MapScreenState extends State<MapScreen>
       }
     }
 
-    if (_zoom >= _clusterOffZoom ||
+    if (!settings.mapClusterNodes ||
+        _zoom >= _clusterOffZoom ||
         overlapsMode ||
         _isBuildingPathTrace ||
         wardriveHighlightActive ||
@@ -4729,6 +4731,14 @@ class _MapScreenState extends State<MapScreen>
                     color: MapPalette.selected,
                     onTap: () => settingsService.setMapShowChatNodes(
                       !settings.mapShowChatNodes,
+                    ),
+                  ),
+                  _mapChip(
+                    label: context.l10n.map_groupChip,
+                    selected: settings.mapClusterNodes,
+                    color: MapPalette.cluster,
+                    onTap: () => settingsService.setMapClusterNodes(
+                      !settings.mapClusterNodes,
                     ),
                   ),
                 ],
@@ -6968,6 +6978,16 @@ class _MapScreenState extends State<MapScreen>
                               service.setMapShowMarkers(value),
                         ),
                         SwitchListTile(
+                          title: Text(sheetContext.l10n.map_clusterNodes),
+                          subtitle: Text(
+                            sheetContext.l10n.map_clusterNodesSubtitle,
+                          ),
+                          value: settings.mapClusterNodes,
+                          dense: true,
+                          onChanged: (value) =>
+                              service.setMapClusterNodes(value),
+                        ),
+                        SwitchListTile(
                           title: Text(
                             sheetContext.l10n.map_showGuessedLocations,
                           ),
@@ -7995,6 +8015,7 @@ class _NodeMarkersCacheKey {
   final bool showChatNodes;
   final bool showOtherNodes;
   final bool isBuildingPathTrace;
+  final bool clusterNodes;
   final int pathTraceSignature;
   final bool wardriveHighlightActive;
   final bool wardriveDisableClustering;
@@ -8019,6 +8040,7 @@ class _NodeMarkersCacheKey {
     required this.showChatNodes,
     required this.showOtherNodes,
     required this.isBuildingPathTrace,
+    required this.clusterNodes,
     required this.pathTraceSignature,
     required this.wardriveHighlightActive,
     required this.wardriveDisableClustering,
@@ -8046,6 +8068,7 @@ class _NodeMarkersCacheKey {
         showChatNodes == other.showChatNodes &&
         showOtherNodes == other.showOtherNodes &&
         isBuildingPathTrace == other.isBuildingPathTrace &&
+        clusterNodes == other.clusterNodes &&
         pathTraceSignature == other.pathTraceSignature &&
         wardriveHighlightActive == other.wardriveHighlightActive &&
         wardriveDisableClustering == other.wardriveDisableClustering &&
@@ -8072,6 +8095,7 @@ class _NodeMarkersCacheKey {
     showChatNodes,
     showOtherNodes,
     isBuildingPathTrace,
+    clusterNodes,
     pathTraceSignature,
     wardriveHighlightActive,
     wardriveDisableClustering,

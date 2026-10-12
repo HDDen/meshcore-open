@@ -1,6 +1,6 @@
 # Privacy Policy for MeshCore Open
 
-**Last Updated:** August 23, 2026
+**Last Updated:** September 27, 2026
 
 ## Introduction
 
@@ -30,6 +30,9 @@ The App stores the following data **locally on your device**:
 - **Message History**: Path history for message routing
 - **Debug Logs**: Optional BLE and app debug logs (if enabled by user)
 - **Cached Map Tiles**: Offline map data for the mapping feature
+- **Images and Models**: Received image bitstreams, reconstructed images, and downloaded translation/image model files
+- **Communities and Credentials**: Community secrets and repeater passwords when you choose to save them
+- **Regions**: Saved region names, per-radio default/channel selections, and message-region metadata
 
 This locally stored data is not transmitted to the MeshCore Open developer. Some features may send specific data to third-party services as described in the Third-Party Services section.
 
@@ -51,7 +54,7 @@ Required by Android for BLE scanning on Android 11 and below. MeshCore Open does
 ### Internet Permission
 - **INTERNET**
 
-Used for features that access third-party internet services, including map tiles, Line-of-Sight elevation lookups, optional model downloads, and optional GIF search.
+Used for features that access third-party internet services, including map tiles, Line-of-Sight elevation lookups, optional model downloads, GIF search/display, and optional URL image previews.
 
 ### Notification Permission
 - **POST_NOTIFICATIONS** (Android 13+)
@@ -62,6 +65,10 @@ Used to display notifications for incoming messages when the app is in the backg
 - **FOREGROUND_SERVICE, FOREGROUND_SERVICE_CONNECTED_DEVICE, WAKE_LOCK**
 
 Used to maintain BLE connection with your MeshCore device while the app is in the background.
+
+### Camera and Photo Library
+
+Camera access is used for contact and community QR scanning. Photo-library access is used when you select a photo for mesh image messaging. Selected photos are encoded locally for transmission over the mesh; the App does not upload them to a model service for inference.
 
 ## Third-Party Services
 
@@ -90,7 +97,13 @@ The App includes a GIF picker feature powered by Giphy. When you use the GIF sea
 - Your device's IP address is visible to Giphy
 - Giphy may collect usage data according to their privacy policy
 
-GIF search is optional and only activated when you choose to use it. See [Giphy's Privacy Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy) for more information about how they handle data.
+GIF search is optional and activated through the picker. Displaying a GIF reference received in a chat also requests image content from Giphy’s CDN, even if you did not perform a search. See [Giphy's Privacy Policy](https://support.giphy.com/hc/en-us/articles/360032872931-GIPHY-Privacy-Policy) for more information about how they handle data.
+
+### URL Image Previews and Custom Model URLs
+
+When URL images are enabled for a contact or channel, supported links in messages can cause requests to the referenced image host, sharing-page provider, or IPFS gateway. These services receive the requested URL and normal connection information, including your IP address. Requests may occur when chat content is displayed rather than only after tapping the link. Disable URL images in the contact/channel settings to disable this preview feature.
+
+If you choose a custom model URL, model requests go to that host rather than only Hugging Face. Translation and mesh-image inference run locally after model installation; message content and selected photos are not sent to the model host for inference.
 
 ## Mesh Network Communications
 
@@ -98,7 +111,7 @@ Messages sent through the MeshCore mesh network are transmitted over radio frequ
 
 ## Data Security
 
-All data stored locally on your device uses standard Flutter/Android storage mechanisms. The App does not implement additional encryption for locally stored data beyond what the operating system provides.
+Local data uses standard platform storage: preferences/JSON for metadata and files for models, images, and caches. Saved secrets and passwords are local data too. The App does not implement additional encryption for locally stored data beyond what the operating system provides.
 
 ## Children's Privacy
 
@@ -106,7 +119,7 @@ The App does not knowingly collect any personal information from children under 
 
 ## Open Source
 
-MeshCore Open is open-source software. You can review the complete source code to verify these privacy practices at [the project repository].
+MeshCore Open is open-source software. You can review the complete source code to verify these privacy practices at [the project repository](https://github.com/zjs81/meshcore-open).
 
 ## Changes to This Policy
 
@@ -114,8 +127,8 @@ We may update this Privacy Policy from time to time. Any changes will be reflect
 
 ## Contact
 
-If you have questions about this Privacy Policy or the App's privacy practices, please open an issue on the project's GitHub repository.
+If you have questions about this Privacy Policy or the App's privacy practices, please open an issue on the [project issue tracker](https://github.com/zjs81/meshcore-open/issues).
 
 ---
 
-**Summary**: MeshCore Open does not use the phone's GPS for location, does not include analytics, and does not collect personal information for the developer. Some optional features communicate with third-party services, including map tile providers, Open-Meteo for LOS elevation lookups, Hugging Face for model downloads, and Giphy for GIF search.
+**Summary**: MeshCore Open does not use the phone's GPS for location, does not include analytics, and does not collect personal information for the developer. Some optional features communicate with third-party services, including map tile providers, Open-Meteo for LOS elevation lookups, Hugging Face for model downloads, Giphy for GIF search/display, and image hosts/gateways for enabled URL previews.

@@ -1317,3 +1317,29 @@ String? parseDefaultFloodScopeFrame(Uint8List frame) {
   if (name.isEmpty) return '';
   return name.startsWith('#') ? name.substring(1) : name;
 }
+
+/// The 16-byte scope key of a region: SHA-256 of its `#name`.
+Uint8List floodScopeKeyForRegion(String region) {
+  final name = region.startsWith('#') ? region : '#$region';
+  final hash = crypto.sha256.convert(utf8.encode(name)).bytes;
+  return Uint8List.fromList(hash.sublist(0, 16));
+}
+
+/// The two transport-code bytes a flood packet carries under [scopeKey]:
+/// HMAC-SHA256 over the payload type and payload, the all-zero and all-one
+/// codes being reserved by the firmware.
+Uint8List floodTransportCode({
+  required Uint8List scopeKey,
+  required int payloadType,
+  required Uint8List payload,
+}) {
+  final input = Uint8List(1 + payload.length)
+    ..[0] = payloadType
+    ..setRange(1, 1 + payload.length, payload);
+  final code = crypto.Hmac(crypto.sha256, scopeKey).convert(input).bytes;
+  if (code[0] == 0 && code[1] == 0) return Uint8List.fromList([1, 0]);
+  if (code[0] == 0xFF && code[1] == 0xFF) {
+    return Uint8List.fromList([0xFE, 0xFF]);
+  }
+  return Uint8List.fromList(code.sublist(0, 2));
+}

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' show Directory, File, FileSystemException, Platform;
+import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -18,7 +19,9 @@ import '../helpers/windows_notification_identity.dart';
 import '../l10n/app_localizations.dart';
 import '../storage/data_root.dart';
 import '../utils/app_logger.dart';
+import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
+import 'notification_reply.dart';
 
 typedef NotificationTapHandler = FutureOr<void> Function(String payload);
 
@@ -43,6 +46,13 @@ class NotificationService {
   /// Set the locale for notification strings (call when app locale changes)
   void setLocale(Locale locale) {
     _locale = locale;
+    // The background action isolate reads this to localize its notices.
+    try {
+      PrefsManager.instance.setString(
+        notificationLanguagePrefsKey,
+        locale.languageCode,
+      );
+    } catch (_) {}
   }
 
   void setTapHandler(NotificationTapHandler handler) {
@@ -54,6 +64,37 @@ class NotificationService {
   }
 
   AppLocalizations get _l10n => lookupAppLocalizations(_locale);
+
+  String? _selfName;
+
+  /// Name of the connected radio, shown as the sender of your own replies.
+  void setSelfName(String? name) {
+    _selfName = name;
+  }
+
+  // Recent messages per conversation notification id, so each notification
+  // shows the conversation (Android MessagingStyle, used by Android Auto).
+  static const _maxConversationMessages = 6;
+  final Map<int, _Conversation> _conversations = {};
+
+  // Single-subscription so actions that arrive before the connector listens
+  // (e.g. during startup) are buffered instead of dropped.
+  final StreamController<NotificationReply> _replies =
+      StreamController<NotificationReply>();
+  ReceivePort? _replyPort;
+
+  /// Reply, mark-as-read and mute actions taken on message notifications.
+  /// Has a single listener (the connector).
+  Stream<NotificationReply> get replies => _replies.stream;
+
+  /// Stops receiving notification actions. The background handler then tells
+  /// the user the app isn't running instead of forwarding to nobody.
+  void releaseReplyPort() {
+    if (_replyPort == null) return;
+    IsolateNameServer.removePortNameMapping(notificationReplyPortName);
+    _replyPort!.close();
+    _replyPort = null;
+  }
 
   String _logSafe(String value) {
     final sanitized = value.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), ' ');
@@ -90,6 +131,7 @@ class NotificationService {
     _pendingNotifications.clear();
     _isBatchingActive = false;
     _suppressNotifications = false;
+    _conversations.clear();
   }
 
   Future<void> initialize() async {
@@ -144,7 +186,10 @@ class NotificationService {
       await _notifications.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: _onNotificationTapped,
+        onDidReceiveBackgroundNotificationResponse:
+            notificationActionBackgroundHandler,
       );
+      _registerReplyPort();
       _isInitialized = true;
       await _handleLaunchNotificationTap();
     } catch (e) {
@@ -192,6 +237,38 @@ class NotificationService {
     }
   }
 
+  void _registerReplyPort() {
+    if (kIsWeb || _replyPort != null) return;
+    final port = ReceivePort();
+    IsolateNameServer.removePortNameMapping(notificationReplyPortName);
+    IsolateNameServer.registerPortWithName(
+      port.sendPort,
+      notificationReplyPortName,
+    );
+    port.listen((dynamic message) {
+      if (message is! Map) return;
+      _dispatchAction(
+        actionId: message['actionId'] as String?,
+        payload: message['payload'] as String?,
+        input: message['input'] as String?,
+      );
+    });
+    _replyPort = port;
+  }
+
+  void _dispatchAction({
+    required String? actionId,
+    required String? payload,
+    String? input,
+  }) {
+    final reply = NotificationReply.parse(
+      actionId: actionId,
+      payload: payload,
+      input: input,
+    );
+    if (reply != null) _replies.add(reply);
+  }
+
   static bool _isDbusSessionAvailable() {
     final addr = Platform.environment['DBUS_SESSION_BUS_ADDRESS'];
     if (addr != null && addr.isNotEmpty) return true;
@@ -213,6 +290,7 @@ class NotificationService {
   // rechecked because the user can enable notifications in system settings
   // while the app is running.
   bool? _canNotify;
+  static const _permissionRequestedKey = 'notification_permission_requested';
 
   Future<bool> _ensureCanNotify() async {
     if (!await _ensureInitialized()) {
@@ -237,8 +315,9 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     if (androidPlugin != null) {
-      final enabled = await androidPlugin.areNotificationsEnabled();
-      return _canNotify = enabled ?? false;
+      final enabled = await androidPlugin.areNotificationsEnabled() ?? false;
+      if (enabled) _canNotify = true;
+      return enabled;
     }
 
     // iOS/macOS request permission during initialize(); desktop has no gate.
@@ -279,8 +358,8 @@ class NotificationService {
         >();
     if (androidPlugin != null) {
       final granted = await androidPlugin.requestNotificationsPermission();
-      _canNotify = granted ?? false;
-      return _canNotify!;
+      if (granted == true) _canNotify = true;
+      return granted ?? false;
     }
 
     // iOS permissions are requested during initialization
@@ -294,11 +373,23 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      _canNotify = granted ?? false;
-      return _canNotify!;
+      if (granted == true) _canNotify = true;
+      return granted ?? false;
     }
 
     return true;
+  }
+
+  /// Asks for the Android 13+ notification permission the first time it is
+  /// needed. Never re-prompts after the user has answered once; iOS/macOS
+  /// already prompt during [initialize].
+  Future<void> requestPermissionsOnce() async {
+    if (!PlatformInfo.isAndroid || !await _ensureInitialized()) return;
+    final prefs = PrefsManager.instance;
+    if (prefs.getBool(_permissionRequestedKey) ?? false) return;
+    if (await _ensureCanNotify()) return;
+    await prefs.setBool(_permissionRequestedKey, true);
+    await requestPermissions();
   }
 
   /// Format special message types for human-readable notifications.
@@ -518,85 +609,254 @@ class NotificationService {
     }
   }
 
-  Future<void> _showMessageNotificationImpl({
-    required String contactName,
+  List<AndroidNotificationAction> _conversationActions(bool isChannel) => [
+    AndroidNotificationAction(
+      notificationReplyActionId,
+      _l10n.notification_actionReply,
+      inputs: [
+        AndroidNotificationActionInput(label: _l10n.notification_replyHint),
+      ],
+      semanticAction: SemanticAction.reply,
+      allowGeneratedReplies: true,
+      cancelNotification: false,
+    ),
+    AndroidNotificationAction(
+      notificationMarkReadActionId,
+      _l10n.notification_actionMarkRead,
+      semanticAction: SemanticAction.markAsRead,
+      invisible: true,
+    ),
+    if (isChannel)
+      AndroidNotificationAction(
+        notificationMuteActionId,
+        _l10n.notification_actionMuteChannel,
+        semanticAction: SemanticAction.mute,
+      ),
+  ];
+
+  // Always MessagingStyle: Android Auto only handles messaging notifications
+  // in that style, so an image preview is shown as the large icon instead.
+  AndroidNotificationDetails _androidConversationDetails(
+    _Conversation conversation, {
+    int? badgeCount,
+    bool silent = false,
+  }) {
+    final imagePath = conversation.imagePath;
+    final mcoAttachment = conversation.mcoAttachment;
+    return AndroidNotificationDetails(
+      conversation.isChannel ? 'channel_messages' : 'messages',
+      conversation.isChannel ? 'Channel Messages' : 'Messages',
+      channelDescription: conversation.isChannel
+          ? 'New channel message notifications'
+          : 'New message notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      number: badgeCount,
+      silent: silent,
+      category: AndroidNotificationCategory.message,
+      // MessagingStyle leaves no room for a big picture, so an MCOimg or a
+      // URL image rides as the large icon.
+      largeIcon: mcoAttachment != null
+          ? ByteArrayAndroidBitmap(mcoAttachment.bytes)
+          : imagePath != null
+          ? FilePathAndroidBitmap(imagePath)
+          : null,
+      styleInformation: MessagingStyleInformation(
+        Person(key: 'self', name: _selfName ?? _l10n.notification_you),
+        conversationTitle: conversation.isChannel ? conversation.title : null,
+        groupConversation: conversation.isChannel,
+        messages: List<Message>.of(conversation.messages),
+      ),
+      actions: _conversationActions(conversation.isChannel),
+    );
+  }
+
+  DarwinNotificationDetails _darwinDetails(
+    String? imagePath,
+    int? badge, [
+    _MCOImageNotificationAttachment? attachment,
+  ]) => DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+    badgeNumber: badge,
+    attachments: _darwinAttachmentsFor(attachment, imagePath: imagePath),
+  );
+
+  Future<void> _showConversationNotificationImpl({
+    required int id,
+    required String payload,
+    required String title,
+    required bool isChannel,
     required String message,
     required bool urlImagesEnabled,
-    String? contactId,
+    String? senderName,
     int? badgeCount,
+    bool silent = false,
   }) async {
     if (!await _ensureCanNotify()) return;
     final mcoAttachment = await _tryBuildMcoImageAttachment(message);
-    final body = mcoAttachment == null
-        ? formatNotificationText(message)
-        : 'MCOimg';
     final imagePath = mcoAttachment == null
         ? await _resolveNotificationImagePath(
             message,
             urlImagesEnabled: urlImagesEnabled,
           ).timeout(_notificationImageTimeout, onTimeout: () => null)
         : null;
+    final preview = mcoAttachment == null
+        ? formatNotificationText(message.trim())
+        : 'MCOimg';
+    final body = preview.isEmpty
+        ? _l10n.notification_receivedNewMessage
+        : preview;
 
-    final androidDetails = AndroidNotificationDetails(
-      'messages',
-      'Messages',
-      channelDescription: 'New message notifications',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-      number: badgeCount,
-      largeIcon: mcoAttachment == null
-          ? null
-          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
-      styleInformation: mcoAttachment != null
-          ? BigPictureStyleInformation(
-              ByteArrayAndroidBitmap(mcoAttachment.bytes),
-              contentTitle: contactName,
-              summaryText: 'MCOimg',
-              hideExpandedLargeIcon: true,
-            )
-          : imagePath != null
-          ? BigPictureStyleInformation(
-              FilePathAndroidBitmap(imagePath),
-              summaryText: formatNotificationText(message),
-            )
-          : null,
-    );
-
-    final iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
-    );
-
-    final macDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
+    final conversation =
+        _conversations.putIfAbsent(
+            id,
+            () => _Conversation(
+              title: title,
+              payload: payload,
+              isChannel: isChannel,
+            ),
+          )
+          ..title = title
+          ..badgeCount = badgeCount
+          ..imagePath = imagePath
+          ..mcoAttachment = mcoAttachment;
+    final sender = isChannel ? (senderName ?? title) : title;
+    conversation.add(
+      Message(
+        body,
+        DateTime.now(),
+        Person(key: isChannel ? 'sender:$sender' : payload, name: sender),
+      ),
+      _maxConversationMessages,
     );
 
     final notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-      macOS: macDetails,
+      android: _androidConversationDetails(
+        conversation,
+        badgeCount: badgeCount,
+        silent: silent,
+      ),
+      iOS: _darwinDetails(imagePath, badgeCount, mcoAttachment),
+      macOS: _darwinDetails(imagePath, badgeCount, mcoAttachment),
       linux: _linuxDetailsFor(mcoAttachment),
       windows: _windowsDetailsFor(mcoAttachment),
     );
 
     try {
       await _notifications.show(
-        id: contactId?.hashCode ?? 0,
-        title: contactName,
-        body: body,
+        id: id,
+        title: title,
+        body: _collapsedBody(conversation),
         notificationDetails: notificationDetails,
-        payload: 'message:$contactId',
+        payload: payload,
       );
     } catch (e) {
       debugPrint('Failed to show message notification: $e');
+    }
+  }
+
+  /// Text shown when the notification is collapsed. Channel messages keep
+  /// the sender prefix, including after your own reply.
+  String _collapsedBody(_Conversation conversation) {
+    final last = conversation.messages.last;
+    if (!conversation.isChannel) return last.text;
+    final sender = last.person?.name ?? _selfName ?? _l10n.notification_you;
+    return '$sender: ${last.text}';
+  }
+
+  int _conversationId(NotificationReply reply) => reply.isChannel
+      ? reply.channelIndex!.hashCode
+      : reply.contactKeyHex!.hashCode;
+
+  /// Adds the user's reply to the conversation notification. Android keeps
+  /// showing a progress spinner on a replied notification until it is updated.
+  /// Pass the current [badgeCount]: an update replaces the whole notification,
+  /// and the Android launcher badge comes from the notification number.
+  Future<void> showOwnReply(
+    NotificationReply reply,
+    String text, {
+    int? badgeCount,
+  }) async {
+    if (!await _ensureInitialized()) return;
+    final id = _conversationId(reply);
+    final conversation = _conversations[id];
+    if (conversation == null) {
+      await _notifications.cancel(id: id);
+      return;
+    }
+    conversation.badgeCount = badgeCount ?? conversation.badgeCount;
+    conversation.add(
+      Message(text, DateTime.now(), null),
+      _maxConversationMessages,
+    );
+    await _repostConversation(id, conversation);
+  }
+
+  /// Tells the user a notification reply could not be sent.
+  Future<void> showReplyFailed(
+    NotificationReply reply,
+    NotificationReplyFailure failure, {
+    int? badgeCount,
+  }) async {
+    if (!await _ensureInitialized()) return;
+    final reason = switch (failure) {
+      NotificationReplyFailure.notConnected =>
+        _l10n.notification_replyNotConnected,
+      NotificationReplyFailure.unavailable =>
+        _l10n.notification_replyUnavailable,
+      NotificationReplyFailure.tooLong => _l10n.notification_replyTooLong,
+      NotificationReplyFailure.sendFailed => _l10n.notification_replySendFailed,
+    };
+    final id = _conversationId(reply);
+    final conversation = _conversations[id];
+    if (conversation != null) {
+      conversation.badgeCount = badgeCount ?? conversation.badgeCount;
+      await _repostConversation(id, conversation);
+    } else {
+      await _notifications.cancel(id: id);
+    }
+    try {
+      await _notifications.show(
+        id: 'reply_failed:$id'.hashCode,
+        title: _l10n.notification_replyFailedTitle,
+        body: reason,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'messages',
+            'Messages',
+            channelDescription: 'New message notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+        ),
+        payload: conversation?.payload,
+      );
+    } catch (e) {
+      debugPrint('Failed to show reply failure notification: $e');
+    }
+  }
+
+  Future<void> _repostConversation(int id, _Conversation conversation) async {
+    try {
+      await _notifications.show(
+        id: id,
+        title: conversation.title,
+        body: _collapsedBody(conversation),
+        notificationDetails: NotificationDetails(
+          android: _androidConversationDetails(
+            conversation,
+            badgeCount: conversation.badgeCount,
+            silent: true,
+          ),
+        ),
+        payload: conversation.payload,
+      );
+    } catch (e) {
+      debugPrint('Failed to update message notification: $e');
     }
   }
 
@@ -649,94 +909,6 @@ class NotificationService {
     }
   }
 
-  Future<void> _showChannelMessageNotificationImpl({
-    required String channelName,
-    required String message,
-    required bool urlImagesEnabled,
-    int? channelIndex,
-    int? badgeCount,
-  }) async {
-    if (!await _ensureCanNotify()) return;
-    final mcoAttachment = await _tryBuildMcoImageAttachment(message);
-    final imagePath = mcoAttachment == null
-        ? await _resolveNotificationImagePath(
-            message,
-            urlImagesEnabled: urlImagesEnabled,
-          ).timeout(_notificationImageTimeout, onTimeout: () => null)
-        : null;
-
-    final androidDetails = AndroidNotificationDetails(
-      'channel_messages',
-      'Channel Messages',
-      channelDescription: 'New channel message notifications',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-      number: badgeCount,
-      largeIcon: mcoAttachment == null
-          ? null
-          : ByteArrayAndroidBitmap(mcoAttachment.bytes),
-      styleInformation: mcoAttachment != null
-          ? BigPictureStyleInformation(
-              ByteArrayAndroidBitmap(mcoAttachment.bytes),
-              contentTitle: channelName,
-              summaryText: 'MCOimg',
-              hideExpandedLargeIcon: true,
-            )
-          : imagePath != null
-          ? BigPictureStyleInformation(
-              FilePathAndroidBitmap(imagePath),
-              summaryText: formatNotificationText(message),
-            )
-          : null,
-    );
-
-    final iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
-    );
-
-    final macDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      badgeNumber: badgeCount,
-      attachments: _darwinAttachmentsFor(mcoAttachment, imagePath: imagePath),
-    );
-
-    final notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-      macOS: macDetails,
-      linux: _linuxDetailsFor(mcoAttachment),
-      windows: _windowsDetailsFor(mcoAttachment),
-    );
-
-    final preview = mcoAttachment == null
-        ? formatNotificationText(message.trim())
-        : 'MCOimg';
-    final body = preview.isEmpty
-        ? _l10n.notification_receivedNewMessage
-        : preview;
-
-    try {
-      await _notifications.show(
-        id:
-            channelIndex?.hashCode ??
-            DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF,
-        title: channelName,
-        body: body,
-        notificationDetails: notificationDetails,
-        payload: 'channel:$channelIndex',
-      );
-    } catch (e) {
-      debugPrint('Failed to show channel notification: $e');
-    }
-  }
-
   /// Returns a privacy-safe identifier for debug logging.
   /// - advert: shows device name (body contains contactName)
   /// - message: shows "from: sender" (avoids logging message content)
@@ -770,6 +942,7 @@ class NotificationService {
   }
 
   Future<void> cancelAll() async {
+    _conversations.clear();
     await _notifications.cancelAll();
   }
 
@@ -814,6 +987,7 @@ class NotificationService {
     int totalUnreadCount,
   ) async {
     if (!await _ensureInitialized()) return;
+    _conversations.remove(contactId.hashCode);
     await _notifications.cancel(id: contactId.hashCode);
     await _updateBadge(totalUnreadCount);
   }
@@ -824,6 +998,7 @@ class NotificationService {
     int totalUnreadCount,
   ) async {
     if (!await _ensureInitialized()) return;
+    _conversations.remove(channelIndex.hashCode);
     await _notifications.cancel(id: channelIndex.hashCode);
     await _updateBadge(totalUnreadCount);
   }
@@ -919,7 +1094,8 @@ class NotificationService {
       _PendingNotification(
         type: _NotificationType.channelMessage,
         title: channelName,
-        body: '$senderName: $message',
+        body: message,
+        senderName: senderName,
         urlImagesEnabled: urlImagesEnabled,
         id: channelIndex?.toString(),
         badgeCount: badgeCount,
@@ -929,10 +1105,20 @@ class NotificationService {
 
   Future<void> _queueNotification(_PendingNotification notification) async {
     final now = DateTime.now();
+    final throttled =
+        _lastNotificationTime != null &&
+        now.difference(_lastNotificationTime!) < _minNotificationInterval;
+
+    // Messages always update their conversation notification so the reply
+    // action stays available; during a burst they update silently.
+    if (notification.type != _NotificationType.advert) {
+      _showNotificationImmediately(notification, silent: throttled);
+      if (!throttled) _lastNotificationTime = now;
+      return;
+    }
 
     // If we recently showed a notification, start batching
-    if (_lastNotificationTime != null &&
-        now.difference(_lastNotificationTime!) < _minNotificationInterval) {
+    if (throttled) {
       _pendingNotifications.add(notification);
       debugPrint(
         '[Notification] queued: ${notification.type.name} (${_getNotificationIdentifier(notification)})',
@@ -974,17 +1160,21 @@ class NotificationService {
   }
 
   Future<void> _showNotificationImmediately(
-    _PendingNotification notification,
-  ) async {
+    _PendingNotification notification, {
+    bool silent = false,
+  }) async {
     try {
       switch (notification.type) {
         case _NotificationType.message:
-          await _showMessageNotificationImpl(
-            contactName: notification.title,
+          await _showConversationNotificationImpl(
+            id: notification.id?.hashCode ?? 0,
+            payload: 'message:${notification.id}',
+            title: notification.title,
+            isChannel: false,
             message: notification.body,
             urlImagesEnabled: notification.urlImagesEnabled,
-            contactId: notification.id,
             badgeCount: notification.badgeCount,
+            silent: silent,
           );
           break;
         case _NotificationType.advert:
@@ -995,12 +1185,19 @@ class NotificationService {
           );
           break;
         case _NotificationType.channelMessage:
-          await _showChannelMessageNotificationImpl(
-            channelName: notification.title,
+          final channelIndex = int.tryParse(notification.id ?? '');
+          await _showConversationNotificationImpl(
+            id:
+                channelIndex?.hashCode ??
+                DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF,
+            payload: 'channel:$channelIndex',
+            title: notification.title,
+            isChannel: true,
             message: notification.body,
+            senderName: notification.senderName,
             urlImagesEnabled: notification.urlImagesEnabled,
-            channelIndex: int.tryParse(notification.id ?? ''),
             badgeCount: notification.badgeCount,
+            silent: silent,
           );
           break;
       }
@@ -1121,6 +1318,7 @@ class _PendingNotification {
   final _NotificationType type;
   final String title;
   final String body;
+  final String? senderName;
   final bool urlImagesEnabled;
   final String? id;
   final int? badgeCount;
@@ -1129,8 +1327,30 @@ class _PendingNotification {
     required this.type,
     required this.title,
     required this.body,
+    this.senderName,
     this.urlImagesEnabled = false,
     this.id,
     this.badgeCount,
   });
+}
+
+class _Conversation {
+  String title;
+  int? badgeCount;
+  String? imagePath;
+  _MCOImageNotificationAttachment? mcoAttachment;
+  final String payload;
+  final bool isChannel;
+  final List<Message> messages = [];
+
+  _Conversation({
+    required this.title,
+    required this.payload,
+    required this.isChannel,
+  });
+
+  void add(Message message, int max) {
+    messages.add(message);
+    if (messages.length > max) messages.removeRange(0, messages.length - max);
+  }
 }

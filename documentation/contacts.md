@@ -109,6 +109,10 @@ Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `m
 ### Import from Discovered Contacts
 Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). An overflow "Delete All" option clears all discovered contacts.
 
+### Import from a QR Code
+
+Choose **Scan QR Code** from the Contacts overflow menu or the add-contact sheet. Allow camera access and scan a compatible contact QR code, or use **Scan QR from Gallery** on the scanner screen to import a QR code from a saved image. Contact QR import is separate from community QR scanning; use Channels for community codes.
+
 ## Contact Sharing Format
 
 Contacts are shared using the `meshcore://` URI scheme:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
 
 /// MeshCore shared design kit.
@@ -192,8 +193,10 @@ class StatTile extends StatelessWidget {
                   label.toUpperCase(),
                   style: MeshTheme.accentLabel(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 9,
+                    fontSize: 11,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -346,11 +349,14 @@ class RouteChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = isDirect
-        ? (hops == null || hops == 0
-              ? 'DIRECT'
-              : '$hops HOP${hops == 1 ? '' : 'S'}')
-        : 'FLOOD';
+    final l10n = context.l10n;
+    final label =
+        (isDirect
+                ? (hops == null || hops == 0
+                      ? l10n.chat_direct
+                      : l10n.chat_hopsCount(hops!))
+                : l10n.routing_modeFlood)
+            .toUpperCase();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -512,6 +518,7 @@ class BottomSheetHeader extends StatelessWidget {
               ?trailing,
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],

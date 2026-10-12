@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
+import 'package:meshcore_open/screens/telemetry_screen.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
@@ -77,6 +78,18 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
       appBar: AppBar(
         title: Text(l10n.radioStats_screenTitle),
         centerTitle: true,
+        actions: [
+          Selector<MeshCoreConnector, bool>(
+            selector: (_, c) => c.isConnected,
+            builder: (context, connected, _) => IconButton(
+              icon: const Icon(Icons.thermostat),
+              tooltip: l10n.contact_telemetry,
+              onPressed: connected
+                  ? () => pushSelfTelemetryScreen(context)
+                  : null,
+            ),
+          ),
+        ],
       ),
       body: Selector<MeshCoreConnector, ({bool connected, bool supported})>(
         selector: (_, c) => (
@@ -109,8 +122,8 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   if (stats != null) ...[
-                    const SectionHeader(
-                      'Signal',
+                    SectionHeader(
+                      l10n.radioStats_sectionSignal,
                       padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                     ),
                     MeshCard(
@@ -144,8 +157,8 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
                         ],
                       ),
                     ),
-                    const SectionHeader(
-                      'Airtime',
+                    SectionHeader(
+                      l10n.radioStats_sectionAirtime,
                       padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                     ),
                     MeshCard(

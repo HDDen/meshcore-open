@@ -13,7 +13,10 @@ void main() {
         McoImageOriginalFormat.lottie,
       );
       expect(isMcoImageOriginalFileName('animation.json'), isFalse);
-      expect(isMcoImageOriginalFileName('animation.webp'), isFalse);
+      expect(
+        mcoImageOriginalFormatForFileName('animation.webp'),
+        McoImageOriginalFormat.webp,
+      );
       expect(isMcoImageOriginalFileName('animation.apng'), isFalse);
     });
 
@@ -23,6 +26,7 @@ void main() {
         'preview.gif',
         'preview.png',
         'preview.jpg',
+        'preview.webp',
         'preview.lottie',
         'preview.lottie.json',
       ]..sort(compareMcoImageOriginalFileNames);
@@ -30,6 +34,7 @@ void main() {
       expect(names, [
         'preview.lottie.json',
         'preview.lottie',
+        'preview.webp',
         'preview.png',
         'preview.gif',
         'preview.jpg',

@@ -219,3 +219,7 @@ Nine configuration cards, each with its own per-field refresh button(s):
 - Some changes (e.g. radio frequency) require a reboot; the firmware response triggers an orange "reboot needed" snackbar
 - Advertisement interval sliders reset to defaults when re-enabled (local: 60 min, flood: 3 hours)
 - **Erase Filesystem** does NOT send any command over the air — tapping it only shows a snackbar explaining the operation requires physical serial access
+
+## Region configuration and companion statistics
+
+Repeater region commands configure the relay’s forwarding policy. The app’s [region list and channel selector](regions.md) choose scopes for outgoing channel floods; adding a name locally does not configure a repeater. [Companion radio statistics](radio-statistics.md) describe your paired radio rather than the remote repeater shown here.

@@ -72,6 +72,7 @@ import '../services/app_settings_service.dart';
 import '../services/background_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../services/translation_service.dart';
+import '../services/notification_reply.dart';
 import '../services/notification_service.dart';
 import 'meshcore_connector_usb.dart';
 import 'meshcore_connector_tcp.dart';
@@ -243,6 +244,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _manualDisconnect = false;
   bool _isRecoveringConnection = false;
   MeshCoreTransportType? _lastManualDisconnectTransport;
+
+  /// Non-null while [disconnect] is tearing the transport down. Connect paths
+  /// join it so a teardown cannot finish after a new connection and reset the
+  /// state to `disconnected`. USB made this reachable: its native close now
+  /// waits out the kernel's closing_wait off the UI isolate, so the teardown
+  /// can outlive the tap that starts the next connection.
+  Future<void>? _activeDisconnect;
+
+  /// Set by [dispose]. A teardown started before disposal can still be running
+  /// (the USB native close waits out the kernel's closing_wait off the UI
+  /// isolate), so state publication is suppressed once the connector is gone.
+  bool _disposed = false;
   final MeshCoreUsbManager _usbManager = MeshCoreUsbManager();
   final LinuxBlePairingService _linuxBlePairingService =
       LinuxBlePairingService();
@@ -297,6 +310,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
   StreamSubscription<List<int>>? _notifySubscription;
   StreamSubscription<dynamic>? _iosBleCentralSubscription;
+  StreamSubscription<NotificationReply>? _notificationReplySubscription;
   Timer? _notifyListenersTimer;
   Timer? _selfInfoRetryTimer;
   Timer? _reconnectTimer;
@@ -3081,6 +3095,143 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Handles a reply or mark-as-read action from a message notification
+  /// (notification shade, watch, or Android Auto).
+  Future<void> handleNotificationReply(NotificationReply reply) async {
+    if (reply.action == NotificationReplyAction.mute) {
+      await _appSettingsService?.muteChannel(
+        _channelDisplayName(reply.channelIndex!),
+      );
+      await _notificationService.clearChannelNotification(
+        reply.channelIndex!,
+        getTotalUnreadCount(),
+      );
+      return;
+    }
+    if (reply.action == NotificationReplyAction.markRead) {
+      // markXRead only clears the notification when there were unread
+      // messages; clear it here otherwise so the action always dismisses it.
+      if (reply.isChannel) {
+        final index = reply.channelIndex!;
+        final hadUnread = getUnreadCountForChannelIndex(index) > 0;
+        markChannelRead(index);
+        if (!hadUnread) {
+          await _notificationService.clearChannelNotification(
+            index,
+            getTotalUnreadCount(),
+          );
+        }
+      } else {
+        final key = reply.contactKeyHex!;
+        final hadUnread = getUnreadCountForContactKey(key) > 0;
+        markContactRead(key);
+        if (!hadUnread) {
+          await _notificationService.clearContactNotification(
+            key,
+            getTotalUnreadCount(),
+          );
+        }
+      }
+      return;
+    }
+
+    if (!isConnected) {
+      await _notificationService.showReplyFailed(
+        reply,
+        NotificationReplyFailure.notConnected,
+        badgeCount: getTotalUnreadCount(),
+      );
+      return;
+    }
+
+    final channel = reply.isChannel
+        ? _findChannelByIndex(reply.channelIndex!)
+        : null;
+    final contact = reply.isChannel
+        ? null
+        : getContactByPubKeyHex(reply.contactKeyHex!);
+    if (channel == null && contact == null) {
+      await _notificationService.showReplyFailed(
+        reply,
+        NotificationReplyFailure.unavailable,
+        badgeCount: getTotalUnreadCount(),
+      );
+      return;
+    }
+
+    // Same length limits and Cyr2Lat handling as the chat screens.
+    final parts = splitMessageToFit(reply.text, (part) {
+      if (channel != null) {
+        return utf8
+                .encode(prepareChannelOutboundText(channel.index, part))
+                .length <=
+            maxChannelMessageBytes(selfName);
+      }
+      return utf8.encode(prepareContactOutboundText(contact!, part)).length <=
+          maxContactMessageBytes();
+    });
+    if (parts == null) {
+      await _notificationService.showReplyFailed(
+        reply,
+        NotificationReplyFailure.tooLong,
+        badgeCount: getTotalUnreadCount(),
+      );
+      return;
+    }
+
+    _appDebugLogService?.info(
+      'Sending notification reply in ${parts.length} part(s)',
+      tag: 'Notification',
+    );
+    for (final part in parts) {
+      // sendMessage/sendChannelMessage silently do nothing when disconnected,
+      // so check before every part in case the link dropped mid-reply.
+      if (!isConnected) {
+        await _notificationService.showReplyFailed(
+          reply,
+          NotificationReplyFailure.notConnected,
+          badgeCount: getTotalUnreadCount(),
+        );
+        return;
+      }
+      // The chat screens transliterate before handing text over, under the
+      // channel's or the contact's own cyr2lat profile; a reply from the
+      // notification shade does the same here.
+      var text = part;
+      try {
+        if (channel != null) {
+          if (isChannelCyr2LatEnabled(channel.index)) {
+            text = _encodeChannelCyr2Lat(channel.index, part);
+          }
+        } else if (isContactCyr2LatEnabled(contact!.publicKeyHex)) {
+          text = _encodeContactCyr2Lat(contact, part);
+        }
+      } catch (_) {}
+      try {
+        if (channel != null) {
+          await sendChannelMessage(channel, text);
+        } else {
+          await sendMessage(contact!, text);
+        }
+      } catch (e) {
+        appLogger.warn('Notification reply send failed: $e');
+        await _notificationService.showReplyFailed(
+          reply,
+          isConnected
+              ? NotificationReplyFailure.sendFailed
+              : NotificationReplyFailure.notConnected,
+          badgeCount: getTotalUnreadCount(),
+        );
+        return;
+      }
+    }
+    await _notificationService.showOwnReply(
+      reply,
+      reply.text,
+      badgeCount: getTotalUnreadCount(),
+    );
+  }
+
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
     _channelSmazEnabled[channelIndex] = enabled;
     if (enabled) {
@@ -3579,6 +3730,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     // Initialize notification service
     _notificationService.initialize();
+    _notificationReplySubscription ??= _notificationService.replies.listen(
+      (reply) => unawaited(
+        handleNotificationReply(reply).catchError((Object e) {
+          appLogger.warn('Notification action failed: $e');
+        }),
+      ),
+    );
     _loadChannelOrder();
 
     // Initialize retry service callbacks
@@ -4747,6 +4905,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       tag: 'USB',
     );
 
+    await _awaitActiveDisconnect();
+    // The await is a suspension point: another connect may have claimed the
+    // connector while this one was waiting for the teardown.
+    if (_state == MeshCoreConnectionState.connecting ||
+        _state == MeshCoreConnectionState.connected) {
+      _appDebugLogService?.warn(
+        'connectUsb ignored: already $_state after disconnect wait',
+        tag: 'USB',
+      );
+      return;
+    }
+
     await stopScan();
     _cancelReconnectTimer();
     _manualDisconnect = false;
@@ -4866,6 +5036,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     _appDebugLogService?.info('connectTcp: endpoint=$host:$port', tag: 'TCP');
+
+    await _awaitActiveDisconnect();
+    // The await is a suspension point: another connect may have claimed the
+    // connector while this one was waiting for the teardown.
+    if (_state == MeshCoreConnectionState.connecting ||
+        _state == MeshCoreConnectionState.connected) {
+      _appDebugLogService?.warn(
+        'connectTcp ignored: already $_state after disconnect wait',
+        tag: 'TCP',
+      );
+      return;
+    }
 
     await stopScan();
     if (!automaticReconnect) {
@@ -5191,6 +5373,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           reason: 'bleConnection',
         ),
       );
+    }
+
+    await _awaitActiveDisconnect();
+    // The await is a suspension point: another connect may have claimed the
+    // connector while this one was waiting for the teardown.
+    if (_state == MeshCoreConnectionState.connecting ||
+        _state == MeshCoreConnectionState.connected) {
+      return;
     }
 
     _activeTransport = MeshCoreTransportType.bluetooth;
@@ -6009,7 +6199,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   bool _canAutoReconnect(MeshCoreTransportType? transport) {
-    if (_isOfflineMode || _manualDisconnect || transport == null) return false;
+    if (_disposed || _isOfflineMode || _manualDisconnect || transport == null) {
+      return false;
+    }
     return switch (transport) {
       MeshCoreTransportType.bluetooth => _lastDeviceId != null,
       MeshCoreTransportType.tcp => _lastTcpHost != null && _lastTcpPort != null,
@@ -6086,12 +6278,58 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> disconnect({
     bool manual = true,
     bool skipBleDeviceDisconnect = false,
+  }) {
+    final inFlight = _activeDisconnect;
+    if (inFlight != null) {
+      if (manual) {
+        // A teardown started as automatic must still honour a later manual
+        // request, otherwise _manualDisconnect stays false and its tail
+        // schedules an auto-reconnect the user did not ask for.
+        _manualDisconnect = true;
+        _isRecoveringConnection = false;
+        _reconnectTransport = null;
+        _lastManualDisconnectTransport = _activeTransport;
+        _cancelReconnectTimer();
+        unawaited(_backgroundService?.stop());
+      }
+      return inFlight;
+    }
+    final teardown = _disconnectInternal(
+      manual: manual,
+      skipBleDeviceDisconnect: skipBleDeviceDisconnect,
+    );
+    _activeDisconnect = teardown;
+    return teardown.whenComplete(() {
+      if (identical(_activeDisconnect, teardown)) {
+        _activeDisconnect = null;
+      }
+    });
+  }
+
+  /// Joins an in-flight [disconnect] so a new connection cannot be started
+  /// while the previous teardown is still running.
+  Future<void> _awaitActiveDisconnect() async {
+    final pending = _activeDisconnect;
+    if (pending == null) return;
+    _appDebugLogService?.info(
+      'Waiting for the in-flight disconnect to finish before connecting',
+      tag: 'Connection',
+    );
+    try {
+      await pending;
+    } catch (_) {
+      // Teardown failures are logged by the disconnect path.
+    }
+  }
+
+  Future<void> _disconnectInternal({
+    required bool manual,
+    required bool skipBleDeviceDisconnect,
   }) async {
     if (_isOfflineMode) {
       await exitOfflineHistory();
       return;
     }
-    if (_state == MeshCoreConnectionState.disconnecting) return;
     final transportAtDisconnect = _activeTransport;
     final wasUsingIosNativeBleCentral = _usingIosNativeBleCentral;
     final transportLabel = switch (transportAtDisconnect) {
@@ -7505,6 +7743,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? pendingMessageId,
     DateTime? pendingTimestamp,
     DateTime? pendingReceivedAt,
+    // The region to send under instead of the channel's own: a reply to a
+    // message heard under a region goes back there.
+    String? region,
   }) async {
     // See sendMessage: normalised up front, and only for a first send.
     var text =
@@ -7528,6 +7769,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           replyToSenderName: replyToSenderName,
           replyToText: replyToText,
           replyToTimestamp: replyToTimestamp,
+          region: region,
         );
       }
       return;
@@ -7595,9 +7837,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // we continue to process it normally.
     }
 
-    final outgoingRegion = shouldDeferForSync
-        ? _outgoingChannelRegion(channel.index)
-        : await _outgoingChannelRegionForMessage(channel.index);
+    final outgoingRegion =
+        region ??
+        (shouldDeferForSync
+            ? _outgoingChannelRegion(channel.index)
+            : await _outgoingChannelRegionForMessage(channel.index));
     if (!isConnected) return;
 
     // MCMP v3: the reply pair travels only when both parts are known, and the
@@ -7931,7 +8175,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                 ),
           );
         },
-        region: getChannelRegion(channel.index),
+        region: region ?? getChannelRegion(channel.index),
         waitForScopeReset: false,
       );
       return;
@@ -7951,46 +8195,154 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           replyToSenderName: replyToSenderName,
           replyToText: replyToText,
           replyToTimestamp: replyToTimestamp,
+          region: region,
         );
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
-    await _runScopedChannelSend(() async {
-      await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-      final sentByRadioAt = DateTime.now();
-      _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
-      final sentTimestampSeconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
-      _updateChannelMessagePacketTimestamp(
-        channel.index,
-        message.messageId,
-        sentTimestampSeconds,
-        packetHash: binaryFrame == null
-            ? _computeContentHash(
-                channel.index,
-                sentTimestampSeconds,
-                '${_selfName ?? 'Me'}: $messageText',
-              )
-            : null,
-      );
-      if (binaryFrame != null) {
-        await _sendFrameAndWaitForCommandAck(
-          binaryFrame,
-          channelSendQueueId: message.messageId,
-        );
-        return;
-      }
-      // Stamp the outgoing packet with the actual send time and align the
-      // stored message.timestamp to the exact value that went on the air, so
-      // replies to our own message resolve by exact-timestamp matching.
-      await _sendFrameAndWaitForCommandAck(
-        buildSendChannelTextMsgFrame(
-          channel.index,
-          outboundText,
-          timestampSeconds: sentTimestampSeconds,
+    // A resend reuses the packet time, so it is the same packet: repeaters
+    // that forwarded it already drop the copy and recipients see it once. The
+    // echo registry and the heard-packet map were fed by the first send, and
+    // the same frame bytes feed them nothing new.
+    int? sentTimestampSeconds;
+    Future<void> transmit({bool isResend = false}) =>
+        _runScopedChannelSend(() async {
+          await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+          if (!isResend) {
+            final sentByRadioAt = DateTime.now();
+            _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
+            final seconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
+            sentTimestampSeconds = seconds;
+            _updateChannelMessagePacketTimestamp(
+              channel.index,
+              message.messageId,
+              seconds,
+              packetHash: binaryFrame == null
+                  ? _computeContentHash(
+                      channel.index,
+                      seconds,
+                      '${_selfName ?? 'Me'}: $messageText',
+                    )
+                  : null,
+            );
+          }
+          if (binaryFrame != null) {
+            await _sendFrameAndWaitForCommandAck(
+              binaryFrame,
+              channelSendQueueId: isResend ? null : message.messageId,
+            );
+            return;
+          }
+          // Stamp the outgoing packet with the actual send time and align the
+          // stored message.timestamp to the exact value that went on the air,
+          // so replies to our own message resolve by exact-timestamp matching.
+          await _sendFrameAndWaitForCommandAck(
+            buildSendChannelTextMsgFrame(
+              channel.index,
+              outboundText,
+              timestampSeconds: sentTimestampSeconds,
+            ),
+            channelSendQueueId: isResend ? null : message.messageId,
+          );
+        }, region: region ?? getChannelRegion(channel.index));
+    await transmit();
+
+    final settings = _appSettingsService?.settings;
+    if (settings != null && settings.channelMinHopsEnabled) {
+      unawaited(
+        _resendUntilMinHops(
+          message.messageId,
+          () => transmit(isResend: true),
+          minHops: settings.channelMinHops,
+          maxResends: settings.channelMinHopsRetries,
         ),
-        channelSendQueueId: message.messageId,
       );
-    }, region: getChannelRegion(channel.index));
+    }
+  }
+
+  /// How long to listen for a channel message to come back through the mesh
+  /// before resending it.
+  static const Duration _channelHopCheckDelay = Duration(seconds: 30);
+
+  /// Resends a channel message until one of its echoes has travelled through
+  /// at least [minHops] repeaters, then gives up and marks it failed.
+  Future<void> _resendUntilMinHops(
+    String messageId,
+    Future<void> Function() resend, {
+    required int minHops,
+    required int maxResends,
+  }) async {
+    _channelHopChecks[messageId] = (resends: 0, maxResends: maxResends);
+    notifyListeners();
+    var hops = 0;
+    try {
+      for (var attempt = 0; ; attempt++) {
+        await Future<void>.delayed(_channelHopCheckDelay);
+        final message = _findChannelMessageById(messageId);
+        if (message == null) return;
+        if (message.status == ChannelMessageStatus.failed) return;
+        hops = message.pathLength ?? 0;
+        if (hops >= minHops) {
+          _appDebugLogService?.info(
+            'Channel message reached $hops hops after $attempt resends',
+            tag: 'Channel resend',
+          );
+          return;
+        }
+        if (attempt >= maxResends || !isConnected) break;
+        _appDebugLogService?.info(
+          'Heard at $hops of $minHops hops; resending '
+          '(${attempt + 1} of $maxResends)',
+          tag: 'Channel resend',
+        );
+        _channelHopChecks[messageId] = (
+          resends: attempt + 1,
+          maxResends: maxResends,
+        );
+        notifyListeners();
+        try {
+          await resend();
+        } catch (e) {
+          _appDebugLogService?.warn(
+            'Channel resend failed: $e',
+            tag: 'Channel resend',
+          );
+          break;
+        }
+      }
+      _appDebugLogService?.warn(
+        'Channel message only heard at $hops of $minHops hops; giving up',
+        tag: 'Channel resend',
+      );
+      // It was sent and may well have travelled further than we can hear, so
+      // this is a warning, not a failure.
+      _channelHopShortfalls[messageId] = (hops: hops, required: minHops);
+    } finally {
+      _channelHopChecks.remove(messageId);
+      notifyListeners();
+    }
+  }
+
+  final Map<String, ({int resends, int maxResends})> _channelHopChecks = {};
+  final Map<String, ({int hops, int required})> _channelHopShortfalls = {};
+
+  /// Set when resending gave up before hearing the message through enough
+  /// repeaters. Kept for this session only.
+  ({int hops, int required})? channelHopShortfall(String messageId) =>
+      _channelHopShortfalls[messageId];
+
+  /// Resend progress for a channel message still waiting to travel far
+  /// enough, or null when it is not being watched.
+  ({int resends, int maxResends})? channelResendProgress(String messageId) =>
+      _channelHopChecks[messageId];
+
+  ChannelMessage? _findChannelMessageById(String messageId) {
+    for (final messages in _channelMessages.values) {
+      for (int i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].messageId == messageId) return messages[i];
+      }
+    }
+    return null;
   }
 
   bool get _shouldDeferChannelSendForSync =>
@@ -8072,9 +8424,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _sendDeferredChannelMessage(
     _DeferredChannelMessageSend pending,
   ) async {
-    final outgoingRegion = await _outgoingChannelRegionForMessage(
-      pending.channel.index,
-    );
+    final outgoingRegion =
+        pending.region ??
+        await _outgoingChannelRegionForMessage(pending.channel.index);
     if (!isConnected) return;
     _updatePendingChannelMessageRegion(
       pending.messageId,
@@ -8161,7 +8513,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           channelSendQueueId: pending.messageId,
         );
       },
-      region: getChannelRegion(pending.channel.index),
+      region: pending.region ?? getChannelRegion(pending.channel.index),
       waitForScopeReset: !shouldBypassAckAndRetry,
     );
   }
@@ -8710,6 +9062,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? replyToSenderName,
     String? replyToText,
     int? replyToTimestamp,
+    String? region,
   }) {
     // See scheduleContactMessage.
     final text = SharedMarkerDeletion.isMarker(rawText)
@@ -8799,7 +9152,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             binaryOutbound.payload,
           );
     final packetRegion = _displayPacketRegion(
-      _outgoingChannelRegion(channel.index),
+      region ?? _outgoingChannelRegion(channel.index),
     );
     final baseMessage = ChannelMessage.outgoing(
       messageText,
@@ -8855,6 +9208,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       replyToSenderName: replyToSenderName,
       replyToText: replyToText,
       replyToTimestamp: replyToTimestamp,
+      region: region,
       delaySeconds: delaySeconds,
       sendAt: DateTime.now().add(Duration(seconds: delaySeconds)),
     );
@@ -9042,6 +9396,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           pendingMessageId: pending.message.messageId,
           pendingTimestamp: pending.message.timestamp,
           pendingReceivedAt: pending.message.receivedAt,
+          region: pending.region,
         );
         if (_pendingChannelSends.containsKey(messageId) && isSessionReady) {
           await _failPendingChannelSend(pending);
@@ -9193,7 +9548,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> removeContact(Contact contact, {bool waitForAck = false}) async {
+  /// [keepMessages] leaves the conversation in the database, so that the
+  /// history comes back if the contact is added again.
+  Future<void> removeContact(
+    Contact contact, {
+    bool waitForAck = false,
+    bool keepMessages = false,
+  }) async {
     if (!isConnected) {
       if (waitForAck) {
         throw Exception('Not connected to a MeshCore device');
@@ -9234,7 +9595,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _unreadStore.saveContactUnreadCount(
       Map<String, int>.from(_contactUnreadCount),
     );
-    _messageStore.clearMessages(contact.publicKeyHex);
+    if (!keepMessages) _messageStore.clearMessages(contact.publicKeyHex);
     notifyListeners();
   }
 
@@ -9263,9 +9624,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Deletes [contact] from wherever it is kept: from the node when the node
   /// holds it, otherwise from the app's discovered list, the only place a
   /// node the app has merely heard takes up.
-  Future<void> deleteContact(Contact contact, {bool waitForAck = false}) {
+  Future<void> deleteContact(
+    Contact contact, {
+    bool waitForAck = false,
+    bool keepMessages = false,
+  }) {
     if (_contacts.byKey(contact.publicKeyHex) != null) {
-      return removeContact(contact, waitForAck: waitForAck);
+      return removeContact(
+        contact,
+        waitForAck: waitForAck,
+        keepMessages: keepMessages,
+      );
     }
     return removeDiscoveredContact(contact);
   }
@@ -10086,6 +10455,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _contactSyncTimeout = null;
         _dropContactsMissingFromNode();
         _isLoadingContacts = false;
+        if (_contactsStorageFull && _contacts.length < _maxContacts) {
+          _contactsStorageFull = false; // capacity freed up since the warning
+        }
         _hasLoadedContacts = true;
         _preserveContactsOnRefresh = false;
         _contactSyncUsesSinceFilter = false;
@@ -10333,6 +10705,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
       _selfName = reader.readCString();
       parsedSelfInfo = true;
+      _notificationService.setSelfName(_selfName);
 
       // The local public key only exists once SELF_INFO has arrived, so the
       // image sender prefix (first 2 bytes, big-endian) is refreshed here.
@@ -13340,12 +13713,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   String channelDisplayName(int channelIndex) =>
       _channelDisplayName(channelIndex);
 
+  // Falls back to the cached channel list, which stays populated while a
+  // channel refresh has temporarily emptied _channels. The same label keys
+  // the channel's mute (`Channel.muteKey`).
   String _channelDisplayName(int channelIndex) {
-    for (final channel in _channels) {
-      if (channel.index != channelIndex) continue;
-      return channel.name.isEmpty ? 'Channel $channelIndex' : channel.name;
-    }
-    return 'Channel $channelIndex';
+    final channel = _findChannelByIndex(channelIndex);
+    if (channel == null || channel.name.isEmpty) return 'Channel $channelIndex';
+    return channel.name;
   }
 
   bool _channelMessageMentionsSelf(String text) {
@@ -16315,10 +16689,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       existing.pathObservations,
       incoming.pathObservations,
     );
+    // The path bytes hold one hash per hop, so the observed hop count is the
+    // byte count over the hash width the route was learned in.
+    final mergedHashWidth =
+        (existing.pathHashWidth ?? incoming.pathHashWidth ?? 1)
+            .clamp(1, 3)
+            .toInt();
     final mergedPathLength = _mergePathLength(
       existing.pathLength,
       incoming.pathLength,
-      mergedPathBytes.length,
+      mergedPathBytes.length ~/ mergedHashWidth,
     );
     final newRepeatCount = existing.repeatCount + 1;
     final promotedFromPending =
@@ -16644,6 +17024,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _setState(MeshCoreConnectionState newState) {
+    if (_disposed) return;
     if (_state != newState) {
       _state = newState;
       _settingsSectionsService?.mcoX3(
@@ -16652,12 +17033,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (newState == MeshCoreConnectionState.connected) {
         _isRecoveringConnection = false;
         unawaited(_transportPreferenceStore.save(_activeTransport.name));
+        if (_appSettingsService?.settings.notificationsEnabled ?? false) {
+          unawaited(_notificationService.requestPermissionsOnce());
+        }
       }
       notifyListeners();
     }
   }
 
   void markNotifyDirty() {
+    if (_disposed) return;
     if (_notifyListenersDirty && _notifyListenersTimer != null) {
       return;
     }
@@ -16689,6 +17074,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void notifyListeners() {
+    if (_disposed) return;
     markNotifyDirty();
   }
 
@@ -16798,12 +17184,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _clearDirectEchoKey('dispose');
+    _disposed = true;
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();
     _usbFrameSubscription?.cancel();
     _notifySubscription?.cancel();
     _iosBleCentralSubscription?.cancel();
+    _notificationReplySubscription?.cancel();
+    _notificationService.releaseReplyPort();
     _notifyListenersTimer?.cancel();
     _reconnectTimer?.cancel();
     _batteryPollTimer?.cancel();
@@ -17754,6 +18143,7 @@ class _PendingChannelSend {
   final String? replyToSenderName;
   final String? replyToText;
   final int? replyToTimestamp;
+  final String? region;
   final int delaySeconds;
   final DateTime sendAt;
   Timer? timer;
@@ -17773,6 +18163,7 @@ class _PendingChannelSend {
     required this.replyToSenderName,
     required this.replyToText,
     required this.replyToTimestamp,
+    this.region,
     required this.delaySeconds,
     required this.sendAt,
   });
@@ -17795,6 +18186,7 @@ class _DeferredChannelMessageSend {
   final String? replyToSenderName;
   final String? replyToText;
   final int? replyToTimestamp;
+  final String? region;
 
   _DeferredChannelMessageSend({
     required this.channel,
@@ -17810,5 +18202,6 @@ class _DeferredChannelMessageSend {
     required this.replyToSenderName,
     required this.replyToText,
     required this.replyToTimestamp,
+    this.region,
   });
 }

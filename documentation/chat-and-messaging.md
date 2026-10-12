@@ -60,6 +60,7 @@ Conversation history is bounded to the most recent 500 retained messages per con
 | Type | Wire Format | Display |
 |---|---|---|
 | Plain text | Raw UTF-8 string | Inline text with link detection |
+| URL image preview | Image URL in text (per-contact opt-in; requires internet) | Downloaded inline preview |
 | GIF | `g:<giphy-id>` | Inline GIF image from Giphy CDN |
 | Location pin | `m:<lat>,<lon>\|<label>\|...` | Location icon + label; tap to open map |
 | Reaction | `r:<hash>:<emoji-index>` | Applied to target message as emoji pill |
@@ -86,7 +87,7 @@ When enabled in App Settings, additional metadata appears inside each bubble:
 ## Message Length Limits
 
 - **Direct messages**: 156 bytes (UTF-8) — enforced in real-time by the input formatter
-- **Channel messages**: 160 minus sender name length minus 2 bytes for the `"<name>: "` prefix
+- **Channel messages**: 160 minus sender name UTF-8 byte length minus 2 bytes for the `"<name>: "` prefix (the name counts as at most 31 bytes, and as 31 when unknown)
 - Over-length paste shows a snackbar error
 
 ## Send Queue
@@ -133,3 +134,7 @@ Add emoji reactions to incoming messages (not your own):
 | Delete | All messages | Removes locally (not from mesh) |
 | Retry | Failed outgoing messages | Re-sends the message |
 | Open chat with sender | Room server chats | Opens 1:1 chat with the message sender |
+
+## Image and translation setup
+
+Enable URL images in the contact’s chat settings to preview supported image links; see [URL images](additional-features.md#url-image-previews). Mesh image packets are currently sent through channel chat, not this direct-message composer. Set up translation and download a model in [App Settings](settings.md#translation) before using incoming or pre-send translation.

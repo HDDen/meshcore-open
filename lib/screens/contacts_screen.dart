@@ -55,6 +55,7 @@ import '../widgets/unread_badge.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
+import 'contact_qr_scanner_screen.dart';
 import 'discovery_screen.dart';
 import 'map_screen.dart';
 import 'repeater_hub_screen.dart';
@@ -474,6 +475,13 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
   }
 
+  void _openContactQrScanner(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ContactQrScannerScreen()),
+    );
+  }
+
   Future<void> _contactImport() async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final clipboardData = await Clipboard.getData('text/plain');
@@ -656,6 +664,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                         text: context.l10n.contacts_addContactFromClipboard,
                       ),
                       onTap: () => _contactImport(),
+                    ),
+                    PopupMenuItem(
+                      child: PopupMenuRow(
+                        icon: Icons.qr_code_scanner,
+                        text: context.l10n.contacts_scanQrCode,
+                      ),
+                      onTap: () => _openContactQrScanner(context),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(
@@ -1172,6 +1187,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.qr_code_scanner),
+                title: Text(context.l10n.contacts_scanQrCode),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _openContactQrScanner(context);
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.person_add_rounded),
                 title: Text(context.l10n.discoveredContacts_Title),
                 onTap: () {
@@ -1646,6 +1669,31 @@ class _ContactsScreenState extends State<ContactsScreen>
             ],
           ),
         ),
+        if (connector.contactsStorageFull)
+          Container(
+            width: double.infinity,
+            color: Theme.of(context).colorScheme.errorContainer,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.l10n.contacts_storageFull,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => connector.refreshContacts(),
@@ -3078,27 +3126,46 @@ class _ContactsScreenState extends State<ContactsScreen>
     MeshCoreConnector connector,
     Contact contact,
   ) {
+    var keepHistory = false;
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.contacts_deleteContact),
-        content: Text(context.l10n.contacts_removeConfirm(contact.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_cancel),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(context.l10n.contacts_deleteContact),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.contacts_removeConfirm(contact.name)),
+              // The conversation stays in the database and comes back with
+              // the contact; the node's own record goes either way.
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: keepHistory,
+                title: Text(context.l10n.contacts_keepChatHistory),
+                onChanged: (value) =>
+                    setDialogState(() => keepHistory = value ?? false),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              connector.deleteContact(contact);
-            },
-            child: Text(
-              context.l10n.common_delete,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.common_cancel),
             ),
-          ),
-        ],
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                connector.deleteContact(contact, keepMessages: keepHistory);
+              },
+              child: Text(
+                context.l10n.common_delete,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

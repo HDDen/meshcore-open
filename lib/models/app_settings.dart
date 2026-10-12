@@ -182,6 +182,7 @@ class AppSettings {
   final String mapKeyPrefix;
   final bool mapShowMarkers;
   final bool mapShowGuessedLocations;
+  final bool mapClusterNodes;
   final bool enableMessageTracing;
   final bool enableTimeSeconds;
   final bool showKeyboardHidingButton;
@@ -320,6 +321,9 @@ class AppSettings {
   final double routeWeightFailureDecrement;
   final int maxMessageRetries;
   final int channelResendTimeoutSeconds;
+  final bool channelMinHopsEnabled;
+  final int channelMinHops;
+  final int channelMinHopsRetries;
   final String themeMode;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
@@ -661,11 +665,12 @@ class AppSettings {
     this.mapShowOtherNodes = true,
     this.pathTraceHighTimeoutEnabled = false,
     this.mapShowOverlaps = false,
-    this.mapTimeFilterHours = 0, // Default to all time
+    this.mapTimeFilterHours = 168,
     this.mapKeyPrefixEnabled = false,
     this.mapKeyPrefix = '',
     this.mapShowMarkers = true,
     this.mapShowGuessedLocations = true,
+    this.mapClusterNodes = true,
     this.enableMessageTracing = true,
     this.enableTimeSeconds = false,
     this.showKeyboardHidingButton = true,
@@ -731,6 +736,9 @@ class AppSettings {
     this.routeWeightFailureDecrement = 0.2,
     this.maxMessageRetries = 5,
     int? channelResendTimeoutSeconds,
+    this.channelMinHopsEnabled = false,
+    this.channelMinHops = 2,
+    this.channelMinHopsRetries = 1,
     this.themeMode = 'system',
     this.languageOverride,
     this.appDebugLogEnabled = false,
@@ -812,6 +820,7 @@ class AppSettings {
       'map_key_prefix': mapKeyPrefix,
       'map_show_markers': mapShowMarkers,
       'map_show_guessed_locations': mapShowGuessedLocations,
+      'map_cluster_nodes': mapClusterNodes,
       'enable_message_tracing': enableMessageTracing,
       'enable_time_seconds': enableTimeSeconds,
       'show_keyboard_hiding_button': showKeyboardHidingButton,
@@ -882,6 +891,9 @@ class AppSettings {
       'route_weight_failure_decrement': routeWeightFailureDecrement,
       'max_message_retries': maxMessageRetries,
       'channel_resend_timeout_seconds': channelResendTimeoutSeconds,
+      'channel_min_hops_enabled': channelMinHopsEnabled,
+      'channel_min_hops': channelMinHops,
+      'channel_min_hops_retries': channelMinHopsRetries,
       'theme_mode': themeMode,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
@@ -969,12 +981,13 @@ class AppSettings {
           json['path_trace_high_timeout_enabled'] as bool? ?? false,
       mapShowOverlaps: json['map_show_overlaps'] as bool? ?? false,
       mapTimeFilterHours:
-          (json['map_time_filter_hours'] as num?)?.toDouble() ?? 0,
+          (json['map_time_filter_hours'] as num?)?.toDouble() ?? 168,
       mapKeyPrefixEnabled: json['map_key_prefix_enabled'] as bool? ?? false,
       mapKeyPrefix: json['map_key_prefix'] as String? ?? '',
       mapShowMarkers: json['map_show_markers'] as bool? ?? true,
       mapShowGuessedLocations:
           json['map_show_guessed_locations'] as bool? ?? true,
+      mapClusterNodes: json['map_cluster_nodes'] as bool? ?? true,
       enableMessageTracing: json['enable_message_tracing'] as bool? ?? true,
       enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
       showKeyboardHidingButton:
@@ -1079,6 +1092,9 @@ class AppSettings {
           (json['route_weight_failure_decrement'] as num?)?.toDouble() ?? 0.2,
       maxMessageRetries: json['max_message_retries'] as int? ?? 5,
       channelResendTimeoutSeconds: json['channel_resend_timeout_seconds'],
+      channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
+      channelMinHops: json['channel_min_hops'] as int? ?? 2,
+      channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
@@ -1214,6 +1230,7 @@ class AppSettings {
     String? mapKeyPrefix,
     bool? mapShowMarkers,
     bool? mapShowGuessedLocations,
+    bool? mapClusterNodes,
     bool? enableMessageTracing,
     bool? enableTimeSeconds,
     bool? showKeyboardHidingButton,
@@ -1279,6 +1296,9 @@ class AppSettings {
     double? routeWeightFailureDecrement,
     int? maxMessageRetries,
     int? channelResendTimeoutSeconds,
+    bool? channelMinHopsEnabled,
+    int? channelMinHops,
+    int? channelMinHopsRetries,
     String? themeMode,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
@@ -1332,6 +1352,7 @@ class AppSettings {
       mapShowMarkers: mapShowMarkers ?? this.mapShowMarkers,
       mapShowGuessedLocations:
           mapShowGuessedLocations ?? this.mapShowGuessedLocations,
+      mapClusterNodes: mapClusterNodes ?? this.mapClusterNodes,
       enableMessageTracing: enableMessageTracing ?? this.enableMessageTracing,
       enableTimeSeconds: enableTimeSeconds ?? this.enableTimeSeconds,
       showKeyboardHidingButton:
@@ -1440,6 +1461,11 @@ class AppSettings {
       maxMessageRetries: maxMessageRetries ?? this.maxMessageRetries,
       channelResendTimeoutSeconds:
           channelResendTimeoutSeconds ?? this.channelResendTimeoutSeconds,
+      channelMinHopsEnabled:
+          channelMinHopsEnabled ?? this.channelMinHopsEnabled,
+      channelMinHops: channelMinHops ?? this.channelMinHops,
+      channelMinHopsRetries:
+          channelMinHopsRetries ?? this.channelMinHopsRetries,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
           ? this.languageOverride

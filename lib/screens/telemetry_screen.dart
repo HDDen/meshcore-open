@@ -23,6 +23,27 @@ import '../widgets/telemetry_location_map.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/mesh_ui.dart';
 
+/// Opens the telemetry screen for the locally connected node.
+void pushSelfTelemetryScreen(BuildContext context) {
+  final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+  final selfKey = connector.selfPublicKey;
+  if (selfKey == null || selfKey.isEmpty) return;
+  final selfContact = Contact(
+    publicKey: selfKey,
+    name: connector.selfName ?? '',
+    type: advTypeChat,
+    pathLength: 0,
+    path: Uint8List(0),
+    lastSeen: DateTime.now(),
+  );
+  Navigator.push(
+    context,
+    MaterialPageRoute<void>(
+      builder: (context) => TelemetryScreen(contact: selfContact, isSelf: true),
+    ),
+  );
+}
+
 class TelemetryScreen extends StatefulWidget {
   final Contact contact;
   final bool isSelf;
@@ -155,7 +176,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     _sentTags.clear();
     final parsedTelemetry = CayenneLpp.parseByChannel(frame);
     final batteryMv = _extractTelemetryBatteryMillivolts(parsedTelemetry);
-    if (batteryMv != null) {
+    if (batteryMv != null && !widget.isSelf) {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
       connector.updateRepeaterBatterySnapshot(
         widget.contact.publicKeyHex,
@@ -545,7 +566,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           _temperatureText(value, isImperialUnits),
         );
       case 'humidity':
-        return _TelemetryFieldDisplay(l10n.telemetry_humidityLabel, text);
+        return _TelemetryFieldDisplay(l10n.telemetry_humidityLabel, '$text%');
       case 'accelerometer':
         return _TelemetryFieldDisplay(
           l10n.telemetry_accelerometerLabel,
@@ -968,10 +989,12 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            value,
-            style: MeshTheme.mono(fontSize: 13, color: scheme.onSurface),
-            textAlign: TextAlign.end,
+          Flexible(
+            child: Text(
+              value,
+              style: MeshTheme.mono(fontSize: 13, color: scheme.onSurface),
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),

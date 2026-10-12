@@ -44,6 +44,7 @@ dependencies:
     git:
       url: https://github.com/MeshEnvy/flserial.git
       ref: e1864de9b65cda9656dba804329bdd2890dd5a92
+  ffi: ^2.1.3            # calloc.free for flserial's native I/O buffers
   provider: ^6.1.5+1
   mco_service:
     path: packages/mco_service_stub

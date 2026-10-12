@@ -60,8 +60,12 @@ Opens a dialog pre-populated with the device's current radio settings. Contains:
 - **TX Power** (dBm): Validated 0 to device max (typically 22 dBm)
 - **Client Repeat** toggle: Only shown on firmware v9+; requires frequency to be exactly 433.000, 869.000, or 918.000 MHz (the Off-Grid presets). Save is blocked with a warning if enabled on other frequencies
 
-### Companion Radio Stats
-Opens the RF statistics screen (RSSI, SNR, packet counts) for the paired radio. Only enabled when connected to a device that supports companion radio stats.
+### Regions
+
+Open region management to add/fetch names and select a default flood scope. Channel chat can override it; clearing an override inherits the default. See [Regions](regions.md), including message labels and temporary reply-region choices.
+
+### Radio stats
+Opens the radio statistics screen for the paired radio: noise floor, last RSSI, last SNR, and total TX/RX airtime. Only enabled when connected to a device that supports companion radio stats (firmware code 8+). See the [radio-statistics guide](radio-statistics.md).
 
 ---
 
@@ -109,6 +113,8 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 - **Channel message notifications**: New channel message alerts
 - **Advertisement notifications**: New node discovery alerts
 
+Individual channels can be muted from the channel chat bell icon, the channel list, or the channel notification. Replying from notifications, watches, and Android Auto is described in [Notifications](notifications.md).
+
 ### Messaging
 - **Clear Path on Max Retry**: Erases the stored routing path after all retries fail
 - **Jump to Oldest Unread**: When opening a chat, scrolls to the oldest unread message instead of the newest
@@ -132,17 +138,24 @@ A dedicated sub-screen for app-level preferences (nothing here is sent to the de
 - **Raster Tile Source**: Sets the MAP theme and with that from where to get the map tile data:
   - OpenStreetMap (Auto/Standard/Dark) is provided by the free OpenStreetMap tile server. (Can only be used for live view or already cached.)
   - Stamen Terrain / AlidadeSmooth Dark / Outdoors / OSM Bright are [StadiaMaps.com raster tile maps](https://stadiamaps.com/products/maps/interactive-basemaps/) for which you can choose an Hosted Endpoint (Worldwide / Europe hosted) and have to provide the API key to your subscription. (You can cache these maps for offline Map usage.)
-  There will be no account provided by meshcore-open. You will have to get you own subscription. StadiaMaps offers a [free](https://stadiamaps.com/pricing/) subscription to download up to 200'000 Standart Raster Basemap tiles.
+  There will be no account provided by meshcore-open. You will have to get you own subscription. Check [current Stadia Maps plans and terms](https://stadiamaps.com/pricing/) for quotas and offline-use permissions.
 - **Offline Map Cache**: Navigate to tile download screen
 
 ### Translation
 Not shown on web. Controls on-device message translation powered by a locally-downloaded ML model:
-- **Enable Translation**: Translates incoming messages into the selected target language
-- **Translate Composer**: Translates outgoing messages from the target language back before sending
-- **Target Language**: Language to translate into (searchable list; defaults to the app language)
-- **Downloaded Model**: Dropdown to select among already-downloaded translation models
-- **Preset Model**: Download a curated preset model with one tap
-- **Custom Model URL**: Enter a URL to download a custom GGUF-format model; shows download progress and a cancel button
+- **Enable translation**: Enables message translation controls
+- **Auto-translate incoming messages**: Automatically translates incoming messages for chat/channel display and notifications
+- **Translate before sending**: Sets the default state of the composer's translate icon (on means messages are translated before sending)
+- **Target language**: Language to translate into (searchable list; defaults to the app language)
+- **Downloaded model**: Dropdown to select among already-downloaded translation models
+- **Preset Hugging Face model**: Download a curated preset model with one tap
+- **Manual model URL**: Enter a URL to download a custom GGUF-format model; shows download progress and a cancel button
+
+The auto-translate and composer toggles are disabled until **Enable translation** is on.
+
+### Image Messages
+
+Image message controls live in App Settings → Messaging. Turn on **Enable image messages** first; **Process images automatically** and the image model download/cancel/removal controls then appear. Automatic processing reconstructs every image as it arrives and uses about 2 GB of memory for a second each time; leave it off to reconstruct with a tap. See [Image Messages](image-messages.md) for firmware, native-runtime, storage, and memory requirements.
 
 ### Cyrillic-to-Latin (Cyr2Lat)
 Controls character substitution profiles used to render Cyrillic text in Latin characters. A dropdown selects the active profile; Add, Edit, and Delete buttons manage the profile list (the last remaining profile cannot be deleted). Each profile stores a JSON character map.

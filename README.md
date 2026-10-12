@@ -550,6 +550,10 @@ Questions, bug reports, feature requests and ideas for the modification are all 
 Issues that concern the base client rather than the modification are better reported upstream at
 <https://github.com/zjs81/meshcore-open/issues>.
 
+## License
+
+MeshCore Open is available under the [MIT License](LICENSE).
+
 ## Acknowledgments
 
 - A big thank you to **[zjs81](https://github.com/zjs81)**, the author of the original
@@ -560,3 +564,8 @@ Issues that concern the base client rather than the modification are better repo
   [mesh-compressor](https://dimapanov.github.io/mesh-compressor/) algorithm behind MCMP
 - Built with [Flutter](https://flutter.dev/)
 - Map tiles from [OpenStreetMap](https://www.openstreetmap.org/)
+
+## SWHID and Archive badge
+
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/zjs81/meshcore-open/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/zjs81/meshcore-open)
+[![SWH](https://archive.softwareheritage.org/badge/swh:1:dir:d37a80b06359730864150ad2aeadd46cce9abd55/)](https://archive.softwareheritage.org/swh:1:dir:d37a80b06359730864150ad2aeadd46cce9abd55;origin=https://github.com/zjs81/meshcore-open;visit=swh:1:snp:47656c4b55ab40a689ff8d2f045196725f05096b;anchor=swh:1:rev:0fe250230905fdd05dbedc0f546736990beacf53)

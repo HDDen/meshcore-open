@@ -32,7 +32,7 @@ Tapping a tab replaces the current screen with a subtle fade + slight horizontal
 
 - **Theme mode** is user-configurable in App Settings (System / Light / Dark) — not locked to system
 - **Language** can be overridden to one of 18 supported languages, or follow the system locale
-- On web, if a non-Chromium browser is detected, the app shows a `ChromeRequiredScreen` instead of the Scanner (Web Bluetooth requires Chromium)
+- On web, if a non-Chromium browser is detected, the app shows a `ChromeRequiredScreen` instead of the Scanner (the web client needs Chrome for Web Serial USB)
 
 ## Full Navigation Graph
 
@@ -69,4 +69,8 @@ Settings (push from any main screen)
         └─ [Offline Map Cache] → push → MapCacheScreen
 ```
 
-Any disconnection from any screen triggers `popUntil(route.isFirst)`, returning to the Scanner.
+Screens using disconnect navigation trigger `popUntil(route.isFirst)`, returning to the Scanner.
+
+## Additional settings destinations
+
+Settings → Regions opens [region management](regions.md). Settings → Radio stats opens [companion statistics](radio-statistics.md), including self-telemetry access. Settings → Telemetry opens telemetry for your own radio directly. App Settings contains image model setup and translation model controls. Contact QR scanning is available from Contacts; community QR scanning is available from Channels.

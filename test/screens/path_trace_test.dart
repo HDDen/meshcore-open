@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
@@ -12,6 +13,8 @@ import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
+import 'package:meshcore_open/services/wardrive_service.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 
@@ -78,11 +81,17 @@ class _FakePathStorageService extends StorageService {
   }
 }
 
-Widget _buildTestApp({
+Future<Widget> _buildTestApp({
   required MeshCoreConnector connector,
   required Widget child,
-}) {
+}) async {
   final appSettingsService = AppSettingsService();
+  // With the option on, the screen asks the wardrive service for the phone's
+  // position from initState, and the service notifies from inside that
+  // first build, which the test framework reports as an error.
+  await appSettingsService.updateSettings(
+    appSettingsService.settings.copyWith(alwaysRequestMapLocation: false),
+  );
 
   return MultiProvider(
     providers: [
@@ -97,6 +106,11 @@ Widget _buildTestApp({
       ChangeNotifierProvider<PathHistoryService>(
         create: (_) => PathHistoryService(_FakePathStorageService()),
       ),
+      // The screen asks it for the phone's position while the map location
+      // option is on; the service reads its settings at construction.
+      ChangeNotifierProvider<WardriveService>(
+        create: (_) => WardriveService(connector),
+      ),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -107,6 +121,14 @@ Widget _buildTestApp({
 }
 
 void main() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    PrefsManager.reset();
+    await PrefsManager.initialize();
+  });
+
+  tearDown(PrefsManager.reset);
+
   testWidgets('PathTraceMapScreen parses response frames correctly', (
     tester,
   ) async {
@@ -118,7 +140,9 @@ void main() {
       pathHashByteWidth: 1,
     );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
+    await tester.pumpWidget(
+      await _buildTestApp(connector: connector, child: screen),
+    );
     await tester.pump();
 
     // Verify a send request was made
@@ -185,7 +209,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _buildTestApp(connector: connector, child: screen),
+        await _buildTestApp(connector: connector, child: screen),
       );
       await tester.pump();
 
@@ -260,7 +284,9 @@ void main() {
       pathHashByteWidth: 1,
     );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
+    await tester.pumpWidget(
+      await _buildTestApp(connector: connector, child: screen),
+    );
     await tester.pump();
 
     expect(connector.sentFrames.length, 1);
@@ -291,14 +317,19 @@ void main() {
       pathHashByteWidth: 1,
     );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
+    await tester.pumpWidget(
+      await _buildTestApp(connector: connector, child: screen),
+    );
     await tester.pump();
 
     expect(connector.sentFrames.length, 1);
     final sentFrame = connector.sentFrames.first;
     expect(sentFrame[0], cmdSendTracePath);
     final payload = sentFrame.sublist(10);
-    expect(payload, Uint8List.fromList([0xBB, 0xCC, 0xBB]));
+    // A chat contact does not forward trace packets, so the endpoint is not
+    // appended as a hop (_forwardsTracePackets: repeaters and sensors only)
+    // and the trace covers the route alone.
+    expect(payload, Uint8List.fromList([0xBB]));
   });
 
   testWidgets('PathTraceMapScreen buildPath: Multi-hop chat contact trace', (
@@ -322,14 +353,17 @@ void main() {
       pathHashByteWidth: 1,
     );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
+    await tester.pumpWidget(
+      await _buildTestApp(connector: connector, child: screen),
+    );
     await tester.pump();
 
     expect(connector.sentFrames.length, 1);
     final sentFrame = connector.sentFrames.first;
     expect(sentFrame[0], cmdSendTracePath);
     final payload = sentFrame.sublist(10);
-    expect(payload, Uint8List.fromList([0x11, 0x22, 0x33, 0x22, 0x11]));
+    // The chat endpoint is left out, as in the 1-hop case.
+    expect(payload, Uint8List.fromList([0x11, 0x22, 0x11]));
   });
 
   testWidgets(
@@ -346,7 +380,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _buildTestApp(connector: connector, child: screen),
+        await _buildTestApp(connector: connector, child: screen),
       );
       await tester.pump();
 
@@ -369,7 +403,9 @@ void main() {
       pathHashByteWidth: 2,
     );
 
-    await tester.pumpWidget(_buildTestApp(connector: connector, child: screen));
+    await tester.pumpWidget(
+      await _buildTestApp(connector: connector, child: screen),
+    );
     await tester.pump();
 
     expect(connector.sentFrames.length, 1);

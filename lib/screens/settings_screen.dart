@@ -607,7 +607,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           context,
           icon: Icons.sensors_outlined,
           title: l10n.radioStats_settingsTile,
-          subtitle: l10n.radioStats_settingsSubtitle,
+          subtitle:
+              connector.isConnected && !connector.supportsCompanionRadioStats
+              ? l10n.settings_requiresFirmware('v1.10')
+              : l10n.radioStats_settingsSubtitle,
           onTap: connector.isConnected && connector.supportsCompanionRadioStats
               ? () => pushCompanionRadioStatsScreen(context)
               : null,
@@ -615,9 +618,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const Divider(height: 1, indent: 16),
         _tappableTile(
           context,
+          icon: Icons.thermostat_outlined,
+          title: l10n.contact_telemetry,
+          subtitle: l10n.repeater_telemetrySubtitle,
+          onTap: connector.isConnected
+              ? () => pushSelfTelemetryScreen(context)
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
           icon: Icons.route_outlined,
           title: l10n.repeater_pathHashMode,
-          subtitle: _pathHashModeSubtitle(context, connector.pathHashByteWidth),
+          subtitle:
+              connector.isConnected &&
+                  (connector.firmwareVerCode ?? 0) <
+                      _minFirmwareVerCodeForPathHashMode
+              ? l10n.settings_requiresFirmware('v1.14')
+              : _pathHashModeSubtitle(context, connector.pathHashByteWidth),
           onTap:
               connector.isConnected &&
                   (connector.firmwareVerCode ?? 0) >=
@@ -1015,7 +1033,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                l10n.repeater_pathHashModeHelper,
+                l10n.settings_pathHashModeHelper,
                 style: Theme.of(builderContext).textTheme.bodySmall,
               ),
             ],
@@ -1513,14 +1531,29 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
       settingsService.settings.autoSendZeroHopAdvertOnGpsUpdate;
 
   final telemModeBase = [
-    DropdownMenuItem(value: teleModeDeny, child: Text(l10n.settings_denyAll)),
+    DropdownMenuItem(
+      value: teleModeDeny,
+      child: Text(
+        l10n.settings_denyAll,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
     DropdownMenuItem(
       value: teleModeAllowFlags,
-      child: Text(l10n.settings_allowByContact),
+      child: Text(
+        l10n.settings_allowByContact,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     ),
     DropdownMenuItem(
       value: teleModeAllowAll,
-      child: Text(l10n.settings_allowAll),
+      child: Text(
+        l10n.settings_allowAll,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     ),
   ];
 
@@ -1528,6 +1561,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (builderContext, setDialogState) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         title: Text(l10n.settings_privacy),
         content: SingleChildScrollView(
           child: Column(
@@ -1561,6 +1595,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
               const SizedBox(height: 8),
               SwitchListTile(
                 title: Text(l10n.settings_multiAck),
+                subtitle: Text(l10n.settings_multiAckSubtitle),
                 value: multiAcks == 1,
                 onChanged: (value) {
                   setDialogState(() => multiAcks = value ? 1 : 0);
@@ -1570,6 +1605,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 initialValue: telemetryMode,
+                isExpanded: true,
                 decoration: InputDecoration(
                   labelText: l10n.settings_telemetryBaseMode,
                   border: const OutlineInputBorder(),
@@ -1584,6 +1620,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 initialValue: telemetryLocMode,
+                isExpanded: true,
                 decoration: InputDecoration(
                   labelText: l10n.settings_telemetryLocationMode,
                   border: const OutlineInputBorder(),
@@ -1598,6 +1635,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 initialValue: telemetryEnvMode,
+                isExpanded: true,
                 decoration: InputDecoration(
                   labelText: l10n.settings_telemetryEnvironmentMode,
                   border: const OutlineInputBorder(),
@@ -1608,6 +1646,11 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                     setDialogState(() => telemetryEnvMode = value);
                   }
                 },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.settings_telemetryPerContactHint,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
@@ -1762,8 +1805,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
       if (preset.frequencyHz == snapshot.frequencyHz &&
           preset.bandwidth == snapshot.bandwidth &&
           preset.spreadingFactor == snapshot.spreadingFactor &&
-          preset.codingRate == snapshot.codingRate &&
-          preset.txPowerDbm == snapshot.txPowerDbm) {
+          preset.codingRate == snapshot.codingRate) {
         return i;
       }
     }
@@ -1850,14 +1892,13 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
       if (offGridFreqHz == current.frequencyHz &&
           preset.bandwidth == current.bandwidth &&
           preset.spreadingFactor == current.spreadingFactor &&
-          preset.codingRate == current.codingRate &&
-          preset.txPowerDbm == current.txPowerDbm) {
+          preset.codingRate == current.codingRate) {
         return _RadioSettingsSnapshot(
           frequencyMHz: preset.frequencyMHz,
           bandwidth: preset.bandwidth,
           spreadingFactor: preset.spreadingFactor,
           codingRate: preset.codingRate,
-          txPowerDbm: preset.txPowerDbm,
+          txPowerDbm: current.txPowerDbm,
         );
       }
     }
@@ -2166,20 +2207,30 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
           children: [
             DropdownButtonFormField<int>(
               key: ValueKey<int?>(_selectedPresetIndex),
-              initialValue: _selectedPresetIndex,
+              initialValue: _selectedPresetIndex ?? -1,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: l10n.settings_presets,
                 border: const OutlineInputBorder(),
               ),
               items: [
+                if (_selectedPresetIndex == null)
+                  DropdownMenuItem(
+                    value: -1,
+                    child: Text(l10n.settings_presetCustom),
+                  ),
                 for (final i in _visiblePresetIndexes())
                   DropdownMenuItem(
                     value: i,
-                    child: Text(RadioSettings.presets[i].$1),
+                    child: Text(
+                      RadioSettings.presets[i].$1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (index) {
-                if (index != null) {
+                if (index != null && index >= 0) {
                   _applyPreset(index);
                 }
               },
@@ -2191,7 +2242,11 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
               decoration: InputDecoration(
                 labelText: l10n.settings_frequency,
                 border: const OutlineInputBorder(),
-                helperText: l10n.settings_frequencyHelper,
+                helperText: _clientRepeat
+                    ? l10n.settings_clientRepeatFrequencyNote(
+                        _frequencyController.text,
+                      )
+                    : l10n.settings_frequencyHelper,
                 errorText: _frequencyError,
               ),
               keyboardType: const TextInputType.numberWithOptions(
@@ -2273,9 +2328,10 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
               decoration: InputDecoration(
                 labelText: l10n.settings_txPower,
                 border: const OutlineInputBorder(),
-                helperText: widget.connector.maxTxPower != null
-                    ? '${l10n.settings_txPowerHelper} (max: ${widget.connector.maxTxPower} dBm)'
-                    : l10n.settings_txPowerHelper,
+                helperText: l10n.settings_txPowerRangeHelper(
+                  _minTxPowerDbm,
+                  widget.connector.maxTxPower ?? 22,
+                ),
                 errorText: _txPowerError,
               ),
               keyboardType: TextInputType.number,
@@ -2290,6 +2346,11 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
                 contentPadding: EdgeInsets.zero,
               ),
             ],
+            const SizedBox(height: 16),
+            Text(
+              l10n.settings_radioMatchWarning,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),

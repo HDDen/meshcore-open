@@ -1898,6 +1898,51 @@ A failed load stays in Flutter's image cache as a completer that only repeats it
 ### Other UX
 Per-conversation **sending delay** (schedule/commit/cancel a queued send), **quick answers** (canned composer replies, `helpers/quick_answers_helper.dart`), per-channel **widget color**, a **sender name size** (`AppSettings.senderNameScalePercent`, mod settings under the monochrome names switch: 25, 50 and 100 to 400 by 25, default 100, a stored value snapped to the nearest; the channel and room bubbles multiply their sender-name font size by it and by the chat zoom, and the gap under the name with it and, above 100%, by a third more (`senderNameGapScale`), while the DPI setting reaches it through the global text scaler like every other text), and a **translate UI shell** (`widgets/message_translation_button.dart`) that only writes the target-language setting (translation itself is disabled).
 
+## Upstream dev merges
+
+The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
+history, one `git merge --no-commit <tip>` per step, so that each step is
+tested on its own. The rules that hold across the steps: the ARB files keep
+the fork's translations where both sides changed a value and take upstream's
+new keys; the generated `app_localizations*.dart` are taken as ours and
+regenerated with `gen-l10n`; the merge hot spots (`chat_screen.dart`,
+`channel_chat_screen.dart`, `contacts_screen.dart`, `map_screen.dart`, the
+connector) stay the fork's and upstream's functional changes are ported into
+them by hand; the storage stays the fork's SQLite; `pubspec.yaml` changes go
+into the three profiles; this file stays the fork's.
+
+**Step 1 (2026-10-12, dev up to 9334d556, upstream's 2026-09-27 batch).**
+Taken: notification replies, mark-as-read and mute actions with Android
+Auto support (`services/notification_reply.dart`, the connector's
+`handleNotificationReply`, MessagingStyle notifications that still carry the
+fork's MCOimg pictures as the large icon and Apple attachment); the channel
+mute bell in the channel chat, one `Channel.muteKey` for named and unnamed
+channels; resending a channel message until it is heard through N repeaters
+(`channelMinHops*` settings, `_resendUntilMinHops`, the resend reusing the
+first send's packet timestamp so it stays one packet; the status icon of a
+channel bubble reports the progress); the contact QR scanner screen
+(`screens/contact_qr_scanner_screen.dart`, `utils/contact_qr*.dart`, beside
+the fork's own link parser); day separators in both chats
+(`widgets/chat_day_separator.dart`); "keep chat history" on contact
+deletion (`removeContact(keepMessages:)`); the contacts-full banner; the map's
+node clustering toggle (`mapClusterNodes`); the USB serial close off the UI
+isolate with the teardown serialised against reconnects
+(`_activeDisconnect`, `_disposed`); the self-node telemetry tile; the
+repeater settings "load all" with fields disabled until read; upstream's
+image send preview with its own reconstruction preview (replacing the fork's
+"as received" one, the parity default kept off); the hash-width fix when a
+repeat's path bytes are merged. Left out: upstream's app-side default region
+(the fork uses the node's default flood scope), the `region` field on
+`ChannelMessage` (the fork has `packetRegion`, and "reply to the same
+region" was ported onto it: the reply banner's region chip, shown for a
+message with a known region and off until tapped, sends the reply under that region
+through `sendChannelMessage(region:)`, the scheduled and the deferred sends
+carrying it along), upstream's `_isChannelRepeat` rewrite and reply-target
+resolution (the fork's exact quotes and heard-packet map cover them), the
+discovery screen's add icon and the region screen's empty state,
+`test/models/channel_message_reply_test.dart` (tests an upstream-only
+constructor parameter).
+
 ## Transports
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.

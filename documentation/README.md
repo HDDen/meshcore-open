@@ -1,6 +1,13 @@
 # MeshCore Open - Feature Documentation
 
-MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking devices. This documentation covers every user-facing feature, how to access it, and what it does.
+MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking devices. These guides describe current user-facing features and their requirements. Reviewed against app `9.5.0+16`, including region-display merge `5eca459e`, on September 27, 2026. Hardware behavior still depends on platform, radio, and firmware.
+
+## Start here
+
+1. Use compatible MeshCore companion firmware and [connect a radio](scanner-and-connection.md).
+2. Wait for synchronization, then open a [channel](channels.md) or [contact chat](chat-and-messaging.md).
+3. For scoped floods, configure [regions](regions.md). For image packets, install the [image model](image-messages.md).
+4. If a device or feature is unavailable, use [troubleshooting](troubleshooting.md).
 
 ## Table of Contents
 
@@ -11,11 +18,15 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 5. [Channels](channels.md) - Broadcast channels, communities, and channel chat
 6. [Map & Location](map-and-location.md) - Node map, path tracing, line-of-sight, and offline caching
 7. [Settings](settings.md) - Device settings, app settings, radio configuration, and exports
-8. [Notifications](notifications.md) - System notifications, unread badges, and notification preferences
+8. [Notifications](notifications.md) - System notifications, replies from watches and Android Auto, unread badges, and notification preferences
 9. [Repeater Management](repeater-management.md) - Repeater hub, status, CLI, telemetry, and neighbors
 10. [Additional Features](additional-features.md) - GIF picker, localization, debug logs, SMAZ compression, and more
 11. [Routing Paths](routing-paths.md) - Path encoding, validation, device capability detection, and storage
 12. [BLE Protocol & Data Layer](ble-protocol.md) - Technical reference for the communication protocol and data architecture
+13. [Regions](regions.md) - Default/override scopes, message labels, and reply regions
+14. [Image Messages](image-messages.md) - Model setup, mesh image sending, recovery, and reconstruction
+15. [Companion Radio Statistics](radio-statistics.md) - Noise, signal metrics, and airtime
+16. [Troubleshooting](troubleshooting.md) - BLE, USB, browser, and firmware issues
 
 ## App Overview
 
@@ -31,3 +42,20 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 - **Read saved chat history offline**, either for one previously connected node or as a shared cross-node view
 - **Search decoded message text** across channels, contacts, and room servers
 - **Analyze line-of-sight** between nodes with terrain elevation profiles
+- **Use Android Auto** to hear new messages and reply by voice while driving (Android)
+
+## What needs internet?
+
+| Feature | Internet requirement |
+|---|---|
+| Radio messaging, region-scoped sends | No internet needed for the mesh transport |
+| Mesh image encoding/reconstruction | Local after model installation |
+| On-device translation | Local after model installation |
+| Model downloads | Internet required |
+| GIF search/display and URL image previews | Internet required to retrieve content |
+| Map display | Cached tiles work offline; uncached tiles need internet |
+| Terrain LOS analysis | Elevation lookup needs internet unless the required data is already cached |
+
+## Keeping documentation current
+
+When changing a feature, update its access steps, defaults, platform/firmware requirements, failure states, and screenshots. Keep binary framing details in the protocol reference and implementation links. See [contribution guidelines](../CONTRIBUTING.md).

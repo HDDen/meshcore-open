@@ -73,6 +73,7 @@ import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/blocked_message_body.dart';
 import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/chat_day_separator.dart';
 import '../widgets/channel_edit_sheet.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/chat_bubble_box.dart';
@@ -145,6 +146,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   bool _ignoreNextTextFieldFocus = false;
   String _lastTextFieldText = '';
   ChannelMessage? _replyingToMessage;
+  /// Whether the reply goes out under the quoted message's region rather
+  /// than the channel's own: off until the chip in the reply banner, shown
+  /// for a message with a known region, is tapped.
+  bool _useReplyRegion = false;
   String? _plainReplyComposerPrefix;
   List<Contact> _mentionSuggestions = const [];
   _ComposerEncoding? _composerEncodingMemo;
@@ -404,6 +409,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       setState(() {
         _plainReplyComposerPrefix = null;
         _replyingToMessage = null;
+        _useReplyRegion = false;
       });
     }
     ComposerDraftCache.write(_composerDraftKey, _composerBodyText(text));
@@ -486,6 +492,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() {
       _channelSkipNextBottomSnap = true;
       _replyingToMessage = message;
+      // Off until the chip in the reply banner is tapped (Denis, 2026-10-12).
+      _useReplyRegion = false;
       _plainReplyComposerPrefix = prefix;
     });
     if (prefix != null) {
@@ -511,6 +519,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final draft = _composerBodyText(_textController.text);
     setState(() {
       _replyingToMessage = null;
+      _useReplyRegion = false;
       _plainReplyComposerPrefix = null;
     });
     if (_textController.text != draft) {
@@ -1025,6 +1034,25 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           centerTitle: false,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
+            Consumer<AppSettingsService>(
+              builder: (context, settings, _) {
+                final muteKey = widget.channel.muteKey;
+                final muted = settings.isChannelMuted(muteKey);
+                return IconButton(
+                  tooltip: muted
+                      ? context.l10n.channels_unmuteChannel
+                      : context.l10n.channels_muteChannel,
+                  icon: Icon(
+                    muted
+                        ? Icons.notifications_off_outlined
+                        : Icons.notifications_outlined,
+                  ),
+                  onPressed: () => muted
+                      ? settings.unmuteChannel(muteKey)
+                      : settings.muteChannel(muteKey),
+                );
+              },
+            ),
             const RadioStatsIconButton(),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
@@ -1303,11 +1331,26 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                                   textScale,
                                                   settingsService,
                                                 );
-                                          if (isUnreadAnchor) {
+                                          // The list is reversed: the row
+                                          // after this one is the older one.
+                                          final startsDay =
+                                              messageIndex ==
+                                                  reversedRows.length - 1 ||
+                                              !isSameChatDay(
+                                                reversedRows[messageIndex + 1]
+                                                    .receivedAt,
+                                                row.receivedAt,
+                                              );
+                                          if (isUnreadAnchor || startsDay) {
                                             return Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                const UnreadDivider(),
+                                                if (startsDay)
+                                                  ChatDaySeparator(
+                                                    day: row.receivedAt,
+                                                  ),
+                                                if (isUnreadAnchor)
+                                                  const UnreadDivider(),
                                                 bubble,
                                               ],
                                             );
@@ -1800,6 +1843,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
                                       isFailed: showFailureVisual,
+                                      isChannel: true,
+                                      repeatCount: message.repeatCount,
+                                      resendProgress: connector.channelResendProgress(
+                                        message.messageId,
+                                      ),
+                                      hopShortfall: connector.channelHopShortfall(
+                                        message.messageId,
+                                      ),
                                     ),
                                   )
                                 : null,
@@ -1831,6 +1882,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             ChannelMessageStatus.sent &&
                                         displayPath.isNotEmpty,
                                     isFailed: showFailureVisual,
+                                    isChannel: true,
+                                    repeatCount: message.repeatCount,
+                                    resendProgress: connector.channelResendProgress(
+                                      message.messageId,
+                                    ),
+                                    hopShortfall: connector.channelHopShortfall(
+                                      message.messageId,
+                                    ),
                                   ),
                                 ),
                                 // With tracing off the meta row is hidden, so
@@ -1907,6 +1966,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
                                       isFailed: showFailureVisual,
+                                      isChannel: true,
+                                      repeatCount: message.repeatCount,
+                                      resendProgress: connector.channelResendProgress(
+                                        message.messageId,
+                                      ),
+                                      hopShortfall: connector.channelHopShortfall(
+                                        message.messageId,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1953,6 +2020,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                               ChannelMessageStatus.sent &&
                                           displayPath.isNotEmpty,
                                       isFailed: showFailureVisual,
+                                      isChannel: true,
+                                      repeatCount: message.repeatCount,
+                                      resendProgress: connector.channelResendProgress(
+                                        message.messageId,
+                                      ),
+                                      hopShortfall: connector.channelHopShortfall(
+                                        message.messageId,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1987,6 +2062,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             ChannelMessageStatus.sent &&
                                         displayPath.isNotEmpty,
                                     isFailed: showFailureVisual,
+                                    isChannel: true,
+                                    repeatCount: message.repeatCount,
+                                    resendProgress: connector.channelResendProgress(
+                                      message.messageId,
+                                    ),
+                                    hopShortfall: connector.channelHopShortfall(
+                                      message.messageId,
+                                    ),
                                   ),
                                 ),
                                 // With tracing off the meta row is hidden, so
@@ -2091,6 +2174,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             ChannelMessageStatus.sent &&
                                         displayPath.isNotEmpty,
                                     isFailed: showFailureVisual,
+                                    isChannel: true,
+                                    repeatCount: message.repeatCount,
+                                    resendProgress: connector.channelResendProgress(
+                                      message.messageId,
+                                    ),
+                                    hopShortfall: connector.channelHopShortfall(
+                                      message.messageId,
+                                    ),
                                   ),
                                 ),
                                 // With tracing off the meta row is hidden, so
@@ -3838,6 +3929,48 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               ],
             ),
           ),
+          // The quoted message's region: the reply goes back under it while
+          // the chip is on, under the channel's own region when struck out.
+          if (message.packetRegion?.isNotEmpty ?? false)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(MeshRadii.xs),
+                onTap: () =>
+                    setState(() => _useReplyRegion = !_useReplyRegion),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _useReplyRegion
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(MeshRadii.xs),
+                    border: Border.all(
+                      color: _useReplyRegion
+                          ? scheme.primary
+                          : scheme.outlineVariant,
+                    ),
+                  ),
+                  child: Text(
+                    context.l10n.channels_regionSetTo(message.packetRegion!),
+                    style:
+                        MeshTheme.mono(
+                          fontSize: 10 * textScale,
+                          color: _useReplyRegion
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurfaceVariant,
+                        ).copyWith(
+                          decoration: _useReplyRegion
+                              ? null
+                              : TextDecoration.lineThrough,
+                        ),
+                  ),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
             onPressed: _cancelReply,
@@ -4396,6 +4529,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       connector,
       skipReplyContext ? embeddedReplyTarget : _replyingToMessage,
     );
+    // Read before _cancelReply clears the toggle.
+    final replyRegion = _useReplyRegion ? replyTarget?.packetRegion : null;
     if (quickAnswerText == null) {
       ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
@@ -4424,6 +4559,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             ? null
             : replyTarget.containerTimestamp ??
                   replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
+        region: replyRegion,
       );
     } else {
       connector.sendChannelMessage(
@@ -4444,6 +4580,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             ? null
             : replyTarget.containerTimestamp ??
                   replyTarget.timestamp.millisecondsSinceEpoch ~/ 1000,
+        region: replyRegion,
       );
     }
   }

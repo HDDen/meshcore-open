@@ -41,27 +41,27 @@ Many contacts on the mesh don't have GPS hardware, so the map has no explicit co
 
 #### Why guessed locations exist
 
-In a mesh network, every message hops through one or more repeaters on its way to the destination. Each repeater in the path is identified by the first byte of its public key. If any of those repeaters have a known GPS location (because they advertise it), then a contact that routes through those repeaters must be somewhere within radio range of them. By combining the positions of multiple repeaters a contact is known to use, the app can triangulate a rough area where the contact is likely located.
+In a mesh network, every message hops through one or more repeaters on its way to the destination. Each repeater in the path is identified by a prefix of its public key whose width is recorded with the path. If any of those repeaters have a known GPS location (because they advertise it), then a contact that routes through those repeaters must be somewhere within radio range of them. By combining the positions of multiple repeaters a contact is known to use, the app can place a rough marker near the anchors. This is a routing heuristic, not measured triangulation or a reliable estimate of physical location.
 
 #### How the algorithm works
 
-1. **Build a repeater index**: The app collects all known contacts of type Repeater that have a valid GPS position and indexes them by the first byte of their public key.
+1. **Build an anchor index**: The app collects known Repeater and Room contacts that have a valid GPS position and indexes them by the public-key prefixes (1–3 bytes) that paths can use. Only contacts without GPS that were seen within the last 7 days are candidates for a guess.
 
-2. **Collect anchor points**: For each contact that lacks GPS, the app looks at the **last-hop byte** of the contact's current path and also searches the `PathHistoryService` for recent paths. Each last-hop byte that matches a located repeater becomes an "anchor point" — a GPS coordinate the contact is likely near.
+2. **Walk each path**: For each candidate, the app takes its current path plus recent paths from `PathHistoryService`. Each path is walked hop by hop, starting from your own radio's position, and the last hop that resolves to an anchor is the repeater that heard the contact directly.
 
-3. **Resolve ambiguity**: If multiple repeaters share the same first public-key byte (a hash collision), that byte is discarded as ambiguous. Only unambiguous one-to-one matches are kept.
+3. **Resolve ambiguity**: If several anchors share a hop's prefix (a hash collision), the hop resolves to the candidate nearest the previous hop that is within the maximum link range. Without a self position there is no reference point, so ambiguous prefixes are dropped and only unambiguous matches are kept. The maximum link range is the estimated LoRa range (computed from the current frequency, bandwidth, spreading factor, and TX power using a free-space path loss model), capped at a plausible 150 km.
 
-4. **Filter geometric inconsistencies**: Two anchor points separated by more than `2 × maxRangeKm` (the estimated LoRa radio range, computed from the current frequency, bandwidth, spreading factor, and TX power using a free-space path loss model) cannot both be in range of the same node. Outlier anchors are removed to keep only a geometrically consistent set.
+4. **Vote and filter inconsistencies**: Each observed path contributes one vote for the anchor it ended on. Two anchors more than `2 × max link range` apart cannot both be in range of the same node, so outliers are removed; if no anchors agree, the most-voted anchor wins.
 
 5. **Compute the estimated position**:
    - **Single anchor**: The contact is placed on a small circle (330m radius) around the repeater. The angle on the circle is deterministic — derived from an FNV-1a hash of the contact's public key — so the same contact always appears at the same offset, preventing markers from stacking on top of each other.
-   - **Two or more anchors**: The position is a weighted average of all anchor coordinates (each subsequent anchor weighted at half the previous one, biasing toward the first), with a smaller offset radius (120m for 2 anchors, 80m for 3+) applied for visual separation.
+   - **Two or more anchors**: The position is the average of the anchor coordinates weighted by their vote counts, with a smaller offset radius (120m for 2 anchors, 80m for 3+) applied for visual separation.
 
 6. **Assign confidence level**:
    - **High confidence** (2+ anchors): The marker border uses the node's type color (brighter border).
    - **Low confidence** (1 anchor): The marker border is rendered in a muted grey.
 
-7. **Cache the result**: The computation is cached using a key derived from the contact's paths, anchor positions, path-history version, and radio parameters. The cache is only invalidated when any of these inputs change, avoiding recomputation on every UI rebuild.
+7. **Cache the result**: The computation runs in a background isolate and is cached using a key derived from the contacts' paths, anchor positions, path-history version, radio parameters, and your own position. The cache is only invalidated when any of these inputs change, avoiding recomputation on every UI rebuild.
 
 #### How to read guessed locations on the map
 
@@ -134,7 +134,7 @@ The bottom panel also provides **packet animation controls**:
 - A live **"Hop x of y · from → to"** label that tracks the active segment
 
 ### How It Works
-Sends a trace request frame over the mesh. The repeater network traces the path hop-by-hop and returns per-hop SNR data. For hops without GPS, positions are inferred by averaging GPS coordinates of contacts sharing that last-hop byte.
+Sends a trace request frame over the mesh. The repeater network traces the path hop-by-hop and returns per-hop SNR data. For hops without GPS, positions are inferred by averaging GPS coordinates of contacts sharing that last-hop prefix.
 
 ---
 
@@ -178,7 +178,7 @@ Settings → App Settings → Map Display → Offline Map Cache
 3. Adjust the zoom range slider
 4. Tap "Download Tiles" (confirmation dialog shows estimated count)
 5. Tiles are downloaded with up to 8 concurrent connections
-6. Once cached, tiles are served from disk without internet (365-day stale period)
+6. Once cached, tiles are served without internet where supported by the cache backend. Select a Stadia Maps source with a configured API key for bulk offline downloads; OpenStreetMap is for live viewing/already cached tiles. Check the provider’s current terms and quotas.
 
 ---
 
@@ -203,3 +203,7 @@ The phone's own GPS is **never used**. All location data comes from the mesh:
 
 1. **Device self-location**: Read from firmware device-info response. Set manually in Settings → Location, or updated automatically if the device has a GPS module.
 2. **Remote node locations**: Extracted from advertisement packets received over the mesh. Encoded as integer lat/lon × 1,000,000.
+
+## Regions and offline use
+
+A [message region](regions.md) is a forwarding scope, not a coordinate or GPS boundary. The map does not establish that a sender is physically inside that region. Cached tiles can be used offline; uncached tiles and uncached LOS elevation lookups require internet.

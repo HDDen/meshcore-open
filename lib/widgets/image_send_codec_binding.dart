@@ -118,8 +118,7 @@ abstract class ImageSendCodec {
   /// Whether this build can run the decoder at all.
   ///
   /// Encoding and decoding are separate halves of the model: a send-only
-  /// install encodes fine and cannot decode a thing. The sheet hides its
-  /// "as received" preview rather than offering a button that cannot work.
+  /// install encodes fine and cannot decode a thing.
   bool get canDecode;
 
   /// Encode [imageBytes] (any common still format) at [rate], returning the
@@ -129,14 +128,9 @@ abstract class ImageSendCodec {
   /// [kImageCodecSquareSize] square first.
   Future<Uint8List> encode(Uint8List imageBytes, ImageCodecRatePoint rate);
 
-  /// Decodes [bitstream] back to PNG bytes — the picture the receiver will
-  /// actually see, synthesised from the same bytes that go on the air.
-  ///
-  /// Returns null when the decode could not run or was rejected; the sheet
-  /// keeps showing the original in that case. This is the full decoder, so it
-  /// is as slow and as memory-hungry as a receive-side decode: call it when
-  /// the user asks for it, not on every preview.
-  Future<Uint8List?> decodeToPng(Uint8List bitstream, ImageCodecRatePoint rate);
+  /// Decodes [payload] to PNG exactly as a recipient would, or null when this
+  /// device cannot decode.
+  Future<Uint8List?> decodePreview(Uint8List payload);
 }
 
 /// A deterministic stand-in used for widget previews and tests.
@@ -153,10 +147,6 @@ class FakeImageSendCodec implements ImageSendCodec {
   final String? unavailableReason;
 
   final Duration latency;
-
-  /// Fake bitstreams decode to nothing; the preview falls back to the original.
-  @override
-  bool get canDecode => false;
 
   const FakeImageSendCodec({
     this.availability = ImageCodecAvailability.ready,
@@ -178,9 +168,10 @@ class FakeImageSendCodec implements ImageSendCodec {
     );
   }
 
+  /// Fake bitstreams decode to nothing; the preview falls back to the original.
   @override
-  Future<Uint8List?> decodeToPng(
-    Uint8List bitstream,
-    ImageCodecRatePoint rate,
-  ) async => null;
+  bool get canDecode => false;
+
+  @override
+  Future<Uint8List?> decodePreview(Uint8List payload) async => null;
 }

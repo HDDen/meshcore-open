@@ -63,6 +63,7 @@ import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/composer_text_builder.dart';
 import '../widgets/byte_count_input.dart';
+import '../widgets/chat_day_separator.dart';
 import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
@@ -1433,10 +1434,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     final isUnreadAnchor =
                         _unreadDividerMessageId != null &&
                         message.messageId == _unreadDividerMessageId;
-                    final child = isUnreadAnchor
+                    // The list is reversed: the next message is the older one.
+                    final startsDay =
+                        messageIndex == reversedMessages.length - 1 ||
+                        !isSameChatDay(
+                          reversedMessages[messageIndex + 1].timestamp,
+                          message.timestamp,
+                        );
+                    final child = isUnreadAnchor || startsDay
                         ? Column(
                             mainAxisSize: MainAxisSize.min,
-                            children: [const UnreadDivider(), replyable],
+                            children: [
+                              if (startsDay)
+                                ChatDaySeparator(day: message.timestamp),
+                              if (isUnreadAnchor) const UnreadDivider(),
+                              replyable,
+                            ],
                           )
                         : replyable;
                     return child;

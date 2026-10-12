@@ -52,7 +52,7 @@ enum MeshCoreConnectionState {
    from `MeshCoreUuids.deviceNamePrefixes` are retained as display/reference
    hints, not as the scan filter.
 2. **Connect** with 15-second timeout (6 seconds on Linux)
-3. **Request MTU** 185 bytes (non-web only)
+3. **Request MTU** 185 bytes (skipped on web and Linux)
 4. **Discover services** and locate NUS
 5. **Enable TX notifications** (up to 3 attempts on native)
 6. **Subscribe** to TX characteristic for incoming frames
@@ -114,7 +114,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 40 | CMD_GET_CUSTOM_VAR | Get custom variables |
 | 41 | CMD_SET_CUSTOM_VAR | Set a custom variable |
 | 50 | CMD_SEND_BINARY_REQ | Send binary request |
-| 54 | CMD_SET_FLOOD_SCOPE | Set flood routing scope (v8+) |
+| 54 | CMD_SET_FLOOD_SCOPE_KEY | Set flood routing scope (v8+; `cmdSetFloodScope` in the app) |
 | 55 | CMD_SEND_CONTROL_DATA | Send control data (e.g. zero-hop discovery, v8+) |
 | 56 | CMD_GET_STATS | Request companion radio stats |
 | 57 | CMD_SEND_ANON_REQ | Send anonymous request |
@@ -191,7 +191,7 @@ Sender key, text, timestamp, outgoing flag, status (pending/sent/delivered/faile
 Sender name, text, `timestamp`, local timeline `receivedAt`, optional first-transmission `sentByRadioAt`, status (pending/sent/failed), repeater hops, path variants, channel index, reactions, and reply threading fields. GROUP_TEXT supplies an independent packet timestamp. MCMP v3 GROUP_DATA has no separate protocol timestamp, so its model `timestamp` is populated from the MCMP body timestamp. The app assigns `receivedAt`; channel history and UI ordering use it, while message bubbles display `timestamp`.
 
 ### Channel
-Index (0–7), name, 16-byte PSK, unread count. PSK derivation methods for hashtag (SHA-256) and community (HMAC-SHA256) channels.
+Index (0 through the firmware-reported channel limit minus one), name, 16-byte PSK, unread count. PSK derivation methods for hashtag (SHA-256) and community (HMAC-SHA256) channels.
 
 ### Community
 UUID, name, 32-byte secret, hashtag channel list. Shared via QR code.
@@ -213,9 +213,12 @@ into it once. Web keeps the SharedPreferences implementation.
 | Contact Groups | `contact_groups<pubKey10>` | Per device identity |
 | Communities | `communities_v1<pubKey10>` | Per device identity |
 | Unread Counts | `contact_unread_count<pubKey10>` | Per device identity |
-| Discovered Contacts | `discovered_contacts` | Global |
+| Discovered Contacts | `discovered_contacts<pubKey10>` | Per device identity (legacy global `discovered_contacts` is migrated on first load) |
 | App Settings | `app_settings` | Global |
 | Path History | `path_history_<contactKey>` | Per contact |
+| Region Names | `regions` | Global |
+| Channel Region | `channel_region_<pubKey10><index>` | Per device + channel |
+| Default Region | `default_region_<pubKey10>` | Per device identity |
 
 ## Auto-Add Configuration Bitmask
 
@@ -262,3 +265,21 @@ Uses Flutter `Provider` with `ChangeNotifier`. The central state holder is `Mesh
 5. Storage stores are persisted (async)
 6. `notifyListeners()` triggers UI rebuilds
 7. Screens read current state via getters
+
+## CLI and application payloads
+
+Remote repeater CLI commands use the text-message command with `txtTypeCliData`, addressed to the repeater's public-key prefix:
+
+```text
+[CMD_SEND_TXT_MSG=2][txt_type=1][attempt][timestamp uint32 LE][public-key prefix x6][UTF-8 command][0]
+```
+
+See `buildSendCliCommandFrame()` (takes the repeater public key) in [meshcore_protocol.dart](../lib/connector/meshcore_protocol.dart). The companion's local CLI command (`CMD_RUN_CLI_COMMAND`, 66) is not used by the app. Companion reboot uses `buildRebootFrame()`; remote repeater reboot is a CLI command.
+
+Reactions use `r:<four-hex message hash>:<two-hex emoji index>`. Channel replies use `@[senderName] text`; location pins use `m:<lat>,<lon>|<label>|...`. These are application conventions and require compatible clients for special rendering.
+
+## Regions and image data
+
+Transport-routed raw packets include four transport-code bytes before packed path metadata. For transport floods, the app matches the first two code bytes against locally known region candidates using HMAC-SHA256 over `[payloadType][payload]`. Region scope keys are the first 16 bytes of SHA256 of `#<region>`. The name itself is not carried as plain text. Unknown or ambiguous matches remain null; see [regions](regions.md).
+
+Image chunks use `CMD_SEND_CHANNEL_DATA` (62), `RESP_CODE_CHANNEL_DATA_RECV` (27), and application data type `0xAE1C`. The framing, capacities, metadata byte, and XOR recovery algorithm are defined in [image_chunk_transport.dart](../lib/services/image_chunk_transport.dart), which is the source of truth. See [image messages](image-messages.md) for user requirements and limitations.
