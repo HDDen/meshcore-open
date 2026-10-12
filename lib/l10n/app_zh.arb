@@ -461,6 +461,8 @@
   "channels_scanQrCodeComingSoon": "即将推出",
   "channels_enterHashtag": "输入标签",
   "channels_hashtagHint": "例如：#团队",
+  "chat_noRadioLocation": "您的电台未设置位置",
+  "chat_shareMyLocation": "分享我的位置",
   "chat_noMessages": "暂无消息",
   "chat_sendMessageToStart": "发送消息开始对话",
   "chat_originalMessageNotFound": "找不到原始消息",
@@ -716,6 +718,7 @@
   "map_shareMarkerHere": "在此分享标记",
   "map_pinLabel": "标签",
   "map_label": "标签",
+  "map_labelUpdateHint": "使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。",
   "map_pointOfInterest": "兴趣点",
   "map_sendToContact": "发送给联系人",
   "map_sendToChannel": "发送到频道",
@@ -2022,7 +2025,47 @@
   "discoveredContacts_noMatching": "没有匹配的联系人",
   "discoveredContacts_Title": "已发现的联系人",
   "discoveredContacts_copyContact": "复制联系人到剪贴板",
+  "discoveredContacts_export": "导出已发现的联系人",
+  "discoveredContacts_import": "导入已发现的联系人",
+  "discoveredContacts_exported": "已将已发现的联系人导出到{path}。",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "导出已发现的联系人失败：{error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "已导入{count}个已发现的联系人。",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "在导入文件中未找到联系人。",
+  "discoveredContacts_importInvalidFile": "该文件不是已发现联系人的导出文件。",
+  "discoveredContacts_importSummary": "已导入：{imported}，已跳过（已存在）：{skipped}，无法读取的条目：{invalid}。",
+  "discoveredContacts_importTooLarge": "导入文件过大（最大 {maxMb} MB）。",
+  "discoveredContacts_importFailed": "导入已发现的联系人失败：{error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "当联系人列表已满时，将替换最老的非收藏联系人。",
+  "contactsSettings_evictDiscoveredContactsTitle": "清除已发现的联系人",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "启用后，当已发现联系人列表达到 {limit} 条的上限时，应用会移除最旧的已发现联系人。",
   "common_deleteAll": "删除全部",
   "discoveredContacts_deleteContactAllContent": "您确定要删除所有发现的联系人吗？",
   "discoveredContacts_deleteContactAll": "删除所有发现的联系人",
@@ -2866,5 +2909,411 @@
         "type": "int"
       }
     }
-  }
+  },
+  "messageStatus_failedChannel": "此无线电无法发送这条消息。",
+  "messageStatus_resending": "还没有从足够多的中继器听到。已重发 {resends} 次，共 {maxResends} 次。",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "已发送，但只有 {hops} 个中继器（共 {required} 个）回传。它可能已经到达你的无线电收不到的范围之外。",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "已发送。频道不确认送达，因此这只表示你的无线电已发出。",
+  "messageStatus_sentDirect": "已发送。正在等待联系人确认。",
+  "messageStatus_heardRepeatedCount": "重复听到 {count, plural, =1{1 次} other{{count} 次}}。附近的中继器转发了它。",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "地区可将泛洪消息限制在该区域内的中继器。可从附近的中继器获取，或按名称添加。",
+  "settings_regionFetchFromRepeaters": "从中继器获取",
+  "settings_regionDefault": "默认地区",
+  "settings_regionDefaultSubtitle": "用于未设置自己地区的频道",
+  "settings_regionDefaultNone": "无",
+  "settings_telemetryPerContactHint": "要允许某个联系人，请打开其聊天并从菜单中选择“联系人设置”。",
+  "settings_multiAckSubtitle": "发送额外的 ACK 以提高送达率；会占用更多空中时间",
+  "settings_presetCustom": "自定义",
+  "settings_radioMatchWarning": "你通信的所有节点必须使用相同的频率、带宽和扩频因子。编码速率（CR）可以不同。",
+  "settings_txPowerRangeHelper": "{min} 至 {max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "为离网重复设置的频率：{freq} MHz",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "此无线电发送的泛洪数据包在路径中记录的每个节点 ID 的大小：1 字节（256 个 ID，最多 64 跳）、2 字节（6.5 万个 ID，最多 32 跳）、3 字节（1600 万个 ID，最多 21 跳）。ID 越大冲突越少，但固件低于 v1.14 的中继器会丢弃带 2 或 3 字节 ID 的数据包。",
+  "settings_requiresFirmware": "需要固件 {version} 或更高版本",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "重发频道消息，直到传得足够远",
+  "appSettings_channelMinHopsSubtitle": "如果消息没有从足够多的中继器回传，就重新发送。会占用更多空中时间。",
+  "appSettings_channelMinHopsCount": "所需跳数：{count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "最多重发 {count, plural, =1{1 次} other{{count} 次}}",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "后台活动",
+  "appSettings_batteryOptimizationSubtitle": "在电池设置中将 MeshCore Open 设为“不优化”，这样后台也能继续接收消息",
+  "contacts_storageFull": "节点上的联系人存储已满。在删除联系人之前无法添加新节点。",
+  "contacts_removeFromContacts": "从联系人中移除",
+  "contacts_removeFromContactsConfirm": "{contactName} 将移至已发现的联系人。聊天记录将被删除。",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "保留聊天记录",
+  "contacts_remove": "移除",
+  "contacts_discoveredNearby": "附近发现的（{count}）",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "你的无线电能听到但尚未添加的节点会列在“已发现的联系人”中",
+  "channels_hashtag": "标签",
+  "channels_addSectionJoin": "加入现有频道",
+  "channels_addSectionCreate": "创建新频道",
+  "channels_dragToReorder": "拖动以重新排序",
+  "channels_regionDefaultSuffix": "（默认）",
+  "channels_regionSelectExplanation": "此频道的泛洪消息只会由所选地区内的中继器转发。",
+  "channels_regionEmpty": "还没有地区。",
+  "channels_manageRegions": "管理地区",
+  "chat_removeGif": "移除 GIF",
+  "chat_cancelReply": "取消回复",
+  "chat_viewPathOnMap": "在地图上查看路径",
+  "chat_today": "今天",
+  "chat_yesterday": "昨天",
+  "map_centerOnMe": "以我的位置为中心",
+  "map_noNodesLocationHint": "没有最近位置的节点。请放宽时间筛选，或在设置中设置自己的位置。",
+  "map_clusterNodes": "将附近节点分组",
+  "map_groupChip": "分组",
+  "map_clusterNodesSubtitle": "缩小地图时，将附近节点显示为一个带编号的圆圈",
+  "map_manageServer": "管理服务器",
+  "login_showPassword": "显示密码",
+  "login_hidePassword": "隐藏密码",
+  "login_advanced": "高级",
+  "common_clearSearch": "清除搜索",
+  "repeater_roleAdmin": "管理员",
+  "repeater_roleGuest": "访客",
+  "repeater_refreshAll": "全部刷新",
+  "repeater_settingsNotLoaded": "尚未从此中继器加载设置。",
+  "repeater_settingsLoadIncomplete": "部分设置无法加载。请使用刷新按钮重试。",
+  "contacts_scanQrCode": "扫描二维码",
+  "contacts_scanQrInstructions": "将摄像头对准 MeshCore 联系人二维码",
+  "contacts_qrFromGallery": "从相册扫描二维码",
+  "contacts_noQrCodeFound": "所选图片中未找到二维码。",
+  "contacts_qrGalleryFailed": "无法打开相册。",
+  "notification_actionReply": "回复",
+  "notification_actionMarkRead": "标为已读",
+  "notification_actionMuteChannel": "静音频道",
+  "notification_replyHint": "消息",
+  "notification_you": "我",
+  "notification_replyFailedTitle": "回复未发送",
+  "notification_replyNotConnected": "未连接到无线电。请在 MeshCore Open 中重新连接后再次发送回复。",
+  "notification_replyTooLong": "回复太长，无法从通知中发送。请改为在 MeshCore Open 中发送。",
+  "notification_replyUnavailable": "此对话已不在所连接的无线电上。",
+  "notification_replySendFailed": "回复可能未发送。请在 MeshCore Open 中检查后重试。",
+  "notification_replyAppNotRunning": "MeshCore Open 未在运行。请打开它并再次发送回复。",
+  "snrIndicator_nearByRepeatersDescription": "你的无线电直接听到的中继器，最近听到的排在前面。",
+  "radioStats_sectionSignal": "信号",
+  "radioStats_sectionAirtime": "空中时间",
+  "imageSend_lossyNote": "压缩到约 {bytes} 字节。接收方的模型会重建它，因此细节会有所不同。",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "原图",
+  "imageSend_viewReconstruction": "收件人看到的",
+  "imageSend_reconstructionUnavailable": "此设备无法预览重建结果。",
+  "imageSend_modelNotDownloaded": "图像模型尚未下载。在设置中下载后才能发送图像。",
+  "receivedImage_save": "保存图片",
+  "receivedImage_shareCaption": "由 {bytes} 字节经 AI 重建；细节为生成内容，并非传输而来。",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "数据包信息",
+  "receivedImage_parityRecovered": "已从恢复包重建了一个数据包。",
+  "receivedImage_decodeTime": "在 {ms} 毫秒内重建",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "无法保存图片",
+  "reviewMode_dialogTitle": "进入审核模式？",
+  "reviewMode_dialogBody": "审核模式会连接到模拟设备，其中包含示例联系人、频道和消息。无需真实设备。",
+  "reviewMode_confirm": "进入",
+  "reviewMode_cancel": "取消",
+  "reviewMode_banner": "审核模式 — 模拟数据",
+  "reviewMode_sendTest": "发送测试消息",
+  "reviewMode_testSent": "测试消息即将送达。",
+  "reviewMode_exit": "退出",
+  "reviewMode_connectFailed": "无法启动审核模式：{error}",
+  "settings_regionUseRadioDefault": "电台默认（{region}）",
+  "settings_regionNoRegion": "无地区（不限范围）",
+  "settings_regionRadioDefault": "电台默认地区",
+  "settings_regionRadioDefaultSubtitle": "保存在电台上。不指定地区发送的泛洪会使用它，本应用和连接此电台的其他应用都一样。",
+  "settings_regionRadioDefaultUpdated": "电台默认地区已更新",
+  "settings_regionRadioDefaultFailed": "无法更新电台默认地区",
+  "appSettings_channelMinHopsCountRepeaters": "同时统计附近不同的中继器",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "当{count, plural, =1{附近 1 个中继器} other{附近 {count} 个不同的中继器}}转发该消息时，即使听不到它继续传播，也视为已发送。",
+  "appSettings_regionOnHopsLine": "在跳数旁显示地区",
+  "appSettings_regionOnHopsLineSubtitle": "将频道消息的地区与跳数显示在同一行，而不是在其下方。",
+  "channels_regionRadioDefaultSuffix": "（电台默认）",
+  "channels_regionRadioDefaultApplies": "此电台会用默认地区发送未指定地区的泛洪：{region}。",
+  "chat_futureTimestampWarning": "此消息的时间在未来，发送方的时钟可能有误。已按到达顺序显示。",
+  "discoveredContacts_scan": "扫描附近节点",
+  "discoveredContacts_scanTitle": "附近节点",
+  "discoveredContacts_scanExplanation": "请求直接无线电范围内的节点自报身份。中继器和传感器会响应，房间服务器和伴侣设备通常不会。",
+  "discoveredContacts_scanning": "正在扫描…",
+  "discoveredContacts_scanFound": "{count, plural, =1{发现 1 个节点} other{发现 {count} 个节点}}",
+  "discoveredContacts_scanNoResults": "没有节点响应。中继器会限制回复频率，请一分钟后重试。",
+  "discoveredContacts_scanAgain": "重新扫描",
+  "discoveredContacts_scanFailed": "无法发送扫描请求。",
+  "discoveredContacts_scanSignal": "信号 {snr} dB · 对方收到我们为 {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "已在联系人中",
+  "discoveredContacts_scanNameLater": "下次广播后将显示名称",
+  "channels_waitForSync": "频道仍在从电台加载。请在同步完成后重试。",
+  "channels_nameTooLong": "名称过长（最多 {maxBytes} 字节）。",
+  "repeater_valueRequired": "{field}：请输入值",
+  "losMapDetailTooltip": "地图细节",
+  "losUnitsTooltip": "单位",
+  "losDistance": "距离",
+  "losClearance": "净空",
+  "losBlockedBy": "阻挡物",
+  "losObstruction": "障碍物",
+  "losDistanceFromA": "距 A {distance}",
+  "losWorstBadge": "最严重",
+  "losBlockedAmount": "阻挡 {amount}",
+  "losFromA": "自 A",
+  "losFromB": "自 B",
+  "losElevation": "海拔",
+  "losCenterOnMap": "居中显示",
+  "losStatusClear": "畅通",
+  "losStatusMarginal": "临界",
+  "losStatusBlocked": "受阻",
+  "losStatusCheckingShort": "检查中",
+  "losStatusNoResult": "无结果",
+  "losSelectedPill": "已选",
+  "gif_tapToLoad": "点按加载 GIF",
+  "gif_loadFailedRetry": "无法加载 GIF\n点按重试",
+  "qr_cameraPermissionDenied": "相机权限被拒绝。\n请在设置中启用相机访问。",
+  "qr_cameraUnsupported": "此设备不支持相机。",
+  "qr_cameraStartFailed": "无法启动相机。\n{details}",
+  "imageMessages_downloadFailedWithError": "无法下载图像模型：{error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "隐藏:离开地图前保持隐藏。",
+  "map_markerRemoveHint": "移除:在从筛选菜单中恢复之前保持隐藏。",
+  "map_markerRemoved": "标记已移除",
+  "map_restoreRemovedMarkers": "恢复已移除的标记",
+  "map_restoreRemovedMarkersSubtitle": "已移除 {count} 个",
+  "map_markersRestored": "已恢复 {count} 个标记",
+  "map_setLocationConfirmTitle": "设为你的位置?",
+  "map_setLocationConfirmBody": "你的节点将广播此位置:\n{lat}, {lon}",
+  "map_setLocationAction": "设置位置",
+  "map_locationSetSuccess": "节点位置已更新",
+  "map_locationSetFailed": "设备未确认新位置。请重试。",
+  "map_poiClusterTitle": "此处有 {count} 个标记",
+  "map_poiClusterSemantics": "{count} 个共享标记。点按以查看列表。",
+  "map_youWithMarkers": "你和 {count} 个标记",
+  "map_sharedMarkerSemantics": "共享标记:{label}",
+  "map_nodeMarkerSemantics": "{name},{type},{status}",
+  "mapCache_zoomLevel": "缩放 {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "下载已取消。已缓存 {count} 个图块。",
+  "mapCache_tooManyTilesTitle": "区域过大",
+  "mapCache_tooManyTiles": "此区域需要 {count} 个图块,超过 {max} 的上限。请选择更小的区域或降低最大缩放级别。",
+  "chat_clearChatConfirm": "这将从此设备上清除此对话中的所有消息,且无法撤销。",
+  "channels_clearChatConfirm": "这将从此设备上清除此频道中的所有消息(包括已接收的图片),且无法撤销。",
+  "channels_timeNow": "刚刚",
+  "channels_timeMinutes": "{minutes}分钟",
+  "channels_timeHours": "{hours}小时",
+  "channels_timeDays": "{days}天",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "未知",
+  "pathMap_noSelfGpsFix": "本地节点没有 GPS 定位",
+  "pathTrace_sendFailed": "无法发送路径追踪:{error}",
+  "losErrorNoInternet": "海拔数据需要网络连接",
+  "losResultStale": "结果已过期:天线高度已更改",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "正在加载遥测数据…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "未连接到电台。请连接后重试。",
+  "settings_requiresConnection": "请连接电台后使用",
+  "settings_txPowerInvalidRange": "TX 功率无效({min} 至 {max} dBm)",
+  "settings_contactSettingsSaved": "联系人设置已保存",
+  "settings_batteryToggleHint": "点按可在百分比和电压之间切换",
+  "settings_publicKeyCopyHint": "复制公钥",
+  "settings_locationClearHelper": "将两个字段都留空即可移除你的位置。",
+  "settings_locationCleared": "位置已移除",
+  "settings_regionFetchDiscovering": "正在查找附近的中继器…",
+  "settings_regionFetchProgress": "正在询问第 {current}/{total} 个中继器…",
+  "settings_regionFetchNoRepeaters": "目前还没有已知的中继器。请将中继器添加为联系人,或等待其广播后重试。",
+  "settings_regionFetchNoneResponded": "附近没有中继器响应。请靠近中继器后重试。",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "路由",
+  "appSettings_imageMessagesSection": "图片消息",
+  "appSettings_showApiKey": "显示 API 密钥",
+  "appSettings_hideApiKey": "隐藏 API 密钥",
+  "translation_defaultModelName": "模型",
+  "translation_downloadProgressBytes": "{fileName}:{current} MB",
+  "translation_downloadProgressTotal": "{fileName}:{current} / {total} MB({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "电台已断开连接",
+  "repeater_radioDisconnectedHint": "请重新连接电台以发送命令、刷新或保存更改。",
+  "repeater_cliSend": "发送命令",
+  "repeater_cliCopyTranscript": "复制记录",
+  "repeater_cliShareTranscript": "分享记录",
+  "repeater_cliTranscriptCopied": "记录已复制",
+  "repeater_cliClearHistoryConfirm": "清除命令历史?此操作无法撤销。",
+  "repeater_cliSearchCommands": "搜索命令",
+  "repeater_cliNoMatchingCommands": "没有匹配的命令",
+  "debugLog_clearConfirm": "清除所有日志条目?此操作无法撤销。",
+  "repeater_unsavedChangesTitle": "未保存的更改",
+  "repeater_unsavedChangesMessage": "你有尚未保存到中继器的更改。",
+  "repeater_discardChanges": "放弃",
+  "repeater_actionSentNoReply": "{action}:命令已发送。中继器不会回复此命令。",
+  "repeater_invalidSettingValue": "{setting}:{value} 无效",
+  "repeater_txPowerOutOfRange": "TX 功率 {value} 超出范围({min} 至 {max} dBm)",
+  "repeater_prvKeyLengthError": "私钥必须恰好为 {length} 个十六进制字符",
+  "contacts_advertFailed": "无法发送广播",
+  "contacts_manageGroups": "管理分组",
+  "community_shortId": "ID:{id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "已连接到",
+  "usbChooseSerialPort": "选择串口",
+  "neighbors_durationSeconds": "{seconds}秒",
+  "neighbors_durationMinutes": "{minutes}分{seconds}秒",
+  "neighbors_durationHours": "{hours}小时{minutes}分",
+  "scanner_getNodeTitle": "需要新节点吗？",
+  "scanner_getNodeBody": "钱包大小，运行 MeshCore，双频 GPS，防水，续航 5 天。",
+  "scanner_getNodeAction": "点此获取",
+  "scanner_getNodeDisclosure": "推广链接：每次购买都会支持 MeshCore Open。",
+  "networkMap_settingsSection": "网络地图",
+  "networkMap_uploadTitle": "分享我的电台收到的信息",
+  "networkMap_uploadExplanation": "开启后，当您的电台已连接时，应用会把电台收到的数据包的简要信息发送到 MeshCore Open 网络地图，让大家看到有哪些转发节点以及它们如何相连。发送内容包括每个数据包的类型、路由、跳数、信号强度和大小，以及转发节点自身广播中的名称和大致位置。绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置：位置会取整到约 2 公里，且应用每天都会使用新的随机 ID。",
+  "networkMap_whatWeCollect": "我们收集的内容",
+  "networkMap_promptTitle": "要帮助建设网络地图吗？",
+  "networkMap_promptBody": "MeshCore Open 可以把您的电台收到的信息分享到公开的网络地图 map.meshcoreopen.org，让大家看到有哪些转发节点以及它们如何相连。\n\n绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置。位置会取整到约 2 公里。",
+  "networkMap_promptSettingsHint": "您可以随时在 设置 → 应用设置 → 网络地图 中更改。",
+  "networkMap_promptAccept": "分享",
+  "networkMap_promptDecline": "不用了",
+  "networkMap_statusOff": "已关闭。不会发送任何内容。",
+  "networkMap_statusWaiting": "已开启。正在等待电台连接。",
+  "networkMap_statusNothingSent": "已开启。尚未发送任何内容。",
+  "networkMap_statusLastSent": "上次发送 {time}。今天 {count} 个数据包。",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "本地",
+  "networkMap_sourceOnline": "在线",
+  "networkMap_sourceBoth": "两者",
+  "networkMap_zoomInHint": "放大以查看在线网络地图",
+  "networkMap_loadFailed": "无法加载在线网络地图",
+  "networkMap_inYourContacts": "在您的联系人中",
+  "networkMap_status": "状态",
+  "networkMap_statusActive": "最近一小时内活跃",
+  "networkMap_statusRecent": "最近一天内收到过",
+  "networkMap_statusStale": "近期未收到",
+  "networkMap_confirmed": "已确认",
+  "networkMap_singleSource": "单一来源，尚未确认",
+  "networkMap_reports": "报告",
+  "networkMap_locationEstimated": "大致位置，根据接收到它的节点估算",
+  "networkMap_locationAdvertised": "大致位置，来自其自身广播",
+  "networkMap_heardByRadio": "您的电台收到过",
+  "networkMap_inYourArea": "在您所在区域",
+  "networkMap_farAway": "距离太远，无法管理。",
+  "networkMap_addToContacts": "添加到联系人",
+  "networkMap_manage": "管理",
+  "networkMap_addedToContacts": "已添加到联系人",
+  "networkMap_addFailed": "无法添加到联系人",
+  "networkMap_unnamed": "未命名转发节点"
 }

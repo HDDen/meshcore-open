@@ -1,79 +1,50 @@
 # Routing Paths
 
-This page covers how MeshCore Open represents, selects, validates, and stores routing paths in the UI and data layer.
+MeshCore Open supports flood routing, direct paths, and routing overrides. Chat → Routing lets you choose Auto, Flood, or Manual and inspect recent paths. [Regions](regions.md) control the scope of channel floods; they do not replace direct-contact routing.
 
-## Path Routing
+## Hash widths and firmware capability
 
-MeshCore supports variable-length multi-byte routing paths so the app can scale from small meshes to very large node sets.
+Each hop is represented by a public-key prefix. Current device-info negotiation clamps mode to `0..2`, giving **1–3 bytes per hop**. Some parsing/display helpers accept four-byte widths; that is not a claim that current device negotiation offers a four-byte mode.
 
-### Hash Width and Multi-Byte Paths
+| Bytes per hop | Possible prefixes | Hops fitting in 64 path bytes |
+|---|---|---|
+| 1 | 256 | 63 with the current six-bit packed hop count |
+| 2 | 65,536 | 32 |
+| 3 | 16,777,216 | 21 |
 
-The device capability determines the hash width (number of bytes per hop):
+These are prefix-space sizes, not collision-free network capacities. Longer prefixes reduce collisions and leave less room for hops. Repeaters need compatible firmware to forward multi-byte paths; the UI identifies older-than-v1.14 firmware as incompatible with two- and three-byte IDs.
 
-| Width | Max Unique Nodes | Typical Use |
-|-------|-----------------|-------------|
-| 1 byte | 256 | Single-byte node IDs |
-| 2 bytes | 65,536 | Medium meshes |
-| 3 bytes | 16.7M | Large networks |
-| 4 bytes | 4.3G | Very large meshes / future-proofing |
+## Encoded paths and model fields
 
-### Device Capability Detection
-
-On device connection, the app reads the firmware capability to set `pathHashByteWidth`:
+For packed non-flood contact path metadata:
 
 ```dart
-// Read from device info response (offset 81)
-final modeRaw = firmwareBytes.length >= 82
-    ? (firmwareBytes[81] & 0xFF)
-    : 0;
-final mode = modeRaw.clamp(0, 3);
-_pathHashByteWidth = mode + 1; // 1, 2, 3, or 4 bytes per hop
+final width = ((pathLenRaw & 0xC0) >> 6) + 1;
+final hopCount = pathLenRaw & 0x3F;
+final byteLength = hopCount * width;
 ```
 
-The connector reads a single-mode byte and clamps to `0..3`, so the supported hop width is `1..4` bytes. UI code also clamps widths when rendering (typically to `1..4`) so 4-byte hops are handled end-to-end in the current codebase.
+`0xFF` is the contact flood/unknown-path sentinel. Handle it before decoding the packed fields.
 
-### Path Data Structure
+- Model/storage `pathLength` stores **hop count**, with `-1` representing flood/unknown.
+- `pathHashWidth` stores the bytes per hop for that path.
+- `pathBytes` (or `Contact.path`) contains concatenated prefixes.
+- Use the path’s own width when splitting, reversing, matching, and rendering it; do not substitute the device’s current width for historical metadata.
 
-Paths in messages and storage consist of:
+For example, a three-hop path at width 2 has six bytes: `[A1,A2,B1,B2,C1,C2]`, rendered as `A1A2 → B1B2 → C1C2`, and `pathLength=3`.
 
- - **`pathLength` (model/storage)**: Hop count (number of hops). Negative values (e.g. `-1`) are used as a flood sentinel.
- - **On-air `path_len` byte**: A packed byte that encodes hop count + hash width and is decoded into `pathLength` + `pathBytes` when parsing frames.
- - **`pathBytes`**: Raw bytes of the path (concatenated hop prefixes), grouped by `pathHashByteWidth`.
- - **`hopCount`**: Derived display value computed from bytes and width: `(byteCount + hashByteWidth - 1) ~/ hashByteWidth`.
- - **Example**: With `pathHashByteWidth=2`, a 3-hop path has 6 bytes (`pathBytes.length = 6`) and `pathLength = 3`:
-  - `pathBytes = [0xA1, 0xA2, 0xB1, 0xB2, 0xC1, 0xC2]`
-  - Hops: `[0xA1A2]`, `[0xB1B2]`, `[0xC1C2]`
+For complete observed paths, hop count is `pathBytes.length ~/ width`. Some display helpers round up a partial final group; malformed or incomplete bytes must not be interpreted as a valid complete route. Prefer decoded observed path bytes when frame metadata describes a different route.
 
-### Hop Count Calculation
+## Where paths come from
 
-Convert path byte length to hop count:
+Contact response frames place packed path metadata at offset **35** and the 64-byte path area at offsets **36–99**, counting the response code as byte 0. See [contact frame layout](ble-protocol.md#contact).
 
-```dart
-int hopCount = (byteCount + hashByteWidth - 1) ~/ hashByteWidth;
-```
+Channel text payloads contain sender text, not an encrypted hop chain. Observed channel paths come from the raw packet header/path associated with `PUSH_CODE_LOG_RX_DATA`. Direct-message frame metadata and path updates likewise need their format-specific decoding.
 
-Use this consistently when displaying hop counts in UI. Do not treat `pathLength` as a hop count when the path uses multi-byte hop hashes.
+Short prefixes can match several known nodes. An unresolved or ambiguous hop is not proof of a particular repeater identity. Map positions derived from paths are estimates, not GPS fixes.
 
-### Path Usage in Different Message Types
+## Storage and route selection
 
-- **Direct messages**: Extract path from decrypted payload to trace sender route.
-- **Channel messages**: Decrypt hop-by-hop routing chain from payload; the header carries the encoded byte length for the path blob, not the derived hop count.
-- **Contact storage**: Path length in byte 32, raw path bytes in bytes 33-96, grouped by detected `pathHashByteWidth`.
+Contacts/messages persist hop count, path bytes, and width. Legacy contact records without width infer it from consistent hop and byte counts, falling back to one byte. `PathHistoryService` scores recent routes using delivery observations; automatic route rotation can select another route on retry when no manual override is active. Rotation follows the App Settings **Auto Route Rotation** toggle (`autoRouteRotationEnabled`, on by default).
 
-### UI Hop Count Display
-
-⚠️ **Important**: In screens like "Channel Message Path", prefer the actual decoded `pathBytes` hop count over `pathLength` metadata:
-
-```dart
-// Preferred: use actual observed path length
-final effectiveHopCount = (pathBytes.length + width - 1) ~/ width;
-
-// Avoid: using encoded byte length as if it were a hop count
-// pathLength is bytes; converting it twice causes inflated counts
-```
-
-Example scenario:
-- Radio header reports `pathLength: 32` bytes
-- Decoded path bytes: `[0xAB, 0xCD]` (2 bytes = 1 hop with width=2)
-- **Display**: "1 hop" (from `pathBytes`), not "32 hops" (which would double-count the encoded length)
-
+For message-path actions, trace maps, and retry behavior, see [chat](chat-and-messaging.md), [channels](channels.md), and [map](map-and-location.md).

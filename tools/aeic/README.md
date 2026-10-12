@@ -30,18 +30,48 @@ the research checkout that is **not** part of this repository:
   produced by it, which is what makes them worth comparing against
 - PyTorch, onnxruntime, NumPy 2
 
-## Running them
+## Preparing the research layout
 
-```bash
-cd <aeic-research-checkout>
-AEIC_DEVICE=cpu python export_golden.py           # tables + symbol vectors
-AEIC_DEVICE=cpu python record_entropy_io.py       # ONNX I/O recordings
+The scripts import helpers that are not included in this app repository: `aeic_runner.py` and, for recording, `bitexact_encoder.py`. Obtain the matching research/export environment before running them. The app does not pin that external checkout’s revision; record its commit, checkpoint checksum, dependency versions, and patch diff alongside regenerated fixtures so others can reproduce your results.
+
+Use this layout in the research checkout:
+
+```text
+exp/
+  export_golden.py
+  record_entropy_io.py
+  aeic_runner.py
+  bitexact_encoder.py
+onnx/
+  aeic_entropy_side_fp32_op17.onnx
+  aeic_entropy_decode_fp32_op17.onnx
+results/golden/
+data/kodak_raw/
+data/custom/
 ```
 
-Then copy the output into `test/services/golden/`.
+Copy the two scripts from this directory into `exp/`. Their output paths are resolved relative to the scripts’ parent directory, not just the shell’s working directory. Supply the ft32 checkpoint and expected image corpus in the research environment.
 
-## If you change the wire format
+## Running them
 
-Regenerate. The fixtures encode the chunk framing and the metadata byte layout,
-so a format change makes them stale in a way the tests will report as a codec
-bug — which is the correct behaviour, but only if you know to look here.
+From the prepared research checkout, with its dependencies installed:
+
+```bash
+AEIC_DEVICE=cpu python exp/export_golden.py --ckpt /absolute/path/AEIC_SE_ft32.pkl
+AEIC_DEVICE=cpu python exp/record_entropy_io.py --ckpt /absolute/path/AEIC_SE_ft32.pkl --scratch /absolute/path/aeic-scratch
+python exp/record_entropy_io.py --verify-only
+```
+
+The recorder’s default scratch path is machine-specific; always supply `--scratch` or `AEIC_SCRATCH`. `--decode-graph` can select an existing recording graph; `--images` selects an explicit corpus. The exporter defaults to ten images; `--all` uses the full configured corpus.
+
+Copy the generated contents of `results/golden/` into the app’s `test/services/golden/`. Keep paired `.gv`, `.bin`, JSON metadata, recording files, and manifest together. Review generated differences and run the relevant tests:
+
+```bash
+flutter test test/services/rans_coder_test.dart test/services/entropy_tables_test.dart test/services/image_codec_e2e_test.dart
+```
+
+## When fixtures need regeneration
+
+Regenerate when changing the reference model, entropy tables, rANS format, or recorded tensor interface. These fixtures validate the codec/entropy pipeline, **not the separate mesh chunk headers**.
+
+Chunk framing and metadata are defined in [image_chunk_transport.dart](../../lib/services/image_chunk_transport.dart). Changes there need transport-focused test updates; a chunk-layout-only change does not automatically require new reference codec fixtures. See the [image-message guide](../../documentation/image-messages.md).

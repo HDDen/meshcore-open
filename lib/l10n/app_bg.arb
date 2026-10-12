@@ -454,6 +454,8 @@
     }
   },
   "chat_location": "Местоположение",
+  "chat_noRadioLocation": "Радиото ви няма зададено местоположение",
+  "chat_shareMyLocation": "Споделяне на моето местоположение",
   "chat_sendMessageTo": "Изпрати съобщение на {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -689,6 +691,7 @@
   "map_shareMarkerHere": "Споделете маркер тук",
   "map_pinLabel": "Етикет на пина",
   "map_label": "Етикет",
+  "map_labelUpdateHint": "Ако използвате същия етикет като преди, маркерът ще се обнови за получателите с MeshCore Open.",
   "map_pointOfInterest": "Точка на интерес",
   "map_sendToContact": "Изпрати на контакт",
   "map_sendToChannel": "Изпрати в канала",
@@ -2017,7 +2020,54 @@
   "discoveredContacts_copyContact": "Копирай контакт в клипборда",
   "discoveredContacts_deleteContact": "Изтрий контакт",
   "discoveredContacts_addContact": "Добави контакт",
+  "discoveredContacts_export": "Експортирай откритите контакти",
+  "discoveredContacts_import": "Импортирай откритите контакти",
+  "discoveredContacts_exported": "Откритите контакти са експортирани в {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Неуспешно експортиране на откритите контакти: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Импортирани са {count} открити контакта.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Във файла за импортиране не са намерени контакти.",
+  "discoveredContacts_importFailed": "Неуспешно импортиране на откритите контакти: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Файлът не е експорт на открити контакти.",
+  "discoveredContacts_importSummary": "Импортирани: {imported}, пропуснати вече известни: {skipped}, нечетими записи: {invalid}.",
+  "discoveredContacts_importTooLarge": "Файлът за импортиране е твърде голям (максимум {maxMb} MB).",
   "contactsSettings_overwriteOldestSubtitle": "Когато списъкът с контакти е пълен, най-старият неключов контакт ще бъде заменен.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Премахване на открити контакти",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Когато е включено, приложението премахва най-старите открити контакти, щом списъкът с открити контакти достигне лимита си от {limit} записа.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_deleteContactAll": "Изтриване на Всички Открити Контакти",
   "discoveredContacts_deleteContactAllContent": "Сигурни ли сте, че искате да изтриете всички открити контакти?",
   "common_deleteAll": "Изтрий всичко",
@@ -2861,5 +2911,404 @@
   "repeater_cliHelpGetRadioFemRxGain": "Показва дали RX усилването на LoRa предния модул е включено.",
   "repeater_cliHelpGetRadioFemTxGain": "Показва дали TX усилването на LoRa предния модул е включено.",
   "repeater_bridgeNote": "Налично само за прошивка с мост (RS232 или ESP-NOW).",
-  "chat_longMessageRetryNote": "Над 158 байта: изпраща се най-много {count} пъти"
+  "chat_longMessageRetryNote": "Над 158 байта: изпраща се най-много {count} пъти",
+  "messageStatus_failedChannel": "Вашето радио не успя да изпрати съобщението.",
+  "messageStatus_resending": "Още не е чуто през достатъчно повторители. Изпратено повторно {resends} от {maxResends} пъти.",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "Изпратено, но чуто обратно само през {hops} от {required} повторители. Възможно е съобщението да е стигнало по-нататък, отколкото вашето радио може да чуе.",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "Изпратено. Каналите не потвърждават доставката, затова това означава само че съобщението е изпратено от вашето радио.",
+  "messageStatus_sentDirect": "Изпратено. Изчакване на потвърждение от контакта.",
+  "messageStatus_heardRepeatedCount": "Чуто повторно: {count, plural, =1{1 път} other{{count} пъти}}. Близките повторители предадоха съобщението нататък.",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "Регионите ограничават разпространяването на съобщения само от повторители в определена област. Вземете ги от близките повторители или добавете по име.",
+  "settings_regionFetchFromRepeaters": "Вземи от повторителите",
+  "settings_regionDefault": "Регион по подразбиране",
+  "settings_regionDefaultSubtitle": "Използва се от канали без собствен регион",
+  "settings_regionDefaultNone": "Няма",
+  "settings_telemetryPerContactHint": "За да разрешите даден контакт, отворете чата му и изберете „Настройки за контакти“ от менюто.",
+  "settings_multiAckSubtitle": "Изпраща допълнителни ACK за по-надеждна доставка; използва повече време на излъчване",
+  "settings_presetCustom": "Персонализиран",
+  "settings_radioMatchWarning": "Всички възли, с които комуникирате, трябва да използват еднакви честота, честотна лента и SF. Скоростта на кодиране (CR) може да се различава.",
+  "settings_txPowerRangeHelper": "от {min} до {max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "Честота {freq} MHz за повторение извън мрежата",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "Размер на всеки идентификатор на възел, записван в пътя на flood пакетите, изпращани от това радио: 1 байт (256 идентификатора, до 64 скока), 2 байта (65 хил. идентификатора, до 32 скока), 3 байта (16 млн идентификатора, до 21 скок). По-големите идентификатори намаляват количествата съвпадения, но повторителите с прошивка по-стара от v1.14 отхвърлят пакети с 2- или 3-байтови идентификатори.",
+  "settings_requiresFirmware": "Изисква се прошивка {version} или по-нова",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "Повторно изпращане на съобщенията в канала, докато не достигнат достатъчно далеч",
+  "appSettings_channelMinHopsSubtitle": "Ако вашето съобщение не се чуе обратно през достатъчно повторители, изпратете го отново. Използва повече време на излъчване.",
+  "appSettings_channelMinHopsCount": "Необходим брой скокове: {count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "Повторно изпращане до {count, plural, =1{1 път} other{{count} пъти}}",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "Дейност във фона",
+  "appSettings_batteryOptimizationSubtitle": "Задайтете за MeshCore Open стойност „Не оптимизирай“ в настройките на батерията, за да продължават да пристигат съобщения във фона",
+  "contacts_storageFull": "Паметта за контакти на възела е запълнена. Нови възли не могат да се добавят, докато контактите не бъдат премахнати.",
+  "contacts_removeFromContacts": "Премахни от контактите",
+  "contacts_removeFromContactsConfirm": "{contactName} ще бъде преместен в „Открити контакти“. Историята на чата ще бъде изтрита.",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "Запази историята на чата",
+  "contacts_remove": "Премахни",
+  "contacts_discoveredNearby": "Открити наблизо ({count})",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "Възлите, които вашето радио чува, но които още не са добавени, се показват в раздел „Открити контакти“",
+  "channels_hashtag": "Хаштаг",
+  "channels_addSectionJoin": "Присъедини се",
+  "channels_addSectionCreate": "Създай нов",
+  "channels_dragToReorder": "Плъзнете, за да промените реда",
+  "channels_regionDefaultSuffix": "(по подразбиране)",
+  "channels_regionSelectExplanation": "Разпространяваните в този канал съобщения ще се препращат само от повторители в избрания регион.",
+  "channels_regionEmpty": "Още няма региони.",
+  "channels_manageRegions": "Управление на региони",
+  "chat_removeGif": "Премахни GIF",
+  "chat_cancelReply": "Отмени отговора",
+  "chat_viewPathOnMap": "Покажи пътя на картата",
+  "chat_today": "Днес",
+  "chat_yesterday": "Вчера",
+  "map_centerOnMe": "Центрирай върху моята позиция",
+  "map_noNodesLocationHint": "Няма възли със скорошно местоположение. Разширете филтъра по време или задайте своето местоположение в настройките.",
+  "map_clusterNodes": "Групирай близките възли",
+  "map_groupChip": "Група",
+  "map_clusterNodesSubtitle": "При отдалечаване близките възли се показват като един кръг с номер",
+  "map_manageServer": "Управление на сървъра",
+  "login_showPassword": "Покажи паролата",
+  "login_hidePassword": "Скрий паролата",
+  "login_advanced": "Разширени",
+  "common_clearSearch": "Изчисти търсенето",
+  "repeater_roleAdmin": "Администратор",
+  "repeater_roleGuest": "Гост",
+  "repeater_refreshAll": "Обнови всички",
+  "repeater_settingsNotLoaded": "Настройките още не са заредени от този повторител.",
+  "repeater_settingsLoadIncomplete": "Някои настройки не можаха да бъдат заредени. Използвайте бутоните за опресняване, за да опитате отново.",
+  "contacts_scanQrCode": "Сканиране на QR код",
+  "contacts_scanQrInstructions": "Насочете камерата към QR код на контакт в MeshCore",
+  "contacts_qrFromGallery": "Сканиране на QR код от галерията",
+  "contacts_noQrCodeFound": "QR код не е намерен в избраното изображение.",
+  "contacts_qrGalleryFailed": "Неуспешно отваряне на галерията.",
+  "notification_actionReply": "Отговори",
+  "notification_actionMarkRead": "Отбележи като прочетено",
+  "notification_actionMuteChannel": "Заглуши канала",
+  "notification_replyHint": "Съобщение",
+  "notification_you": "Вие",
+  "notification_replyFailedTitle": "Отговорът не е изпратен",
+  "notification_replyNotConnected": "Няма връзка с радиото. Свържете се отново в MeshCore Open и изпратете отговора си повторно.",
+  "notification_replyTooLong": "Отговорът ви е твърде дълъг, за да бъде изпратен от известие. Изпратете го от MeshCore Open.",
+  "notification_replyUnavailable": "Този разговор вече не е налични в свързаното радио.",
+  "notification_replySendFailed": "Възможно отговорът ви да не е изпратен. Проверете в MeshCore Open и опитайте отново.",
+  "notification_replyAppNotRunning": "MeshCore Open не работи. Отворете го и изпратете отговора си повторно.",
+  "snrIndicator_nearByRepeatersDescription": "Повторители, чути от вашето радио пряко, първо най-скорошните.",
+  "radioStats_sectionSignal": "Сигнал",
+  "radioStats_sectionAirtime": "Време на излъчване",
+  "imageSend_lossyNote": "Компресирано до около {bytes} байта. Моделът на получателя възстановява изображението, затова детайлите ще се различават.",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "Оригинал",
+  "imageSend_viewReconstruction": "Какво виждат получателите",
+  "imageSend_reconstructionUnavailable": "Това устройство не може да покаже реконструкцията.",
+  "imageSend_modelNotDownloaded": "Моделът за изображения още не е изтеглен. Изтеглете го в настройките, за да изпращате изображения.",
+  "receivedImage_save": "Запази изображението",
+  "receivedImage_shareCaption": "Възстановено от ИИ от {bytes} байта; фините детайли се генерират, а не се предават.",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "Информация за пакета",
+  "receivedImage_parityRecovered": "Един пакет е възстановен от възстановителния пакет.",
+  "receivedImage_decodeTime": "Възстановено за {ms} мс",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "Изображението не можа да бъде запазено",
+  "reviewMode_dialogTitle": "Вход в режим за преглед?",
+  "reviewMode_dialogBody": "Режимът за преглед се свързва със симулирано радио с примерни контакти, канали и съобщения. Не е нужно реално радио.",
+  "reviewMode_confirm": "Вход",
+  "reviewMode_cancel": "Отказ",
+  "reviewMode_banner": "Режим за преглед — симулирани данни",
+  "reviewMode_sendTest": "Тестово съобщение",
+  "reviewMode_testSent": "Скоро ще пристигне тестово съобщение.",
+  "reviewMode_exit": "Изход",
+  "reviewMode_connectFailed": "Режимът за преглед не можа да се стартира: {error}",
+  "settings_regionUseRadioDefault": "По подразбиране на радиото ({region})",
+  "settings_regionNoRegion": "Без регион (без ограничение)",
+  "settings_regionRadioDefault": "Регион на радиото по подразбиране",
+  "settings_regionRadioDefaultSubtitle": "Запазва се на радиото. Използва се от flood съобщения без регион — от това и от всяко друго приложение, свързано с радиото.",
+  "settings_regionRadioDefaultUpdated": "Регионът на радиото по подразбиране е обновен",
+  "settings_regionRadioDefaultFailed": "Регионът на радиото по подразбиране не можа да се обнови",
+  "appSettings_channelMinHopsCountRepeaters": "Отчитай и други близки повторители",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Смятай съобщението за изпратено, когато го повторят {count, plural, =1{1 близък повторител} other{{count} различни близки повторители}}, дори да не чуваш как продължава нататък.",
+  "appSettings_regionOnHopsLine": "Регион до броя хопове",
+  "appSettings_regionOnHopsLineSubtitle": "Показвай региона на съобщението в канала на същия ред като броя хопове, а не под него.",
+  "channels_regionRadioDefaultSuffix": "(по подразбиране на радиото)",
+  "channels_regionRadioDefaultApplies": "Това радио изпраща flood без регион в своя регион по подразбиране: {region}.",
+  "chat_futureTimestampWarning": "Часът на това съобщение е в бъдещето, така че часовникът на подателя може да е грешен. Показано е по реда на получаване.",
+  "discoveredContacts_scan": "Сканиране за близки възли",
+  "discoveredContacts_scanTitle": "Близки възли",
+  "discoveredContacts_scanExplanation": "Моли възлите в обхват на директна радиовръзка да се обявят. Отговарят повторители и сензори. Сървърите за стаи и компаньоните обикновено не отговарят.",
+  "discoveredContacts_scanning": "Сканиране…",
+  "discoveredContacts_scanFound": "{count, plural, =1{Намерен 1 възел} other{Намерени {count} възела}}",
+  "discoveredContacts_scanNoResults": "Нито един възел не отговори. Повторителите ограничават честотата на отговорите, опитайте след минута.",
+  "discoveredContacts_scanAgain": "Сканирай отново",
+  "discoveredContacts_scanFailed": "Заявката за сканиране не можа да се изпрати.",
+  "discoveredContacts_scanSignal": "Сигнал {snr} dB · чуха ни с {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "Вече в контактите",
+  "discoveredContacts_scanNameLater": "Името се появява след следващата обява",
+  "channels_waitForSync": "Каналите все още се зареждат от радиото. Опитайте отново, когато синхронизацията приключи.",
+  "channels_nameTooLong": "Името е твърде дълго (макс. {maxBytes} байта).",
+  "repeater_valueRequired": "{field}: въведете стойност",
+  "losMapDetailTooltip": "Детайл на картата",
+  "losUnitsTooltip": "Единици",
+  "losDistance": "Разстояние",
+  "losClearance": "Просвет",
+  "losBlockedBy": "Блокирано от",
+  "losObstruction": "Препятствие",
+  "losDistanceFromA": "{distance} от A",
+  "losWorstBadge": "НАЙ-ЛОШО",
+  "losBlockedAmount": "Блокирано {amount}",
+  "losFromA": "От A",
+  "losFromB": "От B",
+  "losElevation": "Височина",
+  "losCenterOnMap": "Центрирай на картата",
+  "losStatusClear": "Ясно",
+  "losStatusMarginal": "Гранично",
+  "losStatusBlocked": "Блокирано",
+  "losStatusCheckingShort": "Проверка",
+  "losStatusNoResult": "Няма резултат",
+  "losSelectedPill": "Избрано",
+  "gif_tapToLoad": "Докоснете, за да заредите GIF",
+  "gif_loadFailedRetry": "GIF не може да се зареди\nДокоснете за повторен опит",
+  "qr_cameraPermissionDenied": "Достъпът до камерата е отказан.\nМоля, разрешете достъп до камерата в настройките.",
+  "qr_cameraUnsupported": "Камерата не се поддържа на това устройство.",
+  "qr_cameraStartFailed": "Камерата не можа да се стартира.\n{details}",
+  "imageMessages_downloadFailedWithError": "Моделът за изображения не можа да се изтегли: {error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "Скриване: скрит, докато не напуснете картата.",
+  "map_markerRemoveHint": "Премахване: остава скрит, докато не го възстановите от менюто за филтър.",
+  "map_markerRemoved": "Маркерът е премахнат",
+  "map_restoreRemovedMarkers": "Възстановяване на премахнатите маркери",
+  "map_restoreRemovedMarkersSubtitle": "{count} премахнати",
+  "map_markersRestored": "Възстановени маркери: {count}",
+  "map_setLocationConfirmTitle": "Задаване като ваша локация?",
+  "map_setLocationConfirmBody": "Вашият възел ще обявява тази позиция:\n{lat}, {lon}",
+  "map_setLocationAction": "Задай локация",
+  "map_locationSetSuccess": "Локацията на възела е обновена",
+  "map_locationSetFailed": "Устройството не потвърди новата локация. Опитайте отново.",
+  "map_poiClusterTitle": "{count} маркера тук",
+  "map_poiClusterSemantics": "{count} споделени маркера. Докоснете, за да ги видите.",
+  "map_youWithMarkers": "Вие и {count} маркера",
+  "map_sharedMarkerSemantics": "Споделен маркер: {label}",
+  "map_nodeMarkerSemantics": "{name}, {type}, {status}",
+  "mapCache_zoomLevel": "Мащаб {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "Изтеглянето е отменено. Кеширани плочки: {count}.",
+  "mapCache_tooManyTilesTitle": "Районът е твърде голям",
+  "mapCache_tooManyTiles": "Този район изисква {count} плочки, повече от лимита от {max}. Изберете по-малък район или по-малък максимален мащаб.",
+  "chat_clearChatConfirm": "Това изтрива всяко съобщение в този разговор от това устройство. Действието не може да бъде отменено.",
+  "channels_clearChatConfirm": "Това изтрива всяко съобщение в този канал от това устройство, включително получените изображения. Действието не може да бъде отменено.",
+  "channels_timeNow": "сега",
+  "channels_timeMinutes": "{minutes}м",
+  "channels_timeHours": "{hours}ч",
+  "channels_timeDays": "{days}д",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "Неизвестен",
+  "pathMap_noSelfGpsFix": "Локалният възел няма GPS фиксиране",
+  "pathTrace_sendFailed": "Пътната трасировка не можа да бъде изпратена: {error}",
+  "losErrorNoInternet": "Данните за надморска височина изискват интернет връзка",
+  "losResultStale": "Остарял резултат: височината на антената е променена",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "Зареждане на телеметрия…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "Няма връзка с радио. Свържете се и опитайте отново.",
+  "settings_requiresConnection": "Свържете се с радио, за да използвате това",
+  "settings_txPowerInvalidRange": "Невалидна TX мощност (от {min} до {max} dBm)",
+  "settings_contactSettingsSaved": "Настройките на контакта са запазени",
+  "settings_batteryToggleHint": "Докоснете, за да превключите между процент и напрежение",
+  "settings_publicKeyCopyHint": "Копиране на публичния ключ",
+  "settings_locationClearHelper": "Оставете и двете полета празни, за да премахнете локацията си.",
+  "settings_locationCleared": "Локацията е премахната",
+  "settings_regionFetchDiscovering": "Търсене на близки ретранслатори…",
+  "settings_regionFetchProgress": "Запитване към ретранслатор {current} от {total}…",
+  "settings_regionFetchNoRepeaters": "Все още няма известни ретранслатори. Добавете ретранслатор като контакт или изчакайте някой да обяви присъствие, после опитайте отново.",
+  "settings_regionFetchNoneResponded": "Нито един близък ретранслатор не отговори. Приближете се до ретранслатор и опитайте отново.",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "Маршрутизиране",
+  "appSettings_imageMessagesSection": "Съобщения с изображения",
+  "appSettings_showApiKey": "Показване на API ключа",
+  "appSettings_hideApiKey": "Скриване на API ключа",
+  "translation_defaultModelName": "Модел",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB ({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "Радиото е изключено",
+  "repeater_radioDisconnectedHint": "Свържете се отново с радиото, за да изпращате команди, да опреснявате или да запазвате промени.",
+  "repeater_cliSend": "Изпрати команда",
+  "repeater_cliCopyTranscript": "Копирай транскрипта",
+  "repeater_cliShareTranscript": "Сподели транскрипта",
+  "repeater_cliTranscriptCopied": "Транскриптът е копиран",
+  "repeater_cliClearHistoryConfirm": "Да се изчисти ли историята на командите? Действието не може да бъде отменено.",
+  "repeater_cliSearchCommands": "Търсене на команди",
+  "repeater_cliNoMatchingCommands": "Няма съвпадащи команди",
+  "debugLog_clearConfirm": "Да се изчистят ли всички записи в дневника? Действието не може да бъде отменено.",
+  "repeater_unsavedChangesTitle": "Незапазени промени",
+  "repeater_unsavedChangesMessage": "Имате промени, които не са запазени в ретранслатора.",
+  "repeater_discardChanges": "Отхвърли",
+  "repeater_actionSentNoReply": "{action}: командата е изпратена. Ретранслаторът не отговаря на тази команда.",
+  "repeater_invalidSettingValue": "{setting}: {value} не е валидна стойност",
+  "repeater_txPowerOutOfRange": "TX мощността {value} е извън диапазона (от {min} до {max} dBm)",
+  "repeater_prvKeyLengthError": "Частният ключ трябва да е точно {length} шестнадесетични знака",
+  "contacts_advertFailed": "Рекламата не можа да бъде изпратена",
+  "contacts_manageGroups": "Управление на групи",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "Свързан с",
+  "usbChooseSerialPort": "Изберете сериен порт",
+  "neighbors_durationSeconds": "{seconds}с",
+  "neighbors_durationMinutes": "{minutes}м {seconds}с",
+  "neighbors_durationHours": "{hours}ч {minutes}м",
+  "scanner_getNodeTitle": "Нуждаете се от нов възел?",
+  "scanner_getNodeBody": "Колкото портфейл, работи с MeshCore, двулентов GPS, водоустойчив, батерия за 5 дни.",
+  "scanner_getNodeAction": "Вземете го тук",
+  "scanner_getNodeDisclosure": "Партньорска връзка: всяка покупка подкрепя MeshCore Open.",
+  "networkMap_settingsSection": "Мрежова карта",
+  "networkMap_uploadTitle": "Споделяне на това, което чува моето радио",
+  "networkMap_uploadExplanation": "Когато това е включено и радиото е свързано, приложението изпраща към мрежовата карта на MeshCore Open кратко обобщение на пакетите, които радиото ви чува, за да може всеки да вижда кои повторители съществуват и как са свързани. Изпращат се типът, маршрутът, броят хопове, силата на сигнала и размерът на всеки пакет, както и имената на повторителите и приблизителното им местоположение от техните собствени обяви. Никога не се изпращат текст на съобщения, кой с кого говори, имена на канали, вашите контакти или точното ви местоположение: координатите се закръглят до около 2 км, а приложението получава нов случаен ID всеки ден.",
+  "networkMap_whatWeCollect": "Какво събираме",
+  "networkMap_promptTitle": "Ще помогнете ли за мрежовата карта?",
+  "networkMap_promptBody": "MeshCore Open може да споделя това, което радиото ви чува, с публичната мрежова карта на map.meshcoreopen.org, за да може всеки да вижда кои повторители съществуват и как са свързани.\n\nНикога не се изпращат текст на съобщения, кой с кого говори, имена на канали, вашите контакти или точното ви местоположение. Координатите се закръглят до около 2 км.",
+  "networkMap_promptSettingsHint": "Можете да промените това по всяко време в Настройки → Настройки на приложението → Мрежова карта.",
+  "networkMap_promptAccept": "Споделям",
+  "networkMap_promptDecline": "Не, благодаря",
+  "networkMap_statusOff": "Изключено. Нищо не се изпраща.",
+  "networkMap_statusWaiting": "Включено. Изчакване на връзка с радио.",
+  "networkMap_statusNothingSent": "Включено. Още нищо не е изпратено.",
+  "networkMap_statusLastSent": "Последно изпращане: {time}. Пакети днес: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Локална",
+  "networkMap_sourceOnline": "Онлайн",
+  "networkMap_sourceBoth": "И двете",
+  "networkMap_zoomInHint": "Увеличете, за да видите онлайн мрежовата карта",
+  "networkMap_loadFailed": "Онлайн мрежовата карта не можа да се зареди",
+  "networkMap_inYourContacts": "В контактите ви",
+  "networkMap_status": "Статус",
+  "networkMap_statusActive": "Активен през последния час",
+  "networkMap_statusRecent": "Чут през последното денонощие",
+  "networkMap_statusStale": "Отдавна не е чут",
+  "networkMap_confirmed": "Потвърден",
+  "networkMap_singleSource": "Един източник, още непотвърден",
+  "networkMap_reports": "Доклади",
+  "networkMap_locationEstimated": "Приблизително местоположение, изчислено по тези, които са го чули",
+  "networkMap_locationAdvertised": "Приблизително местоположение, от собствената му обява",
+  "networkMap_heardByRadio": "Чут от вашето радио",
+  "networkMap_inYourArea": "Във вашия район",
+  "networkMap_farAway": "Далече. Управлението няма да стигне до него.",
+  "networkMap_addToContacts": "Добави към контактите",
+  "networkMap_manage": "Управление",
+  "networkMap_addedToContacts": "Добавено към контактите",
+  "networkMap_addFailed": "Неуспешно добавяне към контактите",
+  "networkMap_unnamed": "Неназован повторител"
 }

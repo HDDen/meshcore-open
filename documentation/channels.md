@@ -2,7 +2,7 @@
 
 ## Overview
 
-Channels are broadcast group-chat spaces secured by a 16-byte pre-shared key (PSK). Any device with the same channel index and PSK will receive and decrypt channel messages. Unlike direct messages, channel messages are broadcast to the entire mesh.
+Channels are broadcast group-chat spaces secured by a 16-byte pre-shared key (PSK). Devices using the same channel PSK can decrypt matching channel traffic; channel indices are local device slots and need not match between peers. Unlike direct messages, channel messages are broadcast to the entire mesh.
 
 The number of active channels is determined by the firmware (default 40); the device reports its actual limit at login.
 
@@ -48,20 +48,24 @@ Pull-to-refresh (swipe down) forces a re-fetch of channels from the device firmw
 
 Tap the "+" FAB to open a dialog with six options:
 
-1. **Create Private Channel** — Enter a name (max 31 characters); a random PSK is generated
+1. **Create Private Channel** — Enter a name (max 31 bytes of UTF-8, so fewer characters for accented letters, Cyrillic, or emoji); a random PSK is generated
 2. **Join Private Channel** — Enter a name and a 32-hex PSK (non-hex characters like spaces and dashes are silently stripped, so pasted keys with formatting are accepted)
 3. **Join Public Channel** — One tap; uses the well-known public PSK (only shown if no public channel exists)
 4. **Join Hashtag Channel** — Enter a hashtag name; PSK is derived from the name. If communities exist, choose between regular hashtag (SHA-256) or community hashtag (HMAC)
 5. **Scan Community QR** — Opens QR scanner to join a community
 6. **Create Community** — Enter a name; generates a random 32-byte secret; optionally adds a community public channel; shows QR code for sharing
 
+Name limits count the `#` and any community prefix, so the name stored on the radio matches what you typed and others derive the same key. Adding a channel is blocked until the channel list has finished syncing from the radio (a snackbar says the channels are still loading), and the free slot is picked when you confirm, so an existing channel is never overwritten.
+
 ## Channel Actions (Long-Press / Right-Click)
 
 | Action | Description |
 |---|---|
-| Edit | Change name, PSK (with a dice icon to generate a random PSK), SMAZ compression toggle (compresses outgoing messages to allow longer text within the byte limit), or Cyr2Lat encoding toggle (transliterates Cyrillic to Latin for compatibility) |
+| Edit | Change name, PSK (with a dice icon to generate a random PSK), SMAZ compression toggle (compresses outgoing messages to allow longer text within the byte limit), Cyr2Lat encoding toggle (transliterates Cyrillic to Latin for compatibility), or "Enable URL images" toggle (previews image links; requires internet) |
 | Mute / Unmute | Toggle push notification suppression for this channel |
-| Delete | Remove the channel from the device (confirmation required) |
+| Delete | Remove the channel from the device and delete its messages, settings, region and images (confirmation required) |
+
+Channel history and settings belong to the channel's key, not its slot on the radio. A slot reused for another channel (here or in another app) starts empty, editing a channel's PSK starts a fresh history, and adding a channel again with its old PSK brings its history back.
 
 ## Channel Chat
 
@@ -71,7 +75,9 @@ Tap a channel card to open the channel chat screen.
 
 - Type icon: globe for public channels, tag (#) for all other channel types
 - Channel name
-- Subtitle: "{Public|Private} • {N} unread" (e.g., "Public • 3 unread")
+- Subtitle: channel type and effective region when set, with `(default)` when inherited
+- Tap the title or landscape icon to select a region; see [Regions](regions.md)
+- Bell icon: mute or unmute notifications for this channel (crossed-out bell when muted)
 
 ### Message Display
 
@@ -83,11 +89,15 @@ Tap a channel card to open the channel chat screen.
 - **Pinch-to-zoom**: Two-finger zoom (0.8x–1.8x) and double-tap to reset text size
 - **Message tracing mode** (when enabled in App Settings): Each bubble additionally shows path prefix bytes (`via XX,YY,...`), a timestamp, and a repeat count icon
 
+Messages also show a region label when known, independently of message tracing. By default the region chip sits below the hop count; turn on **Region next to hop count** in App Settings → Messaging to show both on one line. The [message-region guide](regions.md#regions-displayed-on-messages) explains why some incoming messages have no label.
+
 ### Message Types in Chat
 
 - **Plain text** with linkified URLs
 - **GIFs** (`g:{gifId}`) rendered inline via Giphy CDN
 - **Location pins** (`m:{lat},{lon}|{label}|`) shown as tappable location cards
+- **Mesh images** sent as GRP_DATA chunks and reconstructed locally ([setup and limitations](image-messages.md))
+- **URL image previews** when enabled per channel; content is fetched over the internet
 - **Reactions** displayed as emoji pills below target messages
 
 ### Replies (Channel Chat Only)
@@ -95,6 +105,7 @@ Tap a channel card to open the channel chat screen.
 - **Mobile**: Swipe an **incoming** message left to trigger reply (with haptic feedback). You cannot swipe your own outgoing messages. Swipe reply is not available on desktop.
 - **All platforms**: Long-press → "Reply"
 - Reply banner appears above the input bar with the quoted message (tap X to cancel)
+- A known original region is selected for the reply by default. Tap the region chip to cross it out and use the channel’s effective region instead. This temporary choice does not change channel settings; see [reply regions](regions.md#reply-using-the-original-region).
 - Sent replies are prefixed `@[{senderName}] {text}`
 - Received replies show a bordered quote block inside the bubble; tapping scrolls to the original. Reply previews render GIF thumbnails and location pin icons, not just text.
 
@@ -102,6 +113,12 @@ Tap a channel card to open the channel chat screen.
 
 - **All platforms**: Long-press (or right-click on desktop) a message bubble → "Path"
 - Opens the Channel Message Path Screen (see [Additional Features](additional-features.md))
+
+### Channel Auto-Resend
+
+With **Resend channel messages until they travel far enough** on (App Settings → Messaging), the app waits after each channel send and checks how far the message was heard repeated. If no repeat reached the required hop count, it sends the message again, up to the configured number of times.
+
+Where your radio only hears nearby repeaters, turn on **Also count different nearby repeaters**: the message then also counts as sent once the required number of *different* first-hop repeaters have repeated it, across all attempts. Your own radio's echo and zero-hop echoes don't count.
 
 ### Context Actions (Long-Press / Right-Click)
 

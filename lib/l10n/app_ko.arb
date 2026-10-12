@@ -606,6 +606,8 @@
   "channels_scanQrCodeComingSoon": "곧 출시",
   "channels_enterHashtag": "해시태그 입력",
   "channels_hashtagHint": "예: #팀",
+  "chat_noRadioLocation": "무전기에 위치가 설정되어 있지 않습니다",
+  "chat_shareMyLocation": "내 위치 공유",
   "chat_noMessages": "아직 메시지가 없습니다.",
   "chat_sendMessageToStart": "시작하려면 메시지를 보내세요.",
   "chat_originalMessageNotFound": "원래 메시지를 찾을 수 없음",
@@ -865,6 +867,7 @@
   "map_setAsMyLocation": "내 위치로 설정",
   "map_pinLabel": "핀 라벨",
   "map_label": "레이블",
+  "map_labelUpdateHint": "이전과 같은 레이블을 사용하면 MeshCore Open 수신자에게 표시된 마커가 업데이트됩니다.",
   "map_pointOfInterest": "관심 지점",
   "map_sendToContact": "연락처로 보내기",
   "map_sendToChannel": "채널로 전송",
@@ -2133,6 +2136,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "애완동물이 발견한 센서를 자동으로 추가할 수 있도록 설정합니다.",
   "contactsSettings_overwriteOldestTitle": "가장 오래된 것을 덮어쓰기",
   "contactsSettings_overwriteOldestSubtitle": "연락처 목록이 가득 차면, 가장 오래된 (선호하지 않은) 연락처가 대체됩니다.",
+  "contactsSettings_evictDiscoveredContactsTitle": "발견된 연락처 삭제",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "활성화하면 발견된 연락처 목록이 {limit}개의 한도에 도달했을 때 가장 오래된 발견된 연락처를 삭제합니다.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "연락처 찾기",
   "discoveredContacts_noMatching": "일치하는 연락처가 없습니다.",
   "discoveredContacts_searchHint": "발견된 연락처 검색",
@@ -2142,6 +2154,44 @@
   "discoveredContacts_deleteContact": "발견된 연락처 삭제",
   "discoveredContacts_deleteContactAll": "발견된 모든 연락처 삭제",
   "discoveredContacts_deleteContactAllContent": "정말로 모든 검색된 연락처를 삭제하시겠습니까?",
+  "discoveredContacts_export": "발견된 연락처 내보내기",
+  "discoveredContacts_import": "발견된 연락처 가져오기",
+  "discoveredContacts_exported": "발견된 연락처를 {path}(으)로 내보냈습니다.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "발견된 연락처 내보내기에 실패했습니다: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "발견된 연락처 {count}개를 가져왔습니다.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "가져오기 파일에서 연락처를 찾을 수 없습니다.",
+  "discoveredContacts_importInvalidFile": "이 파일은 발견된 연락처 내보내기 파일이 아닙니다.",
+  "discoveredContacts_importSummary": "가져옴: {imported}개, 건너뜀(이미 등록됨): {skipped}개, 읽을 수 없는 항목: {invalid}개.",
+  "discoveredContacts_importTooLarge": "가져오기 파일이 너무 큽니다(최대 {maxMb}MB).",
+  "discoveredContacts_importFailed": "발견된 연락처 가져오기에 실패했습니다: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chat_sendCooldown": "다시 보내기 전에 잠시 기다려 주시기 바랍니다.",
   "appSettings_jumpToOldestUnread": "가장 오래된, 아직 읽지 않은 항목으로 이동",
   "appSettings_jumpToOldestUnreadSubtitle": "새로운 메시지가 없는 채팅을 열 때, 최신 메시지가 아닌 첫 번째 읽지 않은 메시지로 스크롤하세요.",
@@ -2995,5 +3045,404 @@
         "type": "int"
       }
     }
-  }
+  },
+  "messageStatus_failedChannel": "이 라디오로 메시지를 보낼 수 없습니다.",
+  "messageStatus_resending": "아직 충분한 리피터에서 들리지 않았습니다. {maxResends}회 중 {resends}회 재전송했습니다.",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "전송했지만, {required}개 중 {hops}개의 리피터에서만 되돌아왔습니다. 이 라디오가 수신할 수 있는 범위보다 더 멀리 갔을 수도 있습니다.",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "전송됨. 채널은 전달을 확인하지 않으므로, 이 라디오가 보냈다는 의미만 있습니다.",
+  "messageStatus_sentDirect": "전송됨. 연락처의 확인을 기다리는 중입니다.",
+  "messageStatus_heardRepeatedCount": "{count, plural, =1{1회} other{{count}회}} 들림. 가까운 리피터가 전달했습니다.",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "지역을 설정하면 플러딩 메시지는 그 지역 안의 리피터만 전달합니다. 가까운 리피터에서 가져오거나 이름으로 추가하세요.",
+  "settings_regionFetchFromRepeaters": "리피터에서 가져오기",
+  "settings_regionDefault": "기본 지역",
+  "settings_regionDefaultSubtitle": "지역이 설정되지 않은 채널에 사용됩니다",
+  "settings_regionDefaultNone": "없음",
+  "settings_telemetryPerContactHint": "연락처에 허용하려면 해당 채팅을 열고 메뉴에서 연락처 설정을 선택하세요.",
+  "settings_multiAckSubtitle": "전달을 개선하기 위해 ACK를 추가로 전송합니다. 방송 시간이 더 필요합니다",
+  "settings_presetCustom": "사용자 지정",
+  "settings_radioMatchWarning": "통신하는 모든 노드가 동일한 주파수, 대역폭, 확산 계수를 사용해야 합니다. 코딩 속도(CR)는 달라도 됩니다.",
+  "settings_txPowerRangeHelper": "{min}~{max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "오프그리드 반복용으로 주파수를 {freq} MHz로 설정",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "이 라디오가 보내는 플러딩 패킷의 경로에 기록되는 각 노드 ID의 크기: 1바이트(256개 ID, 최대 64홉), 2바이트(65,000개 ID, 최대 32홉), 3바이트(160만 개 ID, 최대 21홉). ID가 클수록 충돌이 줄어들지만, v1.14보다 오래된 펌웨어의 리피터는 2바이트 또는 3바이트 ID가 든 패킷을 버립니다.",
+  "settings_requiresFirmware": "펌웨어 {version} 이상이 필요합니다",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "충분히 멀리 전달될 때까지 채널 메시지 재전송",
+  "appSettings_channelMinHopsSubtitle": "메시지가 충분한 리피터에서 되돌아와 들리지 않으면 다시 전송합니다. 방송 시간이 더 필요합니다.",
+  "appSettings_channelMinHopsCount": "필요한 홉 수: {count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "{count, plural, =1{1회} other{{count}회}}까지 재전송",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "백그라운드 작업",
+  "appSettings_batteryOptimizationSubtitle": "배터리 설정에서 MeshCore Open을 \"최적화 안 함\"으로 지정하면 백그라운드에서도 메시지가 계속 수신됩니다",
+  "contacts_storageFull": "노드의 연락처 저장 공간이 가득 찼습니다. 연락처를 삭제하기 전까지 새 노드를 추가할 수 없습니다.",
+  "contacts_removeFromContacts": "연락처에서 제거",
+  "contacts_removeFromContactsConfirm": "{contactName}은(는) 발견된 연락처로 이동합니다. 채팅 기록은 삭제됩니다.",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "채팅 기록 유지",
+  "contacts_remove": "제거",
+  "contacts_discoveredNearby": "주변에서 발견됨({count})",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "이 라디오가 들리지만 아직 추가하지 않은 노드는 발견된 연락처에 표시됩니다",
+  "channels_hashtag": "해시태그",
+  "channels_addSectionJoin": "기존 채널 참여",
+  "channels_addSectionCreate": "새로 만들기",
+  "channels_dragToReorder": "끌어서 순서 변경",
+  "channels_regionDefaultSuffix": "(기본값)",
+  "channels_regionSelectExplanation": "이 채널의 플러딩 메시지는 선택한 지역 안의 리피터만 전달합니다.",
+  "channels_regionEmpty": "아직 지역이 없습니다.",
+  "channels_manageRegions": "지역 관리",
+  "chat_removeGif": "GIF 제거",
+  "chat_cancelReply": "답장 취소",
+  "chat_viewPathOnMap": "지도에서 경로 보기",
+  "chat_today": "오늘",
+  "chat_yesterday": "어제",
+  "map_centerOnMe": "내 위치 중심으로 보기",
+  "map_noNodesLocationHint": "최근 위치 정보가 있는 노드가 없습니다. 시간 필터를 넓히거나 설정에서 내 위치를 설정하세요.",
+  "map_clusterNodes": "주변 노드 묶기",
+  "map_groupChip": "그룹",
+  "map_clusterNodesSubtitle": "축소할 때 주변 노드를 번호가 있는 하나의 원으로 표시합니다",
+  "map_manageServer": "서버 관리",
+  "login_showPassword": "비밀번호 표시",
+  "login_hidePassword": "비밀번호 숨기기",
+  "login_advanced": "고급",
+  "common_clearSearch": "검색어 지우기",
+  "repeater_roleAdmin": "관리자",
+  "repeater_roleGuest": "게스트",
+  "repeater_refreshAll": "모두 새로고침",
+  "repeater_settingsNotLoaded": "이 리피터에서 아직 설정을 불러오지 않았습니다.",
+  "repeater_settingsLoadIncomplete": "일부 설정을 불러오지 못했습니다. 새로고침 버튼을 사용해 다시 시도하세요.",
+  "contacts_scanQrCode": "QR 코드 스캔",
+  "contacts_scanQrInstructions": "카메라를 MeshCore 연락처 QR 코드에 비추세요",
+  "contacts_qrFromGallery": "갤러리에서 QR 스캔",
+  "contacts_noQrCodeFound": "선택한 이미지에서 QR 코드를 찾을 수 없습니다.",
+  "contacts_qrGalleryFailed": "갤러리를 열 수 없습니다.",
+  "notification_actionReply": "답장",
+  "notification_actionMarkRead": "읽음으로 표시",
+  "notification_actionMuteChannel": "채널 음소거",
+  "notification_replyHint": "메시지",
+  "notification_you": "나",
+  "notification_replyFailedTitle": "답장 전송 안 됨",
+  "notification_replyNotConnected": "라디오에 연결되어 있지 않습니다. MeshCore Open에서 다시 연결한 뒤 답장을 다시 보내세요.",
+  "notification_replyTooLong": "답장이 너무 길어 알림으로 전송할 수 없습니다. 대신 MeshCore Open에서 보내세요.",
+  "notification_replyUnavailable": "이 대화는 연결된 라디오에 더 이상 없습니다.",
+  "notification_replySendFailed": "답장이 전송되지 않았을 수 있습니다. MeshCore Open에서 확인한 뒤 다시 시도하세요.",
+  "notification_replyAppNotRunning": "MeshCore Open이 실행 중이 아닙니다. 앱을 연 뒤 답장을 다시 보내세요.",
+  "snrIndicator_nearByRepeatersDescription": "이 라디오가 직접 들은 리피터입니다. 가장 최근에 들은 순으로 표시됩니다.",
+  "radioStats_sectionSignal": "신호",
+  "radioStats_sectionAirtime": "방송 시간",
+  "imageSend_lossyNote": "약 {bytes}바이트로 압축됩니다. 수신 측 모델이 복원하므로 세부 내용이 달라집니다.",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "원본",
+  "imageSend_viewReconstruction": "수신자가 보는 화면",
+  "imageSend_reconstructionUnavailable": "이 장치에서는 복원 결과를 미리 볼 수 없습니다.",
+  "imageSend_modelNotDownloaded": "이미지 모델이 아직 다운로드되지 않았습니다. 설정에서 다운로드하면 이미지를 보낼 수 있습니다.",
+  "receivedImage_save": "이미지 저장",
+  "receivedImage_shareCaption": "{bytes}바이트에서 AI로 복원함. 세부 디테일은 전송된 것이 아니라 생성된 것입니다.",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "패킷 정보",
+  "receivedImage_parityRecovered": "패킷 1개를 복구 패킷에서 재구성했습니다.",
+  "receivedImage_decodeTime": "{ms}밀리초에 재구성됨",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "이미지를 저장할 수 없습니다",
+  "reviewMode_dialogTitle": "검토 모드로 들어갈까요?",
+  "reviewMode_dialogBody": "검토 모드는 샘플 연락처, 채널, 메시지가 있는 시뮬레이션 기기에 연결합니다. 실제 기기는 필요하지 않습니다.",
+  "reviewMode_confirm": "들어가기",
+  "reviewMode_cancel": "취소",
+  "reviewMode_banner": "검토 모드 — 시뮬레이션 데이터",
+  "reviewMode_sendTest": "테스트 메시지 보내기",
+  "reviewMode_testSent": "잠시 후 테스트 메시지가 도착합니다.",
+  "reviewMode_exit": "나가기",
+  "reviewMode_connectFailed": "검토 모드를 시작할 수 없습니다: {error}",
+  "settings_regionUseRadioDefault": "무전기 기본값 ({region})",
+  "settings_regionNoRegion": "지역 없음 (범위 미지정)",
+  "settings_regionRadioDefault": "무전기 기본 지역",
+  "settings_regionRadioDefaultSubtitle": "무전기에 저장됩니다. 지역 없이 보내는 플러딩은 이 앱과 무전기에 연결된 다른 앱 모두 이 지역을 사용합니다.",
+  "settings_regionRadioDefaultUpdated": "무전기 기본 지역을 업데이트했습니다",
+  "settings_regionRadioDefaultFailed": "무전기 기본 지역을 업데이트하지 못했습니다",
+  "appSettings_channelMinHopsCountRepeaters": "근처의 다른 리피터도 포함",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "{count, plural, =1{근처 리피터 1대} other{근처의 서로 다른 리피터 {count}대}}가 다시 전송하면, 그 너머로 전달되는 것이 들리지 않아도 전송된 것으로 처리합니다.",
+  "appSettings_regionOnHopsLine": "홉 수 옆에 지역 표시",
+  "appSettings_regionOnHopsLineSubtitle": "채널 메시지의 지역을 홉 수 아래가 아닌 같은 줄에 표시합니다.",
+  "channels_regionRadioDefaultSuffix": "(무전기 기본값)",
+  "channels_regionRadioDefaultApplies": "이 무전기는 지역 없는 플러딩을 기본 지역으로 보냅니다: {region}.",
+  "chat_futureTimestampWarning": "이 메시지의 시간이 미래입니다. 보낸 사람의 시계가 잘못되었을 수 있습니다. 도착한 순서대로 표시됩니다.",
+  "discoveredContacts_scan": "근처 노드 스캔",
+  "discoveredContacts_scanTitle": "근처 노드",
+  "discoveredContacts_scanExplanation": "직접 전파가 닿는 범위의 노드에게 응답을 요청합니다. 리피터와 센서가 응답합니다. 룸 서버와 컴패니언은 보통 응답하지 않습니다.",
+  "discoveredContacts_scanning": "스캔 중…",
+  "discoveredContacts_scanFound": "{count, plural, =1{노드 1개 발견} other{노드 {count}개 발견}}",
+  "discoveredContacts_scanNoResults": "응답한 노드가 없습니다. 리피터는 응답 횟수를 제한하므로 1분 후에 다시 시도하세요.",
+  "discoveredContacts_scanAgain": "다시 스캔",
+  "discoveredContacts_scanFailed": "스캔 요청을 보내지 못했습니다.",
+  "discoveredContacts_scanSignal": "신호 {snr} dB · 상대방 수신 {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "이미 연락처에 있음",
+  "discoveredContacts_scanNameLater": "다음 어드버트 후에 이름이 표시됩니다",
+  "channels_waitForSync": "채널을 무전기에서 아직 불러오는 중입니다. 동기화가 끝난 후 다시 시도하세요.",
+  "channels_nameTooLong": "이름이 너무 깁니다 (최대 {maxBytes}바이트).",
+  "repeater_valueRequired": "{field}: 값을 입력하세요",
+  "losMapDetailTooltip": "지도 상세",
+  "losUnitsTooltip": "단위",
+  "losDistance": "거리",
+  "losClearance": "여유 공간",
+  "losBlockedBy": "가로막는 대상",
+  "losObstruction": "장애물",
+  "losDistanceFromA": "A에서 {distance}",
+  "losWorstBadge": "최악",
+  "losBlockedAmount": "{amount} 차단됨",
+  "losFromA": "A 기준",
+  "losFromB": "B 기준",
+  "losElevation": "고도",
+  "losCenterOnMap": "지도 중앙으로",
+  "losStatusClear": "양호",
+  "losStatusMarginal": "경계",
+  "losStatusBlocked": "차단됨",
+  "losStatusCheckingShort": "확인 중",
+  "losStatusNoResult": "결과 없음",
+  "losSelectedPill": "선택됨",
+  "gif_tapToLoad": "탭하여 GIF 불러오기",
+  "gif_loadFailedRetry": "GIF를 불러올 수 없습니다\n탭하여 다시 시도",
+  "qr_cameraPermissionDenied": "카메라 권한이 거부되었습니다.\n설정에서 카메라 접근을 허용해 주세요.",
+  "qr_cameraUnsupported": "이 기기는 카메라를 지원하지 않습니다.",
+  "qr_cameraStartFailed": "카메라를 시작하지 못했습니다.\n{details}",
+  "imageMessages_downloadFailedWithError": "이미지 모델을 다운로드하지 못했습니다: {error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "숨기기: 지도를 벗어날 때까지 숨겨집니다.",
+  "map_markerRemoveHint": "삭제: 필터 메뉴에서 복원하기 전까지 숨겨진 상태로 유지됩니다.",
+  "map_markerRemoved": "마커를 삭제했습니다",
+  "map_restoreRemovedMarkers": "삭제한 마커 복원",
+  "map_restoreRemovedMarkersSubtitle": "{count}개 삭제됨",
+  "map_markersRestored": "마커 {count}개를 복원했습니다",
+  "map_setLocationConfirmTitle": "내 위치로 설정할까요?",
+  "map_setLocationConfirmBody": "노드가 다음 위치를 어드버트합니다:\n{lat}, {lon}",
+  "map_setLocationAction": "위치 설정",
+  "map_locationSetSuccess": "노드 위치를 업데이트했습니다",
+  "map_locationSetFailed": "장치가 새 위치를 확인하지 않았습니다. 다시 시도하세요.",
+  "map_poiClusterTitle": "여기에 마커 {count}개",
+  "map_poiClusterSemantics": "공유 마커 {count}개. 탭하여 목록을 확인하세요.",
+  "map_youWithMarkers": "나와 마커 {count}개",
+  "map_sharedMarkerSemantics": "공유 마커: {label}",
+  "map_nodeMarkerSemantics": "{name}, {type}, {status}",
+  "mapCache_zoomLevel": "줌 {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "다운로드가 취소되었습니다. 타일 {count}개를 캐시했습니다.",
+  "mapCache_tooManyTilesTitle": "영역이 너무 큽니다",
+  "mapCache_tooManyTiles": "이 영역에는 타일 {count}개가 필요하며 제한인 {max}개를 초과합니다. 더 작은 영역을 선택하거나 최대 줌을 낮추세요.",
+  "chat_clearChatConfirm": "이 대화의 모든 메시지를 이 기기에서 삭제합니다. 되돌릴 수 없습니다.",
+  "channels_clearChatConfirm": "받은 이미지를 포함해 이 채널의 모든 메시지를 이 기기에서 삭제합니다. 되돌릴 수 없습니다.",
+  "channels_timeNow": "지금",
+  "channels_timeMinutes": "{minutes}분",
+  "channels_timeHours": "{hours}시간",
+  "channels_timeDays": "{days}일",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "알 수 없음",
+  "pathMap_noSelfGpsFix": "로컬 노드에 GPS 위치가 없습니다",
+  "pathTrace_sendFailed": "경로 추적을 보낼 수 없습니다: {error}",
+  "losErrorNoInternet": "고도 데이터에는 인터넷 연결이 필요합니다",
+  "losResultStale": "오래된 결과: 안테나 높이가 변경되었습니다",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "텔레메트리 불러오는 중…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "무전기에 연결되어 있지 않습니다. 연결한 후 다시 시도하세요.",
+  "settings_requiresConnection": "사용하려면 무전기에 연결하세요",
+  "settings_txPowerInvalidRange": "잘못된 TX 출력입니다({min}~{max} dBm)",
+  "settings_contactSettingsSaved": "연락처 설정을 저장했습니다",
+  "settings_batteryToggleHint": "탭하여 퍼센트와 전압 전환",
+  "settings_publicKeyCopyHint": "공개 키 복사",
+  "settings_locationClearHelper": "위치를 삭제하려면 두 입력란을 모두 비워 두세요.",
+  "settings_locationCleared": "위치를 삭제했습니다",
+  "settings_regionFetchDiscovering": "주변 리피터를 찾는 중…",
+  "settings_regionFetchProgress": "리피터 {current}/{total}에 요청하는 중…",
+  "settings_regionFetchNoRepeaters": "알려진 리피터가 아직 없습니다. 리피터를 연락처로 추가하거나 어드버트를 기다린 후 다시 시도하세요.",
+  "settings_regionFetchNoneResponded": "응답한 주변 리피터가 없습니다. 리피터에 더 가까이 이동한 후 다시 시도하세요.",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "라우팅",
+  "appSettings_imageMessagesSection": "이미지 메시지",
+  "appSettings_showApiKey": "API 키 표시",
+  "appSettings_hideApiKey": "API 키 숨기기",
+  "translation_defaultModelName": "모델",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB ({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "무전기 연결 끊김",
+  "repeater_radioDisconnectedHint": "명령을 보내거나 새로고침 또는 변경 사항을 저장하려면 무전기에 다시 연결하세요.",
+  "repeater_cliSend": "명령 보내기",
+  "repeater_cliCopyTranscript": "기록 복사",
+  "repeater_cliShareTranscript": "기록 공유",
+  "repeater_cliTranscriptCopied": "기록을 복사했습니다",
+  "repeater_cliClearHistoryConfirm": "명령 기록을 지울까요? 되돌릴 수 없습니다.",
+  "repeater_cliSearchCommands": "명령 검색",
+  "repeater_cliNoMatchingCommands": "일치하는 명령이 없습니다",
+  "debugLog_clearConfirm": "모든 로그 항목을 지울까요? 되돌릴 수 없습니다.",
+  "repeater_unsavedChangesTitle": "저장하지 않은 변경 사항",
+  "repeater_unsavedChangesMessage": "리피터에 저장되지 않은 변경 사항이 있습니다.",
+  "repeater_discardChanges": "취소",
+  "repeater_actionSentNoReply": "{action}: 명령을 보냈습니다. 리피터는 이 명령에 응답하지 않습니다.",
+  "repeater_invalidSettingValue": "{setting}: {value}은(는) 올바르지 않습니다",
+  "repeater_txPowerOutOfRange": "TX 출력 {value}이(가) 범위를 벗어났습니다({min}~{max} dBm)",
+  "repeater_prvKeyLengthError": "개인 키는 정확히 16진수 {length}자여야 합니다",
+  "contacts_advertFailed": "어드버트를 보낼 수 없습니다",
+  "contacts_manageGroups": "그룹 관리",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "연결 대상",
+  "usbChooseSerialPort": "시리얼 포트 선택",
+  "neighbors_durationSeconds": "{seconds}초",
+  "neighbors_durationMinutes": "{minutes}분 {seconds}초",
+  "neighbors_durationHours": "{hours}시간 {minutes}분",
+  "scanner_getNodeTitle": "새 노드가 필요하신가요?",
+  "scanner_getNodeBody": "지갑 크기에 MeshCore 구동, 듀얼 밴드 GPS, 방수, 5일 배터리.",
+  "scanner_getNodeAction": "여기서 구하기",
+  "scanner_getNodeDisclosure": "제휴 링크: 구매할 때마다 MeshCore Open을 후원하게 됩니다.",
+  "networkMap_settingsSection": "네트워크 지도",
+  "networkMap_uploadTitle": "내 라디오가 수신한 정보 공유",
+  "networkMap_uploadExplanation": "이 기능을 켜고 라디오가 연결되어 있으면, 앱이 라디오가 수신한 패킷의 요약 정보를 MeshCore Open 네트워크 지도로 보내 어떤 리피터가 있고 서로 어떻게 연결되는지 모두가 볼 수 있게 합니다. 각 패킷의 종류, 경로, 홉 수, 신호 세기, 크기와 함께 리피터 자체 어드버트에 담긴 이름과 대략적인 위치를 보냅니다. 메시지 내용, 누가 누구와 대화하는지, 채널 이름, 연락처, 정확한 위치는 절대 보내지 않습니다. 위치는 약 2km 단위로 반올림되며, 앱 ID는 매일 새로운 무작위 값으로 바뀝니다.",
+  "networkMap_whatWeCollect": "수집하는 정보",
+  "networkMap_promptTitle": "네트워크 지도 만들기에 참여하시겠어요?",
+  "networkMap_promptBody": "MeshCore Open은 라디오가 수신한 정보를 map.meshcoreopen.org의 공개 네트워크 지도와 공유하여, 어떤 리피터가 있고 서로 어떻게 연결되는지 모두가 볼 수 있게 할 수 있습니다.\n\n메시지 내용, 누가 누구와 대화하는지, 채널 이름, 연락처, 정확한 위치는 절대 보내지 않습니다. 위치는 약 2km 단위로 반올림됩니다.",
+  "networkMap_promptSettingsHint": "설정 → 앱 설정 → 네트워크 지도에서 언제든지 변경할 수 있습니다.",
+  "networkMap_promptAccept": "공유",
+  "networkMap_promptDecline": "괜찮아요",
+  "networkMap_statusOff": "꺼짐. 아무것도 전송되지 않습니다.",
+  "networkMap_statusWaiting": "켜짐. 라디오 연결을 기다리는 중입니다.",
+  "networkMap_statusNothingSent": "켜짐. 아직 전송한 내용이 없습니다.",
+  "networkMap_statusLastSent": "마지막 전송 {time}. 오늘 패킷 {count}개.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "로컬",
+  "networkMap_sourceOnline": "온라인",
+  "networkMap_sourceBoth": "모두",
+  "networkMap_zoomInHint": "온라인 네트워크 지도를 보려면 확대하세요",
+  "networkMap_loadFailed": "온라인 네트워크 지도를 불러오지 못했습니다",
+  "networkMap_inYourContacts": "내 연락처에 있음",
+  "networkMap_status": "상태",
+  "networkMap_statusActive": "최근 1시간 이내 활동",
+  "networkMap_statusRecent": "최근 하루 이내 수신",
+  "networkMap_statusStale": "최근 수신 없음",
+  "networkMap_confirmed": "확인됨",
+  "networkMap_singleSource": "단일 출처, 아직 확인되지 않음",
+  "networkMap_reports": "보고",
+  "networkMap_locationEstimated": "대략적인 위치, 수신한 노드를 기준으로 추정",
+  "networkMap_locationAdvertised": "대략적인 위치, 자체 어드버트 기준",
+  "networkMap_heardByRadio": "내 라디오가 수신함",
+  "networkMap_inYourArea": "내 주변 지역",
+  "networkMap_farAway": "멀리 떨어져 있어 관리할 수 없습니다.",
+  "networkMap_addToContacts": "연락처에 추가",
+  "networkMap_manage": "관리",
+  "networkMap_addedToContacts": "연락처에 추가됨",
+  "networkMap_addFailed": "연락처에 추가하지 못했습니다",
+  "networkMap_unnamed": "이름 없는 리피터"
 }

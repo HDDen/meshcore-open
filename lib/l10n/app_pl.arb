@@ -464,6 +464,8 @@
     }
   },
   "chat_location": "Lokalizacja",
+  "chat_noRadioLocation": "Twoje radio nie ma ustawionej lokalizacji",
+  "chat_shareMyLocation": "Udostępnij moją lokalizację",
   "chat_sendMessageTo": "Wyślij wiadomość do {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -699,6 +701,7 @@
   "map_shareMarkerHere": "Udostępnij znacznik tutaj",
   "map_pinLabel": "Etykieta pinezki",
   "map_label": "Etykieta",
+  "map_labelUpdateHint": "Użycie tej samej etykiety co wcześniej zaktualizuje znacznik u odbiorców korzystających z MeshCore Open.",
   "map_pointOfInterest": "Punkt zainteresowań",
   "map_sendToContact": "Wyślij do kontaktu",
   "map_sendToChannel": "Wyślij do kanału",
@@ -2055,7 +2058,54 @@
   "contactsSettings_autoAddSensorsSubtitle": "Zezwól towarzyszowi na automatyczne dodawanie wykrytych czujników.",
   "discoveredContacts_noMatching": "Brak pasujących kontaktów",
   "discoveredContacts_deleteContact": "Usuń kontakt",
+  "discoveredContacts_export": "Eksportuj odkryte kontakty",
+  "discoveredContacts_import": "Importuj odkryte kontakty",
+  "discoveredContacts_exported": "Wyeksportowano odkryte kontakty do {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Nie udało się wyeksportować odkrytych kontaktów: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Zaimportowano {count} odkrytych kontaktów.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Nie znaleziono kontaktów w pliku importu.",
+  "discoveredContacts_importFailed": "Nie udało się zaimportować odkrytych kontaktów: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Ten plik nie jest eksportem odkrytych kontaktów.",
+  "discoveredContacts_importSummary": "Zaimportowano: {imported}, pominięto już znane: {skipped}, nieczytelne wpisy: {invalid}.",
+  "discoveredContacts_importTooLarge": "Plik importu jest zbyt duży (maksymalnie {maxMb} MB).",
   "contactsSettings_overwriteOldestSubtitle": "Gdy lista kontaktów jest pełna, najstarszy nieulubiony kontakt zostanie zastąpiony.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Usuwaj odkryte kontakty",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Gdy ta opcja jest włączona, aplikacja usuwa najstarsze odkryte kontakty, gdy lista odkrytych osiągnie limit {limit} wpisów.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Usuń wszystko",
   "discoveredContacts_deleteContactAllContent": "Czy na pewno chcesz usunąć wszystkie znalezione kontakty?",
   "discoveredContacts_deleteContactAll": "Usuń wszystkie odkryte kontakty",
@@ -2288,12 +2338,6 @@
   "scanner_linuxPairingPinTitle": "Kod PIN parowania Bluetooth",
   "repeater_cliQuickClockSync": "Synchronizacja zegara",
   "repeater_cliQuickDiscovery": "Odkryj Sąsiadów",
-  "@repeater_clockSyncAfterLogin": {
-    "description": "Repeater setting: auto sync device clock after successful login"
-  },
-  "@repeater_clockSyncAfterLoginSubtitle": {
-    "description": "Repeater setting subtitle: describes the clock sync after login behavior"
-  },
   "repeater_clockSyncAfterLogin": "Synchronizacja zegara po zalogowaniu",
   "repeater_clockSyncAfterLoginSubtitle": "Automatycznie wysyłaj powiadomienie \"synchronizacja zegara\" po pomyślnym zalogowaniu.",
   "chat_sendMessage": "Wyślij wiadomość",
@@ -2900,5 +2944,404 @@
         "type": "int"
       }
     }
-  }
+  },
+  "messageStatus_failedChannel": "Twoje radio nie mogło wysłać tej wiadomości.",
+  "messageStatus_resending": "Za mało przekaźników jeszcze nie usłyszało. Wysłano ponownie {resends} z {maxResends} razy.",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "Wysłane, ale odpowiedź usłyszano tylko przez {hops} z {required} przekaźników. Mogła jednak dotrzeć dalej, niż Twoje radio jest w stanie usłyszeć.",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "Wysłane. Kanały nie potwierdzają dostarczenia, więc to oznacza tylko, że Twoje radio je wysłało.",
+  "messageStatus_sentDirect": "Wysłane. Oczekiwanie na potwierdzenie od kontaktu.",
+  "messageStatus_heardRepeatedCount": "Usłyszano powtórnie {count, plural, =1{1 raz} few{{count} razy} many{{count} razy} other{{count} razy}}. Pobliskie przekaźniki przekazały je dalej.",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "Regiony ograniczają wiadomości flood do przekaźników z danego obszaru. Pobierz je z pobliskich przekaźników lub dodaj region po nazwie.",
+  "settings_regionFetchFromRepeaters": "Pobierz z przekaźników",
+  "settings_regionDefault": "Domyślny region",
+  "settings_regionDefaultSubtitle": "Używany przez kanały bez własnego regionu",
+  "settings_regionDefaultNone": "Brak",
+  "settings_telemetryPerContactHint": "Aby zezwolić kontaktowi, otwórz jego czat i wybierz Ustawienia kontaktów z menu.",
+  "settings_multiAckSubtitle": "Wysyłaj dodatkowe potwierdzenia ACK dla lepszego dostarczenia; zużywa więcej czasu w eterze",
+  "settings_presetCustom": "Niestandardowy",
+  "settings_radioMatchWarning": "Wszystkie węzły, z którymi rozmawiasz, muszą używać tej samej częstotliwości, przepustowości i SF. Współczynnik kodowania (CR) może się różnić.",
+  "settings_txPowerRangeHelper": "{min} do {max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "Częstotliwość ustawiona na {freq} MHz dla powtórzeń poza siecią",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "Rozmiar identyfikatora węzła zapisywanego w ścieżce wysyłanych pakietów flood: 1 bajt (256 identyfikatorów, do 64 skoków), 2 bajty (65 tys., do 32 skoków), 3 bajty (16 mln, do 21 skoków). Większe identyfikatory zmniejszają kolizje, ale przekaźniki z oprogramowaniem starszym niż v1.14 odrzucają pakiety z identyfikatorami 2- lub 3-bajtowymi.",
+  "settings_requiresFirmware": "Wymaga oprogramowania w wersji {version} lub nowszej",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "Wysyłaj ponownie wiadomości kanału, aż przejdą wystarczająco daleko",
+  "appSettings_channelMinHopsSubtitle": "Jeśli Twoja wiadomość nie wraca przez wystarczającą liczbę przekaźników, wyślij ją ponownie. Zużywa więcej czasu w eterze.",
+  "appSettings_channelMinHopsCount": "Wymagane skoki: {count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "Wyślij ponownie maksymalnie {count, plural, =1{1 raz} few{{count} razy} many{{count} razy} other{{count} razy}}",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "Działanie w tle",
+  "appSettings_batteryOptimizationSubtitle": "Ustaw w ustawieniach baterii aplikacji MeshCore Open opcję „Nie optymalizuj”, aby wiadomości przychodziły w tle",
+  "contacts_storageFull": "Pamięć kontaktów w węźle jest pełna. Nowe węzły nie mogą być dodane, dopóki nie usuniesz kontaktów.",
+  "contacts_removeFromContacts": "Usuń z kontaktów",
+  "contacts_removeFromContactsConfirm": "{contactName} trafi do Odkrytych kontaktów. Historia czatu zostanie usunięta.",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "Zachowaj historię czatu",
+  "contacts_remove": "Usuń",
+  "contacts_discoveredNearby": "Odkryte w pobliżu ({count})",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "Węzły, które słyszy Twoje radio, ale nie zostały jeszcze dodane, znajdziesz w Odkrytych kontaktach",
+  "channels_hashtag": "Hashtag",
+  "channels_addSectionJoin": "Dołącz do istniejącego",
+  "channels_addSectionCreate": "Utwórz nowy",
+  "channels_dragToReorder": "Przeciągnij, aby zmienić kolejność",
+  "channels_regionDefaultSuffix": "(domyślny)",
+  "channels_regionSelectExplanation": "Wiadomości flood na tym kanale będą przekazywane tylko przez przekaźniki z wybranego regionu.",
+  "channels_regionEmpty": "Nie ma jeszcze regionów.",
+  "channels_manageRegions": "Zarządzaj regionami",
+  "chat_removeGif": "Usuń GIF",
+  "chat_cancelReply": "Anuluj odpowiedź",
+  "chat_viewPathOnMap": "Pokaż ścieżkę na mapie",
+  "chat_today": "Dzisiaj",
+  "chat_yesterday": "Wczoraj",
+  "map_centerOnMe": "Wyśrodkuj na mojej lokalizacji",
+  "map_noNodesLocationHint": "Brak węzłów z ostatnią lokalizacją. Poszerz filtr czasu lub ustaw własną lokalizację w Ustawieniach.",
+  "map_clusterNodes": "Grupuj pobliskie węzły",
+  "map_groupChip": "Grupy",
+  "map_clusterNodesSubtitle": "Przy małym powiększeniu pobliskie węzły są pokazywane jako jedno numerowane kółko",
+  "map_manageServer": "Zarządzaj serwerem",
+  "login_showPassword": "Pokaż hasło",
+  "login_hidePassword": "Ukryj hasło",
+  "login_advanced": "Zaawansowany",
+  "common_clearSearch": "Wyczyść wyszukiwanie",
+  "repeater_roleAdmin": "ADMIN",
+  "repeater_roleGuest": "GOŚĆ",
+  "repeater_refreshAll": "Odśwież wszystko",
+  "repeater_settingsNotLoaded": "Ustawienia nie zostały jeszcze wczytane z tego przekaźnika.",
+  "repeater_settingsLoadIncomplete": "Nie udało się wczytać niektórych ustawień. Użyj przycisków odświeżania, aby spróbować ponownie.",
+  "contacts_scanQrCode": "Skanuj kod QR",
+  "contacts_scanQrInstructions": "Skieruj kamerę na kod QR kontaktu MeshCore",
+  "contacts_qrFromGallery": "Skanuj kod QR z galerii",
+  "contacts_noQrCodeFound": "Nie znaleziono kodu QR na wybranym obrazie.",
+  "contacts_qrGalleryFailed": "Nie udało się otworzyć galerii.",
+  "notification_actionReply": "Odpowiedz",
+  "notification_actionMarkRead": "Oznacz jako przeczytane",
+  "notification_actionMuteChannel": "Wycisz kanał",
+  "notification_replyHint": "Wiadomość",
+  "notification_you": "Ty",
+  "notification_replyFailedTitle": "Odpowiedź nie została wysłana",
+  "notification_replyNotConnected": "Brak połączenia z radiem. Połącz się ponownie w MeshCore Open i wyślij odpowiedź jeszcze raz.",
+  "notification_replyTooLong": "Twoja odpowiedź jest za długa, aby wysłać ją z powiadomienia. Wyślij ją zamiast tego z MeshCore Open.",
+  "notification_replyUnavailable": "Tej rozmowy nie ma już na podłączonym radiu.",
+  "notification_replySendFailed": "Twoja odpowiedź mogła nie zostać wysłana. Sprawdź w MeshCore Open i spróbuj ponownie.",
+  "notification_replyAppNotRunning": "MeshCore Open nie jest uruchomiony. Otwórz go i wyślij odpowiedź jeszcze raz.",
+  "snrIndicator_nearByRepeatersDescription": "Przekaźniki usłyszane bezpośrednio przez Twoje radio, najpierw te ostatnio usłyszane.",
+  "radioStats_sectionSignal": "Sygnał",
+  "radioStats_sectionAirtime": "Czas w eterze",
+  "imageSend_lossyNote": "Skompresowano do około {bytes} bajtów. Model odbiorcy odtworzy obraz, więc szczegóły będą się różnić.",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "Oryginał",
+  "imageSend_viewReconstruction": "Co widzą odbiorcy",
+  "imageSend_reconstructionUnavailable": "To urządzenie nie może wyświetlić podglądu rekonstrukcji.",
+  "imageSend_modelNotDownloaded": "Model obrazowy nie jest jeszcze pobrany. Pobierz go w Ustawieniach, aby wysyłać obrazy.",
+  "receivedImage_save": "Zapisz obraz",
+  "receivedImage_shareCaption": "Odtworzony przez AI z {bytes} bajtów; drobne szczegóły są generowane, a nie przesyłane.",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "Informacje o pakiecie",
+  "receivedImage_parityRecovered": "Jeden pakiet został odtworzony z pakietu odzysku.",
+  "receivedImage_decodeTime": "Odtworzono w {ms} ms",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "Nie udało się zapisać obrazu",
+  "reviewMode_dialogTitle": "Włączyć tryb recenzji?",
+  "reviewMode_dialogBody": "Tryb recenzji łączy się z symulowanym radiem z przykładowymi kontaktami, kanałami i wiadomościami. Prawdziwe radio nie jest potrzebne.",
+  "reviewMode_confirm": "Włącz",
+  "reviewMode_cancel": "Anuluj",
+  "reviewMode_banner": "Tryb recenzji — dane symulowane",
+  "reviewMode_sendTest": "Wyślij wiadomość testową",
+  "reviewMode_testSent": "Wiadomość testowa wkrótce nadejdzie.",
+  "reviewMode_exit": "Wyjdź",
+  "reviewMode_connectFailed": "Nie udało się uruchomić trybu recenzji: {error}",
+  "settings_regionUseRadioDefault": "Domyślny region radia ({region})",
+  "settings_regionNoRegion": "Brak regionu (bez ograniczenia)",
+  "settings_regionRadioDefault": "Domyślny region radia",
+  "settings_regionRadioDefaultSubtitle": "Zapisany w radiu. Używają go floody wysłane bez regionu, z tej aplikacji i z każdej innej aplikacji połączonej z radiem.",
+  "settings_regionRadioDefaultUpdated": "Zaktualizowano domyślny region radia",
+  "settings_regionRadioDefaultFailed": "Nie udało się zaktualizować domyślnego regionu radia",
+  "appSettings_channelMinHopsCountRepeaters": "Licz także różne pobliskie przekaźniki",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Uznaj wiadomość za wysłaną, gdy powtórzy ją {count, plural, =1{1 pobliski przekaźnik} few{{count} różne pobliskie przekaźniki} many{{count} różnych pobliskich przekaźników} other{{count} różnego pobliskiego przekaźnika}}, nawet jeśli nie słyszysz, jak idzie dalej.",
+  "appSettings_regionOnHopsLine": "Region obok liczby hopów",
+  "appSettings_regionOnHopsLineSubtitle": "Pokaż region wiadomości kanału w tym samym wierszu co liczba hopów, zamiast pod nią.",
+  "channels_regionRadioDefaultSuffix": "(domyślny radia)",
+  "channels_regionRadioDefaultApplies": "To radio wysyła floody bez regionu w swoim regionie domyślnym: {region}.",
+  "chat_futureTimestampWarning": "Czas tej wiadomości jest w przyszłości, więc zegar nadawcy może być błędny. Wiadomość jest pokazana w kolejności odbioru.",
+  "discoveredContacts_scan": "Skanuj pobliskie węzły",
+  "discoveredContacts_scanTitle": "Pobliskie węzły",
+  "discoveredContacts_scanExplanation": "Prosi węzły w bezpośrednim zasięgu radia o zgłoszenie się. Odpowiadają przekaźniki i czujniki. Serwery pokoi i companiony zwykle nie.",
+  "discoveredContacts_scanning": "Skanowanie…",
+  "discoveredContacts_scanFound": "{count, plural, =1{Znaleziono 1 węzeł} few{Znaleziono {count} węzły} many{Znaleziono {count} węzłów} other{Znaleziono {count} węzła}}",
+  "discoveredContacts_scanNoResults": "Żaden węzeł nie odpowiedział. Przekaźniki ograniczają częstotliwość odpowiedzi, więc spróbuj ponownie za minutę.",
+  "discoveredContacts_scanAgain": "Skanuj ponownie",
+  "discoveredContacts_scanFailed": "Nie udało się wysłać żądania skanowania.",
+  "discoveredContacts_scanSignal": "Sygnał {snr} dB · usłyszeli nas z {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "Już w kontaktach",
+  "discoveredContacts_scanNameLater": "Nazwa pojawi się po następnym ogłoszeniu",
+  "channels_waitForSync": "Kanały są jeszcze wczytywane z radia. Spróbuj ponownie po zakończeniu synchronizacji.",
+  "channels_nameTooLong": "Nazwa jest za długa (maks. {maxBytes} bajtów).",
+  "repeater_valueRequired": "{field}: wpisz wartość",
+  "losMapDetailTooltip": "Szczegóły mapy",
+  "losUnitsTooltip": "Jednostki",
+  "losDistance": "Odległość",
+  "losClearance": "Prześwit",
+  "losBlockedBy": "Zablokowane przez",
+  "losObstruction": "Przeszkoda",
+  "losDistanceFromA": "{distance} od A",
+  "losWorstBadge": "NAJGORSZA",
+  "losBlockedAmount": "Zablokowane {amount}",
+  "losFromA": "Od A",
+  "losFromB": "Od B",
+  "losElevation": "Wysokość",
+  "losCenterOnMap": "Wyśrodkuj na mapie",
+  "losStatusClear": "Wolne",
+  "losStatusMarginal": "Graniczne",
+  "losStatusBlocked": "Zablokowane",
+  "losStatusCheckingShort": "Sprawdzanie",
+  "losStatusNoResult": "Brak wyniku",
+  "losSelectedPill": "Wybrano",
+  "gif_tapToLoad": "Dotknij, aby wczytać GIF",
+  "gif_loadFailedRetry": "Nie można wczytać GIF-a\nDotknij, aby spróbować ponownie",
+  "qr_cameraPermissionDenied": "Odmowa dostępu do aparatu.\nWłącz dostęp do aparatu w ustawieniach.",
+  "qr_cameraUnsupported": "Aparat nie jest obsługiwany na tym urządzeniu.",
+  "qr_cameraStartFailed": "Nie udało się uruchomić aparatu.\n{details}",
+  "imageMessages_downloadFailedWithError": "Nie udało się pobrać modelu obrazów: {error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "Ukryj: ukryty do czasu opuszczenia mapy.",
+  "map_markerRemoveHint": "Usuń: pozostaje ukryty, dopóki nie przywrócisz go z menu filtrów.",
+  "map_markerRemoved": "Znacznik usunięty",
+  "map_restoreRemovedMarkers": "Przywróć usunięte znaczniki",
+  "map_restoreRemovedMarkersSubtitle": "Usunięto: {count}",
+  "map_markersRestored": "Przywrócono znaczniki: {count}",
+  "map_setLocationConfirmTitle": "Ustawić jako Twoją lokalizację?",
+  "map_setLocationConfirmBody": "Twój węzeł będzie ogłaszał tę pozycję:\n{lat}, {lon}",
+  "map_setLocationAction": "Ustaw lokalizację",
+  "map_locationSetSuccess": "Zaktualizowano lokalizację węzła",
+  "map_locationSetFailed": "Urządzenie nie potwierdziło nowej lokalizacji. Spróbuj ponownie.",
+  "map_poiClusterTitle": "Znaczniki tutaj: {count}",
+  "map_poiClusterSemantics": "Udostępnione znaczniki: {count}. Dotknij, aby je wyświetlić.",
+  "map_youWithMarkers": "Ty i znaczniki: {count}",
+  "map_sharedMarkerSemantics": "Udostępniony znacznik: {label}",
+  "map_nodeMarkerSemantics": "{name}, {type}, {status}",
+  "mapCache_zoomLevel": "Zoom {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "Pobieranie anulowane. Zapisano w pamięci podręcznej kafelki: {count}.",
+  "mapCache_tooManyTilesTitle": "Obszar zbyt duży",
+  "mapCache_tooManyTiles": "Ten obszar wymaga {count} kafelków, co przekracza limit {max}. Wybierz mniejszy obszar lub zmniejsz maksymalny zoom.",
+  "chat_clearChatConfirm": "Spowoduje to usunięcie z tego urządzenia wszystkich wiadomości w tej rozmowie. Tej operacji nie można cofnąć.",
+  "channels_clearChatConfirm": "Spowoduje to usunięcie z tego urządzenia wszystkich wiadomości w tym kanale, w tym odebranych obrazów. Tej operacji nie można cofnąć.",
+  "channels_timeNow": "teraz",
+  "channels_timeMinutes": "{minutes} min",
+  "channels_timeHours": "{hours} godz.",
+  "channels_timeDays": "{days} d",
+  "channels_indexChip": "KN {index}",
+  "reaction_unknownSender": "Nieznany",
+  "pathMap_noSelfGpsFix": "Lokalny węzeł nie ma pozycji GPS",
+  "pathTrace_sendFailed": "Nie udało się wysłać śledzenia trasy: {error}",
+  "losErrorNoInternet": "Dane wysokościowe wymagają połączenia z internetem",
+  "losResultStale": "Nieaktualne: zmieniono wysokość anteny",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "Wczytywanie telemetrii…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "Brak połączenia z radiem. Połącz się i spróbuj ponownie.",
+  "settings_requiresConnection": "Połącz się z radiem, aby z tego korzystać",
+  "settings_txPowerInvalidRange": "Nieprawidłowa moc TX (od {min} do {max} dBm)",
+  "settings_contactSettingsSaved": "Zapisano ustawienia kontaktu",
+  "settings_batteryToggleHint": "Dotknij, aby przełączyć między procentami a napięciem",
+  "settings_publicKeyCopyHint": "Kopiuj klucz publiczny",
+  "settings_locationClearHelper": "Pozostaw oba pola puste, aby usunąć swoją lokalizację.",
+  "settings_locationCleared": "Lokalizacja usunięta",
+  "settings_regionFetchDiscovering": "Wyszukiwanie pobliskich przekaźników…",
+  "settings_regionFetchProgress": "Odpytywanie przekaźnika {current} z {total}…",
+  "settings_regionFetchNoRepeaters": "Nie są jeszcze znane żadne przekaźniki. Dodaj przekaźnik jako kontakt lub poczekaj, aż któryś się ogłosi, a następnie spróbuj ponownie.",
+  "settings_regionFetchNoneResponded": "Żaden pobliski przekaźnik nie odpowiedział. Zbliż się do przekaźnika i spróbuj ponownie.",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "Routing",
+  "appSettings_imageMessagesSection": "Wiadomości z obrazami",
+  "appSettings_showApiKey": "Pokaż klucz API",
+  "appSettings_hideApiKey": "Ukryj klucz API",
+  "translation_defaultModelName": "Model",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB ({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "Radio rozłączone",
+  "repeater_radioDisconnectedHint": "Połącz się ponownie z radiem, aby wysyłać polecenia, odświeżać lub zapisywać zmiany.",
+  "repeater_cliSend": "Wyślij polecenie",
+  "repeater_cliCopyTranscript": "Kopiuj zapis",
+  "repeater_cliShareTranscript": "Udostępnij zapis",
+  "repeater_cliTranscriptCopied": "Skopiowano zapis",
+  "repeater_cliClearHistoryConfirm": "Wyczyścić historię poleceń? Tej operacji nie można cofnąć.",
+  "repeater_cliSearchCommands": "Szukaj poleceń",
+  "repeater_cliNoMatchingCommands": "Brak pasujących poleceń",
+  "debugLog_clearConfirm": "Wyczyścić wszystkie wpisy dziennika? Tej operacji nie można cofnąć.",
+  "repeater_unsavedChangesTitle": "Niezapisane zmiany",
+  "repeater_unsavedChangesMessage": "Masz zmiany, które nie zostały zapisane w przekaźniku.",
+  "repeater_discardChanges": "Odrzuć",
+  "repeater_actionSentNoReply": "{action}: polecenie wysłane. Przekaźnik nie odpowiada na to polecenie.",
+  "repeater_invalidSettingValue": "{setting}: {value} jest nieprawidłowe",
+  "repeater_txPowerOutOfRange": "Moc TX {value} jest poza zakresem (od {min} do {max} dBm)",
+  "repeater_prvKeyLengthError": "Klucz prywatny musi mieć dokładnie {length} znaków szesnastkowych",
+  "contacts_advertFailed": "Nie udało się wysłać ogłoszenia",
+  "contacts_manageGroups": "Zarządzaj grupami",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "Połączono z",
+  "usbChooseSerialPort": "Wybierz port szeregowy",
+  "neighbors_durationSeconds": "{seconds} s",
+  "neighbors_durationMinutes": "{minutes} min {seconds} s",
+  "neighbors_durationHours": "{hours} godz. {minutes} min",
+  "scanner_getNodeTitle": "Potrzebujesz nowego węzła?",
+  "scanner_getNodeBody": "Wielkości portfela, z MeshCore, dwuzakresowy GPS, wodoodporny, bateria na 5 dni.",
+  "scanner_getNodeAction": "Kup tutaj",
+  "scanner_getNodeDisclosure": "Link partnerski: każdy zakup wspiera MeshCore Open.",
+  "networkMap_settingsSection": "Mapa sieci",
+  "networkMap_uploadTitle": "Udostępniaj to, co słyszy moje radio",
+  "networkMap_uploadExplanation": "Gdy ta opcja jest włączona, a radio połączone, aplikacja wysyła krótkie podsumowanie pakietów słyszanych przez radio do mapy sieci MeshCore Open, aby każdy mógł zobaczyć, jakie repeatery istnieją i jak się łączą. Wysyłany jest typ, trasa, liczba skoków, siła sygnału i rozmiar każdego pakietu oraz nazwy repeaterów i przybliżone lokalizacje z ich własnych rozgłoszeń. Nigdy nie wysyła treści wiadomości, informacji o tym, kto z kim rozmawia, nazw kanałów, Twoich kontaktów ani Twojej dokładnej pozycji: lokalizacje są zaokrąglane do około 2 km, a aplikacja co dzień dostaje nowy losowy identyfikator.",
+  "networkMap_whatWeCollect": "Co zbieramy",
+  "networkMap_promptTitle": "Pomóc w budowie mapy sieci?",
+  "networkMap_promptBody": "MeshCore Open może udostępniać to, co słyszy Twoje radio, publicznej mapie sieci na map.meshcoreopen.org, aby każdy mógł zobaczyć, jakie repeatery istnieją i jak się łączą.\n\nNigdy nie wysyła treści wiadomości, informacji o tym, kto z kim rozmawia, nazw kanałów, Twoich kontaktów ani Twojej dokładnej pozycji. Lokalizacje są zaokrąglane do około 2 km.",
+  "networkMap_promptSettingsHint": "Możesz to zmienić w dowolnym momencie w Ustawienia → Ustawienia aplikacji → Mapa sieci.",
+  "networkMap_promptAccept": "Udostępnij",
+  "networkMap_promptDecline": "Nie, dziękuję",
+  "networkMap_statusOff": "Wyłączone. Nic nie jest wysyłane.",
+  "networkMap_statusWaiting": "Włączone. Oczekiwanie na połączenie z radiem.",
+  "networkMap_statusNothingSent": "Włączone. Nic jeszcze nie wysłano.",
+  "networkMap_statusLastSent": "Ostatnio wysłano {time}. Pakiety dzisiaj: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokalna",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Obie",
+  "networkMap_zoomInHint": "Przybliż, aby zobaczyć mapę sieci online",
+  "networkMap_loadFailed": "Nie udało się wczytać mapy sieci online",
+  "networkMap_inYourContacts": "W Twoich kontaktach",
+  "networkMap_status": "Stan",
+  "networkMap_statusActive": "Aktywny w ostatniej godzinie",
+  "networkMap_statusRecent": "Słyszany w ostatniej dobie",
+  "networkMap_statusStale": "Dawno niesłyszany",
+  "networkMap_confirmed": "Potwierdzony",
+  "networkMap_singleSource": "Jedno źródło, jeszcze niepotwierdzone",
+  "networkMap_reports": "Raporty",
+  "networkMap_locationEstimated": "Przybliżona lokalizacja, oszacowana na podstawie tego, kto go słyszał",
+  "networkMap_locationAdvertised": "Przybliżona lokalizacja, z jego własnego rozgłoszenia",
+  "networkMap_heardByRadio": "Słyszany przez Twoje radio",
+  "networkMap_inYourArea": "W Twojej okolicy",
+  "networkMap_farAway": "Daleko. Zarządzanie tam nie dotrze.",
+  "networkMap_addToContacts": "Dodaj do kontaktów",
+  "networkMap_manage": "Zarządzaj",
+  "networkMap_addedToContacts": "Dodano do kontaktów",
+  "networkMap_addFailed": "Nie udało się dodać do kontaktów",
+  "networkMap_unnamed": "Repeater bez nazwy"
 }

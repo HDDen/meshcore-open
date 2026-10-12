@@ -475,6 +475,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "Ihr Funkgerät hat keinen Standort festgelegt",
+  "chat_shareMyLocation": "Meinen Standort teilen",
   "chat_location": "Ort",
   "chat_sendMessageTo": "Nachricht an {contactName} senden",
   "@chat_sendMessageTo": {
@@ -711,6 +713,7 @@
   "map_shareMarkerHere": "Marker hier teilen",
   "map_pinLabel": "Pin-Beschriftung",
   "map_label": "Beschriftung",
+  "map_labelUpdateHint": "Wenn Sie denselben Namen verwenden wie zuvor, wird die Markierung bei MeshCore Open-Empfängern aktualisiert.",
   "map_pointOfInterest": "Punkt von Interesse",
   "map_sendToContact": "An Kontakt senden",
   "map_sendToChannel": "An Kanal senden",
@@ -2130,6 +2133,7 @@
   "contactsSettings_autoAddUsersTitle": "Automatische Hinzufügung von Benutzern",
   "settings_contactSettingsSubtitle": "Einstellungen für das Hinzufügen von Kontakten",
   "contactsSettings_autoAddSensorsTitle": "Automatisch Sensoren hinzufügen",
+  "contactsSettings_autoAddSensorsSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Sensoren hinzuzufügen",
   "contactsSettings_autoAddUsersSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Benutzer hinzuzufügen",
   "contactsSettings_autoAddRoomServersTitle": "Automatisch Raumservers hinzufügen",
   "contactsSettings_autoAddRoomServersSubtitle": "Ermöglichen Sie dem Begleiter, entdeckte Raumserver automatisch hinzuzufügen",
@@ -2143,11 +2147,57 @@
   "discoveredContacts_Title": "Entdeckte Kontakte",
   "discoveredContacts_copyContact": "Kontakt in die Zwischenablage kopieren",
   "contactsSettings_overwriteOldestTitle": "Überschreiben des Ältesten",
-  "contactsSettings_autoAddSensorsSubtitle": "Ermöglichen Sie dem Begleiter, automatisch entdeckte Sensoren hinzuzufügen",
   "contactsSettings_overwriteOldestSubtitle": "Wenn die Kontaktliste voll ist, wird der älteste nicht favorisierte Kontakt ersetzt.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Liste entdeckter Kontakte kürzen",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Wenn aktiviert, wird die Liste der entdeckten Kontakte auf {limit} Kontakte begrenzt.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Alles löschen",
   "discoveredContacts_deleteContactAllContent": "Sind Sie sicher, dass Sie alle gefundenen Kontakte löschen möchten?",
   "discoveredContacts_deleteContactAll": "Alle entdeckten Kontakte löschen",
+  "discoveredContacts_export": "Entdeckte Kontakte exportieren",
+  "discoveredContacts_import": "Entdeckte Kontakte importieren",
+  "discoveredContacts_exported": "Entdeckte Kontakte exportiert nach {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Export von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} entdeckte Kontakte importiert.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Keine Kontakte in Importdatei gefunden.",
+  "discoveredContacts_importInvalidFile": "Die Datei ist kein Export entdeckter Kontakte.",
+  "discoveredContacts_importSummary": "{imported} entdeckte Kontakte importiert. {skipped} bereits bekannte und {invalid} unlesbare Einträge übersprungen.",
+  "discoveredContacts_importTooLarge": "Die Importdatei ist zu groß (maximal {maxMb} MB).",
+  "discoveredContacts_importFailed": "Import von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_showGuessedLocations": "Vermutete Knotenstandorte anzeigen",
   "map_guessedLocation": "Vermuteter Standort",
   "usbScreenSubtitle": "Wählen Sie ein erkanntes serielles Gerät aus und verbinden Sie es direkt mit Ihrem MeshCore-Knoten.",
@@ -2996,5 +3046,404 @@
   "room_postsPushed": "Gesendete Beiträge",
   "room_postsStored": "Beiträge",
   "settings_publicKeyCopied": "Öffentlicher Schlüssel kopiert",
-  "settings_radioSettingsNotApplied": "Das Funkgerät hat diese Einstellungen nicht übernommen"
+  "settings_radioSettingsNotApplied": "Das Funkgerät hat diese Einstellungen nicht übernommen",
+  "messageStatus_failedChannel": "Ihr Funkgerät konnte diese Nachricht nicht senden.",
+  "messageStatus_resending": "Noch nicht über genügend Repeater gehört. {resends} von {maxResends} Malen erneut gesendet.",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "Gesendet, aber nur über {hops} von {required} Repeatern zurückgehört. Möglicherweise ist sie weiter gelangt, als Ihr Funkgerät hören kann.",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "Gesendet. Kanäle bestätigen keine Zustellung, das bedeutet also nur, dass Ihr Funkgerät sie gesendet hat.",
+  "messageStatus_sentDirect": "Gesendet. Warten auf die Bestätigung des Kontakts.",
+  "messageStatus_heardRepeatedCount": "Gehört {count, plural, =1{einmal} other{{count}-mal}}. Repeater in der Nähe haben sie weitergeleitet.",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "Regionen begrenzen Flood-Nachrichten auf die Repeater eines Gebiets. Rufen Sie sie von Repeatern in der Nähe ab oder fügen Sie eine nach Namen hinzu.",
+  "settings_regionFetchFromRepeaters": "Von Repeatern abrufen",
+  "settings_regionDefault": "Standardregion",
+  "settings_regionDefaultSubtitle": "Wird von Kanälen ohne eigene Region verwendet",
+  "settings_regionDefaultNone": "Keine",
+  "settings_telemetryPerContactHint": "Um einen Kontakt zuzulassen, öffnen Sie den zugehörigen Chat und wählen Sie im Menü Kontakteinstellungen aus.",
+  "settings_multiAckSubtitle": "Zusätzliche ACKs für eine bessere Zustellung senden; erhöht die Sendezeit",
+  "settings_presetCustom": "Benutzerdefiniert",
+  "settings_radioMatchWarning": "Alle Knoten, mit denen Sie kommunizieren, müssen dieselbe Frequenz, Bandbreite und SF verwenden. Die Coderate (CR) darf abweichen.",
+  "settings_txPowerRangeHelper": "{min} bis {max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "Frequenz für die Weiterleitung ohne Netzstrom auf {freq} MHz gesetzt",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "Größe der einzelnen Knoten-ID, die im Pfad der von diesem Funkgerät gesendeten Flood-Pakete aufgezeichnet wird: 1 Byte (256 IDs, bis zu 64 Hops), 2 Bytes (65.000 IDs, bis zu 32 Hops), 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Größere IDs verringern Kollisionen, aber Repeater mit einer Firmware älter als v1.14 verwerfen Pakete mit 2- oder 3-Byte-IDs.",
+  "settings_requiresFirmware": "Erfordert Firmware {version} oder neuer",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "Kanalnachrichten erneut senden, bis sie weit genug gelangen",
+  "appSettings_channelMinHopsSubtitle": "Wenn Ihre Nachricht nicht über genügend Repeater zurückgehört wird, senden Sie sie erneut. Erhöht die Sendezeit.",
+  "appSettings_channelMinHopsCount": "Erforderliche Hops: {count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "Bis zu {count, plural, =1{1-mal} other{{count}-mal}} erneut senden",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "Hintergrundaktivität",
+  "appSettings_batteryOptimizationSubtitle": "Setzen Sie MeshCore Open in den Akkueinstellungen auf „Nicht optimieren“, damit Nachrichten auch im Hintergrund ankommen",
+  "contacts_storageFull": "Der Kontaktspeicher auf dem Knoten ist voll. Neue Knoten lassen sich erst wieder hinzufügen, wenn Kontakte entfernt wurden.",
+  "contacts_removeFromContacts": "Aus Kontakten entfernen",
+  "contacts_removeFromContactsConfirm": "{contactName} wird zu „Entdeckte Kontakte“ verschoben. Der Chatverlauf wird gelöscht.",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "Chatverlauf behalten",
+  "contacts_remove": "Entfernen",
+  "contacts_discoveredNearby": "In der Nähe entdeckt ({count})",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "Knoten, die Ihr Funkgerät hört, aber noch nicht hinzugefügt hat, stehen unter „Entdeckte Kontakte“.",
+  "channels_hashtag": "Hashtag",
+  "channels_addSectionJoin": "Bestehendem beitreten",
+  "channels_addSectionCreate": "Neuen erstellen",
+  "channels_dragToReorder": "Zum Umsortieren ziehen",
+  "channels_regionDefaultSuffix": "(Standard)",
+  "channels_regionSelectExplanation": "Flood-Nachrichten in diesem Kanal werden nur von Repeatern in der ausgewählten Region weitergeleitet.",
+  "channels_regionEmpty": "Noch keine Regionen.",
+  "channels_manageRegions": "Regionen verwalten",
+  "chat_removeGif": "GIF entfernen",
+  "chat_cancelReply": "Antwort abbrechen",
+  "chat_viewPathOnMap": "Pfad auf der Karte anzeigen",
+  "chat_today": "Heute",
+  "chat_yesterday": "Gestern",
+  "map_centerOnMe": "Auf meinen Standort zentrieren",
+  "map_noNodesLocationHint": "Keine Knoten mit einem aktuellen Standort. Erweitern Sie den Zeitfilter oder legen Sie Ihren eigenen Standort in den Einstellungen fest.",
+  "map_clusterNodes": "Nahegelegene Knoten gruppieren",
+  "map_groupChip": "Gruppe",
+  "map_clusterNodesSubtitle": "Beim Herauszoomen nahegelegene Knoten als einen nummerierten Kreis anzeigen",
+  "map_manageServer": "Server verwalten",
+  "login_showPassword": "Passwort anzeigen",
+  "login_hidePassword": "Passwort ausblenden",
+  "login_advanced": "Erweitert",
+  "common_clearSearch": "Suche löschen",
+  "repeater_roleAdmin": "ADMIN",
+  "repeater_roleGuest": "GAST",
+  "repeater_refreshAll": "Alle aktualisieren",
+  "repeater_settingsNotLoaded": "Die Einstellungen wurden von diesem Repeater noch nicht geladen.",
+  "repeater_settingsLoadIncomplete": "Einige Einstellungen konnten nicht geladen werden. Verwenden Sie die Aktualisieren-Schaltflächen, um es erneut zu versuchen.",
+  "contacts_scanQrCode": "QR-Code scannen",
+  "contacts_scanQrInstructions": "Richten Sie die Kamera auf einen QR-Code eines MeshCore-Kontakts",
+  "contacts_qrFromGallery": "QR-Code aus der Galerie scannen",
+  "contacts_noQrCodeFound": "Im ausgewählten Bild wurde kein QR-Code gefunden.",
+  "contacts_qrGalleryFailed": "Die Galerie konnte nicht geöffnet werden.",
+  "notification_actionReply": "Antworten",
+  "notification_actionMarkRead": "Als gelesen markieren",
+  "notification_actionMuteChannel": "Kanal stummschalten",
+  "notification_replyHint": "Nachricht",
+  "notification_you": "Du",
+  "notification_replyFailedTitle": "Antwort nicht gesendet",
+  "notification_replyNotConnected": "Keine Verbindung zu einem Funkgerät. Stellen Sie die Verbindung in MeshCore Open wieder her und senden Sie Ihre Antwort erneut.",
+  "notification_replyTooLong": "Ihre Antwort ist zu lang, um aus einer Benachrichtigung heraus gesendet zu werden. Senden Sie sie stattdessen aus MeshCore Open.",
+  "notification_replyUnavailable": "Diese Unterhaltung ist auf dem verbundenen Funkgerät nicht mehr vorhanden.",
+  "notification_replySendFailed": "Ihre Antwort wurde möglicherweise nicht gesendet. Prüfen Sie dies in MeshCore Open und versuchen Sie es erneut.",
+  "notification_replyAppNotRunning": "MeshCore Open wird nicht ausgeführt. Öffnen Sie die App und senden Sie Ihre Antwort erneut.",
+  "snrIndicator_nearByRepeatersDescription": "Repeater, die Ihr Funkgerät direkt gehört hat, zuletzt gehört zuerst.",
+  "radioStats_sectionSignal": "Signal",
+  "radioStats_sectionAirtime": "Sendezeit",
+  "imageSend_lossyNote": "Auf etwa {bytes} Bytes komprimiert. Das Modell des Empfängers rekonstruiert das Bild, daher weichen Details ab.",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "Original",
+  "imageSend_viewReconstruction": "Was die Empfänger sehen",
+  "imageSend_reconstructionUnavailable": "Dieses Gerät kann die Rekonstruktion nicht in der Vorschau anzeigen.",
+  "imageSend_modelNotDownloaded": "Das Bildmodell wurde noch nicht heruntergeladen. Laden Sie es in den Einstellungen herunter, um Bilder zu senden.",
+  "receivedImage_save": "Bild speichern",
+  "receivedImage_shareCaption": "KI-rekonstruiert aus {bytes} Bytes; feine Details werden erzeugt und nicht übertragen.",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "Paketinfo",
+  "receivedImage_parityRecovered": "Ein Paket wurde aus dem Wiederherstellungspaket rekonstruiert.",
+  "receivedImage_decodeTime": "In {ms} ms rekonstruiert",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "Das Bild konnte nicht gespeichert werden",
+  "reviewMode_dialogTitle": "Prüfmodus aktivieren?",
+  "reviewMode_dialogBody": "Der Prüfmodus verbindet sich mit einem simulierten Radio mit Beispielkontakten, Kanälen und Nachrichten. Es wird kein echtes Radio benötigt.",
+  "reviewMode_confirm": "Aktivieren",
+  "reviewMode_cancel": "Abbrechen",
+  "reviewMode_banner": "Prüfmodus — simulierte Daten",
+  "reviewMode_sendTest": "Testnachricht senden",
+  "reviewMode_testSent": "Eine Testnachricht trifft in Kürze ein.",
+  "reviewMode_exit": "Beenden",
+  "reviewMode_connectFailed": "Prüfmodus konnte nicht gestartet werden: {error}",
+  "settings_regionUseRadioDefault": "Radio-Standard ({region})",
+  "settings_regionNoRegion": "Keine Region (ohne Bereich)",
+  "settings_regionRadioDefault": "Standardregion des Radios",
+  "settings_regionRadioDefaultSubtitle": "Auf dem Radio gespeichert. Floods ohne Region verwenden sie, von dieser App und von jeder anderen App, die mit dem Radio verbunden ist.",
+  "settings_regionRadioDefaultUpdated": "Standardregion des Radios aktualisiert",
+  "settings_regionRadioDefaultFailed": "Standardregion des Radios konnte nicht aktualisiert werden",
+  "appSettings_channelMinHopsCountRepeaters": "Auch verschiedene Repeater in der Nähe zählen",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Die Nachricht als gesendet betrachten, wenn {count, plural, =1{1 Repeater in der Nähe} other{{count} verschiedene Repeater in der Nähe}} sie wiederholen, auch wenn Sie nicht hören, wie sie weiterläuft.",
+  "appSettings_regionOnHopsLine": "Region neben der Hop-Anzahl",
+  "appSettings_regionOnHopsLineSubtitle": "Die Region einer Kanalnachricht in derselben Zeile wie die Hop-Anzahl anzeigen statt darunter.",
+  "channels_regionRadioDefaultSuffix": "(Radio-Standard)",
+  "channels_regionRadioDefaultApplies": "Dieses Radio sendet Floods ohne Region in seiner Standardregion: {region}.",
+  "chat_futureTimestampWarning": "Die Uhrzeit dieser Nachricht liegt in der Zukunft, daher könnte die Uhr des Absenders falsch gehen. Sie wird in der Reihenfolge ihres Eintreffens angezeigt.",
+  "discoveredContacts_scan": "Nach Knoten in der Nähe suchen",
+  "discoveredContacts_scanTitle": "Knoten in der Nähe",
+  "discoveredContacts_scanExplanation": "Fordert Knoten in direkter Funkreichweite auf, sich zu melden. Repeater und Sensoren antworten. Raumserver und Companions meist nicht.",
+  "discoveredContacts_scanning": "Suche läuft…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 Knoten gefunden} other{{count} Knoten gefunden}}",
+  "discoveredContacts_scanNoResults": "Kein Knoten hat geantwortet. Repeater begrenzen, wie oft sie antworten. Versuchen Sie es in einer Minute erneut.",
+  "discoveredContacts_scanAgain": "Erneut suchen",
+  "discoveredContacts_scanFailed": "Die Suchanfrage konnte nicht gesendet werden.",
+  "discoveredContacts_scanSignal": "Signal {snr} dB · sie haben uns mit {remoteSnr} dB gehört",
+  "discoveredContacts_scanInContacts": "Bereits in den Kontakten",
+  "discoveredContacts_scanNameLater": "Name erscheint nach der nächsten Ankündigung",
+  "channels_waitForSync": "Kanäle werden noch vom Radio geladen. Versuchen Sie es erneut, wenn die Synchronisierung abgeschlossen ist.",
+  "channels_nameTooLong": "Name ist zu lang (max. {maxBytes} Bytes).",
+  "repeater_valueRequired": "{field}: Wert eingeben",
+  "losMapDetailTooltip": "Kartendetails",
+  "losUnitsTooltip": "Einheiten",
+  "losDistance": "Entfernung",
+  "losClearance": "Freiraum",
+  "losBlockedBy": "Blockiert durch",
+  "losObstruction": "Hindernis",
+  "losDistanceFromA": "{distance} von A",
+  "losWorstBadge": "SCHLECHTESTES",
+  "losBlockedAmount": "Blockiert {amount}",
+  "losFromA": "Von A",
+  "losFromB": "Von B",
+  "losElevation": "Höhe",
+  "losCenterOnMap": "Auf Karte zentrieren",
+  "losStatusClear": "Frei",
+  "losStatusMarginal": "Grenzwertig",
+  "losStatusBlocked": "Blockiert",
+  "losStatusCheckingShort": "Prüfung",
+  "losStatusNoResult": "Kein Ergebnis",
+  "losSelectedPill": "Ausgewählt",
+  "gif_tapToLoad": "Zum Laden des GIFs tippen",
+  "gif_loadFailedRetry": "GIF kann nicht geladen werden\nTippen, um es erneut zu versuchen",
+  "qr_cameraPermissionDenied": "Kamerazugriff verweigert.\nBitte aktivieren Sie den Kamerazugriff in den Einstellungen.",
+  "qr_cameraUnsupported": "Kamera wird auf diesem Gerät nicht unterstützt.",
+  "qr_cameraStartFailed": "Kamera konnte nicht gestartet werden.\n{details}",
+  "imageMessages_downloadFailedWithError": "Das Bildmodell konnte nicht heruntergeladen werden: {error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "Ausblenden: bleibt ausgeblendet, bis du die Karte verlässt.",
+  "map_markerRemoveHint": "Entfernen: bleibt ausgeblendet, bis du es über das Filtermenü wiederherstellst.",
+  "map_markerRemoved": "Marker entfernt",
+  "map_restoreRemovedMarkers": "Entfernte Marker wiederherstellen",
+  "map_restoreRemovedMarkersSubtitle": "{count} entfernt",
+  "map_markersRestored": "{count} Marker wiederhergestellt",
+  "map_setLocationConfirmTitle": "Als deinen Standort festlegen?",
+  "map_setLocationConfirmBody": "Dein Knoten wird diese Position bekannt geben:\n{lat}, {lon}",
+  "map_setLocationAction": "Standort festlegen",
+  "map_locationSetSuccess": "Knotenstandort aktualisiert",
+  "map_locationSetFailed": "Das Gerät hat den neuen Standort nicht bestätigt. Versuche es erneut.",
+  "map_poiClusterTitle": "{count} Marker hier",
+  "map_poiClusterSemantics": "{count} geteilte Marker. Tippen, um sie aufzulisten.",
+  "map_youWithMarkers": "Du und {count} Marker",
+  "map_sharedMarkerSemantics": "Geteilter Marker: {label}",
+  "map_nodeMarkerSemantics": "{name}, {type}, {status}",
+  "mapCache_zoomLevel": "Zoom {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "Download abgebrochen. {count} Kacheln im Cache.",
+  "mapCache_tooManyTilesTitle": "Bereich zu groß",
+  "mapCache_tooManyTiles": "Dieser Bereich benötigt {count} Kacheln, mehr als das Limit von {max}. Wähle einen kleineren Bereich oder verringere den maximalen Zoom.",
+  "chat_clearChatConfirm": "Dadurch werden alle Nachrichten dieser Unterhaltung von diesem Gerät gelöscht. Das kann nicht rückgängig gemacht werden.",
+  "channels_clearChatConfirm": "Dadurch werden alle Nachrichten dieses Kanals von diesem Gerät gelöscht, einschließlich empfangener Bilder. Das kann nicht rückgängig gemacht werden.",
+  "channels_timeNow": "jetzt",
+  "channels_timeMinutes": "{minutes} Min.",
+  "channels_timeHours": "{hours} Std.",
+  "channels_timeDays": "{days} T.",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "Unbekannt",
+  "pathMap_noSelfGpsFix": "Lokaler Knoten hat keinen GPS-Fix",
+  "pathTrace_sendFailed": "Pfadverfolgung konnte nicht gesendet werden: {error}",
+  "losErrorNoInternet": "Für Höhendaten wird eine Internetverbindung benötigt",
+  "losResultStale": "Veraltet: Antennenhöhe wurde geändert",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "Telemetrie wird geladen…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "Nicht mit einem Funkgerät verbunden. Verbinde dich und versuche es erneut.",
+  "settings_requiresConnection": "Verbinde dich mit einem Funkgerät, um dies zu nutzen",
+  "settings_txPowerInvalidRange": "Ungültige Sendeleistung ({min} bis {max} dBm)",
+  "settings_contactSettingsSaved": "Kontakteinstellungen gespeichert",
+  "settings_batteryToggleHint": "Tippen, um zwischen Prozent und Spannung zu wechseln",
+  "settings_publicKeyCopyHint": "Öffentlichen Schlüssel kopieren",
+  "settings_locationClearHelper": "Lass beide Felder leer, um deinen Standort zu entfernen.",
+  "settings_locationCleared": "Standort entfernt",
+  "settings_regionFetchDiscovering": "Suche nach Repeatern in der Nähe…",
+  "settings_regionFetchProgress": "Frage Repeater {current} von {total} ab…",
+  "settings_regionFetchNoRepeaters": "Noch keine Repeater bekannt. Füge einen Repeater als Kontakt hinzu oder warte, bis einer sich ankündigt, und versuche es dann erneut.",
+  "settings_regionFetchNoneResponded": "Kein Repeater in der Nähe hat geantwortet. Gehe näher an einen Repeater heran und versuche es erneut.",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "Routing",
+  "appSettings_imageMessagesSection": "Bildnachrichten",
+  "appSettings_showApiKey": "API-Schlüssel anzeigen",
+  "appSettings_hideApiKey": "API-Schlüssel verbergen",
+  "translation_defaultModelName": "Modell",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB ({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "Funkgerät getrennt",
+  "repeater_radioDisconnectedHint": "Verbinde dich erneut mit deinem Funkgerät, um Befehle zu senden, zu aktualisieren oder Änderungen zu speichern.",
+  "repeater_cliSend": "Befehl senden",
+  "repeater_cliCopyTranscript": "Protokoll kopieren",
+  "repeater_cliShareTranscript": "Protokoll teilen",
+  "repeater_cliTranscriptCopied": "Protokoll kopiert",
+  "repeater_cliClearHistoryConfirm": "Befehlsverlauf löschen? Das kann nicht rückgängig gemacht werden.",
+  "repeater_cliSearchCommands": "Befehle suchen",
+  "repeater_cliNoMatchingCommands": "Keine passenden Befehle",
+  "debugLog_clearConfirm": "Alle Protokolleinträge löschen? Das kann nicht rückgängig gemacht werden.",
+  "repeater_unsavedChangesTitle": "Ungespeicherte Änderungen",
+  "repeater_unsavedChangesMessage": "Es gibt Änderungen, die nicht im Repeater gespeichert wurden.",
+  "repeater_discardChanges": "Verwerfen",
+  "repeater_actionSentNoReply": "{action}: Befehl gesendet. Der Repeater antwortet auf diesen Befehl nicht.",
+  "repeater_invalidSettingValue": "{setting}: {value} ist ungültig",
+  "repeater_txPowerOutOfRange": "Sendeleistung {value} liegt außerhalb des Bereichs ({min} bis {max} dBm)",
+  "repeater_prvKeyLengthError": "Der private Schlüssel muss genau {length} Hex-Zeichen lang sein",
+  "contacts_advertFailed": "Advert konnte nicht gesendet werden",
+  "contacts_manageGroups": "Gruppen verwalten",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "Verbunden mit",
+  "usbChooseSerialPort": "Serielle Schnittstelle wählen",
+  "neighbors_durationSeconds": "{seconds} s",
+  "neighbors_durationMinutes": "{minutes} Min. {seconds} s",
+  "neighbors_durationHours": "{hours} Std. {minutes} Min.",
+  "scanner_getNodeTitle": "Brauchst du einen neuen Node?",
+  "scanner_getNodeBody": "Im Hosentaschenformat, mit MeshCore, Dualband-GPS, wasserdicht und 5 Tage Akkulaufzeit.",
+  "scanner_getNodeAction": "Hier holen",
+  "scanner_getNodeDisclosure": "Affiliate-Link: Jeder Kauf unterstützt MeshCore Open.",
+  "networkMap_settingsSection": "Netzwerkkarte",
+  "networkMap_uploadTitle": "Teilen, was mein Funkgerät hört",
+  "networkMap_uploadExplanation": "Wenn dies aktiviert und dein Funkgerät verbunden ist, sendet die App eine kurze Zusammenfassung der Pakete, die dein Funkgerät empfängt, an die MeshCore-Open-Netzwerkkarte, damit alle sehen können, welche Repeater es gibt und wie sie verbunden sind. Gesendet werden Typ, Route, Hops, Signalstärke und Größe jedes Pakets sowie Repeater-Namen und ungefähre Standorte aus deren eigenen Adverts. Nie gesendet werden Nachrichtentexte, wer mit wem spricht, Kanalnamen, deine Kontakte oder dein genauer Standort: Standorte werden auf etwa 2 km gerundet, und deine App erhält jeden Tag eine neue zufällige ID.",
+  "networkMap_whatWeCollect": "Was wir erfassen",
+  "networkMap_promptTitle": "Beim Aufbau der Netzwerkkarte helfen?",
+  "networkMap_promptBody": "MeshCore Open kann teilen, was dein Funkgerät hört, und zwar mit der öffentlichen Netzwerkkarte unter map.meshcoreopen.org, damit alle sehen können, welche Repeater es gibt und wie sie verbunden sind.\n\nEs werden nie Nachrichtentexte, wer mit wem spricht, Kanalnamen, deine Kontakte oder dein genauer Standort gesendet. Standorte werden auf etwa 2 km gerundet.",
+  "networkMap_promptSettingsHint": "Du kannst dies jederzeit unter Einstellungen → App-Einstellungen → Netzwerkkarte ändern.",
+  "networkMap_promptAccept": "Teilen",
+  "networkMap_promptDecline": "Nein danke",
+  "networkMap_statusOff": "Aus. Es wird nichts gesendet.",
+  "networkMap_statusWaiting": "An. Warte auf eine Funkgerät-Verbindung.",
+  "networkMap_statusNothingSent": "An. Noch nichts gesendet.",
+  "networkMap_statusLastSent": "Zuletzt gesendet {time}. Heute {count} Pakete.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokal",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Beides",
+  "networkMap_zoomInHint": "Zoome hinein, um die Online-Netzwerkkarte zu sehen",
+  "networkMap_loadFailed": "Online-Netzwerkkarte konnte nicht geladen werden",
+  "networkMap_inYourContacts": "In deinen Kontakten",
+  "networkMap_status": "Status",
+  "networkMap_statusActive": "Aktiv in der letzten Stunde",
+  "networkMap_statusRecent": "Am letzten Tag gehört",
+  "networkMap_statusStale": "Zuletzt nicht gehört",
+  "networkMap_confirmed": "Bestätigt",
+  "networkMap_singleSource": "Einzelne Quelle, noch nicht bestätigt",
+  "networkMap_reports": "Meldungen",
+  "networkMap_locationEstimated": "Ungefährer Standort, geschätzt anhand der Empfänger",
+  "networkMap_locationAdvertised": "Ungefährer Standort, aus dem eigenen Advert",
+  "networkMap_heardByRadio": "Von deinem Funkgerät gehört",
+  "networkMap_inYourArea": "In deiner Nähe",
+  "networkMap_farAway": "Weit entfernt. Verwaltung ist nicht möglich.",
+  "networkMap_addToContacts": "Zu Kontakten hinzufügen",
+  "networkMap_manage": "Verwalten",
+  "networkMap_addedToContacts": "Zu Kontakten hinzugefügt",
+  "networkMap_addFailed": "Hinzufügen zu Kontakten fehlgeschlagen",
+  "networkMap_unnamed": "Unbenannter Repeater"
 }

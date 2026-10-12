@@ -36,6 +36,10 @@ class TimeoutPredictionService extends ChangeNotifier {
   final Map<String, _ContactStats> _contactStats = {};
   Timer? _persistTimer;
 
+  /// When true, [recordObservation] ignores new deliveries. Review mode sets
+  /// this so the simulated radio's fixed ACK delay never trains the real model.
+  static bool recordingSuspended = false;
+
   TimeoutPredictionService(StorageService storage) : _storage = storage;
   TimeoutPredictionService.noStorage() : _storage = null;
 
@@ -63,6 +67,7 @@ class TimeoutPredictionService extends ChangeNotifier {
     required int tripTimeMs,
     int secondsSinceLastRx = 0,
   }) {
+    if (recordingSuspended) return;
     final isFlood = pathLength < 0;
     final observation = DeliveryObservation(
       contactKey: contactKey,

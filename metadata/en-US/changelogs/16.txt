@@ -1,0 +1,10 @@
+- Multi-byte routing paths
+- Regions support, including fetching regions from repeaters
+- Set repeater identity keys from the app
+- Zero-hop location adverts
+- Alternative map sources and a high-contrast map filter
+- Device info shows the connected node's hardware and firmware
+- High-voltage LiPo battery chemistry option
+- Australia (Mid) radio preset
+- Right-click support on desktop
+- Fixed the Android adaptive icon and app label

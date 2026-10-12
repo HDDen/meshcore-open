@@ -14,10 +14,11 @@ From the Contacts screen:
 
 ### Login Dialog
 
-- Password field with show/hide toggle
+- Password field with show/hide toggle. It accepts up to 20 characters so longer passwords from a password manager can be pasted, but MeshCore firmware only uses the first 15 characters of a login password (and stores only 15 when a password is set), so the first 15 must match
 - "Save password" checkbox (persists for future logins). If a saved password exists, it is pre-filled and the checkbox is pre-checked, making login one-tap
 - Routing mode selector and "Manage Paths" link are available directly in the dialog (configure routing before login)
 - Auto-retries up to 5 times on timeout, showing progress ("Attempt 2 of 5"). A wrong password (explicit failure response) stops immediately — only timeouts trigger retries
+- CLI commands to a repeater are matched to their reply by a short prefix. A reply that arrives late for an earlier attempt still completes the command, and no further attempts are sent
 - If auto-clock-sync is enabled for this repeater (configured in Repeater Settings), a `clock sync` command is sent automatically on successful login
 
 ---
@@ -219,3 +220,7 @@ Nine configuration cards, each with its own per-field refresh button(s):
 - Some changes (e.g. radio frequency) require a reboot; the firmware response triggers an orange "reboot needed" snackbar
 - Advertisement interval sliders reset to defaults when re-enabled (local: 60 min, flood: 3 hours)
 - **Erase Filesystem** does NOT send any command over the air — tapping it only shows a snackbar explaining the operation requires physical serial access
+
+## Region configuration and companion statistics
+
+Repeater region commands configure the relay’s forwarding policy. The app’s [region list and channel selector](regions.md) choose scopes for outgoing channel floods; adding a name locally does not configure a repeater. [Companion radio statistics](radio-statistics.md) describe your paired radio rather than the remote repeater shown here.

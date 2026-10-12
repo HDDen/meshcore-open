@@ -626,6 +626,8 @@
     }
   },
   "chat_location": "hely",
+  "chat_noRadioLocation": "A rádiónak nincs beállított helye",
+  "chat_shareMyLocation": "Saját helyem megosztása",
   "chat_sendMessageTo": "Üzenet küldése a következő címre: {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -865,6 +867,7 @@
   "map_setAsMyLocation": "Beállítás helyemként",
   "map_pinLabel": "Kitűzött címke",
   "map_label": "Címke",
+  "map_labelUpdateHint": "Ha ugyanazt a címkét használja, mint korábban, a jelölő frissül a MeshCore Open-t használó címzetteknél.",
   "map_pointOfInterest": "Érdekes pont",
   "map_sendToContact": "Elküldés a kapcsolattartónak",
   "map_sendToChannel": "Küldés a csatornára",
@@ -2133,6 +2136,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "Engedélyezze a társ számára a felfedezett érzékelők automatikus hozzáadását.",
   "contactsSettings_overwriteOldestTitle": "A legrégebbi felülírása",
   "contactsSettings_overwriteOldestSubtitle": "Amikor a névjegylista megtelik, a legrégebbi, nem kedvenc névjegy lecserélődik.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Felfedezett kapcsolatok eltávolítása",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Ha engedélyezve van, az alkalmazás eltávolítja a legrégebbi felfedezett kapcsolatokat, amint a felfedezési lista eléri a(z) {limit} bejegyzéses korlátot.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "Felfedezett kapcsolatok",
   "discoveredContacts_noMatching": "Nincsenek megfelelő névjegyek",
   "discoveredContacts_searchHint": "Keresés a talált névjegyek között",
@@ -2142,6 +2154,44 @@
   "discoveredContacts_deleteContact": "A felfedezett névjegy törlése",
   "discoveredContacts_deleteContactAll": "Törölje az összes felfedezett névjegyet",
   "discoveredContacts_deleteContactAllContent": "Biztosan törli az összes felfedezett névjegyet?",
+  "discoveredContacts_export": "Felfedezett kapcsolatok exportálása",
+  "discoveredContacts_import": "Felfedezett kapcsolatok importálása",
+  "discoveredContacts_exported": "A felfedezett kapcsolatok exportálva ide: {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "A felfedezett kapcsolatok exportálása nem sikerült: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} felfedezett kapcsolat importálva.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Az importfájlban nem találhatók kapcsolatok.",
+  "discoveredContacts_importFailed": "A felfedezett kapcsolatok importálása nem sikerült: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "A fájl nem felfedezett kapcsolatok exportja.",
+  "discoveredContacts_importSummary": "Importálva: {imported}, kihagyva már ismert: {skipped}, olvashatatlan bejegyzés: {invalid}.",
+  "discoveredContacts_importTooLarge": "Az importfájl túl nagy (legfeljebb {maxMb} MB).",
   "chat_sendCooldown": "Kérjük, várjon egy pillanatot, mielőtt újra elküldi.",
   "appSettings_jumpToOldestUnread": "Ugrás a legrégebbi olvasatlanra",
   "appSettings_jumpToOldestUnreadSubtitle": "Ha olvasatlan üzeneteket tartalmazó csevegést nyit meg, görgessen az első olvasatlanra a legutóbbi helyett.",
@@ -2900,5 +2950,404 @@
   "settings_publicKeyCopied": "Nyilvános kulcs másolva",
   "settings_radioSettingsNotApplied": "A rádió nem alkalmazta ezeket a beállításokat",
   "urlImage_enable": "URL-képek engedélyezése",
-  "urlImage_possible": "Lehetséges URL-kép; engedélyezze a Beállításokban."
+  "urlImage_possible": "Lehetséges URL-kép; engedélyezze a Beállításokban.",
+  "messageStatus_failedChannel": "A rádió nem tudta elküldeni ezt az üzenetet.",
+  "messageStatus_resending": "Még nem hallották vissza elég átjátszó segítségével. Újraküldve {resends} alkalomból {maxResends} alkalomból.",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "Elküldve, de csak {hops} / {required} átjátszón keresztül hallották vissza. Lehet, hogy a rádió hatókörénél tovább is eljutott.",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "Elküldve. A csatornák nem erősítik meg a kézbesítést, ezért ez csak azt jelenti, hogy a rádió elküldötte.",
+  "messageStatus_sentDirect": "Elküldve. Várakozás a névjegy megerősítésére.",
+  "messageStatus_heardRepeatedCount": "{count, plural, =1{egyszer} other{{count} alkalommal}} hallották vissza. A közeli átjátszók továbbították.",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "A tájak a megadott terület átjátszóira korlátozzák az elárasztási üzeneteket. Töltse le őket a közeli átjátszókról, vagy adjon hozzá tájat név szerint.",
+  "settings_regionFetchFromRepeaters": "Lekérés az átjátszókról",
+  "settings_regionDefault": "Alapértelmezett táj",
+  "settings_regionDefaultSubtitle": "Azok a csatornák használják, amelyeknek nincs saját tájuk",
+  "settings_regionDefaultNone": "Nincs",
+  "settings_telemetryPerContactHint": "Ha engedélyezni szeretné a kapcsolatot, nyissa meg a csevegését, és válassza a menüben a Kapcsolati beállítások lehetőséget.",
+  "settings_multiAckSubtitle": "További ACK-kat küld a jobb kézbesítés érdekében; több műsoridőt igényel",
+  "settings_presetCustom": "Egyéni",
+  "settings_radioMatchWarning": "Az összes csomóponttal, amelyhez kapcsolódik, azonos frekvenciát, sávszélességet és SF-et kell használni. A kódolási arány (CR) eltérhet.",
+  "settings_txPowerRangeHelper": "{min}–{max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "{freq} MHz frekvencia beállítva a hálózaton kívüli ismétléshez",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "Az elküldött elárasztási csomagok útvonalában rögzített csomópontazonosító mérete: 1 bájt (256 azonosító, legfeljebb 64 ugrás), 2 bájt (65 ezer, legfeljebb 32 ugrás), 3 bájt (16 millió, legfeljebb 21 ugrás). A nagyobb azonosítók csökkentik az ütközéseket, de az v1.14-nél régebbi firmware-t futtató átjátszók eldobják a 2 vagy 3 bájtos azonosítókat tartalmazó csomagokat.",
+  "settings_requiresFirmware": "{version} vagy újabb firmware szükséges",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "A csatornaüzenetek újraküldése, amíg elég messzék el",
+  "appSettings_channelMinHopsSubtitle": "Ha az üzenet nem érkezik vissza elég átjátszón keresztül, küldje el újra. Több műsoridőt igényel.",
+  "appSettings_channelMinHopsCount": "Szükséges ugrások: {count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "Legfeljebb {count, plural, =1{1-szer} other{{count}-szer}} újraküldés",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "Háttérben futó tevékenység",
+  "appSettings_batteryOptimizationSubtitle": "Állítsa be a MeshCore Open alkalmazást az akkumulátorbeállításokban a „Ne optimalizálja” értékre, hogy az üzenetek a háttérben is érkezzenek",
+  "contacts_storageFull": "A csomópont névjegytárhelye megtelt. Új csomópontokat nem lehet hozzáadni, amíg nem távolít el névjegyeket.",
+  "contacts_removeFromContacts": "Eltávolítás a névjegyek közül",
+  "contacts_removeFromContactsConfirm": "{contactName} átkerül a Felfedezett kapcsolatok közé. A csevegési előzmények törlődnek.",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "A csevegés előzményeinek megőrzése",
+  "contacts_remove": "Eltávolítás",
+  "contacts_discoveredNearby": "Közelben felfedezve ({count})",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "Azok a csomópontok, amelyeket a rádió hall, de még nem adt hozzá, a Felfedezett kapcsolatok listáján szerepelnek",
+  "channels_hashtag": "Hashtag",
+  "channels_addSectionJoin": "Csatlakozás meglévőhöz",
+  "channels_addSectionCreate": "Új létrehozása",
+  "channels_dragToReorder": "Húzza az átrendezéshez",
+  "channels_regionDefaultSuffix": "(alapértelmezett)",
+  "channels_regionSelectExplanation": "A csatorna elárasztási üzeneteit csak a kiválasztott táj átjátszói továbbítják.",
+  "channels_regionEmpty": "Még nincsenek tájak.",
+  "channels_manageRegions": "Tájak kezelése",
+  "chat_removeGif": "GIF eltávolítása",
+  "chat_cancelReply": "Válasz visszavonása",
+  "chat_viewPathOnMap": "Útvonal megtekintése a térképen",
+  "chat_today": "Ma",
+  "chat_yesterday": "Tegnap",
+  "map_centerOnMe": "Középre a saját helyemre",
+  "map_noNodesLocationHint": "Nincsenek friss helyzetű csomópontok. Bővítse az időszűrőt, vagy állítsa be a saját helyét a Beállításokban.",
+  "map_clusterNodes": "Közeli csomópontok csoportosítása",
+  "map_groupChip": "Csoportok",
+  "map_clusterNodesSubtitle": "Kicsinyített nézetben a közeli csomópontok egyetlen számozott körként jelennek meg",
+  "map_manageServer": "Kiszolgáló kezelése",
+  "login_showPassword": "Jelszó megjelenítése",
+  "login_hidePassword": "Jelszó elrejtése",
+  "login_advanced": "Fejlett",
+  "common_clearSearch": "Keresés törlése",
+  "repeater_roleAdmin": "ADMIN",
+  "repeater_roleGuest": "VENDÉG",
+  "repeater_refreshAll": "Összes frissítése",
+  "repeater_settingsNotLoaded": "A beállításokat még nem töltöttük le erről az átjátszóról.",
+  "repeater_settingsLoadIncomplete": "Néhány beállítást nem sikerült betölteni. Az újrapróbálkozáshoz használja a frissítés gombokat.",
+  "contacts_scanQrCode": "QR-kód beolvasása",
+  "contacts_scanQrInstructions": "Irányítsa a kamerát a MeshCore névjegy QR-kódjára",
+  "contacts_qrFromGallery": "QR-kód beolvasása a galériából",
+  "contacts_noQrCodeFound": "A kiválasztott képen nem található QR-kód.",
+  "contacts_qrGalleryFailed": "A galéria nem nyitható meg.",
+  "notification_actionReply": "Válasz",
+  "notification_actionMarkRead": "Megjelölés olvasottként",
+  "notification_actionMuteChannel": "Csatorna némítása",
+  "notification_replyHint": "Üzenet",
+  "notification_you": "Ön",
+  "notification_replyFailedTitle": "A válasz nem lett elküldve",
+  "notification_replyNotConnected": "Nincs csatlakozás rádióhoz. Csatlakozzon újra a MeshCore Open alkalmazásban, és küldje el a választ újra.",
+  "notification_replyTooLong": "A válasz túl hosszú ahhoz, hogy értesítésből küldhető legyen. Küldje el helyette a MeshCore Open alkalmazásból.",
+  "notification_replyUnavailable": "Ez a beszélgetés már nincs a csatlakoztatott rádión.",
+  "notification_replySendFailed": "Előfordulhat, hogy a válasz nem ment el. Ellenőrizze a MeshCore Open alkalmazásban, és próbálja újra.",
+  "notification_replyAppNotRunning": "A MeshCore Open nem fut. Nyissa meg, és küldje el a választ újra.",
+  "snrIndicator_nearByRepeatersDescription": "Azok az átjátszók, amelyeket a rádió közvetlenül hallott, a legutóbb hallottak elöl.",
+  "radioStats_sectionSignal": "Jel",
+  "radioStats_sectionAirtime": "Műsoridő",
+  "imageSend_lossyNote": "Tömörítve körülbelül {bytes} bájtra. A címzett modellje rekonstruálja, így a részletek eltérnek.",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "Eredeti",
+  "imageSend_viewReconstruction": "Amit a címzettek látnak",
+  "imageSend_reconstructionUnavailable": "Ezen az eszközön nem jeleníthető meg a rekonstrukció előnézete.",
+  "imageSend_modelNotDownloaded": "A képmodell még nincs letöltve. Töltse le a Beállításokban a képek küldéséhez.",
+  "receivedImage_save": "Kép mentése",
+  "receivedImage_shareCaption": "AI-jel rekonstruálva {bytes} bájtból; a finom részletek generáltak, nem továbbítottak.",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "Csomag adatai",
+  "receivedImage_parityRecovered": "Egy csomag újra lett építve a helyreállító csomagból.",
+  "receivedImage_decodeTime": "{ms} ms alatt rekonstruálva",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "A képet nem sikerült elmenteni",
+  "reviewMode_dialogTitle": "Belép az áttekintő módba?",
+  "reviewMode_dialogBody": "Az áttekintő mód egy szimulált rádióhoz csatlakozik, mintakapcsolatokkal, csatornákkal és üzenetekkel. Nincs szükség valódi rádióra.",
+  "reviewMode_confirm": "Belépés",
+  "reviewMode_cancel": "Mégsem",
+  "reviewMode_banner": "Áttekintő mód — szimulált adatok",
+  "reviewMode_sendTest": "Tesztüzenet küldése",
+  "reviewMode_testSent": "Hamarosan megérkezik egy tesztüzenet.",
+  "reviewMode_exit": "Kilépés",
+  "reviewMode_connectFailed": "Az áttekintő mód nem indítható el: {error}",
+  "settings_regionUseRadioDefault": "Rádió alapértelmezése ({region})",
+  "settings_regionNoRegion": "Nincs táj (korlátlan)",
+  "settings_regionRadioDefault": "A rádió alapértelmezett tája",
+  "settings_regionRadioDefaultSubtitle": "A rádión van tárolva. A táj nélkül küldött elárasztásokhoz ezt használja, ebből az alkalmazásból és a rádióhoz csatlakozó bármely másik alkalmazásból is.",
+  "settings_regionRadioDefaultUpdated": "A rádió alapértelmezett tája frissítve",
+  "settings_regionRadioDefaultFailed": "Nem sikerült frissíteni a rádió alapértelmezett tájat",
+  "appSettings_channelMinHopsCountRepeaters": "A közeli különböző átjátszókat is számolja",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Az üzenetet elküldöttnek tekinti, ha {count, plural, =1{1 közeli átjátszó} other{{count} különböző közeli átjátszó}} továbbítja, még ha nem is hallja, hogy tovább halad.",
+  "appSettings_regionOnHopsLine": "Táj a ugrásszám mellett",
+  "appSettings_regionOnHopsLineSubtitle": "A csatornaüzenet tája az ugrásszámmal azonos sorban jelenik meg, nem alatta.",
+  "channels_regionRadioDefaultSuffix": "(rádió alapértelmezése)",
+  "channels_regionRadioDefaultApplies": "Ez a rádió a táj nélküli elárasztásokat az alapértelmezett tájában küldi: {region}.",
+  "chat_futureTimestampWarning": "Az üzenet időpontja a jövőben van, ezért a feladó órája hibás lehet. Az érkezés sorrendjében látható.",
+  "discoveredContacts_scan": "Közeli csomópontok keresése",
+  "discoveredContacts_scanTitle": "Közeli csomópontok",
+  "discoveredContacts_scanExplanation": "Felkéri a közvetlen rádiótávolságon belüli csomópontokat, hogy azonosítsák magukat. Az átjátszók és az érzékelők válaszolnak. A szobaszerverek és a kísérők általában nem.",
+  "discoveredContacts_scanning": "Keresés…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 csomópont található} other{{count} csomópont található}}",
+  "discoveredContacts_scanNoResults": "Egy csomópont sem válaszolt. Az átjátszók korlátozzák a válaszok gyakoriságát, ezért próbálja újra egy perc múlva.",
+  "discoveredContacts_scanAgain": "Keresés újra",
+  "discoveredContacts_scanFailed": "Nem sikerült elküldeni a keresési kérést.",
+  "discoveredContacts_scanSignal": "Jel: {snr} dB · ők {remoteSnr} dB-lel hallottak minket",
+  "discoveredContacts_scanInContacts": "Már a kapcsolatok között",
+  "discoveredContacts_scanNameLater": "A neve a következő hirdetése után jelenik meg",
+  "channels_waitForSync": "A csatornák még töltődnek a rádióról. Próbálja újra, ha a szinkronizálás befejeződött.",
+  "channels_nameTooLong": "A név túl hosszú (legfeljebb {maxBytes} bájt).",
+  "repeater_valueRequired": "{field}: adjon meg értéket",
+  "losMapDetailTooltip": "Térkép részletessége",
+  "losUnitsTooltip": "Mértékegységek",
+  "losDistance": "Távolság",
+  "losClearance": "Szabad tér",
+  "losBlockedBy": "Akadályozó",
+  "losObstruction": "Akadály",
+  "losDistanceFromA": "{distance} A-tól",
+  "losWorstBadge": "LEGROSSZABB",
+  "losBlockedAmount": "Takarás: {amount}",
+  "losFromA": "A-tól",
+  "losFromB": "B-től",
+  "losElevation": "Magasság",
+  "losCenterOnMap": "Középre a térképen",
+  "losStatusClear": "Szabad",
+  "losStatusMarginal": "Határeset",
+  "losStatusBlocked": "Takart",
+  "losStatusCheckingShort": "Ellenőrzés",
+  "losStatusNoResult": "Nincs eredmény",
+  "losSelectedPill": "Kiválasztva",
+  "gif_tapToLoad": "Koppintson a GIF betöltéséhez",
+  "gif_loadFailedRetry": "A GIF nem tölthető be\nKoppintson az újrapróbáláshoz",
+  "qr_cameraPermissionDenied": "Kamera-engedély megtagadva.\nEngedélyezze a kamera hozzáférést a beállításokban.",
+  "qr_cameraUnsupported": "A kamera nem támogatott ezen az eszközön.",
+  "qr_cameraStartFailed": "A kamera indítása sikertelen.\n{details}",
+  "imageMessages_downloadFailedWithError": "A képmodell letöltése sikertelen: {error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "Elrejtés: a térkép elhagyásáig rejtve marad.",
+  "map_markerRemoveHint": "Eltávolítás: a szűrőmenüből való visszaállításig rejtve marad.",
+  "map_markerRemoved": "Jelölő eltávolítva",
+  "map_restoreRemovedMarkers": "Eltávolított jelölők visszaállítása",
+  "map_restoreRemovedMarkersSubtitle": "{count} eltávolítva",
+  "map_markersRestored": "{count} jelölő visszaállítva",
+  "map_setLocationConfirmTitle": "Beállítja saját helyzetként?",
+  "map_setLocationConfirmBody": "A csomópont ezt a pozíciót fogja hirdetni:\n{lat}, {lon}",
+  "map_setLocationAction": "Helyzet beállítása",
+  "map_locationSetSuccess": "A csomópont helyzete frissítve",
+  "map_locationSetFailed": "Az eszköz nem erősítette meg az új helyzetet. Próbálja újra.",
+  "map_poiClusterTitle": "{count} jelölő itt",
+  "map_poiClusterSemantics": "{count} megosztott jelölő. Koppintson a listázáshoz.",
+  "map_youWithMarkers": "Ön és {count} jelölő",
+  "map_sharedMarkerSemantics": "Megosztott jelölő: {label}",
+  "map_nodeMarkerSemantics": "{name}, {type}, {status}",
+  "mapCache_zoomLevel": "Nagyítás: {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "A letöltés megszakítva. {count} csempe gyorsítótárazva.",
+  "mapCache_tooManyTilesTitle": "Túl nagy terület",
+  "mapCache_tooManyTiles": "Ehhez a területhez {count} csempe kell, ami meghaladja a {max} korlátot. Válasszon kisebb területet, vagy csökkentse a maximális nagyítást.",
+  "chat_clearChatConfirm": "Ez törli a beszélgetés összes üzenetét erről az eszközről. A művelet nem vonható vissza.",
+  "channels_clearChatConfirm": "Ez törli a csatorna összes üzenetét erről az eszközről, a fogadott képekkel együtt. A művelet nem vonható vissza.",
+  "channels_timeNow": "most",
+  "channels_timeMinutes": "{minutes} p",
+  "channels_timeHours": "{hours} ó",
+  "channels_timeDays": "{days} n",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "Ismeretlen",
+  "pathMap_noSelfGpsFix": "A helyi csomópontnak nincs GPS-jelzése",
+  "pathTrace_sendFailed": "Nem sikerült elküldeni az útvonalkövetést: {error}",
+  "losErrorNoInternet": "A magassági adatokhoz internetkapcsolat szükséges",
+  "losResultStale": "Elavult: az antennamagasság megváltozott",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "Telemetria betöltése…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "Nincs kapcsolat rádióval. Csatlakozzon, és próbálja újra.",
+  "settings_requiresConnection": "A használathoz csatlakozzon egy rádióhoz",
+  "settings_txPowerInvalidRange": "Érvénytelen TX teljesítmény ({min} – {max} dBm)",
+  "settings_contactSettingsSaved": "Kapcsolatbeállítások mentve",
+  "settings_batteryToggleHint": "Koppintson a százalék és a feszültség közötti váltáshoz",
+  "settings_publicKeyCopyHint": "Nyilvános kulcs másolása",
+  "settings_locationClearHelper": "A helyzet törléséhez hagyja üresen mindkét mezőt.",
+  "settings_locationCleared": "Helyzet eltávolítva",
+  "settings_regionFetchDiscovering": "Közeli átjátszók keresése…",
+  "settings_regionFetchProgress": "{current}. átjátszó lekérdezése ({total} közül)…",
+  "settings_regionFetchNoRepeaters": "Még nem ismert egyetlen átjátszó sem. Adjon hozzá egy átjátszót kapcsolatként, vagy várja meg, amíg egy hirdet, majd próbálja újra.",
+  "settings_regionFetchNoneResponded": "Egyik közeli átjátszó sem válaszolt. Menjen közelebb egy átjátszóhoz, és próbálja újra.",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "Útválasztás",
+  "appSettings_imageMessagesSection": "Képüzenetek",
+  "appSettings_showApiKey": "API-kulcs megjelenítése",
+  "appSettings_hideApiKey": "API-kulcs elrejtése",
+  "translation_defaultModelName": "Modell",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB ({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "A rádió lecsatlakozott",
+  "repeater_radioDisconnectedHint": "Csatlakozzon újra a rádióhoz parancsok küldéséhez, frissítéshez vagy a módosítások mentéséhez.",
+  "repeater_cliSend": "Parancs küldése",
+  "repeater_cliCopyTranscript": "Átirat másolása",
+  "repeater_cliShareTranscript": "Átirat megosztása",
+  "repeater_cliTranscriptCopied": "Átirat másolva",
+  "repeater_cliClearHistoryConfirm": "Törli a parancselőzményeket? A művelet nem vonható vissza.",
+  "repeater_cliSearchCommands": "Parancsok keresése",
+  "repeater_cliNoMatchingCommands": "Nincs egyező parancs",
+  "debugLog_clearConfirm": "Törli az összes naplóbejegyzést? A művelet nem vonható vissza.",
+  "repeater_unsavedChangesTitle": "Nem mentett módosítások",
+  "repeater_unsavedChangesMessage": "Vannak módosítások, amelyek nincsenek elmentve az átjátszóra.",
+  "repeater_discardChanges": "Elvetés",
+  "repeater_actionSentNoReply": "{action}: parancs elküldve. Az átjátszó nem válaszol erre a parancsra.",
+  "repeater_invalidSettingValue": "{setting}: {value} érvénytelen",
+  "repeater_txPowerOutOfRange": "A(z) {value} TX teljesítmény tartományon kívül van ({min} – {max} dBm)",
+  "repeater_prvKeyLengthError": "A privát kulcsnak pontosan {length} hexadecimális karakterből kell állnia",
+  "contacts_advertFailed": "Nem sikerült elküldeni a hirdetést",
+  "contacts_manageGroups": "Csoportok kezelése",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "Csatlakozva:",
+  "usbChooseSerialPort": "Soros port kiválasztása",
+  "neighbors_durationSeconds": "{seconds} mp",
+  "neighbors_durationMinutes": "{minutes} p {seconds} mp",
+  "neighbors_durationHours": "{hours} ó {minutes} p",
+  "scanner_getNodeTitle": "Új csomópontra van szükséged?",
+  "scanner_getNodeBody": "Pénztárca méretű, MeshCore-t futtat, kétsávos GPS, vízálló, 5 napos akkumulátor.",
+  "scanner_getNodeAction": "Itt szerezhetsz egyet",
+  "scanner_getNodeDisclosure": "Partnerlink: minden vásárlás a MeshCore Opent támogatja.",
+  "networkMap_settingsSection": "Hálózati térkép",
+  "networkMap_uploadTitle": "Megosztom, amit a rádióm hall",
+  "networkMap_uploadExplanation": "Ha ez be van kapcsolva és a rádió csatlakozik, az alkalmazás rövid összefoglalót küld a rádió által hallott csomagokról a MeshCore Open hálózati térképére, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz. Elküldi az egyes csomagok típusát, útvonalát, ugrásszámát, jelerősségét és méretét, valamint a repeaterek nevét és hozzávetőleges helyét a saját advertjeikből. Soha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet: a helyek kb. 2 km-re kerekítettek, az alkalmazásod pedig naponta új véletlenszerű azonosítót kap.",
+  "networkMap_whatWeCollect": "Mit gyűjtünk",
+  "networkMap_promptTitle": "Segítesz a hálózati térkép építésében?",
+  "networkMap_promptBody": "A MeshCore Open megoszthatja, amit a rádiód hall, a nyilvános hálózati térképpel a map.meshcoreopen.org oldalon, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz.\n\nSoha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet. A helyek kb. 2 km-re kerekítettek.",
+  "networkMap_promptSettingsHint": "Ezt bármikor módosíthatod: Beállítások → Alkalmazásbeállítások → Hálózati térkép.",
+  "networkMap_promptAccept": "Megosztás",
+  "networkMap_promptDecline": "Köszönöm, nem",
+  "networkMap_statusOff": "Kikapcsolva. Semmi sem kerül elküldésre.",
+  "networkMap_statusWaiting": "Bekapcsolva. Várakozás a rádiókapcsolatra.",
+  "networkMap_statusNothingSent": "Bekapcsolva. Még nem ment el semmi.",
+  "networkMap_statusLastSent": "Utoljára elküldve: {time}. Ma {count} csomag.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Helyi",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Mindkettő",
+  "networkMap_zoomInHint": "Nagyíts rá az online hálózati térkép megtekintéséhez",
+  "networkMap_loadFailed": "Nem sikerült betölteni az online hálózati térképet",
+  "networkMap_inYourContacts": "A kapcsolataid között",
+  "networkMap_status": "Állapot",
+  "networkMap_statusActive": "Aktív az elmúlt órában",
+  "networkMap_statusRecent": "Hallva az elmúlt napban",
+  "networkMap_statusStale": "Mostanában nem hallható",
+  "networkMap_confirmed": "Megerősítve",
+  "networkMap_singleSource": "Egyetlen forrás, még nem megerősített",
+  "networkMap_reports": "Jelentések",
+  "networkMap_locationEstimated": "Hozzávetőleges hely, a hallók alapján becsülve",
+  "networkMap_locationAdvertised": "Hozzávetőleges hely, a saját advertjéből",
+  "networkMap_heardByRadio": "A rádiód hallja",
+  "networkMap_inYourArea": "A közeledben",
+  "networkMap_farAway": "Messze van. A kezelés nem éri el.",
+  "networkMap_addToContacts": "Hozzáadás a kapcsolatokhoz",
+  "networkMap_manage": "Kezelés",
+  "networkMap_addedToContacts": "Hozzáadva a kapcsolatokhoz",
+  "networkMap_addFailed": "Nem sikerült hozzáadni a kapcsolatokhoz",
+  "networkMap_unnamed": "Névtelen repeater"
 }

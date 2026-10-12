@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
 
 /// MeshCore shared design kit.
@@ -33,7 +36,10 @@ class SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               label.toUpperCase(),
-              style: MeshTheme.accentLabel(color: scheme.onSurfaceVariant),
+              style: MeshTheme.accentLabel(
+                color: scheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -113,7 +119,7 @@ class StatusChip extends StatelessWidget {
     required this.color,
     this.icon,
     this.pulse = false,
-    this.fontSize = 11.5,
+    this.fontSize = 12.5,
   });
 
   @override
@@ -191,35 +197,39 @@ class StatTile extends StatelessWidget {
                   label.toUpperCase(),
                   style: MeshTheme.accentLabel(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 9,
+                    fontSize: 12,
                   ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text.rich(
-            TextSpan(
-              text: value,
-              style: MeshTheme.mono(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
-              ),
-              children: [
-                if (unit != null)
-                  TextSpan(
-                    text: ' $unit',
-                    style: MeshTheme.mono(
-                      fontSize: 11,
-                      color: scheme.onSurfaceVariant,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text.rich(
+              TextSpan(
+                text: value,
+                style: MeshTheme.mono(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+                children: [
+                  if (unit != null)
+                    TextSpan(
+                      text: ' $unit',
+                      style: MeshTheme.mono(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+              maxLines: 1,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -352,11 +362,14 @@ class RouteChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = isDirect
-        ? (hops == null || hops == 0
-              ? 'DIRECT'
-              : '$hops HOP${hops == 1 ? '' : 'S'}')
-        : 'FLOOD';
+    final l10n = context.l10n;
+    final label =
+        (isDirect
+                ? (hops == null || hops == 0
+                      ? l10n.chat_direct
+                      : l10n.chat_hopsCount(hops!))
+                : l10n.routing_modeFlood)
+            .toUpperCase();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -369,7 +382,7 @@ class RouteChip extends StatelessWidget {
         children: [
           Icon(
             isDirect ? Icons.trending_flat : Icons.podcasts,
-            size: 11,
+            size: 14,
             color: scheme.onSurfaceVariant,
           ),
           const SizedBox(width: 3),
@@ -377,7 +390,7 @@ class RouteChip extends StatelessWidget {
             label,
             style: MeshTheme.accentLabel(
               color: scheme.onSurfaceVariant,
-              fontSize: 8.5,
+              fontSize: 12,
             ),
           ),
         ],
@@ -518,6 +531,7 @@ class BottomSheetHeader extends StatelessWidget {
               ?trailing,
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],
@@ -530,6 +544,11 @@ class BottomSheetHeader extends StatelessWidget {
 
 /// Shows a modal bottom sheet with the app-standard shape, scroll behavior
 /// and safe-area handling. Pair the content with [BottomSheetHeader].
+///
+/// `useSafeArea` only pads the top and sides, so the bottom is padded here by
+/// whichever is larger: the keyboard inset or the system navigation bar
+/// (edge-to-edge Android, iOS home indicator). Both are then removed from the
+/// content's [MediaQuery] so nested [SafeArea]s don't apply them twice.
 Future<T?> showMeshSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -540,10 +559,23 @@ Future<T?> showMeshSheet<T>(
     isScrollControlled: isScrollControlled,
     useSafeArea: true,
     showDragHandle: false,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: builder(context),
-    ),
+    builder: (sheetContext) {
+      final media = MediaQuery.of(sheetContext);
+      final bottom = math.max(
+        media.viewInsets.bottom,
+        media.viewPadding.bottom,
+      );
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: MediaQuery(
+          data: media
+              .removeViewInsets(removeBottom: true)
+              .removeViewPadding(removeBottom: true)
+              .removePadding(removeBottom: true),
+          child: Builder(builder: builder),
+        ),
+      );
+    },
   );
 }
 

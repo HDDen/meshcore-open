@@ -47,14 +47,13 @@ branch be sure to start on latest `dev`.
 * Ensure the PR description clearly describes the problem and solution. Include
 the relevant issue number if applicable.
 
-* The PR should contain **one commit** only, the commit message should have a
-clear title followed by a new line and then brief description if needed. PR with
-multiple commits will be squashed into one before merging if required. See
+* Prefer **one final commit** per PR. The commit message should have a
+clear title followed by a new line and then brief description if needed. If review requires follow-up commits, maintainers may squash them before merging. See
 [Git Mastery](https://git-mastery.org/lessons/commitMessage/) for more
 information on good commit messages.
 
-* **Before committing changes** on your branch, be sure to run both
-`dart format .` and `flutter analyze`. The continuous development checks will
+* **Before committing changes** on your branch, be sure to run
+`dart format .`, `flutter analyze --fatal-infos --fatal-warnings`, and `flutter test`. CI also checks formatting with `dart format --output=none --set-exit-if-changed .`. The continuous development checks will
 fail if issues here are not addressed before hand.
 
 ## AI-use
@@ -69,3 +68,9 @@ There are some limits to acceptable use however. Generally:
 for the patch, bug fix, etc.
 * The contributor should have a good understanding of what the code does and how
 the application works in order to effectively be able to manage the agent.
+
+## Documentation and validation
+
+Update the relevant [user guides](documentation/README.md) when changing features, defaults, navigation, firmware requirements, or platform limitations. Add screenshots for visible UI changes and keep localization keys consistent across supported locales. Include protocol changes explicitly in the PR description.
+
+Test on the platforms and hardware affected by the change. State what you tested and any untested platforms in the PR; automated builds do not prove BLE/USB/radio interoperability. Documentation-only changes need link and content checks, not a Flutter build.

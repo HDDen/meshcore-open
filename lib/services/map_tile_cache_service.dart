@@ -275,12 +275,24 @@ class MapTileCacheResult {
   final int total;
   final int downloaded;
   final int failed;
+  final bool cancelled;
 
   const MapTileCacheResult({
     required this.total,
     required this.downloaded,
     required this.failed,
+    this.cancelled = false,
   });
+}
+
+/// Cooperative cancellation flag for [MapTileCacheService.downloadRegion].
+/// Tiles already in flight finish; no new tiles are queued after [cancel].
+class MapTileDownloadCancelToken {
+  bool _cancelled = false;
+
+  bool get isCancelled => _cancelled;
+
+  void cancel() => _cancelled = true;
 }
 
 class CachedTileInfo {
@@ -315,6 +327,10 @@ class MapTileCacheService extends ChangeNotifier {
   static const String userAgentPackageName = 'com.meshcore.open';
   static const int defaultMinZoom = 10;
   static const int defaultMaxZoom = 15;
+
+  /// Largest bulk download the UI allows in one go. Keeps a single request
+  /// within tile-server usage policies and avoids filling the device.
+  static const int maxBulkDownloadTiles = 20000;
 
   final AppSettingsService appSettingsService;
   final BaseCacheManager cacheManager;
@@ -614,6 +630,7 @@ class MapTileCacheService extends ChangeNotifier {
     int concurrentDownloads = 8,
     Map<String, String>? headers,
     void Function(MapTileCacheProgress progress)? onProgress,
+    MapTileDownloadCancelToken? cancelToken,
   }) async {
     final safeMin = math.min(minZoom, maxZoom);
     final safeMax = math.max(minZoom, maxZoom);
@@ -652,10 +669,17 @@ class MapTileCacheService extends ChangeNotifier {
       }
     }
 
+    var stoppedEarly = false;
+
+    outer:
     for (int zoom = safeMin; zoom <= safeMax; zoom++) {
       final tileBounds = _tileBoundsForBounds(bounds, zoom);
       for (int x = tileBounds.minX; x <= tileBounds.maxX; x++) {
         for (int y = tileBounds.minY; y <= tileBounds.maxY; y++) {
+          if (cancelToken?.isCancelled ?? false) {
+            stoppedEarly = true;
+            break outer;
+          }
           final url = _buildTileUrl(x, y, zoom, urlTemplate: currentTemplate);
           await queueDownload(url);
         }
@@ -670,6 +694,7 @@ class MapTileCacheService extends ChangeNotifier {
       total: total,
       downloaded: completed - failed,
       failed: failed,
+      cancelled: stoppedEarly,
     );
   }
 

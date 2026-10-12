@@ -624,6 +624,8 @@
   "channels_scanQrCodeComingSoon": "近日公開",
   "channels_enterHashtag": "ハッシュタグを入力してください",
   "channels_hashtagHint": "例：#チーム",
+  "chat_noRadioLocation": "無線機に位置情報が設定されていません",
+  "chat_shareMyLocation": "自分の位置情報を共有",
   "chat_noMessages": "まだメッセージは届いていません",
   "chat_sendMessageToStart": "開始するためにメッセージを送信してください",
   "chat_originalMessageNotFound": "元のメッセージが見つかりませんでした",
@@ -883,6 +885,7 @@
   "map_setAsMyLocation": "現在地として設定",
   "map_pinLabel": "ピンラベル",
   "map_label": "ラベル",
+  "map_labelUpdateHint": "以前と同じラベルを使うと、MeshCore Open の受信者側でマーカーが更新されます。",
   "map_pointOfInterest": "興味地点",
   "map_sendToContact": "連絡先へ送信",
   "map_sendToChannel": "チャンネルへ送信",
@@ -2228,6 +2231,15 @@
   "contactsSettings_autoAddSensorsSubtitle": "利用者が、発見したセンサーを自動的に追加できるようにする。",
   "contactsSettings_overwriteOldestTitle": "最も古いものを上書きする",
   "contactsSettings_overwriteOldestSubtitle": "連絡先リストが満杯になった場合、最も古いかつ「お気に入り」ではない連絡先が削除されます。",
+  "contactsSettings_evictDiscoveredContactsTitle": "検出された連絡先を削除",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "有効にすると、検出された連絡先のリストが上限の{limit}件に達した際に、最も古い検出済み連絡先が削除されます。",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "discoveredContacts_Title": "連絡先が見つかった",
   "discoveredContacts_noMatching": "一致する連絡先が見つかりませんでした",
   "discoveredContacts_searchHint": "発見された連絡先を検索する",
@@ -2237,6 +2249,44 @@
   "discoveredContacts_deleteContact": "発見された連絡先を削除",
   "discoveredContacts_deleteContactAll": "発見されたすべての連絡先を削除",
   "discoveredContacts_deleteContactAllContent": "本当に、見つけたすべての連絡先を削除してもよろしいですか？",
+  "discoveredContacts_export": "発見済みの連絡先をエクスポート",
+  "discoveredContacts_import": "発見済みの連絡先をインポート",
+  "discoveredContacts_exported": "発見済みの連絡先を {path} にエクスポートしました。",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "発見済みの連絡先のエクスポートに失敗しました: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} 件の発見済み連絡先をインポートしました。",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "インポートファイルに連絡先が見つかりませんでした。",
+  "discoveredContacts_importInvalidFile": "このファイルは発見済み連絡先のエクスポートではありません。",
+  "discoveredContacts_importSummary": "インポート: {imported} 件、スキップ（既知）: {skipped} 件、読み取れないエントリ: {invalid} 件。",
+  "discoveredContacts_importTooLarge": "インポートファイルが大きすぎます（最大 {maxMb} MB）。",
+  "discoveredContacts_importFailed": "発見済みの連絡先のインポートに失敗しました: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chat_sendCooldown": "再度送信する前に、しばらくお待ちください。",
   "appSettings_jumpToOldestUnread": "最も古い未読のメッセージへ移動",
   "appSettings_jumpToOldestUnreadSubtitle": "未読メッセージがあるチャットを開く際、「最新のメッセージ」ではなく、最初に未読のメッセージまでスクロールしてください。",
@@ -2995,5 +3045,404 @@
         "type": "int"
       }
     }
-  }
+  },
+  "messageStatus_failedChannel": "ラジオはこのメッセージを送信できませんでした。",
+  "messageStatus_resending": "まだ十分に多くのリピータから確認できていません。{maxResends} 回中 {resends} 回再送信しました。",
+  "@messageStatus_resending": {
+    "placeholders": {
+      "resends": {
+        "type": "int"
+      },
+      "maxResends": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_hopsNotReached": "送信しましたが、{required} 個中 {hops} 個のリピータからのみ返答を確認できました。ラジオが受信できる範囲より先まで届いている可能性があります。",
+  "@messageStatus_hopsNotReached": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "messageStatus_sentChannel": "送信しました。チャンネルは配信を確認しないため、ラジオが送信したのみを意味します。",
+  "messageStatus_sentDirect": "送信しました。連絡先の確認を待っています。",
+  "messageStatus_heardRepeatedCount": "{count, plural, =1{1 回} other{{count} 回}} 聞かれました。近くのリピータが転送しました。",
+  "@messageStatus_heardRepeatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_regionEmptyExplanation": "地域を設定すると、フラッドメッセージはその地域内のリピータだけが転送します。近くのリピータから取得するか、名前を指定して追加してください。",
+  "settings_regionFetchFromRepeaters": "リピータから取得",
+  "settings_regionDefault": "既定の地域",
+  "settings_regionDefaultSubtitle": "地域が設定されていないチャンネルで使用されます",
+  "settings_regionDefaultNone": "なし",
+  "settings_telemetryPerContactHint": "連絡先に許可するには、そのチャットを開いてメニューから「連絡先設定」を選択してください。",
+  "settings_multiAckSubtitle": "配信を確実にするため ACK を追加送信します。放送時間が長くなります",
+  "settings_presetCustom": "カスタム",
+  "settings_radioMatchWarning": "通信するすべてのノードで、周波数・帯域幅・伝播係数を揃える必要があります。コーディング速度（CR）は異なっていても構いません。",
+  "settings_txPowerRangeHelper": "{min}～{max} dBm",
+  "@settings_txPowerRangeHelper": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_clientRepeatFrequencyNote": "オフグリッド中継用に周波数を {freq} MHz に設定",
+  "@settings_clientRepeatFrequencyNote": {
+    "placeholders": {
+      "freq": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_pathHashModeHelper": "このラジオが送信するフラッドパケットの経路に記録される各ノード ID のサイズ：1 バイト（256 個の ID、最大 64 ホップ）、2 バイト（65,000 個の ID、最大 32 ホップ）、3 バイト（160 万個の ID、最大 21 ホップ）。ID が大きいほど衝突が減りますが、v1.14 より古いファームウェアのリピータは 2 バイトまたは 3 バイトの ID を含むパケットを破棄します。",
+  "settings_requiresFirmware": "ファームウェア {version} 以降が必要です",
+  "@settings_requiresFirmware": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings_channelMinHops": "十分遠くまで届くまでチャンネルメッセージを再送信",
+  "appSettings_channelMinHopsSubtitle": "メッセージが十分な数のリピータから返ってこない場合は、再送信します。放送時間が長くなります。",
+  "appSettings_channelMinHopsCount": "必要なホップ数：{count}",
+  "@appSettings_channelMinHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_channelMinHopsRetries": "{count, plural, =1{1 回} other{{count} 回}}まで再送信",
+  "@appSettings_channelMinHopsRetries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appSettings_batteryOptimization": "バックグラウンド動作",
+  "appSettings_batteryOptimizationSubtitle": "バッテリー設定で MeshCore Open を「最適化しない」に設定すると、バックグラウンドでもメッセージを受信し続けられます",
+  "contacts_storageFull": "ノードの連絡先ストレージが満杯です。連絡先を削除するまで、新しいノードを追加できません。",
+  "contacts_removeFromContacts": "連絡先から削除",
+  "contacts_removeFromContactsConfirm": "{contactName} は発見された連絡先に移動します。チャット履歴は削除されます。",
+  "@contacts_removeFromContactsConfirm": {
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts_keepChatHistory": "チャット履歴を保持",
+  "contacts_remove": "削除",
+  "contacts_discoveredNearby": "近くで発見された連絡先（{count}）",
+  "@contacts_discoveredNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts_noContactsDiscoveredHint": "ラジオが受信したものの、まだ追加していないノードは「発見された連絡先」に表示されます",
+  "channels_hashtag": "ハッシュタグ",
+  "channels_addSectionJoin": "既存のチャンネルに参加",
+  "channels_addSectionCreate": "新規作成",
+  "channels_dragToReorder": "ドラッグして並べ替え",
+  "channels_regionDefaultSuffix": "（デフォルト）",
+  "channels_regionSelectExplanation": "このチャンネルのフラッドメッセージは、選択した地域内のリピータだけが転送します。",
+  "channels_regionEmpty": "まだ地域がありません。",
+  "channels_manageRegions": "地域を管理",
+  "chat_removeGif": "GIFを削除",
+  "chat_cancelReply": "返信を取り消す",
+  "chat_viewPathOnMap": "地図で経路を表示",
+  "chat_today": "今日",
+  "chat_yesterday": "昨日",
+  "map_centerOnMe": "現在地を中心に表示",
+  "map_noNodesLocationHint": "最近の位置情報を持つノードがありません。時間フィルターを広げるか、設定で現在地を設定してください。",
+  "map_clusterNodes": "近くのノードをグループ化",
+  "map_groupChip": "グループ",
+  "map_clusterNodesSubtitle": "縮小表示時に、近くのノードを番号付きの 1 つの円にまとめて表示します",
+  "map_manageServer": "サーバーを管理",
+  "login_showPassword": "パスワードを表示",
+  "login_hidePassword": "パスワードを非表示",
+  "login_advanced": "高度な",
+  "common_clearSearch": "検索をクリア",
+  "repeater_roleAdmin": "管理者",
+  "repeater_roleGuest": "ゲスト",
+  "repeater_refreshAll": "すべて更新",
+  "repeater_settingsNotLoaded": "このリピータからまだ設定を読み込んでいません。",
+  "repeater_settingsLoadIncomplete": "一部の設定を読み込めませんでした。更新ボタンから再試行してください。",
+  "contacts_scanQrCode": "QRコードをスキャン",
+  "contacts_scanQrInstructions": "カメラを MeshCore の連絡先 QR コードに向けてください",
+  "contacts_qrFromGallery": "ギャラリーからQRをスキャン",
+  "contacts_noQrCodeFound": "選択した画像にQRコードが見つかりませんでした。",
+  "contacts_qrGalleryFailed": "ギャラリーを開けませんでした。",
+  "notification_actionReply": "返信",
+  "notification_actionMarkRead": "既読にする",
+  "notification_actionMuteChannel": "チャンネルをミュート",
+  "notification_replyHint": "メッセージ",
+  "notification_you": "自分",
+  "notification_replyFailedTitle": "返信を送信できませんでした",
+  "notification_replyNotConnected": "ラジオに接続されていません。MeshCore Open で再接続してから、もう一度返信を送信してください。",
+  "notification_replyTooLong": "返信が長すぎて通知から送信できません。MeshCore Open から送信してください。",
+  "notification_replyUnavailable": "この会話は接続中のラジオにありません。",
+  "notification_replySendFailed": "返信が送信されていない可能性があります。MeshCore Open で確認してから再試行してください。",
+  "notification_replyAppNotRunning": "MeshCore Open が起動していません。起動してから、もう一度返信を送信してください。",
+  "snrIndicator_nearByRepeatersDescription": "ラジオが直接受信したリピータ（最近受信した順）",
+  "radioStats_sectionSignal": "信号",
+  "radioStats_sectionAirtime": "放送時間",
+  "imageSend_lossyNote": "約 {bytes} バイトに圧縮されます。受信側のモデルが復元するため、細部は異なります。",
+  "@imageSend_lossyNote": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "imageSend_viewOriginal": "オリジナル",
+  "imageSend_viewReconstruction": "受信者の表示",
+  "imageSend_reconstructionUnavailable": "このデバイスでは復元結果をプレビューできません。",
+  "imageSend_modelNotDownloaded": "画像モデルがまだダウンロードされていません。設定でダウンロードすると画像を送信できます。",
+  "receivedImage_save": "画像を保存",
+  "receivedImage_shareCaption": "{bytes} バイトから AI で復元。細部は送信されたものではなく、生成されたものです。",
+  "@receivedImage_shareCaption": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_packetInfo": "パケット情報",
+  "receivedImage_parityRecovered": "1 つのパケットを回復パケットから再構築しました。",
+  "receivedImage_decodeTime": "{ms} ミリ秒で再構築",
+  "@receivedImage_decodeTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "receivedImage_saveFailed": "画像を保存できませんでした",
+  "reviewMode_dialogTitle": "レビューモードに入りますか？",
+  "reviewMode_dialogBody": "レビューモードでは、サンプルの連絡先、チャンネル、メッセージを備えたシミュレートされたデバイスに接続します。実際のデバイスは不要です。",
+  "reviewMode_confirm": "開始",
+  "reviewMode_cancel": "キャンセル",
+  "reviewMode_banner": "レビューモード — シミュレーションデータ",
+  "reviewMode_sendTest": "テストメッセージを送信",
+  "reviewMode_testSent": "まもなくテストメッセージが届きます。",
+  "reviewMode_exit": "終了",
+  "reviewMode_connectFailed": "レビューモードを開始できませんでした: {error}",
+  "settings_regionUseRadioDefault": "無線機の既定（{region}）",
+  "settings_regionNoRegion": "地域なし（スコープなし）",
+  "settings_regionRadioDefault": "無線機の既定の地域",
+  "settings_regionRadioDefaultSubtitle": "無線機に保存されます。地域を指定せずに送るフラッドは、このアプリや無線機に接続した他のアプリからでも、この地域を使います。",
+  "settings_regionRadioDefaultUpdated": "無線機の既定の地域を更新しました",
+  "settings_regionRadioDefaultFailed": "無線機の既定の地域を更新できませんでした",
+  "appSettings_channelMinHopsCountRepeaters": "近くの別のリピータも数える",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "{count, plural, =1{近くのリピータ 1 台} other{近くの異なるリピータ {count} 台}}が再送したら、それ以上先に届くのが聞こえなくても送信済みとみなします。",
+  "appSettings_regionOnHopsLine": "ホップ数の横に地域を表示",
+  "appSettings_regionOnHopsLineSubtitle": "チャンネルメッセージの地域を、ホップ数の下ではなく同じ行に表示します。",
+  "channels_regionRadioDefaultSuffix": "（無線機の既定）",
+  "channels_regionRadioDefaultApplies": "この無線機は、地域なしのフラッドを既定の地域で送信します：{region}。",
+  "chat_futureTimestampWarning": "このメッセージの時刻は未来です。送信者の時計がずれている可能性があります。届いた順に表示しています。",
+  "discoveredContacts_scan": "近くのノードをスキャン",
+  "discoveredContacts_scanTitle": "近くのノード",
+  "discoveredContacts_scanExplanation": "直接電波が届く範囲のノードに応答を求めます。リピータとセンサーが応答します。ルームサーバーやコンパニオンは通常応答しません。",
+  "discoveredContacts_scanning": "スキャン中…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 件のノードが見つかりました} other{{count} 件のノードが見つかりました}}",
+  "discoveredContacts_scanNoResults": "応答したノードはありません。リピータは応答頻度を制限しているため、1 分ほど待ってからもう一度お試しください。",
+  "discoveredContacts_scanAgain": "もう一度スキャン",
+  "discoveredContacts_scanFailed": "スキャン要求を送信できませんでした。",
+  "discoveredContacts_scanSignal": "信号 {snr} dB ・ 相手の受信 {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "すでに連絡先にあります",
+  "discoveredContacts_scanNameLater": "次のアドバートの後に名前が表示されます",
+  "channels_waitForSync": "チャンネルは無線機からまだ読み込み中です。同期が完了してからもう一度お試しください。",
+  "channels_nameTooLong": "名前が長すぎます（最大 {maxBytes} バイト）。",
+  "repeater_valueRequired": "{field}：値を入力してください",
+  "losMapDetailTooltip": "地図の詳細",
+  "losUnitsTooltip": "単位",
+  "losDistance": "距離",
+  "losClearance": "クリアランス",
+  "losBlockedBy": "遮蔽物",
+  "losObstruction": "障害物",
+  "losDistanceFromA": "A から {distance}",
+  "losWorstBadge": "最悪",
+  "losBlockedAmount": "遮断量 {amount}",
+  "losFromA": "A から",
+  "losFromB": "B から",
+  "losElevation": "標高",
+  "losCenterOnMap": "地図の中心に表示",
+  "losStatusClear": "クリア",
+  "losStatusMarginal": "境界",
+  "losStatusBlocked": "遮断",
+  "losStatusCheckingShort": "確認中",
+  "losStatusNoResult": "結果なし",
+  "losSelectedPill": "選択中",
+  "gif_tapToLoad": "タップして GIF を読み込む",
+  "gif_loadFailedRetry": "GIF を読み込めません\nタップして再試行",
+  "qr_cameraPermissionDenied": "カメラの権限が拒否されました。\n設定でカメラへのアクセスを有効にしてください。",
+  "qr_cameraUnsupported": "この端末ではカメラがサポートされていません。",
+  "qr_cameraStartFailed": "カメラを起動できませんでした。\n{details}",
+  "imageMessages_downloadFailedWithError": "画像モデルをダウンロードできませんでした：{error}",
+  "map_nodeId": "ID",
+  "map_markerHideHint": "非表示:マップを離れるまで非表示になります。",
+  "map_markerRemoveHint": "削除:フィルターメニューから復元するまで非表示のままです。",
+  "map_markerRemoved": "マーカーを削除しました",
+  "map_restoreRemovedMarkers": "削除したマーカーを復元",
+  "map_restoreRemovedMarkersSubtitle": "{count}件削除済み",
+  "map_markersRestored": "{count}件のマーカーを復元しました",
+  "map_setLocationConfirmTitle": "この位置を自分の位置に設定しますか?",
+  "map_setLocationConfirmBody": "ノードは次の位置をアドバートします:\n{lat}, {lon}",
+  "map_setLocationAction": "位置を設定",
+  "map_locationSetSuccess": "ノードの位置を更新しました",
+  "map_locationSetFailed": "デバイスが新しい位置を確認しませんでした。もう一度お試しください。",
+  "map_poiClusterTitle": "ここに{count}件のマーカー",
+  "map_poiClusterSemantics": "共有マーカー{count}件。タップして一覧を表示します。",
+  "map_youWithMarkers": "自分と{count}件のマーカー",
+  "map_sharedMarkerSemantics": "共有マーカー: {label}",
+  "map_nodeMarkerSemantics": "{name}、{type}、{status}",
+  "mapCache_zoomLevel": "ズーム {zoom}",
+  "mapCache_sizeBytes": "{size} B",
+  "mapCache_sizeKilobytes": "{size} KB",
+  "mapCache_sizeMegabytes": "{size} MB",
+  "mapCache_sizeGigabytes": "{size} GB",
+  "mapCache_downloadCancelled": "ダウンロードをキャンセルしました。{count}枚のタイルをキャッシュしました。",
+  "mapCache_tooManyTilesTitle": "エリアが大きすぎます",
+  "mapCache_tooManyTiles": "このエリアには{count}枚のタイルが必要で、上限の{max}枚を超えています。より小さいエリアを選ぶか、最大ズームを下げてください。",
+  "chat_clearChatConfirm": "この会話のすべてのメッセージをこのデバイスから消去します。元に戻せません。",
+  "channels_clearChatConfirm": "このチャンネルのすべてのメッセージを、受信した画像も含めてこのデバイスから消去します。元に戻せません。",
+  "channels_timeNow": "今",
+  "channels_timeMinutes": "{minutes}分",
+  "channels_timeHours": "{hours}時間",
+  "channels_timeDays": "{days}日",
+  "channels_indexChip": "CH {index}",
+  "reaction_unknownSender": "不明",
+  "pathMap_noSelfGpsFix": "ローカルノードにGPS測位がありません",
+  "pathTrace_sendFailed": "パストレースを送信できませんでした: {error}",
+  "losErrorNoInternet": "標高データにはインターネット接続が必要です",
+  "losResultStale": "古い結果: アンテナ高が変更されました",
+  "losSnrValue": "{snr} dB",
+  "losFrequencyValue": "{frequency} MHz",
+  "losKFactorValue": "k={kFactor}",
+  "losEndpointA": "A",
+  "losEndpointB": "B",
+  "units_km": "km",
+  "units_mi": "mi",
+  "units_m": "m",
+  "units_ft": "ft",
+  "telemetry_loading": "テレメトリを読み込み中…",
+  "telemetry_axisValue": "X: {x}, Y: {y}, Z: {z}",
+  "telemetry_colourValue": "R: {red}, G: {green}, B: {blue}",
+  "telemetry_altitudeValueFeet": "{feet} ft",
+  "telemetry_distanceValueFeet": "{feet} ft",
+  "settings_notConnectedError": "無線機に接続されていません。接続してからもう一度お試しください。",
+  "settings_requiresConnection": "使用するには無線機に接続してください",
+  "settings_txPowerInvalidRange": "TX出力が無効です({min}~{max} dBm)",
+  "settings_contactSettingsSaved": "連絡先設定を保存しました",
+  "settings_batteryToggleHint": "タップでパーセントと電圧を切り替え",
+  "settings_publicKeyCopyHint": "公開鍵をコピー",
+  "settings_locationClearHelper": "位置情報を削除するには、両方の欄を空にしてください。",
+  "settings_locationCleared": "位置情報を削除しました",
+  "settings_regionFetchDiscovering": "近くのリピータを検索中…",
+  "settings_regionFetchProgress": "リピータ {current}/{total} に問い合わせ中…",
+  "settings_regionFetchNoRepeaters": "既知のリピータがまだありません。リピータを連絡先に追加するか、アドバートを待ってからもう一度お試しください。",
+  "settings_regionFetchNoneResponded": "近くのリピータから応答がありませんでした。リピータに近づいてもう一度お試しください。",
+  "appSettings_sourceSummary": "{label} - {description}",
+  "appSettings_routingSection": "ルーティング",
+  "appSettings_imageMessagesSection": "画像メッセージ",
+  "appSettings_showApiKey": "APIキーを表示",
+  "appSettings_hideApiKey": "APIキーを非表示",
+  "translation_defaultModelName": "モデル",
+  "translation_downloadProgressBytes": "{fileName}: {current} MB",
+  "translation_downloadProgressTotal": "{fileName}: {current} / {total} MB({percent}%)",
+  "translation_downloadedModelDetails": "{size} MB • {source}",
+  "repeater_radioDisconnected": "無線機が切断されました",
+  "repeater_radioDisconnectedHint": "コマンドの送信、更新、変更の保存を行うには、無線機に再接続してください。",
+  "repeater_cliSend": "コマンドを送信",
+  "repeater_cliCopyTranscript": "履歴をコピー",
+  "repeater_cliShareTranscript": "履歴を共有",
+  "repeater_cliTranscriptCopied": "履歴をコピーしました",
+  "repeater_cliClearHistoryConfirm": "コマンド履歴を消去しますか?元に戻せません。",
+  "repeater_cliSearchCommands": "コマンドを検索",
+  "repeater_cliNoMatchingCommands": "一致するコマンドがありません",
+  "debugLog_clearConfirm": "すべてのログを消去しますか?元に戻せません。",
+  "repeater_unsavedChangesTitle": "未保存の変更",
+  "repeater_unsavedChangesMessage": "リピータに保存されていない変更があります。",
+  "repeater_discardChanges": "破棄",
+  "repeater_actionSentNoReply": "{action}: コマンドを送信しました。リピータはこのコマンドに応答しません。",
+  "repeater_invalidSettingValue": "{setting}: {value}は無効です",
+  "repeater_txPowerOutOfRange": "TX出力 {value} は範囲外です({min}~{max} dBm)",
+  "repeater_prvKeyLengthError": "秘密鍵は16進数でちょうど{length}文字である必要があります",
+  "contacts_advertFailed": "アドバートを送信できませんでした",
+  "contacts_manageGroups": "グループを管理",
+  "community_shortId": "ID: {id}…",
+  "tcpSectionTitle": "TCP / IP",
+  "tcpConnectedToHeader": "接続先",
+  "usbChooseSerialPort": "シリアルポートを選択",
+  "neighbors_durationSeconds": "{seconds}秒",
+  "neighbors_durationMinutes": "{minutes}分{seconds}秒",
+  "neighbors_durationHours": "{hours}時間{minutes}分",
+  "scanner_getNodeTitle": "新しいノードが必要ですか?",
+  "scanner_getNodeBody": "財布サイズで MeshCore が動作。デュアルバンドGPS、防水、バッテリー5日間。",
+  "scanner_getNodeAction": "こちらで入手",
+  "scanner_getNodeDisclosure": "アフィリエイトリンク: 購入のたびに MeshCore Open を応援できます。",
+  "networkMap_settingsSection": "ネットワークマップ",
+  "networkMap_uploadTitle": "ラジオが受信した情報を共有",
+  "networkMap_uploadExplanation": "オンにしてラジオが接続されている間、ラジオが受信したパケットの概要をアプリが MeshCore Open のネットワークマップに送信します。これにより、どんなリピータがあり、どうつながっているかを誰でも見られます。送信するのは、各パケットの種類、経路、ホップ数、信号強度、サイズと、リピータ自身のアドバートに含まれる名前とおおよその位置です。メッセージの本文、誰が誰と話しているか、チャンネル名、連絡先、正確な位置は送信しません。位置は約2km単位に丸められ、アプリのIDは毎日ランダムに新しくなります。",
+  "networkMap_whatWeCollect": "収集する情報",
+  "networkMap_promptTitle": "ネットワークマップの作成にご協力いただけますか?",
+  "networkMap_promptBody": "MeshCore Open は、ラジオが受信した情報を map.meshcoreopen.org の公開ネットワークマップと共有できます。これにより、どんなリピータがあり、どうつながっているかを誰でも見られます。\n\nメッセージの本文、誰が誰と話しているか、チャンネル名、連絡先、正確な位置は送信しません。位置は約2km単位に丸められます。",
+  "networkMap_promptSettingsHint": "この設定はいつでも「設定」→「アプリ設定」→「ネットワークマップ」で変更できます。",
+  "networkMap_promptAccept": "共有する",
+  "networkMap_promptDecline": "いいえ、結構です",
+  "networkMap_statusOff": "オフ。何も送信されません。",
+  "networkMap_statusWaiting": "オン。ラジオの接続を待っています。",
+  "networkMap_statusNothingSent": "オン。まだ何も送信されていません。",
+  "networkMap_statusLastSent": "最終送信: {time}。今日は{count}パケット。",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "ローカル",
+  "networkMap_sourceOnline": "オンライン",
+  "networkMap_sourceBoth": "両方",
+  "networkMap_zoomInHint": "ズームインするとオンラインのネットワークマップが表示されます",
+  "networkMap_loadFailed": "オンラインのネットワークマップを読み込めませんでした",
+  "networkMap_inYourContacts": "連絡先にあります",
+  "networkMap_status": "ステータス",
+  "networkMap_statusActive": "直近1時間にアクティブ",
+  "networkMap_statusRecent": "直近1日以内に受信",
+  "networkMap_statusStale": "最近受信されていません",
+  "networkMap_confirmed": "確認済み",
+  "networkMap_singleSource": "情報源が1つのみで、未確認",
+  "networkMap_reports": "レポート",
+  "networkMap_locationEstimated": "おおよその位置(受信したノードから推定)",
+  "networkMap_locationAdvertised": "おおよその位置(自身のアドバートより)",
+  "networkMap_heardByRadio": "ラジオが受信",
+  "networkMap_inYourArea": "お近く",
+  "networkMap_farAway": "遠すぎます。管理はできません。",
+  "networkMap_addToContacts": "連絡先に追加",
+  "networkMap_manage": "管理",
+  "networkMap_addedToContacts": "連絡先に追加しました",
+  "networkMap_addFailed": "連絡先に追加できませんでした",
+  "networkMap_unnamed": "名前のないリピータ"
 }

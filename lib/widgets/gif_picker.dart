@@ -136,6 +136,7 @@ class _GifPickerState extends State<GifPicker> {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -151,6 +152,7 @@ class _GifPickerState extends State<GifPicker> {
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
+                      tooltip: context.l10n.common_clearSearch,
                       onPressed: () {
                         _searchController.clear();
                         _loadTrendingGifs();
@@ -181,7 +183,7 @@ class _GifPickerState extends State<GifPicker> {
           Text(
             context.l10n.gifPicker_poweredBy,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
