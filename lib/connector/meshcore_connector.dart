@@ -379,6 +379,12 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
   final List<Uint8List> _deferredQueuedContactMessageFrames = [];
+
+  /// Channel frames that arrived before this session's slot map was
+  /// confirmed. The firmware only sends them in reply to SYNC_NEXT_MESSAGE,
+  /// which waits for the map, so this is a guard: their slot index cannot be
+  /// resolved yet, and they are replayed once it can.
+  final List<Uint8List> _channelFramesAwaitingMap = [];
   bool _pendingQueueSync = false;
   // CMD_APP_START stops the firmware's contact iterator (END_OF_CONTACTS is
   // then never sent), so APP_START requested during a contact sync is held
@@ -3431,6 +3437,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _isProcessingDeferredQueuedContactMessages = false;
     _queuedMessageSyncInFlight = false;
     _deferredQueuedContactMessageFrames.clear();
+    _channelFramesAwaitingMap.clear();
     _pendingQueueSync = false;
     _resetSyncFlowState();
     _queueSyncTimeout?.cancel();
@@ -5682,6 +5689,19 @@ class MeshCoreConnector extends ChangeNotifier {
     _finishChannelSync();
   }
 
+  void _replayChannelFramesAwaitingMap() {
+    if (_channelFramesAwaitingMap.isEmpty) return;
+    final frames = List<Uint8List>.of(_channelFramesAwaitingMap);
+    _channelFramesAwaitingMap.clear();
+    for (final frame in frames) {
+      if (frame[0] != respCodeChannelDataRecv) {
+        _handleIncomingChannelMessage(frame);
+      } else if (_appSettingsService?.settings.imageMessagesEnabled ?? false) {
+        _handleIncomingChannelData(frame);
+      }
+    }
+  }
+
   /// A channel whose key changed in place keeps its position in the custom
   /// order: [after] takes [before]'s place when no slot holds [before] any
   /// more. Returns true when the order changed.
@@ -5714,6 +5734,7 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void _finishChannelSync() {
+    if (_channelMapConfirmed) _replayChannelFramesAwaitingMap();
     final completer = _channelSyncCompleter;
     _channelSyncCompleter = null;
     if (completer != null && !completer.isCompleted) completer.complete();
@@ -5745,12 +5766,11 @@ class MeshCoreConnector extends ChangeNotifier {
       // First: the channel sync is already running and carries unread counts
       // over from these. The migration never touches the channel cache.
       await loadCachedChannels();
-      final migrated = await ChannelStorageMigration.migrate(
+      await ChannelStorageMigration.migrate(
         _channelStore.publicKeyHex,
+        beforeDone: (slotIds) async =>
+            _receivedImageStore?.stampLegacyChannelIds(slotIds),
       );
-      if (migrated.isNotEmpty) {
-        await _receivedImageStore?.stampLegacyChannelIds(migrated);
-      }
       await _loadChannelOrder();
       final saved = await _channelStore.loadSlotChannelIds();
       _slotChannelIds
@@ -5966,6 +5986,13 @@ class MeshCoreConnector extends ChangeNotifier {
         } else {
           unawaited(_handleIncomingMessage(frame));
         }
+        break;
+      case respCodeChannelMsgRecv ||
+              respCodeChannelMsgRecvV3 ||
+              respCodeChannelDataRecv
+          when !_channelMapConfirmed:
+        if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
+        _channelFramesAwaitingMap.add(frame);
         break;
       case respCodeChannelMsgRecv:
       case respCodeChannelMsgRecvV3:

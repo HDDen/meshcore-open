@@ -254,6 +254,27 @@ void main() {
       );
     });
 
+    test('images are stamped before the migration is marked done', () async {
+      await _init(legacyValues());
+      await expectLater(
+        ChannelStorageMigration.migrate(
+          _scopeA,
+          beforeDone: (_) async => throw StateError('killed'),
+        ),
+        throwsStateError,
+      );
+      // Not marked done, so the next launch stamps again.
+      Map<int, String>? stamped;
+      await ChannelStorageMigration.migrate(
+        _scopeA,
+        beforeDone: (slotIds) async => stamped = slotIds,
+      );
+      expect(stamped, {0: _idOne, 2: _idTwo});
+      // Data moved by the first run is still there.
+      final messages = ChannelMessageStore()..setPublicKeyHex = _deviceA;
+      expect((await messages.loadChannelMessages(_idOne)).single.text, 'hello');
+    });
+
     test('skips a scope that must not adopt legacy data', () async {
       await _init(legacyValues());
       scopesWithoutLegacyMigration.add(_scopeA);

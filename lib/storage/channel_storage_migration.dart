@@ -25,7 +25,14 @@ class ChannelStorageMigration {
   /// Migrates [scope] (first 10 hex chars of the radio's public key) and
   /// returns the slot -> channel ID mapping it used. Returns an empty map when
   /// the scope was already migrated or must not adopt legacy data.
-  static Future<Map<int, String>> migrate(String scope) async {
+  ///
+  /// [beforeDone] runs with that mapping before the migration is marked done,
+  /// so data kept elsewhere (images) is moved on the same one-shot terms: an
+  /// interrupted run repeats it on the next launch.
+  static Future<Map<int, String>> migrate(
+    String scope, {
+    Future<void> Function(Map<int, String> slotIds)? beforeDone,
+  }) async {
     if (scope.isEmpty || !canMigrateLegacyKeys(scope)) return {};
     final prefs = PrefsManager.instance;
     final doneKey = '$_doneKeyPrefix$scope';
@@ -61,6 +68,7 @@ class ChannelStorageMigration {
       );
     }
     await _migrateOrder(scope, slotIds);
+    if (slotIds.isNotEmpty) await beforeDone?.call(slotIds);
 
     await prefs.setBool(doneKey, true);
     await channelStore.saveSlotChannelIds(slotIds);

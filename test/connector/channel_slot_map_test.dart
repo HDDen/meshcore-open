@@ -243,6 +243,32 @@ void main() {
     expect(_storedTexts(hikingId), isEmpty);
   });
 
+  test('a channel frame that arrives before the slot map is held, then filed '
+      'by the confirmed map', () async {
+    final radio = _TestRadio(
+      afterHandle: (radio, frame) {
+        if (frame[0] == cmdAppStart) {
+          radio.emitForTest(
+            ReviewFrames.channelMessage(
+              channelIndex: 1,
+              sender: 'Sam',
+              message: 'before the map',
+              timestampSecs: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            ),
+          );
+        }
+      },
+    );
+    await _connect(
+      radio,
+      // A stale map from last session would file it under the ghost channel.
+      seed: () => _seedSlotMap({0: _id(_psk(0)), 1: ghostId, 2: _id(_psk(2))}),
+    );
+    await _waitFor(() => _texts(1).contains('before the map'));
+    expect(_storedTexts(hikingId), contains('before the map'));
+    expect(_storedTexts(ghostId), isNot(contains('before the map')));
+  });
+
   test('MSG_WAITING before the channel sync waits for the slot map', () async {
     // DEVICE_INFO is held back so MSG_WAITING lands between SELF_INFO and the
     // start of the channel sync.
