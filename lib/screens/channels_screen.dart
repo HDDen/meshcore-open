@@ -331,11 +331,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   String _relativeTime(DateTime t) {
+    final l10n = context.l10n;
     final diff = DateTime.now().difference(t);
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
-    if (diff.inHours < 24) return '${diff.inHours}h';
-    return '${diff.inDays}d';
+    if (diff.inMinutes < 1) return l10n.channels_timeNow;
+    if (diff.inMinutes < 60) return l10n.channels_timeMinutes(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.channels_timeHours(diff.inHours);
+    return l10n.channels_timeDays(diff.inDays);
   }
 
   @override
@@ -811,7 +812,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         if (!hideChannelIndexIndicator) ...[
                           const SizedBox(width: 6),
                           StatusChip(
-                            label: 'CH ${channel.index}',
+                            label: context.l10n.channels_indexChip(
+                              channel.index,
+                            ),
                             color: MeshPalette.blue,
                             fontSize: 10,
                           ),

@@ -1791,49 +1791,65 @@ class AppSettingsScreen extends StatelessWidget {
       currentApiKey.isEmpty ? AppSettings.stadiaDemo : currentApiKey,
     );
     final controller = TextEditingController(text: maskedApiKey);
+    var obscured = true;
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.appSettings_stadiaApiKey),
-        content: SizedBox(
-          width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.appSettings_stadiaApiKeyDialogDescription),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                autofillHints: const [AutofillHints.password],
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '4e1bf343-3d91-4d9c-a8e1-1234567890ab',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(context.l10n.appSettings_stadiaApiKey),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.appSettings_stadiaApiKeyDialogDescription),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  obscureText: obscured,
+                  autofillHints: const [AutofillHints.password],
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    hintText: '4e1bf343-3d91-4d9c-a8e1-1234567890ab',
+                    suffixIcon: IconButton(
+                      tooltip: obscured
+                          ? context.l10n.appSettings_showApiKey
+                          : context.l10n.appSettings_hideApiKey,
+                      icon: Icon(
+                        obscured
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      onPressed: () =>
+                          setDialogState(() => obscured = !obscured),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                final apiKey = controller.text.trim();
+                await settingsService.setMapTileApiKey(
+                  apiKey == maskedApiKey ? currentApiKey : apiKey,
+                );
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+              },
+              child: Text(context.l10n.common_save),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final apiKey = controller.text.trim();
-              await settingsService.setMapTileApiKey(
-                apiKey == maskedApiKey ? currentApiKey : apiKey,
-              );
-              if (!dialogContext.mounted) return;
-              Navigator.pop(dialogContext);
-            },
-            child: Text(context.l10n.common_save),
-          ),
-        ],
       ),
     );
   }

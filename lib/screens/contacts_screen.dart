@@ -64,6 +64,16 @@ import 'settings_screen.dart';
 
 enum RoomLoginDestination { chat, management }
 
+/// A contact command waiting for the node's OK or ERR, which carry no
+/// correlation: the oldest pending one takes the next reply, and the timer
+/// reports a failure when neither comes.
+class _PendingContactOperation {
+  final ContactOperationType type;
+  final Timer timeout;
+
+  _PendingContactOperation(this.type, this.timeout);
+}
+
 enum ContactOperationType { import, export, zeroHopShare }
 
 enum _BatchContactOperation { delete }
@@ -138,7 +148,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<Contact> _derivedBatchSelectableContacts = const [];
   List<ContactGroup> _derivedSortedGroups = const [];
 
-  final List<ContactOperationType> _pendingOperations = [];
+  final List<_PendingContactOperation> _pendingOperations = [];
+  static const Duration _contactOperationTimeout = Duration(seconds: 10);
   final Set<String> _selectedBatchContactKeys = {};
   bool _batchOperationInProgress = false;
   bool _batchOperationCancellationRequested = false;
@@ -209,6 +220,10 @@ class _ContactsScreenState extends State<ContactsScreen>
     _searchFocusNode.dispose();
     _searchController.dispose();
     _frameSubscription?.cancel();
+    for (final op in _pendingOperations) {
+      op.timeout.cancel();
+    }
+    _pendingOperations.clear();
     _scopeSyncConnector?.removeListener(_handleConnectorScopeChange);
     super.dispose();
   }
@@ -291,6 +306,78 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
+  void _addPendingOperation(ContactOperationType type) {
+    late final _PendingContactOperation op;
+    op = _PendingContactOperation(
+      type,
+      Timer(_contactOperationTimeout, () {
+        if (!_pendingOperations.remove(op)) return;
+        _showOperationResult(type, success: false);
+      }),
+    );
+    _pendingOperations.add(op);
+  }
+
+  /// Removes the oldest pending operation of [type] (or of any type when
+  /// null) and returns its type, or null when nothing is pending.
+  ContactOperationType? _takePendingOperation([ContactOperationType? type]) {
+    final index = type == null
+        ? (_pendingOperations.isEmpty ? -1 : 0)
+        : _pendingOperations.indexWhere((op) => op.type == type);
+    if (index < 0) return null;
+    final op = _pendingOperations.removeAt(index);
+    op.timeout.cancel();
+    return op.type;
+  }
+
+  void _showOperationResult(
+    ContactOperationType type, {
+    required bool success,
+  }) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final String message;
+    switch (type) {
+      case ContactOperationType.import:
+        message = success
+            ? l10n.contacts_contactImported
+            : l10n.contacts_contactImportFailed;
+      case ContactOperationType.zeroHopShare:
+        message = success
+            ? l10n.contacts_zeroHopContactAdvertSent
+            : l10n.contacts_zeroHopContactAdvertFailed;
+      case ContactOperationType.export:
+        message = success
+            ? l10n.contacts_contactAdvertCopied
+            : l10n.contacts_contactAdvertCopyFailed;
+    }
+    showDismissibleSnackBar(context, content: Text(message));
+  }
+
+  Future<void> _sendSelfAdvert(
+    MeshCoreConnector connector, {
+    required bool flood,
+  }) async {
+    var sent = false;
+    try {
+      if (connector.isConnected) {
+        await connector.sendSelfAdvert(flood: flood);
+        sent = true;
+      }
+    } catch (e) {
+      appLogger.error('Self advert failed: $e', tag: 'ContactsScreen');
+    }
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(
+        sent
+            ? context.l10n.settings_advertisementSent
+            : context.l10n.contacts_advertFailed,
+      ),
+    );
+  }
+
   void _handleConnectorScopeChange() {
     final connector = _scopeSyncConnector;
     if (connector == null) return;
@@ -368,12 +455,12 @@ class _ContactsScreenState extends State<ContactsScreen>
                 content: Text(context.l10n.contacts_invalidAdvertFormat),
               );
             }
-            _pendingOperations.remove(ContactOperationType.export);
+            _takePendingOperation(ContactOperationType.export);
             return;
           }
           final hexString = pubKeyToHex(advertPacket);
           Clipboard.setData(ClipboardData(text: "meshcore://$hexString"));
-          _pendingOperations.remove(ContactOperationType.export);
+          _takePendingOperation(ContactOperationType.export);
           if (mounted) {
             showDismissibleSnackBar(
               context,
@@ -385,50 +472,11 @@ class _ContactsScreenState extends State<ContactsScreen>
 
         // Generic OK/ERR acks carry no command correlation, so consume only
         // the oldest pending operation per ack instead of clearing all.
-        if (code == respCodeOk) {
+        if (code == respCodeOk || code == respCodeErr) {
           if (!mounted) return;
-          if (_pendingOperations.isEmpty) return;
-          final op = _pendingOperations.removeAt(0);
-          switch (op) {
-            case ContactOperationType.import:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactImported),
-              );
-            case ContactOperationType.zeroHopShare:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_zeroHopContactAdvertSent),
-              );
-            case ContactOperationType.export:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactAdvertCopied),
-              );
-          }
-        }
-
-        if (code == respCodeErr) {
-          if (!mounted) return;
-          if (_pendingOperations.isEmpty) return;
-          final op = _pendingOperations.removeAt(0);
-          switch (op) {
-            case ContactOperationType.import:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactImportFailed),
-              );
-            case ContactOperationType.zeroHopShare:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_zeroHopContactAdvertFailed),
-              );
-            case ContactOperationType.export:
-              showDismissibleSnackBar(
-                context,
-                content: Text(context.l10n.contacts_contactAdvertCopyFailed),
-              );
-          }
+          final op = _takePendingOperation();
+          if (op == null) return;
+          _showOperationResult(op, success: code == respCodeOk);
         }
       } catch (e) {
         appLogger.error(
@@ -442,11 +490,11 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<void> _contactExport(Uint8List pubKey) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final exportContactFrame = buildExportContactFrame(pubKey);
-    _pendingOperations.add(ContactOperationType.export);
+    _addPendingOperation(ContactOperationType.export);
     try {
       await connector.sendFrame(exportContactFrame, expectsGenericAck: true);
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.export);
+      _takePendingOperation(ContactOperationType.export);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -459,14 +507,14 @@ class _ContactsScreenState extends State<ContactsScreen>
   Future<void> _contactZeroHop(Uint8List pubKey) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     final exportContactZeroHopFrame = buildZeroHopContact(pubKey);
-    _pendingOperations.add(ContactOperationType.zeroHopShare);
+    _addPendingOperation(ContactOperationType.zeroHopShare);
     try {
       await connector.sendFrame(
         exportContactZeroHopFrame,
         expectsGenericAck: true,
       );
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.zeroHopShare);
+      _takePendingOperation(ContactOperationType.zeroHopShare);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -532,11 +580,11 @@ class _ContactsScreenState extends State<ContactsScreen>
       }
       return;
     }
-    _pendingOperations.add(ContactOperationType.import);
+    _addPendingOperation(ContactOperationType.import);
     try {
       await connector.sendFrame(importContactFrame, expectsGenericAck: true);
     } catch (e) {
-      _pendingOperations.remove(ContactOperationType.import);
+      _takePendingOperation(ContactOperationType.import);
       if (mounted) {
         showDismissibleSnackBar(
           context,
@@ -700,30 +748,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                         icon: Icons.connect_without_contact,
                         text: context.l10n.contacts_zeroHopAdvert,
                       ),
-                      onTap: () => {
-                        connector.sendSelfAdvert(flood: false),
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(
-                            context.l10n.settings_advertisementSent,
-                          ),
-                        ),
-                      },
+                      onTap: () => _sendSelfAdvert(connector, flood: false),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(
                         icon: Icons.cell_tower,
                         text: context.l10n.contacts_floodAdvert,
                       ),
-                      onTap: () => {
-                        connector.sendSelfAdvert(flood: true),
-                        showDismissibleSnackBar(
-                          context,
-                          content: Text(
-                            context.l10n.settings_advertisementSent,
-                          ),
-                        ),
-                      },
+                      onTap: () => _sendSelfAdvert(connector, flood: true),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(

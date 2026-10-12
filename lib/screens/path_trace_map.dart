@@ -24,6 +24,7 @@ import 'package:meshcore_open/services/map_tile_cache_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/wardrive_service.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
+import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:meshcore_open/widgets/snr_indicator.dart';
 import 'package:provider/provider.dart';
@@ -661,7 +662,19 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     // fallback now; RESP_CODE_SENT replaces it with the firmware estimate.
     _timeoutTimer?.cancel();
     _timeoutTimer = Timer(_traceSentFallbackTimeout, _failTrace);
-    connector.sendFrame(frame);
+    try {
+      await connector.sendFrame(frame);
+    } catch (e) {
+      appLogger.error('Failed to send path trace: $e', tag: 'PathTraceMap');
+      _timeoutTimer?.cancel();
+      _failTrace();
+      if (!mounted) return;
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.pathTrace_sendFailed(e.toString())),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
   }
 
   void _failTrace() {

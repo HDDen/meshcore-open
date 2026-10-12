@@ -446,8 +446,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       label: label,
       value: publicKeyHex,
       mono: true,
+      semanticsHint: context.l10n.settings_publicKeyCopyHint,
+      trailing: Icon(
+        Icons.copy_outlined,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       onTap: () => _copyPublicKey(context, publicKeyHex),
     );
+  }
+
+  /// Guards a radio command: returns false, after telling the user, when the
+  /// radio is not connected, because the connector ignores commands sent
+  /// while disconnected and a success message would be a lie.
+  bool _ensureConnected(BuildContext context, MeshCoreConnector connector) {
+    if (connector.isConnected) return true;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.settings_notConnectedError),
+    );
+    return false;
   }
 
   Future<void> _copyPublicKey(BuildContext context, String publicKeyHex) async {
@@ -466,6 +484,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool mono = false,
     Widget? leading,
     Color? valueColor,
+    Widget? trailing,
+    String? semanticsHint,
     VoidCallback? onTap,
   }) {
     final scheme = Theme.of(context).colorScheme;
@@ -486,6 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              if (trailing != null) ...[const Spacer(), trailing],
             ],
           ),
           const SizedBox(height: 2),
@@ -510,10 +531,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (onTap != null) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(MeshRadii.xs),
-        onTap: onTap,
-        child: content,
+      return Semantics(
+        button: true,
+        hint: semanticsHint,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(MeshRadii.xs),
+          onTap: onTap,
+          child: content,
+        ),
       );
     }
     return content;
@@ -560,10 +585,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return _infoRow(
       context,
+      semanticsHint: millivolts != null ? l10n.settings_batteryToggleHint : null,
       label: l10n.settings_infoBattery,
       value: displayValue,
       leading: Icon(icon, size: 14, color: iconColor),
       valueColor: valueColor,
+      trailing: millivolts != null
+          ? Tooltip(
+              message: l10n.settings_batteryToggleHint,
+              child: Icon(
+                Icons.swap_horiz,
+                size: 18,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          : null,
       onTap: millivolts != null
           ? () {
               setState(() {
@@ -1130,6 +1166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: InputDecoration(
                   labelText: l10n.settings_longitude,
                   border: const OutlineInputBorder(),
+                  helperText: l10n.settings_locationClearHelper,
+                  helperMaxLines: 2,
                   errorText: locationError,
                   errorMaxLines: 2,
                 ),
@@ -1198,6 +1236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final lonText = lonController.text.trim();
                 double? lat;
                 double? lon;
+                var clearsLocation = false;
                 if (latText.isNotEmpty || lonText.isNotEmpty) {
                   lat = latText.isNotEmpty
                       ? double.tryParse(latText)
@@ -1217,6 +1256,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     });
                     return;
                   }
+                } else if ((connector.selfLatitude ?? 0) != 0 ||
+                    (connector.selfLongitude ?? 0) != 0) {
+                  // Both fields left empty: the firmware knows no "no
+                  // location" besides 0,0, which the map and the adverts
+                  // already read as none.
+                  lat = 0;
+                  lon = 0;
+                  clearsLocation = true;
                 }
 
                 Navigator.pop(dialogContext);
@@ -1245,7 +1292,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (!context.mounted) return;
                 showDismissibleSnackBar(
                   context,
-                  content: Text(l10n.settings_locationUpdated),
+                  content: Text(
+                    clearsLocation
+                        ? l10n.settings_locationCleared
+                        : l10n.settings_locationUpdated,
+                  ),
                 );
               },
               child: Text(l10n.common_save),
@@ -1258,6 +1309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _syncTime(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
+    if (!_ensureConnected(context, connector)) return;
     connector.syncTime();
     showDismissibleSnackBar(
       context,
@@ -1417,6 +1469,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _editAutoAddConfig(BuildContext context, MeshCoreConnector connector) {
     final l10n = context.l10n;
+    // The dialog's own context is gone once it pops; the confirmation goes
+    // through the screen's.
+    final screenContext = context;
     bool autoAddChat = false;
     bool autoAddRepeater = false;
     bool autoAddRoomServer = false;
@@ -1493,6 +1548,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () {
+                if (!_ensureConnected(screenContext, connector)) return;
                 _sendSettings(
                   connector,
                   autoAddChat,
@@ -1502,6 +1558,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   overwriteOldest,
                 );
                 Navigator.pop(context);
+                showDismissibleSnackBar(
+                  screenContext,
+                  content: Text(l10n.settings_contactSettingsSaved),
+                );
               },
               child: Text(l10n.common_save),
             ),

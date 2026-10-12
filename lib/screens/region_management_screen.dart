@@ -408,6 +408,34 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   }
 
   Future<void> _showFetchRegionsDialog() async {
+    final l10n = context.l10n;
+    final connector = context.read<MeshCoreConnector>();
+    if (!connector.isConnected) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(l10n.settings_notConnectedError),
+      );
+      return;
+    }
+    final hasRepeater = connector.contacts.any(
+      (contact) => contact.type == advTypeRepeater,
+    );
+    if (!hasRepeater) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.settings_regionFetchRegions),
+          content: Text(l10n.settings_regionFetchNoRepeaters),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.common_close),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     await _fetchAndShowRegions(_fetchRegionsFromRepeaters);
   }
 
@@ -863,28 +891,27 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       );
       awaitingSentResponse = true;
       await connector.sendFrame(frame);
-      final regions = await completer.future;
-      if (pathChangedForRequest && connector.isConnected) {
-        await _restoreRepeaterPath(
-          connector,
-          repeater,
-          originalPathLength,
-          originalPath,
-        );
-      }
-      return regions;
+      return await completer.future;
     } catch (_) {
-      timeout?.cancel();
-      subscription?.cancel();
-      if (pathChangedForRequest && connector.isConnected) {
-        await _restoreRepeaterPath(
-          connector,
-          repeater,
-          originalPathLength,
-          originalPath,
-        );
-      }
       return <Region>{};
+    } finally {
+      timeout?.cancel();
+      await subscription?.cancel();
+      // Always put the user's route back, whatever happened above. (The
+      // connector ignores path writes while disconnected, so nothing can be
+      // restored if the link dropped mid-request.)
+      if (pathChangedForRequest && connector.isConnected) {
+        try {
+          await _restoreRepeaterPath(
+            connector,
+            repeater,
+            originalPathLength,
+            originalPath,
+          );
+        } catch (_) {
+          // Best effort; the original path is still in the contact store.
+        }
+      }
     }
   }
 
@@ -936,7 +963,10 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
 
   void _handleAddRegion(Region region, BuildContext context) {
     Navigator.pop(context);
-    _regionStore.addRegion(region);
+    // An empty name would collide with the '' "none" entry.
+    final trimmed = region.trim();
+    if (trimmed.isEmpty) return;
+    _regionStore.addRegion(trimmed);
     _loadRegions();
   }
 

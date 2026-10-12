@@ -108,6 +108,7 @@ import '../theme/mesh_theme.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import 'app_settings_screen.dart';
 import 'channel_message_path_screen.dart';
@@ -160,6 +161,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Map<String, GlobalKey> _messageKeys = {};
+  _TranscriptOrder? _transcriptOrder;
+  ReceivedImageStore? _watchedImageStore;
+  int _imageStoreVersion = 0;
+  ModalRoute<dynamic>? _route;
   final _messageContentCache =
       MessageContentCache<_ParsedChannelMessageContent>();
 
@@ -290,7 +295,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     });
   }
 
-  // TODO: Reload communities when returning from another screen
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!identical(route, _route)) {
+      _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+      _route = route;
+      route?.secondaryAnimation?.addStatusListener(_onCoveringRouteStatus);
+    }
+  }
+
+  /// Reloads communities when a route pushed on top of this one is popped,
+  /// so a community joined or created elsewhere gets its badge and type here.
+  void _onCoveringRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && mounted) {
+      _loadCommunities();
+    }
+  }
+
+  /// Loads the community list; also re-run whenever a covering route pops
+  /// (see [_onCoveringRouteStatus]).
   Future<void> _loadCommunities() async {
     final connector = context.read<MeshCoreConnector>();
     _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
@@ -446,6 +471,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   void dispose() {
+    _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+    _watchedImageStore?.removeListener(_onImageStoreChanged);
     _connector?.setActiveChannel(null);
     _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
@@ -500,6 +527,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       _useReplyRegion = false;
       _plainReplyComposerPrefix = prefix;
     });
+    // Replying means typing next: open the keyboard on the composer.
+    _textFieldFocusNode.requestFocus();
     if (prefix != null) {
       final value = '$prefix$draft';
       _textController.value = TextEditingValue(
@@ -1180,9 +1209,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final settingsService = context
                         .watch<AppSettingsService>();
                     final messages = timeline.messages;
-                    final imageRows = _receivedImageRows(context);
+                    final reversedRows = _transcriptRowsFor(context, messages);
 
-                    if (messages.isEmpty && imageRows.isEmpty) {
+                    if (reversedRows.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1215,14 +1244,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       );
                     }
 
-                    final rows = <_ChannelChatRow>[
-                      for (final message in messages)
-                        _ChannelChatRow(message: message),
-                      ...imageRows,
-                    ]..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
-
-                    // Reverse rows so newest appear at bottom with reverse: true.
-                    final reversedRows = rows.reversed.toList();
                     final itemCount =
                         reversedRows.length + (_isLoadingOlder ? 1 : 0);
 
@@ -3000,7 +3021,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           style: MeshTheme.emoji(fontSize: 16),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(child: Text(reaction.senderName ?? '???')),
+                        Expanded(
+                          child: Text(
+                            reaction.senderName ??
+                                context.l10n.reaction_unknownSender,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -3425,21 +3451,52 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// test without the provider still renders.
   /// [context] must be the context of the element currently building (the
   /// `Consumer` builder's, not the `State`'s), because `watch` asserts on that.
-  List<_ChannelChatRow> _receivedImageRows(BuildContext context) {
-    if (!kImageCodecFeatureAvailable) return const <_ChannelChatRow>[];
-
-    final ReceivedImageStore store;
-    try {
-      store = context.watch<ReceivedImageStore>();
-    } on ProviderNotFoundException {
-      return const <_ChannelChatRow>[];
+  /// The transcript's rows, newest first. The order is memoised on the
+  /// message list object, its length and its two end ids, and on the image
+  /// store's version: the merge of messages and images and the sort by
+  /// arrival used to run on every rebuild of the transcript, relays
+  /// included. The rows themselves are built anew from the live list, since
+  /// the connector replaces a message in place when its status or repeats
+  /// change.
+  List<_ChannelChatRow> _transcriptRowsFor(
+    BuildContext context,
+    List<ChannelMessage> messages,
+  ) {
+    ReceivedImageStore? store;
+    if (kImageCodecFeatureAvailable) {
+      try {
+        store = context.watch<ReceivedImageStore>();
+      } on ProviderNotFoundException {
+        store = null;
+      }
     }
-    return <_ChannelChatRow>[
-      for (final entry in store.entries)
-        if (entry.channelIndex == widget.channel.index)
-          _ChannelChatRow(image: entry),
-    ];
+    if (!identical(store, _watchedImageStore)) {
+      _watchedImageStore?.removeListener(_onImageStoreChanged);
+      _watchedImageStore = store;
+      store?.addListener(_onImageStoreChanged);
+      _imageStoreVersion++;
+    }
+    var order = _transcriptOrder;
+    if (order == null ||
+        !order.matches(messages, _imageStoreVersion, widget.channel.index)) {
+      final images = store == null
+          ? const <ReceivedImageEntry>[]
+          : [
+              for (final entry in store.entries)
+                if (entry.channelIndex == widget.channel.index) entry,
+            ];
+      order = _TranscriptOrder.build(
+        messages: messages,
+        images: images,
+        imageVersion: _imageStoreVersion,
+        channelIndex: widget.channel.index,
+      );
+      _transcriptOrder = order;
+    }
+    return order.rows(messages);
   }
+
+  void _onImageStoreChanged() => _imageStoreVersion++;
 
   /// Bubble for one AEIC image, following the GIF-message precedent: minimal
   /// chrome, the renderer owns every state (receiving / decoding / failed) and
@@ -4717,26 +4774,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _confirmClearChat() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.contact_clearChat),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmClearDialog(
+      context,
+      title: context.l10n.contact_clearChat,
+      message: context.l10n.channels_clearChatConfirm,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       if (!mounted) return;
       context.read<MeshCoreConnector>().clearMessagesForChannel(
         widget.channel.index,
@@ -5994,6 +6037,85 @@ class _ChannelChatRow {
   /// Stable identity for the scroll-to-message [GlobalKey] map. The `aeic:`
   /// prefix keeps a stream id from ever colliding with a message id.
   String get id => message?.messageId ?? 'aeic:${image!.streamId}';
+}
+
+/// Memoised ordering of a channel transcript, newest first. Rows hold
+/// positions, not message objects: the connector replaces messages in place
+/// (status, repeats, reactions) without changing their order or id, so
+/// [rows] always reads the current object from the live list.
+class _TranscriptOrder {
+  final List<ChannelMessage> _source;
+  final int _sourceLength;
+  final String? _firstId;
+  final String? _lastId;
+  final int _imageVersion;
+  final int _channelIndex;
+
+  /// Newest first. `>= 0` is a message index; `< 0` is image `-(i + 1)`.
+  final List<int> _order;
+  final List<ReceivedImageEntry> _images;
+
+  _TranscriptOrder._(
+    this._source,
+    this._sourceLength,
+    this._firstId,
+    this._lastId,
+    this._imageVersion,
+    this._channelIndex,
+    this._order,
+    this._images,
+  );
+
+  factory _TranscriptOrder.build({
+    required List<ChannelMessage> messages,
+    required List<ReceivedImageEntry> images,
+    required int imageVersion,
+    required int channelIndex,
+  }) {
+    DateTime timeOf(int code) =>
+        code >= 0 ? messages[code].receivedAt : images[-code - 1].firstSeen;
+    // Images are not ChannelMessages: they arrive as GRP_DATA chunks and are
+    // owned by ReceivedImageStore, so the two sources are merged here in
+    // arrival (receivedAt) order and the list indexes rows, not messages.
+    final order = <int>[
+      for (var i = 0; i < messages.length; i++) i,
+      for (var i = 0; i < images.length; i++) -(i + 1),
+    ];
+    // Ties keep their place in the concatenated list, as a stable sort
+    // would: messages in store order, then images.
+    int positionOf(int code) =>
+        code >= 0 ? code : messages.length + (-code - 1);
+    order.sort((a, b) {
+      final byTime = timeOf(a).compareTo(timeOf(b));
+      return byTime != 0 ? byTime : positionOf(a).compareTo(positionOf(b));
+    });
+    return _TranscriptOrder._(
+      messages,
+      messages.length,
+      messages.isEmpty ? null : messages.first.messageId,
+      messages.isEmpty ? null : messages.last.messageId,
+      imageVersion,
+      channelIndex,
+      order.reversed.toList(growable: false),
+      images,
+    );
+  }
+
+  bool matches(List<ChannelMessage> messages, int imageVersion, int channel) {
+    return identical(messages, _source) &&
+        messages.length == _sourceLength &&
+        imageVersion == _imageVersion &&
+        channel == _channelIndex &&
+        (messages.isEmpty ? null : messages.first.messageId) == _firstId &&
+        (messages.isEmpty ? null : messages.last.messageId) == _lastId;
+  }
+
+  List<_ChannelChatRow> rows(List<ChannelMessage> messages) => [
+    for (final code in _order)
+      code >= 0
+          ? _ChannelChatRow(message: messages[code])
+          : _ChannelChatRow(image: _images[-code - 1]),
+  ];
 }
 
 @immutable

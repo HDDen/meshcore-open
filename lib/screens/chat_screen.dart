@@ -59,6 +59,7 @@ import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_bubble_box.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
@@ -2352,7 +2353,9 @@ class _ChatScreenState extends State<ChatScreen> {
       widget.contact.publicKeyHex,
     );
     connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
-    final contact = widget.contact;
+    // The live contact carries the current telemetry flags; widget.contact
+    // is the snapshot this screen was opened with.
+    final contact = _resolveContact(connector);
     bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
     bool mcotxtEnabled = connector.isContactMCOtxtEnabled(contact.publicKeyHex);
     bool mcotxtPlainWhenSmaller = connector.isContactMCOtxtPlainWhenSmaller(
@@ -2381,6 +2384,17 @@ class _ChatScreenState extends State<ChatScreen> {
     bool teleBaseEnabled = contact.teleBaseEnabled;
     bool teleLocEnabled = contact.teleLocEnabled;
     bool teleEnvEnabled = contact.teleEnvEnabled;
+    // Each toggle is committed at once, like the compression switches, so
+    // dismissing the dialog by tapping outside keeps the change. All three
+    // flags go every time so overlapping writes cannot undo each other.
+    void commitTelemetryFlags() {
+      connector.setContactFlags(
+        contact,
+        teleBase: teleBaseEnabled,
+        teleLoc: teleLocEnabled,
+        teleEnv: teleEnvEnabled,
+      );
+    }
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -2696,6 +2710,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleBaseEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleBaseEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
                 const Divider(height: 8),
@@ -2706,6 +2721,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleLocEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleLocEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
                 const Divider(height: 8),
@@ -2716,6 +2732,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   value: teleEnvEnabled,
                   onChanged: (value) {
                     setDialogState(() => teleEnvEnabled = value);
+                    commitTelemetryFlags();
                   },
                 ),
               ],
@@ -2904,26 +2921,12 @@ class _ChatScreenState extends State<ChatScreen> {
     BuildContext context,
     MeshCoreConnector connector,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.contact_clearChat),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmClearDialog(
+      context,
+      title: context.l10n.contact_clearChat,
+      message: context.l10n.chat_clearChatConfirm,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       connector.clearMessagesForContact(widget.contact);
     }
   }

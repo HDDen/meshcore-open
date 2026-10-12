@@ -54,6 +54,7 @@ import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/map_poi_cluster.dart';
 import '../widgets/marker_label_dialog.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -226,6 +227,9 @@ class _MapScreenState extends State<MapScreen>
   // The search field rebuilds the map through _searchQuery; it waits for
   // the typing to pause.
   Timer? _searchDebounce;
+  // Online/recent status is derived from DateTime.now(); rebuild once a
+  // minute so markers age even when the connector stays quiet.
+  Timer? _ageTimer;
   static const Duration _searchDelay = Duration(milliseconds: 300);
   // Derivations of the wardrive samples, kept while the samples list and the
   // settings they read stay: the service builds a new list at every change
@@ -259,6 +263,9 @@ class _MapScreenState extends State<MapScreen>
     _nodeFiltersExpanded =
         PrefsManager.instance.getBool(_nodeFiltersExpandedKey) ?? true;
     _loadRemovedMarkers();
+    _ageTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (mounted) setState(() {});
+    });
     _pathEditFocus.addListener(() {
       if (!_pathEditFocus.hasFocus) _commitPathEdit();
     });
@@ -333,6 +340,7 @@ class _MapScreenState extends State<MapScreen>
     appRouteObserver.unsubscribe(this);
     _removeMapSnackBarOverlay();
     _searchDebounce?.cancel();
+    _ageTimer?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     _pathEditController.dispose();
@@ -1478,41 +1486,14 @@ class _MapScreenState extends State<MapScreen>
                           wardriveDisableClustering: wardriveDisableClustering,
                           wardriveAnsweredKeys: wardriveAnsweredKeys,
                         ),
-                        ...sharedMarkers.map(_buildSharedMarker),
-                        if (selfDisplayPosition != null)
-                          Marker(
-                            point: selfDisplayPosition,
-                            width: 40,
-                            height: 40,
-                            child: IgnorePointer(
-                              ignoring: true,
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: MapPalette.panelDark,
-                                  border: Border.all(
-                                    color: MapPalette.markerOutline,
-                                    width: 2.5,
-                                  ),
-                                  boxShadow: [
-                                    const BoxShadow(
-                                      color: MapPalette.markerShadow,
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.person_pin_circle,
-                                  color: MapPalette.selected,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                          ),
+                        ..._buildPoiAndSelfMarkers(
+                          sharedMarkers,
+                          selfPosition: selfDisplayPosition,
+                          clusterPois:
+                              settings.mapClusterNodes &&
+                              !settings.mapShowOverlaps &&
+                              !_isBuildingPathTrace,
+                        ),
                         if (_showNodeLabels && selfDisplayPosition != null)
                           _buildNodeLabelMarker(
                             point: selfDisplayPosition,
@@ -5546,14 +5527,219 @@ class _MapScreenState extends State<MapScreen>
     return _cachedSharedMarkers;
   }
 
+  Color _sharedMarkerColor(_SharedMarker marker) {
+    final style = marker.channelName == null
+        ? null
+        : _channelMarkerStyles.styleFor(marker.channelName);
+    return style?.color ??
+        (marker.isChannel
+            ? (marker.isPublicChannel ? MapPalette.cluster : MapPalette.router)
+            : MapPalette.shared);
+  }
+
+  Marker _buildSelfMarker(LatLng position) {
+    return Marker(
+      point: position,
+      width: 40,
+      height: 40,
+      child: IgnorePointer(
+        ignoring: true,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: MapPalette.panelDark,
+            border: Border.all(color: MapPalette.markerOutline, width: 2.5),
+            boxShadow: const [
+              BoxShadow(
+                color: MapPalette.markerShadow,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.person_pin_circle,
+            color: MapPalette.selected,
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Shared pins plus the "You" marker. With node clustering on (and
+  /// neither overlaps nor a path trace shown), pins falling into the same
+  /// ~64px grid cell at the current zoom, the grid the node clusters use,
+  /// collapse into one numbered marker. The self position joins its cell,
+  /// so pins placed at or near the user's position are not hidden under the
+  /// "You" marker.
+  List<Marker> _buildPoiAndSelfMarkers(
+    List<_SharedMarker> pois, {
+    required LatLng? selfPosition,
+    required bool clusterPois,
+  }) {
+    if (!clusterPois) {
+      return [
+        ...pois.map(_buildSharedMarker),
+        if (selfPosition != null) _buildSelfMarker(selfPosition),
+      ];
+    }
+    final cellDeg = mapGridCellDegrees(_zoom);
+    final cells = mapGridCluster(pois, (m) => m.position, cellDeg);
+    final selfCellKey = selfPosition == null
+        ? null
+        : mapGridCellKey(selfPosition, cellDeg);
+    final markers = <Marker>[];
+    Marker? selfMarker;
+    cells.forEach((key, members) {
+      if (key == selfCellKey) {
+        selfMarker = _poiClusterMarker(members, selfPosition: selfPosition);
+      } else if (members.length == 1) {
+        markers.add(_buildSharedMarker(members.first));
+      } else {
+        markers.add(_poiClusterMarker(members));
+      }
+    });
+    // Self is drawn last so it stays on top of nearby node markers.
+    if (selfPosition != null) {
+      markers.add(selfMarker ?? _buildSelfMarker(selfPosition));
+    }
+    return markers;
+  }
+
+  Marker _poiClusterMarker(
+    List<_SharedMarker> members, {
+    LatLng? selfPosition,
+  }) {
+    final count = members.length;
+    LatLng point;
+    if (selfPosition != null) {
+      point = selfPosition;
+    } else {
+      double lat = 0, lon = 0;
+      for (final m in members) {
+        lat += m.position.latitude;
+        lon += m.position.longitude;
+      }
+      point = LatLng(lat / count, lon / count);
+    }
+    final l10n = context.l10n;
+    return Marker(
+      key: ValueKey('poi-cluster:${members.first.id}:$count'),
+      point: point,
+      width: 48,
+      height: 48,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _showPoiClusterSheet(members, selfPosition: selfPosition),
+        child: Center(
+          child: PoiClusterMarker(
+            count: count,
+            includesSelf: selfPosition != null,
+            semanticLabel: selfPosition != null
+                ? l10n.map_youWithMarkers(count)
+                : l10n.map_poiClusterSemantics(count),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPoiClusterSheet(
+    List<_SharedMarker> members, {
+    LatLng? selfPosition,
+  }) {
+    HapticFeedback.selectionClick();
+    showMeshSheet<void>(
+      context,
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        final scheme = Theme.of(sheetContext).colorScheme;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                BottomSheetHeader(
+                  title: selfPosition != null
+                      ? l10n.map_youWithMarkers(members.length)
+                      : l10n.map_poiClusterTitle(members.length),
+                ),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      if (selfPosition != null)
+                        ListTile(
+                          leading: const Icon(
+                            Icons.person_pin_circle,
+                            color: MapPalette.selected,
+                          ),
+                          title: Text(l10n.pathTrace_you),
+                          subtitle: Text(
+                            '${selfPosition.latitude.toStringAsFixed(5)}, '
+                            '${selfPosition.longitude.toStringAsFixed(5)}',
+                            style: MeshTheme.mono(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _mapController.move(selfPosition, max(_zoom, 16));
+                          },
+                        ),
+                      for (final marker in members)
+                        ListTile(
+                          leading: Icon(
+                            Icons.flag,
+                            color: _sharedMarkerColor(marker),
+                          ),
+                          title: Text(
+                            marker.label.isEmpty
+                                ? l10n.map_sharedPin
+                                : marker.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${marker.fromName} · '
+                            '${_formatLastSeen(marker.timestamp)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: MeshTheme.mono(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _showMarkerInfo(marker);
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Marker _buildSharedMarker(_SharedMarker marker) {
     final style = marker.channelName == null
         ? null
         : _channelMarkerStyles.styleFor(marker.channelName);
-    final markerColor = style?.color ??
-        (marker.isChannel
-            ? (marker.isPublicChannel ? MapPalette.cluster : MapPalette.router)
-            : MapPalette.shared);
+    final markerColor = _sharedMarkerColor(marker);
     final markerIcon = style?.icon ?? Icons.flag;
     return Marker(
       key: ValueKey('shared:${marker.id}'),
@@ -6273,6 +6459,119 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  /// Removes the pin as the dialog's button did, and offers to put it back:
+  /// an invisible marker cannot be tapped to restore it, so the undo is the
+  /// one chance short of the filter sheet.
+  Future<void> _removeMarkerWithUndo(_SharedMarker marker) async {
+    final previousRemoved = Map<String, DateTime>.from(_removedMarkerIds);
+    final previousHiddenAt = _hiddenMarkerIds[marker.id];
+    final at = DateTime.now();
+    setState(() {
+      _hiddenMarkerIds[marker.id] = at;
+      _removedMarkerIds = {...previousRemoved, marker.id: at};
+    });
+    await _markerService.saveRemovedIds(_removedMarkerIds);
+    if (!mounted) return;
+    _showMapSnackBar(
+      content: Text(context.l10n.map_markerRemoved),
+      actionLabel: context.l10n.common_undo,
+      onAction: () async {
+        if (!mounted) return;
+        setState(() {
+          if (previousHiddenAt == null) {
+            _hiddenMarkerIds.remove(marker.id);
+          } else {
+            _hiddenMarkerIds[marker.id] = previousHiddenAt;
+          }
+          _removedMarkerIds = previousRemoved;
+        });
+        await _markerService.saveRemovedIds(_removedMarkerIds);
+      },
+    );
+  }
+
+  /// Brings back every pin removed on this phone (the filter sheet's entry).
+  Future<void> _restoreRemovedMarkers() async {
+    final count = _removedMarkerIds.length;
+    if (count == 0) return;
+    setState(() {
+      for (final id in _removedMarkerIds.keys) {
+        _hiddenMarkerIds.remove(id);
+      }
+      _removedMarkerIds = <String, DateTime>{};
+    });
+    await _markerService.saveRemovedIds(_removedMarkerIds);
+    if (!mounted) return;
+    _showMapSnackBar(content: Text(context.l10n.map_markersRestored(count)));
+  }
+
+  /// Asks before the node's advertised position changes, then waits for the
+  /// SELF_INFO that confirms it: the firmware stores micro-degrees, so the
+  /// comparison allows that rounding.
+  Future<void> _confirmAndSetMyLocation(
+    MeshCoreConnector connector,
+    LatLng position,
+  ) async {
+    if (!connector.isConnected) return;
+    final l10n = context.l10n;
+    final latText = position.latitude.toStringAsFixed(6);
+    final lonText = position.longitude.toStringAsFixed(6);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.map_setLocationConfirmTitle),
+        content: Text(l10n.map_setLocationConfirmBody(latText, lonText)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.map_setLocationAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || !connector.isConnected) return;
+    bool matches() {
+      final lat = connector.selfLatitude;
+      final lon = connector.selfLongitude;
+      return lat != null &&
+          lon != null &&
+          (lat - position.latitude).abs() < 2e-6 &&
+          (lon - position.longitude).abs() < 2e-6;
+    }
+
+    var ok = false;
+    try {
+      await connector.setNodeLocation(
+        lat: position.latitude,
+        lon: position.longitude,
+      );
+      await connector.refreshDeviceInfo();
+      // SELF_INFO arrives on its own after the query; wait for it.
+      final deadline = DateTime.now().add(const Duration(seconds: 6));
+      while (mounted && connector.isConnected) {
+        if (matches()) {
+          ok = true;
+          break;
+        }
+        if (DateTime.now().isAfter(deadline)) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+    } catch (e) {
+      appLogger.warn('Setting the node location failed: $e', tag: 'Map');
+    }
+    if (!mounted) return;
+    _showMapSnackBar(
+      content: Text(
+        ok ? l10n.map_locationSetSuccess : l10n.map_locationSetFailed,
+      ),
+      backgroundColor: ok ? null : Theme.of(context).colorScheme.error,
+    );
+  }
+
   void _showMarkerInfo(_SharedMarker marker) {
     showDialog(
       context: context,
@@ -6317,6 +6616,22 @@ class _MapScreenState extends State<MapScreen>
             ),
             if (marker.flags.isNotEmpty)
               _buildInfoRow(context.l10n.map_flags, marker.flags),
+            const SizedBox(height: 12),
+            Text(
+              context.l10n.map_markerHideHint,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.map_markerRemoveHint,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
         // One Row instead of the default OverflowBar, which stacks four
@@ -6346,15 +6661,8 @@ class _MapScreenState extends State<MapScreen>
                 label: context.l10n.common_remove,
                 color: Theme.of(context).colorScheme.error,
                 onPressed: () async {
-                  final at = DateTime.now();
-                  setState(() {
-                    _hiddenMarkerIds[marker.id] = at;
-                    _removedMarkerIds[marker.id] = at;
-                  });
-                  await _markerService.saveRemovedIds(_removedMarkerIds);
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext);
-                  }
+                  Navigator.pop(dialogContext);
+                  await _removeMarkerWithUndo(marker);
                 },
               ),
               if (marker.sourceText.isNotEmpty &&
@@ -6495,17 +6803,9 @@ class _MapScreenState extends State<MapScreen>
                 ListTile(
                   leading: const Icon(Icons.my_location),
                   title: Text(context.l10n.map_setAsMyLocation),
-                  onTap: () async {
-                    final successMsg = context.l10n.settings_locationUpdated;
+                  onTap: () {
                     Navigator.pop(sheetContext);
-                    if (!connector.isConnected) return;
-                    await connector.setNodeLocation(
-                      lat: position.latitude,
-                      lon: position.longitude,
-                    );
-                    await connector.refreshDeviceInfo();
-                    if (!mounted) return;
-                    _showMapSnackBar(content: Text(successMsg));
+                    unawaited(_confirmAndSetMyLocation(connector, position));
                   },
                 ),
                 ListTile(
@@ -6934,6 +7234,23 @@ class _MapScreenState extends State<MapScreen>
                           dense: true,
                           onChanged: (value) =>
                               service.setMapShowMarkers(value),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.restore),
+                          title: Text(
+                            sheetContext.l10n.map_restoreRemovedMarkers,
+                          ),
+                          subtitle: Text(
+                            sheetContext.l10n.map_restoreRemovedMarkersSubtitle(
+                              _removedMarkerIds.length,
+                            ),
+                          ),
+                          dense: true,
+                          enabled: _removedMarkerIds.isNotEmpty,
+                          onTap: () async {
+                            await _restoreRemovedMarkers();
+                            setSheetState(() {});
+                          },
                         ),
                         SwitchListTile(
                           title: Text(sheetContext.l10n.map_clusterNodes),
@@ -7715,6 +8032,8 @@ class _MapScreenState extends State<MapScreen>
   void _showMapSnackBar({
     required Widget content,
     Color? backgroundColor,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     _removeMapSnackBarOverlay();
     final overlay = Overlay.maybeOf(context);
@@ -7752,7 +8071,21 @@ class _MapScreenState extends State<MapScreen>
                             ? scheme.onSurface
                             : scheme.onError,
                       ),
-                  child: content,
+                  child: actionLabel == null || onAction == null
+                      ? content
+                      : Row(
+                          children: [
+                            Expanded(child: content),
+                            const SizedBox(width: 12),
+                            TextButton(
+                              onPressed: () {
+                                _removeMapSnackBarOverlay();
+                                onAction();
+                              },
+                              child: Text(actionLabel),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),

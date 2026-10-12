@@ -135,6 +135,14 @@ class RepeaterCommandService {
     );
   }
 
+  /// The text [sendCommand] would put on the wire for its next attempt: the
+  /// clock-sync rewrite plus the `XX|` reply prefix (unless [raw]). Used for
+  /// debug previews so they match what is actually sent.
+  String previewFramedCommand(String command, {bool raw = false}) {
+    if (raw) return command;
+    return '${_peekPrefixToken()}${normalizeRepeaterClockSyncCommand(command)}';
+  }
+
   /// Send [line] verbatim and don't wait for a reply. While `region load` is
   /// active the firmware consumes each line before prefix stripping and
   /// sends nothing back (simple_repeater/MyMesh.cpp handleCommand). The
@@ -192,6 +200,17 @@ class RepeaterCommandService {
   void dispose() {
     _pendingCommands.clear();
     _pendingByPrefix.clear();
+  }
+
+  String _peekPrefixToken() {
+    for (var i = 0; i < 256; i++) {
+      final value = (_prefixCounter + i) & 0xFF;
+      final token = '${value.toRadixString(16).padLeft(2, '0').toUpperCase()}|';
+      if (!_pendingByPrefix.containsKey(token)) {
+        return token;
+      }
+    }
+    return '00|';
   }
 
   String _nextPrefixToken() {

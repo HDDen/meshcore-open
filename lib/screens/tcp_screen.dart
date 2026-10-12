@@ -38,6 +38,8 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   bool _startupAutoconnectAttempted = false;
   bool _isAutoconnecting = false;
   bool _isOpeningOfflineHistory = false;
+  String? _hostError;
+  String? _portError;
 
   @override
   void initState() {
@@ -99,6 +101,9 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     final port = int.tryParse(_portController.text) ?? 0;
     await _settingsService.recordTcpConnection(host, port);
     if (!mounted) return;
+    // Only navigate while this route is on top; otherwise a reconnect would
+    // replace whatever screen the user has pushed above it.
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const ChannelsScreen()),
@@ -148,7 +153,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                 _buildTransportLinks(context),
 
                 // Connection form
-                const SectionHeader('TCP / IP'),
+                SectionHeader(context.l10n.tcpSectionTitle),
                 MeshCard(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -159,9 +164,16 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpHostLabel,
                           hintText: context.l10n.tcpHostHint,
+                          errorText: _hostError,
+                          errorMaxLines: 3,
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.url,
+                        onChanged: (_) {
+                          if (_hostError != null) {
+                            setState(() => _hostError = null);
+                          }
+                        },
                       ),
                       const SizedBox(height: 12),
                       TextField(
@@ -169,9 +181,16 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                         decoration: InputDecoration(
                           labelText: context.l10n.tcpPortLabel,
                           hintText: context.l10n.tcpPortHint,
+                          errorText: _portError,
+                          errorMaxLines: 3,
                         ),
                         enabled: !isConnecting,
                         keyboardType: TextInputType.number,
+                        onChanged: (_) {
+                          if (_portError != null) {
+                            setState(() => _portError = null);
+                          }
+                        },
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile.adaptive(
@@ -236,7 +255,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                 // Last used endpoint
                 if (connector.activeTcpEndpoint != null &&
                     connector.isTcpTransportConnected) ...[
-                  const SectionHeader('CONNECTED TO'),
+                  SectionHeader(context.l10n.tcpConnectedToHeader),
                   MeshCard(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -674,12 +693,19 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
 
     final host = _hostController.text.trim();
     final parsedPort = int.tryParse(_portController.text.trim());
-    if (host.isEmpty) {
-      if (showErrors) _showError(context.l10n.tcpErrorHostRequired);
-      return;
-    }
-    if (parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
-      if (showErrors) _showError(context.l10n.tcpErrorPortInvalid);
+    // The fields show what is wrong with them; a snackbar reads as a
+    // connection failure.
+    final hostError = host.isEmpty ? context.l10n.tcpErrorHostRequired : null;
+    final portError = parsedPort == null || parsedPort < 1 || parsedPort > 65535
+        ? context.l10n.tcpErrorPortInvalid
+        : null;
+    if (hostError != null || portError != null || parsedPort == null) {
+      if (showErrors) {
+        setState(() {
+          _hostError = hostError;
+          _portError = portError;
+        });
+      }
       return;
     }
 

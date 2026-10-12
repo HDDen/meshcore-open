@@ -3121,7 +3121,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void setContactUnreadCount(String contactKeyHex, int count) {
+    final previousCount = _contactUnreadCount[contactKeyHex] ?? 0;
     _contactUnreadCount[contactKeyHex] = count;
+    if (_shouldTrackUnreadForContactKey(contactKeyHex)) {
+      final total = _cachedContactsUnreadTotal + (count - previousCount);
+      _cachedContactsUnreadTotal = total < 0 ? 0 : total;
+    }
     _unreadStore.saveContactUnreadCount(
       Map<String, int>.from(_contactUnreadCount),
     );
@@ -3131,7 +3136,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void setChannelUnreadCount(int channelIndex, int count) {
     final channel = _findChannelByIndex(channelIndex);
     if (channel != null) {
+      final previousCount = channel.unreadCount;
       channel.unreadCount = count;
+      final total = _cachedChannelsUnreadTotal + (count - previousCount);
+      _cachedChannelsUnreadTotal = total < 0 ? 0 : total;
       unawaited(
         _channelStore.saveChannels(
           _channels.isNotEmpty ? _channels : _cachedChannels,

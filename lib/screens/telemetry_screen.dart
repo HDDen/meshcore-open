@@ -137,6 +137,16 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           );
           if (timeout != null) _armTelemetryTimeout(timeout);
         }
+        // The radio refused the request before giving it a tag: fail now
+        // instead of waiting the fallback out.
+        if (cmd == respCodeErr &&
+            _isLoading &&
+            _sentTags.isWaiting &&
+            !_sentTags.hasDeadline) {
+          _statusTimeout?.cancel();
+          _sentTags.clear();
+          _handleTelemetryTimeout(_activeTelemetryRequestIsAutoRefresh);
+        }
 
         // Check if it's a binary response
         if (!widget.isSelf && cmd == pushCodeBinaryResponse) {
@@ -452,7 +462,26 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (!_isLoaded &&
+              if (_isLoading &&
+                  !_hasData &&
+                  (_parsedTelemetry == null || _parsedTelemetry!.isEmpty))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.telemetry_loading,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (!_isLoaded &&
                   !_hasData &&
                   (_parsedTelemetry == null || _parsedTelemetry!.isEmpty))
                 Center(
@@ -512,7 +541,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     bool isImperialUnits,
   ) {
     if (entry.key == 'gps') {
-      return _buildGpsInfo(entry.value);
+      return _buildGpsInfo(entry.value, isImperialUnits);
     }
 
     final display = _formatTelemetryField(
@@ -580,7 +609,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       case 'altitude':
         return _TelemetryFieldDisplay(
           l10n.telemetry_altitudeLabel,
-          l10n.telemetry_altitudeValue(text),
+          _lengthText(value, isImperialUnits, altitude: true),
         );
       case 'voltage':
         return _TelemetryFieldDisplay(
@@ -619,7 +648,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       case 'distance':
         return _TelemetryFieldDisplay(
           l10n.telemetry_distanceLabel,
-          l10n.telemetry_distanceValue(text),
+          _lengthText(value, isImperialUnits, altitude: false),
         );
       case 'energy':
         return _TelemetryFieldDisplay(
@@ -870,7 +899,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     return value;
   }
 
-  Widget _buildGpsInfo(dynamic value) {
+  Widget _buildGpsInfo(dynamic value, bool isImperialUnits) {
     final latitude = _readGpsValue(value, 'latitude');
     final longitude = _readGpsValue(value, 'longitude');
     final altitude = _readGpsValue(value, 'altitude');
@@ -879,7 +908,13 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         ? [
             latitude!.toStringAsFixed(5),
             longitude!.toStringAsFixed(5),
-            if (altitude != null) '${altitude.toStringAsFixed(1)} m',
+            if (altitude != null)
+              _lengthText(
+                altitude,
+                isImperialUnits,
+                altitude: true,
+                metricText: altitude.toStringAsFixed(1),
+              ),
           ].join(', ')
         : value.toString();
 
@@ -918,6 +953,33 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
         longitude <= 180.0;
   }
 
+  /// Formats a length reported in metres, converting to feet in imperial
+  /// mode.
+  String _lengthText(
+    dynamic meters,
+    bool isImperialUnits, {
+    required bool altitude,
+    String? metricText,
+  }) {
+    final l10n = context.l10n;
+    if (meters is! num) {
+      final text = _telemetryValueText(meters);
+      return altitude
+          ? l10n.telemetry_altitudeValue(text)
+          : l10n.telemetry_distanceValue(text);
+    }
+    if (isImperialUnits) {
+      final feet = (meters * 3.28084).toStringAsFixed(1);
+      return altitude
+          ? l10n.telemetry_altitudeValueFeet(feet)
+          : l10n.telemetry_distanceValueFeet(feet);
+    }
+    final text = metricText ?? _telemetryValueText(meters);
+    return altitude
+        ? l10n.telemetry_altitudeValue(text)
+        : l10n.telemetry_distanceValue(text);
+  }
+
   String _telemetryValueText(dynamic value) {
     if (value == null) return context.l10n.common_notAvailable;
     if (value is double) {
@@ -940,7 +1002,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     final x = _telemetryValueText(value['x']);
     final y = _telemetryValueText(value['y']);
     final z = _telemetryValueText(value['z']);
-    return 'X: $x, Y: $y, Z: $z';
+    return context.l10n.telemetry_axisValue(x, y, z);
   }
 
   String _telemetryColorText(dynamic value) {
@@ -948,7 +1010,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     final red = _telemetryValueText(value['red']);
     final green = _telemetryValueText(value['green']);
     final blue = _telemetryValueText(value['blue']);
-    return 'R: $red, G: $green, B: $blue';
+    return context.l10n.telemetry_colourValue(red, green, blue);
   }
 
   String _telemetryMapText(dynamic value) {
