@@ -35,6 +35,7 @@ import '../services/image_chunk_transport.dart'
         respCodeChannelDataRecv,
         senderPrefixFromKey;
 import '../services/image_codec_service.dart';
+import '../services/received_image_store.dart';
 import '../services/message_retry_service.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
@@ -49,6 +50,7 @@ import '../storage/channel_message_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
+import '../storage/channel_storage_migration.dart';
 import '../storage/channel_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
@@ -310,6 +312,7 @@ class MeshCoreConnector extends ChangeNotifier {
   // frames (chunks of one image arrive in separate GRP_DATA frames, and via the
   // firmware offline queue they may be minutes apart).
   ImageChunkTransport? _imageTransport;
+  ReceivedImageStore? _receivedImageStore;
   void Function(ImageChunkOutcome outcome)? _onImageChunk;
   void Function(int senderPrefix)? _onImageSenderPrefix;
   // Intentionally global (not per-contact): tracks overall network activity.
@@ -376,6 +379,12 @@ class MeshCoreConnector extends ChangeNotifier {
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
   final List<Uint8List> _deferredQueuedContactMessageFrames = [];
+
+  /// Channel frames that arrived before this session's slot map was
+  /// confirmed. The firmware only sends them in reply to SYNC_NEXT_MESSAGE,
+  /// which waits for the map, so this is a guard: their slot index cannot be
+  /// resolved yet, and they are replayed once it can.
+  final List<Uint8List> _channelFramesAwaitingMap = [];
   bool _pendingQueueSync = false;
   // CMD_APP_START stops the firmware's contact iterator (END_OF_CONTACTS is
   // then never sent), so APP_START requested during a contact sync is held
@@ -419,8 +428,25 @@ class MeshCoreConnector extends ChangeNotifier {
   // Slots whose GET_CHANNEL timed out in the last sync with no cached copy:
   // their contents are unknown, so UI must not treat them as free.
   final Set<int> _unconfirmedChannelSlots = {};
+  // A slot timed out in this sync pass (restored from cache or unconfirmed).
+  bool _channelSyncIncomplete = false;
+  int _channelMapSyncRetries = 0;
+  static const int _maxChannelMapSyncRetries = 2;
+  // Completes when the running channel sync has applied its slot map.
+  Completer<void>? _channelSyncCompleter;
   static const int _maxChannelSyncRetries = 3;
-  static const int _channelSyncTimeoutMs = 2000; // 2 second timeout per channel
+  @visibleForTesting
+  int channelSyncTimeoutMs = 2000; // timeout per channel
+  // Slot -> Channel.storageId for the connected radio. Persisted data is
+  // keyed by channel ID while in-memory state stays keyed by slot; this map
+  // is the only bridge between them. Seeded from the saved map at SELF_INFO
+  // and replaced when a channel sync completes.
+  final Map<int, String> _slotChannelIds = {};
+  // Whether this session's channel sync has confirmed _slotChannelIds.
+  // Queued channel frames carry only a slot index, so they wait for it.
+  bool _channelMapConfirmed = false;
+  int _channelSessionGeneration = 0;
+  Future<void> _channelStorageReady = Future<void>.value();
   static const Duration _batteryPollInterval = Duration(seconds: 120);
 
   // Services
@@ -468,7 +494,7 @@ class MeshCoreConnector extends ChangeNotifier {
   final Map<String, _RepeaterAckContext> _pendingRepeaterAcks = {};
   String? _activeContactKey;
   int? _activeChannelIndex;
-  List<int> _channelOrder = [];
+  List<String> _channelOrder = [];
 
   int _storageUsedKb = -1;
   int _storageTotalKb = -1;
@@ -592,6 +618,13 @@ class MeshCoreConnector extends ChangeNotifier {
   bool get hasLoadedChannels => _hasLoadedChannels;
   Set<int> get unconfirmedChannelSlots =>
       Set.unmodifiable(_unconfirmedChannelSlots);
+
+  /// [Channel.storageId] of the channel in radio slot [slot], as of the last
+  /// channel sync, or null for an empty or unknown slot.
+  String? channelIdForSlot(int slot) => _slotChannelIds[slot];
+
+  @visibleForTesting
+  bool get channelMapConfirmed => _channelMapConfirmed;
   Stream<Uint8List> get receivedFrames => _receivedFramesController.stream;
   Uint8List? get selfPublicKey => _selfPublicKey;
   String get selfPublicKeyHex => pubKeyToHex(_selfPublicKey ?? Uint8List(0));
@@ -873,18 +906,58 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   List<ChannelMessage> getChannelMessages(Channel channel) {
-    return _channelMessages[channel.index] ?? [];
+    return _channelMessages[_canonicalSlot(channel.index)] ?? [];
   }
 
   Future<void> deleteChannelMessage(ChannelMessage message) async {
     final channelIndex = message.channelIndex;
     if (channelIndex == null) return;
-    final messages = _channelMessages[channelIndex];
+    final slot = _canonicalSlot(channelIndex);
+    final messages = _channelMessages[slot];
     if (messages == null) return;
     final removed = messages.remove(message);
     if (!removed) return;
-    await _channelMessageStore.saveChannelMessages(channelIndex, messages);
+    await _saveChannelMessages(slot, messages);
     notifyListeners();
+  }
+
+  /// Storage ID for [slot], or null (logged) when the slot has none, in which
+  /// case the caller skips persistence.
+  String? _channelIdForSlot(int slot) {
+    final id = _slotChannelIds[slot];
+    if (id == null) {
+      debugPrint(
+        '[ChannelStorage] Slot $slot has no channel ID; not persisted',
+      );
+    }
+    return id;
+  }
+
+  /// Lowest slot holding the same channel as [slot] in [slotIds], matching
+  /// the firmware, which files a PSK held twice under its first slot. Both
+  /// slots share that slot's in-memory history.
+  static int _canonicalSlotIn(Map<int, String> slotIds, int slot) {
+    final id = slotIds[slot];
+    if (id == null) return slot;
+    return _lowestSlotFor(slotIds, id) ?? slot;
+  }
+
+  static int? _lowestSlotFor(Map<int, String> slotIds, String channelId) {
+    int? lowest;
+    for (final entry in slotIds.entries) {
+      if (entry.value == channelId && (lowest == null || entry.key < lowest)) {
+        lowest = entry.key;
+      }
+    }
+    return lowest;
+  }
+
+  int _canonicalSlot(int slot) => _canonicalSlotIn(_slotChannelIds, slot);
+
+  Future<void> _saveChannelMessages(int slot, List<ChannelMessage> messages) {
+    final id = _channelIdForSlot(slot);
+    if (id == null) return Future<void>.value();
+    return _channelMessageStore.saveChannelMessages(id, messages);
   }
 
   int getUnreadCountForContact(Contact contact) {
@@ -1299,13 +1372,34 @@ class MeshCoreConnector extends ChangeNotifier {
     );
   }
 
+  /// Slots holding the same channel as [slot]. Settings are stored per
+  /// channel ID, so the in-memory copy of every such slot must change too.
+  List<int> _slotsSharingChannel(int slot) {
+    final id = _slotChannelIds[slot];
+    if (id == null) return [slot];
+    return [
+      for (final entry in _slotChannelIds.entries)
+        if (entry.value == id) entry.key,
+    ];
+  }
+
   Future<void> setChannelSmazEnabled(int channelIndex, bool enabled) async {
-    _channelSmazEnabled[channelIndex] = enabled;
-    if (enabled) {
-      _channelCyr2LatEnabled[channelIndex] = false;
-      await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
+    final slots = _slotsSharingChannel(channelIndex);
+    for (final slot in slots) {
+      _channelSmazEnabled[slot] = enabled;
     }
-    await _channelSettingsStore.saveSmazEnabled(channelIndex, enabled);
+    final channelId = _channelIdForSlot(channelIndex);
+    if (enabled) {
+      for (final slot in slots) {
+        _channelCyr2LatEnabled[slot] = false;
+      }
+      if (channelId != null) {
+        await _channelSettingsStore.saveCyr2LatEnabled(channelId, false);
+      }
+    }
+    if (channelId != null) {
+      await _channelSettingsStore.saveSmazEnabled(channelId, enabled);
+    }
     notifyListeners();
   }
 
@@ -1319,8 +1413,13 @@ class MeshCoreConnector extends ChangeNotifier {
     int channelIndex,
     bool enabled,
   ) async {
-    _channelUrlImagesEnabled[channelIndex] = enabled;
-    await _channelSettingsStore.saveUrlImagesEnabled(channelIndex, enabled);
+    for (final slot in _slotsSharingChannel(channelIndex)) {
+      _channelUrlImagesEnabled[slot] = enabled;
+    }
+    final channelId = _channelIdForSlot(channelIndex);
+    if (channelId != null) {
+      await _channelSettingsStore.saveUrlImagesEnabled(channelId, enabled);
+    }
     notifyListeners();
   }
 
@@ -1334,12 +1433,22 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   Future<void> setChannelCyr2LatEnabled(int channelIndex, bool enabled) async {
-    _channelCyr2LatEnabled[channelIndex] = enabled;
-    if (enabled) {
-      _channelSmazEnabled[channelIndex] = false;
-      await _channelSettingsStore.saveSmazEnabled(channelIndex, false);
+    final slots = _slotsSharingChannel(channelIndex);
+    for (final slot in slots) {
+      _channelCyr2LatEnabled[slot] = enabled;
     }
-    await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, enabled);
+    final channelId = _channelIdForSlot(channelIndex);
+    if (enabled) {
+      for (final slot in slots) {
+        _channelSmazEnabled[slot] = false;
+      }
+      if (channelId != null) {
+        await _channelSettingsStore.saveSmazEnabled(channelId, false);
+      }
+    }
+    if (channelId != null) {
+      await _channelSettingsStore.saveCyr2LatEnabled(channelId, enabled);
+    }
     notifyListeners();
   }
 
@@ -1355,9 +1464,14 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> setChannelRegion(int channelIndex, String region) async {
     // Update in-memory state and notify synchronously so the UI reflects the
     // change immediately; persistence happens in the background.
-    _channelRegions[channelIndex] = region;
+    for (final slot in _slotsSharingChannel(channelIndex)) {
+      _channelRegions[slot] = region;
+    }
     notifyListeners();
-    await _channelRegionStore.saveRegion(channelIndex, region);
+    final channelId = _channelIdForSlot(channelIndex);
+    if (channelId != null) {
+      await _channelRegionStore.saveRegion(channelId, region);
+    }
   }
 
   Future<void> _loadChannelOrder() async {
@@ -1366,19 +1480,34 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// History is stored by channel ID, so it may carry the slot the channel
+  /// sat in when it was saved; rebind it to the slot it is shown in now.
+  List<ChannelMessage> _bindToSlot(List<ChannelMessage> messages, int slot) => [
+    for (final message in messages)
+      message.channelIndex == slot
+          ? message
+          : message.copyWith(channelIndex: slot),
+  ];
+
   /// Load persisted channel messages for a specific channel
   Future<void> _loadChannelMessages(int channelIndex) async {
-    final allMessages = await _channelMessageStore.loadChannelMessages(
-      channelIndex,
-    );
+    final channelId = _slotChannelIds[channelIndex];
+    final allMessages = channelId == null
+        ? <ChannelMessage>[]
+        : _bindToSlot(
+            await _channelMessageStore.loadChannelMessages(channelId),
+            channelIndex,
+          );
     // Keep only the most recent N messages in memory to bound memory usage
     final windowedMessages = allMessages.length > _messageWindowSize
         ? allMessages.sublist(allMessages.length - _messageWindowSize)
         : allMessages;
-    _channelMessageStore.setArchived(
-      channelIndex,
-      allMessages.sublist(0, allMessages.length - windowedMessages.length),
-    );
+    if (channelId != null) {
+      _channelMessageStore.setArchived(
+        channelId,
+        allMessages.sublist(0, allMessages.length - windowedMessages.length),
+      );
+    }
     // Replace even when nothing is stored so another radio's messages never
     // linger under this index.
     final hadMessages = _channelMessages[channelIndex]?.isNotEmpty ?? false;
@@ -1391,14 +1520,17 @@ class MeshCoreConnector extends ChangeNotifier {
     int channelIndex, {
     int count = 50,
   }) async {
+    final slot = _canonicalSlot(channelIndex);
+    final channelId = _channelIdForSlot(slot);
+    if (channelId == null) return [];
     final allMessages = await _channelMessageStore.loadChannelMessages(
-      channelIndex,
+      channelId,
     );
-    final currentMessages = _channelMessages[channelIndex] ?? [];
+    final currentMessages = _channelMessages[slot] ?? [];
 
     // Storage holds the archived entries followed by the in-memory window.
     final currentOffset =
-        (_channelMessageStore.archivedCount(channelIndex) ??
+        (_channelMessageStore.archivedCount(channelId) ??
                 allMessages.length - currentMessages.length)
             .clamp(0, allMessages.length);
     if (currentOffset == 0) {
@@ -1408,22 +1540,34 @@ class MeshCoreConnector extends ChangeNotifier {
     final fetchCount = count.clamp(0, currentOffset);
     final startIndex = currentOffset - fetchCount;
 
-    final olderMessages = allMessages.sublist(startIndex, currentOffset);
-    _channelMessageStore.unarchiveNewest(channelIndex, olderMessages.length);
+    final olderMessages = _bindToSlot(
+      allMessages.sublist(startIndex, currentOffset),
+      slot,
+    );
+    _channelMessageStore.unarchiveNewest(channelId, olderMessages.length);
 
     // Prepend to current conversation
-    _channelMessages[channelIndex] = [...olderMessages, ...currentMessages];
+    _channelMessages[slot] = [...olderMessages, ...currentMessages];
     notifyListeners();
 
     return olderMessages;
   }
 
-  /// Load all persisted channel messages on startup
-  Future<void> loadAllChannelMessages({int? maxChannels}) async {
-    final channelCount = maxChannels ?? _maxChannels;
-    // Load messages for all known channels (0-7 by default)
-    for (int i = 0; i < channelCount; i++) {
-      await _loadChannelMessages(i);
+  /// Loads the persisted messages of every channel in the slot map. Slots
+  /// that hold no channel, or alias a lower slot with the same PSK, are
+  /// emptied.
+  Future<void> loadAllChannelMessages() async {
+    var removed = false;
+    for (final slot in _channelMessages.keys.toList()) {
+      if (!_slotChannelIds.containsKey(slot) || _canonicalSlot(slot) != slot) {
+        _channelMessages.remove(slot);
+        _processedChannelReactions.remove(slot);
+        removed = true;
+      }
+    }
+    if (removed) notifyListeners();
+    for (final slot in _slotChannelIds.keys.toList()..sort()) {
+      if (_canonicalSlot(slot) == slot) await _loadChannelMessages(slot);
     }
   }
 
@@ -1438,6 +1582,7 @@ class MeshCoreConnector extends ChangeNotifier {
     TimeoutPredictionService? timeoutPredictionService,
     ImageCodecService? imageCodecService,
     ImageChunkTransport? imageTransport,
+    ReceivedImageStore? receivedImageStore,
     void Function(ImageChunkOutcome outcome)? onImageChunk,
     void Function(int senderPrefix)? onImageSenderPrefix,
   }) {
@@ -1447,6 +1592,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _translationService = translationService;
     _imageCodecService = imageCodecService;
     _imageTransport = imageTransport;
+    _receivedImageStore = receivedImageStore;
     _onImageChunk = onImageChunk;
     _onImageSenderPrefix = onImageSenderPrefix;
     _bleDebugLogService = bleDebugLogService;
@@ -1564,21 +1710,30 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadChannelSettings({int? maxChannels}) async {
+  /// Reloads the persisted settings of every channel in the slot map.
+  Future<void> loadChannelSettings() async {
     _channelSmazEnabled.clear();
     _channelCyr2LatEnabled.clear();
     _channelUrlImagesEnabled.clear();
+    _channelCyr2LatProfileId.clear();
     _channelRegions.clear();
     _defaultRegion = _channelRegionStore.loadDefaultRegion();
-    final channelCount = maxChannels ?? _maxChannels;
-    for (int i = 0; i < channelCount; i++) {
-      _channelSmazEnabled[i] = await _channelSettingsStore.loadSmazEnabled(i);
-      _channelCyr2LatEnabled[i] = await _channelSettingsStore
-          .loadCyr2LatEnabled(i);
-      _channelUrlImagesEnabled[i] = await _channelSettingsStore
-          .loadUrlImagesEnabled(i);
-      _channelRegions[i] = await _channelRegionStore.loadRegion(i);
+    for (final slot in _slotChannelIds.keys.toList()) {
+      await _loadChannelSlotSettings(slot);
     }
+  }
+
+  Future<void> _loadChannelSlotSettings(int slot) async {
+    final channelId = _slotChannelIds[slot];
+    if (channelId == null) return;
+    _channelSmazEnabled[slot] = await _channelSettingsStore.loadSmazEnabled(
+      channelId,
+    );
+    _channelCyr2LatEnabled[slot] = await _channelSettingsStore
+        .loadCyr2LatEnabled(channelId);
+    _channelUrlImagesEnabled[slot] = await _channelSettingsStore
+        .loadUrlImagesEnabled(channelId);
+    _channelRegions[slot] = await _channelRegionStore.loadRegion(channelId);
   }
 
   /// After an incoming DM or channel message, wait before TX so we do not
@@ -1869,7 +2024,8 @@ class MeshCoreConnector extends ChangeNotifier {
     String messageId,
     ChannelMessage Function(ChannelMessage current) update,
   ) {
-    final messages = _channelMessages[channelIndex];
+    final slot = _canonicalSlot(channelIndex);
+    final messages = _channelMessages[slot];
     if (messages == null) {
       return;
     }
@@ -1878,7 +2034,7 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     messages[index] = update(messages[index]);
-    _channelMessageStore.saveChannelMessages(channelIndex, messages);
+    _saveChannelMessages(slot, messages);
     notifyListeners();
   }
 
@@ -3281,6 +3437,7 @@ class MeshCoreConnector extends ChangeNotifier {
     _isProcessingDeferredQueuedContactMessages = false;
     _queuedMessageSyncInFlight = false;
     _deferredQueuedContactMessageFrames.clear();
+    _channelFramesAwaitingMap.clear();
     _pendingQueueSync = false;
     _resetSyncFlowState();
     _queueSyncTimeout?.cancel();
@@ -3295,6 +3452,13 @@ class MeshCoreConnector extends ChangeNotifier {
     _totalChannelsToRequest = 0;
     _previousChannelsCache.clear();
     _unconfirmedChannelSlots.clear();
+    _channelSyncIncomplete = false;
+    _channelMapSyncRetries = 0;
+    _channelMapConfirmed = false;
+    _channelSessionGeneration++;
+    final channelSync = _channelSyncCompleter;
+    _channelSyncCompleter = null;
+    if (channelSync != null && !channelSync.isCompleted) channelSync.complete();
   }
 
   bool get _shouldAutoReconnect =>
@@ -4540,30 +4704,29 @@ class MeshCoreConnector extends ChangeNotifier {
     final reactionInfo = ReactionHelper.parseReaction(text);
     if (reactionInfo != null) {
       reactionInfo.senderName = selfName;
+      final slot = _canonicalSlot(channel.index);
       // Check if we've already processed this reaction
-      _processedChannelReactions.putIfAbsent(channel.index, () => {});
+      _processedChannelReactions.putIfAbsent(slot, () => {});
       final reactionIdentifier = reactionInfo.identifier();
 
       // Maybe we should allow resending. Recipients can drop duplicates.
-      if (_processedChannelReactions[channel.index]!.contains(
-        reactionIdentifier,
-      )) {
+      if (_processedChannelReactions[slot]!.contains(reactionIdentifier)) {
         // Already processed, don't process again
         return;
       }
 
       // Get the in-memory messages list (same as _addChannelMessage uses)
-      _channelMessages.putIfAbsent(channel.index, () => []);
-      final messages = _channelMessages[channel.index]!;
+      _channelMessages.putIfAbsent(slot, () => []);
+      final messages = _channelMessages[slot]!;
 
       // Process reaction locally to update the UI immediately
       appLogger.info('Adding sent channel reaction, id: $reactionIdentifier');
       final reactionApplied = _processReaction(messages, reactionInfo);
       if (reactionApplied) {
-        await _channelMessageStore.saveChannelMessages(channel.index, messages);
+        await _saveChannelMessages(slot, messages);
 
         // Mark this reaction as processed
-        _processedChannelReactions[channel.index]!.add(reactionIdentifier);
+        _processedChannelReactions[slot]!.add(reactionIdentifier);
 
         notifyListeners();
 
@@ -5101,6 +5264,13 @@ class MeshCoreConnector extends ChangeNotifier {
     await sendFrame(buildSetDeviceTimeFrame(now));
   }
 
+  bool get _channelSyncBlocksQueue =>
+      !_channelMapConfirmed ||
+      _pendingInitialChannelSync ||
+      _isSyncingChannels ||
+      _channelSyncInFlight ||
+      _channelSyncCompleter != null;
+
   Future<void> syncQueuedMessages({bool force = false}) async {
     if (!isConnected) return;
     if (!force && _isSyncingQueuedMessages) return;
@@ -5112,7 +5282,9 @@ class MeshCoreConnector extends ChangeNotifier {
       _pendingQueueSync = true;
       return;
     }
-    if (_isSyncingChannels || _channelSyncInFlight) {
+    // Queued channel frames carry only a slot index, so they wait until this
+    // session's slot map is confirmed and no channel sync can change it.
+    if (_channelSyncBlocksQueue) {
       _pendingQueueSync = true;
       return;
     }
@@ -5129,6 +5301,17 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
     if (_queuedMessageSyncInFlight) return;
+    if (_channelSyncBlocksQueue) {
+      // A channel sync started mid-queue: hold the next frame until its slot
+      // map is in place. _finishChannelSync resumes the queue.
+      debugPrint('[QueueSync] Paused for channel sync');
+      _queueSyncTimeout?.cancel();
+      _isSyncingQueuedMessages = false;
+      _queueSyncRetries = 0;
+      _pendingQueueSync = true;
+      notifyListeners();
+      return;
+    }
     _queuedMessageSyncInFlight = true;
 
     // Cancel any existing timeout
@@ -5247,11 +5430,20 @@ class MeshCoreConnector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Syncs every channel slot from the radio. Completes once the sync has
+  /// applied its slot map, so callers can persist under the new channel IDs.
   Future<void> getChannels({int? maxChannels, bool force = false}) async {
     if (!isConnected) return;
-    if (_isSyncingChannels) {
-      debugPrint('[ChannelSync] Already syncing channels, ignoring request');
-      return;
+    while (_channelSyncCompleter != null) {
+      final running = _channelSyncCompleter!.future;
+      if (!force) {
+        debugPrint('[ChannelSync] Already syncing channels, ignoring request');
+        return running;
+      }
+      // A forced refresh follows a SET_CHANNEL the running sync may have
+      // read past, so run a fresh sync once it ends.
+      await running;
+      if (!isConnected) return;
     }
 
     // Skip fetching if already loaded and not forced
@@ -5262,12 +5454,16 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
+    final completer = Completer<void>();
+    _channelSyncCompleter = completer;
+    _channelMapSyncRetries = 0;
     _isLoadingChannels = true;
     _isSyncingChannels = true;
     _hasLoadedChannels = false;
     _previousChannelsCache = List<Channel>.from(_channels);
     _channels.clear();
     _unconfirmedChannelSlots.clear();
+    _channelSyncIncomplete = false;
     _nextChannelIndexToRequest = 0;
     _totalChannelsToRequest = maxChannels ?? _maxChannels;
     _channelSyncRetries = 0;
@@ -5279,6 +5475,25 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Start sequential sync
     await _requestNextChannel();
+    return completer.future;
+  }
+
+  /// Runs another full pass after slots timed out, keeping what this pass
+  /// learned as the fallback for slots that time out again.
+  void _restartChannelSyncPass() {
+    final known = <int, Channel>{
+      for (final channel in _previousChannelsCache) channel.index: channel,
+      for (final channel in _channels) channel.index: channel,
+    };
+    _previousChannelsCache = known.values.toList();
+    _channels.clear();
+    _unconfirmedChannelSlots.clear();
+    _channelSyncIncomplete = false;
+    _nextChannelIndexToRequest = 0;
+    _channelSyncRetries = 0;
+    _channelSyncInFlight = false;
+    notifyListeners();
+    unawaited(_requestNextChannel());
   }
 
   Future<void> _requestNextChannel() async {
@@ -5303,7 +5518,7 @@ class MeshCoreConnector extends ChangeNotifier {
 
     // Set up timeout for this channel request
     _channelSyncTimeout = Timer(
-      Duration(milliseconds: _channelSyncTimeoutMs),
+      Duration(milliseconds: channelSyncTimeoutMs),
       () => _handleChannelSyncTimeout(channelIndex),
     );
 
@@ -5335,6 +5550,7 @@ class MeshCoreConnector extends ChangeNotifier {
       debugPrint(
         '[ChannelSync] Max retries reached for channel $channelIndex, attempting cache restore',
       );
+      _channelSyncIncomplete = true;
 
       // Try to restore this channel from cache
       try {
@@ -5382,6 +5598,19 @@ class MeshCoreConnector extends ChangeNotifier {
       '[ChannelSync] Sync complete: received ${_channels.length}/$_totalChannelsToRequest channels',
     );
 
+    if (_channelSyncIncomplete &&
+        _channelMapSyncRetries < _maxChannelMapSyncRetries &&
+        isConnected) {
+      _channelMapSyncRetries++;
+      debugPrint(
+        '[ChannelSync] Some slots did not answer; retrying the sync '
+        '($_channelMapSyncRetries/$_maxChannelMapSyncRetries)',
+      );
+      _restartChannelSyncPass();
+      return;
+    }
+    final complete = !_channelSyncIncomplete;
+
     _cleanupChannelSync(completed: true);
 
     // Cache channels for offline use
@@ -5392,6 +5621,166 @@ class MeshCoreConnector extends ChangeNotifier {
     // Apply ordering and notify UI
     _applyChannelOrder();
     notifyListeners();
+    unawaited(_applyChannelMap(complete: complete));
+  }
+
+  /// Replaces the slot map with the one this sync read and reloads the
+  /// in-memory state of every slot whose channel changed, then releases the
+  /// queued messages that were waiting for it.
+  Future<void> _applyChannelMap({required bool complete}) async {
+    final generation = _channelSessionGeneration;
+    final next = <int, String>{
+      for (final channel in _channels)
+        if (channel.storageId != null) channel.index: channel.storageId!,
+    };
+    final unconfirmed = Set<int>.of(_unconfirmedChannelSlots);
+    await _channelStorageReady;
+    if (generation != _channelSessionGeneration) return;
+
+    final previous = Map<int, String>.of(_slotChannelIds);
+    if (!complete) {
+      for (final slot in unconfirmed) {
+        final saved = previous[slot];
+        if (saved != null) next[slot] = saved;
+      }
+      appLogger.warn(
+        'Channel sync incomplete; using the saved channel map for slots '
+        '$unconfirmed',
+      );
+    }
+    _slotChannelIds
+      ..clear()
+      ..addAll(next);
+
+    try {
+      var orderChanged = false;
+      final slots = {...previous.keys, ...next.keys}.toList()..sort();
+      for (final slot in slots) {
+        final before = previous[slot];
+        final after = next[slot];
+        if (before == after &&
+            _canonicalSlotIn(previous, slot) == _canonicalSlotIn(next, slot)) {
+          continue;
+        }
+        if (before != after) {
+          appLogger.info(
+            'Channel slot $slot: ${before ?? 'empty'} -> ${after ?? 'empty'}',
+          );
+          orderChanged |= _carryChannelOrder(before, after, next);
+        }
+        _dropChannelSlotState(slot, before);
+        await _loadChannelSlotSettings(slot);
+        if (_canonicalSlot(slot) == slot) await _loadChannelMessages(slot);
+        if (generation != _channelSessionGeneration) return;
+      }
+      if (orderChanged) {
+        _applyChannelOrder();
+        await _channelOrderStore.saveChannelOrder(_channelOrder);
+      }
+      await _channelStore.saveSlotChannelIds(next);
+    } catch (e) {
+      // The map is already applied in memory; a storage failure must not
+      // leave the queue blocked for the rest of the session.
+      appLogger.warn('Applying the channel slot map failed: $e');
+    }
+    if (generation != _channelSessionGeneration) return;
+    _channelMapConfirmed = true;
+    notifyListeners();
+    _finishChannelSync();
+  }
+
+  void _replayChannelFramesAwaitingMap() {
+    if (_channelFramesAwaitingMap.isEmpty) return;
+    final frames = List<Uint8List>.of(_channelFramesAwaitingMap);
+    _channelFramesAwaitingMap.clear();
+    for (final frame in frames) {
+      if (frame[0] != respCodeChannelDataRecv) {
+        _handleIncomingChannelMessage(frame);
+      } else if (_appSettingsService?.settings.imageMessagesEnabled ?? false) {
+        _handleIncomingChannelData(frame);
+      }
+    }
+  }
+
+  /// A channel whose key changed in place keeps its position in the custom
+  /// order: [after] takes [before]'s place when no slot holds [before] any
+  /// more. Returns true when the order changed.
+  bool _carryChannelOrder(
+    String? before,
+    String? after,
+    Map<int, String> next,
+  ) {
+    if (before == null || after == null) return false;
+    if (next.containsValue(before) || _channelOrder.contains(after)) {
+      return false;
+    }
+    final position = _channelOrder.indexOf(before);
+    if (position < 0) return false;
+    _channelOrder[position] = after;
+    return true;
+  }
+
+  /// Releases queued messages after a sync failed without reading the slots,
+  /// keeping the saved slot map.
+  Future<void> _releaseChannelMapWithoutSync() async {
+    final generation = _channelSessionGeneration;
+    await _channelStorageReady;
+    if (generation != _channelSessionGeneration) return;
+    if (!_channelMapConfirmed) {
+      appLogger.warn('Channel sync failed; using the saved channel map');
+      _channelMapConfirmed = true;
+    }
+    _finishChannelSync();
+  }
+
+  void _finishChannelSync() {
+    if (_channelMapConfirmed) _replayChannelFramesAwaitingMap();
+    final completer = _channelSyncCompleter;
+    _channelSyncCompleter = null;
+    if (completer != null && !completer.isCompleted) completer.complete();
+    if (isConnected) _startPostChannelInitialQueuedMessageSync();
+  }
+
+  /// Forgets everything held in memory for [slot], whose channel changed.
+  void _dropChannelSlotState(int slot, String? previousId) {
+    _channelMessages.remove(slot);
+    _processedChannelReactions.remove(slot);
+    _channelSmazEnabled.remove(slot);
+    _channelCyr2LatEnabled.remove(slot);
+    _channelUrlImagesEnabled.remove(slot);
+    _channelCyr2LatProfileId.remove(slot);
+    _channelRegions.remove(slot);
+    if (previousId != null && !_slotChannelIds.containsValue(previousId)) {
+      _channelMessageStore.forgetArchive(previousId);
+    }
+    // The reassembler reports in-progress streams as failed while the store
+    // can still map them to their entries, so drop it first.
+    _imageTransport?.reassembler.clearChannel(slot);
+    _receivedImageStore?.forgetChannelSlot(slot);
+  }
+
+  /// Runs the one-shot storage migration, then preloads this radio's channel
+  /// state from the saved slot map so it shows before the channel sync ends.
+  Future<void> _prepareChannelStorage() async {
+    try {
+      // First: the channel sync is already running and carries unread counts
+      // over from these. The migration never touches the channel cache.
+      await loadCachedChannels();
+      await ChannelStorageMigration.migrate(
+        _channelStore.publicKeyHex,
+        beforeDone: (slotIds) async =>
+            _receivedImageStore?.stampLegacyChannelIds(slotIds),
+      );
+      await _loadChannelOrder();
+      final saved = await _channelStore.loadSlotChannelIds();
+      _slotChannelIds
+        ..clear()
+        ..addAll(saved);
+      await loadChannelSettings();
+      await loadAllChannelMessages();
+    } catch (e) {
+      appLogger.warn('Loading channel storage failed: $e');
+    }
   }
 
   void _cleanupChannelSync({required bool completed}) {
@@ -5414,19 +5803,25 @@ class MeshCoreConnector extends ChangeNotifier {
       _recalculateCachedChannelsUnreadTotal();
     }
 
-    if (isConnected) {
-      _startPostChannelInitialQueuedMessageSync();
-    }
-
     // Keep cache on failure/disconnection for future attempts
     if (!completed) {
+      if (isConnected) {
+        unawaited(_releaseChannelMapWithoutSync());
+      } else {
+        final completer = _channelSyncCompleter;
+        _channelSyncCompleter = null;
+        if (completer != null && !completer.isCompleted) completer.complete();
+      }
       notifyListeners();
     }
   }
 
   void _startPostChannelInitialQueuedMessageSync() {
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
-      _deferQueuedContactMessagesUntilContacts = _pendingInitialContactsSync;
+      // Keep a deferral already in force so its held frames still replay.
+      _deferQueuedContactMessagesUntilContacts =
+          _deferQueuedContactMessagesUntilContacts ||
+          _pendingInitialContactsSync;
       _pendingInitialQueuedMessageSync = false;
       _pendingQueueSync = false;
       unawaited(syncQueuedMessages(force: true));
@@ -5444,15 +5839,35 @@ class MeshCoreConnector extends ChangeNotifier {
   Future<void> deleteChannel(int index) async {
     if (!isConnected) return;
 
+    // The PSK of the channel being deleted, as the channel list shows it,
+    // not the slot map, which can lag for a slot left unconfirmed.
+    final channelId =
+        _findChannelByIndex(index)?.storageId ?? _slotChannelIds[index];
     // Delete by setting empty name and zero PSK
     await sendFrame(buildSetChannelFrame(index, '', Uint8List(16)));
-    // Clear stored messages for this channel
-    await _channelMessageStore.clearChannelMessages(index);
-    // Clear in-memory messages for this channel
+    // Another slot holding the same PSK keeps the shared history.
+    final stillHeld = _channels.any(
+      (channel) => channel.index != index && channel.storageId == channelId,
+    );
+    if (channelId != null && !stillHeld) {
+      await _clearChannelStorage(channelId);
+    }
     _channelMessages.remove(index);
     _processedChannelReactions.remove(index);
     // Refresh channels after deleting
     await getChannels(force: true);
+  }
+
+  /// Removes everything persisted for [channelId]: messages, settings,
+  /// region, images and its place in the channel order.
+  Future<void> _clearChannelStorage(String channelId) async {
+    await _channelMessageStore.clearChannelMessages(channelId);
+    await _channelSettingsStore.clearChannel(channelId);
+    await _channelRegionStore.clearRegion(channelId);
+    await _receivedImageStore?.deleteImagesForChannelId(channelId);
+    if (_channelOrder.remove(channelId)) {
+      await _channelOrderStore.saveChannelOrder(_channelOrder);
+    }
   }
 
   void _handleFrame(List<int> data) {
@@ -5571,6 +5986,13 @@ class MeshCoreConnector extends ChangeNotifier {
         } else {
           unawaited(_handleIncomingMessage(frame));
         }
+        break;
+      case respCodeChannelMsgRecv ||
+              respCodeChannelMsgRecvV3 ||
+              respCodeChannelDataRecv
+          when !_channelMapConfirmed:
+        if (_isSyncingQueuedMessages) _handleQueuedMessageReceived();
+        _channelFramesAwaitingMap.add(frame);
         break;
       case respCodeChannelMsgRecv:
       case respCodeChannelMsgRecvV3:
@@ -5844,13 +6266,10 @@ class MeshCoreConnector extends ChangeNotifier {
     _pathHistoryService?.setDevicePublicKey(selfPublicKeyHex);
 
     // Now that we have self info, we can load all the persisted data for this node
-    _loadChannelOrder();
     loadContactCache();
-    loadChannelSettings();
-    loadCachedChannels();
-
-    // Load persisted channel messages
-    loadAllChannelMessages();
+    // Channel data is migrated and preloaded from the saved slot map before
+    // the channel sync diffs that map against the radio.
+    _channelStorageReady = _prepareChannelStorage();
     loadUnreadState();
     _loadDiscoveredContactCache();
     _persistedStateLoadedKey = selfPublicKeyHex;
@@ -5923,8 +6342,6 @@ class MeshCoreConnector extends ChangeNotifier {
       _maxContacts = nextMaxContacts;
       _maxChannels = nextMaxChannels;
       if (nextMaxChannels > previousMaxChannels) {
-        unawaited(loadChannelSettings(maxChannels: nextMaxChannels));
-        unawaited(loadAllChannelMessages(maxChannels: nextMaxChannels));
         if (isConnected &&
             _selfPublicKey != null &&
             !_pendingInitialChannelSync) {
@@ -6800,7 +7217,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _ensureChannelCyr2LatSettingLoaded(int channelIndex) {
     if (_channelCyr2LatEnabled.containsKey(channelIndex)) return;
-    _channelSettingsStore.loadCyr2LatEnabled(channelIndex).then((enabled) {
+    final channelId = _slotChannelIds[channelIndex];
+    if (channelId == null) return;
+    _channelSettingsStore.loadCyr2LatEnabled(channelId).then((enabled) {
       if (_channelCyr2LatEnabled[channelIndex] == enabled) return;
       _channelCyr2LatEnabled[channelIndex] = enabled;
       notifyListeners();
@@ -6809,7 +7228,9 @@ class MeshCoreConnector extends ChangeNotifier {
 
   void _ensureChannelCyr2LatProfileLoaded(int channelIndex) {
     if (_channelCyr2LatProfileId.containsKey(channelIndex)) return;
-    _channelSettingsStore.loadCyr2LatProfileId(channelIndex).then((profileId) {
+    final channelId = _slotChannelIds[channelIndex];
+    if (channelId == null) return;
+    _channelSettingsStore.loadCyr2LatProfileId(channelId).then((profileId) {
       if (_channelCyr2LatProfileId[channelIndex] == profileId) return;
       _channelCyr2LatProfileId[channelIndex] = profileId;
       notifyListeners();
@@ -6826,8 +7247,13 @@ class MeshCoreConnector extends ChangeNotifier {
     String? profileId,
   ) async {
     if (_channelCyr2LatProfileId[channelIndex] == profileId) return;
-    _channelCyr2LatProfileId[channelIndex] = profileId;
-    await _channelSettingsStore.saveCyr2LatProfileId(channelIndex, profileId);
+    for (final slot in _slotsSharingChannel(channelIndex)) {
+      _channelCyr2LatProfileId[slot] = profileId;
+    }
+    final channelId = _channelIdForSlot(channelIndex);
+    if (channelId != null) {
+      await _channelSettingsStore.saveCyr2LatProfileId(channelId, profileId);
+    }
     notifyListeners();
   }
 
@@ -7044,6 +7470,19 @@ class MeshCoreConnector extends ChangeNotifier {
             return;
           }
 
+          // File the message under the channel this PSK is now in, which
+          // may not be the slot the channel list says.
+          final channelId = channel.storageId;
+          final slot = _channelMapConfirmed && channelId != null
+              ? _slotForChannelId(channelId)
+              : null;
+          if (slot == null) {
+            debugPrint(
+              '[RxLog] No confirmed slot holds channel $channelId; dropped',
+            );
+            return;
+          }
+
           final pktHash = _computePacketHash(
             packet.payloadType,
             packet.payload,
@@ -7060,7 +7499,7 @@ class MeshCoreConnector extends ChangeNotifier {
             pathLength: packet.isFlood ? packet.hopCount : 0,
             pathHashWidth: packet.pathHashWidth,
             pathBytes: packet.pathBytes,
-            channelIndex: channel.index,
+            channelIndex: slot,
             region: _resolveTransportRegion(packet),
             packetHash: pktHash,
           );
@@ -7071,14 +7510,14 @@ class MeshCoreConnector extends ChangeNotifier {
             pathBytes: message.pathBytes,
             pathHashWidth: message.pathHashWidth,
           );
-          final isNew = _addChannelMessage(channel.index, message);
+          final isNew = _addChannelMessage(slot, message);
           _maybeIncrementChannelUnread(message, isNew: isNew);
           notifyListeners();
           if (isNew) {
             // Run translation + notification asynchronously to avoid blocking
             unawaited(() async {
               final translationResult = await translateChannelMessage(
-                channel.index,
+                slot,
                 message,
               );
               _maybeNotifyChannelMessage(
@@ -7152,9 +7591,7 @@ class MeshCoreConnector extends ChangeNotifier {
           status: ChannelMessageStatus.sent,
         );
         _pendingChannelSentQueue.remove(messageId);
-        unawaited(
-          _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
-        );
+        unawaited(_saveChannelMessages(entry.key, channelMessages));
         notifyListeners();
         return true;
       }
@@ -7177,9 +7614,7 @@ class MeshCoreConnector extends ChangeNotifier {
         channelMessages[i] = message.copyWith(
           status: ChannelMessageStatus.failed,
         );
-        unawaited(
-          _channelMessageStore.saveChannelMessages(entry.key, channelMessages),
-        );
+        unawaited(_saveChannelMessages(entry.key, channelMessages));
         notifyListeners();
         return;
       }
@@ -7275,11 +7710,17 @@ class MeshCoreConnector extends ChangeNotifier {
       '[ChannelSync] Received channel ${channel.index}: ${channel.isEmpty ? "empty" : channel.name}',
     );
 
-    // Preserve unread count from cached channel
-    final cachedChannel = _cachedChannels.cast<Channel?>().firstWhere(
-      (c) => c?.index == channel.index,
-      orElse: () => null,
-    );
+    // Preserve unread count from the cached copy of the same channel (same
+    // PSK), wherever it sat; a reused slot starts with no unread.
+    final cachedChannel =
+        _cachedChannels.cast<Channel?>().firstWhere(
+          (c) => c?.index == channel.index && listEquals(c?.psk, channel.psk),
+          orElse: () => null,
+        ) ??
+        _cachedChannels.cast<Channel?>().firstWhere(
+          (c) => listEquals(c?.psk, channel.psk),
+          orElse: () => null,
+        );
     if (cachedChannel != null) {
       channel.unreadCount = cachedChannel.unreadCount;
     }
@@ -7324,8 +7765,10 @@ class MeshCoreConnector extends ChangeNotifier {
         (c) => c.index == channel.index,
       );
       if (existingIndex >= 0) {
-        // Preserve unread count from existing channel
-        channel.unreadCount = _channels[existingIndex].unreadCount;
+        // Preserve unread count from the existing channel if unchanged
+        if (listEquals(_channels[existingIndex].psk, channel.psk)) {
+          channel.unreadCount = _channels[existingIndex].unreadCount;
+        }
         _channels[existingIndex] = channel;
       } else {
         _channels.add(channel);
@@ -7345,14 +7788,14 @@ class MeshCoreConnector extends ChangeNotifier {
       return;
     }
 
-    final orderIndex = <int, int>{};
+    final orderIndex = <String, int>{};
     for (int i = 0; i < _channelOrder.length; i++) {
-      orderIndex[_channelOrder[i]] = i;
+      orderIndex.putIfAbsent(_channelOrder[i], () => i);
     }
 
     _channels.sort((a, b) {
-      final aPos = orderIndex[a.index];
-      final bPos = orderIndex[b.index];
+      final aPos = orderIndex[a.storageId];
+      final bPos = orderIndex[b.storageId];
       if (aPos != null && bPos != null) return aPos.compareTo(bPos);
       if (aPos != null) return -1;
       if (bPos != null) return 1;
@@ -7360,8 +7803,15 @@ class MeshCoreConnector extends ChangeNotifier {
     });
   }
 
+  /// Saves the channel order given as slot indexes; it is stored by channel
+  /// ID so it follows channels that move between slots.
   Future<void> setChannelOrder(List<int> order) async {
-    _channelOrder = List<int>.from(order);
+    final ids = <String>[];
+    for (final slot in order) {
+      final id = _findChannelByIndex(slot)?.storageId;
+      if (id != null && !ids.contains(id)) ids.add(id);
+    }
+    _channelOrder = ids;
     _applyChannelOrder();
     notifyListeners();
     await _channelOrderStore.saveChannelOrder(_channelOrder);
@@ -7655,6 +8105,9 @@ class MeshCoreConnector extends ChangeNotifier {
     }
   }
 
+  int? _slotForChannelId(String channelId) =>
+      _lowestSlotFor(_slotChannelIds, channelId);
+
   int _computeChannelHash(Uint8List psk) {
     final digest = crypto.sha256.convert(psk).bytes;
     return digest[0];
@@ -7785,7 +8238,8 @@ class MeshCoreConnector extends ChangeNotifier {
     return _ParsedText(senderName: 'Unknown', text: text);
   }
 
-  bool _addChannelMessage(int channelIndex, ChannelMessage message) {
+  bool _addChannelMessage(int slot, ChannelMessage message) {
+    final channelIndex = _canonicalSlot(slot);
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 
@@ -7807,7 +8261,7 @@ class MeshCoreConnector extends ChangeNotifier {
       if (reactionApplied) {
         appLogger.info('Adding channel reaction, id: $reactionIdentifier');
         // Save updated messages
-        _channelMessageStore.saveChannelMessages(channelIndex, messages);
+        _saveChannelMessages(channelIndex, messages);
 
         // Mark as processed
         _processedChannelReactions[channelIndex]!.add(reactionIdentifier);
@@ -7915,7 +8369,7 @@ class MeshCoreConnector extends ChangeNotifier {
     }
 
     // Save to persistent storage
-    _channelMessageStore.saveChannelMessages(channelIndex, messages);
+    _saveChannelMessages(channelIndex, messages);
     return isNew;
   }
 
@@ -8150,6 +8604,8 @@ class MeshCoreConnector extends ChangeNotifier {
     _channelHopShortfalls.clear();
     _messageStore.forgetArchive();
     _channelMessageStore.forgetArchive();
+    _slotChannelIds.clear();
+    _channelMapConfirmed = false;
     _messageStateOwnerKey = null;
     _persistedStateLoadedKey = null;
   }
@@ -8834,11 +9290,12 @@ class MeshCoreConnector extends ChangeNotifier {
   }
 
   void clearMessagesForChannel(int channelIndex) {
-    final messages = _channelMessages[channelIndex];
-    if (messages == null) return;
-    messages.clear();
-    // Clear storage too, not just the in-memory window.
-    unawaited(_channelMessageStore.clearChannelMessages(channelIndex));
+    _channelMessages[_canonicalSlot(channelIndex)]?.clear();
+    // Clear storage too, even when nothing of it is in memory.
+    final channelId = _channelIdForSlot(channelIndex);
+    if (channelId != null) {
+      unawaited(_channelMessageStore.clearChannelMessages(channelId));
+    }
     markChannelRead(channelIndex);
     notifyListeners();
   }

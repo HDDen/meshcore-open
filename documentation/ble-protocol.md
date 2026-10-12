@@ -198,13 +198,17 @@ UUID, name, 32-byte secret, hashtag channel list. Shared via QR code.
 
 Message/contact metadata and preferences use `SharedPreferences` (JSON-serialized); there is no SQLite database. Model bundles, received image bitstreams/reconstructions, and map caches use files. Region metadata is persisted with channel messages; older records without it load with a null region.
 
+Per-channel data is keyed by a channel ID, not the radio slot: `<channelId>` is the first 8 bytes of SHA-256(`"meshcore-channel:"` + PSK) as 16 hex characters, so a reused slot starts clean and a re-added channel gets its history back. Each channel sync saves the slot-to-ID map (`channel_slot_ids_<pubKey10>`) and reloads any slot whose channel changed since the last connection; queued channel messages are not fetched until that map is confirmed. Older slot-keyed data is moved once per radio (`channel_storage_v2_<pubKey10>`) using the cached channel list; slots with no cached PSK keep their old keys unread.
+
 | Data | Storage Key Pattern | Scope |
 |---|---|---|
 | Contacts | `contacts<pubKey10>` | Per device identity |
 | Messages | `messages_<pubKey10><contactKey>` | Per device + contact |
-| Channel Messages | `channel_messages_<pubKey10><index>` | Per device + channel |
+| Channel Messages | `channel_messages_<pubKey10>_<channelId>` | Per device + channel |
 | Channels | `channels<pubKey10>` | Per device identity |
-| Channel Order | `channel_order_<pubKey10>` | Per device identity |
+| Channel Order | `channel_order_<pubKey10>` (list of channel IDs) | Per device identity |
+| Channel Slot Map | `channel_slot_ids_<pubKey10>` | Per device identity |
+| Channel Settings | `channel_{smaz,cyr2lat,url_images}_<pubKey10>_<channelId>`, `channel_cyr2lat_<pubKey10>_profile_<channelId>` | Per device + channel |
 | Contact Groups | `contact_groups<pubKey10>` | Per device identity |
 | Communities | `communities_v1<pubKey10>` | Per device identity |
 | Unread Counts | `contact_unread_count<pubKey10>` | Per device identity |
@@ -212,7 +216,7 @@ Message/contact metadata and preferences use `SharedPreferences` (JSON-serialize
 | App Settings | `app_settings` | Global |
 | Path History | `path_history_<contactKey>` | Per contact |
 | Region Names | `regions` | Global |
-| Channel Region | `channel_region_<pubKey10><index>` | Per device + channel |
+| Channel Region | `channel_region_<pubKey10>_<channelId>` | Per device + channel |
 | Default Region | `default_region_<pubKey10>` | Per device identity |
 
 ## Auto-Add Configuration Bitmask

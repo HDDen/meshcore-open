@@ -63,7 +63,9 @@ Name limits count the `#` and any community prefix, so the name stored on the ra
 |---|---|
 | Edit | Change name, PSK (with a dice icon to generate a random PSK), SMAZ compression toggle (compresses outgoing messages to allow longer text within the byte limit), Cyr2Lat encoding toggle (transliterates Cyrillic to Latin for compatibility), or "Enable URL images" toggle (previews image links; requires internet) |
 | Mute / Unmute | Toggle push notification suppression for this channel |
-| Delete | Remove the channel from the device (confirmation required) |
+| Delete | Remove the channel from the device and delete its messages, settings, region and images (confirmation required) |
+
+Channel history and settings belong to the channel's key, not its slot on the radio. A slot reused for another channel (here or in another app) starts empty, editing a channel's PSK starts a fresh history, and adding a channel again with its old PSK brings its history back.
 
 ## Channel Chat
 

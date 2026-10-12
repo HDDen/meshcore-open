@@ -43,6 +43,8 @@ ChannelMessage _ch(int i) => ChannelMessage(
 
 MessageStore _messageStore() => MessageStore()..setPublicKeyHex = _device;
 
+const _channelId = '0123456789abcdef';
+
 void main() {
   group('MessageStore window persistence', () {
     test('saving the window keeps archived history ahead of it', () async {
@@ -179,27 +181,30 @@ void main() {
       await _init();
       final store = ChannelMessageStore()..setPublicKeyHex = _device;
       final all = [for (var i = 0; i < 8; i++) _ch(i)];
-      await store.saveChannelMessages(0, all);
+      await store.saveChannelMessages(_channelId, all);
 
-      final loaded = await store.loadChannelMessages(0);
-      store.setArchived(0, loaded.sublist(0, 5));
-      await store.saveChannelMessages(0, [...loaded.sublist(5), _ch(8)]);
+      final loaded = await store.loadChannelMessages(_channelId);
+      store.setArchived(_channelId, loaded.sublist(0, 5));
+      await store.saveChannelMessages(_channelId, [
+        ...loaded.sublist(5),
+        _ch(8),
+      ]);
 
-      final reloaded = await store.loadChannelMessages(0);
+      final reloaded = await store.loadChannelMessages(_channelId);
       expect(reloaded.map((m) => m.text), [for (var i = 0; i <= 8; i++) 'c$i']);
     });
 
     test('clearing through another instance resets the archive', () async {
       await _init();
       final store = ChannelMessageStore()..setPublicKeyHex = _device;
-      store.setArchived(0, [_ch(0), _ch(1)]);
-      await store.saveChannelMessages(0, [_ch(2)]);
+      store.setArchived(_channelId, [_ch(0), _ch(1)]);
+      await store.saveChannelMessages(_channelId, [_ch(2)]);
 
       await (ChannelMessageStore()..setPublicKeyHex = _device)
-          .clearChannelMessages(0);
-      await store.saveChannelMessages(0, [_ch(3)]);
+          .clearChannelMessages(_channelId);
+      await store.saveChannelMessages(_channelId, [_ch(3)]);
 
-      final reloaded = await store.loadChannelMessages(0);
+      final reloaded = await store.loadChannelMessages(_channelId);
       expect(reloaded.map((m) => m.text), ['c3']);
     });
   });

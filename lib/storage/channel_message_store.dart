@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:meshcore_open/utils/app_logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/channel_message.dart';
 import '../models/message.dart' show legacyAwareReceivedAt;
 import '../models/translation_support.dart';
 import '../helpers/smaz.dart';
-import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ChannelMessageStore {
@@ -30,11 +28,13 @@ class ChannelMessageStore {
   /// created by a screen to clear a key also resets the connector's view.
   static final Map<String, List<String>> _archived = {};
 
+  String _keyForChannel(String channelId) => '${keyFor}_$channelId';
+
   /// Save messages for a specific channel: [messages] is the in-memory
   /// window (oldest first) and is written after the archived entries that
   /// sit ahead of it in storage.
   Future<void> saveChannelMessages(
-    int channelIndex,
+    String channelId,
     List<ChannelMessage> messages,
   ) async {
     if (publicKeyHex.isEmpty) {
@@ -44,11 +44,11 @@ class ChannelMessageStore {
       return;
     }
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = _keyForChannel(channelId);
     final visibleJson = messages.map(_messageToJson).toList();
     final archived =
         _archived[key] ??
-        _unreconciledArchive(_readStored(prefs, channelIndex), visibleJson);
+        _unreconciledArchive(prefs.getString(key), visibleJson);
     final overflow = archived.length + visibleJson.length - maxStoredMessages;
     if (overflow > 0) {
       archived.removeRange(0, overflow.clamp(0, archived.length));
@@ -59,22 +59,22 @@ class ChannelMessageStore {
   }
 
   /// Records [olderMessages] as the stored entries that precede the
-  /// in-memory window for [channelIndex].
-  void setArchived(int channelIndex, List<ChannelMessage> olderMessages) {
-    _archived['$keyFor$channelIndex'] = olderMessages
+  /// in-memory window for [channelId].
+  void setArchived(String channelId, List<ChannelMessage> olderMessages) {
+    _archived[_keyForChannel(channelId)] = olderMessages
         .map((message) => jsonEncode(_messageToJson(message)))
         .toList();
   }
 
   /// Number of stored entries ahead of the in-memory window, or null when
   /// the window has not been reconciled with storage.
-  int? archivedCount(int channelIndex) =>
-      _archived['$keyFor$channelIndex']?.length;
+  int? archivedCount(String channelId) =>
+      _archived[_keyForChannel(channelId)]?.length;
 
   /// Removes the newest [count] archived entries after they were paged back
   /// into the in-memory window.
-  void unarchiveNewest(int channelIndex, int count) {
-    final archived = _archived['$keyFor$channelIndex'];
+  void unarchiveNewest(String channelId, int count) {
+    final archived = _archived[_keyForChannel(channelId)];
     if (archived == null || count <= 0) return;
     archived.removeRange(
       (archived.length - count).clamp(0, archived.length),
@@ -84,11 +84,11 @@ class ChannelMessageStore {
 
   /// Drops the archive bookkeeping, for one channel or all of them, when the
   /// matching in-memory window is discarded.
-  void forgetArchive([int? channelIndex]) {
-    if (channelIndex == null) {
+  void forgetArchive([String? channelId]) {
+    if (channelId == null) {
       _archived.clear();
     } else {
-      _archived.remove('$keyFor$channelIndex');
+      _archived.remove(_keyForChannel(channelId));
     }
   }
 
@@ -118,41 +118,17 @@ class ChannelMessageStore {
     return 'fallback:${json['timestamp']}:${json['senderName']}:${json['text']}';
   }
 
-  /// Reads the stored JSON for [channelIndex], migrating the legacy unscoped
-  /// key on first access.
-  String? _readStored(SharedPreferences prefs, int channelIndex) {
-    final key = '$keyFor$channelIndex';
-    final oldKey = '$_keyPrefix$channelIndex';
-    final jsonString = prefs.getString(key);
-    if ((jsonString == null || jsonString.isEmpty) &&
-        canMigrateLegacyKeys(publicKeyHex)) {
-      // Attempt migration from legacy unscoped key on first load
-      final legacyJsonString = prefs.getString(oldKey);
-      prefs.remove(oldKey);
-      if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
-        appLogger.info(
-          'Migrating channel messages from legacy key $oldKey to scoped key $key',
-        );
-        prefs.setString(key, legacyJsonString);
-        return legacyJsonString;
-      }
-    }
-    return jsonString;
-  }
-
   /// Load messages for a specific channel
-  Future<List<ChannelMessage>> loadChannelMessages(int channelIndex) async {
+  Future<List<ChannelMessage>> loadChannelMessages(String channelId) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load channel messages.',
       );
       return [];
     }
-    final prefs = PrefsManager.instance;
-    String? jsonString = _readStored(prefs, channelIndex);
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = prefs.getString(keyFor);
-    }
+    final jsonString = PrefsManager.instance.getString(
+      _keyForChannel(channelId),
+    );
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
@@ -161,7 +137,7 @@ class ChannelMessageStore {
       jsonList = jsonDecode(jsonString) as List<dynamic>;
     } catch (e) {
       appLogger.warn(
-        'Stored messages for channel $channelIndex are unreadable: $e',
+        'Stored messages for channel $channelId are unreadable: $e',
       );
       return [];
     }
@@ -177,9 +153,9 @@ class ChannelMessageStore {
   }
 
   /// Clear messages for a specific channel
-  Future<void> clearChannelMessages(int channelIndex) async {
+  Future<void> clearChannelMessages(String channelId) async {
     final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
+    final key = _keyForChannel(channelId);
     _archived[key] = [];
     await prefs.remove(key);
   }

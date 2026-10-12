@@ -1514,6 +1514,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     try {
       await store.registerOutgoing(
         channelIndex: widget.channel.index,
+        channelId: widget.channel.storageId,
         // The same 16 bits the chunk header carries, so the entry keys the
         // same way an inbound one would.
         senderPrefix: senderPrefix,
@@ -1629,10 +1630,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
     final images = store == null
         ? const <ReceivedImageEntry>[]
-        : [
-            for (final entry in store.entries)
-              if (entry.channelIndex == widget.channel.index) entry,
-          ];
+        : store.entriesForChannel(widget.channel.storageId);
     final layout = _TranscriptLayout.build(
       messages: messages,
       images: images,
@@ -2339,9 +2337,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       context.read<MeshCoreConnector>().clearMessagesForChannel(
         widget.channel.index,
       );
+      final channelId = widget.channel.storageId;
+      if (channelId == null) return;
       try {
-        await context.read<ReceivedImageStore>().deleteImagesForChannel(
-          widget.channel.index,
+        await context.read<ReceivedImageStore>().deleteImagesForChannelId(
+          channelId,
         );
       } on ProviderNotFoundException {
         return;

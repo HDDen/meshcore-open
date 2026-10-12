@@ -159,6 +159,11 @@ class ReceivedImageEntry {
   final int imgId;
   final int channelIndex;
 
+  /// [Channel.storageId] of the channel the image belongs to. [channelIndex]
+  /// is the radio slot it arrived on, which another channel may reuse later.
+  /// Null only for entries written before channel IDs existed.
+  final String? channelId;
+
   /// Local clock at the first chunk — code 27 carries no timestamp.
   final DateTime firstSeen;
 
@@ -221,6 +226,7 @@ class ReceivedImageEntry {
     required this.senderPrefix,
     required this.imgId,
     required this.channelIndex,
+    this.channelId,
     required this.firstSeen,
     required this.state,
     required this.receivedChunks,
@@ -259,6 +265,7 @@ class ReceivedImageEntry {
   static const Object _unset = Object();
 
   ReceivedImageEntry copyWith({
+    String? channelId,
     ReceivedImageState? state,
     int? receivedChunks,
     int? totalChunks,
@@ -281,6 +288,7 @@ class ReceivedImageEntry {
       senderPrefix: senderPrefix,
       imgId: imgId,
       channelIndex: channelIndex,
+      channelId: channelId ?? this.channelId,
       firstSeen: firstSeen,
       state: state ?? this.state,
       receivedChunks: receivedChunks ?? this.receivedChunks,
@@ -309,6 +317,7 @@ class ReceivedImageEntry {
     'senderPrefix': senderPrefix,
     'imgId': imgId,
     'channelIndex': channelIndex,
+    if (channelId != null) 'channelId': channelId,
     'firstSeenMs': firstSeen.millisecondsSinceEpoch,
     'state': state.name,
     'receivedChunks': receivedChunks,
@@ -335,6 +344,7 @@ class ReceivedImageEntry {
       senderPrefix: json['senderPrefix'] as int? ?? 0,
       imgId: json['imgId'] as int? ?? 0,
       channelIndex: json['channelIndex'] as int? ?? 0,
+      channelId: json['channelId'] as String?,
       firstSeen: DateTime.fromMillisecondsSinceEpoch(
         json['firstSeenMs'] as int? ?? 0,
       ),
@@ -760,6 +770,7 @@ class ReceivedImageStore extends ChangeNotifier {
   Future<ReceivedImageEntry?> handleOutcome(
     ImageChunkOutcome outcome, {
     required int channelIndex,
+    String? channelId,
     DateTime? at,
   }) async {
     final now = at ?? _clock();
@@ -810,6 +821,8 @@ class ReceivedImageStore extends ChangeNotifier {
                       .toInt(),
             totalChunks: header.total,
             error: null,
+            // A first chunk seen before its slot had an ID gets one now.
+            channelId: existing.channelId ?? channelId,
           );
           return _store(updated);
         }
@@ -826,6 +839,7 @@ class ReceivedImageStore extends ChangeNotifier {
           senderPrefix: header.senderPrefix,
           imgId: header.imgId,
           channelIndex: channelIndex,
+          channelId: channelId,
           firstSeen: now,
           state: ReceivedImageState.receiving,
           receivedChunks: counts,
@@ -861,13 +875,14 @@ class ReceivedImageStore extends ChangeNotifier {
       case ImageChunkStatus.completed:
         final result = outcome.result;
         if (result == null) return null;
-        return _handleCompleted(result, now);
+        return _handleCompleted(result, now, channelId);
     }
   }
 
   Future<ReceivedImageEntry> _handleCompleted(
     ImageReassemblyResult result,
     DateTime now,
+    String? channelId,
   ) async {
     final key = result.key;
     var entry = entryForKey(key);
@@ -884,11 +899,14 @@ class ReceivedImageStore extends ChangeNotifier {
         senderPrefix: key.senderPrefix,
         imgId: key.imgId,
         channelIndex: key.channelIndex,
+        channelId: channelId,
         firstSeen: now,
         state: ReceivedImageState.receiving,
         receivedChunks: result.chunkCount,
         totalChunks: result.chunkCount,
       );
+    } else if (entry.channelId == null && channelId != null) {
+      entry = entry.copyWith(channelId: channelId);
     }
 
     final metadata = result.metadata;
@@ -1000,6 +1018,7 @@ class ReceivedImageStore extends ChangeNotifier {
   /// ```dart
   /// final entry = await receivedImageStore.registerOutgoing(
   ///   channelIndex: channelIndex,
+  ///   channelId: channel.storageId,
   ///   senderPrefix: selfPrefix,      // same 16 bits the chunk header carries
   ///   imgId: chunkSet.imgId,
   ///   previewPng: preview.croppedPngBytes,  // the 512x512 crop, NOT a decode
@@ -1015,6 +1034,7 @@ class ReceivedImageStore extends ChangeNotifier {
   /// memory beyond the encode that already ran.
   Future<ReceivedImageEntry> registerOutgoing({
     required int channelIndex,
+    String? channelId,
     required int senderPrefix,
     required int imgId,
     required Uint8List previewPng,
@@ -1038,6 +1058,7 @@ class ReceivedImageStore extends ChangeNotifier {
       senderPrefix: senderPrefix,
       imgId: imgId,
       channelIndex: channelIndex,
+      channelId: channelId,
       firstSeen: now,
       state: ReceivedImageState.decoded,
       receivedChunks: chunkCount,
@@ -1429,15 +1450,41 @@ class ReceivedImageStore extends ChangeNotifier {
   ///
   /// Returns the stream ids that were removed, so the caller can strip their
   /// sentinels from the channel's message list in one pass.
-  Future<List<String>> deleteImagesForChannel(int channelIndex) async {
+  Future<List<String>> deleteImagesForChannelId(String channelId) async {
     final doomed = _entries.values
-        .where((e) => e.channelIndex == channelIndex)
+        .where((e) => e.channelId == channelId)
         .map((e) => e.streamId)
         .toList();
     for (final streamId in doomed) {
       await deleteImage(streamId);
     }
     return doomed;
+  }
+
+  /// Images of [channelId], newest first.
+  List<ReceivedImageEntry> entriesForChannel(String? channelId) {
+    if (channelId == null) return const <ReceivedImageEntry>[];
+    return entries.where((e) => e.channelId == channelId).toList();
+  }
+
+  /// Gives entries saved before channel IDs existed the ID of the channel
+  /// their slot held then ([slotIds], from the radio's cached channel list).
+  /// The store is app-wide, so with several radios the first one migrated
+  /// claims the unstamped images.
+  Future<void> stampLegacyChannelIds(Map<int, String> slotIds) async {
+    for (final entry in _entries.values.toList()) {
+      if (entry.channelId != null) continue;
+      final channelId = slotIds[entry.channelIndex];
+      if (channelId == null) continue;
+      await _store(entry.copyWith(channelId: channelId));
+    }
+  }
+
+  /// Forgets which in-progress streams arrived on [channelIndex] after the
+  /// radio slot was given to another channel, so a new image on that slot
+  /// never continues an old one.
+  void forgetChannelSlot(int channelIndex) {
+    _byKey.removeWhere((key, _) => key.channelIndex == channelIndex);
   }
 
   /// Deletes an image for each sentinel that is still present in a channel's
