@@ -447,6 +447,29 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_regionDefaultNone => 'Žiadny';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Predvolené rádia ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Bez regiónu (bez obmedzenia)';
+
+  @override
+  String get settings_regionRadioDefault => 'Predvolený región rádia';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Uložené v rádiu. Používajú ho flood správy odoslané bez regiónu, z tejto aplikácie aj z každej inej aplikácie pripojenej k rádiu.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Predvolený región rádia bol aktualizovaný';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Predvolený región rádia sa nepodarilo aktualizovať';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Správa regiónov';
 
   @override
@@ -725,7 +748,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Všetky uzly, s ktorými komunikujete, musia používať rovnakú frekvenciu, šírku pásma, SF a CR.';
+      'Všetky uzly, s ktorými komunikujete, musia používať rovnakú frekvenciu, šírku pásma a SF. Rýchlosť kódovania (CR) sa môže líšiť.';
 
   @override
   String get settings_frequency => 'Frekvencia (MHz)';
@@ -948,6 +971,30 @@ class AppLocalizationsSk extends AppLocalizations {
     );
     return 'Odoslať znova najviac $_temp0';
   }
+
+  @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Počítať aj rôzne blízke opakovače';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rôznych blízkych opakovačov',
+      many: '$count rôznych blízkych opakovačov',
+      few: '$count rôzne blízke opakovače',
+      one: '1 blízky opakovač',
+    );
+    return 'Správu považovať za odoslanú, keď ju zopakuje $_temp0, aj keď nepočujete, ako putuje ďalej.';
+  }
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Región vedľa počtu skokov';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Zobraziť región správy kanála v rovnakom riadku ako počet skokov namiesto pod ním.';
 
   @override
   String get appSettings_notifications => 'Upozornenia';
@@ -1707,6 +1754,14 @@ class AppLocalizationsSk extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(predvolený)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(predvolený pre rádio)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Toto rádio odosiela flood správy bez regiónu vo svojom predvolenom regióne: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Flood správy na tomto kanáli budú preposielané iba opakovačmi z vybraného regiónu.';
 
@@ -1750,6 +1805,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_typeMessage => 'Napíšte správu...';
 
   @override
+  String get chat_futureTimestampWarning =>
+      'Čas tejto správy je v budúcnosti, takže hodiny odosielateľa môžu byť nesprávne. Zobrazuje sa v poradí, v akom prišla.';
+
+  @override
   String chat_messageTooLong(int maxBytes) {
     return 'Správa je príliš dlhá (max $maxBytes bajtov).';
   }
@@ -1775,6 +1834,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Odoslať GIF';
+
+  @override
+  String get chat_shareMyLocation => 'Zdieľať moju polohu';
+
+  @override
+  String get chat_noRadioLocation => 'Vaše rádio nemá nastavenú polohu';
 
   @override
   String get chat_removeGif => 'Odstrániť GIF';
@@ -2281,6 +2346,10 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get map_label => 'Popis';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Ak použijete rovnaký štítok ako predtým, značka sa aktualizuje u príjemcov MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Bod záujmu';
@@ -4941,6 +5010,54 @@ class AppLocalizationsSk extends AppLocalizations {
       'Kontakt sa nepodarilo importovať.';
 
   @override
+  String get discoveredContacts_export => 'Exportovať objavené kontakty';
+
+  @override
+  String get discoveredContacts_import => 'Importovať objavené kontakty';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Objavené kontakty boli exportované do $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Export objavených kontaktov zlyhal: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Bolo importovaných $count objavených kontaktov.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'V importovanom súbore sa nenašli žiadne kontakty.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Importované: $imported, preskočené (už známe): $skipped, nečitateľné záznamy: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Súbor nie je exportom objavených kontaktov.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Importovaný súbor je príliš veľký (maximum $maxMb MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Import objavených kontaktov zlyhal: $error';
+  }
+
+  @override
   String get contacts_zeroHopAdvert => 'Zero-hop advert';
 
   @override
@@ -5242,6 +5359,55 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get discoveredContacts_deleteContactAllContent =>
       'Ste si istí, že chcete zmazať všetky objavené kontakty?';
+
+  @override
+  String get discoveredContacts_scan => 'Vyhľadať blízke uzly';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Blízke uzly';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Požiada uzly v priamom dosahu rádia, aby sa identifikovali. Odpovedajú opakovače a senzory. Room servery a companiony zvyčajne nie.';
+
+  @override
+  String get discoveredContacts_scanning => 'Vyhľadávam…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nájdených $count uzlov',
+      many: 'Nájdených $count uzlov',
+      few: 'Nájdené $count uzly',
+      one: 'Nájdený 1 uzol',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Žiadny uzol neodpovedal. Opakovače obmedzujú frekvenciu odpovedí, skúste to znova o minútu.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Vyhľadať znova';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Požiadavku na vyhľadávanie sa nepodarilo odoslať.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Signál $snr dB · oni nás počuli na $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Už v kontaktoch';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'Meno sa zobrazí po jeho ďalšom inzeráte';
 
   @override
   String get chat_sendCooldown => 'Prosím, počkajte chvíľu, než zašlete znova.';
@@ -7443,5 +7609,105 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String reviewMode_connectFailed(Object error) {
     return 'Režim kontroly sa nepodarilo spustiť: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Kanály sa ešte načítavajú z rádia. Skúste to znova po dokončení synchronizácie.';
+
+  @override
+  String channels_nameTooLong(Object maxBytes) {
+    return 'Názov je príliš dlhý (max. $maxBytes bajtov).';
+  }
+
+  @override
+  String repeater_valueRequired(Object field) {
+    return '$field: zadajte hodnotu';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Detail mapy';
+
+  @override
+  String get losUnitsTooltip => 'Jednotky';
+
+  @override
+  String get losDistance => 'Vzdialenosť';
+
+  @override
+  String get losClearance => 'Voľný priestor';
+
+  @override
+  String get losBlockedBy => 'Blokované';
+
+  @override
+  String get losObstruction => 'Prekážka';
+
+  @override
+  String losDistanceFromA(Object distance) {
+    return '$distance od A';
+  }
+
+  @override
+  String get losWorstBadge => 'NAJHORŠIA';
+
+  @override
+  String losBlockedAmount(Object amount) {
+    return 'Blokované $amount';
+  }
+
+  @override
+  String get losFromA => 'Od A';
+
+  @override
+  String get losFromB => 'Od B';
+
+  @override
+  String get losElevation => 'Výška';
+
+  @override
+  String get losCenterOnMap => 'Vycentrovať na mape';
+
+  @override
+  String get losStatusClear => 'Voľné';
+
+  @override
+  String get losStatusMarginal => 'Hraničné';
+
+  @override
+  String get losStatusBlocked => 'Blokované';
+
+  @override
+  String get losStatusCheckingShort => 'Kontrola';
+
+  @override
+  String get losStatusNoResult => 'Žiadny výsledok';
+
+  @override
+  String get losSelectedPill => 'Vybrané';
+
+  @override
+  String get gif_tapToLoad => 'Klepnutím načítate GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'GIF sa nepodarilo načítať\nKlepnutím skúste znova';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Povolenie kamery bolo zamietnuté.\nPovoľte prístup ku kamere v nastaveniach.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'Kamera nie je na tomto zariadení podporovaná.';
+
+  @override
+  String qr_cameraStartFailed(Object details) {
+    return 'Kameru sa nepodarilo spustiť.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(Object error) {
+    return 'Model obrázkov sa nepodarilo stiahnuť: $error';
   }
 }

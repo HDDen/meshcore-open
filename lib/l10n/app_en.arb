@@ -178,6 +178,19 @@
   "settings_regionDefault": "Default region",
   "settings_regionDefaultSubtitle": "Used by channels without their own region",
   "settings_regionDefaultNone": "None",
+  "settings_regionUseRadioDefault": "Radio default ({region})",
+  "@settings_regionUseRadioDefault": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_regionNoRegion": "No region (unscoped)",
+  "settings_regionRadioDefault": "Radio default region",
+  "settings_regionRadioDefaultSubtitle": "Saved on the radio. Floods sent without a region use it, from this app and any other app connected to the radio.",
+  "settings_regionRadioDefaultUpdated": "Radio default region updated",
+  "settings_regionRadioDefaultFailed": "Could not update the radio default region",
   "settings_regionManagement_screenTitle": "Region Management",
   "settings_regionNameHint": "Enter region name",
   "settings_regionAddRegion": "Add region",
@@ -274,7 +287,7 @@
   "settings_infoFirmware": "Firmware version",
   "settings_presets": "Presets",
   "settings_presetCustom": "Custom",
-  "settings_radioMatchWarning": "All nodes you talk to must use the same frequency, bandwidth, SF and CR.",
+  "settings_radioMatchWarning": "All nodes you talk to must use the same frequency, bandwidth and SF. The coding rate (CR) can differ.",
   "settings_frequency": "Frequency (MHz)",
   "settings_frequencyHelper": "150.0 - 2500.0",
   "settings_frequencyInvalid": "Invalid frequency (150-2500 MHz)",
@@ -362,6 +375,10 @@
   "appSettings_channelMinHopsSubtitle": "If your message isn't heard coming back through enough repeaters, send it again. Uses more airtime.",
   "appSettings_channelMinHopsCount": "Required hops: {count}",
   "appSettings_channelMinHopsRetries": "Resend up to {count, plural, =1{1 time} other{{count} times}}",
+  "appSettings_channelMinHopsCountRepeaters": "Also count different nearby repeaters",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Treat the message as sent when {count, plural, =1{1 nearby repeater} other{{count} different nearby repeaters}} repeat it, even if you can't hear it travel further.",
+  "appSettings_regionOnHopsLine": "Region next to hop count",
+  "appSettings_regionOnHopsLineSubtitle": "Show a channel message's region on the same line as its hop count instead of below it.",
   "appSettings_notifications": "Notifications",
   "appSettings_enableNotifications": "Enable Notifications",
   "appSettings_enableNotificationsSubtitle": "Receive notifications for messages and adverts",
@@ -792,6 +809,15 @@
   "channels_regionSelect_Title": "Select a region",
   "channels_clearRegion": "Clear region",
   "channels_regionDefaultSuffix": "(default)",
+  "channels_regionRadioDefaultSuffix": "(radio default)",
+  "channels_regionRadioDefaultApplies": "This radio sends floods without a region in its default region: {region}.",
+  "@channels_regionRadioDefaultApplies": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "channels_regionSelectExplanation": "Flood messages on this channel will only be forwarded by repeaters in the selected region.",
   "channels_regionEmpty": "No regions yet.",
   "channels_manageRegions": "Manage regions",
@@ -825,6 +851,7 @@
   },
   "chat_location": "Location",
   "chat_typeMessage": "Type a message...",
+  "chat_futureTimestampWarning": "This message's time is in the future, so the sender's clock may be wrong. It is shown in the order it arrived.",
   "chat_messageTooLong": "Message too long (max {maxBytes} bytes).",
   "@chat_messageTooLong": {
     "placeholders": {
@@ -849,6 +876,14 @@
     }
   },
   "chat_sendGif": "Send GIF",
+  "chat_shareMyLocation": "Share my location",
+  "@chat_shareMyLocation": {
+    "description": "Chat input menu action that shares the radio's own position as a map marker"
+  },
+  "chat_noRadioLocation": "Your radio has no location set",
+  "@chat_noRadioLocation": {
+    "description": "Shown when sharing a location but the radio reports no usable position"
+  },
   "chat_removeGif": "Remove GIF",
   "chat_cancelReply": "Cancel reply",
   "chat_receivedGif": "Received a GIF",
@@ -1123,6 +1158,7 @@
   "map_setAsMyLocation": "Set as my location",
   "map_pinLabel": "Pin label",
   "map_label": "Label",
+  "map_labelUpdateHint": "Using the same label as before will update the marker for MeshCore Open recipients.",
   "map_pointOfInterest": "Point of interest",
   "map_sendToContact": "Send to contact",
   "map_sendToChannel": "Send to channel",
@@ -2802,6 +2838,64 @@
   "contacts_invalidAdvertFormat": "Invalid contact data",
   "contacts_contactImported": "Contact has been imported.",
   "contacts_contactImportFailed": "Failed to import contact.",
+  "discoveredContacts_export": "Export discovered contacts",
+  "discoveredContacts_import": "Import discovered contacts",
+  "discoveredContacts_exported": "Exported discovered contacts to {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Failed to export discovered contacts: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Imported {count} discovered contacts.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "No contacts found in import file.",
+  "discoveredContacts_importSummary": "Imported {imported} discovered contacts. Skipped {skipped} already known and {invalid} unreadable entries.",
+  "@discoveredContacts_importSummary": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "invalid": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "The file is not a discovered contacts export.",
+  "discoveredContacts_importTooLarge": "The import file is too large (maximum {maxMb} MB).",
+  "@discoveredContacts_importTooLarge": {
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importFailed": "Failed to import discovered contacts: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contacts_zeroHopAdvert": "Zero Hop Advert",
   "contacts_floodAdvert": "Flood Advert",
   "contacts_copyAdvertToClipboard": "Copy self-link «meshcore://»",
@@ -2922,6 +3016,34 @@
     }
   },
   "discoveredContacts_deleteContactAllContent": "Are you sure you want to delete all discovered contacts?",
+  "discoveredContacts_scan": "Scan for nearby nodes",
+  "discoveredContacts_scanTitle": "Nearby nodes",
+  "discoveredContacts_scanExplanation": "Asks nodes within direct radio range to identify themselves. Repeaters and sensors answer. Room servers and companions usually don't.",
+  "discoveredContacts_scanning": "Scanning…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 node found} other{{count} nodes found}}",
+  "@discoveredContacts_scanFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_scanNoResults": "No nodes answered. Repeaters limit how often they reply, so try again in a minute.",
+  "discoveredContacts_scanAgain": "Scan again",
+  "discoveredContacts_scanFailed": "Could not send the scan request.",
+  "discoveredContacts_scanSignal": "Signal {snr} dB · they heard us at {remoteSnr} dB",
+  "@discoveredContacts_scanSignal": {
+    "placeholders": {
+      "snr": {
+        "type": "String"
+      },
+      "remoteSnr": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_scanInContacts": "Already in contacts",
+  "discoveredContacts_scanNameLater": "Name appears after its next advert",
   "chat_sendCooldown": "Please wait a moment before sending again.",
   "appSettings_jumpToOldestUnread": "Jump to oldest unread",
   "appSettings_jumpToOldestUnreadSubtitle": "When opening a chat with unread messages, scroll to the first unread instead of the latest.",
@@ -4072,5 +4194,33 @@
   "reviewMode_sendTest": "Send test message",
   "reviewMode_testSent": "A test message will arrive shortly.",
   "reviewMode_exit": "Exit",
-  "reviewMode_connectFailed": "Could not start review mode: {error}"
+  "reviewMode_connectFailed": "Could not start review mode: {error}",
+  "channels_waitForSync": "Channels are still loading from the radio. Try again when the sync finishes.",
+  "channels_nameTooLong": "Name is too long (max {maxBytes} bytes).",
+  "repeater_valueRequired": "{field}: enter a value",
+  "losMapDetailTooltip": "Map detail",
+  "losUnitsTooltip": "Units",
+  "losDistance": "Distance",
+  "losClearance": "Clearance",
+  "losBlockedBy": "Blocked by",
+  "losObstruction": "Obstruction",
+  "losDistanceFromA": "{distance} from A",
+  "losWorstBadge": "WORST",
+  "losBlockedAmount": "Blocked {amount}",
+  "losFromA": "From A",
+  "losFromB": "From B",
+  "losElevation": "Elevation",
+  "losCenterOnMap": "Center on map",
+  "losStatusClear": "Clear",
+  "losStatusMarginal": "Marginal",
+  "losStatusBlocked": "Blocked",
+  "losStatusCheckingShort": "Checking",
+  "losStatusNoResult": "No result",
+  "losSelectedPill": "Selected",
+  "gif_tapToLoad": "Tap to load GIF",
+  "gif_loadFailedRetry": "Can't load GIF\nTap to retry",
+  "qr_cameraPermissionDenied": "Camera permission denied.\nPlease enable camera access in settings.",
+  "qr_cameraUnsupported": "Camera not supported on this device.",
+  "qr_cameraStartFailed": "Failed to start camera.\n{details}",
+  "imageMessages_downloadFailedWithError": "The image model could not be downloaded: {error}"
 }

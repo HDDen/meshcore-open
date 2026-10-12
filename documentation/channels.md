@@ -48,12 +48,14 @@ Pull-to-refresh (swipe down) forces a re-fetch of channels from the device firmw
 
 Tap the "+" FAB to open a dialog with six options:
 
-1. **Create Private Channel** — Enter a name (max 31 characters); a random PSK is generated
+1. **Create Private Channel** — Enter a name (max 31 bytes of UTF-8, so fewer characters for accented letters, Cyrillic, or emoji); a random PSK is generated
 2. **Join Private Channel** — Enter a name and a 32-hex PSK (non-hex characters like spaces and dashes are silently stripped, so pasted keys with formatting are accepted)
 3. **Join Public Channel** — One tap; uses the well-known public PSK (only shown if no public channel exists)
 4. **Join Hashtag Channel** — Enter a hashtag name; PSK is derived from the name. If communities exist, choose between regular hashtag (SHA-256) or community hashtag (HMAC)
 5. **Scan Community QR** — Opens QR scanner to join a community
 6. **Create Community** — Enter a name; generates a random 32-byte secret; optionally adds a community public channel; shows QR code for sharing
+
+Name limits count the `#` and any community prefix, so the name stored on the radio matches what you typed and others derive the same key. Adding a channel is blocked until the channel list has finished syncing from the radio (a snackbar says the channels are still loading), and the free slot is picked when you confirm, so an existing channel is never overwritten.
 
 ## Channel Actions (Long-Press / Right-Click)
 
@@ -129,6 +131,12 @@ Messages also show a region label when known, independently of message tracing. 
 
 - **All platforms**: Long-press (or right-click on desktop) a message bubble → "Path"
 - Opens the Channel Message Path Screen (see [Additional Features](additional-features.md))
+
+### Channel Auto-Resend
+
+With **Resend channel messages until they travel far enough** on (App Settings → Messaging), the app waits after each channel send and checks how far the message was heard repeated. If no repeat reached the required hop count, it sends the message again, up to the configured number of times.
+
+Where your radio only hears nearby repeaters, turn on **Also count different nearby repeaters**: the message then also counts as sent once the required number of *different* first-hop repeaters have repeated it, across all attempts. Your own radio's echo and zero-hop echoes don't count.
 
 ### Context Actions (Long-Press / Right-Click)
 

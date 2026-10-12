@@ -23,6 +23,10 @@ class MessageStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
+  /// Upper bound on persisted messages per conversation. The oldest entries
+  /// beyond it are dropped on save.
+  static const int maxStoredMessages = 1000;
+
   Future<void> saveMessages(
     String contactKeyHex,
     List<Message> messages,
@@ -270,12 +274,6 @@ class MessageStore {
         );
         jsonString = legacyJsonString;
       }
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      jsonString = await history.getString(MessageHistoryKind.direct, keyFor);
-    }
-    if (jsonString == null || jsonString.isEmpty) {
-      return null;
     }
     return jsonString;
   }

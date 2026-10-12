@@ -31,7 +31,9 @@ class _AckHistoryEntry {
 /// for O(1) lookup.  [pathSelection] snapshots the route used for this
 /// specific attempt so that a late PUSH_CODE_SEND_CONFIRMED credits the
 /// correct path even when the message has since been retried on a different
-/// route.
+/// route.  Firmware hashes only `attempt & 3`, so attempts N and N+4 of one
+/// message share an ACK hash; each hash therefore keeps every attempt that
+/// produced it.
 typedef AckHashMapping = ({
   String messageId,
   DateTime timestamp,
@@ -193,7 +195,11 @@ class MessageRetryService extends ChangeNotifier {
 
   RetryServiceConfig? _config;
 
-  MessageRetryService();
+  /// Extra time allowed for RESP_CODE_SENT on top of the delivery timeout
+  /// before an attempt with no SENT reply is treated as timed out.
+  final Duration sentWatchdogGrace;
+
+  MessageRetryService({this.sentWatchdogGrace = const Duration(seconds: 5)});
 
   void initialize(RetryServiceConfig config) {
     _config = config;
@@ -1152,6 +1158,9 @@ class MessageRetryService extends ChangeNotifier {
     String? matchedMessageId;
     int? matchedAttemptIndex;
     PathSelection? matchedPathSelection;
+    // True when attempts on different routes share this ACK hash, so the
+    // route that delivered it is unknown and must not be credited.
+    var ambiguousPath = false;
     final ackHashHex = ackHash.toRadixString(16).padLeft(8, '0');
 
     // Clean up old ACK hash mappings (older than 15 minutes)
@@ -1171,6 +1180,11 @@ class MessageRetryService extends ChangeNotifier {
       matchedMessageId = mapping.messageId;
       matchedAttemptIndex = mapping.attemptIndex;
       matchedPathSelection = mapping.pathSelection;
+      ambiguousPath = mappings.any(
+        (m) =>
+            m.messageId != mapping.messageId ||
+            !_sameSelection(m.pathSelection, mapping.pathSelection),
+      );
     } else {
       config?.debugLogService?.warn(
         'PUSH_CODE_SEND_CONFIRMED: ACK hash $ackHashHex not found in direct mapping, trying fallback',
@@ -1229,13 +1243,15 @@ class MessageRetryService extends ChangeNotifier {
       config?.updateMessage(deliveredMessage);
 
       if (contact != null) {
-        _recordPathResultFromMessage(
-          contact.publicKeyHex,
-          message,
-          selection,
-          true,
-          tripTimeMs,
-        );
+        if (!ambiguousPath) {
+          _recordPathResultFromMessage(
+            contact.publicKeyHex,
+            message,
+            selection,
+            true,
+            tripTimeMs,
+          );
+        }
         if (config?.onDeliveryObserved != null &&
             tripTimeMs > 0 &&
             message.pathLength != null) {
@@ -1314,6 +1330,13 @@ class MessageRetryService extends ChangeNotifier {
     final recordSelection = selection ?? _selectionFromMessage(message);
     if (recordSelection == null) return;
     callback(contactKey, recordSelection, success, tripTimeMs);
+  }
+
+  static bool _sameSelection(PathSelection? a, PathSelection? b) {
+    if (a == null || b == null) return a == b;
+    return a.useFlood == b.useFlood &&
+        a.hopCount == b.hopCount &&
+        listEquals(a.pathBytes, b.pathBytes);
   }
 
   PathSelection? _selectionFromMessage(Message message) {

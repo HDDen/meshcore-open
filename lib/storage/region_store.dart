@@ -5,6 +5,11 @@ import 'prefs_manager.dart';
 
 typedef Region = String;
 
+/// Stored region assignment meaning "explicitly no region": floods go out
+/// unscoped even when an app or radio default region exists. '!' cannot occur
+/// in a region name, so it never collides with a real region.
+const Region kUnscopedRegion = '!unscoped';
+
 class RegionStore {
   static const String key = 'regions';
   String publicKeyHex = '';

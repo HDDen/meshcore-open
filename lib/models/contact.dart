@@ -21,7 +21,6 @@ class Contact {
   final bool hasMessages;
   final DateTime? lastModified;
   final bool isActive;
-  final bool wasPulled;
   final Uint8List? rawPacket;
 
   Contact({
@@ -41,7 +40,6 @@ class Contact {
     DateTime? lastMessageAt,
     this.hasMessages = false,
     this.isActive = true,
-    this.wasPulled = false,
     this.rawPacket,
   }) : lastMessageAt = lastMessageAt ?? lastSeen;
 

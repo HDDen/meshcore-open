@@ -133,9 +133,8 @@ class BufferWriter {
   void writeCString(String string, int maxLength) {
     final bytes = Uint8List(maxLength);
     final encoded = utf8.encode(string);
-    for (var i = 0; i < maxLength - 1 && i < encoded.length; i++) {
-      bytes[i] = encoded[i];
-    }
+    final len = utf8BoundaryLength(encoded, maxLength - 1);
+    bytes.setRange(0, len, encoded);
     writeBytes(bytes);
   }
 
@@ -339,6 +338,11 @@ const int respCodeChannelDataRecv = 27;
 const int respCodeDefaultFloodScope = 28;
 const int respCodeStats = 24;
 
+/// Region name field width in SET/GET_DEFAULT_FLOOD_SCOPE frames (NUL padded,
+/// so at most 30 name bytes).
+const int defaultFloodScopeNameSize = 31;
+const int floodScopeKeySize = 16;
+
 const int statsTypeCore = 0;
 const int statsTypeRadio = 1;
 const int statsTypePackets = 2;
@@ -407,6 +411,20 @@ const int autoAddRoomServerFlag =
 const int autoAddSensorFlag =
     1 << 4; // 0x10 - auto-add Sensor (ADV_TYPE_SENSOR)
 
+/// Returns the largest prefix length of [bytes] that is at most [maxBytes]
+/// and does not end in the middle of a UTF-8 encoded character.
+int utf8BoundaryLength(List<int> bytes, int maxBytes) {
+  if (bytes.length <= maxBytes) return bytes.length;
+  if (maxBytes <= 0) return 0;
+  var len = maxBytes;
+  // Back up over continuation bytes (10xxxxxx) to the lead byte, then drop
+  // that lead byte too since its character would be cut short.
+  while (len > 0 && (bytes[len] & 0xC0) == 0x80) {
+    len--;
+  }
+  return len;
+}
+
 // Sizes
 const int pubKeySize = 32;
 const int signatureSize = 64;
@@ -424,6 +442,11 @@ const int maxFrameSize = 176;
 /// MAX_PACKET_PAYLOAD(184) - CIPHER_BLOCK_SIZE(16) - 3 = 165 bytes — the node
 /// answers with an error frame and nothing is transmitted.
 const int maxChannelDataLength = 165;
+// Largest frame current firmware may send (MAX_FRAME_SIZE 176, +4 bytes for
+// region transport codes). Receive paths must accept frames up to this size.
+const int maxRxFrameSize = 176;
+// Widest per-hop path hash firmware accepts on air (mode 2); 4 is reserved.
+const int maxPathHashWidth = 3;
 const int appProtocolVersion = 4;
 // Matches firmware MAX_TEXT_LEN (10 * CIPHER_BLOCK_SIZE).
 const int maxTextPayloadBytes = 160;
@@ -791,7 +814,8 @@ Uint8List buildGetStatsFrame(int statsType) {
   return Uint8List.fromList([cmdGetStats, statsType & 0xFF]);
 }
 
-/// Path hash width on air: [61][0][mode], mode 0..3 → (mode+1) bytes per hop hash.
+/// Path hash width on air: [61][0][mode], mode 0..2 → (mode+1) bytes per hop
+/// hash. Firmware rejects mode 3 (4-byte hashes are reserved).
 Uint8List buildSetPathHashModeFrame(int mode) {
   final m = mode.clamp(0, 2).toInt();
   return Uint8List.fromList([cmdSetPathHashMode, 0, m]);
@@ -815,9 +839,7 @@ Uint8List buildSendSelfAdvertFrame({bool flood = false}) {
 // Format: [cmd][name...]
 Uint8List buildSetAdvertNameFrame(String name) {
   final nameBytes = utf8.encode(name);
-  final nameLen = nameBytes.length < maxNameSize
-      ? nameBytes.length
-      : maxNameSize - 1;
+  final nameLen = utf8BoundaryLength(nameBytes, maxNameSize - 1);
   final writer = BufferWriter();
   writer.writeByte(cmdSetAdvertName);
   writer.writeBytes(Uint8List.fromList(nameBytes.sublist(0, nameLen)));
@@ -1120,7 +1142,7 @@ Uint8List buildSendBinaryReq(Uint8List repeaterPubKey, {Uint8List? payload}) {
 
 Uint8List _reversePathByHop(Uint8List path, int pathHashWidth) {
   if (path.isEmpty) return Uint8List(0);
-  final width = pathHashWidth.clamp(1, 4).toInt();
+  final width = pathHashWidth.clamp(1, maxPathHashWidth).toInt();
   if (path.length % width != 0) {
     return Uint8List.fromList(path.reversed.toList());
   }
@@ -1143,9 +1165,7 @@ Uint8List buildSendAnonReqFrame(
   int replyHopCount = 0,
   int pathHashWidth = pathHashSize,
 }) {
-  // Current MeshCore firmware reserves path-hash mode 3 (4-byte hashes), so
-  // anon reply paths must stay in the supported 1..3 byte range.
-  final width = pathHashWidth.clamp(1, 3).toInt();
+  final width = pathHashWidth.clamp(1, maxPathHashWidth).toInt();
   final path = replyPath ?? Uint8List(0);
   final encodedPathLen = ((width - 1) << 6) | (replyHopCount & 0x3F);
   final writer = BufferWriter();

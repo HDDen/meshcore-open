@@ -81,6 +81,11 @@ class ImageCodecSession {
   Completer<void>? _shutdownCompleter;
   int _nextJobId = 1;
   bool _disposed = false;
+  bool _dead = false;
+
+  /// True once the worker isolate has died. A dead session can never answer
+  /// again, so the owner must drop it and spawn a new one.
+  bool get isDead => _dead;
 
   ImageCodecSession._({
     required Isolate isolate,
@@ -123,12 +128,16 @@ class ImageCodecSession {
     });
 
     errors.listen((message) {
-      final description = message is List && message.isNotEmpty
+      // `null` is the onExit notification: the isolate is gone without an
+      // error report (killed, or a native crash).
+      final description = message == null
+          ? 'exited'
+          : message is List && message.isNotEmpty
           ? message.first.toString()
           : message.toString();
       final active = session;
       if (active != null) {
-        active._failAll(StateError('Image codec isolate died: $description'));
+        active._markDead(StateError('Image codec isolate died: $description'));
       } else if (!handshake.isCompleted) {
         handshake.complete({'type': 'fatal', 'error': description});
       }
@@ -148,6 +157,7 @@ class ImageCodecSession {
         ),
         errorsAreFatal: true,
         onError: errors.sendPort,
+        onExit: errors.sendPort,
         debugName: 'image-codec',
       );
     } catch (_) {
@@ -368,6 +378,18 @@ class ImageCodecSession {
     if (shutdown != null && !shutdown.isCompleted) {
       shutdown.complete();
     }
+  }
+
+  /// The worker died on its own. Fail what is pending and refuse new work,
+  /// or the next job would be sent to a dead port and wait forever.
+  void _markDead(Object error) {
+    if (_disposed) return;
+    _dead = true;
+    _disposed = true;
+    _failAll(error);
+    _isolate.kill(priority: Isolate.immediate);
+    _fromWorker.close();
+    _errors.close();
   }
 
   /// Gracefully closes the native sessions, then stops the worker isolate.

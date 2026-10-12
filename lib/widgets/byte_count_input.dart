@@ -28,6 +28,9 @@ class ByteCountedTextField extends StatefulWidget {
   /// Optional focus node forwarded to the inner [TextField].
   final FocusNode? focusNode;
 
+  /// Whether the inner [TextField] requests focus when first built.
+  final bool autofocus;
+
   /// Hint text shown when the field is empty.
   final String? hintText;
 
@@ -98,6 +101,7 @@ class ByteCountedTextField extends StatefulWidget {
     required this.maxBytes,
     required this.controller,
     this.focusNode,
+    this.autofocus = false,
     this.hintText,
     this.textInputAction,
     this.onSubmitted,
@@ -395,6 +399,7 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
               textAlignVertical: TextAlignVertical.top,
               controller: widget.controller,
               focusNode: widget.focusNode,
+              autofocus: widget.autofocus,
               enabled: widget.enabled,
               inputFormatters: [
                 ...widget.extraFormatters,

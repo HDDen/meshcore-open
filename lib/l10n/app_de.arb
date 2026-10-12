@@ -499,6 +499,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "Ihr Funkgerät hat keinen Standort festgelegt",
+  "chat_shareMyLocation": "Meinen Standort teilen",
   "chat_location": "Ort",
   "chat_sendMessageTo": "Nachricht an {contactName} senden",
   "@chat_sendMessageTo": {
@@ -707,6 +709,7 @@
   "map_shareMarkerHere": "Marker hier teilen",
   "map_pinLabel": "Pin-Beschriftung",
   "map_label": "Beschriftung",
+  "map_labelUpdateHint": "Wenn Sie denselben Namen verwenden wie zuvor, wird die Markierung bei MeshCore Open-Empfängern aktualisiert.",
   "map_pointOfInterest": "Punkt von Interesse",
   "map_sendToContact": "An Kontakt senden",
   "map_sendToChannel": "An Kanal senden",
@@ -2120,6 +2123,44 @@
   "common_deleteAll": "Alles löschen",
   "discoveredContacts_deleteContactAllContent": "Sind Sie sicher, dass Sie alle gefundenen Kontakte löschen möchten?",
   "discoveredContacts_deleteContactAll": "Alle entdeckten Kontakte löschen",
+  "discoveredContacts_export": "Entdeckte Kontakte exportieren",
+  "discoveredContacts_import": "Entdeckte Kontakte importieren",
+  "discoveredContacts_exported": "Entdeckte Kontakte exportiert nach {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Export von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} entdeckte Kontakte importiert.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Keine Kontakte in Importdatei gefunden.",
+  "discoveredContacts_importInvalidFile": "Die Datei ist kein Export entdeckter Kontakte.",
+  "discoveredContacts_importSummary": "{imported} entdeckte Kontakte importiert. {skipped} bereits bekannte und {invalid} unlesbare Einträge übersprungen.",
+  "discoveredContacts_importTooLarge": "Die Importdatei ist zu groß (maximal {maxMb} MB).",
+  "discoveredContacts_importFailed": "Import von entdeckten Kontakten fehlgeschlagen: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_showGuessedLocations": "Vermutete Knotenstandorte anzeigen",
   "map_guessedLocation": "Vermuteter Standort",
   "usbScreenSubtitle": "Wählen Sie ein erkanntes serielles Gerät aus, um sich direkt mit Ihrem MeshCore-Knoten zu verbinden.",
@@ -3816,7 +3857,7 @@
   "settings_telemetryPerContactHint": "Um einen Kontakt zuzulassen, öffnen Sie den zugehörigen Chat und wählen Sie im Menü Kontakteinstellungen aus.",
   "settings_multiAckSubtitle": "Zusätzliche ACKs für eine bessere Zustellung senden; erhöht die Sendezeit",
   "settings_presetCustom": "Benutzerdefiniert",
-  "settings_radioMatchWarning": "Alle Knoten, mit denen Sie kommunizieren, müssen dieselbe Frequenz, Bandbreite, SF und CR verwenden.",
+  "settings_radioMatchWarning": "Alle Knoten, mit denen Sie kommunizieren, müssen dieselbe Frequenz, Bandbreite und SF verwenden. Die Coderate (CR) darf abweichen.",
   "settings_txPowerRangeHelper": "{min} bis {max} dBm",
   "settings_clientRepeatFrequencyNote": "Frequenz für die Weiterleitung ohne Netzstrom auf {freq} MHz gesetzt",
   "settings_pathHashModeHelper": "Größe der einzelnen Knoten-ID, die im Pfad der von diesem Funkgerät gesendeten Flood-Pakete aufgezeichnet wird: 1 Byte (256 IDs, bis zu 64 Hops), 2 Bytes (65.000 IDs, bis zu 32 Hops), 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Größere IDs verringern Kollisionen, aber Repeater mit einer Firmware älter als v1.14 verwerfen Pakete mit 2- oder 3-Byte-IDs.",
@@ -3900,5 +3941,57 @@
   "reviewMode_sendTest": "Testnachricht senden",
   "reviewMode_testSent": "Eine Testnachricht trifft in Kürze ein.",
   "reviewMode_exit": "Beenden",
-  "reviewMode_connectFailed": "Prüfmodus konnte nicht gestartet werden: {error}"
+  "reviewMode_connectFailed": "Prüfmodus konnte nicht gestartet werden: {error}",
+  "settings_regionUseRadioDefault": "Radio-Standard ({region})",
+  "settings_regionNoRegion": "Keine Region (ohne Bereich)",
+  "settings_regionRadioDefault": "Standardregion des Radios",
+  "settings_regionRadioDefaultSubtitle": "Auf dem Radio gespeichert. Floods ohne Region verwenden sie, von dieser App und von jeder anderen App, die mit dem Radio verbunden ist.",
+  "settings_regionRadioDefaultUpdated": "Standardregion des Radios aktualisiert",
+  "settings_regionRadioDefaultFailed": "Standardregion des Radios konnte nicht aktualisiert werden",
+  "appSettings_channelMinHopsCountRepeaters": "Auch verschiedene Repeater in der Nähe zählen",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Die Nachricht als gesendet betrachten, wenn {count, plural, =1{1 Repeater in der Nähe} other{{count} verschiedene Repeater in der Nähe}} sie wiederholen, auch wenn Sie nicht hören, wie sie weiterläuft.",
+  "appSettings_regionOnHopsLine": "Region neben der Hop-Anzahl",
+  "appSettings_regionOnHopsLineSubtitle": "Die Region einer Kanalnachricht in derselben Zeile wie die Hop-Anzahl anzeigen statt darunter.",
+  "channels_regionRadioDefaultSuffix": "(Radio-Standard)",
+  "channels_regionRadioDefaultApplies": "Dieses Radio sendet Floods ohne Region in seiner Standardregion: {region}.",
+  "chat_futureTimestampWarning": "Die Uhrzeit dieser Nachricht liegt in der Zukunft, daher könnte die Uhr des Absenders falsch gehen. Sie wird in der Reihenfolge ihres Eintreffens angezeigt.",
+  "discoveredContacts_scan": "Nach Knoten in der Nähe suchen",
+  "discoveredContacts_scanTitle": "Knoten in der Nähe",
+  "discoveredContacts_scanExplanation": "Fordert Knoten in direkter Funkreichweite auf, sich zu melden. Repeater und Sensoren antworten. Raumserver und Companions meist nicht.",
+  "discoveredContacts_scanning": "Suche läuft…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 Knoten gefunden} other{{count} Knoten gefunden}}",
+  "discoveredContacts_scanNoResults": "Kein Knoten hat geantwortet. Repeater begrenzen, wie oft sie antworten. Versuchen Sie es in einer Minute erneut.",
+  "discoveredContacts_scanAgain": "Erneut suchen",
+  "discoveredContacts_scanFailed": "Die Suchanfrage konnte nicht gesendet werden.",
+  "discoveredContacts_scanSignal": "Signal {snr} dB · sie haben uns mit {remoteSnr} dB gehört",
+  "discoveredContacts_scanInContacts": "Bereits in den Kontakten",
+  "discoveredContacts_scanNameLater": "Name erscheint nach der nächsten Ankündigung",
+  "channels_waitForSync": "Kanäle werden noch vom Radio geladen. Versuchen Sie es erneut, wenn die Synchronisierung abgeschlossen ist.",
+  "channels_nameTooLong": "Name ist zu lang (max. {maxBytes} Bytes).",
+  "repeater_valueRequired": "{field}: Wert eingeben",
+  "losMapDetailTooltip": "Kartendetails",
+  "losUnitsTooltip": "Einheiten",
+  "losDistance": "Entfernung",
+  "losClearance": "Freiraum",
+  "losBlockedBy": "Blockiert durch",
+  "losObstruction": "Hindernis",
+  "losDistanceFromA": "{distance} von A",
+  "losWorstBadge": "SCHLECHTESTES",
+  "losBlockedAmount": "Blockiert {amount}",
+  "losFromA": "Von A",
+  "losFromB": "Von B",
+  "losElevation": "Höhe",
+  "losCenterOnMap": "Auf Karte zentrieren",
+  "losStatusClear": "Frei",
+  "losStatusMarginal": "Grenzwertig",
+  "losStatusBlocked": "Blockiert",
+  "losStatusCheckingShort": "Prüfung",
+  "losStatusNoResult": "Kein Ergebnis",
+  "losSelectedPill": "Ausgewählt",
+  "gif_tapToLoad": "Zum Laden des GIFs tippen",
+  "gif_loadFailedRetry": "GIF kann nicht geladen werden\nTippen, um es erneut zu versuchen",
+  "qr_cameraPermissionDenied": "Kamerazugriff verweigert.\nBitte aktivieren Sie den Kamerazugriff in den Einstellungen.",
+  "qr_cameraUnsupported": "Kamera wird auf diesem Gerät nicht unterstützt.",
+  "qr_cameraStartFailed": "Kamera konnte nicht gestartet werden.\n{details}",
+  "imageMessages_downloadFailedWithError": "Das Bildmodell konnte nicht heruntergeladen werden: {error}"
 }

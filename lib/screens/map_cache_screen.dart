@@ -140,6 +140,7 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
   }
 
   void _updateEstimate() {
+    if (!mounted) return;
     if (_selectedBounds == null) {
       setState(() {
         _estimatedTiles = 0;

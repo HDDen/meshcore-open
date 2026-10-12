@@ -50,6 +50,7 @@ import '../helpers/channel_qr_link.dart'; // channel-qr-scan
 import '../helpers/gif_helper.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import 'channel_chat_screen.dart';
 import 'chat_screen.dart';
 import 'channel_qr_scanner_screen.dart'; // channel-qr-scan
@@ -627,10 +628,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final community = isCommunityChannel
         ? _communityIndex.getCommunityForChannel(channel)
         : null;
+    final radioDefault = connector.defaultRegionScopeLabel;
     final region = connector.hasChannelRegion(channel.index)
         ? context.l10n.channels_regionSetTo(
             connector.getChannelRegion(channel.index),
           )
+        : connector.isChannelExplicitlyUnscoped(channel.index) &&
+              connector.supportsExplicitUnscopedFlood
+        ? context.l10n.settings_regionNoRegion
+        : radioDefault != null &&
+              connector.channelUsesRadioDefaultScope(channel.index)
+        ? '${context.l10n.channels_regionSetTo(radioDefault)} '
+              '${context.l10n.channels_regionRadioDefaultSuffix}'
         : context.l10n.channels_regionNotSet;
     String subtitle = region;
     switch (channelType) {
@@ -2909,17 +2918,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   void _showAddChannelDialog(BuildContext context) {
     final connector = context.read<MeshCoreConnector>();
-    final nextIndex = _findNextAvailableIndex(
-      connector.channels,
-      connector.maxChannels,
-    );
-    if (nextIndex == null) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(context.l10n.channels_noFreeSlots),
-      );
-      return;
-    }
+    if (_resolveFreeChannelSlot(context, connector) == null) return;
     final hasPublicChannel = connector.channels.any((c) => c.isPublicChannel);
     int? selectedOption;
     final nameController = TextEditingController();
@@ -3109,7 +3108,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           labelText: sheetContext.l10n.channels_channelName,
                           border: const OutlineInputBorder(),
                         ),
-                        maxLength: 31,
+                        inputFormatters: const [
+                          Utf8LengthLimitingTextInputFormatter(
+                            maxRadioNameBytes,
+                          ),
+                        ],
                       ),
                     ),
                     Padding(
@@ -3131,6 +3134,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                   return;
                                 }
+                                final nextIndex = _resolveFreeChannelSlot(
+                                  context,
+                                  connector,
+                                );
+                                if (nextIndex == null) return;
                                 final psk = randomBytes(16);
                                 Navigator.pop(sheetContext);
                                 await connector.setChannel(
@@ -3171,7 +3179,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           labelText: sheetContext.l10n.channels_channelName,
                           border: const OutlineInputBorder(),
                         ),
-                        maxLength: 31,
+                        inputFormatters: const [
+                          Utf8LengthLimitingTextInputFormatter(
+                            maxRadioNameBytes,
+                          ),
+                        ],
                       ),
                     ),
                     Padding(
@@ -3219,6 +3231,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   );
                                   return;
                                 }
+                                final nextIndex = _resolveFreeChannelSlot(
+                                  context,
+                                  connector,
+                                );
+                                if (nextIndex == null) return;
                                 Navigator.pop(sheetContext);
                                 connector.setChannel(nextIndex, name, psk);
                                 if (context.mounted) {
@@ -3251,6 +3268,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       Expanded(
                         child: FilledButton(
                           onPressed: () {
+                            final nextIndex = _resolveFreeChannelSlot(
+                              context,
+                              connector,
+                            );
+                            if (nextIndex == null) return;
                             final psk = Channel.parsePskHex(
                               Channel.publicChannelPsk,
                             );
@@ -3438,6 +3460,27 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 if (hashtag.startsWith('#')) {
                                   hashtag = hashtag.substring(1);
                                 }
+                                if (!isRegularHashtag &&
+                                    selectedCommunity != null &&
+                                    utf8ByteLength(
+                                          '${selectedCommunity!.name} #$hashtag',
+                                        ) >
+                                        maxRadioNameBytes) {
+                                  showDismissibleSnackBar(
+                                    context,
+                                    content: Text(
+                                      sheetContext.l10n.channels_nameTooLong(
+                                        maxRadioNameBytes,
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                final nextIndex = _resolveFreeChannelSlot(
+                                  context,
+                                  connector,
+                                );
+                                if (nextIndex == null) return;
                                 final String channelName;
 
                                 final Uint8List psk;
@@ -3510,13 +3553,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         child: FilledButton.icon(
                           onPressed: () async {
                             Navigator.pop(sheetContext);
-                            if (context.mounted) {
-                              await ChannelQrScannerScreen.scanAndAdd(
-                                context,
-                                connector: connector,
-                                index: nextIndex,
-                              );
-                            }
+                            if (!context.mounted) return;
+                            final nextIndex = _resolveFreeChannelSlot(
+                              context,
+                              connector,
+                            );
+                            if (nextIndex == null) return;
+                            await ChannelQrScannerScreen.scanAndAdd(
+                              context,
+                              connector: connector,
+                              index: nextIndex,
+                            );
                           },
                           icon: const Icon(Icons.qr_code_scanner),
                           label: Text(sheetContext.l10n.channels_scanQrCode),
@@ -3576,7 +3623,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.groups),
                         ),
-                        maxLength: 31,
+                        inputFormatters: [
+                          Utf8LengthLimitingTextInputFormatter(
+                            maxRadioNameBytes,
+                            encoder: (text) =>
+                                '$text ${sheetContext.l10n.channels_public}',
+                          ),
+                        ],
                       ),
                     ),
                     CheckboxListTile(
@@ -3615,6 +3668,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   return;
                                 }
 
+                                final nextIndex = addPublicChannel
+                                    ? _resolveFreeChannelSlot(
+                                        context,
+                                        connector,
+                                      )
+                                    : null;
+                                if (addPublicChannel && nextIndex == null) {
+                                  return;
+                                }
+
                                 // Create community with random secret
                                 final community = Community.create(
                                   id: const Uuid().v4(),
@@ -3625,11 +3688,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 await _communityStore.addCommunity(community);
 
                                 // Optionally add the community public channel to the device
-                                if (addPublicChannel) {
+                                if (nextIndex != null) {
                                   final psk = community
                                       .deriveCommunityPublicPsk();
-                                  final channelName =
-                                      '${community.name} $publicLabel';
+                                  final channelName = fitRadioName(
+                                    community.name,
+                                    publicLabel,
+                                  );
                                   connector.setChannel(
                                     nextIndex,
                                     channelName,
@@ -3861,17 +3926,52 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
+  /// Picks a free channel slot at the moment the user commits, or shows why
+  /// none can be used. Slots are only trusted after a complete channel sync:
+  /// while syncing, a slot that hasn't been fetched yet looks empty and
+  /// writing to it would overwrite the channel stored on the radio.
+  int? _resolveFreeChannelSlot(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    if (connector.isSyncingChannels || !connector.hasLoadedChannels) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_waitForSync),
+      );
+      return null;
+    }
+    final index = _findNextAvailableIndex(
+      connector.channels,
+      connector.maxChannels,
+      connector.unconfirmedChannelSlots,
+    );
+    if (index == null) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_noFreeSlots),
+      );
+    }
+    return index;
+  }
+
   void _addPublicChannel(BuildContext context, MeshCoreConnector connector) {
+    final index = _resolveFreeChannelSlot(context, connector);
+    if (index == null) return;
     final psk = Channel.parsePskHex(Channel.publicChannelPsk);
-    connector.setChannel(0, context.l10n.channels_public, psk);
+    connector.setChannel(index, context.l10n.channels_public, psk);
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.channels_publicChannelAdded),
     );
   }
 
-  int? _findNextAvailableIndex(List<Channel> channels, int maxChannels) {
-    final usedIndices = channels.map((c) => c.index).toSet();
+  int? _findNextAvailableIndex(
+    List<Channel> channels,
+    int maxChannels,
+    Set<int> unconfirmedSlots,
+  ) {
+    final usedIndices = {...channels.map((c) => c.index), ...unconfirmedSlots};
     for (int i = 0; i < maxChannels; i++) {
       if (!usedIndices.contains(i)) return i;
     }

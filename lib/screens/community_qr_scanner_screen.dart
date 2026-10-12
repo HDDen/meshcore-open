@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/utf8_length_limiter.dart';
 import '../l10n/l10n.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
@@ -369,15 +370,33 @@ class _CommunityQrScannerScreenState extends State<CommunityQrScannerScreen> {
     _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
     await _communityStore.addCommunity(community);
 
-    // Optionally add the community public channel to the device
+    // Optionally add the community public channel to the device. Only trust
+    // free slots after a complete channel sync; mid-sync, unfetched slots
+    // look empty and writing one would overwrite an existing channel.
     if (addPublicChannel && context.mounted) {
       final connector = context.read<MeshCoreConnector>();
-      final nextIndex = _findNextAvailableChannelIndex(connector);
+      final slotsKnown =
+          connector.hasLoadedChannels && !connector.isSyncingChannels;
+      final nextIndex = slotsKnown
+          ? _findNextAvailableChannelIndex(connector)
+          : null;
 
       if (nextIndex != null) {
         final psk = community.deriveCommunityPublicPsk();
-        final channelName = '${community.name} Public';
+        final channelName = fitRadioName(
+          community.name,
+          context.l10n.channels_public,
+        );
         connector.setChannel(nextIndex, channelName, psk);
+      } else {
+        showDismissibleSnackBar(
+          context,
+          content: Text(
+            slotsKnown
+                ? context.l10n.channels_noFreeSlots
+                : context.l10n.channels_waitForSync,
+          ),
+        );
       }
     }
 
@@ -394,7 +413,10 @@ class _CommunityQrScannerScreenState extends State<CommunityQrScannerScreen> {
   }
 
   int? _findNextAvailableChannelIndex(MeshCoreConnector connector) {
-    final usedIndices = connector.channels.map((c) => c.index).toSet();
+    final usedIndices = {
+      ...connector.channels.map((c) => c.index),
+      ...connector.unconfirmedChannelSlots,
+    };
     for (int i = 0; i < connector.maxChannels; i++) {
       if (!usedIndices.contains(i)) return i;
     }

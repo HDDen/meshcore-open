@@ -134,6 +134,18 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
         'text': command,
         'timestamp': DateTime.now().toString(),
       });
+      // The repeater enters load mode as soon as it receives the command, and
+      // its reply may take a full timeout (or be lost). Switch modes now so
+      // lines typed meanwhile go out verbatim instead of as `XX|` commands; a
+      // blank line always ends it safely.
+      if (startsRegionLoad) {
+        _regionLoadActive = true;
+        _commandHistory.add({
+          'type': 'response',
+          'text': context.l10n.repeater_cliRegionLoadActive,
+          'timestamp': DateTime.now().toString(),
+        });
+      }
     });
     _commandController.clear();
     _historyIndex = -1;
@@ -183,19 +195,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           });
         });
       }
-    }
-
-    // The reply to `region load` may be lost even though the repeater entered
-    // load mode, so enter it regardless; a blank line always ends it safely.
-    if (startsRegionLoad && mounted) {
-      setState(() {
-        _regionLoadActive = true;
-        _commandHistory.add({
-          'type': 'response',
-          'text': context.l10n.repeater_cliRegionLoadActive,
-          'timestamp': DateTime.now().toString(),
-        });
-      });
     }
 
     _scrollToBottom();

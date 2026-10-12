@@ -446,6 +446,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_regionDefaultNone => 'Немає';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return 'Типово для радіо ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => 'Без регіону (без обмеження)';
+
+  @override
+  String get settings_regionRadioDefault => 'Типовий регіон радіо';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      'Зберігається на радіо. Його використовують flood-розсилки без регіону — із цього та будь-якого іншого застосунку, підключеного до радіо.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated =>
+      'Типовий регіон радіо оновлено';
+
+  @override
+  String get settings_regionRadioDefaultFailed =>
+      'Не вдалося оновити типовий регіон радіо';
+
+  @override
   String get settings_regionManagement_screenTitle => 'Керування регіонами';
 
   @override
@@ -723,7 +746,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      'Усі вузли, з якими ви спілкуєтесь, мають використовувати однакові частоту, смугу пропускання, SF та CR.';
+      'Усі вузли, з якими ви спілкуєтесь, мають використовувати однакові частоту, смугу пропускання та SF. Швидкість кодування (CR) може відрізнятися.';
 
   @override
   String get settings_frequency => 'Частота (МГц)';
@@ -946,6 +969,30 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return 'Повторювати до $_temp0';
   }
+
+  @override
+  String get appSettings_channelMinHopsCountRepeaters =>
+      'Також враховувати інші найближчі ретранслятори';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count різного найближчого ретранслятора',
+      many: '$count різних найближчих ретрансляторів',
+      few: '$count різні найближчі ретранслятори',
+      one: '$count найближчий ретранслятор',
+    );
+    return 'Вважати повідомлення надісланим, коли його повторять $_temp0, навіть якщо ви не чуєте, як воно йде далі.';
+  }
+
+  @override
+  String get appSettings_regionOnHopsLine => 'Регіон поруч із кількістю хопів';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      'Показувати регіон повідомлення каналу в одному рядку з кількістю хопів, а не під ним.';
 
   @override
   String get appSettings_notifications => 'Сповіщення';
@@ -1707,6 +1754,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(за замовчуванням)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(типово для радіо)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return 'Це радіо надсилає flood без регіону у свій типовий регіон: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       'Повідомлення, що розсилаються в цьому каналі, пересилатимуть лише ретранслятори у вибраному регіоні.';
 
@@ -1751,6 +1806,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_typeMessage => 'Введіть повідомлення...';
 
   @override
+  String get chat_futureTimestampWarning =>
+      'Час цього повідомлення в майбутньому, тож годинник відправника може бути неточним. Повідомлення показано в порядку отримання.';
+
+  @override
   String chat_messageTooLong(int maxBytes) {
     return 'Повідомлення занадто довге (макс. $maxBytes байт).';
   }
@@ -1776,6 +1835,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'Надіслати GIF';
+
+  @override
+  String get chat_shareMyLocation => 'Поділитися моєю геопозицією';
+
+  @override
+  String get chat_noRadioLocation => 'У вашому радіо не задано геопозицію';
 
   @override
   String get chat_removeGif => 'Видалити GIF';
@@ -2283,6 +2348,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get map_label => 'Мітка';
+
+  @override
+  String get map_labelUpdateHint =>
+      'Якщо використати ту саму мітку, що й раніше, маркер оновиться в одержувачів MeshCore Open.';
 
   @override
   String get map_pointOfInterest => 'Точка інтересу';
@@ -4959,6 +5028,54 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contacts_contactImportFailed => 'Контакт не вдалось імпортувати';
 
   @override
+  String get discoveredContacts_export => 'Експортувати виявлені контакти';
+
+  @override
+  String get discoveredContacts_import => 'Імпортувати виявлені контакти';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return 'Виявлені контакти експортовано до $path.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return 'Не вдалося експортувати виявлені контакти: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return 'Імпортовано $count виявлених контактів.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts =>
+      'У файлі імпорту не знайдено контактів.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return 'Імпортовано: $imported, пропущено вже відомих: $skipped, нечитабельних записів: $invalid.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      'Файл не є експортом виявлених контактів.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return 'Файл імпорту завеликий (максимум $maxMb МБ).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return 'Не вдалося імпортувати виявлені контакти: $error';
+  }
+
+  @override
   String get contacts_zeroHopAdvert => 'Оголошення без ретрансляції';
 
   @override
@@ -5266,6 +5383,55 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get discoveredContacts_deleteContactAllContent =>
       'Ви впевнені, що хочете видалити всі виявлені контакти?';
+
+  @override
+  String get discoveredContacts_scan => 'Сканувати найближчі вузли';
+
+  @override
+  String get discoveredContacts_scanTitle => 'Найближчі вузли';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      'Просить вузли в зоні прямого радіозв’язку відрекомендуватися. Відповідають ретранслятори та датчики. Сервери кімнат і компаньйони зазвичай не відповідають.';
+
+  @override
+  String get discoveredContacts_scanning => 'Сканування…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Знайдено $count вузла',
+      many: 'Знайдено $count вузлів',
+      few: 'Знайдено $count вузли',
+      one: 'Знайдено $count вузол',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      'Жоден вузол не відповів. Ретранслятори обмежують частоту відповідей, спробуйте за хвилину.';
+
+  @override
+  String get discoveredContacts_scanAgain => 'Сканувати знову';
+
+  @override
+  String get discoveredContacts_scanFailed =>
+      'Не вдалося надіслати запит сканування.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return 'Сигнал $snr дБ · нас почули з $remoteSnr дБ';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => 'Уже в контактах';
+
+  @override
+  String get discoveredContacts_scanNameLater =>
+      'Ім’я з’явиться після наступного оголошення';
 
   @override
   String get chat_sendCooldown =>
@@ -7488,5 +7654,105 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String reviewMode_connectFailed(Object error) {
     return 'Не вдалося запустити режим перевірки: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      'Канали ще завантажуються з радіо. Спробуйте після завершення синхронізації.';
+
+  @override
+  String channels_nameTooLong(Object maxBytes) {
+    return 'Ім’я задовге (макс. $maxBytes байт).';
+  }
+
+  @override
+  String repeater_valueRequired(Object field) {
+    return '$field: введіть значення';
+  }
+
+  @override
+  String get losMapDetailTooltip => 'Деталізація карти';
+
+  @override
+  String get losUnitsTooltip => 'Одиниці';
+
+  @override
+  String get losDistance => 'Відстань';
+
+  @override
+  String get losClearance => 'Просвіт';
+
+  @override
+  String get losBlockedBy => 'Заблоковано';
+
+  @override
+  String get losObstruction => 'Перешкода';
+
+  @override
+  String losDistanceFromA(Object distance) {
+    return '$distance від A';
+  }
+
+  @override
+  String get losWorstBadge => 'НАЙГІРША';
+
+  @override
+  String losBlockedAmount(Object amount) {
+    return 'Перекрито на $amount';
+  }
+
+  @override
+  String get losFromA => 'Від A';
+
+  @override
+  String get losFromB => 'Від B';
+
+  @override
+  String get losElevation => 'Висота';
+
+  @override
+  String get losCenterOnMap => 'Центрувати на карті';
+
+  @override
+  String get losStatusClear => 'Чисто';
+
+  @override
+  String get losStatusMarginal => 'На межі';
+
+  @override
+  String get losStatusBlocked => 'Заблоковано';
+
+  @override
+  String get losStatusCheckingShort => 'Перевірка';
+
+  @override
+  String get losStatusNoResult => 'Немає результату';
+
+  @override
+  String get losSelectedPill => 'Вибрано';
+
+  @override
+  String get gif_tapToLoad => 'Торкніться, щоб завантажити GIF';
+
+  @override
+  String get gif_loadFailedRetry =>
+      'Не вдається завантажити GIF\nТоркніться, щоб повторити';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      'Доступ до камери заборонено.\nУвімкніть доступ до камери в налаштуваннях.';
+
+  @override
+  String get qr_cameraUnsupported =>
+      'Камера не підтримується на цьому пристрої.';
+
+  @override
+  String qr_cameraStartFailed(Object details) {
+    return 'Не вдалося запустити камеру.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(Object error) {
+    return 'Не вдалося завантажити модель зображень: $error';
   }
 }

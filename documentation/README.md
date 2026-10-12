@@ -1,6 +1,6 @@
 # MeshCore Open - Feature Documentation
 
-MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking devices. These guides describe current user-facing features and their requirements. Reviewed against app `9.5.0+16`, including region-display merge `5eca459e`, on September 27, 2026. Hardware behavior still depends on platform, radio, and firmware.
+MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking devices. These guides describe current user-facing features and their requirements. Reviewed against app `9.5.0+18` on October 11, 2026. Hardware behavior still depends on platform, radio, and firmware.
 
 ## Start here
 
@@ -11,19 +11,19 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 
 ## Table of Contents
 
-1. [Scanner & Connection](scanner-and-connection.md) - BLE scanning, USB serial, and TCP connection
+1. [Scanner & Connection](scanner-and-connection.md) - BLE scanning, USB serial, and TCP connection with automatic reconnect
 2. [Navigation](navigation.md) - App flow, device screen, and quick-switch navigation
-3. [Contacts](contacts.md) - Contact management, groups, discovery, and sharing
-4. [Chat & Messaging](chat-and-messaging.md) - Direct messages, message status, reactions, and retries
-5. [Channels](channels.md) - Broadcast channels, communities, and channel chat
-6. [Map & Location](map-and-location.md) - Node map, path tracing, line-of-sight, and offline caching
+3. [Contacts](contacts.md) - Contact management, groups, discovery, nearby-node scan, discovered-contact import/export, and sharing
+4. [Chat & Messaging](chat-and-messaging.md) - Direct messages, location sharing, message status, reactions, and retries
+5. [Channels](channels.md) - Broadcast channels, communities, channel chat, and auto-resend
+6. [Map & Location](map-and-location.md) - Node map, shared pins, path tracing, line-of-sight, and offline caching
 7. [Settings](settings.md) - Device settings, app settings, radio configuration, and exports
 8. [Notifications](notifications.md) - System notifications, replies from watches and Android Auto, unread badges, and notification preferences
 9. [Repeater Management](repeater-management.md) - Repeater hub, status, CLI, telemetry, and neighbors
 10. [Additional Features](additional-features.md) - GIF picker, localization, debug logs, SMAZ compression, and more
 11. [Routing Paths](routing-paths.md) - Path encoding, validation, device capability detection, and storage
 12. [BLE Protocol & Data Layer](ble-protocol.md) - Technical reference for the communication protocol and data architecture
-13. [Regions](regions.md) - Default/override scopes, message labels, and reply regions
+13. [Regions](regions.md) - App and radio default regions, unscoped sends, message labels, and reply regions
 14. [Image Messages](image-messages.md) - Model setup, mesh image sending, recovery, and reconstruction
 15. [Companion Radio Statistics](radio-statistics.md) - Noise, signal metrics, and airtime
 16. [Troubleshooting](troubleshooting.md) - BLE, USB, browser, and firmware issues
@@ -38,6 +38,8 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 - **View nodes on a map** with GPS locations, predicted positions, and path traces
 - **Manage repeaters** with CLI access, telemetry, neighbor info, and settings
 - **Share contacts** via `meshcore://` URIs and QR codes
+- **Share locations** as map pins from chat or the map
+- **Scan for nearby nodes** and import/export discovered contacts
 - **Configure radio settings** including frequency, power, bandwidth, and spreading factor
 - **Cache offline maps** for use without internet connectivity
 - **Read saved chat history offline**, either for one previously connected node or as a shared cross-node view

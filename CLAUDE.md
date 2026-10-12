@@ -68,7 +68,7 @@ All screens are fully implemented (no remaining placeholders).
 | `scanner_screen.dart` | BLE device scan and connect — main entry point |
 | `tcp_screen.dart` | Connect to a MeshCore device over TCP/IP |
 | `usb_screen.dart` | Connect to a MeshCore device over USB serial |
-| `discovery_screen.dart` | Browse discovered mesh nodes not yet in contacts; a discovery request sent from the screen lists the nodes that answer it above a rule, a contact the node holds among them dimmed and without actions, and leaves the list as it was below |
+| `discovery_screen.dart` | Browse discovered mesh nodes not yet in contacts; a discovery request sent from the screen lists the nodes that answer it above a rule, a contact the node holds among them dimmed and without actions, and leaves the list as it was below; its menu exports the list to a JSON file and imports one |
 | `chrome_required_screen.dart` | Web gate for non-Chrome browsers (BLE unavailable) |
 
 ### Chat / Messaging
@@ -310,7 +310,7 @@ The node owns its contact table and says what it did with each advert. `PUSH_COD
 
 **The contact list is the node's.** Every sync keeps the list on screen while it runs (`preserveExisting`), so a full one, without `since`, is what prunes it: `CONTACTS_START` notes the keys listed before it (`_contactsUnconfirmedBySync`), every CONTACT frame, a sync's or a GET_CONTACT_BY_KEY answer, strikes its key, and at `END_OF_CONTACTS` `_dropContactsMissingFromNode` removes what is left, a contact the node no longer holds or never did. Its conversation stays in the database and its unread count goes, nothing on screen being left to clear it. A sync filtered by lastmod lists only what changed and a sync that ended in the idle timeout proves nothing, so neither drops anything. Discovered entries never become contacts: `isActive` in the discovered list only mirrors membership (`updateKnownDiscovered`). `_loadDiscoveredContactCache` used to merge every entry flagged active, favourite or with messages into the list, and with NEW_ADVERT still routed through `_handleContact`, which recorded each node as an active discovered entry before the auto-add filter, every node a node with auto-add off declined came back as a contact at the next connection: contacts the node did not hold, which the official app did not show, which returned after deletion and failed a batch deletion. `removeContact` therefore takes the node's ERR_CODE_NOT_FOUND (`CommandFailedException.errCode == errCodeNotFound`) as a finished removal, so such an entry can still be deleted.
 
-**Repeaters only the app knows.** The contact list also shows the repeaters the app has heard whose adverts the node did not keep (`MeshCoreConnector.localRepeaters`: discovered entries of type repeater with no counterpart in `_contacts`), after the node's own contacts and with `contacts_notInNodeMemory` as the last line of the card; `_discoveredContacts` is a `KeyIndexedList` too, and the screen keys its snapshot and its derived rows on `discoveredRevision` as well. They stay in the app-wide discovered list, never in `_contacts`, up to `_maxDiscoveredContacts` (1000, the stalest evicted). A ping reaches them as they are, a trace needing no contact on the node. A login, a status or region request, a favourite or a share needs the node to hold the contact (the firmware answers ERR_CODE_NOT_FOUND otherwise, and a region request on a route writes the contact through `setContactPath`), so these go through `runWithContactOnNode` (`widgets/node_memory_prompt.dart`), which asks before `importDiscoveredContact` writes it and tells a full table (ERR_CODE_TABLE_FULL) apart from other failures. The map's actions on discovered nodes, opening a chat and joining a room included, ask the same way; they used to import silently. `deleteContact` removes a contact from the node when the node holds it and from the discovered list otherwise, so deleting such a repeater sends the node no removal it cannot perform; its next advert brings it back.
+**Repeaters only the app knows.** The contact list also shows the repeaters the app has heard whose adverts the node did not keep (`MeshCoreConnector.localRepeaters`: discovered entries of type repeater with no counterpart in `_contacts`), after the node's own contacts and with `contacts_notInNodeMemory` as the last line of the card; `_discoveredContacts` is a `KeyIndexedList` too, and the screen keys its snapshot and its derived rows on `discoveredRevision` as well. They stay in the app-wide discovered list, never in `_contacts`, up to `maxDiscoveredContacts` (1000, the stalest evicted). A ping reaches them as they are, a trace needing no contact on the node. A login, a status or region request, a favourite or a share needs the node to hold the contact (the firmware answers ERR_CODE_NOT_FOUND otherwise, and a region request on a route writes the contact through `setContactPath`), so these go through `runWithContactOnNode` (`widgets/node_memory_prompt.dart`), which asks before `importDiscoveredContact` writes it and tells a full table (ERR_CODE_TABLE_FULL) apart from other failures. The map's actions on discovered nodes, opening a chat and joining a room included, ask the same way; they used to import silently. `deleteContact` removes a contact from the node when the node holds it and from the discovered list otherwise, so deleting such a repeater sends the node no removal it cannot perform; its next advert brings it back.
 
 ### Contact message summaries and channel-screen visibility
 
@@ -1703,6 +1703,8 @@ Background wardriving (`map_wardriveInBackground`, Android only) needs five thin
 ### Region / flood-scope routing
 Channels can be tagged with a named region; `cmdSetFloodScope` (54) / `cmdSetDefaultFloodScope` (63) hash `#<name>` (SHA-256, first 16 bytes) into a scope. Managed in `region_management_screen.dart`; persisted in `region_store` / `channel_region_store`.
 
+A channel can also be set to *no region*: `kUnscopedRegion` (`'!unscoped'`, `region_store.dart`, upstream's marker) stored in the channel's region slot, which `getChannelRegion` answers `''` for, so a share link, a label or `outgoingChannelRegionLabel` never treat it as a region, while `isChannelExplicitlyUnscoped` tells it apart. Its floods go out under no scope at all, the node's default scope included: `_runScopedChannelSend` sends CMD_SET_FLOOD_SCOPE sub-command 1 for it through `_sendFloodUnscopedFrame`, the same probe the contact's flood choice uses (the first refusal sets `_unscopedSendUnsupported` for the connection, and the send falls back to the bare clear, which puts the default scope back). The picker's tile (`_RegionSelectDialog`) shows on firmware 12+ only (`supportsExplicitUnscopedFlood`), and the channels list and the chat's app bar label the channel *no region* while the firmware takes the flag, else with the node's default scope and `channels_regionRadioDefaultSuffix`, read through `channelUsesRadioDefaultScope`. The contact's own choice keeps its `*` marker (`ContactRegionStore.unscoped`), a different store.
+
 A channel send carries no region in its command: `_runScopedChannelSend` sets the scope override (54 with the key, or 54 without one for an unscoped channel, so nothing another client left behind leaks into the packet), sends, waits for the node's `RESP_CODE_OK`, which it writes only after building the packet with the scope's transport code (`Mesh::sendFlood`), and clears the override; all of it under `_runChannelCommandLocked`, the scope being one field on the node. A channel send is never answered with `RESP_CODE_SENT`, in stock firmware or the South Edition, and meshcore_py waits for OK as well. Channel text and reactions once waited for SENT, a leftover of an upstream branch, and so held the lock and the scope for the full five-second timeout on every message, while direct messages and repeater commands queued behind them. The same belief had `_handleMessageSent` give an unclaimed SENT to the oldest pending channel message; it answers a login, a request or a CLI command (whose SENT carries a zero hash), so the message was marked sent before it went out and left out of the replay after a reconnect. An unclaimed SENT is now ignored, as upstream does too.
 
 A contact can carry a flood choice of its own (`ContactRegionStore`, `getContactRegion` / `setContactRegion`): a region, or `ContactRegionStore.unscoped` (`*`), no scope at all. It is chosen from the line the direct chat's app bar shows under the route line whenever a send would go by flood, forced or automatic with no route; the picker (`widgets/contact_region_dialog.dart`) lists *no region* first, then the known regions, and its clear action drops the contact's choice so the node's default scope applies again. Every attempt the retry service makes goes through `_sendMessageDirect` under the same lock, so a direct send never falls inside a channel's scoped window nor a channel send inside a direct one. A flood attempt to a contact with a choice opens a window of its own (`_sendScopedContactFrame`): 54 with the region's key, or 54 sub-command 1 for unscoped (`buildSetFloodUnscopedFrame`, firmware 12+; older firmware answers `ERR_CODE_UNSUPPORTED_CMD`, which is logged once and sends every unscoped attempt under the default scope until the connection ends, while any other failure fails the attempt as a region's scope command does), then the frame, `RESP_CODE_SENT`, and 54 sub-command 0, which clears the key and the unscoped flag alike. Without a choice the app sends nothing extra and the node stamps its default scope. A room login, a repeater login, a status, telemetry or neighbour request and every CLI command to a repeater (the settings and console screens, the settings' danger zone, the clock sync after a login) take the same road through `sendContactFrame(contact, frame, useFlood:)`, with the routing their screen prepared through `preparePathForContactSend`; the firmware floods them exactly as it floods a text message (`sendLogin` / `sendRequest` / `sendCommandData` end in `sendFloodScoped(recipient)`) and answers them with `RESP_CODE_SENT` too, so the line shows for a room server as well. The CLI commands and the telemetry and neighbour requests used to go out through a bare `sendFrame`: by flood they took the node's default scope while the login before them took the contact's region, and one written while a channel's window stood open took that channel's. Under the lock a command now waits for a channel send in progress, its radio-quiet wait included. `sendContactFrame` rethrows a failure as `sendFrame` does, so a screen reports a send that did not happen instead of waiting out a reply; only the telemetry request to the node itself stays on `sendFrame`, since it never leaves the node. Room posts flood like any other direct message: the retry service's `_roomPostPathWithoutFlood` guard of 2026-09-18, which turned a flood choice for a room into the known route or a zero-hop direct send, was removed on 2026-09-26 once posts could carry a region. What it spared is accepted now: the firmware floods only a contact with no route, so a flood attempt erases the node's route to the room, and until the room's next path return the node acknowledges the room's pushes by flood (`sendAckTo`). The node's own ACKs and path returns for what it receives from that contact still go under its default scope, out of the app's reach. The picker paints a tile's colour through its own `Material` inside a `ClipRect`: `tileColor` is ink on the nearest Material, which a scrolled-away tile otherwise keeps showing under the bar.
@@ -1959,11 +1961,61 @@ enforcement, light icons over the image viewer and the QR scanner); the copy
 snackbar skipped on Android, where the system shows its own chip; the
 package bumps in all four pubspecs. Left out: the discovered-contact
 eviction toggle (`evictDiscoveredContactsEnabled`, cap 500), since the fork
-keeps its eviction always on at `_maxDiscoveredContacts` (1000); its ARB keys
+keeps its eviction always on at `maxDiscoveredContacts` (1000); its ARB keys
 came along unused. Upstream's re-indent of `channels_screen.dart` made the
 auto-merge turn the search clear button's `setChannelsSearchText('')` into
 `(value)`: a hot screen's `git diff HEAD` is read even when its conflicts
 were taken as ours.
+
+**Step 3 (2026-10-12, dev up to 9609a823).** Taken: the contact-sync fixes
+(CMD_APP_START stops the firmware's contact iterator, so `_sendAppStart`
+holds it back while a sync runs and `_continueAfterContactSync` sends it at
+the end; a message from a sender the app does not know yet is held in
+`_unknownSenderMessageFrames` and replayed when its CONTACT frame arrives or
+the sync ends, where it used to be re-parsed after a refresh that had
+delivered nothing, the firmware having already dropped it from its queue);
+the channel sync ending at the first ERR_NOT_FOUND
+(`_handleChannelSyncNotFound`) and `_unconfirmedChannelSlots` behind the
+free-slot choice of the channels and community screens; a later SELF_INFO
+of the same radio in one link session (`refreshDeviceInfo` after a settings
+change) no longer reloads every store (`_persistedStateLoadedKey`), and
+another radio answering after a dropped BLE link drops the previous radio's
+in-memory history (`_messageStateOwnerKey`, `_clearSessionMessageState`);
+reply tombstones in `PendingCommandReplies`, so a late OK or ERR of a
+timed-out command cannot complete the next one; 176-byte RX frames
+(`maxRxFrameSize`, the USB codec); TCP keepalive probes in
+`tcp_transport_service_native.dart`; the discovered list's export and
+import (`exportDiscoveredContactsJson` / `importDiscoveredContactsJson`, the
+discovery screen's menu, onto the app-wide list and the fork's cap, public
+now as `maxDiscoveredContacts`); the repeater command service's late-reply
+handling, merged with the fork's `sendContactFrame`; the image store's
+atomic writes, dead worker and delete-during-decode fixes merged into
+`received_image_store.dart`; the future-timestamp indicator next to a
+message time, computed on the fork's `receivedAt` (nullable on `Message`);
+`_isSendingText` in both chats, with the draft kept when it changed during
+an outgoing translation; `MarkerLabelDialog` on the map, fed the fork's own
+`_maxMarkerLabelBytes` budget; the system text scale as the default of
+`LinkHandler.buildLinkifyText` (the chats pass their own scaler); the app
+badge on iOS and macOS; UTF-8 name limits; `channelMinHopsCountRepeaters`;
+`regionOnHopsLine`, taken as a setting (the channel bubble puts the region
+into the hop row instead of upstream's `_RouteRegionChips`); and a channel's
+explicit *no region*, added on top of the fork's scope handling (see
+**Region / flood-scope routing**). Left out: upstream's TCP auto-reconnect
+(the fork reconnects every transport through `_scheduleReconnect`), the
+preference archive window (`setArchived`; the fork pages SQLite), the
+stalled-sync watchdog (the fork's `_contactSyncIdleTimeout` ends such a
+sync), upstream's app default region and its radio-default dropdown on the
+region screen (the fork has its own default-scope section over
+`getDefaultRegionScope`), the node scan sheet (#570), share-my-location
+from the chat composer (the fork's actions sheet inserts the coordinates,
+the map shares pins), `Contact.wasPulled` (removed upstream; the map's
+contact signature dropped it). Dropped tests: `received_at_test` (the
+archive, a non-null `Message.receivedAt`), `default_flood_scope_test`
+(upstream's app default), `scoped_store_fixes_test` (preference-key
+scoping). Auto-merge damage fixed: the closing `}` of
+`_handleDisconnection`, a stray `return;` in the unknown-sender branch, a
+duplicate `case respCodeDefaultFloodScope`, the discovery screen's lost
+delete handler, a `showDismissibleSnackBar` call without its import.
 
 ## Transports
 

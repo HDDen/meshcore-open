@@ -428,6 +428,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_regionDefaultNone => '없음';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return '무전기 기본값 ($region)';
+  }
+
+  @override
+  String get settings_regionNoRegion => '지역 없음 (범위 미지정)';
+
+  @override
+  String get settings_regionRadioDefault => '무전기 기본 지역';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      '무전기에 저장됩니다. 지역 없이 보내는 플러딩은 이 앱과 무전기에 연결된 다른 앱 모두 이 지역을 사용합니다.';
+
+  @override
+  String get settings_regionRadioDefaultUpdated => '무전기 기본 지역을 업데이트했습니다';
+
+  @override
+  String get settings_regionRadioDefaultFailed => '무전기 기본 지역을 업데이트하지 못했습니다';
+
+  @override
   String get settings_regionManagement_screenTitle => '리전 관리';
 
   @override
@@ -693,7 +714,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_radioMatchWarning =>
-      '통신하는 모든 노드가 동일한 주파수, 대역폭, 확산 계수, 코딩 속도를 사용해야 합니다.';
+      '통신하는 모든 노드가 동일한 주파수, 대역폭, 확산 계수를 사용해야 합니다. 코딩 속도(CR)는 달라도 됩니다.';
 
   @override
   String get settings_frequency => '주파수 (MHz)';
@@ -909,6 +930,27 @@ class AppLocalizationsKo extends AppLocalizations {
     );
     return '$_temp0까지 재전송';
   }
+
+  @override
+  String get appSettings_channelMinHopsCountRepeaters => '근처의 다른 리피터도 포함';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '근처의 서로 다른 리피터 $count대',
+      one: '근처 리피터 1대',
+    );
+    return '$_temp0가 다시 전송하면, 그 너머로 전달되는 것이 들리지 않아도 전송된 것으로 처리합니다.';
+  }
+
+  @override
+  String get appSettings_regionOnHopsLine => '홉 수 옆에 지역 표시';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      '채널 메시지의 지역을 홉 수 아래가 아닌 같은 줄에 표시합니다.';
 
   @override
   String get appSettings_notifications => '알림';
@@ -1634,6 +1676,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channels_regionDefaultSuffix => '(기본값)';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '(무전기 기본값)';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return '이 무전기는 지역 없는 플러딩을 기본 지역으로 보냅니다: $region.';
+  }
+
+  @override
   String get channels_regionSelectExplanation =>
       '이 채널의 플러딩 메시지는 선택한 지역 안의 리피터만 전달합니다.';
 
@@ -1677,6 +1727,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_typeMessage => '메시지를 입력하세요...';
 
   @override
+  String get chat_futureTimestampWarning =>
+      '이 메시지의 시간이 미래입니다. 보낸 사람의 시계가 잘못되었을 수 있습니다. 도착한 순서대로 표시됩니다.';
+
+  @override
   String chat_messageTooLong(int maxBytes) {
     return '메시지가 너무 깁니다 (최대 $maxBytes 바이트).';
   }
@@ -1702,6 +1756,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_sendGif => 'GIF 보내기';
+
+  @override
+  String get chat_shareMyLocation => '내 위치 공유';
+
+  @override
+  String get chat_noRadioLocation => '무전기에 위치가 설정되어 있지 않습니다';
 
   @override
   String get chat_removeGif => 'GIF 제거';
@@ -2194,6 +2254,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_label => '레이블';
+
+  @override
+  String get map_labelUpdateHint =>
+      '이전과 같은 레이블을 사용하면 MeshCore Open 수신자에게 표시된 마커가 업데이트됩니다.';
 
   @override
   String get map_pointOfInterest => '관심 지점';
@@ -4728,6 +4792,53 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_contactImportFailed => '연락처를 가져오지 못했습니다.';
 
   @override
+  String get discoveredContacts_export => '발견된 연락처 내보내기';
+
+  @override
+  String get discoveredContacts_import => '발견된 연락처 가져오기';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '발견된 연락처를 $path(으)로 내보냈습니다.';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '발견된 연락처 내보내기에 실패했습니다: $error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '발견된 연락처 $count개를 가져왔습니다.';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => '가져오기 파일에서 연락처를 찾을 수 없습니다.';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return '가져옴: $imported개, 건너뜀(이미 등록됨): $skipped개, 읽을 수 없는 항목: $invalid개.';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile =>
+      '이 파일은 발견된 연락처 내보내기 파일이 아닙니다.';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return '가져오기 파일이 너무 큽니다(최대 ${maxMb}MB).';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '발견된 연락처 가져오기에 실패했습니다: $error';
+  }
+
+  @override
   String get contacts_zeroHopAdvert => '제로 홉 애드버트';
 
   @override
@@ -5005,6 +5116,51 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get discoveredContacts_deleteContactAllContent =>
       '정말로 모든 검색된 연락처를 삭제하시겠습니까?';
+
+  @override
+  String get discoveredContacts_scan => '근처 노드 스캔';
+
+  @override
+  String get discoveredContacts_scanTitle => '근처 노드';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      '직접 전파가 닿는 범위의 노드에게 응답을 요청합니다. 리피터와 센서가 응답합니다. 룸 서버와 컴패니언은 보통 응답하지 않습니다.';
+
+  @override
+  String get discoveredContacts_scanning => '스캔 중…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '노드 $count개 발견',
+      one: '노드 1개 발견',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults =>
+      '응답한 노드가 없습니다. 리피터는 응답 횟수를 제한하므로 1분 후에 다시 시도하세요.';
+
+  @override
+  String get discoveredContacts_scanAgain => '다시 스캔';
+
+  @override
+  String get discoveredContacts_scanFailed => '스캔 요청을 보내지 못했습니다.';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return '신호 $snr dB · 상대방 수신 $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => '이미 연락처에 있음';
+
+  @override
+  String get discoveredContacts_scanNameLater => '다음 어드버트 후에 이름이 표시됩니다';
 
   @override
   String get chat_sendCooldown => '다시 보내기 전에 잠시 기다려 주시기 바랍니다.';
@@ -7133,5 +7289,103 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String reviewMode_connectFailed(Object error) {
     return '검토 모드를 시작할 수 없습니다: $error';
+  }
+
+  @override
+  String get channels_waitForSync =>
+      '채널을 무전기에서 아직 불러오는 중입니다. 동기화가 끝난 후 다시 시도하세요.';
+
+  @override
+  String channels_nameTooLong(Object maxBytes) {
+    return '이름이 너무 깁니다 (최대 $maxBytes바이트).';
+  }
+
+  @override
+  String repeater_valueRequired(Object field) {
+    return '$field: 값을 입력하세요';
+  }
+
+  @override
+  String get losMapDetailTooltip => '지도 상세';
+
+  @override
+  String get losUnitsTooltip => '단위';
+
+  @override
+  String get losDistance => '거리';
+
+  @override
+  String get losClearance => '여유 공간';
+
+  @override
+  String get losBlockedBy => '가로막는 대상';
+
+  @override
+  String get losObstruction => '장애물';
+
+  @override
+  String losDistanceFromA(Object distance) {
+    return 'A에서 $distance';
+  }
+
+  @override
+  String get losWorstBadge => '최악';
+
+  @override
+  String losBlockedAmount(Object amount) {
+    return '$amount 차단됨';
+  }
+
+  @override
+  String get losFromA => 'A 기준';
+
+  @override
+  String get losFromB => 'B 기준';
+
+  @override
+  String get losElevation => '고도';
+
+  @override
+  String get losCenterOnMap => '지도 중앙으로';
+
+  @override
+  String get losStatusClear => '양호';
+
+  @override
+  String get losStatusMarginal => '경계';
+
+  @override
+  String get losStatusBlocked => '차단됨';
+
+  @override
+  String get losStatusCheckingShort => '확인 중';
+
+  @override
+  String get losStatusNoResult => '결과 없음';
+
+  @override
+  String get losSelectedPill => '선택됨';
+
+  @override
+  String get gif_tapToLoad => '탭하여 GIF 불러오기';
+
+  @override
+  String get gif_loadFailedRetry => 'GIF를 불러올 수 없습니다\n탭하여 다시 시도';
+
+  @override
+  String get qr_cameraPermissionDenied =>
+      '카메라 권한이 거부되었습니다.\n설정에서 카메라 접근을 허용해 주세요.';
+
+  @override
+  String get qr_cameraUnsupported => '이 기기는 카메라를 지원하지 않습니다.';
+
+  @override
+  String qr_cameraStartFailed(Object details) {
+    return '카메라를 시작하지 못했습니다.\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(Object error) {
+    return '이미지 모델을 다운로드하지 못했습니다: $error';
   }
 }

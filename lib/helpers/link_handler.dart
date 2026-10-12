@@ -20,11 +20,25 @@ class LinkHandler {
     return base.copyWith(color: orange, decoration: TextDecoration.underline);
   }
 
+  /// The system text scale as a linear factor for [style]'s size.
+  ///
+  /// flutter_linkify only takes a `textScaleFactor` (default 1.0, which
+  /// ignores the system font size), so the ambient [TextScaler] is sampled
+  /// at the style's font size to keep Android's nonlinear scaling. The
+  /// in-app chat text scale is already part of `style.fontSize`.
+  static double systemTextScaleFactor(BuildContext context, TextStyle style) {
+    final fontSize =
+        style.fontSize ?? DefaultTextStyle.of(context).style.fontSize ?? 14;
+    if (fontSize <= 0) return 1.0;
+    return MediaQuery.textScalerOf(context).scale(fontSize) / fontSize;
+  }
+
   /// Returns a [SelectableLinkify] on desktop or a [Linkify] on mobile.
   ///
-  /// [textScaler] lets callers scale linkified text explicitly. flutter_linkify
-  /// does not inherit MediaQuery's textScaler, so message bodies must pass one
-  /// to participate in the global UI scale (see the DPI setting).
+  /// [textScaler] lets callers scale linkified text explicitly, which the chat
+  /// screens do to combine their zoom with the global UI scale (see the DPI
+  /// setting). flutter_linkify does not inherit MediaQuery's textScaler, so
+  /// without one the system text scale is applied here.
   static Widget buildLinkifyText({
     required BuildContext context,
     required String text,
@@ -42,9 +56,9 @@ class LinkHandler {
     ];
     void onOpen(LinkableElement link) => handleLinkTap(context, link.url);
     // flutter_linkify 6.0.0 exposes textScaleFactor (double), not textScaler.
-    final effectiveTextScaleFactor = (textScaler ?? TextScaler.noScaling).scale(
-      1.0,
-    );
+    final effectiveTextScaleFactor = textScaler != null
+        ? textScaler.scale(1.0)
+        : systemTextScaleFactor(context, style);
 
     if (PlatformInfo.isDesktop) {
       final linkify = SelectableLinkify(

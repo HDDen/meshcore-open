@@ -543,6 +543,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "La tua radio non ha una posizione impostata",
+  "chat_shareMyLocation": "Condividi la mia posizione",
   "chat_location": "Posizione",
   "chat_sendMessageTo": "Invia un messaggio a {contactName}",
   "@chat_sendMessageTo": {
@@ -750,6 +752,7 @@
   "map_shareMarkerHere": "Condividi segnaposto qui",
   "map_pinLabel": "Etichetta pin",
   "map_label": "Etichetta",
+  "map_labelUpdateHint": "Usando la stessa etichetta di prima, il segnaposto verrà aggiornato per i destinatari che usano MeshCore Open.",
   "map_pointOfInterest": "Punto di interesse",
   "map_sendToContact": "Invia a contatto",
   "map_sendToChannel": "Invia al canale",
@@ -2156,6 +2159,44 @@
   "discoveredContacts_contactAdded": "Contatto aggiunto",
   "discoveredContacts_deleteContact": "Elimina Contatto",
   "discoveredContacts_copyContact": "Copia contatto negli appunti",
+  "discoveredContacts_export": "Esporta contatti scoperti",
+  "discoveredContacts_import": "Importa contatti scoperti",
+  "discoveredContacts_exported": "Contatti scoperti esportati in {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Esportazione dei contatti scoperti non riuscita: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Importati {count} contatti scoperti.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Nessun contatto trovato nel file di importazione.",
+  "discoveredContacts_importInvalidFile": "Il file non è un'esportazione di contatti scoperti.",
+  "discoveredContacts_importSummary": "Importati {imported} contatti scoperti. Saltati {skipped} già noti e {invalid} voci illeggibili.",
+  "discoveredContacts_importTooLarge": "Il file di importazione è troppo grande (massimo {maxMb} MB).",
+  "discoveredContacts_importFailed": "Importazione dei contatti scoperti non riuscita: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "contactsSettings_overwriteOldestSubtitle": "Quando l'elenco dei contatti è pieno, il contatto più vecchio non tra i preferiti verrà sostituito.",
   "contactsSettings_evictDiscoveredContactsTitle": "Rimuovi i contatti scoperti",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Se abilitato, l'app rimuove i contatti scoperti più vecchi quando l'elenco dei contatti scoperti raggiunge il limite di {limit} voci.",
@@ -3656,7 +3697,7 @@
   "settings_telemetryPerContactHint": "Per consentire un contatto, apri la sua chat e scegli Impostazioni di contatto dal menu.",
   "settings_multiAckSubtitle": "Invia ACK aggiuntivi per una consegna migliore; usa più tempo di trasmissione",
   "settings_presetCustom": "Personalizzato",
-  "settings_radioMatchWarning": "Tutti i nodi con cui parli devono usare la stessa frequenza, larghezza di banda, SF e CR.",
+  "settings_radioMatchWarning": "Tutti i nodi con cui parli devono usare la stessa frequenza, larghezza di banda e SF. Il coding rate (CR) può essere diverso.",
   "settings_txPowerRangeHelper": "{min} - {max} dBm",
   "settings_clientRepeatFrequencyNote": "Frequenza impostata su {freq} MHz per la ripetizione fuori rete",
   "settings_pathHashModeHelper": "Dimensione di ogni ID di nodo registrato nel percorso dei pacchetti flood inviati da questa radio: 1 byte (256 ID, fino a 64 salti), 2 byte (65.000 ID, fino a 32 salti), 3 byte (16 milioni di ID, fino a 21 salti). ID più grandi riducono le collisioni, ma i ripetitori con firmware precedente alla v1.14 scartano i pacchetti con ID a 2 o 3 byte.",
@@ -3735,5 +3776,57 @@
   "reviewMode_sendTest": "Invia messaggio di prova",
   "reviewMode_testSent": "A breve arriverà un messaggio di prova.",
   "reviewMode_exit": "Esci",
-  "reviewMode_connectFailed": "Impossibile avviare la modalità revisione: {error}"
+  "reviewMode_connectFailed": "Impossibile avviare la modalità revisione: {error}",
+  "settings_regionUseRadioDefault": "Predefinita della radio ({region})",
+  "settings_regionNoRegion": "Nessuna regione (senza ambito)",
+  "settings_regionRadioDefault": "Regione predefinita della radio",
+  "settings_regionRadioDefaultSubtitle": "Salvata sulla radio. I flood inviati senza regione la usano, da questa app e da qualsiasi altra app collegata alla radio.",
+  "settings_regionRadioDefaultUpdated": "Regione predefinita della radio aggiornata",
+  "settings_regionRadioDefaultFailed": "Impossibile aggiornare la regione predefinita della radio",
+  "appSettings_channelMinHopsCountRepeaters": "Conta anche i diversi ripetitori vicini",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Considera il messaggio inviato quando {count, plural, =1{1 ripetitore vicino} other{{count} ripetitori vicini diversi}} lo ripetono, anche se non senti che prosegue oltre.",
+  "appSettings_regionOnHopsLine": "Regione accanto al numero di salti",
+  "appSettings_regionOnHopsLineSubtitle": "Mostra la regione di un messaggio di canale sulla stessa riga del numero di salti invece che sotto.",
+  "channels_regionRadioDefaultSuffix": "(predefinita della radio)",
+  "channels_regionRadioDefaultApplies": "Questa radio invia i flood senza regione nella sua regione predefinita: {region}.",
+  "chat_futureTimestampWarning": "L'ora di questo messaggio è nel futuro, quindi l'orologio del mittente potrebbe essere sbagliato. Viene mostrato nell'ordine di arrivo.",
+  "discoveredContacts_scan": "Cerca nodi vicini",
+  "discoveredContacts_scanTitle": "Nodi vicini",
+  "discoveredContacts_scanExplanation": "Chiede ai nodi nel raggio radio diretto di identificarsi. Ripetitori e sensori rispondono. I room server e i companion di solito no.",
+  "discoveredContacts_scanning": "Ricerca in corso…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 nodo trovato} other{{count} nodi trovati}}",
+  "discoveredContacts_scanNoResults": "Nessun nodo ha risposto. I ripetitori limitano la frequenza delle risposte, riprova tra un minuto.",
+  "discoveredContacts_scanAgain": "Cerca di nuovo",
+  "discoveredContacts_scanFailed": "Impossibile inviare la richiesta di ricerca.",
+  "discoveredContacts_scanSignal": "Segnale {snr} dB · ci hanno sentito a {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "Già nei contatti",
+  "discoveredContacts_scanNameLater": "Il nome appare dopo il prossimo annuncio",
+  "channels_waitForSync": "I canali sono ancora in caricamento dalla radio. Riprova quando la sincronizzazione è terminata.",
+  "channels_nameTooLong": "Il nome è troppo lungo (max {maxBytes} byte).",
+  "repeater_valueRequired": "{field}: inserisci un valore",
+  "losMapDetailTooltip": "Dettaglio mappa",
+  "losUnitsTooltip": "Unità",
+  "losDistance": "Distanza",
+  "losClearance": "Margine libero",
+  "losBlockedBy": "Bloccato da",
+  "losObstruction": "Ostacolo",
+  "losDistanceFromA": "{distance} da A",
+  "losWorstBadge": "PEGGIORE",
+  "losBlockedAmount": "Bloccato {amount}",
+  "losFromA": "Da A",
+  "losFromB": "Da B",
+  "losElevation": "Elevazione",
+  "losCenterOnMap": "Centra sulla mappa",
+  "losStatusClear": "Libero",
+  "losStatusMarginal": "Al limite",
+  "losStatusBlocked": "Bloccato",
+  "losStatusCheckingShort": "Controllo",
+  "losStatusNoResult": "Nessun risultato",
+  "losSelectedPill": "Selezionato",
+  "gif_tapToLoad": "Tocca per caricare la GIF",
+  "gif_loadFailedRetry": "Impossibile caricare la GIF\nTocca per riprovare",
+  "qr_cameraPermissionDenied": "Permesso della fotocamera negato.\nAbilita l'accesso alla fotocamera nelle impostazioni.",
+  "qr_cameraUnsupported": "Fotocamera non supportata su questo dispositivo.",
+  "qr_cameraStartFailed": "Avvio della fotocamera non riuscito.\n{details}",
+  "imageMessages_downloadFailedWithError": "Impossibile scaricare il modello di immagine: {error}"
 }

@@ -499,6 +499,8 @@
       }
     }
   },
+  "chat_noRadioLocation": "Votre radio n'a pas de position définie",
+  "chat_shareMyLocation": "Partager ma position",
   "chat_location": "Emplacement",
   "chat_sendMessageTo": "Envoyer un message à {contactName}",
   "@chat_sendMessageTo": {
@@ -706,6 +708,7 @@
   "map_shareMarkerHere": "Partager le marqueur ici",
   "map_pinLabel": "Libellé de l'épingle",
   "map_label": "Étiquette",
+  "map_labelUpdateHint": "Utiliser la même étiquette qu’avant mettra à jour le marqueur pour les destinataires utilisant MeshCore Open.",
   "map_pointOfInterest": "Point d'intérêt",
   "map_sendToContact": "Envoyer au contact",
   "map_sendToChannel": "Envoyer sur le canal",
@@ -2112,6 +2115,44 @@
   "common_deleteAll": "Tout supprimer",
   "discoveredContacts_deleteContactAll": "Supprimer tous les contacts découverts",
   "discoveredContacts_deleteContactAllContent": "Êtes-vous sûr de vouloir supprimer tous les contacts découverts ?",
+  "discoveredContacts_export": "Exporter les contacts découverts",
+  "discoveredContacts_import": "Importer les contacts découverts",
+  "discoveredContacts_exported": "Contacts découverts exportés vers {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Impossible d'exporter les contacts découverts: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "{count} contacts découverts importés.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Aucun contact trouvé dans le fichier d'importation.",
+  "discoveredContacts_importInvalidFile": "Le fichier n'est pas un export de contacts découverts.",
+  "discoveredContacts_importSummary": "{imported} contacts découverts importés. {skipped} déjà connus et {invalid} entrées illisibles ignorés.",
+  "discoveredContacts_importTooLarge": "Le fichier d'importation est trop volumineux (maximum {maxMb} Mo).",
+  "discoveredContacts_importFailed": "Impossible d'importer les contacts découverts: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "map_showGuessedLocations": "Afficher les emplacements estimés des nœuds",
   "map_guessedLocation": "Localisation estimée",
   "connectionChoiceUsbLabel": "USB",
@@ -3787,7 +3828,7 @@
   "settings_telemetryPerContactHint": "Pour autoriser un contact, ouvrez son chat et choisissez Paramètres de contact dans le menu.",
   "settings_multiAckSubtitle": "Envoyer des ACK supplémentaires pour une meilleure livraison ; utilise plus de temps d'antenne",
   "settings_presetCustom": "Personnalisé",
-  "settings_radioMatchWarning": "Tous les nœuds avec lesquels vous communiquez doivent utiliser la même fréquence, la même bande passante, le même SF et le même CR.",
+  "settings_radioMatchWarning": "Tous les nœuds avec lesquels vous communiquez doivent utiliser la même fréquence, la même bande passante et le même SF. Le taux de codage (CR) peut être différent.",
   "settings_txPowerRangeHelper": "{min} à {max} dBm",
   "settings_clientRepeatFrequencyNote": "Fréquence réglée sur {freq} MHz pour la répétition hors réseau",
   "settings_pathHashModeHelper": "Taille de chaque ID de nœud enregistré dans le chemin des paquets flood envoyés par cette radio : 1 octet (256 ID, jusqu'à 64 sauts), 2 octets (65 000 ID, jusqu'à 32 sauts), 3 octets (16 millions d'ID, jusqu'à 21 sauts). Des ID plus grands réduisent les collisions, mais les répéteurs exécutant un firmware antérieur à la v1.14 ignorent les paquets avec des ID de 2 ou 3 octets.",
@@ -3871,5 +3912,57 @@
   "reviewMode_sendTest": "Envoyer un message test",
   "reviewMode_testSent": "Un message test arrivera sous peu.",
   "reviewMode_exit": "Quitter",
-  "reviewMode_connectFailed": "Impossible de démarrer le mode revue : {error}"
+  "reviewMode_connectFailed": "Impossible de démarrer le mode revue : {error}",
+  "settings_regionUseRadioDefault": "Par défaut de la radio ({region})",
+  "settings_regionNoRegion": "Aucune région (sans portée)",
+  "settings_regionRadioDefault": "Région par défaut de la radio",
+  "settings_regionRadioDefaultSubtitle": "Enregistrée sur la radio. Les floods envoyés sans région l'utilisent, depuis cette application et toute autre application connectée à la radio.",
+  "settings_regionRadioDefaultUpdated": "Région par défaut de la radio mise à jour",
+  "settings_regionRadioDefaultFailed": "Impossible de mettre à jour la région par défaut de la radio",
+  "appSettings_channelMinHopsCountRepeaters": "Compter aussi les différents répéteurs proches",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Considérer le message comme envoyé quand {count, plural, =1{1 répéteur proche} other{{count} répéteurs proches différents}} le répètent, même si vous ne l'entendez pas aller plus loin.",
+  "appSettings_regionOnHopsLine": "Région à côté du nombre de sauts",
+  "appSettings_regionOnHopsLineSubtitle": "Afficher la région d'un message de canal sur la même ligne que son nombre de sauts plutôt qu'en dessous.",
+  "channels_regionRadioDefaultSuffix": "(défaut de la radio)",
+  "channels_regionRadioDefaultApplies": "Cette radio envoie les floods sans région dans sa région par défaut : {region}.",
+  "chat_futureTimestampWarning": "L'heure de ce message est dans le futur, l'horloge de l'expéditeur est peut-être incorrecte. Il est affiché dans l'ordre d'arrivée.",
+  "discoveredContacts_scan": "Rechercher les nœuds proches",
+  "discoveredContacts_scanTitle": "Nœuds proches",
+  "discoveredContacts_scanExplanation": "Demande aux nœuds à portée radio directe de s'identifier. Les répéteurs et les capteurs répondent. Les serveurs de salon et les compagnons généralement pas.",
+  "discoveredContacts_scanning": "Recherche…",
+  "discoveredContacts_scanFound": "{count, plural, =0{Aucun nœud trouvé} =1{1 nœud trouvé} other{{count} nœuds trouvés}}",
+  "discoveredContacts_scanNoResults": "Aucun nœud n'a répondu. Les répéteurs limitent la fréquence de leurs réponses, réessayez dans une minute.",
+  "discoveredContacts_scanAgain": "Rechercher à nouveau",
+  "discoveredContacts_scanFailed": "Impossible d'envoyer la demande de recherche.",
+  "discoveredContacts_scanSignal": "Signal {snr} dB · ils nous ont reçus à {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "Déjà dans les contacts",
+  "discoveredContacts_scanNameLater": "Le nom apparaîtra après sa prochaine annonce",
+  "channels_waitForSync": "Les canaux sont encore en cours de chargement depuis la radio. Réessayez quand la synchronisation sera terminée.",
+  "channels_nameTooLong": "Le nom est trop long (max. {maxBytes} octets).",
+  "repeater_valueRequired": "{field} : saisissez une valeur",
+  "losMapDetailTooltip": "Détail de la carte",
+  "losUnitsTooltip": "Unités",
+  "losDistance": "Distance",
+  "losClearance": "Dégagement",
+  "losBlockedBy": "Bloqué par",
+  "losObstruction": "Obstacle",
+  "losDistanceFromA": "{distance} depuis A",
+  "losWorstBadge": "PIRE",
+  "losBlockedAmount": "Bloqué {amount}",
+  "losFromA": "Depuis A",
+  "losFromB": "Depuis B",
+  "losElevation": "Altitude",
+  "losCenterOnMap": "Centrer sur la carte",
+  "losStatusClear": "Dégagé",
+  "losStatusMarginal": "Limite",
+  "losStatusBlocked": "Bloqué",
+  "losStatusCheckingShort": "Vérification",
+  "losStatusNoResult": "Aucun résultat",
+  "losSelectedPill": "Sélectionné",
+  "gif_tapToLoad": "Touchez pour charger le GIF",
+  "gif_loadFailedRetry": "Impossible de charger le GIF\nTouchez pour réessayer",
+  "qr_cameraPermissionDenied": "Autorisation de la caméra refusée.\nVeuillez activer l'accès à la caméra dans les réglages.",
+  "qr_cameraUnsupported": "Caméra non prise en charge sur cet appareil.",
+  "qr_cameraStartFailed": "Échec du démarrage de la caméra.\n{details}",
+  "imageMessages_downloadFailedWithError": "Le modèle d'image n'a pas pu être téléchargé : {error}"
 }

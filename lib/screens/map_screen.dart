@@ -51,10 +51,10 @@ import '../helpers/map_session_zoom.dart';
 import '../helpers/last_value_memo.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
-import '../helpers/utf8_length_limiter.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/marker_label_dialog.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/wardrive_status_panel.dart';
@@ -5474,7 +5474,7 @@ class _MapScreenState extends State<MapScreen>
             flags: payload.flags,
             fromName: message.senderName,
             sourceLabel: channel.name.isEmpty
-                ? 'Channel ${channel.index}'
+                ? context.l10n.channels_channelIndex(channel.index)
                 : channel.name,
             timestamp: message.timestamp,
             isChannel: true,
@@ -6536,10 +6536,13 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
 
-    final label = await _promptForLabel(
-      context,
-      defaultLabel,
-      maxLabelBytes: _maxMarkerLabelBytes(position, flags),
+    final label = await showDialog<String>(
+      context: context,
+      builder: (_) => MarkerLabelDialog(
+        maxBytes: _maxMarkerLabelBytes(position, flags),
+        defaultLabel: defaultLabel,
+        confirmText: context.l10n.common_continue,
+      ),
     );
     if (label == null || !mounted) return;
 
@@ -6578,50 +6581,6 @@ class _MapScreenState extends State<MapScreen>
     return max(0, limit - reserved);
   }
 
-  Future<String?> _promptForLabel(
-    BuildContext context,
-    String defaultLabel, {
-    required int maxLabelBytes,
-  }) async {
-    final controller = TextEditingController(text: defaultLabel);
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: controller.text.length,
-    );
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.map_pinLabel),
-        content: TextField(
-          controller: controller,
-          inputFormatters: [
-            Utf8LengthLimitingTextInputFormatter(maxLabelBytes),
-          ],
-          decoration: InputDecoration(
-            hintText: context.l10n.map_label,
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final label = controller.text.trim().replaceAll('|', '/');
-              Navigator.pop(
-                dialogContext,
-                label.isEmpty ? defaultLabel : label,
-              );
-            },
-            child: Text(context.l10n.common_continue),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// The plain `lat,lon` form, which is both what a marker message carries and
   /// what a coordinate message pasted into a chat is parsed back from.
   String _formatCoordinates(LatLng position) {
@@ -6629,9 +6588,8 @@ class _MapScreenState extends State<MapScreen>
         '${position.longitude.toStringAsFixed(6)}';
   }
 
-  String _formatMarkerMessage(LatLng position, String label, String flags) {
-    return 'm:${_formatCoordinates(position)}|$label|$flags';
-  }
+  String _formatMarkerMessage(LatLng position, String label, String flags) =>
+      formatMarkerText(position.latitude, position.longitude, label, flags);
 
   Future<void> _showRecipientSheet({
     required BuildContext context,
@@ -7854,7 +7812,6 @@ int _mapContactSignature(Contact contact) {
     contact.lastSeen.millisecondsSinceEpoch,
     contact.lastMessageAt.millisecondsSinceEpoch,
     contact.isActive,
-    contact.wasPulled,
   );
 }
 

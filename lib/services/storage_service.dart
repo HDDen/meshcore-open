@@ -19,6 +19,13 @@ class StorageService {
       'repeater_auto_clock_sync_after_login';
   static const String _deliveryObservationsKey = 'delivery_observations';
 
+  /// App-wide keys (not scoped to a radio) that hold per-repeater data. Review
+  /// mode snapshots and restores them so simulated logins leave nothing behind.
+  static const List<String> globalRepeaterKeys = [
+    _repeaterPasswordsKey,
+    _repeaterAutoClockSyncAfterLoginKey,
+  ];
+
   String _publicKeyHex = '';
   set setPublicKeyHex(String value) =>
       _publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';

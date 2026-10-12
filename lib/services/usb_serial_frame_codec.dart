@@ -5,6 +5,9 @@ const int usbSerialRxFrameStart = 0x3e;
 const int usbSerialHeaderLength = 3;
 const int usbSerialMaxPayloadLength = 176;
 
+/// A device-to-host frame carries up to the companion's MAX_FRAME_SIZE.
+const int usbSerialMaxRxPayloadLength = 176;
+
 Uint8List wrapUsbSerialTxFrame(Uint8List payload) {
   if (payload.length > usbSerialMaxPayloadLength) {
     throw ArgumentError.value(
@@ -72,7 +75,7 @@ class UsbSerialFrameDecoder {
 
       final payloadLength =
           _rxBuffer[_startIndex + 1] | (_rxBuffer[_startIndex + 2] << 8);
-      if (payloadLength > usbSerialMaxPayloadLength) {
+      if (payloadLength > usbSerialMaxRxPayloadLength) {
         _startIndex++;
         _compactBufferIfNeeded();
         continue;

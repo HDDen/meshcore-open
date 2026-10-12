@@ -324,6 +324,14 @@ class AppSettings {
   final bool channelMinHopsEnabled;
   final int channelMinHops;
   final int channelMinHopsRetries;
+
+  /// When on, hearing the message repeated by at least [channelMinHops]
+  /// different first-hop repeaters also satisfies the channel resend.
+  final bool channelMinHopsCountRepeaters;
+
+  /// A channel bubble's region on the hop-count row instead of a line of
+  /// its own.
+  final bool regionOnHopsLine;
   final String themeMode;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
@@ -739,6 +747,8 @@ class AppSettings {
     this.channelMinHopsEnabled = false,
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
+    this.channelMinHopsCountRepeaters = false,
+    this.regionOnHopsLine = false,
     this.themeMode = 'system',
     this.languageOverride,
     this.appDebugLogEnabled = false,
@@ -894,6 +904,8 @@ class AppSettings {
       'channel_min_hops_enabled': channelMinHopsEnabled,
       'channel_min_hops': channelMinHops,
       'channel_min_hops_retries': channelMinHopsRetries,
+      'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
+      'region_on_hops_line': regionOnHopsLine,
       'theme_mode': themeMode,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
@@ -1095,6 +1107,9 @@ class AppSettings {
       channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
+      channelMinHopsCountRepeaters:
+          json['channel_min_hops_count_repeaters'] as bool? ?? false,
+      regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
@@ -1299,6 +1314,8 @@ class AppSettings {
     bool? channelMinHopsEnabled,
     int? channelMinHops,
     int? channelMinHopsRetries,
+    bool? channelMinHopsCountRepeaters,
+    bool? regionOnHopsLine,
     String? themeMode,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
@@ -1466,6 +1483,9 @@ class AppSettings {
       channelMinHops: channelMinHops ?? this.channelMinHops,
       channelMinHopsRetries:
           channelMinHopsRetries ?? this.channelMinHopsRetries,
+      channelMinHopsCountRepeaters:
+          channelMinHopsCountRepeaters ?? this.channelMinHopsCountRepeaters,
+      regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
           ? this.languageOverride

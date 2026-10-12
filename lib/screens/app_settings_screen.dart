@@ -700,6 +700,18 @@ class AppSettingsScreen extends StatelessWidget {
             horizontal: 16,
             vertical: 4,
           ),
+          secondary: const Icon(Icons.short_text, size: 20),
+          title: Text(context.l10n.appSettings_regionOnHopsLine),
+          subtitle: Text(context.l10n.appSettings_regionOnHopsLineSubtitle),
+          value: settingsService.settings.regionOnHopsLine,
+          onChanged: settingsService.setRegionOnHopsLine,
+        ),
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           secondary: const Icon(Icons.cell_tower, size: 20),
           title: Text(context.l10n.appSettings_channelMinHops),
           subtitle: Text(context.l10n.appSettings_channelMinHopsSubtitle),
@@ -738,6 +750,21 @@ class AppSettingsScreen extends StatelessWidget {
               onChanged: (value) =>
                   settingsService.setChannelMinHopsRetries(value.toInt()),
             ),
+          ),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
+            secondary: const Icon(Icons.hub_outlined, size: 20),
+            title: Text(context.l10n.appSettings_channelMinHopsCountRepeaters),
+            subtitle: Text(
+              context.l10n.appSettings_channelMinHopsCountRepeatersSubtitle(
+                settingsService.settings.channelMinHops,
+              ),
+            ),
+            value: settingsService.settings.channelMinHopsCountRepeaters,
+            onChanged: settingsService.setChannelMinHopsCountRepeaters,
           ),
         ],
         const Divider(height: 1, indent: 16),
@@ -934,11 +961,15 @@ class AppSettingsScreen extends StatelessWidget {
     ImageCodecModelSpec spec,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
-    final failed = context.l10n.imageMessages_downloadFailed;
+    final l10n = context.l10n;
     try {
       await codec.downloadPresetModel(spec);
     } on Exception catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text('$failed $error')));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.imageMessages_downloadFailedWithError('$error')),
+        ),
+      );
     }
   }
 

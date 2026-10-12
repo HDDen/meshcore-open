@@ -481,6 +481,8 @@
     }
   },
   "chat_location": "Геопозиція",
+  "chat_noRadioLocation": "У вашому радіо не задано геопозицію",
+  "chat_shareMyLocation": "Поділитися моєю геопозицією",
   "chat_sendMessageTo": "Надіслати повідомлення {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -693,6 +695,7 @@
   "map_shareMarkerHere": "Поділитись маркером тут",
   "map_pinLabel": "Мітка піна",
   "map_label": "Мітка",
+  "map_labelUpdateHint": "Якщо використати ту саму мітку, що й раніше, маркер оновиться в одержувачів MeshCore Open.",
   "map_pointOfInterest": "Точка інтересу",
   "map_sendToContact": "Надіслати контакту",
   "map_sendToChannel": "Надіслати в канал",
@@ -2022,6 +2025,44 @@
   "discoveredContacts_deleteContact": "Видалити контакт",
   "discoveredContacts_copyContact": "Копіювати контакт у буфер обміну",
   "discoveredContacts_addContact": "Додати контакт",
+  "discoveredContacts_export": "Експортувати виявлені контакти",
+  "discoveredContacts_import": "Імпортувати виявлені контакти",
+  "discoveredContacts_exported": "Виявлені контакти експортовано до {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Не вдалося експортувати виявлені контакти: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Імпортовано {count} виявлених контактів.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "У файлі імпорту не знайдено контактів.",
+  "discoveredContacts_importFailed": "Не вдалося імпортувати виявлені контакти: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Файл не є експортом виявлених контактів.",
+  "discoveredContacts_importSummary": "Імпортовано: {imported}, пропущено вже відомих: {skipped}, нечитабельних записів: {invalid}.",
+  "discoveredContacts_importTooLarge": "Файл імпорту завеликий (максимум {maxMb} МБ).",
   "contactsSettings_overwriteOldestSubtitle": "Коли список контактів заповнений, найстарший контакт без позначки улюбленого буде замінений.",
   "contactsSettings_evictDiscoveredContactsTitle": "Видаляти виявлені контакти",
   "contactsSettings_evictDiscoveredContactsSubtitle": "Якщо ввімкнено, застосунок видаляє найстаріші виявлені контакти, коли список виявлених контактів досягає ліміту в {limit} записів.",
@@ -3661,7 +3702,7 @@
   "settings_telemetryPerContactHint": "Щоб дозволити контакт, відкрийте його чат і виберіть «Налаштування контактів» в меню.",
   "settings_multiAckSubtitle": "Надсилати додаткові ACK для кращої доставки; використовує більше часу в ефірі",
   "settings_presetCustom": "Власний",
-  "settings_radioMatchWarning": "Усі вузли, з якими ви спілкуєтесь, мають використовувати однакові частоту, смугу пропускання, SF та CR.",
+  "settings_radioMatchWarning": "Усі вузли, з якими ви спілкуєтесь, мають використовувати однакові частоту, смугу пропускання та SF. Швидкість кодування (CR) може відрізнятися.",
   "settings_txPowerRangeHelper": "від {min} до {max} dBm",
   "settings_clientRepeatFrequencyNote": "Частота {freq} МГц для повтору без підключення до мережі",
   "settings_pathHashModeHelper": "Розмір кожного ідентифікатора вузла, який записується в шлях flood-пакетів, які надсилає це радіо: 1 байт (256 ідентифікаторів, до 64 переходів), 2 байти (65 тис. ідентифікаторів, до 32 переходів), 3 байти (16 млн ідентифікаторів, до 21 переходу). Більші ідентифікатори зменшують кількість зіткнень, але ретранслятори з прошивкою старішою за v1.14 відкидають пакети з 2- або 3-байтовими ідентифікаторами.",
@@ -3745,5 +3786,57 @@
   "reviewMode_sendTest": "Тестове повідомлення",
   "reviewMode_testSent": "Незабаром надійде тестове повідомлення.",
   "reviewMode_exit": "Вийти",
-  "reviewMode_connectFailed": "Не вдалося запустити режим перевірки: {error}"
+  "reviewMode_connectFailed": "Не вдалося запустити режим перевірки: {error}",
+  "settings_regionUseRadioDefault": "Типово для радіо ({region})",
+  "settings_regionNoRegion": "Без регіону (без обмеження)",
+  "settings_regionRadioDefault": "Типовий регіон радіо",
+  "settings_regionRadioDefaultSubtitle": "Зберігається на радіо. Його використовують flood-розсилки без регіону — із цього та будь-якого іншого застосунку, підключеного до радіо.",
+  "settings_regionRadioDefaultUpdated": "Типовий регіон радіо оновлено",
+  "settings_regionRadioDefaultFailed": "Не вдалося оновити типовий регіон радіо",
+  "appSettings_channelMinHopsCountRepeaters": "Також враховувати інші найближчі ретранслятори",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Вважати повідомлення надісланим, коли його повторять {count, plural, one{{count} найближчий ретранслятор} few{{count} різні найближчі ретранслятори} many{{count} різних найближчих ретрансляторів} other{{count} різного найближчого ретранслятора}}, навіть якщо ви не чуєте, як воно йде далі.",
+  "appSettings_regionOnHopsLine": "Регіон поруч із кількістю хопів",
+  "appSettings_regionOnHopsLineSubtitle": "Показувати регіон повідомлення каналу в одному рядку з кількістю хопів, а не під ним.",
+  "channels_regionRadioDefaultSuffix": "(типово для радіо)",
+  "channels_regionRadioDefaultApplies": "Це радіо надсилає flood без регіону у свій типовий регіон: {region}.",
+  "chat_futureTimestampWarning": "Час цього повідомлення в майбутньому, тож годинник відправника може бути неточним. Повідомлення показано в порядку отримання.",
+  "discoveredContacts_scan": "Сканувати найближчі вузли",
+  "discoveredContacts_scanTitle": "Найближчі вузли",
+  "discoveredContacts_scanExplanation": "Просить вузли в зоні прямого радіозв’язку відрекомендуватися. Відповідають ретранслятори та датчики. Сервери кімнат і компаньйони зазвичай не відповідають.",
+  "discoveredContacts_scanning": "Сканування…",
+  "discoveredContacts_scanFound": "{count, plural, one{Знайдено {count} вузол} few{Знайдено {count} вузли} many{Знайдено {count} вузлів} other{Знайдено {count} вузла}}",
+  "discoveredContacts_scanNoResults": "Жоден вузол не відповів. Ретранслятори обмежують частоту відповідей, спробуйте за хвилину.",
+  "discoveredContacts_scanAgain": "Сканувати знову",
+  "discoveredContacts_scanFailed": "Не вдалося надіслати запит сканування.",
+  "discoveredContacts_scanSignal": "Сигнал {snr} дБ · нас почули з {remoteSnr} дБ",
+  "discoveredContacts_scanInContacts": "Уже в контактах",
+  "discoveredContacts_scanNameLater": "Ім’я з’явиться після наступного оголошення",
+  "channels_waitForSync": "Канали ще завантажуються з радіо. Спробуйте після завершення синхронізації.",
+  "channels_nameTooLong": "Ім’я задовге (макс. {maxBytes} байт).",
+  "repeater_valueRequired": "{field}: введіть значення",
+  "losMapDetailTooltip": "Деталізація карти",
+  "losUnitsTooltip": "Одиниці",
+  "losDistance": "Відстань",
+  "losClearance": "Просвіт",
+  "losBlockedBy": "Заблоковано",
+  "losObstruction": "Перешкода",
+  "losDistanceFromA": "{distance} від A",
+  "losWorstBadge": "НАЙГІРША",
+  "losBlockedAmount": "Перекрито на {amount}",
+  "losFromA": "Від A",
+  "losFromB": "Від B",
+  "losElevation": "Висота",
+  "losCenterOnMap": "Центрувати на карті",
+  "losStatusClear": "Чисто",
+  "losStatusMarginal": "На межі",
+  "losStatusBlocked": "Заблоковано",
+  "losStatusCheckingShort": "Перевірка",
+  "losStatusNoResult": "Немає результату",
+  "losSelectedPill": "Вибрано",
+  "gif_tapToLoad": "Торкніться, щоб завантажити GIF",
+  "gif_loadFailedRetry": "Не вдається завантажити GIF\nТоркніться, щоб повторити",
+  "qr_cameraPermissionDenied": "Доступ до камери заборонено.\nУвімкніть доступ до камери в налаштуваннях.",
+  "qr_cameraUnsupported": "Камера не підтримується на цьому пристрої.",
+  "qr_cameraStartFailed": "Не вдалося запустити камеру.\n{details}",
+  "imageMessages_downloadFailedWithError": "Не вдалося завантажити модель зображень: {error}"
 }

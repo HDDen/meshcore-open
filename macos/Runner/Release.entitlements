@@ -20,8 +20,8 @@
 	</array>
 	<key>com.apple.security.device.camera</key>
 	<true/>
-	<!-- AEIC: read images the user explicitly chooses -->
-	<key>com.apple.security.files.user-selected.read-only</key>
+	<!-- image_picker: read photos the user explicitly chooses -->
+	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 </dict>
 </plist>

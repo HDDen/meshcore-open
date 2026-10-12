@@ -7,6 +7,7 @@ import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
 import 'message_compression.dart';
+import 'message.dart' show futureTimestampTolerance;
 import 'translation_support.dart';
 import '../utils/app_logger.dart';
 
@@ -207,6 +208,11 @@ class ChannelMessage {
   /// RSSI is absent when only the channel-message response was observed.
   double? get snr => primaryPathObservation?.snr;
   int? get rssi => primaryPathObservation?.rssi;
+
+  /// True when the sender's clock put [timestamp] clearly ahead of the time
+  /// this device received the message.
+  bool get hasFutureTimestamp =>
+      timestamp.difference(receivedAt) > futureTimestampTolerance;
 
   ChannelMessage copyWith({
     ChannelMessageStatus? status,

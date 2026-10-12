@@ -424,6 +424,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_regionDefaultNone => '无';
 
   @override
+  String settings_regionUseRadioDefault(String region) {
+    return '电台默认（$region）';
+  }
+
+  @override
+  String get settings_regionNoRegion => '无地区（不限范围）';
+
+  @override
+  String get settings_regionRadioDefault => '电台默认地区';
+
+  @override
+  String get settings_regionRadioDefaultSubtitle =>
+      '保存在电台上。不指定地区发送的泛洪会使用它，本应用和连接此电台的其他应用都一样。';
+
+  @override
+  String get settings_regionRadioDefaultUpdated => '电台默认地区已更新';
+
+  @override
+  String get settings_regionRadioDefaultFailed => '无法更新电台默认地区';
+
+  @override
   String get settings_regionManagement_screenTitle => '区域管理';
 
   @override
@@ -680,7 +701,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_presetCustom => '自定义';
 
   @override
-  String get settings_radioMatchWarning => '你通信的所有节点必须使用相同的频率、带宽、扩频因子和编码速率。';
+  String get settings_radioMatchWarning =>
+      '你通信的所有节点必须使用相同的频率、带宽和扩频因子。编码速率（CR）可以不同。';
 
   @override
   String get settings_frequency => '频率 (MHz)';
@@ -892,6 +914,27 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '最多重发 $_temp0';
   }
+
+  @override
+  String get appSettings_channelMinHopsCountRepeaters => '同时统计附近不同的中继器';
+
+  @override
+  String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '附近 $count 个不同的中继器',
+      one: '附近 1 个中继器',
+    );
+    return '当$_temp0转发该消息时，即使听不到它继续传播，也视为已发送。';
+  }
+
+  @override
+  String get appSettings_regionOnHopsLine => '在跳数旁显示地区';
+
+  @override
+  String get appSettings_regionOnHopsLineSubtitle =>
+      '将频道消息的地区与跳数显示在同一行，而不是在其下方。';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1605,6 +1648,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channels_regionDefaultSuffix => '（默认）';
 
   @override
+  String get channels_regionRadioDefaultSuffix => '（电台默认）';
+
+  @override
+  String channels_regionRadioDefaultApplies(String region) {
+    return '此电台会用默认地区发送未指定地区的泛洪：$region。';
+  }
+
+  @override
   String get channels_regionSelectExplanation => '此频道的泛洪消息只会由所选地区内的中继器转发。';
 
   @override
@@ -1647,6 +1698,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_typeMessage => '输入消息...';
 
   @override
+  String get chat_futureTimestampWarning => '此消息的时间在未来，发送方的时钟可能有误。已按到达顺序显示。';
+
+  @override
   String chat_messageTooLong(int maxBytes) {
     return '消息过长（最多 $maxBytes 字节）';
   }
@@ -1672,6 +1726,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_sendGif => '发送 GIF';
+
+  @override
+  String get chat_shareMyLocation => '分享我的位置';
+
+  @override
+  String get chat_noRadioLocation => '您的电台未设置位置';
 
   @override
   String get chat_removeGif => '移除 GIF';
@@ -2153,6 +2213,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_label => '标签';
+
+  @override
+  String get map_labelUpdateHint => '使用与之前相同的标签，将为 MeshCore Open 接收者更新该标记。';
 
   @override
   String get map_pointOfInterest => '兴趣点';
@@ -4639,6 +4702,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_contactImportFailed => '导入联系人失败。';
 
   @override
+  String get discoveredContacts_export => '导出已发现的联系人';
+
+  @override
+  String get discoveredContacts_import => '导入已发现的联系人';
+
+  @override
+  String discoveredContacts_exported(String path) {
+    return '已将已发现的联系人导出到$path。';
+  }
+
+  @override
+  String discoveredContacts_exportFailed(String error) {
+    return '导出已发现的联系人失败：$error';
+  }
+
+  @override
+  String discoveredContacts_imported(int count) {
+    return '已导入$count个已发现的联系人。';
+  }
+
+  @override
+  String get discoveredContacts_importNoContacts => '在导入文件中未找到联系人。';
+
+  @override
+  String discoveredContacts_importSummary(
+    int imported,
+    int skipped,
+    int invalid,
+  ) {
+    return '已导入：$imported，已跳过（已存在）：$skipped，无法读取的条目：$invalid。';
+  }
+
+  @override
+  String get discoveredContacts_importInvalidFile => '该文件不是已发现联系人的导出文件。';
+
+  @override
+  String discoveredContacts_importTooLarge(int maxMb) {
+    return '导入文件过大（最大 $maxMb MB）。';
+  }
+
+  @override
+  String discoveredContacts_importFailed(String error) {
+    return '导入已发现的联系人失败：$error';
+  }
+
+  @override
   String get contacts_zeroHopAdvert => '发送零跳广播';
 
   @override
@@ -4891,6 +5000,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get discoveredContacts_deleteContactAllContent => '您确定要删除所有发现的联系人吗？';
+
+  @override
+  String get discoveredContacts_scan => '扫描附近节点';
+
+  @override
+  String get discoveredContacts_scanTitle => '附近节点';
+
+  @override
+  String get discoveredContacts_scanExplanation =>
+      '请求直接无线电范围内的节点自报身份。中继器和传感器会响应，房间服务器和伴侣设备通常不会。';
+
+  @override
+  String get discoveredContacts_scanning => '正在扫描…';
+
+  @override
+  String discoveredContacts_scanFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '发现 $count 个节点',
+      one: '发现 1 个节点',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get discoveredContacts_scanNoResults => '没有节点响应。中继器会限制回复频率，请一分钟后重试。';
+
+  @override
+  String get discoveredContacts_scanAgain => '重新扫描';
+
+  @override
+  String get discoveredContacts_scanFailed => '无法发送扫描请求。';
+
+  @override
+  String discoveredContacts_scanSignal(String snr, String remoteSnr) {
+    return '信号 $snr dB · 对方收到我们为 $remoteSnr dB';
+  }
+
+  @override
+  String get discoveredContacts_scanInContacts => '已在联系人中';
+
+  @override
+  String get discoveredContacts_scanNameLater => '下次广播后将显示名称';
 
   @override
   String get chat_sendCooldown => '请稍等片刻后再尝试发送。';
@@ -6984,5 +7137,101 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String reviewMode_connectFailed(Object error) {
     return '无法启动审核模式：$error';
+  }
+
+  @override
+  String get channels_waitForSync => '频道仍在从电台加载。请在同步完成后重试。';
+
+  @override
+  String channels_nameTooLong(Object maxBytes) {
+    return '名称过长（最多 $maxBytes 字节）。';
+  }
+
+  @override
+  String repeater_valueRequired(Object field) {
+    return '$field：请输入值';
+  }
+
+  @override
+  String get losMapDetailTooltip => '地图细节';
+
+  @override
+  String get losUnitsTooltip => '单位';
+
+  @override
+  String get losDistance => '距离';
+
+  @override
+  String get losClearance => '净空';
+
+  @override
+  String get losBlockedBy => '阻挡物';
+
+  @override
+  String get losObstruction => '障碍物';
+
+  @override
+  String losDistanceFromA(Object distance) {
+    return '距 A $distance';
+  }
+
+  @override
+  String get losWorstBadge => '最严重';
+
+  @override
+  String losBlockedAmount(Object amount) {
+    return '阻挡 $amount';
+  }
+
+  @override
+  String get losFromA => '自 A';
+
+  @override
+  String get losFromB => '自 B';
+
+  @override
+  String get losElevation => '海拔';
+
+  @override
+  String get losCenterOnMap => '居中显示';
+
+  @override
+  String get losStatusClear => '畅通';
+
+  @override
+  String get losStatusMarginal => '临界';
+
+  @override
+  String get losStatusBlocked => '受阻';
+
+  @override
+  String get losStatusCheckingShort => '检查中';
+
+  @override
+  String get losStatusNoResult => '无结果';
+
+  @override
+  String get losSelectedPill => '已选';
+
+  @override
+  String get gif_tapToLoad => '点按加载 GIF';
+
+  @override
+  String get gif_loadFailedRetry => '无法加载 GIF\n点按重试';
+
+  @override
+  String get qr_cameraPermissionDenied => '相机权限被拒绝。\n请在设置中启用相机访问。';
+
+  @override
+  String get qr_cameraUnsupported => '此设备不支持相机。';
+
+  @override
+  String qr_cameraStartFailed(Object details) {
+    return '无法启动相机。\n$details';
+  }
+
+  @override
+  String imageMessages_downloadFailedWithError(Object error) {
+    return '无法下载图像模型：$error';
   }
 }

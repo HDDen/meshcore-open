@@ -22,7 +22,11 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
 
-  /// Save messages for a specific channel
+  /// Upper bound on persisted messages per channel. The oldest entries
+  /// beyond it are dropped on save.
+  static const int maxStoredMessages = 1000;
+
+  /// Save messages for a specific channel.
   Future<void> saveChannelMessages(
     int channelIndex,
     List<ChannelMessage> messages, {

@@ -478,6 +478,8 @@
     }
   },
   "chat_location": "Plats",
+  "chat_noRadioLocation": "Din radio har ingen plats inställd",
+  "chat_shareMyLocation": "Dela min plats",
   "chat_sendMessageTo": "Skicka ett meddelande till {contactName}",
   "@chat_sendMessageTo": {
     "placeholders": {
@@ -684,6 +686,7 @@
   "map_shareMarkerHere": "Dela markör här",
   "map_pinLabel": "Nålens etikett",
   "map_label": "Etikett",
+  "map_labelUpdateHint": "Om du använder samma etikett som tidigare uppdateras markören för mottagare med MeshCore Open.",
   "map_pointOfInterest": "Plats av intresse",
   "map_sendToContact": "Skicka till kontakt",
   "map_sendToChannel": "Skicka till kanal",
@@ -1979,6 +1982,44 @@
   "discoveredContacts_contactAdded": "Kontakt tillagd",
   "discoveredContacts_addContact": "Lägg till kontakt",
   "discoveredContacts_copyContact": "Kopiera kontakt till urklipp",
+  "discoveredContacts_export": "Exportera upptäckta kontakter",
+  "discoveredContacts_import": "Importera upptäckta kontakter",
+  "discoveredContacts_exported": "Upptäckta kontakter exporterades till {path}.",
+  "@discoveredContacts_exported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_exportFailed": "Det gick inte att exportera upptäckta kontakter: {error}",
+  "@discoveredContacts_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_imported": "Importerade {count} upptäckta kontakter.",
+  "@discoveredContacts_imported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoveredContacts_importNoContacts": "Inga kontakter hittades i importfilen.",
+  "discoveredContacts_importFailed": "Det gick inte att importera upptäckta kontakter: {error}",
+  "@discoveredContacts_importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveredContacts_importInvalidFile": "Filen är inte en export av upptäckta kontakter.",
+  "discoveredContacts_importSummary": "Importerade: {imported}, hoppade över redan kända: {skipped}, oläsliga poster: {invalid}.",
+  "discoveredContacts_importTooLarge": "Importfilen är för stor (högst {maxMb} MB).",
   "contactsSettings_overwriteOldestSubtitle": "När kontaktlistan är full ersätts den äldsta icke-favoriterade kontakten.",
   "contactsSettings_evictDiscoveredContactsTitle": "Rensa upptäckta kontakter",
   "contactsSettings_evictDiscoveredContactsSubtitle": "När detta är aktiverat tar appen bort de äldsta upptäckta kontakterna när listan över upptäckta kontakter når sin gräns på {limit} poster.",
@@ -3464,7 +3505,7 @@
   "settings_telemetryPerContactHint": "För att tillåta en kontakt öppnar du chatten och väljer Kontaktinställningar i menyn.",
   "settings_multiAckSubtitle": "Skicka extra ACK för bättre leverans; använder mer sändningstid",
   "settings_presetCustom": "Anpassad",
-  "settings_radioMatchWarning": "Alla noder du kommunicerar med måste använda samma frekvens, bandbredd, SF och CR.",
+  "settings_radioMatchWarning": "Alla noder du kommunicerar med måste använda samma frekvens, bandbredd och SF. Kodningshastigheten (CR) får skilja sig.",
   "settings_txPowerRangeHelper": "{min} till {max} dBm",
   "settings_clientRepeatFrequencyNote": "Frekvensen är satt till {freq} MHz för upprepning utan elnät",
   "settings_pathHashModeHelper": "Storleken på varje nod-ID som registreras i rutten för de flood-paket som den här radion skickar: 1 byte (256 ID:n, upp till 64 hopp), 2 byte (65K ID:n, upp till 32 hopp), 3 byte (16M ID:n, upp till 21 hopp). Större ID:n minskar kollisioner, men repeatrar med firmware äldre än v1.14 tappar paket med 2- eller 3-byte-ID:n.",
@@ -3548,5 +3589,57 @@
   "reviewMode_sendTest": "Skicka testmeddelande",
   "reviewMode_testSent": "Ett testmeddelande kommer snart.",
   "reviewMode_exit": "Avsluta",
-  "reviewMode_connectFailed": "Det gick inte att starta granskningsläget: {error}"
+  "reviewMode_connectFailed": "Det gick inte att starta granskningsläget: {error}",
+  "settings_regionUseRadioDefault": "Radions standard ({region})",
+  "settings_regionNoRegion": "Ingen region (utan begränsning)",
+  "settings_regionRadioDefault": "Radions standardregion",
+  "settings_regionRadioDefaultSubtitle": "Sparas på radion. Floods som skickas utan region använder den, från den här appen och från alla andra appar som är anslutna till radion.",
+  "settings_regionRadioDefaultUpdated": "Radions standardregion uppdaterad",
+  "settings_regionRadioDefaultFailed": "Det gick inte att uppdatera radions standardregion",
+  "appSettings_channelMinHopsCountRepeaters": "Räkna även olika repeatrar i närheten",
+  "appSettings_channelMinHopsCountRepeatersSubtitle": "Betrakta meddelandet som skickat när {count, plural, =1{1 repeater i närheten} other{{count} olika repeatrar i närheten}} upprepar det, även om du inte hör det färdas vidare.",
+  "appSettings_regionOnHopsLine": "Region bredvid hoppantal",
+  "appSettings_regionOnHopsLineSubtitle": "Visa ett kanalmeddelandes region på samma rad som dess hoppantal i stället för under det.",
+  "channels_regionRadioDefaultSuffix": "(radions standard)",
+  "channels_regionRadioDefaultApplies": "Den här radion skickar floods utan region i sin standardregion: {region}.",
+  "chat_futureTimestampWarning": "Det här meddelandets tid ligger i framtiden, så avsändarens klocka kan vara fel. Det visas i den ordning det kom in.",
+  "discoveredContacts_scan": "Sök efter noder i närheten",
+  "discoveredContacts_scanTitle": "Noder i närheten",
+  "discoveredContacts_scanExplanation": "Ber noder inom direkt radioräckvidd att identifiera sig. Repeatrar och sensorer svarar. Rumsservrar och companions gör det oftast inte.",
+  "discoveredContacts_scanning": "Söker…",
+  "discoveredContacts_scanFound": "{count, plural, =1{1 nod hittades} other{{count} noder hittades}}",
+  "discoveredContacts_scanNoResults": "Inga noder svarade. Repeatrar begränsar hur ofta de svarar, så försök igen om en minut.",
+  "discoveredContacts_scanAgain": "Sök igen",
+  "discoveredContacts_scanFailed": "Det gick inte att skicka sökförfrågan.",
+  "discoveredContacts_scanSignal": "Signal {snr} dB · de hörde oss med {remoteSnr} dB",
+  "discoveredContacts_scanInContacts": "Finns redan i kontakter",
+  "discoveredContacts_scanNameLater": "Namnet visas efter nästa annons",
+  "channels_waitForSync": "Kanalerna laddas fortfarande från radion. Försök igen när synkroniseringen är klar.",
+  "channels_nameTooLong": "Namnet är för långt (max {maxBytes} byte).",
+  "repeater_valueRequired": "{field}: ange ett värde",
+  "losMapDetailTooltip": "Kartdetaljer",
+  "losUnitsTooltip": "Enheter",
+  "losDistance": "Avstånd",
+  "losClearance": "Frigång",
+  "losBlockedBy": "Blockeras av",
+  "losObstruction": "Hinder",
+  "losDistanceFromA": "{distance} från A",
+  "losWorstBadge": "VÄRST",
+  "losBlockedAmount": "Blockerad {amount}",
+  "losFromA": "Från A",
+  "losFromB": "Från B",
+  "losElevation": "Höjd",
+  "losCenterOnMap": "Centrera på kartan",
+  "losStatusClear": "Fri",
+  "losStatusMarginal": "Marginell",
+  "losStatusBlocked": "Blockerad",
+  "losStatusCheckingShort": "Kontrollerar",
+  "losStatusNoResult": "Inget resultat",
+  "losSelectedPill": "Vald",
+  "gif_tapToLoad": "Tryck för att ladda GIF",
+  "gif_loadFailedRetry": "Det gick inte att ladda GIF\nTryck för att försöka igen",
+  "qr_cameraPermissionDenied": "Kamerabehörighet nekades.\nAktivera kameraåtkomst i inställningarna.",
+  "qr_cameraUnsupported": "Kameran stöds inte på den här enheten.",
+  "qr_cameraStartFailed": "Det gick inte att starta kameran.\n{details}",
+  "imageMessages_downloadFailedWithError": "Bildmodellen kunde inte laddas ned: {error}"
 }

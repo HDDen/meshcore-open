@@ -886,13 +886,19 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       _refreshNotificationPermissionState();
       unawaited(widget.connector.resumeQueuedMessageSyncAfterForeground());
     }
-    widget.receivedImageStore.setForeground(state == AppLifecycleState.resumed);
+    // `inactive` is still on screen (iOS Control Center, a call banner, a Face
+    // ID prompt), so it must not cancel a decode and mark the image corrupt.
+    widget.receivedImageStore.setForeground(
+      state == AppLifecycleState.resumed || state == AppLifecycleState.inactive,
+    );
     // The neural codec has a very high memory peak, so release its native
     // sessions whenever the app leaves the foreground.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       unawaited(widget.imageCodecService.handleMemoryPressure());
-      unawaited(widget.receivedImageStore.handleMemoryPressure());
+    }
+    if (state == AppLifecycleState.resumed) {
+      widget.connector.syncAppBadge();
     }
   }
 

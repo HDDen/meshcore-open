@@ -108,6 +108,7 @@ import '../theme/mesh_theme.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/future_timestamp_indicator.dart';
 import 'app_settings_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'canvas_editor_screen.dart';
@@ -199,6 +200,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   MeshCoreConnector? _connector;
   StreamSubscription<void>? _mcmpSigningFailedSubscription;
   DateTime? _lastChannelSendAt;
+  // True while a send is awaiting outgoing translation, so a second tap
+  // can't send the same text again.
+  bool _isSendingText = false;
   String? _lastChannelSentText;
   /// Suppresses the one snap-to-bottom that follows the next list rebuild.
   ///
@@ -1015,8 +1019,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               .getUnreadCountForChannelIndex(
                                 widget.channel.index,
                               );
+                          final radioDefault =
+                              connector.defaultRegionScopeLabel;
                           final regionHeader = region.isNotEmpty
                               ? context.l10n.channels_regionSetTo(region)
+                              : connector.isChannelExplicitlyUnscoped(
+                                      widget.channel.index,
+                                    ) &&
+                                    connector.supportsExplicitUnscopedFlood
+                              ? context.l10n.settings_regionNoRegion
+                              : radioDefault != null &&
+                                    connector.channelUsesRadioDefaultScope(
+                                      widget.channel.index,
+                                    )
+                              ? '${context.l10n.channels_regionSetTo(radioDefault)} '
+                                    '${context.l10n.channels_regionRadioDefaultSuffix}'
                               : context.l10n.channels_regionNotSet;
                           return Text(
                             '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
@@ -1517,6 +1534,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         settingsService.settings.incomingQuoteAsMentions;
     final simplifiedMentions = settingsService.settings.simplifiedMentions;
     final showMessageRegion = settingsService.settings.showMessageRegion;
+    final regionOnHopsLine = settingsService.settings.regionOnHopsLine;
     final isOutgoing = message.isOutgoing;
     // A body that arrived while its sender was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link, no quote.
@@ -2282,11 +2300,29 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       color: metaColor,
                                     ),
                                   ),
+                                  // The region joins the hop row under the
+                                  // "region next to hop count" setting; a
+                                  // message with no hop row keeps the line
+                                  // below.
+                                  if (showMessageRegion && regionOnHopsLine)
+                                    Text(
+                                      context.l10n.channels_messageRegion(
+                                        packetRegionLabel,
+                                      ),
+                                      style: MeshTheme.mono(
+                                        fontSize: 10 * textScale,
+                                        color: metaColor,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
                           ],
-                          if (showMessageRegion) ...[
+                          if (showMessageRegion &&
+                              !(regionOnHopsLine &&
+                                  showHops &&
+                                  (displayPath.isNotEmpty ||
+                                      showSignalReading))) ...[
                             const SizedBox(height: 3),
                             Padding(
                               padding: isMediaMessage
@@ -2357,6 +2393,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     color: metaColor,
                                   ),
                                 ),
+                                if (message.hasFutureTimestamp) ...[
+                                  const SizedBox(width: 4),
+                                  FutureTimestampIndicator(
+                                    size: 16 * textScale,
+                                  ),
+                                ],
                                 if (outgoingRadioWaitSeconds != null) ...[
                                   const SizedBox(width: 3),
                                   Text(
@@ -4427,7 +4469,30 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     ChannelMessage? embeddedReplyTarget,
     EncodedMCOImageV3? mcoImageV3,
   }) async {
+    if (_isSendingText) return;
+    _isSendingText = true;
+    try {
+      await _sendMessageInner(
+        quickAnswerText: quickAnswerText,
+        skipTranslation: skipTranslation,
+        skipReplyContext: skipReplyContext,
+        embeddedReplyTarget: embeddedReplyTarget,
+        mcoImageV3: mcoImageV3,
+      );
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
+  Future<void> _sendMessageInner({
+    String? quickAnswerText,
+    bool skipTranslation = false,
+    bool skipReplyContext = false,
+    ChannelMessage? embeddedReplyTarget,
+    EncodedMCOImageV3? mcoImageV3,
+  }) async {
     final composerReply = _composerReply(_textController.text);
+    final composerTextAtSend = _textController.text;
     final rawText = quickAnswerText ??
         _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -4531,7 +4596,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
     // Read before _cancelReply clears the toggle.
     final replyRegion = _useReplyRegion ? replyTarget?.packetRegion : null;
-    if (quickAnswerText == null) {
+    // Keep anything typed while the outgoing translation ran.
+    if (quickAnswerText == null &&
+        _textController.text == composerTextAtSend) {
       ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
       _textFieldFocusNode.requestFocus();
@@ -5616,6 +5683,47 @@ class _RegionSelectDialog extends StatefulWidget {
 class _RegionSelectDialogState extends State<_RegionSelectDialog> {
   final RegionStore regionStore = RegionStore();
 
+  /// Where the firmware cannot override the node's default scope, say that
+  /// a channel without a region floods under it.
+  List<Widget> _buildRadioDefaultNote(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final radioDefault = connector.defaultRegionScopeLabel;
+    if (radioDefault == null || connector.supportsExplicitUnscopedFlood) {
+      return const [];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Text(
+          context.l10n.channels_regionRadioDefaultApplies(radioDefault),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    ];
+  }
+
+  /// "No region": the flood carries no scope at all, the node's default
+  /// included (firmware 12+).
+  Widget _buildUnscopedTile(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final selected = connector.isChannelExplicitlyUnscoped(
+      widget.channel.index,
+    );
+    return ListTile(
+      leading: const Icon(Icons.public_off),
+      title: Text(context.l10n.settings_regionNoRegion),
+      tileColor: selected ? Colors.blue.withValues(alpha: 0.2) : null,
+      onTap: () {
+        // Tapping the selected option clears it back to the default.
+        connector.setChannelRegion(
+          widget.channel.index,
+          selected ? '' : kUnscopedRegion,
+        );
+        Navigator.pop(context);
+      },
+    );
+  }
+
   List<Region> regions = [];
   int selectedIndex = -1;
 
@@ -5673,6 +5781,9 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
                 ),
               ],
             ),
+            ..._buildRadioDefaultNote(context),
+            if (context.read<MeshCoreConnector>().supportsExplicitUnscopedFlood)
+              _buildUnscopedTile(context),
             const SizedBox(height: 15),
             Expanded(
               // A tile's colour is ink, painted on the dialog's Material, so

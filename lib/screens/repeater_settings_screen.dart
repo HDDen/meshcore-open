@@ -92,6 +92,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   bool _isLoading = false;
   bool _hasChanges = false;
   final Set<_SettingField> _dirtyFields = {};
+  final Set<_SettingField> _editedDuringSave = {};
   bool _refreshingBasic = false;
   bool _refreshingRadio = false;
   bool _refreshingTxPower = false;
@@ -826,6 +827,61 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         retainDirty.add(field);
       }
 
+      // Fields whose edits this save attempts. Anything edited while the
+      // commands are in flight stays dirty afterwards (see _markChanged).
+      final savingFields = Set<_SettingField>.of(_dirtyFields);
+      _editedDuringSave.clear();
+
+      // A changed text field that was emptied has nothing to send; report it
+      // instead of silently skipping it and claiming the save succeeded.
+      void requireText(
+        _SettingField field,
+        TextEditingController controller,
+        String label,
+      ) {
+        if (_dirtyFields.contains(field) && controller.text.trim().isEmpty) {
+          reject(field, l10n.repeater_valueRequired(label));
+        }
+      }
+
+      requireText(
+        _SettingField.name,
+        _nameController,
+        l10n.repeater_repeaterName,
+      );
+      requireText(
+        _SettingField.radio,
+        _freqController,
+        l10n.repeater_frequencyMhz,
+      );
+      requireText(
+        _SettingField.txPower,
+        _txPowerController,
+        l10n.repeater_txPower,
+      );
+      requireText(_SettingField.lat, _latController, l10n.repeater_latitude);
+      requireText(_SettingField.lon, _lonController, l10n.repeater_longitude);
+      requireText(
+        _SettingField.prvKey,
+        _prvKeyController,
+        l10n.repeater_prvKey,
+      );
+      requireText(
+        _SettingField.txDelay,
+        _txDelayController,
+        l10n.repeater_txDelay,
+      );
+      requireText(
+        _SettingField.directTxDelay,
+        _directTxDelayController,
+        l10n.repeater_directTxDelay,
+      );
+      requireText(
+        _SettingField.intThresh,
+        _intThreshController,
+        l10n.repeater_intThresh,
+      );
+
       if (_dirtyFields.contains(_SettingField.name) &&
           _nameController.text.isNotEmpty) {
         pending.add((
@@ -1098,9 +1154,13 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
       setState(() {
         _isLoading = false;
+        // Only drop fields that were actually sent successfully; keep failed
+        // ones and anything edited while the save was running.
         _dirtyFields
-          ..clear()
-          ..addAll(retainDirty);
+          ..removeAll(savingFields)
+          ..addAll(retainDirty)
+          ..addAll(_editedDuringSave);
+        _editedDuringSave.clear();
         _hasChanges = _dirtyFields.isNotEmpty || passwordsFailed;
       });
 
@@ -1144,6 +1204,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
 
   void _markChanged(_SettingField field) {
     _dirtyFields.add(field);
+    if (_isLoading) _editedDuringSave.add(field);
     _flagHasChanges();
   }
 

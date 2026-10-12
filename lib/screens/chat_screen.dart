@@ -59,6 +59,7 @@ import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_bubble_box.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/composer_text_builder.dart';
@@ -134,6 +135,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
   DateTime? _lastTextSendAt;
+  // True while a send is awaiting outgoing translation, so a second tap
+  // can't send the same text again.
+  bool _isSendingText = false;
   String? _highlightedMessageId;
   int _highlightSequence = 0;
   int _messageScrollGeneration = 0;
@@ -1986,7 +1990,28 @@ class _ChatScreenState extends State<ChatScreen> {
     bool skipTranslation = false,
     bool skipReplyContext = false,
   }) async {
+    if (_isSendingText) return;
+    _isSendingText = true;
+    try {
+      await _sendMessageInner(
+        connector,
+        quickAnswerText: quickAnswerText,
+        skipTranslation: skipTranslation,
+        skipReplyContext: skipReplyContext,
+      );
+    } finally {
+      _isSendingText = false;
+    }
+  }
+
+  Future<void> _sendMessageInner(
+    MeshCoreConnector connector, {
+    String? quickAnswerText,
+    bool skipTranslation = false,
+    bool skipReplyContext = false,
+  }) async {
     final composerReply = _composerReply(_textController.text);
+    final composerTextAtSend = _textController.text;
     final rawText =
         quickAnswerText ?? _composerBodyText(_textController.text);
     final text = quickAnswerText == null ? rawText.trim() : rawText;
@@ -2090,7 +2115,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // end transform
 
-    if (quickAnswerText == null) {
+    // Keep anything typed while the outgoing translation ran.
+    if (quickAnswerText == null &&
+        _textController.text == composerTextAtSend) {
       ComposerDraftCache.clear(_composerDraftKey);
       _textController.clear();
       _textFieldFocusNode.requestFocus();
@@ -4308,6 +4335,12 @@ class _MessageBubble extends StatelessWidget {
                                       ),
                                     ],
                                   ),
+                                if (message.hasFutureTimestamp) ...[
+                                  const SizedBox(width: 4),
+                                  FutureTimestampIndicator(
+                                    size: 16 * textScale,
+                                  ),
+                                ],
                                 if (isOutgoing) ...[
                                   const SizedBox(width: 4),
                                   _buildStatusIcon(metaColor),

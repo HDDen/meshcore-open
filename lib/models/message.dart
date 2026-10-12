@@ -11,6 +11,23 @@ import 'translation_support.dart';
 
 enum MessageStatus { pending, sent, delivered, failed }
 
+/// How far a sender timestamp may run ahead of the local receive time before
+/// the UI flags it as a wrong clock.
+const Duration futureTimestampTolerance = Duration(minutes: 5);
+
+/// Receive time for a persisted message JSON record. Records written before
+/// `receivedAt` existed fall back to the sender timestamp, capped at now so a
+/// stored future-dated message stops sorting below everything received later.
+DateTime legacyAwareReceivedAt(Map<String, dynamic> json) {
+  final stored = json['receivedAt'];
+  if (stored is int) return DateTime.fromMillisecondsSinceEpoch(stored);
+  final timestamp = DateTime.fromMillisecondsSinceEpoch(
+    json['timestamp'] as int,
+  );
+  final now = DateTime.now();
+  return timestamp.isAfter(now) ? now : timestamp;
+}
+
 class Message {
   static const Object _unset = Object();
 
@@ -214,6 +231,13 @@ class Message {
        reactionStatuses = reactionStatuses ?? {};
 
   String get senderKeyHex => pubKeyToHex(senderKey);
+
+  /// True when the sender's clock put [timestamp] clearly ahead of the time
+  /// this device received the message.
+  bool get hasFutureTimestamp {
+    final at = receivedAt;
+    return at != null && timestamp.difference(at) > futureTimestampTolerance;
+  }
 
   Message copyWith({
     String? text,
@@ -420,6 +444,7 @@ class Message {
         text: text,
         rawText: rawText,
         timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
+        receivedAt: DateTime.now(),
         isOutgoing: false,
         isCli: false,
         status: MessageStatus.delivered,
