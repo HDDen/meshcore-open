@@ -1054,10 +1054,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           (c) =>
               c.hasLocation &&
               c.path.isNotEmpty &&
-              _matchesHopPrefix(
-                _lastHopChunk(c.path, c.pathHashWidth),
-                hop,
-              ),
+              _matchesHopPrefix(_lastHopChunk(c.path, c.pathHashWidth), hop),
         )
         .toList();
     if (peers.isEmpty) return null;
@@ -1100,10 +1097,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         if (record.pathBytes.isEmpty) continue;
         final recordHops = PathHelper.splitPathBytes(
           record.pathBytes,
-          Contact.inferPathHashWidth(
-            record.hopCount,
-            record.pathBytes.length,
-          ),
+          Contact.inferPathHashWidth(record.hopCount, record.pathBytes.length),
         );
         if (!seen.add(_pathKeyForHops(recordHops))) continue;
         if (altIndex >= kAlternatePathColors.length) break;

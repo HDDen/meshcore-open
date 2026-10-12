@@ -1198,6 +1198,15 @@
   "discoveredContacts_Title": "Добавить обнаруженные контакты",
   "discoveredContacts_deleteContact": "Удалить контакт",
   "contactsSettings_overwriteOldestSubtitle": "Когда список контактов заполнен, будет заменен самый старый контакт, который не находится в избранном.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Удалять обнаруженные контакты",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Если включено, приложение удаляет самые старые обнаруженные контакты, когда список обнаруженных достигает лимита в {limit} записей.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Удалить все",
   "discoveredContacts_deleteContactAllContent": "Вы уверены, что хотите удалить все обнаруженные контакты?",
   "discoveredContacts_deleteContactAll": "Удалить Все Обнаруженные Контакты",
@@ -3069,5 +3078,14 @@
   "receivedImage_packetInfo": "Информация о пакете",
   "receivedImage_parityRecovered": "Один пакет восстановлен из пакета восстановления.",
   "receivedImage_decodeTime": "Реконструировано за {ms} мс",
-  "receivedImage_saveFailed": "Не удалось сохранить изображение"
+  "receivedImage_saveFailed": "Не удалось сохранить изображение",
+  "reviewMode_dialogTitle": "Войти в режим проверки?",
+  "reviewMode_dialogBody": "Режим проверки подключается к имитируемому радио с примерами контактов, каналов и сообщений. Реальное радио не требуется.",
+  "reviewMode_confirm": "Войти",
+  "reviewMode_cancel": "Отмена",
+  "reviewMode_banner": "Режим проверки — имитация данных",
+  "reviewMode_sendTest": "Тестовое сообщение",
+  "reviewMode_testSent": "Скоро придёт тестовое сообщение.",
+  "reviewMode_exit": "Выйти",
+  "reviewMode_connectFailed": "Не удалось запустить режим проверки: {error}"
 }

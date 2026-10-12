@@ -1943,6 +1943,28 @@ discovery screen's add icon and the region screen's empty state,
 `test/models/channel_message_reply_test.dart` (tests an upstream-only
 constructor parameter).
 
+**Step 2 (2026-10-12, dev up to a64a33d0, upstream build 18).** Taken: review
+mode, a simulated radio for store reviewers (`lib/review_mode/`,
+`MeshCoreTransportType.review`, `connectReview`, the session cleanup at
+startup in `main.dart`, the banner above the channel and contact lists, the
+long-press on the scanner title), but kept unreachable: `reviewModeAvailable`
+in `review_mode_entry.dart` is `false`, because the simulated radio's
+contacts, channels and messages would go into the application database
+while `clearReviewModeData` clears preferences only; enabling it means
+clearing the fake scope's rows there too. Its three connector-level tests
+assumed the preference storage and were dropped;
+`test/review_mode/review_radio_test.dart` stays. Edge-to-edge on Android
+(`SystemUiMode.edgeToEdge`, transparent system bars with contrast
+enforcement, light icons over the image viewer and the QR scanner); the copy
+snackbar skipped on Android, where the system shows its own chip; the
+package bumps in all four pubspecs. Left out: the discovered-contact
+eviction toggle (`evictDiscoveredContactsEnabled`, cap 500), since the fork
+keeps its eviction always on at `_maxDiscoveredContacts` (1000); its ARB keys
+came along unused. Upstream's re-indent of `channels_screen.dart` made the
+auto-merge turn the search clear button's `setChannelsSearchText('')` into
+`(value)`: a hot screen's `git diff HEAD` is read even when its conflicts
+were taken as ours.
+
 ## Transports
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.

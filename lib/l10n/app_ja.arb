@@ -2180,6 +2180,8 @@
   "contactsSettings_overwriteOldestTitle": "最も古いものを上書きする",
   "contactsSettings_overwriteOldestSubtitle": "連絡先リストが満杯になった場合、お気に入りに登録されていない最も古い連絡先が置き換えられます。",
   "discoveredContacts_Title": "発見された連絡先を追加",
+  "contactsSettings_evictDiscoveredContactsTitle": "検出された連絡先を削除",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "有効にすると、検出された連絡先のリストが上限の{limit}件に達した際に、最も古い検出済み連絡先が削除されます。",
   "discoveredContacts_noMatching": "一致する連絡先が見つかりませんでした",
   "discoveredContacts_searchHint": "発見された連絡先を検索する",
   "discoveredContacts_contactAdded": "連絡先を追加しました",
@@ -3859,5 +3861,14 @@
   "receivedImage_packetInfo": "パケット情報",
   "receivedImage_parityRecovered": "1 つのパケットを回復パケットから再構築しました。",
   "receivedImage_decodeTime": "{ms} ミリ秒で再構築",
-  "receivedImage_saveFailed": "画像を保存できませんでした"
+  "receivedImage_saveFailed": "画像を保存できませんでした",
+  "reviewMode_dialogTitle": "レビューモードに入りますか？",
+  "reviewMode_dialogBody": "レビューモードでは、サンプルの連絡先、チャンネル、メッセージを備えたシミュレートされたデバイスに接続します。実際のデバイスは不要です。",
+  "reviewMode_confirm": "開始",
+  "reviewMode_cancel": "キャンセル",
+  "reviewMode_banner": "レビューモード — シミュレーションデータ",
+  "reviewMode_sendTest": "テストメッセージを送信",
+  "reviewMode_testSent": "まもなくテストメッセージが届きます。",
+  "reviewMode_exit": "終了",
+  "reviewMode_connectFailed": "レビューモードを開始できませんでした: {error}"
 }

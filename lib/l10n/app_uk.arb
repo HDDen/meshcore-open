@@ -2023,6 +2023,8 @@
   "discoveredContacts_copyContact": "Копіювати контакт у буфер обміну",
   "discoveredContacts_addContact": "Додати контакт",
   "contactsSettings_overwriteOldestSubtitle": "Коли список контактів заповнений, найстарший контакт без позначки улюбленого буде замінений.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Видаляти виявлені контакти",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Якщо ввімкнено, застосунок видаляє найстаріші виявлені контакти, коли список виявлених контактів досягає ліміту в {limit} записів.",
   "common_deleteAll": "Видалити все",
   "discoveredContacts_deleteContactAll": "Видалити всі виявлені контакти",
   "discoveredContacts_deleteContactAllContent": "Ви впевнені, що хочете видалити всі виявлені контакти?",
@@ -3734,5 +3736,14 @@
   "receivedImage_packetInfo": "Інформація про пакет",
   "receivedImage_parityRecovered": "Один пакет відновлено з пакета відновлення.",
   "receivedImage_decodeTime": "Відтворено за {ms} мс",
-  "receivedImage_saveFailed": "Не вдалося зберегти зображення"
+  "receivedImage_saveFailed": "Не вдалося зберегти зображення",
+  "reviewMode_dialogTitle": "Увійти в режим перевірки?",
+  "reviewMode_dialogBody": "Режим перевірки підключається до імітованого радіо із прикладами контактів, каналів і повідомлень. Справжнє радіо не потрібне.",
+  "reviewMode_confirm": "Увійти",
+  "reviewMode_cancel": "Скасувати",
+  "reviewMode_banner": "Режим перевірки — імітовані дані",
+  "reviewMode_sendTest": "Тестове повідомлення",
+  "reviewMode_testSent": "Незабаром надійде тестове повідомлення.",
+  "reviewMode_exit": "Вийти",
+  "reviewMode_connectFailed": "Не вдалося запустити режим перевірки: {error}"
 }

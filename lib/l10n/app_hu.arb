@@ -2060,6 +2060,8 @@
   "contactsSettings_overwriteOldestTitle": "A legrégebbi felülírása",
   "contactsSettings_overwriteOldestSubtitle": "Amikor a névjegylista megtelik, a legrégebbi, nem kedvenc névjegy lecserélődik.",
   "discoveredContacts_Title": "Felfedezett névjegyek hozzáadása",
+  "contactsSettings_evictDiscoveredContactsTitle": "Felfedezett kapcsolatok eltávolítása",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Ha engedélyezve van, az alkalmazás eltávolítja a legrégebbi felfedezett kapcsolatokat, amint a felfedezési lista eléri a(z) {limit} bejegyzéses korlátot.",
   "discoveredContacts_noMatching": "Nincsenek megfelelő névjegyek",
   "discoveredContacts_searchHint": "Keresés a talált névjegyek között",
   "discoveredContacts_contactAdded": "Névjegy hozzáadva",
@@ -3758,5 +3760,14 @@
   "receivedImage_packetInfo": "Csomag adatai",
   "receivedImage_parityRecovered": "Egy csomag újra lett építve a helyreállító csomagból.",
   "receivedImage_decodeTime": "{ms} ms alatt rekonstruálva",
-  "receivedImage_saveFailed": "A képet nem sikerült elmenteni"
+  "receivedImage_saveFailed": "A képet nem sikerült elmenteni",
+  "reviewMode_dialogTitle": "Belép az áttekintő módba?",
+  "reviewMode_dialogBody": "Az áttekintő mód egy szimulált rádióhoz csatlakozik, mintakapcsolatokkal, csatornákkal és üzenetekkel. Nincs szükség valódi rádióra.",
+  "reviewMode_confirm": "Belépés",
+  "reviewMode_cancel": "Mégsem",
+  "reviewMode_banner": "Áttekintő mód — szimulált adatok",
+  "reviewMode_sendTest": "Tesztüzenet küldése",
+  "reviewMode_testSent": "Hamarosan megérkezik egy tesztüzenet.",
+  "reviewMode_exit": "Kilépés",
+  "reviewMode_connectFailed": "Az áttekintő mód nem indítható el: {error}"
 }

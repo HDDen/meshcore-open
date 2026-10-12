@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// A reusable QR code scanner widget that can be embedded anywhere.
@@ -150,28 +151,33 @@ class _QrScannerWidgetState extends State<QrScannerWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Scanner view
-        MobileScanner(
-          controller: _controller,
-          onDetect: _handleDetection,
-          errorBuilder: (context, error) {
-            return _buildErrorWidget(context, error);
-          },
-        ),
+    // The camera preview is dark, so keep the system bar icons light, and lift
+    // the controls above the navigation bar the app draws behind.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Stack(
+        children: [
+          // Scanner view
+          MobileScanner(
+            controller: _controller,
+            onDetect: _handleDetection,
+            errorBuilder: (context, error) {
+              return _buildErrorWidget(context, error);
+            },
+          ),
 
-        // Overlay
-        widget.overlay ?? _buildDefaultOverlay(context),
+          // Overlay
+          widget.overlay ?? _buildDefaultOverlay(context),
 
-        // Control buttons
-        Positioned(
-          bottom: 16,
-          left: 0,
-          right: 0,
-          child: _buildControls(context),
-        ),
-      ],
+          // Control buttons
+          Positioned(
+            bottom: 16 + MediaQuery.viewPaddingOf(context).bottom,
+            left: 0,
+            right: 0,
+            child: _buildControls(context),
+          ),
+        ],
+      ),
     );
   }
 

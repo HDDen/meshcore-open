@@ -1,5 +1,6 @@
 import '../models/app_settings.dart';
 import '../utils/app_logger.dart';
+import 'legacy_key_migration.dart';
 import 'prefs_manager.dart';
 
 class ContactSettingsStore {
@@ -43,7 +44,7 @@ class ContactSettingsStore {
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
     bool? enabled = prefs.getBool(key);
-    if (enabled == null) {
+    if (enabled == null && canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       enabled = prefs.getBool(oldKey);
       if (prefs.containsKey(oldKey)) prefs.remove(oldKey);

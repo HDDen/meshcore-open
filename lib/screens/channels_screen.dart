@@ -58,6 +58,7 @@ import 'community_qr_scanner_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
 import 'settings_screen.dart';
+import '../review_mode/review_mode_banner.dart';
 
 class ChannelsScreen extends StatefulWidget {
   final bool hideBackButton;
@@ -430,136 +431,143 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            if (connector.isOfflineMode) return;
-            await context.read<MeshCoreConnector>().getChannels(force: true);
-          },
-          child: () {
-            final channels = connector.channels;
-            final roomServerContacts = _roomServerContactsForChannelsScreen(
-              connector,
-              appSettings,
-              viewState,
-            );
-            final waitingForInitialChannels =
-                !connector.hasLoadedChannels && !connector.isLoadingChannels;
-            final waitingForFirstChannel =
-                connector.isLoadingChannels && channels.isEmpty;
-            final waitingForChannelGroups =
-                connector.isConnected &&
-                (connector.selfPublicKeyHex.isEmpty ||
-                    _loadedChannelGroupsForPublicKey !=
-                        connector.selfPublicKeyHex);
+        body: Column(
+          children: [
+            const ReviewModeBanner(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  if (connector.isOfflineMode) return;
+                  await context.read<MeshCoreConnector>().getChannels(force: true);
+                },
+                child: () {
+                  final channels = connector.channels;
+                  final roomServerContacts = _roomServerContactsForChannelsScreen(
+                    connector,
+                    appSettings,
+                    viewState,
+                  );
+                  final waitingForInitialChannels =
+                      !connector.hasLoadedChannels && !connector.isLoadingChannels;
+                  final waitingForFirstChannel =
+                      connector.isLoadingChannels && channels.isEmpty;
+                  final waitingForChannelGroups =
+                      connector.isConnected &&
+                      (connector.selfPublicKeyHex.isEmpty ||
+                          _loadedChannelGroupsForPublicKey !=
+                              connector.selfPublicKeyHex);
 
-            if (waitingForInitialChannels ||
-                waitingForFirstChannel ||
-                waitingForChannelGroups) {
-              return const Center(child: CircularProgressIndicator());
-            }
+                  if (waitingForInitialChannels ||
+                      waitingForFirstChannel ||
+                      waitingForChannelGroups) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-            if (channels.isEmpty && roomServerContacts.isEmpty) {
-              return ListView(
-                children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height - 200,
-                    child: EmptyState(
-                      icon: Icons.tag,
-                      title: context.l10n.channels_noChannelsConfigured,
-                      action: FilledButton.icon(
-                        onPressed: connector.isOfflineMode
-                            ? null
-                            : () => _addPublicChannel(context, connector),
-                        icon: const Icon(Icons.public),
-                        label: Text(context.l10n.channels_addPublicChannel),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
+                  if (channels.isEmpty && roomServerContacts.isEmpty) {
+                    return ListView(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height - 200,
+                          child: EmptyState(
+                            icon: Icons.tag,
+                            title: context.l10n.channels_noChannelsConfigured,
+                            action: FilledButton.icon(
+                              onPressed: connector.isOfflineMode
+                                  ? null
+                                  : () => _addPublicChannel(context, connector),
+                              icon: const Icon(Icons.public),
+                              label: Text(context.l10n.channels_addPublicChannel),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
 
-            final filteredChannels = _filterAndSortChannels(
-              channels,
-              connector,
-              viewState,
-            );
-            final sortUnreadFirst = appSettings.channelsUnreadSorting;
-            final channelsListDisabled =
-                connector.isLoadingChannels || connector.isSyncingChannels;
+                  final filteredChannels = _filterAndSortChannels(
+                    channels,
+                    connector,
+                    viewState,
+                  );
+                  final sortUnreadFirst = appSettings.channelsUnreadSorting;
+                  final channelsListDisabled =
+                      connector.isLoadingChannels || connector.isSyncingChannels;
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.channels_searchChannels,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (viewState.channelsSearchText.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.clear),
-                              tooltip: context.l10n.common_clearSearch,
-                              onPressed: () {
-                                _searchDebounce?.cancel();
-                                _searchDebounce = null;
-                                _searchController.clear();
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.channels_searchChannels,
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (viewState.channelsSearchText.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    tooltip: context.l10n.common_clearSearch,
+                                    onPressed: () {
+                                      _searchDebounce?.cancel();
+                                      _searchDebounce = null;
+                                      _searchController.clear();
+                                      context
+                                          .read<UiViewStateService>()
+                                          .setChannelsSearchText('');
+                                    },
+                                  ),
+                                _buildFilterButton(viewState),
+                              ],
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            _searchDebounce?.cancel();
+                            _searchDebounce = Timer(
+                              const Duration(milliseconds: 300),
+                              () {
+                                if (!mounted) return;
                                 context
                                     .read<UiViewStateService>()
-                                    .setChannelsSearchText('');
+                                    .setChannelsSearchText(value);
                               },
+                            );
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: AnimatedOpacity(
+                          opacity: channelsListDisabled ? 0.45 : 1.0,
+                          duration: const Duration(milliseconds: 180),
+                          child: AbsorbPointer(
+                            absorbing: channelsListDisabled,
+                            child: _buildChannelsList(
+                              context,
+                              connector,
+                              channelMessageStore,
+                              viewState,
+                              filteredChannels,
+                              roomServerContacts,
+                              mutedChannelNames,
+                              hideChannelIndexIndicator:
+                                  appSettings.hideChannelIndexIndicator,
+                              sortUnreadFirst: sortUnreadFirst,
                             ),
-                          _buildFilterButton(viewState),
-                        ],
+                          ),
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      _searchDebounce?.cancel();
-                      _searchDebounce = Timer(
-                        const Duration(milliseconds: 300),
-                        () {
-                          if (!mounted) return;
-                          context
-                              .read<UiViewStateService>()
-                              .setChannelsSearchText(value);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: AnimatedOpacity(
-                    opacity: channelsListDisabled ? 0.45 : 1.0,
-                    duration: const Duration(milliseconds: 180),
-                    child: AbsorbPointer(
-                      absorbing: channelsListDisabled,
-                      child: _buildChannelsList(
-                        context,
-                        connector,
-                        channelMessageStore,
-                        viewState,
-                        filteredChannels,
-                        roomServerContacts,
-                        mutedChannelNames,
-                        hideChannelIndexIndicator:
-                            appSettings.hideChannelIndexIndicator,
-                        sortUnreadFirst: sortUnreadFirst,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }(),
+                    ],
+                  );
+                }(),
+              ),
+            ),
+          ],
         ),
         floatingActionButton: connector.isOfflineMode
             ? null

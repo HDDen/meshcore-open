@@ -2015,6 +2015,8 @@
   "contactsSettings_overwriteOldestTitle": "Prepísať najstaršie",
   "discoveredContacts_addContact": "Pridať kontakt",
   "contactsSettings_overwriteOldestSubtitle": "Keď je zoznam kontaktov plný, bude nahradený najstarší kontakt, ktorý nie je medzi obľúbenými.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Odstraňovať objavené kontakty",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Keď je táto možnosť zapnutá, aplikácia odstráni najstaršie objavené kontakty, keď zoznam objavených dosiahne limit {limit} záznamov.",
   "discoveredContacts_deleteContactAll": "Zmazať všetky objavené kontakty",
   "common_deleteAll": "Zmazať všetko",
   "discoveredContacts_deleteContactAllContent": "Ste si istí, že chcete zmazať všetky objavené kontakty?",
@@ -3755,5 +3757,14 @@
   "receivedImage_packetInfo": "Informácie o pakete",
   "receivedImage_parityRecovered": "Jeden paket bol zrekonštruovaný z paketu na obnovu.",
   "receivedImage_decodeTime": "Zrekonštruované za {ms} ms",
-  "receivedImage_saveFailed": "Nepodarilo sa uložiť obrázok"
+  "receivedImage_saveFailed": "Nepodarilo sa uložiť obrázok",
+  "reviewMode_dialogTitle": "Vstúpiť do režimu kontroly?",
+  "reviewMode_dialogBody": "Režim kontroly sa pripojí k simulovanému rádiu s ukážkovými kontaktmi, kanálmi a správami. Skutočné rádio nie je potrebné.",
+  "reviewMode_confirm": "Vstúpiť",
+  "reviewMode_cancel": "Zrušiť",
+  "reviewMode_banner": "Režim kontroly — simulované údaje",
+  "reviewMode_sendTest": "Poslať testovaciu správu",
+  "reviewMode_testSent": "Čoskoro príde testovacia správa.",
+  "reviewMode_exit": "Ukončiť",
+  "reviewMode_connectFailed": "Režim kontroly sa nepodarilo spustiť: {error}"
 }

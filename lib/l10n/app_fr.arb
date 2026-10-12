@@ -2100,6 +2100,15 @@
   "discoveredContacts_Title": "Ajouter des contacts découverts",
   "discoveredContacts_searchHint": "Rechercher des contacts découverts",
   "contactsSettings_overwriteOldestSubtitle": "Lorsque la liste de contacts est pleine, le contact le plus ancien non favori sera remplacé.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Évincer les contacts découverts",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Lorsque cette option est activée, l'application supprime les contacts découverts les plus anciens dès que la liste de découverte atteint sa limite de {limit} entrées.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Tout supprimer",
   "discoveredContacts_deleteContactAll": "Supprimer tous les contacts découverts",
   "discoveredContacts_deleteContactAllContent": "Êtes-vous sûr de vouloir supprimer tous les contacts découverts ?",
@@ -3853,5 +3862,14 @@
   "receivedImage_packetInfo": "Informations sur le paquet",
   "receivedImage_parityRecovered": "Un paquet a été reconstitué à partir du paquet de récupération.",
   "receivedImage_decodeTime": "Reconstitué en {ms} ms",
-  "receivedImage_saveFailed": "Impossible d'enregistrer l'image"
+  "receivedImage_saveFailed": "Impossible d'enregistrer l'image",
+  "reviewMode_dialogTitle": "Activer le mode revue ?",
+  "reviewMode_dialogBody": "Le mode revue se connecte à une radio simulée avec des contacts, canaux et messages d'exemple. Aucune radio réelle n'est nécessaire.",
+  "reviewMode_confirm": "Activer",
+  "reviewMode_cancel": "Annuler",
+  "reviewMode_banner": "Mode revue — données simulées",
+  "reviewMode_sendTest": "Envoyer un message test",
+  "reviewMode_testSent": "Un message test arrivera sous peu.",
+  "reviewMode_exit": "Quitter",
+  "reviewMode_connectFailed": "Impossible de démarrer le mode revue : {error}"
 }

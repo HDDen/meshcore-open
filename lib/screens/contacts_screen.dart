@@ -12,6 +12,7 @@ import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../review_mode/review_mode_banner.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
@@ -758,23 +759,30 @@ class _ContactsScreenState extends State<ContactsScreen>
               ),
           ],
         ),
-        body: IgnorePointer(
-          ignoring: lockContactList,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: AnimatedOpacity(
-                  opacity: lockContactList ? 0.45 : 1,
-                  duration: const Duration(milliseconds: 160),
-                  child: _buildContactsBody(context, connector),
+        body: Column(
+          children: [
+            const ReviewModeBanner(),
+            Expanded(
+              child: IgnorePointer(
+                ignoring: lockContactList,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        opacity: lockContactList ? 0.45 : 1,
+                        duration: const Duration(milliseconds: 160),
+                        child: _buildContactsBody(context, connector),
+                      ),
+                    ),
+                    if (_batchOperationInProgress)
+                      const Positioned.fill(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
                 ),
               ),
-              if (_batchOperationInProgress)
-                const Positioned.fill(
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
         floatingActionButton:
             widget.batchOperationsMode || connector.isOfflineMode

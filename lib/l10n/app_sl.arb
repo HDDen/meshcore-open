@@ -2015,6 +2015,8 @@
   "discoveredContacts_searchHint": "Išči odkrite stike",
   "discoveredContacts_deleteContact": "Izbriši stik",
   "contactsSettings_overwriteOldestSubtitle": "Ko je seznam stikov poln, bo zamenjan najstarejši stik, ki ni med priljubljenimi.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Odstrani odkrite stike",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Ko je ta možnost vklopljena, aplikacija odstrani najstarejše odkrite stike, ko seznam odkritih stikov doseže omejitev {limit} vnosov.",
   "common_deleteAll": "Izbriši vse",
   "discoveredContacts_deleteContactAllContent": "Ste prepričani, da želite izbrisati vse odkrite kontakte?",
   "discoveredContacts_deleteContactAll": "Izbriši vse odkrite kontakte",
@@ -3755,5 +3757,14 @@
   "receivedImage_packetInfo": "Podatki o paketu",
   "receivedImage_parityRecovered": "En paket je bil rekonstruiran iz obnovitvenega paketa.",
   "receivedImage_decodeTime": "Rekonstruirano v {ms} ms",
-  "receivedImage_saveFailed": "Slike ni bilo mogoče shraniti"
+  "receivedImage_saveFailed": "Slike ni bilo mogoče shraniti",
+  "reviewMode_dialogTitle": "Vstop v način pregleda?",
+  "reviewMode_dialogBody": "Način pregleda se poveže s simuliranim radiem z vzorčnimi stiki, kanali in sporočili. Pravi radio ni potreben.",
+  "reviewMode_confirm": "Vstopi",
+  "reviewMode_cancel": "Prekliči",
+  "reviewMode_banner": "Način pregleda — simulirani podatki",
+  "reviewMode_sendTest": "Pošlji testno sporočilo",
+  "reviewMode_testSent": "Kmalu bo prispelo testno sporočilo.",
+  "reviewMode_exit": "Izhod",
+  "reviewMode_connectFailed": "Načina pregleda ni bilo mogoče zagnati: {error}"
 }

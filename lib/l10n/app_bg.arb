@@ -2015,6 +2015,8 @@
   "discoveredContacts_deleteContact": "Изтрий открития контакт",
   "discoveredContacts_addContact": "Добави контакт",
   "contactsSettings_overwriteOldestSubtitle": "Когато списъкът с контакти е пълен, ще бъде заменен най-старият контакт, който не е в любими.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Премахване на открити контакти",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Когато е включено, приложението премахва най-старите открити контакти, щом списъкът с открити контакти достигне лимита си от {limit} записа.",
   "discoveredContacts_deleteContactAll": "Изтриване на Всички Открити Контакти",
   "discoveredContacts_deleteContactAllContent": "Сигурни ли сте, че искате да изтриете всички открити контакти?",
   "common_deleteAll": "Изтрий всичко",
@@ -3754,5 +3756,14 @@
   "receivedImage_packetInfo": "Информация за пакета",
   "receivedImage_parityRecovered": "Един пакет е възстановен от възстановителния пакет.",
   "receivedImage_decodeTime": "Възстановено за {ms} мс",
-  "receivedImage_saveFailed": "Изображението не можа да бъде запазено"
+  "receivedImage_saveFailed": "Изображението не можа да бъде запазено",
+  "reviewMode_dialogTitle": "Вход в режим за преглед?",
+  "reviewMode_dialogBody": "Режимът за преглед се свързва със симулирано радио с примерни контакти, канали и съобщения. Не е нужно реално радио.",
+  "reviewMode_confirm": "Вход",
+  "reviewMode_cancel": "Отказ",
+  "reviewMode_banner": "Режим за преглед — симулирани данни",
+  "reviewMode_sendTest": "Тестово съобщение",
+  "reviewMode_testSent": "Скоро ще пристигне тестово съобщение.",
+  "reviewMode_exit": "Изход",
+  "reviewMode_connectFailed": "Режимът за преглед не можа да се стартира: {error}"
 }

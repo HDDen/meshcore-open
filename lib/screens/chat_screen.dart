@@ -3168,6 +3168,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _copyMessageText(String text) {
     Clipboard.setData(ClipboardData(text: text));
+    // Android shows its own clipboard chip; the snackbar is redundant there
+    // and lingers over the input field after the chip dismisses.
+    if (PlatformInfo.isAndroid) return;
     showDismissibleSnackBar(
       context,
       content: Text(context.l10n.chat_messageCopied),

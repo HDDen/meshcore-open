@@ -2015,6 +2015,8 @@
   "discoveredContacts_Title": "添加已发现的联系人",
   "discoveredContacts_copyContact": "复制联系人到剪贴板",
   "contactsSettings_overwriteOldestSubtitle": "当联系人列表已满时，将替换最老的非收藏联系人。",
+  "contactsSettings_evictDiscoveredContactsTitle": "清除已发现的联系人",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "启用后，当已发现联系人列表达到 {limit} 条的上限时，应用会移除最旧的已发现联系人。",
   "common_deleteAll": "删除全部",
   "discoveredContacts_deleteContactAllContent": "您确定要删除所有发现的联系人吗？",
   "discoveredContacts_deleteContactAll": "删除所有发现的联系人",
@@ -3759,5 +3761,14 @@
   "receivedImage_packetInfo": "数据包信息",
   "receivedImage_parityRecovered": "已从恢复包重建了一个数据包。",
   "receivedImage_decodeTime": "在 {ms} 毫秒内重建",
-  "receivedImage_saveFailed": "无法保存图片"
+  "receivedImage_saveFailed": "无法保存图片",
+  "reviewMode_dialogTitle": "进入审核模式？",
+  "reviewMode_dialogBody": "审核模式会连接到模拟设备，其中包含示例联系人、频道和消息。无需真实设备。",
+  "reviewMode_confirm": "进入",
+  "reviewMode_cancel": "取消",
+  "reviewMode_banner": "审核模式 — 模拟数据",
+  "reviewMode_sendTest": "发送测试消息",
+  "reviewMode_testSent": "测试消息即将送达。",
+  "reviewMode_exit": "退出",
+  "reviewMode_connectFailed": "无法启动审核模式：{error}"
 }

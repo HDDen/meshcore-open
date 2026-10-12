@@ -1980,6 +1980,15 @@
   "discoveredContacts_contactAdded": "Contato adicionado",
   "discoveredContacts_addContact": "Adicionar Contato",
   "contactsSettings_overwriteOldestSubtitle": "Quando a lista de contatos estiver cheia, o contato mais antigo não favoritado será substituído.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Remover contatos descobertos",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Quando ativado, o aplicativo remove os contatos descobertos mais antigos assim que a lista de descobertos atingir o limite de {limit} entradas.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Excluir Tudo",
   "discoveredContacts_deleteContactAll": "Excluir Todos os Contatos Descobertos",
   "discoveredContacts_deleteContactAllContent": "Tem certeza de que deseja excluir todos os contatos descobertos?",
@@ -3536,5 +3545,14 @@
   "receivedImage_packetInfo": "Informações do pacote",
   "receivedImage_parityRecovered": "Um pacote foi reconstruído a partir do pacote de recuperação.",
   "receivedImage_decodeTime": "Reconstruído em {ms} ms",
-  "receivedImage_saveFailed": "Não foi possível guardar a imagem"
+  "receivedImage_saveFailed": "Não foi possível guardar a imagem",
+  "reviewMode_dialogTitle": "Entrar no modo de revisão?",
+  "reviewMode_dialogBody": "O modo de revisão conecta-se a um rádio simulado com contatos, canais e mensagens de exemplo. Não é necessário um rádio real.",
+  "reviewMode_confirm": "Entrar",
+  "reviewMode_cancel": "Cancelar",
+  "reviewMode_banner": "Modo de revisão — dados simulados",
+  "reviewMode_sendTest": "Enviar mensagem de teste",
+  "reviewMode_testSent": "Uma mensagem de teste chegará em breve.",
+  "reviewMode_exit": "Sair",
+  "reviewMode_connectFailed": "Não foi possível iniciar o modo de revisão: {error}"
 }

@@ -2015,6 +2015,15 @@
   "discoveredContacts_contactAdded": "Contact toegevoegd",
   "discoveredContacts_searchHint": "Ontdekte contacten zoeken",
   "contactsSettings_overwriteOldestSubtitle": "Wanneer de contactenlijst vol is, wordt de oudste niet-favoriete contactpersoon vervangen.",
+  "contactsSettings_evictDiscoveredContactsTitle": "Ontdekte contacten verwijderen",
+  "contactsSettings_evictDiscoveredContactsSubtitle": "Indien ingeschakeld verwijdert de app de oudste ontdekte contacten zodra de lijst met ontdekte contacten de limiet van {limit} items bereikt.",
+  "@contactsSettings_evictDiscoveredContactsSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "common_deleteAll": "Alles verwijderen",
   "discoveredContacts_deleteContactAll": "Verwijder alle ontdekte contacten",
   "discoveredContacts_deleteContactAllContent": "Weet u zeker dat u alle ontdekte contacten wilt verwijderen?",
@@ -3537,5 +3546,14 @@
   "notification_replyTooLong": "Je antwoord is te lang om vanuit een melding te verzenden. Verzend het vanuit MeshCore Open.",
   "notification_replyUnavailable": "Dit gesprek staat niet meer op de verbonden radio.",
   "notification_replySendFailed": "Je antwoord is mogelijk niet verzonden. Controleer dit in MeshCore Open en probeer het opnieuw.",
-  "notification_replyAppNotRunning": "MeshCore Open is niet actief. Open de app en verzend je antwoord opnieuw."
+  "notification_replyAppNotRunning": "MeshCore Open is niet actief. Open de app en verzend je antwoord opnieuw.",
+  "reviewMode_dialogTitle": "Beoordelingsmodus starten?",
+  "reviewMode_dialogBody": "De beoordelingsmodus maakt verbinding met een gesimuleerde radio met voorbeeldcontacten, kanalen en berichten. Een echte radio is niet nodig.",
+  "reviewMode_confirm": "Starten",
+  "reviewMode_cancel": "Annuleren",
+  "reviewMode_banner": "Beoordelingsmodus — gesimuleerde gegevens",
+  "reviewMode_sendTest": "Testbericht sturen",
+  "reviewMode_testSent": "Er komt zo een testbericht binnen.",
+  "reviewMode_exit": "Afsluiten",
+  "reviewMode_connectFailed": "Beoordelingsmodus kon niet worden gestart: {error}"
 }
