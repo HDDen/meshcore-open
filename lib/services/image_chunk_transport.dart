@@ -633,6 +633,10 @@ enum ImageReassemblyFailureReason {
 
   /// Dropped by [ImageReassembler.clear] (disconnect / new session).
   disconnected,
+
+  /// Dropped by [ImageReassembler.clearChannel] because the radio slot it
+  /// arrived on now holds a different channel.
+  channelChanged,
 }
 
 /// A fully reassembled image.
@@ -873,6 +877,34 @@ class ImageReassembler {
           firstSeen: entry.firstSeen,
           expiredAt: at,
           reason: ImageReassemblyFailureReason.disconnected,
+        ),
+      );
+    }
+  }
+
+  /// Drops every stream that arrived on [channelIndex], whose radio slot now
+  /// holds a different channel, so a new image there can never be completed
+  /// with the old channel's bytes. In-progress streams are reported through
+  /// [onFailed] so their bubbles stop showing "receiving".
+  void clearChannel(int channelIndex, {DateTime? now}) {
+    final at = now ?? _clock();
+    _recentlyCompleted.removeWhere(
+      (key, _) => key.channelIndex == channelIndex,
+    );
+    final dropped = _pending.values
+        .where((entry) => entry.key.channelIndex == channelIndex)
+        .toList();
+    for (final entry in dropped) {
+      _pending.remove(entry.key);
+      onFailed?.call(
+        ImageReassemblyFailure(
+          key: entry.key,
+          total: entry.total,
+          receivedDataChunks: entry.bodies.length,
+          hadParity: entry.hasParity,
+          firstSeen: entry.firstSeen,
+          expiredAt: at,
+          reason: ImageReassemblyFailureReason.channelChanged,
         ),
       );
     }

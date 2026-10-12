@@ -604,6 +604,7 @@ void main() {
       () async {
         final store = ChannelMessageStore()..publicKeyHex = '1234567890';
         final channelIndex = 1;
+        const channelId = '0123456789abcdef';
 
         final rawPath = Uint8List(64)
           ..[0] = 0xBB
@@ -623,11 +624,11 @@ void main() {
 
         final prefs = PrefsManager.instance;
         await prefs.setString(
-          '${store.keyFor}$channelIndex',
+          '${store.keyFor}_$channelId',
           jsonEncode(messageJson),
         );
 
-        final messages = await store.loadChannelMessages(channelIndex);
+        final messages = await store.loadChannelMessages(channelId);
         expect(messages, hasLength(1));
         expect(messages.first.pathLength, equals(1));
         expect(
