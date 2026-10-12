@@ -4954,6 +4954,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get discoveredContacts_Title => '発見された連絡先を追加';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle => '検出された連絡先を削除';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return '有効にすると、検出された連絡先のリストが上限の$limit件に達した際に、最も古い検出済み連絡先が削除されます。';
+  }
+
+  @override
   String get discoveredContacts_noMatching => '一致する連絡先が見つかりませんでした';
 
   @override
@@ -7088,4 +7096,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'レビューモードに入りますか？';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'レビューモードでは、サンプルの連絡先、チャンネル、メッセージを備えたシミュレートされたデバイスに接続します。実際のデバイスは不要です。';
+
+  @override
+  String get reviewMode_confirm => '開始';
+
+  @override
+  String get reviewMode_cancel => 'キャンセル';
+
+  @override
+  String get reviewMode_banner => 'レビューモード — シミュレーションデータ';
+
+  @override
+  String get reviewMode_sendTest => 'テストメッセージを送信';
+
+  @override
+  String get reviewMode_testSent => 'まもなくテストメッセージが届きます。';
+
+  @override
+  String get reviewMode_exit => '終了';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'レビューモードを開始できませんでした: $error';
+  }
 }

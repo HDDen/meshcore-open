@@ -5217,6 +5217,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get discoveredContacts_Title => 'Entdeckte Kontakte hinzufügen';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Liste entdeckter Kontakte kürzen';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Wenn aktiviert, wird die Liste der entdeckten Kontakte auf $limit Kontakte begrenzt.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Keine passenden Kontakte';
 
   @override
@@ -7453,4 +7462,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Prüfmodus aktivieren?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Der Prüfmodus verbindet sich mit einem simulierten Radio mit Beispielkontakten, Kanälen und Nachrichten. Es wird kein echtes Radio benötigt.';
+
+  @override
+  String get reviewMode_confirm => 'Aktivieren';
+
+  @override
+  String get reviewMode_cancel => 'Abbrechen';
+
+  @override
+  String get reviewMode_banner => 'Prüfmodus — simulierte Daten';
+
+  @override
+  String get reviewMode_sendTest => 'Testnachricht senden';
+
+  @override
+  String get reviewMode_testSent => 'Eine Testnachricht trifft in Kürze ein.';
+
+  @override
+  String get reviewMode_exit => 'Beenden';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Prüfmodus konnte nicht gestartet werden: $error';
+  }
 }

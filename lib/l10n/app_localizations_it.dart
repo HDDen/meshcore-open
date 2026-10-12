@@ -5222,6 +5222,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get discoveredContacts_Title => 'Aggiungi contatti scoperti';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Rimuovi i contatti scoperti';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Se abilitato, l\'app rimuove i contatti scoperti più vecchi quando l\'elenco dei contatti scoperti raggiunge il limite di $limit voci.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Nessun contatto corrispondente';
 
   @override
@@ -7454,4 +7463,34 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Entrare nella modalità revisione?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'La modalità revisione si connette a una radio simulata con contatti, canali e messaggi di esempio. Non serve una radio reale.';
+
+  @override
+  String get reviewMode_confirm => 'Entra';
+
+  @override
+  String get reviewMode_cancel => 'Annulla';
+
+  @override
+  String get reviewMode_banner => 'Modalità revisione — dati simulati';
+
+  @override
+  String get reviewMode_sendTest => 'Invia messaggio di prova';
+
+  @override
+  String get reviewMode_testSent => 'A breve arriverà un messaggio di prova.';
+
+  @override
+  String get reviewMode_exit => 'Esci';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Impossibile avviare la modalità revisione: $error';
+  }
 }

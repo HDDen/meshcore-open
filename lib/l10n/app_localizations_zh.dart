@@ -4847,6 +4847,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoveredContacts_Title => '添加已发现的联系人';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle => '清除已发现的联系人';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return '启用后，当已发现联系人列表达到 $limit 条的上限时，应用会移除最旧的已发现联系人。';
+  }
+
+  @override
   String get discoveredContacts_noMatching => '没有匹配的联系人';
 
   @override
@@ -6948,4 +6956,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => '进入审核模式？';
+
+  @override
+  String get reviewMode_dialogBody => '审核模式会连接到模拟设备，其中包含示例联系人、频道和消息。无需真实设备。';
+
+  @override
+  String get reviewMode_confirm => '进入';
+
+  @override
+  String get reviewMode_cancel => '取消';
+
+  @override
+  String get reviewMode_banner => '审核模式 — 模拟数据';
+
+  @override
+  String get reviewMode_sendTest => '发送测试消息';
+
+  @override
+  String get reviewMode_testSent => '测试消息即将送达。';
+
+  @override
+  String get reviewMode_exit => '退出';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return '无法启动审核模式：$error';
+  }
 }

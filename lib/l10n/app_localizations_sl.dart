@@ -5179,6 +5179,15 @@ class AppLocalizationsSl extends AppLocalizations {
   String get discoveredContacts_Title => 'Dodaj odkrite stike';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Odstrani odkrite stike';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Ko je ta možnost vklopljena, aplikacija odstrani najstarejše odkrite stike, ko seznam odkritih stikov doseže omejitev $limit vnosov.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Ni ujemajočih stikov';
 
   @override
@@ -7402,4 +7411,34 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Vstop v način pregleda?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Način pregleda se poveže s simuliranim radiem z vzorčnimi stiki, kanali in sporočili. Pravi radio ni potreben.';
+
+  @override
+  String get reviewMode_confirm => 'Vstopi';
+
+  @override
+  String get reviewMode_cancel => 'Prekliči';
+
+  @override
+  String get reviewMode_banner => 'Način pregleda — simulirani podatki';
+
+  @override
+  String get reviewMode_sendTest => 'Pošlji testno sporočilo';
+
+  @override
+  String get reviewMode_testSent => 'Kmalu bo prispelo testno sporočilo.';
+
+  @override
+  String get reviewMode_exit => 'Izhod';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Načina pregleda ni bilo mogoče zagnati: $error';
+  }
 }

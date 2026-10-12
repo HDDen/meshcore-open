@@ -4960,6 +4960,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get discoveredContacts_Title => '발견된 연락처 추가';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle => '발견된 연락처 삭제';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return '활성화하면 발견된 연락처 목록이 $limit개의 한도에 도달했을 때 가장 오래된 발견된 연락처를 삭제합니다.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => '일치하는 연락처가 없습니다.';
 
   @override
@@ -7096,4 +7104,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => '검토 모드로 들어갈까요?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      '검토 모드는 샘플 연락처, 채널, 메시지가 있는 시뮬레이션 기기에 연결합니다. 실제 기기는 필요하지 않습니다.';
+
+  @override
+  String get reviewMode_confirm => '들어가기';
+
+  @override
+  String get reviewMode_cancel => '취소';
+
+  @override
+  String get reviewMode_banner => '검토 모드 — 시뮬레이션 데이터';
+
+  @override
+  String get reviewMode_sendTest => '테스트 메시지 보내기';
+
+  @override
+  String get reviewMode_testSent => '잠시 후 테스트 메시지가 도착합니다.';
+
+  @override
+  String get reviewMode_exit => '나가기';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return '검토 모드를 시작할 수 없습니다: $error';
+  }
 }

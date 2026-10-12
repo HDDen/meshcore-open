@@ -5233,6 +5233,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get discoveredContacts_Title => 'Dodaj odkryte kontakty';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Usuwaj odkryte kontakty';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Gdy ta opcja jest włączona, aplikacja usuwa najstarsze odkryte kontakty, gdy lista odkrytych osiągnie limit $limit wpisów.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Brak pasujących kontaktów';
 
   @override
@@ -7463,4 +7472,34 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Włączyć tryb recenzji?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Tryb recenzji łączy się z symulowanym radiem z przykładowymi kontaktami, kanałami i wiadomościami. Prawdziwe radio nie jest potrzebne.';
+
+  @override
+  String get reviewMode_confirm => 'Włącz';
+
+  @override
+  String get reviewMode_cancel => 'Anuluj';
+
+  @override
+  String get reviewMode_banner => 'Tryb recenzji — dane symulowane';
+
+  @override
+  String get reviewMode_sendTest => 'Wyślij wiadomość testową';
+
+  @override
+  String get reviewMode_testSent => 'Wiadomość testowa wkrótce nadejdzie.';
+
+  @override
+  String get reviewMode_exit => 'Wyjdź';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Nie udało się uruchomić trybu recenzji: $error';
+  }
 }

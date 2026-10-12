@@ -5222,6 +5222,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get discoveredContacts_Title => 'Добавяне на открити контакти';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Премахване на открити контакти';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Когато е включено, приложението премахва най-старите открити контакти, щом списъкът с открити контакти достигне лимита си от $limit записа.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Няма съвпадащи контакти';
 
   @override
@@ -7460,4 +7469,34 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Вход в режим за преглед?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Режимът за преглед се свързва със симулирано радио с примерни контакти, канали и съобщения. Не е нужно реално радио.';
+
+  @override
+  String get reviewMode_confirm => 'Вход';
+
+  @override
+  String get reviewMode_cancel => 'Отказ';
+
+  @override
+  String get reviewMode_banner => 'Режим за преглед — симулирани данни';
+
+  @override
+  String get reviewMode_sendTest => 'Тестово съобщение';
+
+  @override
+  String get reviewMode_testSent => 'Скоро ще пристигне тестово съобщение.';
+
+  @override
+  String get reviewMode_exit => 'Изход';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Режимът за преглед не можа да се стартира: $error';
+  }
 }

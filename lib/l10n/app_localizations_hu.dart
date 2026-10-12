@@ -5212,6 +5212,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get discoveredContacts_Title => 'Felfedezett névjegyek hozzáadása';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Felfedezett kapcsolatok eltávolítása';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Ha engedélyezve van, az alkalmazás eltávolítja a legrégebbi felfedezett kapcsolatokat, amint a felfedezési lista eléri a(z) $limit bejegyzéses korlátot.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Nincsenek megfelelő névjegyek';
 
   @override
@@ -7436,4 +7445,34 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Belép az áttekintő módba?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Az áttekintő mód egy szimulált rádióhoz csatlakozik, mintakapcsolatokkal, csatornákkal és üzenetekkel. Nincs szükség valódi rádióra.';
+
+  @override
+  String get reviewMode_confirm => 'Belépés';
+
+  @override
+  String get reviewMode_cancel => 'Mégsem';
+
+  @override
+  String get reviewMode_banner => 'Áttekintő mód — szimulált adatok';
+
+  @override
+  String get reviewMode_sendTest => 'Tesztüzenet küldése';
+
+  @override
+  String get reviewMode_testSent => 'Hamarosan megérkezik egy tesztüzenet.';
+
+  @override
+  String get reviewMode_exit => 'Kilépés';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Az áttekintő mód nem indítható el: $error';
+  }
 }

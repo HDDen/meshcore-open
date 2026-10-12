@@ -5129,6 +5129,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveredContacts_Title => 'Add discovered contacts';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Evict discovered contacts';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'When enabled, the app removes the oldest discovered contacts once the discovery list reaches its limit of $limit entries.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'No matching contacts';
 
   @override
@@ -7327,4 +7336,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Enter review mode?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Review mode connects to a simulated radio with sample contacts, channels and messages. No real radio is needed.';
+
+  @override
+  String get reviewMode_confirm => 'Enter';
+
+  @override
+  String get reviewMode_cancel => 'Cancel';
+
+  @override
+  String get reviewMode_banner => 'Review mode — simulated data';
+
+  @override
+  String get reviewMode_sendTest => 'Send test message';
+
+  @override
+  String get reviewMode_testSent => 'A test message will arrive shortly.';
+
+  @override
+  String get reviewMode_exit => 'Exit';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Could not start review mode: $error';
+  }
 }

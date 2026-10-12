@@ -5236,6 +5236,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoveredContacts_Title => 'Ajouter des contacts découverts';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Évincer les contacts découverts';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Lorsque cette option est activée, l\'application supprime les contacts découverts les plus anciens dès que la liste de découverte atteint sa limite de $limit entrées.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Aucun contact correspondant';
 
   @override
@@ -7474,4 +7483,34 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Activer le mode revue ?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Le mode revue se connecte à une radio simulée avec des contacts, canaux et messages d\'exemple. Aucune radio réelle n\'est nécessaire.';
+
+  @override
+  String get reviewMode_confirm => 'Activer';
+
+  @override
+  String get reviewMode_cancel => 'Annuler';
+
+  @override
+  String get reviewMode_banner => 'Mode revue — données simulées';
+
+  @override
+  String get reviewMode_sendTest => 'Envoyer un message test';
+
+  @override
+  String get reviewMode_testSent => 'Un message test arrivera sous peu.';
+
+  @override
+  String get reviewMode_exit => 'Quitter';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Impossible de démarrer le mode revue : $error';
+  }
 }

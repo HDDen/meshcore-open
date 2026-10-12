@@ -8884,6 +8884,18 @@ abstract class AppLocalizations {
   /// **'Add discovered contacts'**
   String get discoveredContacts_Title;
 
+  /// No description provided for @contactsSettings_evictDiscoveredContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evict discovered contacts'**
+  String get contactsSettings_evictDiscoveredContactsTitle;
+
+  /// No description provided for @contactsSettings_evictDiscoveredContactsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, the app removes the oldest discovered contacts once the discovery list reaches its limit of {limit} entries.'**
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit);
+
   /// No description provided for @discoveredContacts_noMatching.
   ///
   /// In en, this message translates to:
@@ -12583,6 +12595,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sender name size'**
   String get settings_modSettingsSenderNameScale;
+
+  /// No description provided for @reviewMode_dialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter review mode?'**
+  String get reviewMode_dialogTitle;
+
+  /// No description provided for @reviewMode_dialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Review mode connects to a simulated radio with sample contacts, channels and messages. No real radio is needed.'**
+  String get reviewMode_dialogBody;
+
+  /// No description provided for @reviewMode_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter'**
+  String get reviewMode_confirm;
+
+  /// No description provided for @reviewMode_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get reviewMode_cancel;
+
+  /// No description provided for @reviewMode_banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Review mode — simulated data'**
+  String get reviewMode_banner;
+
+  /// No description provided for @reviewMode_sendTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test message'**
+  String get reviewMode_sendTest;
+
+  /// No description provided for @reviewMode_testSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A test message will arrive shortly.'**
+  String get reviewMode_testSent;
+
+  /// No description provided for @reviewMode_exit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get reviewMode_exit;
+
+  /// No description provided for @reviewMode_connectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start review mode: {error}'**
+  String reviewMode_connectFailed(Object error);
 }
 
 class _AppLocalizationsDelegate

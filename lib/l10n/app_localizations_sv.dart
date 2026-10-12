@@ -5179,6 +5179,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get discoveredContacts_Title => 'Lägg till upptäckta kontakter';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Rensa upptäckta kontakter';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'När detta är aktiverat tar appen bort de äldsta upptäckta kontakterna när listan över upptäckta kontakter når sin gräns på $limit poster.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Inga matchande kontakter';
 
   @override
@@ -7399,4 +7408,34 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Aktivera granskningsläge?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'Granskningsläget ansluter till en simulerad radio med exempelkontakter, kanaler och meddelanden. Ingen riktig radio behövs.';
+
+  @override
+  String get reviewMode_confirm => 'Aktivera';
+
+  @override
+  String get reviewMode_cancel => 'Avbryt';
+
+  @override
+  String get reviewMode_banner => 'Granskningsläge — simulerad data';
+
+  @override
+  String get reviewMode_sendTest => 'Skicka testmeddelande';
+
+  @override
+  String get reviewMode_testSent => 'Ett testmeddelande kommer snart.';
+
+  @override
+  String get reviewMode_exit => 'Avsluta';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Det gick inte att starta granskningsläget: $error';
+  }
 }

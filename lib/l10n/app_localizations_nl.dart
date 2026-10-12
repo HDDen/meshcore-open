@@ -5194,6 +5194,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get discoveredContacts_Title => 'Ontdekte contacten toevoegen';
 
   @override
+  String get contactsSettings_evictDiscoveredContactsTitle =>
+      'Ontdekte contacten verwijderen';
+
+  @override
+  String contactsSettings_evictDiscoveredContactsSubtitle(int limit) {
+    return 'Indien ingeschakeld verwijdert de app de oudste ontdekte contacten zodra de lijst met ontdekte contacten de limiet van $limit items bereikt.';
+  }
+
+  @override
   String get discoveredContacts_noMatching => 'Geen overeenkomende contacten';
 
   @override
@@ -7416,4 +7425,34 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_modSettingsSenderNameScale => 'Sender name size';
+
+  @override
+  String get reviewMode_dialogTitle => 'Beoordelingsmodus starten?';
+
+  @override
+  String get reviewMode_dialogBody =>
+      'De beoordelingsmodus maakt verbinding met een gesimuleerde radio met voorbeeldcontacten, kanalen en berichten. Een echte radio is niet nodig.';
+
+  @override
+  String get reviewMode_confirm => 'Starten';
+
+  @override
+  String get reviewMode_cancel => 'Annuleren';
+
+  @override
+  String get reviewMode_banner => 'Beoordelingsmodus — gesimuleerde gegevens';
+
+  @override
+  String get reviewMode_sendTest => 'Testbericht sturen';
+
+  @override
+  String get reviewMode_testSent => 'Er komt zo een testbericht binnen.';
+
+  @override
+  String get reviewMode_exit => 'Afsluiten';
+
+  @override
+  String reviewMode_connectFailed(Object error) {
+    return 'Beoordelingsmodus kon niet worden gestart: $error';
+  }
 }
