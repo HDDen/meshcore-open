@@ -75,6 +75,7 @@ Future<List<int>> _signedAdvertPayload({
   double? lon,
   String? name,
   bool corruptSignature = false,
+  List<int> unsignedSuffix = const [],
 }) async {
   final publicKey = (await keyPair.extractPublicKey()).bytes;
   final timestamp = [0x10, 0x20, 0x30, 0x40];
@@ -99,7 +100,13 @@ Future<List<int>> _signedAdvertPayload({
   ], keyPair: keyPair);
   final sigBytes = List<int>.from(signature.bytes);
   if (corruptSignature) sigBytes[10] ^= 0x01;
-  return [...publicKey, ...timestamp, ...sigBytes, ...appData];
+  return [
+    ...publicKey,
+    ...timestamp,
+    ...sigBytes,
+    ...appData,
+    ...unsignedSuffix,
+  ];
 }
 
 void main() {
@@ -279,6 +286,7 @@ void main() {
       double? lon,
       String? name,
       bool corrupt = false,
+      List<int> unsignedSuffix = const [],
     }) async {
       return _rxFrame(
         payloadType: payloadTypeADVERT,
@@ -291,6 +299,7 @@ void main() {
           lon: lon,
           name: name,
           corruptSignature: corrupt,
+          unsignedSuffix: unsignedSuffix,
         ),
       );
     }
@@ -359,6 +368,24 @@ void main() {
       expect(json['name'], isNull);
       expect(json['loc'], isNull);
       expect(json['key'], keyHex);
+    });
+
+    test('bytes after the signed 32 app-data bytes are ignored', () async {
+      // flags (1) + location (8) + 23-byte name fill the signed 32 bytes.
+      const name = 'Hilltop Repeater North1';
+      expect(utf8.encode(name).length, 23);
+      final frame = await advertFrame(
+        type: advTypeRepeater,
+        lat: 47.6,
+        lon: -122.3,
+        name: name,
+        unsignedSuffix: utf8.encode(' \u{1F6AB} evil'),
+      );
+      final advert = (await buildAdvertRecord(frame, _receivedAt))!;
+      final json = advert.toJson();
+      expect(json['hidden'], false);
+      expect(json['name'], name);
+      expect(json['loc'], isNotNull);
     });
 
     test('adverts with a bad signature are dropped', () async {

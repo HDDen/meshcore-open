@@ -41,6 +41,51 @@ const _bbox = NetworkMapBbox(
 );
 
 void main() {
+  group('visible area to request boxes', () {
+    List<List<double>>? boxes(double w, double s, double e, double n) =>
+        NetworkMapBbox.forVisibleArea(
+          west: w,
+          south: s,
+          east: e,
+          north: n,
+        )?.map((b) => [b.minLon, b.minLat, b.maxLon, b.maxLat]).toList();
+
+    test('normal area is one box', () {
+      expect(boxes(-112.5, 33, -111.5, 34), [
+        [-112.5, 33, -111.5, 34],
+      ]);
+    });
+
+    test('wrapped across the antimeridian is split in two', () {
+      expect(boxes(179, -18, -179, -16), [
+        [179, -18, 180, -16],
+        [-180, -18, -179, -16],
+      ]);
+    });
+
+    test('unwrapped longitudes beyond 180 are normalised and split', () {
+      expect(boxes(175, 0, 185, 5), [
+        [175, 0, 180, 5],
+        [-180, 0, -175, 5],
+      ]);
+      expect(boxes(190, 0, 200, 5), [
+        [-170, 0, -160, 5],
+      ]);
+    });
+
+    test('too large an area asks to zoom in', () {
+      expect(boxes(-130, 20, -60, 50), isNull);
+      expect(boxes(170, -40, -170, 40), isNull);
+    });
+
+    test('every box is valid for the server', () {
+      for (final b in boxes(179.5, 10, -170.25, 12)!) {
+        expect(b[0] < b[2], isTrue);
+        expect(b[0] >= -180 && b[2] <= 180, isTrue);
+      }
+    });
+  });
+
   test('parses repeaters and sends bbox', () async {
     late Uri requested;
     final client = NetworkMapApiClient(

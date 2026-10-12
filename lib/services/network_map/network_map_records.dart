@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -288,7 +289,13 @@ Future<NetworkMapAdvertRecord?> buildAdvertRecord(
   const appDataStart = _advertPubKeySize + 4 + _advertSignatureSize;
   if (payload.length <= appDataStart) return null;
 
-  final appData = payload.sublist(appDataStart);
+  // Only the first 32 app-data bytes are signed (firmware Mesh.cpp truncates
+  // to MAX_ADVERT_DATA_SIZE before verifying and parsing), so bytes appended
+  // after them must never reach the name, location or 🚫 check.
+  final appData = payload.sublist(
+    appDataStart,
+    min(payload.length, appDataStart + _maxAdvertDataSize),
+  );
   final flags = appData[0];
   final type = flags & 0x0F;
   if (type != advTypeRepeater && type != advTypeRoom) return null;

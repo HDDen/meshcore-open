@@ -52,26 +52,33 @@ class NetworkMapOnlineController extends ChangeNotifier {
   }
 
   Future<void> _load(LatLngBounds bounds) async {
-    final bbox = NetworkMapBbox(
-      minLon: bounds.west.clamp(-180.0, 180.0),
-      minLat: bounds.south.clamp(-90.0, 90.0),
-      maxLon: bounds.east.clamp(-180.0, 180.0),
-      maxLat: bounds.north.clamp(-90.0, 90.0),
+    final boxes = NetworkMapBbox.forVisibleArea(
+      west: bounds.west,
+      south: bounds.south,
+      east: bounds.east,
+      north: bounds.north,
     );
     final generation = ++_generation;
-    if (!bbox.isWithinLimit) {
+    if (boxes == null) {
       _setState(NetworkMapLoadState.zoomIn);
       return;
     }
     _setState(NetworkMapLoadState.loading);
     try {
       final results = await Future.wait([
-        _client.fetchRepeaters(bbox),
-        _client.fetchLinks(bbox),
+        Future.wait(boxes.map(_client.fetchRepeaters)),
+        Future.wait(boxes.map((b) => _client.fetchLinks(b))),
       ]);
       if (_disposed || generation != _generation) return;
-      _repeaters = results[0] as List<NetworkMapRepeater>;
-      _links = results[1] as List<NetworkMapLink>;
+      // Two boxes (antimeridian) can both return items on the seam.
+      _repeaters = {
+        for (final r in results[0].expand((l) => l as List<NetworkMapRepeater>))
+          r.key: r,
+      }.values.toList();
+      _links = {
+        for (final l in results[1].expand((l) => l as List<NetworkMapLink>))
+          '${l.a}:${l.b}': l,
+      }.values.toList();
       _setState(NetworkMapLoadState.ready);
     } catch (_) {
       if (_disposed || generation != _generation) return;

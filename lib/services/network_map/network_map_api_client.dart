@@ -25,6 +25,32 @@ class NetworkMapBbox {
       maxLon - minLon <= networkMapMaxBboxSpan &&
       maxLat - minLat <= networkMapMaxBboxSpan;
 
+  /// Valid request boxes for a visible area, or null when it is larger than
+  /// [networkMapMaxBboxSpan]. [west] and [east] may be unwrapped (beyond
+  /// ±180) or wrapped across the antimeridian (west > east); an area that
+  /// crosses ±180 is split into two boxes, one on each side.
+  static List<NetworkMapBbox>? forVisibleArea({
+    required double west,
+    required double south,
+    required double east,
+    required double north,
+  }) {
+    final minLat = south.clamp(-90.0, 90.0);
+    final maxLat = north.clamp(-90.0, 90.0);
+    var span = east - west;
+    if (span < 0) span += 360;
+    if (span > networkMapMaxBboxSpan ||
+        maxLat - minLat > networkMapMaxBboxSpan) {
+      return null;
+    }
+    final w = (west + 180) % 360 - 180; // Dart % is non-negative here.
+    final e = w + span;
+    NetworkMapBbox box(double a, double b) =>
+        NetworkMapBbox(minLon: a, minLat: minLat, maxLon: b, maxLat: maxLat);
+    if (e <= 180) return [box(w, e)];
+    return [box(w, 180), box(-180, e - 360)];
+  }
+
   String get query => [
     minLon,
     minLat,

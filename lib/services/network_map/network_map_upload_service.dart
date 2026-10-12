@@ -140,6 +140,12 @@ class NetworkMapUploadService extends ChangeNotifier {
   StreamSubscription<Uint8List>? _frameSub;
   Timer? _timer;
   bool _uploading = false;
+
+  /// Bumped whenever sharing is turned off. An upload started under an older
+  /// generation is never sent and its result is ignored, so nothing leaves the
+  /// phone after consent is withdrawn and a late response can't touch a queue
+  /// that was cleared and refilled in the meantime.
+  int _consentGeneration = 0;
   int _failures = 0;
   Duration _retryAfter = Duration.zero;
   Duration _nextInterval = uploadInterval;
@@ -189,7 +195,10 @@ class NetworkMapUploadService extends ChangeNotifier {
   }
 
   void _sync() {
-    if (!enabled) _queue.clear();
+    if (!enabled && (isActive || !_queue.isEmpty || _uploading)) {
+      _queue.clear();
+      _consentGeneration++;
+    }
     // The store-review demo radio is simulated; its traffic must not reach
     // the real map.
     final shouldListen =
@@ -263,6 +272,8 @@ class NetworkMapUploadService extends ChangeNotifier {
 
   Future<void> _upload() async {
     _uploading = true;
+    final generation = _consentGeneration;
+    bool stale() => generation != _consentGeneration || !enabled;
     _lastAttemptAt = DateTime.now();
     try {
       _accrueListenTime();
@@ -289,6 +300,7 @@ class NetworkMapUploadService extends ChangeNotifier {
         packets: batch.packets,
         adverts: batch.adverts,
       );
+      if (stale()) return;
       final jsonBytes = utf8.encode(jsonEncode(body));
       final gzipped = gzipEncode(jsonBytes);
       final response = await _client
@@ -301,6 +313,7 @@ class NetworkMapUploadService extends ChangeNotifier {
             body: gzipped ?? jsonBytes,
           )
           .timeout(const Duration(seconds: 30));
+      if (stale()) return;
       final status = response.statusCode;
       if (status == 202 || status == 200) {
         _queue.remove(batch.packets.length, batch.adverts.length);
@@ -318,6 +331,7 @@ class NetworkMapUploadService extends ChangeNotifier {
         _failures = 0;
       }
     } catch (e) {
+      if (stale()) return;
       appLogger.warn('Network map upload failed: $e', tag: 'NetworkMap');
       _onFailed(null, null);
     } finally {
@@ -362,6 +376,16 @@ class NetworkMapUploadService extends ChangeNotifier {
         ? Duration.zero
         : Duration(seconds: min(retryAfter, maxBackoff.inSeconds));
   }
+
+  @visibleForTesting
+  int get queuedPacketCount => _queue.packetCount;
+
+  @visibleForTesting
+  void queuePacketForTest(NetworkMapPacketRecord record) =>
+      _queue.addPacket(record, DateTime.now());
+
+  @visibleForTesting
+  Future<void> uploadNowForTest() => _upload();
 
   Future<String> _appString() async {
     if (_appId != null) return _appId!;
