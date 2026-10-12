@@ -43,30 +43,31 @@ class ChannelRegionStore {
     await PrefsManager.instance.setString(_defaultKey, region);
   }
 
-  Future<String> loadRegion(int channelIndex) async {
+  String _keyForChannel(String channelId) => '${keyFor}_$channelId';
+
+  Future<String> loadRegion(String channelId) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot load channel settings.',
       );
       return '';
     }
-    final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
-    String? region = prefs.getString(key);
-    return region ?? '';
+    return PrefsManager.instance.getString(_keyForChannel(channelId)) ?? '';
   }
 
-  Future<String> saveRegion(int channelIndex, String region) async {
+  Future<String> saveRegion(String channelId, String region) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(
         'Public key hex is not set. Cannot save channel settings.',
       );
       return '';
     }
-
-    final prefs = PrefsManager.instance;
-    final key = '$keyFor$channelIndex';
-    await prefs.setString(key, region);
+    await PrefsManager.instance.setString(_keyForChannel(channelId), region);
     return region;
+  }
+
+  Future<void> clearRegion(String channelId) async {
+    if (publicKeyHex.isEmpty) return;
+    await PrefsManager.instance.remove(_keyForChannel(channelId));
   }
 }

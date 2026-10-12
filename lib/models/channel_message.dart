@@ -124,6 +124,7 @@ class ChannelMessage {
     MessageTranslationStatus? translationStatus,
     Object? translationModelId = _unset,
     Map<String, List<String?>>? reactions,
+    int? channelIndex,
   }) {
     return ChannelMessage(
       senderKey: senderKey,
@@ -152,7 +153,7 @@ class ChannelMessage {
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,
       pathVariants: pathVariants ?? this.pathVariants,
-      channelIndex: channelIndex,
+      channelIndex: channelIndex ?? this.channelIndex,
       region: region == _unset ? this.region : region as String?,
       messageId: messageId,
       packetHash: packetHash ?? this.packetHash,

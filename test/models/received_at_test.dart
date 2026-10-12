@@ -36,6 +36,8 @@ ChannelMessage _ch(
   channelIndex: 0,
 );
 
+const _channelId = '0123456789abcdef';
+
 void main() {
   final base = DateTime(2026, 10, 1, 12);
 
@@ -127,10 +129,10 @@ void main() {
       await _init();
       final store = ChannelMessageStore()..setPublicKeyHex = _device;
       final received = base.add(const Duration(seconds: 42));
-      await store.saveChannelMessages(0, [
+      await store.saveChannelMessages(_channelId, [
         _ch('one', timestamp: base, receivedAt: received),
       ]);
-      final loaded = await store.loadChannelMessages(0);
+      final loaded = await store.loadChannelMessages(_channelId);
       expect(loaded.single.receivedAt, received);
       expect(loaded.single.timestamp, base);
     });
@@ -167,14 +169,14 @@ void main() {
         'plainText': true,
       };
       await _init({
-        'channel_messages_${_device.substring(0, 10)}0': jsonEncode([
+        'channel_messages_${_device.substring(0, 10)}_$_channelId': jsonEncode([
           record('old', past),
           record('ahead', future),
         ]),
       });
       final store = ChannelMessageStore()..setPublicKeyHex = _device;
       final before = DateTime.now();
-      final loaded = await store.loadChannelMessages(0);
+      final loaded = await store.loadChannelMessages(_channelId);
       expect(loaded, hasLength(2));
       expect(
         loaded[0].receivedAt.millisecondsSinceEpoch,

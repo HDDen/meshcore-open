@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/utils/keys.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
@@ -12,7 +11,6 @@ import 'package:uuid/uuid.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
-import '../services/received_image_store.dart';
 import '../services/ui_view_state_service.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -55,8 +53,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   List<Community> _communities = [];
   Timer? _searchDebounce;
-
-  ChannelMessageStore get _channelMessageStore => ChannelMessageStore();
 
   @override
   void initState() {
@@ -103,9 +99,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
     final viewState = context.watch<UiViewStateService>();
-
-    final channelMessageStore = ChannelMessageStore();
-    channelMessageStore.setPublicKeyHex = connector.selfPublicKeyHex;
 
     // Auto-navigate back to scanner if disconnected
     if (!checkConnectionAndNavigate(connector)) {
@@ -318,7 +311,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   return _buildChannelTile(
                                     context,
                                     connector,
-                                    channelMessageStore,
                                     channel,
                                     showDragHandle: true,
                                     dragIndex: index,
@@ -339,7 +331,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   return _buildChannelTile(
                                     context,
                                     connector,
-                                    channelMessageStore,
                                     channel,
                                     listIndex: index,
                                   );
@@ -375,7 +366,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   Widget _buildChannelTile(
     BuildContext context,
     MeshCoreConnector connector,
-    ChannelMessageStore channelMessageStore,
     Channel channel, {
     bool showDragHandle = false,
     int? dragIndex,
@@ -469,19 +459,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             ),
           );
         },
-        onLongPress: () => _showChannelActions(
-          this.context,
-          connector,
-          channelMessageStore,
-          channel,
-        ),
+        onLongPress: () =>
+            _showChannelActions(this.context, connector, channel),
         onSecondaryTap: PlatformInfo.isDesktop
-            ? () => _showChannelActions(
-                this.context,
-                connector,
-                channelMessageStore,
-                channel,
-              )
+            ? () => _showChannelActions(this.context, connector, channel)
             : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,7 +622,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _showChannelActions(
     BuildContext context,
     MeshCoreConnector connector,
-    ChannelMessageStore channelMessageStore,
     Channel channel,
   ) {
     final parentContext = context;
@@ -700,12 +680,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 Navigator.pop(sheetContext);
                 await Future.delayed(const Duration(milliseconds: 100));
                 if (parentContext.mounted) {
-                  _confirmDeleteChannel(
-                    parentContext,
-                    connector,
-                    channelMessageStore,
-                    channel,
-                  );
+                  _confirmDeleteChannel(parentContext, connector, channel);
                 }
               },
             ),
@@ -951,9 +926,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 );
               }
 
-              Widget? buildExpandedContent(
-                ChannelMessageStore channelMessageStore,
-              ) {
+              Widget? buildExpandedContent() {
                 switch (selectedOption) {
                   case 0: // Create Private Channel
                     return Column(
@@ -1007,8 +980,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                       name,
                                       psk,
                                     );
-                                    await channelMessageStore
-                                        .clearChannelMessages(nextIndex);
                                     if (context.mounted) {
                                       showDismissibleSnackBar(
                                         context,
@@ -1609,8 +1580,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                   .l10n
                                   .channels_joinPublicChannelDesc,
                             ),
-                            if (selectedOption == 2)
-                              buildExpandedContent(_channelMessageStore)!,
+                            if (selectedOption == 2) buildExpandedContent()!,
                           ],
                           buildOptionCard(
                             optionIndex: 3,
@@ -1621,8 +1591,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 .l10n
                                 .channels_joinHashtagChannelDesc,
                           ),
-                          if (selectedOption == 3)
-                            buildExpandedContent(_channelMessageStore)!,
+                          if (selectedOption == 3) buildExpandedContent()!,
                           buildOptionCard(
                             optionIndex: 1,
                             icon: Icons.lock,
@@ -1632,16 +1601,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 .l10n
                                 .channels_joinPrivateChannelDesc,
                           ),
-                          if (selectedOption == 1)
-                            buildExpandedContent(_channelMessageStore)!,
+                          if (selectedOption == 1) buildExpandedContent()!,
                           buildOptionCard(
                             optionIndex: 4,
                             icon: Icons.qr_code_scanner,
                             title: sheetContext.l10n.community_scanQr,
                             subtitle: sheetContext.l10n.community_join,
                           ),
-                          if (selectedOption == 4)
-                            buildExpandedContent(_channelMessageStore)!,
+                          if (selectedOption == 4) buildExpandedContent()!,
                           SectionHeader(
                             sheetContext.l10n.channels_addSectionCreate,
                           ),
@@ -1654,16 +1621,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 .l10n
                                 .channels_createPrivateChannelDesc,
                           ),
-                          if (selectedOption == 0)
-                            buildExpandedContent(_channelMessageStore)!,
+                          if (selectedOption == 0) buildExpandedContent()!,
                           buildOptionCard(
                             optionIndex: 5,
                             icon: Icons.groups,
                             title: sheetContext.l10n.community_create,
                             subtitle: sheetContext.l10n.community_createDesc,
                           ),
-                          if (selectedOption == 5)
-                            buildExpandedContent(_channelMessageStore)!,
+                          if (selectedOption == 5) buildExpandedContent()!,
                         ],
                       ),
                     ),
@@ -1916,15 +1881,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _confirmDeleteChannel(
     BuildContext context,
     MeshCoreConnector connector,
-    ChannelMessageStore channelMessageStore,
     Channel channel,
   ) {
-    ReceivedImageStore? imageStore;
-    try {
-      imageStore = context.read<ReceivedImageStore>();
-    } on ProviderNotFoundException {
-      imageStore = null;
-    }
     final channelLabel = channel.name.isEmpty
         ? context.l10n.channels_channelIndex(channel.index)
         : channel.name;
@@ -1945,9 +1903,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               Navigator.pop(dialogContext);
               try {
                 await connector.deleteChannel(channel.index);
-
-                await channelMessageStore.clearChannelMessages(channel.index);
-                await imageStore?.deleteImagesForChannel(channel.index);
 
                 if (!context.mounted) return;
 
