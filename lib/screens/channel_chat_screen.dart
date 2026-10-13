@@ -2587,10 +2587,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             padding: isMediaMessage
                                 ? const EdgeInsets.symmetric(horizontal: 8)
                                 : EdgeInsets.zero,
+                            // A resent message names its attempts, the first
+                            // send counted: the seconds would count from the
+                            // last attempt only.
                             child: Text(
-                              context.l10n.settings_modSettingsNoRetraInfo(
-                                noRetransmissionWarningSeconds,
-                              ),
+                              message.resendCount > 0
+                                  ? context.l10n
+                                        .settings_modSettingsNoRetraInfoResends(
+                                          message.resendCount + 1,
+                                        )
+                                  : context.l10n.settings_modSettingsNoRetraInfo(
+                                      noRetransmissionWarningSeconds,
+                                    ),
                               style: MeshTheme.mono(
                                 fontSize: 10 * textScale,
                                 color: metaColor,

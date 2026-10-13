@@ -53,7 +53,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "de": [
@@ -110,7 +111,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "es": [
@@ -167,7 +169,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "fr": [
@@ -224,7 +227,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "hu": [
@@ -281,7 +285,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "it": [
@@ -338,7 +343,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "ja": [
@@ -395,7 +401,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "ko": [
@@ -452,7 +459,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "nl": [
@@ -509,7 +517,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "pl": [
@@ -566,7 +575,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "pt": [
@@ -623,7 +633,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "sk": [
@@ -680,7 +691,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "sl": [
@@ -737,7 +749,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "sv": [
@@ -794,7 +807,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "uk": [
@@ -851,7 +865,8 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ],
 
   "zh": [
@@ -908,6 +923,7 @@
     "chat_historyLinked",
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
-    "appSettings_channelMinHopsDelay"
+    "appSettings_channelMinHopsDelay",
+    "settings_modSettingsNoRetraInfoResends"
   ]
 }

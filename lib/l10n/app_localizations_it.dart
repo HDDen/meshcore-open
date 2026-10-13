@@ -8329,4 +8329,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String appSettings_channelMinHopsDelay(int seconds) {
     return 'Wait before resending: $seconds s';
   }
+
+  @override
+  String settings_modSettingsNoRetraInfoResends(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts',
+      one: '$count attempt',
+    );
+    return 'Not spread over the mesh in $_temp0.';
+  }
 }

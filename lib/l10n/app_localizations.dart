@@ -13942,6 +13942,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wait before resending: {seconds} s'**
   String appSettings_channelMinHopsDelay(int seconds);
+
+  /// No description provided for @settings_modSettingsNoRetraInfoResends.
+  ///
+  /// In en, this message translates to:
+  /// **'Not spread over the mesh in {count, plural, one{{count} attempt} other{{count} attempts}}.'**
+  String settings_modSettingsNoRetraInfoResends(int count);
 }
 
 class _AppLocalizationsDelegate

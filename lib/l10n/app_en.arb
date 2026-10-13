@@ -4380,5 +4380,7 @@
   "channelPath_sendAttemptsLabel": "Send attempts",
   "settings_modSettingsHideChannelMute": "Hide the channel mute switch",
   "appSettings_channelMinHopsDelay": "Wait before resending: {seconds} s",
-  "@appSettings_channelMinHopsDelay": {"placeholders": {"seconds": {"type": "int"}}}
+  "@appSettings_channelMinHopsDelay": {"placeholders": {"seconds": {"type": "int"}}},
+  "settings_modSettingsNoRetraInfoResends": "Not spread over the mesh in {count, plural, one{{count} attempt} other{{count} attempts}}.",
+  "@settings_modSettingsNoRetraInfoResends": {"placeholders": {"count": {"type": "int"}}}
 }

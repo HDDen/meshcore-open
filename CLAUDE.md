@@ -2051,8 +2051,10 @@ selector rebuilds on
 list), the sent check mark left out under the setting, the badge saying
 the message went out, and the path screen a *Send attempts* row; the wait before each resend is `channelMinHopsDelaySeconds` (10 to
 120 s, default 30) under the hop count; the no-retransmission warning of
-the mod settings is held back while the resends run and counts from the
-last attempt (all 2026-10-13)); the contact QR scanner screen
+the mod settings is held back while the resends run, counts from the last
+attempt, and its line under a resent message names the resends
+(`settings_modSettingsNoRetraInfoResends`) rather than seconds that would
+count from that attempt only (all 2026-10-13/14)); the contact QR scanner screen
 (`screens/contact_qr_scanner_screen.dart`, `utils/contact_qr*.dart`, beside
 the fork's own link parser); day separators in both chats
 (`widgets/chat_day_separator.dart`); "keep chat history" on contact

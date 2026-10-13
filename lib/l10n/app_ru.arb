@@ -3333,5 +3333,6 @@
   "networkMap_unnamed": "Репитер без имени",
   "channelPath_sendAttemptsLabel": "Попыток отправки",
   "settings_modSettingsHideChannelMute": "Скрыть переключатель уведомлений в канале",
-  "appSettings_channelMinHopsDelay": "Пауза перед повтором: {seconds} с"
+  "appSettings_channelMinHopsDelay": "Пауза перед повтором: {seconds} с",
+  "settings_modSettingsNoRetraInfoResends": "Не распространилось по сети за {count, plural, one{{count} попытку} few{{count} попытки} other{{count} попыток}}."
 }

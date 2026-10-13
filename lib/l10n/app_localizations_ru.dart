@@ -8306,4 +8306,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String appSettings_channelMinHopsDelay(int seconds) {
     return 'Пауза перед повтором: $seconds с';
   }
+
+  @override
+  String settings_modSettingsNoRetraInfoResends(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count попыток',
+      few: '$count попытки',
+      one: '$count попытку',
+    );
+    return 'Не распространилось по сети за $_temp0.';
+  }
 }
