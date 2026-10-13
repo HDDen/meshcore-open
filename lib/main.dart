@@ -33,6 +33,8 @@ import 'services/storage_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/app_settings_service.dart';
+import 'services/network_map/network_map_availability.dart';
+import 'services/network_map/network_map_upload_service.dart';
 import 'services/notification_service.dart';
 import 'services/ble_debug_log_service.dart';
 import 'services/app_debug_log_service.dart';
@@ -405,6 +407,14 @@ Future<void> _startApplication() async {
         : null,
   );
 
+  // Upstream's network map uploader; see network_map_availability.dart.
+  final networkMapUploadService = networkMapAvailable
+      ? NetworkMapUploadService(
+          connector: connector,
+          settings: appSettingsService,
+        )
+      : null;
+
   _setStartupStage('MCO-STARTUP-106', 'Contacts and channel settings');
   await connector.loadContactCache();
   StartupTiming.mark('  channel settings');
@@ -439,6 +449,7 @@ Future<void> _startApplication() async {
       imageCodecService: imageCodecService,
       receivedImageStore: receivedImageStore,
       imageReassembler: imageReassembler,
+      networkMapUploadService: networkMapUploadService,
     ),
   );
   if (StartupTiming.enabled) {
@@ -602,6 +613,7 @@ class MeshCoreApp extends StatefulWidget {
   final ImageCodecService imageCodecService;
   final ReceivedImageStore receivedImageStore;
   final ImageStreamReassembler imageReassembler;
+  final NetworkMapUploadService? networkMapUploadService;
 
   const MeshCoreApp({
     super.key,
@@ -623,6 +635,7 @@ class MeshCoreApp extends StatefulWidget {
     required this.imageCodecService,
     required this.receivedImageStore,
     required this.imageReassembler,
+    this.networkMapUploadService,
   });
 
   @override
@@ -973,6 +986,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.wardriveService),
         ChangeNotifierProvider.value(value: widget.imageCodecService),
         ChangeNotifierProvider.value(value: widget.receivedImageStore),
+        if (widget.networkMapUploadService case final uploads?)
+          ChangeNotifierProvider<NetworkMapUploadService>.value(
+            value: uploads,
+          ),
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {

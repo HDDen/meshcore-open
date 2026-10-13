@@ -3280,5 +3280,55 @@
   "chat_historyLinkAttach": "Подтянуть",
   "chat_historyLinkTitle": "Подтянуть историю?",
   "chat_historyLinkBody": "Найдена история для контакта с именем «{name}», но другим ключом ({key}). Подтягивайте её в этот диалог, только если уверены, что это тот же человек, а не тёзка. Два ключа станут одним контактом в приложении.",
-  "chat_historyLinked": "История подтянута."
+  "chat_historyLinked": "История подтянута.",
+  "scanner_getNodeTitle": "Нужна новая нода?",
+  "scanner_getNodeBody": "Размером с кошелёк, работает на MeshCore, двухдиапазонный GPS, водонепроницаемая, батареи хватает на 5 дней.",
+  "scanner_getNodeAction": "Купить здесь",
+  "scanner_getNodeDisclosure": "Партнёрская ссылка: каждая покупка поддерживает MeshCore Open.",
+  "networkMap_settingsSection": "Карта сети",
+  "networkMap_uploadTitle": "Делиться тем, что слышит моё радио",
+  "networkMap_uploadExplanation": "Когда это включено и радио подключено, приложение отправляет на карту сети MeshCore Open краткую сводку о пакетах, которые слышит ваше радио, чтобы все могли видеть, какие репитеры существуют и как они связаны. Отправляются тип, маршрут, число хопов, уровень сигнала и размер каждого пакета, а также имена репитеров и их примерное местоположение из их собственных анонсов. Никогда не отправляются текст сообщений, кто с кем общается, названия каналов, ваши контакты и ваше точное местоположение: координаты округляются примерно до 2 км, а приложение каждый день получает новый случайный ID.",
+  "networkMap_whatWeCollect": "Что мы собираем",
+  "networkMap_promptTitle": "Помочь построить карту сети?",
+  "networkMap_promptBody": "MeshCore Open может делиться тем, что слышит ваше радио, с публичной картой сети на map.meshcoreopen.org, чтобы все могли видеть, какие репитеры существуют и как они связаны.\n\nНикогда не отправляются текст сообщений, кто с кем общается, названия каналов, ваши контакты и ваше точное местоположение. Координаты округляются примерно до 2 км.",
+  "networkMap_promptSettingsHint": "Это можно изменить в любой момент: Настройки → Настройки приложения → Карта сети.",
+  "networkMap_promptAccept": "Делиться",
+  "networkMap_promptDecline": "Нет, спасибо",
+  "networkMap_statusOff": "Выключено. Ничего не отправляется.",
+  "networkMap_statusWaiting": "Включено. Ожидание подключения радио.",
+  "networkMap_statusNothingSent": "Включено. Пока ничего не отправлено.",
+  "networkMap_statusLastSent": "Последняя отправка: {time}. Пакетов сегодня: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Локальная",
+  "networkMap_sourceOnline": "Онлайн",
+  "networkMap_sourceBoth": "Обе",
+  "networkMap_zoomInHint": "Приблизьте, чтобы увидеть онлайн-карту сети",
+  "networkMap_loadFailed": "Не удалось загрузить онлайн-карту сети",
+  "networkMap_inYourContacts": "В ваших контактах",
+  "networkMap_status": "Статус",
+  "networkMap_statusActive": "Активен за последний час",
+  "networkMap_statusRecent": "Слышен за последние сутки",
+  "networkMap_statusStale": "Давно не слышен",
+  "networkMap_confirmed": "Подтверждён",
+  "networkMap_singleSource": "Один источник, пока не подтверждён",
+  "networkMap_reports": "Отчёты",
+  "networkMap_locationEstimated": "Примерное местоположение, оценено по тем, кто его слышал",
+  "networkMap_locationAdvertised": "Примерное местоположение, из собственного анонса",
+  "networkMap_heardByRadio": "Слышен вашим радио",
+  "networkMap_inYourArea": "В вашем районе",
+  "networkMap_farAway": "Далеко. Управление до него не дойдёт.",
+  "networkMap_addToContacts": "Добавить в контакты",
+  "networkMap_manage": "Управлять",
+  "networkMap_addedToContacts": "Добавлено в контакты",
+  "networkMap_addFailed": "Не удалось добавить в контакты",
+  "networkMap_unnamed": "Репитер без имени"
 }

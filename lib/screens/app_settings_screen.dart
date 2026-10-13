@@ -18,6 +18,7 @@ import '../services/image_codec_backend.dart' show kImageCodecFeatureAvailable;
 import '../services/background_service.dart';
 import '../services/image_codec_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/network_map/network_map_availability.dart';
 import '../services/notification_service.dart';
 import '../services/translation_service.dart';
 import '../theme/mesh_theme.dart';
@@ -25,6 +26,7 @@ import '../utils/battery_utils.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/network_map_settings_section.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/cyr2lat.dart';
@@ -119,6 +121,17 @@ class AppSettingsScreen extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           child: _buildMapContent(context, settingsService),
                         ),
+
+                        // NETWORK MAP (upstream's opt-in uploads, off here)
+                        if (networkMapAvailable) ...[
+                          SectionHeader(
+                            context.l10n.networkMap_settingsSection,
+                          ),
+                          const MeshCard(
+                            padding: EdgeInsets.zero,
+                            child: NetworkMapSettingsSection(),
+                          ),
+                        ],
 
                         // TRANSLATION (non-web only)
                         if (!kIsWeb && BuildFeatures.llmTranslationEnabled) ...[

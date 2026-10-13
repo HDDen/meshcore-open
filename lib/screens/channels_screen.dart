@@ -18,6 +18,7 @@ import '../helpers/keyboard_focus_utils.dart';
 import '../l10n/l10n.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
+import '../services/network_map/network_map_availability.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_group.dart';
@@ -40,6 +41,7 @@ import '../widgets/channel_data_scope_dialog.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/message_search_sheet.dart';
+import '../widgets/network_map_opt_in_dialog.dart';
 import '../widgets/qr_code_display.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
@@ -106,6 +108,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       context.read<MeshCoreConnector>().getChannels();
       _loadChannelGroups();
       _loadCommunities();
+      if (networkMapAvailable) {
+        unawaited(maybeShowNetworkMapOptInDialog(context));
+      }
     });
   }
 

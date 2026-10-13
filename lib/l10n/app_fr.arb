@@ -4062,5 +4062,55 @@
   "usbChooseSerialPort": "Choisir le port série",
   "neighbors_durationSeconds": "{seconds} s",
   "neighbors_durationMinutes": "{minutes} min {seconds} s",
-  "neighbors_durationHours": "{hours} h {minutes} min"
+  "neighbors_durationHours": "{hours} h {minutes} min",
+  "scanner_getNodeTitle": "Besoin d'un nouveau nœud ?",
+  "scanner_getNodeBody": "Format portefeuille, fonctionne avec MeshCore, GPS bi-bande, étanche, 5 jours d'autonomie.",
+  "scanner_getNodeAction": "Obtenez-le ici",
+  "scanner_getNodeDisclosure": "Lien d'affiliation : chaque achat soutient MeshCore Open.",
+  "networkMap_settingsSection": "Carte du réseau",
+  "networkMap_uploadTitle": "Partager ce que ma radio entend",
+  "networkMap_uploadExplanation": "Lorsque cette option est activée et que votre radio est connectée, l'application envoie un court résumé des paquets entendus par votre radio à la carte du réseau MeshCore Open, afin que chacun puisse voir quels répéteurs existent et comment ils sont reliés. Elle envoie le type, la route, les sauts, la puissance du signal et la taille de chaque paquet, ainsi que les noms et les positions approximatives des répéteurs issus de leurs propres adverts. Elle n'envoie jamais le texte des messages, qui parle à qui, les noms des canaux, vos contacts ni votre position exacte : les positions sont arrondies à environ 2 km, et votre application reçoit chaque jour un nouvel identifiant aléatoire.",
+  "networkMap_whatWeCollect": "Ce que nous collectons",
+  "networkMap_promptTitle": "Aider à construire la carte du réseau ?",
+  "networkMap_promptBody": "MeshCore Open peut partager ce que votre radio entend avec la carte publique du réseau sur map.meshcoreopen.org, afin que chacun puisse voir quels répéteurs existent et comment ils sont reliés.\n\nElle n'envoie jamais le texte des messages, qui parle à qui, les noms des canaux, vos contacts ni votre position exacte. Les positions sont arrondies à environ 2 km.",
+  "networkMap_promptSettingsHint": "Vous pouvez modifier cela à tout moment dans Paramètres → Paramètres de l'application → Carte du réseau.",
+  "networkMap_promptAccept": "Partager",
+  "networkMap_promptDecline": "Non merci",
+  "networkMap_statusOff": "Désactivé. Rien n'est envoyé.",
+  "networkMap_statusWaiting": "Activé. En attente d'une connexion radio.",
+  "networkMap_statusNothingSent": "Activé. Rien n'a encore été envoyé.",
+  "networkMap_statusLastSent": "Dernier envoi {time}. {count} paquets aujourd'hui.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Local",
+  "networkMap_sourceOnline": "En ligne",
+  "networkMap_sourceBoth": "Les deux",
+  "networkMap_zoomInHint": "Zoomez pour voir la carte du réseau en ligne",
+  "networkMap_loadFailed": "Impossible de charger la carte du réseau en ligne",
+  "networkMap_inYourContacts": "Dans vos contacts",
+  "networkMap_status": "Statut",
+  "networkMap_statusActive": "Actif durant la dernière heure",
+  "networkMap_statusRecent": "Entendu durant le dernier jour",
+  "networkMap_statusStale": "Pas entendu récemment",
+  "networkMap_confirmed": "Confirmé",
+  "networkMap_singleSource": "Source unique, pas encore confirmé",
+  "networkMap_reports": "Rapports",
+  "networkMap_locationEstimated": "Position approximative, estimée d'après ceux qui l'ont entendu",
+  "networkMap_locationAdvertised": "Position approximative, issue de son propre advert",
+  "networkMap_heardByRadio": "Entendu par votre radio",
+  "networkMap_inYourArea": "Dans votre zone",
+  "networkMap_farAway": "Trop loin. La gestion ne pourra pas l'atteindre.",
+  "networkMap_addToContacts": "Ajouter aux contacts",
+  "networkMap_manage": "Gérer",
+  "networkMap_addedToContacts": "Ajouté aux contacts",
+  "networkMap_addFailed": "Impossible d'ajouter aux contacts",
+  "networkMap_unnamed": "Répéteur sans nom"
 }

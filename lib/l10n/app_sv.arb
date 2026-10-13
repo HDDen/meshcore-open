@@ -3739,5 +3739,55 @@
   "usbChooseSerialPort": "Välj serieport",
   "neighbors_durationSeconds": "{seconds} s",
   "neighbors_durationMinutes": "{minutes} min {seconds} s",
-  "neighbors_durationHours": "{hours} h {minutes} min"
+  "neighbors_durationHours": "{hours} h {minutes} min",
+  "scanner_getNodeTitle": "Behöver du en ny nod?",
+  "scanner_getNodeBody": "Plånboksstorlek, kör MeshCore, GPS med dubbla band, vattentät, 5 dagars batteritid.",
+  "scanner_getNodeAction": "Skaffa en här",
+  "scanner_getNodeDisclosure": "Affiliatelänk: varje köp stöder MeshCore Open.",
+  "networkMap_settingsSection": "Nätverkskarta",
+  "networkMap_uploadTitle": "Dela vad min radio hör",
+  "networkMap_uploadExplanation": "När detta är på och din radio är ansluten skickar appen en kort sammanfattning av paketen som din radio hör till MeshCore Opens nätverkskarta, så att alla kan se vilka repeaters som finns och hur de hänger ihop. Den skickar varje pakets typ, rutt, antal hopp, signalstyrka och storlek, plus repeaternamn och ungefärliga platser från deras egna annonser. Den skickar aldrig meddelandetext, vem som pratar med vem, kanalnamn, dina kontakter eller din exakta position: platser avrundas till cirka 2 km, och din app får ett nytt slumpmässigt ID varje dag.",
+  "networkMap_whatWeCollect": "Vad vi samlar in",
+  "networkMap_promptTitle": "Hjälpa till att bygga nätverkskartan?",
+  "networkMap_promptBody": "MeshCore Open kan dela vad din radio hör med den offentliga nätverkskartan på map.meshcoreopen.org, så att alla kan se vilka repeaters som finns och hur de hänger ihop.\n\nDen skickar aldrig meddelandetext, vem som pratar med vem, kanalnamn, dina kontakter eller din exakta position. Platser avrundas till cirka 2 km.",
+  "networkMap_promptSettingsHint": "Du kan ändra detta när som helst under Inställningar → Appinställningar → Nätverkskarta.",
+  "networkMap_promptAccept": "Dela",
+  "networkMap_promptDecline": "Nej tack",
+  "networkMap_statusOff": "Av. Inget skickas.",
+  "networkMap_statusWaiting": "På. Väntar på radioanslutning.",
+  "networkMap_statusNothingSent": "På. Inget skickat ännu.",
+  "networkMap_statusLastSent": "Senast skickat {time}. {count} paket idag.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokal",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Båda",
+  "networkMap_zoomInHint": "Zooma in för att se nätverkskartan online",
+  "networkMap_loadFailed": "Det gick inte att ladda nätverkskartan online",
+  "networkMap_inYourContacts": "I dina kontakter",
+  "networkMap_status": "Status",
+  "networkMap_statusActive": "Aktiv den senaste timmen",
+  "networkMap_statusRecent": "Hörd under det senaste dygnet",
+  "networkMap_statusStale": "Inte hörd på sistone",
+  "networkMap_confirmed": "Bekräftad",
+  "networkMap_singleSource": "Enskild källa, ännu inte bekräftad",
+  "networkMap_reports": "Rapporter",
+  "networkMap_locationEstimated": "Ungefärlig plats, uppskattad utifrån vilka som hörde den",
+  "networkMap_locationAdvertised": "Ungefärlig plats, från dess egen annons",
+  "networkMap_heardByRadio": "Hörd av din radio",
+  "networkMap_inYourArea": "I ditt område",
+  "networkMap_farAway": "Långt bort. Hantering når inte dit.",
+  "networkMap_addToContacts": "Lägg till i kontakter",
+  "networkMap_manage": "Hantera",
+  "networkMap_addedToContacts": "Tillagd i kontakter",
+  "networkMap_addFailed": "Det gick inte att lägga till i kontakter",
+  "networkMap_unnamed": "Namnlös repeater"
 }

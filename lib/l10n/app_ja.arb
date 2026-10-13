@@ -4061,5 +4061,55 @@
   "usbChooseSerialPort": "シリアルポートを選択",
   "neighbors_durationSeconds": "{seconds}秒",
   "neighbors_durationMinutes": "{minutes}分{seconds}秒",
-  "neighbors_durationHours": "{hours}時間{minutes}分"
+  "neighbors_durationHours": "{hours}時間{minutes}分",
+  "scanner_getNodeTitle": "新しいノードが必要ですか?",
+  "scanner_getNodeBody": "財布サイズで MeshCore が動作。デュアルバンドGPS、防水、バッテリー5日間。",
+  "scanner_getNodeAction": "こちらで入手",
+  "scanner_getNodeDisclosure": "アフィリエイトリンク: 購入のたびに MeshCore Open を応援できます。",
+  "networkMap_settingsSection": "ネットワークマップ",
+  "networkMap_uploadTitle": "ラジオが受信した情報を共有",
+  "networkMap_uploadExplanation": "オンにしてラジオが接続されている間、ラジオが受信したパケットの概要をアプリが MeshCore Open のネットワークマップに送信します。これにより、どんなリピータがあり、どうつながっているかを誰でも見られます。送信するのは、各パケットの種類、経路、ホップ数、信号強度、サイズと、リピータ自身のアドバートに含まれる名前とおおよその位置です。メッセージの本文、誰が誰と話しているか、チャンネル名、連絡先、正確な位置は送信しません。位置は約2km単位に丸められ、アプリのIDは毎日ランダムに新しくなります。",
+  "networkMap_whatWeCollect": "収集する情報",
+  "networkMap_promptTitle": "ネットワークマップの作成にご協力いただけますか?",
+  "networkMap_promptBody": "MeshCore Open は、ラジオが受信した情報を map.meshcoreopen.org の公開ネットワークマップと共有できます。これにより、どんなリピータがあり、どうつながっているかを誰でも見られます。\n\nメッセージの本文、誰が誰と話しているか、チャンネル名、連絡先、正確な位置は送信しません。位置は約2km単位に丸められます。",
+  "networkMap_promptSettingsHint": "この設定はいつでも「設定」→「アプリ設定」→「ネットワークマップ」で変更できます。",
+  "networkMap_promptAccept": "共有する",
+  "networkMap_promptDecline": "いいえ、結構です",
+  "networkMap_statusOff": "オフ。何も送信されません。",
+  "networkMap_statusWaiting": "オン。ラジオの接続を待っています。",
+  "networkMap_statusNothingSent": "オン。まだ何も送信されていません。",
+  "networkMap_statusLastSent": "最終送信: {time}。今日は{count}パケット。",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "ローカル",
+  "networkMap_sourceOnline": "オンライン",
+  "networkMap_sourceBoth": "両方",
+  "networkMap_zoomInHint": "ズームインするとオンラインのネットワークマップが表示されます",
+  "networkMap_loadFailed": "オンラインのネットワークマップを読み込めませんでした",
+  "networkMap_inYourContacts": "連絡先にあります",
+  "networkMap_status": "ステータス",
+  "networkMap_statusActive": "直近1時間にアクティブ",
+  "networkMap_statusRecent": "直近1日以内に受信",
+  "networkMap_statusStale": "最近受信されていません",
+  "networkMap_confirmed": "確認済み",
+  "networkMap_singleSource": "情報源が1つのみで、未確認",
+  "networkMap_reports": "レポート",
+  "networkMap_locationEstimated": "おおよその位置(受信したノードから推定)",
+  "networkMap_locationAdvertised": "おおよその位置(自身のアドバートより)",
+  "networkMap_heardByRadio": "ラジオが受信",
+  "networkMap_inYourArea": "お近く",
+  "networkMap_farAway": "遠すぎます。管理はできません。",
+  "networkMap_addToContacts": "連絡先に追加",
+  "networkMap_manage": "管理",
+  "networkMap_addedToContacts": "連絡先に追加しました",
+  "networkMap_addFailed": "連絡先に追加できませんでした",
+  "networkMap_unnamed": "名前のないリピータ"
 }

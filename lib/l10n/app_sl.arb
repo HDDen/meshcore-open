@@ -3929,5 +3929,55 @@
   "usbChooseSerialPort": "Izberite serijska vrata",
   "neighbors_durationSeconds": "{seconds} s",
   "neighbors_durationMinutes": "{minutes} min {seconds} s",
-  "neighbors_durationHours": "{hours} h {minutes} min"
+  "neighbors_durationHours": "{hours} h {minutes} min",
+  "scanner_getNodeTitle": "Potrebujete nov node?",
+  "scanner_getNodeBody": "Velikosti denarnice, poganja MeshCore, dvopasovni GPS, vodoodporen, baterija za 5 dni.",
+  "scanner_getNodeAction": "Oglejte si ga tukaj",
+  "scanner_getNodeDisclosure": "Partnerska povezava: vsak nakup podpira MeshCore Open.",
+  "networkMap_settingsSection": "Omrežni zemljevid",
+  "networkMap_uploadTitle": "Deli, kaj sliši moj radio",
+  "networkMap_uploadExplanation": "Ko je to vklopljeno in je radio povezan, aplikacija na omrežni zemljevid MeshCore Open pošlje kratek povzetek paketov, ki jih sliši vaš radio, tako da vsi vidijo, kateri repeaterji obstajajo in kako so povezani. Pošlje vrsto, pot, število skokov, moč signala in velikost vsakega paketa ter imena in približne lokacije repeaterjev iz njihovih lastnih advertov. Nikoli ne pošlje besedila sporočil, kdo se s kom pogovarja, imen kanalov, vaših stikov ali vašega natančnega položaja: lokacije so zaokrožene na približno 2 km, aplikacija pa vsak dan dobi nov naključni ID.",
+  "networkMap_whatWeCollect": "Kaj zbiramo",
+  "networkMap_promptTitle": "Pomagate graditi omrežni zemljevid?",
+  "networkMap_promptBody": "MeshCore Open lahko deli, kaj sliši vaš radio, z javnim omrežnim zemljevidom na map.meshcoreopen.org, tako da vsi vidijo, kateri repeaterji obstajajo in kako so povezani.\n\nNikoli ne pošlje besedila sporočil, kdo se s kom pogovarja, imen kanalov, vaših stikov ali vašega natančnega položaja. Lokacije so zaokrožene na približno 2 km.",
+  "networkMap_promptSettingsHint": "To lahko kadar koli spremenite v Nastavitve → Nastavitve aplikacije → Omrežni zemljevid.",
+  "networkMap_promptAccept": "Deli",
+  "networkMap_promptDecline": "Ne, hvala",
+  "networkMap_statusOff": "Izklopljeno. Nič se ne pošilja.",
+  "networkMap_statusWaiting": "Vklopljeno. Čakanje na povezavo z radiem.",
+  "networkMap_statusNothingSent": "Vklopljeno. Še nič poslanega.",
+  "networkMap_statusLastSent": "Nazadnje poslano {time}. Paketov danes: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Lokalno",
+  "networkMap_sourceOnline": "Na spletu",
+  "networkMap_sourceBoth": "Oboje",
+  "networkMap_zoomInHint": "Povečajte, da vidite spletni omrežni zemljevid",
+  "networkMap_loadFailed": "Spletnega omrežnega zemljevida ni bilo mogoče naložiti",
+  "networkMap_inYourContacts": "V vaših stikih",
+  "networkMap_status": "Stanje",
+  "networkMap_statusActive": "Aktiven v zadnji uri",
+  "networkMap_statusRecent": "Slišan v zadnjem dnevu",
+  "networkMap_statusStale": "V zadnjem času ni bil slišan",
+  "networkMap_confirmed": "Potrjeno",
+  "networkMap_singleSource": "En vir, še ni potrjeno",
+  "networkMap_reports": "Poročila",
+  "networkMap_locationEstimated": "Približna lokacija, ocenjena glede na to, kdo ga je slišal",
+  "networkMap_locationAdvertised": "Približna lokacija, iz njegovega lastnega adverta",
+  "networkMap_heardByRadio": "Sliši ga vaš radio",
+  "networkMap_inYourArea": "V vaši bližini",
+  "networkMap_farAway": "Daleč stran. Upravljanje ne bo doseglo.",
+  "networkMap_addToContacts": "Dodaj med stike",
+  "networkMap_manage": "Upravljaj",
+  "networkMap_addedToContacts": "Dodano med stike",
+  "networkMap_addFailed": "Dodajanje med stike ni uspelo",
+  "networkMap_unnamed": "Repeater brez imena"
 }

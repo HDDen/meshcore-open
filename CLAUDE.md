@@ -2205,6 +2205,39 @@ channel identity work, see **AEIC image store**); the paragraph of
 subject of the channel identity table that follows this step as its own
 change.
 
+**Step 6 (2026-10-13, dev up to 3bee159c, upstream's network map).** Taken
+whole but unreachable: upstream's opt-in upload of header-only packet
+records to map.meshcoreopen.org and its online repeater layer
+(`lib/services/network_map/*`, `lib/utils/location_grid.dart`,
+`lib/connector/raw_packet.dart`, the four `network_map_*` widgets,
+`get_node_banner.dart`, `mesh_nav_tile.dart` restored for the settings
+section, the settings fields `networkMapUploadEnabled` and
+`networkMapPromptShown`, `UiViewStateService.mapSource`, the tests and
+`documentation/network-map.md`). `networkMapAvailable` in
+`lib/services/network_map/network_map_availability.dart` is `false`, as
+`reviewModeAvailable` is: `main.dart` creates no `NetworkMapUploadService`
+and registers no provider for it, the channels screen never asks the opt-in
+question, the app settings show no network-map section, and the map's
+`mapSource` is `local` without reading `UiViewStateService`, so the
+Local / Online / Both switch, the online layers, the hint and the
+`NetworkMapOnlineController` (a `late final` the disabled build never
+touches) stay out of the build. The connector reads the path byte through
+`raw_packet.dart`'s public `decodePathByteLen` / `decodePathHashWidth`
+where it had private copies. The decision is the fork's: what its users'
+packet records should feed, if anything, is not settled, and an upload
+nobody can switch on would still cost a listener on every connector
+notification. The node-purchase banner of the connect screen is gated the
+same way (`getNodeBannerAvailable` in `get_node_banner.dart`; it would sit
+above the offline-history row, not replace the bottom bar as upstream's
+does) and kept so the fork can point it at a project of its own. Left out:
+the version bump (ours stays as **Dependencies** says), the `BETA` suffix on
+the settings screen's version, the README link to the map and the
+privacy-policy paragraphs about uploads and the affiliate link, since
+neither exists in this build; `docs/PRIVACY_POLICY.md` is upstream's text
+of 2026-09-27 until the flag flips. ARB: upstream's 40 keys appended to en
+and ru, the ru strings reworded to the fork's terms («радио» for the radio,
+«репитер», «анонс», «нода»), the other locales auto-merged.
+
 ## Transports
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.

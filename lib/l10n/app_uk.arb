@@ -3936,5 +3936,55 @@
   "usbChooseSerialPort": "Виберіть послідовний порт",
   "neighbors_durationSeconds": "{seconds}с",
   "neighbors_durationMinutes": "{minutes}хв {seconds}с",
-  "neighbors_durationHours": "{hours}год {minutes}хв"
+  "neighbors_durationHours": "{hours}год {minutes}хв",
+  "scanner_getNodeTitle": "Потрібна нова нода?",
+  "scanner_getNodeBody": "Розміром з гаманець, працює на MeshCore, дводіапазонний GPS, водонепроникна, батареї вистачає на 5 днів.",
+  "scanner_getNodeAction": "Придбати тут",
+  "scanner_getNodeDisclosure": "Партнерське посилання: кожна покупка підтримує MeshCore Open.",
+  "networkMap_settingsSection": "Карта мережі",
+  "networkMap_uploadTitle": "Ділитися тим, що чує мій радіомодуль",
+  "networkMap_uploadExplanation": "Коли це ввімкнено і радіомодуль підключено, застосунок надсилає на карту мережі MeshCore Open короткий підсумок пакетів, які чує ваш радіомодуль, щоб усі могли бачити, які ретранслятори існують і як вони пов'язані. Надсилаються тип, маршрут, кількість хопів, рівень сигналу та розмір кожного пакета, а також назви ретрансляторів і їхнє приблизне розташування з їхніх власних оголошень. Ніколи не надсилаються текст повідомлень, хто з ким спілкується, назви каналів, ваші контакти та ваше точне розташування: координати округлюються приблизно до 2 км, а застосунок щодня отримує новий випадковий ID.",
+  "networkMap_whatWeCollect": "Що ми збираємо",
+  "networkMap_promptTitle": "Допомогти побудувати карту мережі?",
+  "networkMap_promptBody": "MeshCore Open може ділитися тим, що чує ваш радіомодуль, з публічною картою мережі на map.meshcoreopen.org, щоб усі могли бачити, які ретранслятори існують і як вони пов'язані.\n\nНіколи не надсилаються текст повідомлень, хто з ким спілкується, назви каналів, ваші контакти та ваше точне розташування. Координати округлюються приблизно до 2 км.",
+  "networkMap_promptSettingsHint": "Це можна змінити будь-коли: Налаштування → Налаштування застосунку → Карта мережі.",
+  "networkMap_promptAccept": "Ділитися",
+  "networkMap_promptDecline": "Ні, дякую",
+  "networkMap_statusOff": "Вимкнено. Нічого не надсилається.",
+  "networkMap_statusWaiting": "Ввімкнено. Очікування підключення радіомодуля.",
+  "networkMap_statusNothingSent": "Ввімкнено. Поки що нічого не надіслано.",
+  "networkMap_statusLastSent": "Останнє надсилання: {time}. Пакетів сьогодні: {count}.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Локальна",
+  "networkMap_sourceOnline": "Онлайн",
+  "networkMap_sourceBoth": "Обидві",
+  "networkMap_zoomInHint": "Наблизьте, щоб побачити онлайн-карту мережі",
+  "networkMap_loadFailed": "Не вдалося завантажити онлайн-карту мережі",
+  "networkMap_inYourContacts": "У ваших контактах",
+  "networkMap_status": "Статус",
+  "networkMap_statusActive": "Активний за останню годину",
+  "networkMap_statusRecent": "Чутно за останню добу",
+  "networkMap_statusStale": "Давно не чутно",
+  "networkMap_confirmed": "Підтверджено",
+  "networkMap_singleSource": "Одне джерело, ще не підтверджено",
+  "networkMap_reports": "Звіти",
+  "networkMap_locationEstimated": "Приблизне розташування, оцінене за тими, хто його чув",
+  "networkMap_locationAdvertised": "Приблизне розташування, з власного оголошення",
+  "networkMap_heardByRadio": "Чує ваш радіомодуль",
+  "networkMap_inYourArea": "У вашому районі",
+  "networkMap_farAway": "Далеко. Керування недоступне.",
+  "networkMap_addToContacts": "Додати до контактів",
+  "networkMap_manage": "Керувати",
+  "networkMap_addedToContacts": "Додано до контактів",
+  "networkMap_addFailed": "Не вдалося додати до контактів",
+  "networkMap_unnamed": "Ретранслятор без назви"
 }

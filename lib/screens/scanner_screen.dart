@@ -15,6 +15,7 @@ import '../utils/app_route_observer.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/device_tile.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/get_node_banner.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -236,62 +237,68 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
       bottomNavigationBar: SafeArea(
         top: false,
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Consumer<MeshCoreConnector>(
-          builder: (context, connector, child) {
-            final isScanning =
-                connector.state == MeshCoreConnectionState.scanning;
-            final isBluetoothOff = _bluetoothState == BluetoothAdapterState.off;
-            return Row(
-              children: [
-                Expanded(
-                  child: OfflineHistoryButton(
-                    connector: connector,
-                    onLoadingChanged: (value) {
-                      if (mounted) {
-                        setState(() => _isOpeningOfflineHistory = value);
-                      }
-                    },
-                    onOpened: () => _changedNavigation = true,
-                    onClosed: () => _changedNavigation = false,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                FloatingActionButton.extended(
-                  heroTag: 'scanner_ble_action',
-                  onPressed: isBluetoothOff || _isOpeningOfflineHistory
-                      ? null
-                      : () {
-                          HapticFeedback.lightImpact();
-                          _toggleScan(connector);
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (getNodeBannerAvailable) const GetNodeBanner(),
+            Consumer<MeshCoreConnector>(
+              builder: (context, connector, child) {
+                final isScanning =
+                    connector.state == MeshCoreConnectionState.scanning;
+                final isBluetoothOff = _bluetoothState == BluetoothAdapterState.off;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: OfflineHistoryButton(
+                        connector: connector,
+                        onLoadingChanged: (value) {
+                          if (mounted) {
+                            setState(() => _isOpeningOfflineHistory = value);
+                          }
                         },
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    transitionBuilder: (child, anim) =>
-                        ScaleTransition(scale: anim, child: child),
-                    child: isScanning
-                        ? SizedBox(
-                            key: const ValueKey('scanning'),
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.bluetooth_searching,
-                            key: ValueKey('idle'),
-                          ),
-                  ),
-                  label: Text(
-                    isScanning
-                        ? context.l10n.scanner_stop
-                        : context.l10n.scanner_scan,
-                  ),
-                ),
-              ],
-            );
-          },
+                        onOpened: () => _changedNavigation = true,
+                        onClosed: () => _changedNavigation = false,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FloatingActionButton.extended(
+                      heroTag: 'scanner_ble_action',
+                      onPressed: isBluetoothOff || _isOpeningOfflineHistory
+                          ? null
+                          : () {
+                              HapticFeedback.lightImpact();
+                              _toggleScan(connector);
+                            },
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, anim) =>
+                            ScaleTransition(scale: anim, child: child),
+                        child: isScanning
+                            ? SizedBox(
+                                key: const ValueKey('scanning'),
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.bluetooth_searching,
+                                key: ValueKey('idle'),
+                              ),
+                      ),
+                      label: Text(
+                        isScanning
+                            ? context.l10n.scanner_stop
+                            : context.l10n.scanner_scan,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

@@ -104,6 +104,7 @@ import '../utils/platform_info.dart';
 import 'meshcore_uuids.dart';
 import 'meshcore_protocol.dart';
 import 'pending_command_replies.dart';
+import 'raw_packet.dart';
 
 class OfflineHistorySource {
   final String scope;
@@ -16857,7 +16858,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         reader.skipBytes(2); // transport_code_2 is reserved for now.
       }
       final pathLenRaw = reader.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
       final pathBytes = reader.readBytes(pathByteLen);
       final payload = reader.readBytes(reader.remaining);
 
@@ -17953,8 +17954,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       //final payloadVer = (header >> 6) & 0x03;
       final pathLenRaw = packet.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
-      final pathHashWidth = _decodePathHashWidth(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
+      final pathHashWidth = decodePathHashWidth(pathLenRaw);
       final pathBytes = packet.readBytes(pathByteLen);
       final payload = packet.readBytes(packet.remaining);
 
@@ -18002,8 +18003,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       //final payloadVer = (header >> 6) & 0x03;
       final pathLenRaw = packet.readByte();
-      final pathByteLen = _decodePathByteLen(pathLenRaw);
-      pathHashWidth = _decodePathHashWidth(pathLenRaw);
+      final pathByteLen = decodePathByteLen(pathLenRaw);
+      pathHashWidth = decodePathHashWidth(pathLenRaw);
       pathBytes = packet.readBytes(pathByteLen);
     } catch (e) {
       appLogger.warn('Malformed RX frame: $e', tag: 'Connector');
@@ -18709,20 +18710,6 @@ const int _routeTransportDirect = 0x03;
 const int _payloadTypeGroupText = 0x05;
 const int _payloadTypeGroupData = 0x06;
 const int _cipherMacSize = 2;
-
-/// Decodes the firmware's encoded path_len byte into actual byte length.
-/// Bits 0-5: hash count (0-63), Bits 6-7: hash size code (0=1byte ... 3=4bytes).
-int _decodePathByteLen(int pathLenRaw) {
-  if (pathLenRaw == 0xFF || pathLenRaw == 0) return 0;
-  final hashCount = pathLenRaw & 63;
-  final hashSize = _decodePathHashWidth(pathLenRaw);
-  return hashCount * hashSize;
-}
-
-int _decodePathHashWidth(int pathLenRaw) {
-  if (pathLenRaw == 0xFF) return 1;
-  return ((pathLenRaw >> 6) & 0x03) + 1;
-}
 
 bool _isPathLenValidForMode(
   int pathLen,

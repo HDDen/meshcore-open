@@ -3960,5 +3960,55 @@
   "usbChooseSerialPort": "Soros port kiválasztása",
   "neighbors_durationSeconds": "{seconds} mp",
   "neighbors_durationMinutes": "{minutes} p {seconds} mp",
-  "neighbors_durationHours": "{hours} ó {minutes} p"
+  "neighbors_durationHours": "{hours} ó {minutes} p",
+  "scanner_getNodeTitle": "Új csomópontra van szükséged?",
+  "scanner_getNodeBody": "Pénztárca méretű, MeshCore-t futtat, kétsávos GPS, vízálló, 5 napos akkumulátor.",
+  "scanner_getNodeAction": "Itt szerezhetsz egyet",
+  "scanner_getNodeDisclosure": "Partnerlink: minden vásárlás a MeshCore Opent támogatja.",
+  "networkMap_settingsSection": "Hálózati térkép",
+  "networkMap_uploadTitle": "Megosztom, amit a rádióm hall",
+  "networkMap_uploadExplanation": "Ha ez be van kapcsolva és a rádió csatlakozik, az alkalmazás rövid összefoglalót küld a rádió által hallott csomagokról a MeshCore Open hálózati térképére, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz. Elküldi az egyes csomagok típusát, útvonalát, ugrásszámát, jelerősségét és méretét, valamint a repeaterek nevét és hozzávetőleges helyét a saját advertjeikből. Soha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet: a helyek kb. 2 km-re kerekítettek, az alkalmazásod pedig naponta új véletlenszerű azonosítót kap.",
+  "networkMap_whatWeCollect": "Mit gyűjtünk",
+  "networkMap_promptTitle": "Segítesz a hálózati térkép építésében?",
+  "networkMap_promptBody": "A MeshCore Open megoszthatja, amit a rádiód hall, a nyilvános hálózati térképpel a map.meshcoreopen.org oldalon, hogy mindenki lássa, milyen repeaterek léteznek és hogyan kapcsolódnak egymáshoz.\n\nSoha nem küld üzenetszöveget, azt, hogy ki kivel beszélget, csatornaneveket, a kapcsolataidat vagy a pontos helyzetedet. A helyek kb. 2 km-re kerekítettek.",
+  "networkMap_promptSettingsHint": "Ezt bármikor módosíthatod: Beállítások → Alkalmazásbeállítások → Hálózati térkép.",
+  "networkMap_promptAccept": "Megosztás",
+  "networkMap_promptDecline": "Köszönöm, nem",
+  "networkMap_statusOff": "Kikapcsolva. Semmi sem kerül elküldésre.",
+  "networkMap_statusWaiting": "Bekapcsolva. Várakozás a rádiókapcsolatra.",
+  "networkMap_statusNothingSent": "Bekapcsolva. Még nem ment el semmi.",
+  "networkMap_statusLastSent": "Utoljára elküldve: {time}. Ma {count} csomag.",
+  "@networkMap_statusLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "networkMap_sourceLocal": "Helyi",
+  "networkMap_sourceOnline": "Online",
+  "networkMap_sourceBoth": "Mindkettő",
+  "networkMap_zoomInHint": "Nagyíts rá az online hálózati térkép megtekintéséhez",
+  "networkMap_loadFailed": "Nem sikerült betölteni az online hálózati térképet",
+  "networkMap_inYourContacts": "A kapcsolataid között",
+  "networkMap_status": "Állapot",
+  "networkMap_statusActive": "Aktív az elmúlt órában",
+  "networkMap_statusRecent": "Hallva az elmúlt napban",
+  "networkMap_statusStale": "Mostanában nem hallható",
+  "networkMap_confirmed": "Megerősítve",
+  "networkMap_singleSource": "Egyetlen forrás, még nem megerősített",
+  "networkMap_reports": "Jelentések",
+  "networkMap_locationEstimated": "Hozzávetőleges hely, a hallók alapján becsülve",
+  "networkMap_locationAdvertised": "Hozzávetőleges hely, a saját advertjéből",
+  "networkMap_heardByRadio": "A rádiód hallja",
+  "networkMap_inYourArea": "A közeledben",
+  "networkMap_farAway": "Messze van. A kezelés nem éri el.",
+  "networkMap_addToContacts": "Hozzáadás a kapcsolatokhoz",
+  "networkMap_manage": "Kezelés",
+  "networkMap_addedToContacts": "Hozzáadva a kapcsolatokhoz",
+  "networkMap_addFailed": "Nem sikerült hozzáadni a kapcsolatokhoz",
+  "networkMap_unnamed": "Névtelen repeater"
 }
