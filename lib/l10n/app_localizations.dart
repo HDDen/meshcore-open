@@ -13043,6 +13043,599 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The image model could not be downloaded: {error}'**
   String imageMessages_downloadFailedWithError(Object error);
+
+  /// No description provided for @map_nodeId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get map_nodeId;
+
+  /// No description provided for @map_markerHideHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide: hidden until you leave the map.'**
+  String get map_markerHideHint;
+
+  /// No description provided for @map_markerRemoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove: stays hidden until you restore it from the filter menu.'**
+  String get map_markerRemoveHint;
+
+  /// No description provided for @map_markerRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Marker removed'**
+  String get map_markerRemoved;
+
+  /// No description provided for @map_restoreRemovedMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore removed markers'**
+  String get map_restoreRemovedMarkers;
+
+  /// No description provided for @map_restoreRemovedMarkersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} removed'**
+  String map_restoreRemovedMarkersSubtitle(Object count);
+
+  /// No description provided for @map_markersRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored {count} markers'**
+  String map_markersRestored(Object count);
+
+  /// No description provided for @map_setLocationConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as your location?'**
+  String get map_setLocationConfirmTitle;
+
+  /// No description provided for @map_setLocationConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your node will advertise this position:\n{lat}, {lon}'**
+  String map_setLocationConfirmBody(Object lat, Object lon);
+
+  /// No description provided for @map_setLocationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set location'**
+  String get map_setLocationAction;
+
+  /// No description provided for @map_locationSetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Node location updated'**
+  String get map_locationSetSuccess;
+
+  /// No description provided for @map_locationSetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The device did not confirm the new location. Try again.'**
+  String get map_locationSetFailed;
+
+  /// No description provided for @map_poiClusterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} markers here'**
+  String map_poiClusterTitle(Object count);
+
+  /// No description provided for @map_poiClusterSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} shared markers. Tap to list them.'**
+  String map_poiClusterSemantics(Object count);
+
+  /// No description provided for @map_youWithMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'You and {count} markers'**
+  String map_youWithMarkers(Object count);
+
+  /// No description provided for @map_sharedMarkerSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared marker: {label}'**
+  String map_sharedMarkerSemantics(Object label);
+
+  /// No description provided for @map_nodeMarkerSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {type}, {status}'**
+  String map_nodeMarkerSemantics(Object name, Object status, Object type);
+
+  /// No description provided for @mapCache_zoomLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom {zoom}'**
+  String mapCache_zoomLevel(Object zoom);
+
+  /// No description provided for @mapCache_sizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} B'**
+  String mapCache_sizeBytes(Object size);
+
+  /// No description provided for @mapCache_sizeKilobytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} KB'**
+  String mapCache_sizeKilobytes(Object size);
+
+  /// No description provided for @mapCache_sizeMegabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB'**
+  String mapCache_sizeMegabytes(Object size);
+
+  /// No description provided for @mapCache_sizeGigabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} GB'**
+  String mapCache_sizeGigabytes(Object size);
+
+  /// No description provided for @mapCache_downloadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Download cancelled. Cached {count} tiles.'**
+  String mapCache_downloadCancelled(Object count);
+
+  /// No description provided for @mapCache_tooManyTilesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Area too large'**
+  String get mapCache_tooManyTilesTitle;
+
+  /// No description provided for @mapCache_tooManyTiles.
+  ///
+  /// In en, this message translates to:
+  /// **'This area needs {count} tiles, more than the limit of {max}. Pick a smaller area or lower the maximum zoom.'**
+  String mapCache_tooManyTiles(Object count, Object max);
+
+  /// No description provided for @chat_clearChatConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This erases every message in this conversation from this device. It cannot be undone.'**
+  String get chat_clearChatConfirm;
+
+  /// No description provided for @channels_clearChatConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This erases every message in this channel from this device, including received images. It cannot be undone.'**
+  String get channels_clearChatConfirm;
+
+  /// No description provided for @channels_timeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get channels_timeNow;
+
+  /// No description provided for @channels_timeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String channels_timeMinutes(Object minutes);
+
+  /// No description provided for @channels_timeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String channels_timeHours(Object hours);
+
+  /// No description provided for @channels_timeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String channels_timeDays(Object days);
+
+  /// No description provided for @channels_indexChip.
+  ///
+  /// In en, this message translates to:
+  /// **'CH {index}'**
+  String channels_indexChip(Object index);
+
+  /// No description provided for @reaction_unknownSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get reaction_unknownSender;
+
+  /// No description provided for @pathMap_noSelfGpsFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Local node has no GPS fix'**
+  String get pathMap_noSelfGpsFix;
+
+  /// No description provided for @pathTrace_sendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the path trace: {error}'**
+  String pathTrace_sendFailed(Object error);
+
+  /// No description provided for @losErrorNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation data needs an internet connection'**
+  String get losErrorNoInternet;
+
+  /// No description provided for @losResultStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of date: antenna height changed'**
+  String get losResultStale;
+
+  /// No description provided for @losSnrValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{snr} dB'**
+  String losSnrValue(Object snr);
+
+  /// No description provided for @losFrequencyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{frequency} MHz'**
+  String losFrequencyValue(Object frequency);
+
+  /// No description provided for @losKFactorValue.
+  ///
+  /// In en, this message translates to:
+  /// **'k={kFactor}'**
+  String losKFactorValue(Object kFactor);
+
+  /// No description provided for @losEndpointA.
+  ///
+  /// In en, this message translates to:
+  /// **'A'**
+  String get losEndpointA;
+
+  /// No description provided for @losEndpointB.
+  ///
+  /// In en, this message translates to:
+  /// **'B'**
+  String get losEndpointB;
+
+  /// No description provided for @units_km.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get units_km;
+
+  /// No description provided for @units_mi.
+  ///
+  /// In en, this message translates to:
+  /// **'mi'**
+  String get units_mi;
+
+  /// No description provided for @units_m.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get units_m;
+
+  /// No description provided for @units_ft.
+  ///
+  /// In en, this message translates to:
+  /// **'ft'**
+  String get units_ft;
+
+  /// No description provided for @telemetry_loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading telemetry…'**
+  String get telemetry_loading;
+
+  /// No description provided for @telemetry_axisValue.
+  ///
+  /// In en, this message translates to:
+  /// **'X: {x}, Y: {y}, Z: {z}'**
+  String telemetry_axisValue(Object x, Object y, Object z);
+
+  /// No description provided for @telemetry_colourValue.
+  ///
+  /// In en, this message translates to:
+  /// **'R: {red}, G: {green}, B: {blue}'**
+  String telemetry_colourValue(Object blue, Object green, Object red);
+
+  /// No description provided for @telemetry_altitudeValueFeet.
+  ///
+  /// In en, this message translates to:
+  /// **'{feet} ft'**
+  String telemetry_altitudeValueFeet(Object feet);
+
+  /// No description provided for @telemetry_distanceValueFeet.
+  ///
+  /// In en, this message translates to:
+  /// **'{feet} ft'**
+  String telemetry_distanceValueFeet(Object feet);
+
+  /// No description provided for @settings_notConnectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected to a radio. Connect and try again.'**
+  String get settings_notConnectedError;
+
+  /// No description provided for @settings_requiresConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a radio to use this'**
+  String get settings_requiresConnection;
+
+  /// No description provided for @settings_txPowerInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid TX power ({min} to {max} dBm)'**
+  String settings_txPowerInvalidRange(Object max, Object min);
+
+  /// No description provided for @settings_contactSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact settings saved'**
+  String get settings_contactSettingsSaved;
+
+  /// No description provided for @settings_batteryToggleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to switch between percent and voltage'**
+  String get settings_batteryToggleHint;
+
+  /// No description provided for @settings_publicKeyCopyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy public key'**
+  String get settings_publicKeyCopyHint;
+
+  /// No description provided for @settings_locationClearHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave both fields empty to remove your location.'**
+  String get settings_locationClearHelper;
+
+  /// No description provided for @settings_locationCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Location removed'**
+  String get settings_locationCleared;
+
+  /// No description provided for @settings_regionFetchDiscovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for nearby repeaters…'**
+  String get settings_regionFetchDiscovering;
+
+  /// No description provided for @settings_regionFetchProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Asking repeater {current} of {total}…'**
+  String settings_regionFetchProgress(Object current, Object total);
+
+  /// No description provided for @settings_regionFetchNoRepeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'No repeaters are known yet. Add a repeater as a contact or wait for one to advertise, then try again.'**
+  String get settings_regionFetchNoRepeaters;
+
+  /// No description provided for @settings_regionFetchNoneResponded.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby repeaters answered. Move closer to a repeater and try again.'**
+  String get settings_regionFetchNoneResponded;
+
+  /// No description provided for @appSettings_sourceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} - {description}'**
+  String appSettings_sourceSummary(Object description, Object label);
+
+  /// No description provided for @appSettings_routingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Routing'**
+  String get appSettings_routingSection;
+
+  /// No description provided for @appSettings_imageMessagesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Image messages'**
+  String get appSettings_imageMessagesSection;
+
+  /// No description provided for @appSettings_showApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Show API key'**
+  String get appSettings_showApiKey;
+
+  /// No description provided for @appSettings_hideApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide API key'**
+  String get appSettings_hideApiKey;
+
+  /// No description provided for @translation_defaultModelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get translation_defaultModelName;
+
+  /// No description provided for @translation_downloadProgressBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName}: {current} MB'**
+  String translation_downloadProgressBytes(Object current, Object fileName);
+
+  /// No description provided for @translation_downloadProgressTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName}: {current} / {total} MB ({percent}%)'**
+  String translation_downloadProgressTotal(
+    Object current,
+    Object fileName,
+    Object percent,
+    Object total,
+  );
+
+  /// No description provided for @translation_downloadedModelDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB • {source}'**
+  String translation_downloadedModelDetails(Object size, Object source);
+
+  /// No description provided for @repeater_radioDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio disconnected'**
+  String get repeater_radioDisconnected;
+
+  /// No description provided for @repeater_radioDisconnectedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect to your radio to send commands, refresh or save changes.'**
+  String get repeater_radioDisconnectedHint;
+
+  /// No description provided for @repeater_cliSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send command'**
+  String get repeater_cliSend;
+
+  /// No description provided for @repeater_cliCopyTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy transcript'**
+  String get repeater_cliCopyTranscript;
+
+  /// No description provided for @repeater_cliShareTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Share transcript'**
+  String get repeater_cliShareTranscript;
+
+  /// No description provided for @repeater_cliTranscriptCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript copied'**
+  String get repeater_cliTranscriptCopied;
+
+  /// No description provided for @repeater_cliClearHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the command history? This cannot be undone.'**
+  String get repeater_cliClearHistoryConfirm;
+
+  /// No description provided for @repeater_cliSearchCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Search commands'**
+  String get repeater_cliSearchCommands;
+
+  /// No description provided for @repeater_cliNoMatchingCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching commands'**
+  String get repeater_cliNoMatchingCommands;
+
+  /// No description provided for @debugLog_clearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all log entries? This cannot be undone.'**
+  String get debugLog_clearConfirm;
+
+  /// No description provided for @repeater_unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get repeater_unsavedChangesTitle;
+
+  /// No description provided for @repeater_unsavedChangesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have changes that haven\'t been saved to the repeater.'**
+  String get repeater_unsavedChangesMessage;
+
+  /// No description provided for @repeater_discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get repeater_discardChanges;
+
+  /// No description provided for @repeater_actionSentNoReply.
+  ///
+  /// In en, this message translates to:
+  /// **'{action}: command sent. The repeater does not reply to this command.'**
+  String repeater_actionSentNoReply(Object action);
+
+  /// No description provided for @repeater_invalidSettingValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{setting}: {value} is not valid'**
+  String repeater_invalidSettingValue(Object setting, Object value);
+
+  /// No description provided for @repeater_txPowerOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'TX power {value} is out of range ({min} to {max} dBm)'**
+  String repeater_txPowerOutOfRange(Object max, Object min, Object value);
+
+  /// No description provided for @repeater_prvKeyLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key must be exactly {length} hex characters'**
+  String repeater_prvKeyLengthError(Object length);
+
+  /// No description provided for @contacts_advertFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send advertisement'**
+  String get contacts_advertFailed;
+
+  /// No description provided for @contacts_manageGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get contacts_manageGroups;
+
+  /// No description provided for @community_shortId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID: {id}…'**
+  String community_shortId(Object id);
+
+  /// No description provided for @tcpSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TCP / IP'**
+  String get tcpSectionTitle;
+
+  /// No description provided for @tcpConnectedToHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to'**
+  String get tcpConnectedToHeader;
+
+  /// No description provided for @usbChooseSerialPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose serial port'**
+  String get usbChooseSerialPort;
+
+  /// No description provided for @neighbors_durationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String neighbors_durationSeconds(Object seconds);
+
+  /// No description provided for @neighbors_durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m {seconds}s'**
+  String neighbors_durationMinutes(Object minutes, Object seconds);
+
+  /// No description provided for @neighbors_durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String neighbors_durationHours(Object hours, Object minutes);
 }
 
 class _AppLocalizationsDelegate

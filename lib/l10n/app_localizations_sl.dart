@@ -7706,4 +7706,400 @@ class AppLocalizationsSl extends AppLocalizations {
   String imageMessages_downloadFailedWithError(Object error) {
     return 'Slikovnega modela ni bilo mogoče prenesti: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint =>
+      'Skrij: skrito, dokler ne zapustite zemljevida.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Odstrani: ostane skrito, dokler ga ne obnovite v meniju filtra.';
+
+  @override
+  String get map_markerRemoved => 'Oznaka odstranjena';
+
+  @override
+  String get map_restoreRemovedMarkers => 'Obnovi odstranjene oznake';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(Object count) {
+    return 'Odstranjenih: $count';
+  }
+
+  @override
+  String map_markersRestored(Object count) {
+    return 'Obnovljenih oznak: $count';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Nastavim kot vašo lokacijo?';
+
+  @override
+  String map_setLocationConfirmBody(Object lat, Object lon) {
+    return 'Vaše vozlišče bo oglaševalo ta položaj:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Nastavi lokacijo';
+
+  @override
+  String get map_locationSetSuccess => 'Lokacija vozlišča posodobljena';
+
+  @override
+  String get map_locationSetFailed =>
+      'Naprava ni potrdila nove lokacije. Poskusite znova.';
+
+  @override
+  String map_poiClusterTitle(Object count) {
+    return 'Oznak tukaj: $count';
+  }
+
+  @override
+  String map_poiClusterSemantics(Object count) {
+    return 'Deljenih oznak: $count. Tapnite za prikaz seznama.';
+  }
+
+  @override
+  String map_youWithMarkers(Object count) {
+    return 'Vi in oznak: $count';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(Object label) {
+    return 'Deljena oznaka: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(Object name, Object status, Object type) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(Object zoom) {
+    return 'Povečava $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(Object size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(Object size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(Object size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(Object size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(Object count) {
+    return 'Prenos preklican. V predpomnilniku je $count ploščic.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Območje je preveliko';
+
+  @override
+  String mapCache_tooManyTiles(Object count, Object max) {
+    return 'To območje potrebuje $count ploščic, kar presega omejitev $max. Izberite manjše območje ali zmanjšajte največjo povečavo.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'S te naprave bodo izbrisana vsa sporočila v tem pogovoru. Dejanja ni mogoče razveljaviti.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'S te naprave bodo izbrisana vsa sporočila v tem kanalu, vključno s prejetimi slikami. Dejanja ni mogoče razveljaviti.';
+
+  @override
+  String get channels_timeNow => 'zdaj';
+
+  @override
+  String channels_timeMinutes(Object minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String channels_timeHours(Object hours) {
+    return '$hours h';
+  }
+
+  @override
+  String channels_timeDays(Object days) {
+    return '$days d';
+  }
+
+  @override
+  String channels_indexChip(Object index) {
+    return 'KAN $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Neznano';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'Lokalno vozlišče nima GPS-a';
+
+  @override
+  String pathTrace_sendFailed(Object error) {
+    return 'Poti ni bilo mogoče poslati: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'Podatki o nadmorski višini zahtevajo internetno povezavo';
+
+  @override
+  String get losResultStale => 'Zastarelo: višina antene se je spremenila';
+
+  @override
+  String losSnrValue(Object snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(Object frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(Object kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'Nalaganje telemetrije…';
+
+  @override
+  String telemetry_axisValue(Object x, Object y, Object z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(Object blue, Object green, Object red) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Ni povezave z radiem. Povežite se in poskusite znova.';
+
+  @override
+  String get settings_requiresConnection => 'Za to se povežite z radiem';
+
+  @override
+  String settings_txPowerInvalidRange(Object max, Object min) {
+    return 'Neveljavna moč TX ($min do $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => 'Nastavitve stika shranjene';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Tapnite za preklop med odstotki in napetostjo';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Kopiraj javni ključ';
+
+  @override
+  String get settings_locationClearHelper =>
+      'Obe polji pustite prazni, če želite odstraniti svojo lokacijo.';
+
+  @override
+  String get settings_locationCleared => 'Lokacija odstranjena';
+
+  @override
+  String get settings_regionFetchDiscovering => 'Iskanje bližnjih ponovitelj…';
+
+  @override
+  String settings_regionFetchProgress(Object current, Object total) {
+    return 'Spraševanje ponovitelja $current od $total…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Zaenkrat ni znanih ponovitelj. Dodajte ponovitelj kot stik ali počakajte, da se oglasi, nato poskusite znova.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Noben bližnji ponovitelj ni odgovoril. Približajte se ponovitelju in poskusite znova.';
+
+  @override
+  String appSettings_sourceSummary(Object description, Object label) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Usmerjanje';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Sporočila s slikami';
+
+  @override
+  String get appSettings_showApiKey => 'Pokaži API ključ';
+
+  @override
+  String get appSettings_hideApiKey => 'Skrij API ključ';
+
+  @override
+  String get translation_defaultModelName => 'Model';
+
+  @override
+  String translation_downloadProgressBytes(Object current, Object fileName) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    Object current,
+    Object fileName,
+    Object percent,
+    Object total,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(Object size, Object source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'Radio odklopljen';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Znova se povežite z radiem, da pošljete ukaze, osvežite ali shranite spremembe.';
+
+  @override
+  String get repeater_cliSend => 'Pošlji ukaz';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Kopiraj prepis';
+
+  @override
+  String get repeater_cliShareTranscript => 'Deli prepis';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Prepis kopiran';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Počistim zgodovino ukazov? Dejanja ni mogoče razveljaviti.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Išči ukaze';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Ni ustreznih ukazov';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Počistim vse vnose dnevnika? Dejanja ni mogoče razveljaviti.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Neshranjene spremembe';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'Imate spremembe, ki niso shranjene v ponovitelju.';
+
+  @override
+  String get repeater_discardChanges => 'Zavrzi';
+
+  @override
+  String repeater_actionSentNoReply(Object action) {
+    return '$action: ukaz poslan. Ponovitelj na ta ukaz ne odgovori.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(Object setting, Object value) {
+    return '$setting: $value ni veljavno';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(Object max, Object min, Object value) {
+    return 'Moč TX $value je izven območja ($min do $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(Object length) {
+    return 'Zasebni ključ mora imeti točno $length šestnajstiških znakov';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Oglasa ni bilo mogoče poslati';
+
+  @override
+  String get contacts_manageGroups => 'Upravljaj skupine';
+
+  @override
+  String community_shortId(Object id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Povezano z';
+
+  @override
+  String get usbChooseSerialPort => 'Izberite serijska vrata';
+
+  @override
+  String neighbors_durationSeconds(Object seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String neighbors_durationMinutes(Object minutes, Object seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String neighbors_durationHours(Object hours, Object minutes) {
+    return '$hours h $minutes min';
+  }
 }

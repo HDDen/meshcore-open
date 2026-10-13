@@ -2017,6 +2017,59 @@ scoping). Auto-merge damage fixed: the closing `}` of
 duplicate `case respCodeDefaultFloodScope`, the discovery screen's lost
 delete handler, a `showDismissibleSnackBar` call without its import.
 
+**Step 4 (2026-10-12, dev up to d30744aa, upstream's UI refresh).** The
+refresh rebuilt most screens around new widgets, and the fork's UI stays.
+Upstream's screens were taken whole only where the fork had changed little
+(`map_cache_screen.dart`, `repeater_settings_screen.dart`,
+`repeater_status_screen.dart`, `repeater_cli_screen.dart`,
+`line_of_sight_map_screen.dart`), the fork's own lines put back by hand: the
+bulk-download gate behind `SettingsSectionsService`, `sendContactFrame` for
+the status request, `recv_errors`, the `clearNeighbors` quick command, the
+console's desktop scrollbar, `MapSessionZoom`, the `context.select` reads
+of the line-of-sight banner. Eleven widgets the refresh introduced were
+dropped as unused by the fork's screens (`chat_composer`,
+`chat_send_pipeline`, `message_bubble_frame`, `reaction_chips`,
+`contact_visuals`, `cyr2lat_profile_dialog`, `language_picker_sheet`,
+`mesh_nav_tile`, `node_scan_sheet`, `radio_settings_dialog`,
+`translation_settings_section`); `confirm_clear_dialog.dart`,
+`radio_disconnected_banner.dart`, `map_poi_cluster.dart` and
+`path_map_scaffold.dart` stayed (the last with its test; the fork's trace
+screens keep their own panels and read only its zoom constants). Ported by
+hand into the fork's screens: the confirmation before clearing a chat or a
+debug log; a contact's telemetry flags written as each is toggled; the
+keyboard opening on a reply; the channel chat's communities reloaded when a
+covering route pops, and its transcript order memoised (`_TranscriptOrder`,
+a stable sort by arrival computed once per change of the message list or
+the image store instead of on every rebuild); the contacts screen's advert
+failure snackbar and a ten-second timeout on its pending import, export and
+share commands, which took the next OK or ERR of anything before; the
+channels list's relative times and slot chip through l10n; on the map, a
+timer that ages the markers once a minute without traffic, the removal of
+a pin with an undo and the restore of every removed pin from the filter
+sheet, a confirmation before "set my location" that waits for the
+SELF_INFO carrying the new position, and the clustering of shared pins with
+the "You" marker under the node clustering toggle
+(`_buildPoiAndSelfMarkers`, off while overlaps or a path trace are shown);
+the TCP screen's field errors; the USB screen's hot-plug timer paused in
+the background and its web port picker; the neighbours screen opening the
+repeater hub; the telemetry screen failing fast on ERR; the settings
+screen's guard for commands sent while disconnected, the hints on the copy
+and battery rows, the confirmation of saved contact settings and empty
+location fields clearing the node's location; the API key field's
+show/hide toggle; the path trace reporting a refused send; the region
+screen's guards on fetching with no repeater and on blank names, the
+repeater's route restored in a `finally`. Left out: share-my-location from
+the composer, the lazy camera and the parallel path loads of the trace
+screens (the fork has no such loop), the semantics labels, the back-button
+change, and the widget extractions themselves. Fixed afterwards: the
+'both' resolution of the `MapBulkDownloadNotAllowed` /
+`MapTileDownloadCancelToken` conflict dropped the exception class's closing
+brace, nesting every later class of the tile cache service (435 analyzer
+errors from one line); and the fork's `PathAnimationControls` overflowed
+the 288 px that upstream's panel test lays them out in, so the controls
+wrap now, the hop label under them, and a legend label is `Flexible`, as
+upstream's refresh had done, the fork's compact sizes and theming kept.
+
 ## Transports
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.

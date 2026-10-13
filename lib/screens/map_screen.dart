@@ -38,6 +38,7 @@ import '../storage/contact_location_estimate_store.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
+import '../utils/app_logger.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';

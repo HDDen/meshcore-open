@@ -2070,10 +2070,10 @@ class _ChannelMessagePathMapScreenState
     final maxHeight =
         MediaQuery.of(context).size.height * (combined ? 0.45 : 0.35);
 
-    double cardHeight;
-    if (_panelCollapsed) {
-      cardHeight = 128;
-    } else {
+    // Collapsed, the panel is as tall as its header and controls, which
+    // wrap on a narrow panel; a fixed height overflowed then.
+    double? cardHeight;
+    if (!_panelCollapsed) {
       final summaryHeight = combined ? 34.0 + entries.length * 36.0 : 0;
       final estimatedHeight = 132.0 + summaryHeight + hops.length * 56.0;
       cardHeight = max(176.0, min(maxHeight, estimatedHeight));
@@ -2112,6 +2112,7 @@ class _ChannelMessagePathMapScreenState
                   style: TextButton.styleFrom(foregroundColor: MeshPalette.ink),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(

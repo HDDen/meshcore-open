@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/region_request_progress_helper.dart';
+import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/region_store.dart';

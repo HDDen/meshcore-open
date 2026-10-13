@@ -1953,10 +1953,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     final combined = _viewMode == PathViewMode.combined;
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
 
-    double cardHeight;
-    if (_panelCollapsed) {
-      cardHeight = 128;
-    } else {
+    // Collapsed, the panel is as tall as its header and controls, which
+    // wrap on a narrow panel; a fixed height overflowed then.
+    double? cardHeight;
+    if (!_panelCollapsed) {
       final summaryHeight = combined ? 34.0 + _displayPaths.length * 36.0 : 0;
       final hopRows = combined
           ? (selected?.totalTransmissions ?? 0)
@@ -1985,6 +1985,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(MeshRadii.md),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(

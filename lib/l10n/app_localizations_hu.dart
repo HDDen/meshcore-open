@@ -7737,4 +7737,401 @@ class AppLocalizationsHu extends AppLocalizations {
   String imageMessages_downloadFailedWithError(Object error) {
     return 'A képmodell letöltése sikertelen: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint =>
+      'Elrejtés: a térkép elhagyásáig rejtve marad.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Eltávolítás: a szűrőmenüből való visszaállításig rejtve marad.';
+
+  @override
+  String get map_markerRemoved => 'Jelölő eltávolítva';
+
+  @override
+  String get map_restoreRemovedMarkers => 'Eltávolított jelölők visszaállítása';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(Object count) {
+    return '$count eltávolítva';
+  }
+
+  @override
+  String map_markersRestored(Object count) {
+    return '$count jelölő visszaállítva';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Beállítja saját helyzetként?';
+
+  @override
+  String map_setLocationConfirmBody(Object lat, Object lon) {
+    return 'A csomópont ezt a pozíciót fogja hirdetni:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Helyzet beállítása';
+
+  @override
+  String get map_locationSetSuccess => 'A csomópont helyzete frissítve';
+
+  @override
+  String get map_locationSetFailed =>
+      'Az eszköz nem erősítette meg az új helyzetet. Próbálja újra.';
+
+  @override
+  String map_poiClusterTitle(Object count) {
+    return '$count jelölő itt';
+  }
+
+  @override
+  String map_poiClusterSemantics(Object count) {
+    return '$count megosztott jelölő. Koppintson a listázáshoz.';
+  }
+
+  @override
+  String map_youWithMarkers(Object count) {
+    return 'Ön és $count jelölő';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(Object label) {
+    return 'Megosztott jelölő: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(Object name, Object status, Object type) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(Object zoom) {
+    return 'Nagyítás: $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(Object size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(Object size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(Object size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(Object size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(Object count) {
+    return 'A letöltés megszakítva. $count csempe gyorsítótárazva.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Túl nagy terület';
+
+  @override
+  String mapCache_tooManyTiles(Object count, Object max) {
+    return 'Ehhez a területhez $count csempe kell, ami meghaladja a $max korlátot. Válasszon kisebb területet, vagy csökkentse a maximális nagyítást.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'Ez törli a beszélgetés összes üzenetét erről az eszközről. A művelet nem vonható vissza.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'Ez törli a csatorna összes üzenetét erről az eszközről, a fogadott képekkel együtt. A művelet nem vonható vissza.';
+
+  @override
+  String get channels_timeNow => 'most';
+
+  @override
+  String channels_timeMinutes(Object minutes) {
+    return '$minutes p';
+  }
+
+  @override
+  String channels_timeHours(Object hours) {
+    return '$hours ó';
+  }
+
+  @override
+  String channels_timeDays(Object days) {
+    return '$days n';
+  }
+
+  @override
+  String channels_indexChip(Object index) {
+    return 'CH $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Ismeretlen';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'A helyi csomópontnak nincs GPS-jelzése';
+
+  @override
+  String pathTrace_sendFailed(Object error) {
+    return 'Nem sikerült elküldeni az útvonalkövetést: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'A magassági adatokhoz internetkapcsolat szükséges';
+
+  @override
+  String get losResultStale => 'Elavult: az antennamagasság megváltozott';
+
+  @override
+  String losSnrValue(Object snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(Object frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(Object kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => 'Telemetria betöltése…';
+
+  @override
+  String telemetry_axisValue(Object x, Object y, Object z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(Object blue, Object green, Object red) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Nincs kapcsolat rádióval. Csatlakozzon, és próbálja újra.';
+
+  @override
+  String get settings_requiresConnection =>
+      'A használathoz csatlakozzon egy rádióhoz';
+
+  @override
+  String settings_txPowerInvalidRange(Object max, Object min) {
+    return 'Érvénytelen TX teljesítmény ($min – $max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => 'Kapcsolatbeállítások mentve';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Koppintson a százalék és a feszültség közötti váltáshoz';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Nyilvános kulcs másolása';
+
+  @override
+  String get settings_locationClearHelper =>
+      'A helyzet törléséhez hagyja üresen mindkét mezőt.';
+
+  @override
+  String get settings_locationCleared => 'Helyzet eltávolítva';
+
+  @override
+  String get settings_regionFetchDiscovering => 'Közeli átjátszók keresése…';
+
+  @override
+  String settings_regionFetchProgress(Object current, Object total) {
+    return '$current. átjátszó lekérdezése ($total közül)…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Még nem ismert egyetlen átjátszó sem. Adjon hozzá egy átjátszót kapcsolatként, vagy várja meg, amíg egy hirdet, majd próbálja újra.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Egyik közeli átjátszó sem válaszolt. Menjen közelebb egy átjátszóhoz, és próbálja újra.';
+
+  @override
+  String appSettings_sourceSummary(Object description, Object label) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Útválasztás';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Képüzenetek';
+
+  @override
+  String get appSettings_showApiKey => 'API-kulcs megjelenítése';
+
+  @override
+  String get appSettings_hideApiKey => 'API-kulcs elrejtése';
+
+  @override
+  String get translation_defaultModelName => 'Modell';
+
+  @override
+  String translation_downloadProgressBytes(Object current, Object fileName) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    Object current,
+    Object fileName,
+    Object percent,
+    Object total,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(Object size, Object source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'A rádió lecsatlakozott';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Csatlakozzon újra a rádióhoz parancsok küldéséhez, frissítéshez vagy a módosítások mentéséhez.';
+
+  @override
+  String get repeater_cliSend => 'Parancs küldése';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Átirat másolása';
+
+  @override
+  String get repeater_cliShareTranscript => 'Átirat megosztása';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Átirat másolva';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Törli a parancselőzményeket? A művelet nem vonható vissza.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Parancsok keresése';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Nincs egyező parancs';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Törli az összes naplóbejegyzést? A művelet nem vonható vissza.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Nem mentett módosítások';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'Vannak módosítások, amelyek nincsenek elmentve az átjátszóra.';
+
+  @override
+  String get repeater_discardChanges => 'Elvetés';
+
+  @override
+  String repeater_actionSentNoReply(Object action) {
+    return '$action: parancs elküldve. Az átjátszó nem válaszol erre a parancsra.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(Object setting, Object value) {
+    return '$setting: $value érvénytelen';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(Object max, Object min, Object value) {
+    return 'A(z) $value TX teljesítmény tartományon kívül van ($min – $max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(Object length) {
+    return 'A privát kulcsnak pontosan $length hexadecimális karakterből kell állnia';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Nem sikerült elküldeni a hirdetést';
+
+  @override
+  String get contacts_manageGroups => 'Csoportok kezelése';
+
+  @override
+  String community_shortId(Object id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Csatlakozva:';
+
+  @override
+  String get usbChooseSerialPort => 'Soros port kiválasztása';
+
+  @override
+  String neighbors_durationSeconds(Object seconds) {
+    return '$seconds mp';
+  }
+
+  @override
+  String neighbors_durationMinutes(Object minutes, Object seconds) {
+    return '$minutes p $seconds mp';
+  }
+
+  @override
+  String neighbors_durationHours(Object hours, Object minutes) {
+    return '$hours ó $minutes p';
+  }
 }

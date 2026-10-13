@@ -7755,4 +7755,401 @@ class AppLocalizationsUk extends AppLocalizations {
   String imageMessages_downloadFailedWithError(Object error) {
     return 'Не вдалося завантажити модель зображень: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint =>
+      'Приховати: маркер буде прихований, доки ви не покинете карту.';
+
+  @override
+  String get map_markerRemoveHint =>
+      'Видалити: маркер залишатиметься прихованим, доки ви не відновите його в меню фільтра.';
+
+  @override
+  String get map_markerRemoved => 'Маркер видалено';
+
+  @override
+  String get map_restoreRemovedMarkers => 'Відновити видалені маркери';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(Object count) {
+    return 'Видалено: $count';
+  }
+
+  @override
+  String map_markersRestored(Object count) {
+    return 'Відновлено маркерів: $count';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => 'Встановити як вашу геопозицію?';
+
+  @override
+  String map_setLocationConfirmBody(Object lat, Object lon) {
+    return 'Ваш вузол оголошуватиме цю позицію:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => 'Встановити позицію';
+
+  @override
+  String get map_locationSetSuccess => 'Позицію вузла оновлено';
+
+  @override
+  String get map_locationSetFailed =>
+      'Пристрій не підтвердив нову позицію. Спробуйте ще раз.';
+
+  @override
+  String map_poiClusterTitle(Object count) {
+    return 'Маркерів тут: $count';
+  }
+
+  @override
+  String map_poiClusterSemantics(Object count) {
+    return 'Спільних маркерів: $count. Торкніться, щоб відкрити список.';
+  }
+
+  @override
+  String map_youWithMarkers(Object count) {
+    return 'Ви та маркерів: $count';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(Object label) {
+    return 'Спільний маркер: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(Object name, Object status, Object type) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(Object zoom) {
+    return 'Масштаб $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(Object size) {
+    return '$size Б';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(Object size) {
+    return '$size КБ';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(Object size) {
+    return '$size МБ';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(Object size) {
+    return '$size ГБ';
+  }
+
+  @override
+  String mapCache_downloadCancelled(Object count) {
+    return 'Завантаження скасовано. Кешовано тайлів: $count.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => 'Область завелика';
+
+  @override
+  String mapCache_tooManyTiles(Object count, Object max) {
+    return 'Для цієї області потрібно тайлів: $count, що перевищує ліміт $max. Виберіть меншу область або зменште максимальний масштаб.';
+  }
+
+  @override
+  String get chat_clearChatConfirm =>
+      'Це видалить усі повідомлення цього чату з цього пристрою. Дію не можна скасувати.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      'Це видалить усі повідомлення цього каналу з цього пристрою, включно з отриманими зображеннями. Дію не можна скасувати.';
+
+  @override
+  String get channels_timeNow => 'зараз';
+
+  @override
+  String channels_timeMinutes(Object minutes) {
+    return '$minutesхв';
+  }
+
+  @override
+  String channels_timeHours(Object hours) {
+    return '$hoursгод';
+  }
+
+  @override
+  String channels_timeDays(Object days) {
+    return '$daysд';
+  }
+
+  @override
+  String channels_indexChip(Object index) {
+    return 'КАН $index';
+  }
+
+  @override
+  String get reaction_unknownSender => 'Невідомо';
+
+  @override
+  String get pathMap_noSelfGpsFix => 'Локальний вузол не має GPS-фіксації';
+
+  @override
+  String pathTrace_sendFailed(Object error) {
+    return 'Не вдалося надіслати трасування шляху: $error';
+  }
+
+  @override
+  String get losErrorNoInternet =>
+      'Для даних про висоти потрібне підключення до інтернету';
+
+  @override
+  String get losResultStale => 'Застаріло: висоту антени змінено';
+
+  @override
+  String losSnrValue(Object snr) {
+    return '$snr дБ';
+  }
+
+  @override
+  String losFrequencyValue(Object frequency) {
+    return '$frequency МГц';
+  }
+
+  @override
+  String losKFactorValue(Object kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'км';
+
+  @override
+  String get units_mi => 'миль';
+
+  @override
+  String get units_m => 'м';
+
+  @override
+  String get units_ft => 'фт';
+
+  @override
+  String get telemetry_loading => 'Завантаження телеметрії…';
+
+  @override
+  String telemetry_axisValue(Object x, Object y, Object z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(Object blue, Object green, Object red) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(Object feet) {
+    return '$feet фт';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(Object feet) {
+    return '$feet фт';
+  }
+
+  @override
+  String get settings_notConnectedError =>
+      'Немає підключення до радіо. Підключіться й спробуйте ще раз.';
+
+  @override
+  String get settings_requiresConnection =>
+      'Підключіться до радіо, щоб скористатися цим';
+
+  @override
+  String settings_txPowerInvalidRange(Object max, Object min) {
+    return 'Недопустима потужність TX (від $min до $max дБм)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => 'Налаштування контакту збережено';
+
+  @override
+  String get settings_batteryToggleHint =>
+      'Торкніться, щоб перемкнути між відсотками та напругою';
+
+  @override
+  String get settings_publicKeyCopyHint => 'Копіювати публічний ключ';
+
+  @override
+  String get settings_locationClearHelper =>
+      'Залиште обидва поля порожніми, щоб видалити вашу геопозицію.';
+
+  @override
+  String get settings_locationCleared => 'Геопозицію видалено';
+
+  @override
+  String get settings_regionFetchDiscovering => 'Пошук ближніх ретрансляторів…';
+
+  @override
+  String settings_regionFetchProgress(Object current, Object total) {
+    return 'Опитування ретранслятора $current з $total…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      'Ретранслятори поки невідомі. Додайте ретранслятор до контактів або дочекайтеся його оголошення, а потім спробуйте ще раз.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      'Ближні ретранслятори не відповіли. Підійдіть ближче до ретранслятора й спробуйте ще раз.';
+
+  @override
+  String appSettings_sourceSummary(Object description, Object label) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => 'Маршрутизація';
+
+  @override
+  String get appSettings_imageMessagesSection => 'Повідомлення із зображеннями';
+
+  @override
+  String get appSettings_showApiKey => 'Показати API-ключ';
+
+  @override
+  String get appSettings_hideApiKey => 'Приховати API-ключ';
+
+  @override
+  String get translation_defaultModelName => 'Модель';
+
+  @override
+  String translation_downloadProgressBytes(Object current, Object fileName) {
+    return '$fileName: $current МБ';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    Object current,
+    Object fileName,
+    Object percent,
+    Object total,
+  ) {
+    return '$fileName: $current / $total МБ ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(Object size, Object source) {
+    return '$size МБ • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => 'Радіо відключено';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      'Підключіться до радіо повторно, щоб надсилати команди, оновлювати дані або зберігати зміни.';
+
+  @override
+  String get repeater_cliSend => 'Надіслати команду';
+
+  @override
+  String get repeater_cliCopyTranscript => 'Копіювати журнал';
+
+  @override
+  String get repeater_cliShareTranscript => 'Поділитися журналом';
+
+  @override
+  String get repeater_cliTranscriptCopied => 'Журнал скопійовано';
+
+  @override
+  String get repeater_cliClearHistoryConfirm =>
+      'Очистити історію команд? Дію не можна скасувати.';
+
+  @override
+  String get repeater_cliSearchCommands => 'Пошук команд';
+
+  @override
+  String get repeater_cliNoMatchingCommands => 'Немає відповідних команд';
+
+  @override
+  String get debugLog_clearConfirm =>
+      'Очистити всі записи журналу? Дію не можна скасувати.';
+
+  @override
+  String get repeater_unsavedChangesTitle => 'Незбережені зміни';
+
+  @override
+  String get repeater_unsavedChangesMessage =>
+      'У вас є зміни, не збережені в ретрансляторі.';
+
+  @override
+  String get repeater_discardChanges => 'Відхилити';
+
+  @override
+  String repeater_actionSentNoReply(Object action) {
+    return '$action: команду надіслано. Ретранслятор не відповідає на цю команду.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(Object setting, Object value) {
+    return '$setting: значення $value недопустиме';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(Object max, Object min, Object value) {
+    return 'Потужність TX $value поза діапазоном (від $min до $max дБм)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(Object length) {
+    return 'Приватний ключ має містити рівно $length шістнадцяткових символів';
+  }
+
+  @override
+  String get contacts_advertFailed => 'Не вдалося надіслати оголошення';
+
+  @override
+  String get contacts_manageGroups => 'Керування групами';
+
+  @override
+  String community_shortId(Object id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => 'Підключено до';
+
+  @override
+  String get usbChooseSerialPort => 'Виберіть послідовний порт';
+
+  @override
+  String neighbors_durationSeconds(Object seconds) {
+    return '$secondsс';
+  }
+
+  @override
+  String neighbors_durationMinutes(Object minutes, Object seconds) {
+    return '$minutesхв $secondsс';
+  }
+
+  @override
+  String neighbors_durationHours(Object hours, Object minutes) {
+    return '$hoursгод $minutesхв';
+  }
 }

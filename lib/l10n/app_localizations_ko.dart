@@ -7388,4 +7388,389 @@ class AppLocalizationsKo extends AppLocalizations {
   String imageMessages_downloadFailedWithError(Object error) {
     return '이미지 모델을 다운로드하지 못했습니다: $error';
   }
+
+  @override
+  String get map_nodeId => 'ID';
+
+  @override
+  String get map_markerHideHint => '숨기기: 지도를 벗어날 때까지 숨겨집니다.';
+
+  @override
+  String get map_markerRemoveHint => '삭제: 필터 메뉴에서 복원하기 전까지 숨겨진 상태로 유지됩니다.';
+
+  @override
+  String get map_markerRemoved => '마커를 삭제했습니다';
+
+  @override
+  String get map_restoreRemovedMarkers => '삭제한 마커 복원';
+
+  @override
+  String map_restoreRemovedMarkersSubtitle(Object count) {
+    return '$count개 삭제됨';
+  }
+
+  @override
+  String map_markersRestored(Object count) {
+    return '마커 $count개를 복원했습니다';
+  }
+
+  @override
+  String get map_setLocationConfirmTitle => '내 위치로 설정할까요?';
+
+  @override
+  String map_setLocationConfirmBody(Object lat, Object lon) {
+    return '노드가 다음 위치를 어드버트합니다:\n$lat, $lon';
+  }
+
+  @override
+  String get map_setLocationAction => '위치 설정';
+
+  @override
+  String get map_locationSetSuccess => '노드 위치를 업데이트했습니다';
+
+  @override
+  String get map_locationSetFailed => '장치가 새 위치를 확인하지 않았습니다. 다시 시도하세요.';
+
+  @override
+  String map_poiClusterTitle(Object count) {
+    return '여기에 마커 $count개';
+  }
+
+  @override
+  String map_poiClusterSemantics(Object count) {
+    return '공유 마커 $count개. 탭하여 목록을 확인하세요.';
+  }
+
+  @override
+  String map_youWithMarkers(Object count) {
+    return '나와 마커 $count개';
+  }
+
+  @override
+  String map_sharedMarkerSemantics(Object label) {
+    return '공유 마커: $label';
+  }
+
+  @override
+  String map_nodeMarkerSemantics(Object name, Object status, Object type) {
+    return '$name, $type, $status';
+  }
+
+  @override
+  String mapCache_zoomLevel(Object zoom) {
+    return '줌 $zoom';
+  }
+
+  @override
+  String mapCache_sizeBytes(Object size) {
+    return '$size B';
+  }
+
+  @override
+  String mapCache_sizeKilobytes(Object size) {
+    return '$size KB';
+  }
+
+  @override
+  String mapCache_sizeMegabytes(Object size) {
+    return '$size MB';
+  }
+
+  @override
+  String mapCache_sizeGigabytes(Object size) {
+    return '$size GB';
+  }
+
+  @override
+  String mapCache_downloadCancelled(Object count) {
+    return '다운로드가 취소되었습니다. 타일 $count개를 캐시했습니다.';
+  }
+
+  @override
+  String get mapCache_tooManyTilesTitle => '영역이 너무 큽니다';
+
+  @override
+  String mapCache_tooManyTiles(Object count, Object max) {
+    return '이 영역에는 타일 $count개가 필요하며 제한인 $max개를 초과합니다. 더 작은 영역을 선택하거나 최대 줌을 낮추세요.';
+  }
+
+  @override
+  String get chat_clearChatConfirm => '이 대화의 모든 메시지를 이 기기에서 삭제합니다. 되돌릴 수 없습니다.';
+
+  @override
+  String get channels_clearChatConfirm =>
+      '받은 이미지를 포함해 이 채널의 모든 메시지를 이 기기에서 삭제합니다. 되돌릴 수 없습니다.';
+
+  @override
+  String get channels_timeNow => '지금';
+
+  @override
+  String channels_timeMinutes(Object minutes) {
+    return '$minutes분';
+  }
+
+  @override
+  String channels_timeHours(Object hours) {
+    return '$hours시간';
+  }
+
+  @override
+  String channels_timeDays(Object days) {
+    return '$days일';
+  }
+
+  @override
+  String channels_indexChip(Object index) {
+    return 'CH $index';
+  }
+
+  @override
+  String get reaction_unknownSender => '알 수 없음';
+
+  @override
+  String get pathMap_noSelfGpsFix => '로컬 노드에 GPS 위치가 없습니다';
+
+  @override
+  String pathTrace_sendFailed(Object error) {
+    return '경로 추적을 보낼 수 없습니다: $error';
+  }
+
+  @override
+  String get losErrorNoInternet => '고도 데이터에는 인터넷 연결이 필요합니다';
+
+  @override
+  String get losResultStale => '오래된 결과: 안테나 높이가 변경되었습니다';
+
+  @override
+  String losSnrValue(Object snr) {
+    return '$snr dB';
+  }
+
+  @override
+  String losFrequencyValue(Object frequency) {
+    return '$frequency MHz';
+  }
+
+  @override
+  String losKFactorValue(Object kFactor) {
+    return 'k=$kFactor';
+  }
+
+  @override
+  String get losEndpointA => 'A';
+
+  @override
+  String get losEndpointB => 'B';
+
+  @override
+  String get units_km => 'km';
+
+  @override
+  String get units_mi => 'mi';
+
+  @override
+  String get units_m => 'm';
+
+  @override
+  String get units_ft => 'ft';
+
+  @override
+  String get telemetry_loading => '텔레메트리 불러오는 중…';
+
+  @override
+  String telemetry_axisValue(Object x, Object y, Object z) {
+    return 'X: $x, Y: $y, Z: $z';
+  }
+
+  @override
+  String telemetry_colourValue(Object blue, Object green, Object red) {
+    return 'R: $red, G: $green, B: $blue';
+  }
+
+  @override
+  String telemetry_altitudeValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String telemetry_distanceValueFeet(Object feet) {
+    return '$feet ft';
+  }
+
+  @override
+  String get settings_notConnectedError => '무전기에 연결되어 있지 않습니다. 연결한 후 다시 시도하세요.';
+
+  @override
+  String get settings_requiresConnection => '사용하려면 무전기에 연결하세요';
+
+  @override
+  String settings_txPowerInvalidRange(Object max, Object min) {
+    return '잘못된 TX 출력입니다($min~$max dBm)';
+  }
+
+  @override
+  String get settings_contactSettingsSaved => '연락처 설정을 저장했습니다';
+
+  @override
+  String get settings_batteryToggleHint => '탭하여 퍼센트와 전압 전환';
+
+  @override
+  String get settings_publicKeyCopyHint => '공개 키 복사';
+
+  @override
+  String get settings_locationClearHelper => '위치를 삭제하려면 두 입력란을 모두 비워 두세요.';
+
+  @override
+  String get settings_locationCleared => '위치를 삭제했습니다';
+
+  @override
+  String get settings_regionFetchDiscovering => '주변 리피터를 찾는 중…';
+
+  @override
+  String settings_regionFetchProgress(Object current, Object total) {
+    return '리피터 $current/$total에 요청하는 중…';
+  }
+
+  @override
+  String get settings_regionFetchNoRepeaters =>
+      '알려진 리피터가 아직 없습니다. 리피터를 연락처로 추가하거나 어드버트를 기다린 후 다시 시도하세요.';
+
+  @override
+  String get settings_regionFetchNoneResponded =>
+      '응답한 주변 리피터가 없습니다. 리피터에 더 가까이 이동한 후 다시 시도하세요.';
+
+  @override
+  String appSettings_sourceSummary(Object description, Object label) {
+    return '$label - $description';
+  }
+
+  @override
+  String get appSettings_routingSection => '라우팅';
+
+  @override
+  String get appSettings_imageMessagesSection => '이미지 메시지';
+
+  @override
+  String get appSettings_showApiKey => 'API 키 표시';
+
+  @override
+  String get appSettings_hideApiKey => 'API 키 숨기기';
+
+  @override
+  String get translation_defaultModelName => '모델';
+
+  @override
+  String translation_downloadProgressBytes(Object current, Object fileName) {
+    return '$fileName: $current MB';
+  }
+
+  @override
+  String translation_downloadProgressTotal(
+    Object current,
+    Object fileName,
+    Object percent,
+    Object total,
+  ) {
+    return '$fileName: $current / $total MB ($percent%)';
+  }
+
+  @override
+  String translation_downloadedModelDetails(Object size, Object source) {
+    return '$size MB • $source';
+  }
+
+  @override
+  String get repeater_radioDisconnected => '무전기 연결 끊김';
+
+  @override
+  String get repeater_radioDisconnectedHint =>
+      '명령을 보내거나 새로고침 또는 변경 사항을 저장하려면 무전기에 다시 연결하세요.';
+
+  @override
+  String get repeater_cliSend => '명령 보내기';
+
+  @override
+  String get repeater_cliCopyTranscript => '기록 복사';
+
+  @override
+  String get repeater_cliShareTranscript => '기록 공유';
+
+  @override
+  String get repeater_cliTranscriptCopied => '기록을 복사했습니다';
+
+  @override
+  String get repeater_cliClearHistoryConfirm => '명령 기록을 지울까요? 되돌릴 수 없습니다.';
+
+  @override
+  String get repeater_cliSearchCommands => '명령 검색';
+
+  @override
+  String get repeater_cliNoMatchingCommands => '일치하는 명령이 없습니다';
+
+  @override
+  String get debugLog_clearConfirm => '모든 로그 항목을 지울까요? 되돌릴 수 없습니다.';
+
+  @override
+  String get repeater_unsavedChangesTitle => '저장하지 않은 변경 사항';
+
+  @override
+  String get repeater_unsavedChangesMessage => '리피터에 저장되지 않은 변경 사항이 있습니다.';
+
+  @override
+  String get repeater_discardChanges => '취소';
+
+  @override
+  String repeater_actionSentNoReply(Object action) {
+    return '$action: 명령을 보냈습니다. 리피터는 이 명령에 응답하지 않습니다.';
+  }
+
+  @override
+  String repeater_invalidSettingValue(Object setting, Object value) {
+    return '$setting: $value은(는) 올바르지 않습니다';
+  }
+
+  @override
+  String repeater_txPowerOutOfRange(Object max, Object min, Object value) {
+    return 'TX 출력 $value이(가) 범위를 벗어났습니다($min~$max dBm)';
+  }
+
+  @override
+  String repeater_prvKeyLengthError(Object length) {
+    return '개인 키는 정확히 16진수 $length자여야 합니다';
+  }
+
+  @override
+  String get contacts_advertFailed => '어드버트를 보낼 수 없습니다';
+
+  @override
+  String get contacts_manageGroups => '그룹 관리';
+
+  @override
+  String community_shortId(Object id) {
+    return 'ID: $id…';
+  }
+
+  @override
+  String get tcpSectionTitle => 'TCP / IP';
+
+  @override
+  String get tcpConnectedToHeader => '연결 대상';
+
+  @override
+  String get usbChooseSerialPort => '시리얼 포트 선택';
+
+  @override
+  String neighbors_durationSeconds(Object seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String neighbors_durationMinutes(Object minutes, Object seconds) {
+    return '$minutes분 $seconds초';
+  }
+
+  @override
+  String neighbors_durationHours(Object hours, Object minutes) {
+    return '$hours시간 $minutes분';
+  }
 }

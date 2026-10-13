@@ -396,74 +396,85 @@ class PathAnimationControls extends StatelessWidget {
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 12, 2),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              controlButton(
-                icon: Icons.animation,
-                tooltip: animationEnabled
-                    ? l10n.pathMap_animationOff
-                    : l10n.pathMap_animationOn,
-                color: animationEnabled
-                    ? MeshPalette.blue
-                    : MeshPalette.ink4On(brightness),
-                onPressed: onToggleAnimation,
+              // A Wrap, not a Row: at 288 px (a 320 px screen, or a wider
+              // one under the DPI setting) the seven controls do not fit
+              // one line, and a Row overflowed instead of wrapping.
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  controlButton(
+                    icon: Icons.animation,
+                    tooltip: animationEnabled
+                        ? l10n.pathMap_animationOff
+                        : l10n.pathMap_animationOn,
+                    color: animationEnabled
+                        ? MeshPalette.blue
+                        : MeshPalette.ink4On(brightness),
+                    onPressed: onToggleAnimation,
+                  ),
+                  controlButton(
+                    icon: Icons.skip_previous,
+                    tooltip: l10n.pathMap_stepBack,
+                    onPressed: enabled && playback.started
+                        ? playback.stepBack
+                        : null,
+                  ),
+                  controlButton(
+                    icon: playback.playing ? Icons.pause : Icons.play_arrow,
+                    tooltip: playback.playing
+                        ? l10n.pathMap_pause
+                        : l10n.pathMap_play,
+                    onPressed: enabled ? playback.togglePlay : null,
+                  ),
+                  controlButton(
+                    icon: Icons.skip_next,
+                    tooltip: l10n.pathMap_stepForward,
+                    onPressed: enabled ? playback.stepForward : null,
+                  ),
+                  controlButton(
+                    icon: Icons.replay,
+                    tooltip: l10n.pathMap_replay,
+                    onPressed: enabled ? playback.replay : null,
+                  ),
+                  controlButton(
+                    icon: followEnabled ? Icons.lock : Icons.lock_open,
+                    tooltip: followEnabled
+                        ? l10n.pathMap_unfollowPacket
+                        : l10n.pathMap_followPacket,
+                    color: followEnabled ? MeshPalette.blue : null,
+                    onPressed: enabled ? onToggleFollow : null,
+                  ),
+                  TextButton(
+                    onPressed: enabled ? playback.cycleSpeed : null,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      minimumSize: const Size(36, 30),
+                    ),
+                    child: Text(
+                      playback.speed == 0.5 ? '0.5×' : '${playback.speed.toInt()}×',
+                      style: MeshTheme.mono(fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
-              controlButton(
-                icon: Icons.skip_previous,
-                tooltip: l10n.pathMap_stepBack,
-                onPressed: enabled && playback.started
-                    ? playback.stepBack
-                    : null,
-              ),
-              controlButton(
-                icon: playback.playing ? Icons.pause : Icons.play_arrow,
-                tooltip: playback.playing
-                    ? l10n.pathMap_pause
-                    : l10n.pathMap_play,
-                onPressed: enabled ? playback.togglePlay : null,
-              ),
-              controlButton(
-                icon: Icons.skip_next,
-                tooltip: l10n.pathMap_stepForward,
-                onPressed: enabled ? playback.stepForward : null,
-              ),
-              controlButton(
-                icon: Icons.replay,
-                tooltip: l10n.pathMap_replay,
-                onPressed: enabled ? playback.replay : null,
-              ),
-              controlButton(
-                icon: followEnabled ? Icons.lock : Icons.lock_open,
-                tooltip: followEnabled
-                    ? l10n.pathMap_unfollowPacket
-                    : l10n.pathMap_followPacket,
-                color: followEnabled ? MeshPalette.blue : null,
-                onPressed: enabled ? onToggleFollow : null,
-              ),
-              TextButton(
-                onPressed: enabled ? playback.cycleSpeed : null,
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  minimumSize: const Size(36, 30),
-                ),
-                child: Text(
-                  playback.speed == 0.5 ? '0.5×' : '${playback.speed.toInt()}×',
-                  style: MeshTheme.mono(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  hopLabel ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: MeshTheme.mono(
-                    fontSize: 10.5,
-                    color: MeshPalette.ink2On(brightness),
+              if (hopLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    hopLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: MeshTheme.mono(
+                      fontSize: 10.5,
+                      color: MeshPalette.ink2On(brightness),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         );
@@ -492,7 +503,9 @@ class PathMiniLegend extends StatelessWidget {
       children: [
         swatch,
         const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 11, color: ink3)),
+        Flexible(
+          child: Text(text, style: TextStyle(fontSize: 11, color: ink3)),
+        ),
       ],
     );
     Widget dashSample() => Row(

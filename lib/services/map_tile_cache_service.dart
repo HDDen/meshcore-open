@@ -336,6 +336,8 @@ class MapTileCacheResult {
 
 class MapBulkDownloadNotAllowed implements Exception {
   const MapBulkDownloadNotAllowed();
+}
+
 /// Cooperative cancellation flag for [MapTileCacheService.downloadRegion].
 /// Tiles already in flight finish; no new tiles are queued after [cancel].
 class MapTileDownloadCancelToken {
