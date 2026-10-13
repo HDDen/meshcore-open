@@ -7033,15 +7033,29 @@ class _MapScreenState extends State<MapScreen>
   /// marker text back as a "remove for everyone" command without overflowing.
   int _maxMarkerLabelBytes(LatLng position, String flags) {
     final connector = context.read<MeshCoreConnector>();
-    var limit = maxChannelMessageBytes(connector.selfName);
+    // The channel is picked after the label, so the budget is the tightest
+    // of the channels it may go to: each sends under a name of its own.
+    final channels = connector.channels.where((c) => !c.isEmpty).toList();
+    var limit = channels.isEmpty
+        ? maxChannelMessageBytes(connector.selfName)
+        : channels
+              .map((c) => connector.maxChannelTextBytes(c.index))
+              .reduce(min);
     final outgoingLimit = context
         .read<AppSettingsService>()
         .settings
         .channelMaxbytesOutgoing;
     if (outgoingLimit > 0) {
-      final capped =
-          outgoingLimit - channelSenderPrefixBytes(connector.selfName);
-      limit = min(limit, max(0, capped));
+      final prefixBytes = channels.isEmpty
+          ? channelSenderPrefixBytes(connector.selfName)
+          : channels
+                .map(
+                  (c) => channelSenderPrefixBytes(
+                    connector.channelSendName(c.index),
+                  ),
+                )
+                .reduce(max);
+      limit = min(limit, max(0, outgoingLimit - prefixBytes));
     }
     final scaffold = utf8.encode(_formatMarkerMessage(position, '', flags));
     final reserved = scaffold.length + SharedMarkerDeletion.prefix.length;

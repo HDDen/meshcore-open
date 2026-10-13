@@ -191,7 +191,7 @@ The stores in `lib/storage/` **scope their data by the first 10 hex chars of the
 |---|---|
 | `message_store`, `channel_message_store` | Direct + channel messages (SQLite-backed, see below) |
 | `contact_store`, `contact_discovery_store` | Known contacts, one `node_contacts` row each; discovered contacts, app-wide, in `discovered_contacts` (see below) |
-| `channel_store`, `channel_order_store`, `channel_settings_store`, `channel_group_store` | Channels (`node_channels` rows), display order and channel groups (`node_state` rows), per-channel compression/sign toggles (preferences) |
+| `channel_store`, `channel_order_store`, `channel_settings_store`, `channel_group_store` | Channels (`node_channels` rows), display order and channel groups (`node_state` rows), per-channel compression/sign toggles and sender name (preferences) |
 | `channel_region_store`, `region_store` | Per-channel region tag + known regions / flood scopes (Advanced mod) |
 | `contact_region_store` | Per-contact flood region, a `contact_settings` row in the message-history database rather than a preference (Advanced mod) |
 | `community_store` | Communities (32-byte shared secrets), a `node_state` row |
@@ -657,6 +657,83 @@ path byte `0xFF`, exactly the shape the rule dropped. When merging from the
 upstream `meshcore_open` branch, expect `_shouldDropSelfChannelMessage` and its
 call sites to come back in the conflict and drop them again; the removal is
 deliberate, not an oversight.
+
+### Channel sender name
+
+A channel can send under a name of its own instead of the node's: the
+*Sender* line of the channel header (`widgets/channel_sender_name_line.dart`,
+the dialog in `channel_sender_name_dialog.dart`, since 2026-10-14), tappable
+on its own text while the rest of the header keeps opening the region dialog,
+*default* for the node's name. The setting lives in `channel_settings_store`
+(`channel_sender_name_`, `loadSenderName` / `saveSenderName`), keyed by name
+and inherited from the owner's other nodes like every channel setting, with
+one twist: a cleared name is stored as the empty string, never removed,
+because a missing value reads through to the other nodes and a name cleared
+here has to shadow theirs. The connector mirrors it in `_channelSenderNames`;
+`channelSenderName` is the stored alias, `channelSenderNameInEffect` the one
+a send takes, `channelSendName` what a message goes out under, and outgoing
+messages store that name in `senderName`, which is what the self-echo rule of
+`_isChannelRepeat`, reactions to our message, replies naming us, the
+heard-packet record and the "own node" quote styling read; `_channelMessageMentionsSelf`
+and `isChannelSenderNameOurs` match the alias beside the node name.
+
+Three locks, in `helpers/channel_sender_name.dart` (`resolveChannelSenderNameLock`),
+each shown as a snackbar when the line is tapped. **Signed MCMP** (MCMP on,
+v3, sign): receivers verify the signature against the contact bearing the
+sender name, so switching signing on drops the alias for good
+(`_dropChannelSenderNameForSigning`, from the three MCMP setters; the edit
+sheet warns under the sign dropdown), and the owner's decision is that the
+alias and a signature never coexist. **Firmware**: a plain packet under the
+alias needs `CMD_SEND_RAW_PACKET`, guaranteed from version code 13
+(`supportsRawPacketSend`; it arrived at 12, on 2026-05-13, so 12 is not
+trusted). **A private `$` region** as the channel's effective scope: its key
+is on the repeater, so the app cannot compute the transport code. In this app
+a channel cannot be given such a region (the region screen allows
+`[a-z0-9-]`, fetched lists and links drop `$` names); only the node's default
+scope, set outside the app, can be one. Nothing falls back at send time: a
+stored alias under a lock is simply not in effect and the line says *default*.
+
+**The wire.** The node's command carries only the text and the companion
+puts `_prefs.node_name` in front of it (`BaseChatMesh::sendGroupMessage`),
+so under an alias the app builds the GRP_TXT packet itself
+(`helpers/channel_raw_packet.dart`, `ChannelRawPacket`; the connector's
+`_channelTextFrame` decides between the two at the five text sends: the
+message, its resends, the ack-and-retry bypass, the deferred send and
+reactions) and sends it through `CMD_SEND_RAW_PACKET`, exactly as the
+firmware would have built it: the flood header, the transport code of the
+region, the node's default scope included, computed in the app
+(`regionTransportCode`, now the one implementation behind
+`_computeRegionTransportCode`), the path byte with the node's hash width, the
+channel hash byte and the MAC and ciphertext of `timestamp + type +
+"Name: text"` (`ChannelEchoRecovery.groupTextPlaintext` /
+`encryptedPayloadFor`). The binary envelopes (MCMP v3 unsigned, MCOtxt,
+MCOimg) carry the name in the body the app writes, so there the alias is
+only substituted. `_handleOk` and `_handleErrorFrame` take the OK or ERR of
+a raw packet with a queue id as a channel send's. Three things the firmware
+does for its own packets the app does here: the echo registry is fed with
+the plaintext directly (`_sendFrameDirect` reads only the node's command),
+the heard-packet record keys on the message's own name, and the dedupe mark
+is missing altogether: `Mesh::sendFlood` marks, the `CMD_SEND_RAW_PACKET`
+handler calls `sendPacket` straight, so the first relayed copy comes back
+from the node as an incoming message under the alias (and on a node with a
+display shows there as one) and is folded into our own message as any copy
+of it is. The raw frame has its own header to fit into the 176-byte
+companion frame, so it carries 160 bytes of plaintext where the node's
+command carries 165: `maxChannelTextBytes` takes five bytes off the channel's
+text budget while an alias is in effect (`ChannelRawPacket.maxGroupTextBytes`,
+155 bytes of `"Name: text"`), and the composer limiter, the send-path length
+guards, the plain-when-smaller costing, the notification reply split and the
+map's marker label budget (the tightest over the channels a pin may go to)
+read it. The node's own transforms of plain text (the South Edition's cyr2lat
+and MCOtxt re-encoding) never see a raw packet
+(`test/helpers/channel_raw_packet_test.dart`, `channel_sender_name_test.dart`,
+`test/widgets/channel_sender_name_line_test.dart`,
+`channel_sender_name_dialog_test.dart`,
+`test/storage/channel_settings_inheritance_test.dart`).
+
+The *(radio default)* suffix of the region line went from the channel header
+and the channels list the same day: the line reads *Region: name* whether the
+region is the channel's own or the node's default scope.
 
 ### Blocked senders
 

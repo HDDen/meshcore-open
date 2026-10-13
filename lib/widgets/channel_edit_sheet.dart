@@ -161,6 +161,18 @@ void showChannelEditSheet(
                           }),
                         ),
                       ),
+                    // Signing verifies by the node's own name, so saving
+                    // with it on resets the channel's sender name.
+                    if (selectedMcmpVersion == 3 &&
+                        mcmpUseSign &&
+                        connector.channelSenderName(channel.index) != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          sheetContext.l10n.channels_senderNameResetBySign,
+                          style: Theme.of(sheetContext).textTheme.bodySmall,
+                        ),
+                      ),
                   ],
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,

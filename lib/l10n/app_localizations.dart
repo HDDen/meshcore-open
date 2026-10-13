@@ -13948,6 +13948,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not spread over the mesh in {count, plural, one{{count} attempt} other{{count} attempts}}.'**
   String settings_modSettingsNoRetraInfoResends(int count);
+
+  /// No description provided for @channels_senderNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender'**
+  String get channels_senderNameLabel;
+
+  /// No description provided for @channels_senderNameDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'default'**
+  String get channels_senderNameDefault;
+
+  /// No description provided for @channels_senderNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name'**
+  String get channels_senderNameTitle;
+
+  /// No description provided for @channels_senderNameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change the name for this channel.'**
+  String get channels_senderNameBody;
+
+  /// No description provided for @channels_senderNameBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max} bytes'**
+  String channels_senderNameBytes(int count, int max);
+
+  /// No description provided for @channels_senderNameLockedBySign.
+  ///
+  /// In en, this message translates to:
+  /// **'A channel with signed MCMP sends under the node\'s name.'**
+  String get channels_senderNameLockedBySign;
+
+  /// No description provided for @channels_senderNameNeedsFirmware.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs firmware with version code 13 or newer.'**
+  String get channels_senderNameNeedsFirmware;
+
+  /// No description provided for @channels_senderNamePrivateRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'The region\'s key is on the repeater, so the name cannot be changed.'**
+  String get channels_senderNamePrivateRegion;
+
+  /// No description provided for @channels_senderNameResetBySign.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender name set for this channel will be reset.'**
+  String get channels_senderNameResetBySign;
 }
 
 class _AppLocalizationsDelegate

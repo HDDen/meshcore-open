@@ -127,4 +127,24 @@ void main() {
     expect(await a.loadWidgetColor(1), isNull);
     expect(await regions.loadRegion(1), '');
   });
+
+  test('a sender name is inherited until the node clears it', () async {
+    final a = ChannelSettingsStore()..setPublicKeyHex = _nodeA;
+    a.replaceChannels([_channel(1, 'Горы')]);
+    await a.saveSenderName(1, 'База');
+
+    final b = ChannelSettingsStore()..setPublicKeyHex = _nodeB;
+    b.replaceChannels([_channel(5, 'Горы')]);
+    expect(await b.loadSenderName(5), 'База');
+
+    // The empty string is a value of its own: the node's name, set here,
+    // which the read does not fall through.
+    await b.saveSenderName(5, '');
+    expect(await b.loadSenderName(5), '');
+    expect(await a.loadSenderName(1), 'База');
+
+    final c = ChannelSettingsStore()..setPublicKeyHex = _nodeB;
+    c.replaceChannels([_channel(7, 'Море')]);
+    expect(await c.loadSenderName(7), isNull);
+  });
 }

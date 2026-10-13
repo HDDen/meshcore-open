@@ -8318,4 +8318,38 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return 'Не распространилось по сети за $_temp0.';
   }
+
+  @override
+  String get channels_senderNameLabel => 'Отправитель';
+
+  @override
+  String get channels_senderNameDefault => 'по умолчанию';
+
+  @override
+  String get channels_senderNameTitle => 'Имя отправителя';
+
+  @override
+  String get channels_senderNameBody =>
+      'Вы можете сменить имя для этого канала.';
+
+  @override
+  String channels_senderNameBytes(int count, int max) {
+    return '$count / $max байт';
+  }
+
+  @override
+  String get channels_senderNameLockedBySign =>
+      'Канал с подписью MCMP отправляет под именем ноды.';
+
+  @override
+  String get channels_senderNameNeedsFirmware =>
+      'Нужна прошивка с кодом версии 13 или новее.';
+
+  @override
+  String get channels_senderNamePrivateRegion =>
+      'Ключ региона хранится на репитере, имя переопределить нельзя.';
+
+  @override
+  String get channels_senderNameResetBySign =>
+      'Имя отправителя, заданное для канала, будет сброшено.';
 }

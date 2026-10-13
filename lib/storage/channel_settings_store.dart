@@ -17,6 +17,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   static const String _widgetColorKeyPrefix = 'channel_widget_color_';
   static const String _widgetTextColorKeyPrefix = 'channel_widget_text_color_';
   static const String _urlImagesKeyPrefix = 'channel_url_images_';
+  static const String _senderNameKeyPrefix = 'channel_sender_name_';
 
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
@@ -35,6 +36,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
   String get keyForWidgetColor => '$_widgetColorKeyPrefix$publicKeyHex';
   String get keyForWidgetTextColor => '$_widgetTextColorKeyPrefix$publicKeyHex';
   String get keyForUrlImages => '$_urlImagesKeyPrefix$publicKeyHex';
+  String get keyForSenderName => '$_senderNameKeyPrefix$publicKeyHex';
 
   Future<T?> _loadValue<T>({
     required String nameKeyPrefix,
@@ -187,6 +189,25 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         channelIndex: channelIndex,
         value: useSign,
         write: PrefsManager.instance.setBool,
+      );
+
+  /// The name the channel sends under instead of the node's: null when never
+  /// set, which reads through to the owner's other nodes like every setting
+  /// here; the empty string for the node's own name set on this node, which
+  /// shadows theirs (see channel_sender_name.dart).
+  Future<String?> loadSenderName(int channelIndex) => _loadValue<String>(
+    nameKeyPrefix: keyForSenderName,
+    channelIndex: channelIndex,
+    read: PrefsManager.instance.getString,
+    write: PrefsManager.instance.setString,
+  );
+
+  Future<void> saveSenderName(int channelIndex, String name) =>
+      _saveValue<String>(
+        nameKeyPrefix: keyForSenderName,
+        channelIndex: channelIndex,
+        value: name,
+        write: PrefsManager.instance.setString,
       );
 
   Future<bool> loadMCOtxtEnabled(int channelIndex) async =>
@@ -354,6 +375,7 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
       keyForWidgetColor,
       keyForWidgetTextColor,
       keyForUrlImages,
+      keyForSenderName,
     ];
     final prefs = PrefsManager.instance;
     for (final prefix in prefixes) {
@@ -392,5 +414,6 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
     keyForWidgetColor,
     keyForWidgetTextColor,
     keyForUrlImages,
+    keyForSenderName,
   ];
 }

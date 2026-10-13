@@ -30,6 +30,8 @@ import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
+import '../helpers/channel_raw_packet.dart';
+import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../helpers/heard_channel_packets.dart';
@@ -648,6 +650,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, bool> _channelMcmpEnabled = {};
   final Map<int, int> _channelMcmpVersion = {};
   final Map<int, bool> _channelMcmpUseSign = {};
+  /// The name each channel sends under instead of the node's, as stored:
+  /// absent when never set, '' for the node's own set here (see
+  /// channelSenderNameFromSetting).
+  final Map<int, String> _channelSenderNames = {};
   final Map<int, bool> _channelMCOtxtEnabled = {};
   final Map<int, bool> _channelMCOtxtPlainWhenSmaller = {};
   final Map<int, bool> _channelSmazEnabled = {};
@@ -2690,6 +2696,71 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _channelMcmpUseSign[channelIndex] ?? false;
   }
 
+  /// Whether the channel signs its MCMP v3 bodies, which receivers verify
+  /// against the node's own name: the one setting a sender name of the
+  /// channel's own cannot coexist with (see channel_sender_name.dart).
+  bool channelSendsSignedMcmp(int channelIndex) =>
+      isChannelMcmpEnabled(channelIndex) &&
+      channelMcmpVersion(channelIndex) == 3 &&
+      channelMcmpUseSign(channelIndex);
+
+  /// Whether the node sends a packet the app built (CMD_SEND_RAW_PACKET):
+  /// stock firmware has the command from version code 13. It arrived at 12,
+  /// on 2026-05-13, so a 12 may or may not have it.
+  bool get supportsRawPacketSend => (_firmwareVerCode ?? 0) >= 13;
+
+  /// The name the channel is set to send under instead of the node's, as
+  /// stored, whatever holds it back: null when none.
+  String? channelSenderName(int channelIndex) =>
+      channelSenderNameFromSetting(_channelSenderNames[channelIndex]);
+
+  /// Why the channel cannot send under a name of its own, or none.
+  ChannelSenderNameLock channelSenderNameLock(int channelIndex) =>
+      resolveChannelSenderNameLock(
+        signsMcmp: channelSendsSignedMcmp(channelIndex),
+        firmwareSendsRawPackets: supportsRawPacketSend,
+        scope: _outgoingChannelRegion(channelIndex),
+      );
+
+  /// The channel's own sender name while it is in effect, else null: the
+  /// node's name is what the channel sends under then.
+  String? channelSenderNameInEffect(int channelIndex) =>
+      channelSenderNameLock(channelIndex) == ChannelSenderNameLock.none
+      ? channelSenderName(channelIndex)
+      : null;
+
+  /// The name a message to the channel goes out under.
+  String channelSendName(int channelIndex) =>
+      channelSenderNameInEffect(channelIndex) ?? _selfName ?? 'Me';
+
+  /// The bytes of text a message to the channel may carry under the name it
+  /// goes out with. A packet built by the app (see [ChannelRawPacket]) has
+  /// to fit the companion frame with its own header: 160 bytes of plaintext
+  /// where the node's command takes 165, so the channel's own name costs
+  /// five bytes of text on top of its length.
+  int maxChannelTextBytes(int channelIndex) {
+    final name = channelSendName(channelIndex);
+    final limit = maxChannelMessageBytes(name);
+    if (channelSenderNameInEffect(channelIndex) == null) return limit;
+    return math.max(
+      0,
+      math.min(
+        limit,
+        ChannelRawPacket.maxGroupTextBytes - channelSenderPrefixBytes(name),
+      ),
+    );
+  }
+
+  /// Whether [name] names this node in the channel: the node's own name, or
+  /// the sender name the channel keeps, which earlier messages may carry
+  /// whether or not it is in effect now.
+  bool isChannelSenderNameOurs(int channelIndex, String? name) {
+    final trimmed = name?.trim();
+    if (trimmed == null || trimmed.isEmpty) return false;
+    return trimmed == _selfName?.trim() ||
+        trimmed == channelSenderName(channelIndex);
+  }
+
   bool isChannelUrlImagesEnabled(int channelIndex) {
     return _channelUrlImagesEnabled[channelIndex] ?? false;
   }
@@ -3210,6 +3281,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await _channelSettingsStore.saveCyr2LatEnabled(channelIndex, false);
     }
     await _channelSettingsStore.saveMcmpEnabled(channelIndex, enabled);
+    await _dropChannelSenderNameForSigning(channelIndex);
     notifyListeners();
   }
 
@@ -3218,6 +3290,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_channelMcmpVersion[channelIndex] == normalized) return;
     _channelMcmpVersion[channelIndex] = normalized;
     await _channelSettingsStore.saveMcmpVersion(channelIndex, normalized);
+    await _dropChannelSenderNameForSigning(channelIndex);
     notifyListeners();
   }
 
@@ -3225,7 +3298,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_channelMcmpUseSign[channelIndex] == useSign) return;
     _channelMcmpUseSign[channelIndex] = useSign;
     await _channelSettingsStore.saveMcmpUseSign(channelIndex, useSign);
+    await _dropChannelSenderNameForSigning(channelIndex);
     notifyListeners();
+  }
+
+  /// Sets the name the channel sends under, the node's own for an empty
+  /// [name]. The empty string is stored rather than the key removed: the
+  /// setting is read from the owner's other nodes like every channel
+  /// setting, and a name cleared here has to shadow theirs, not uncover it.
+  Future<void> setChannelSenderName(int channelIndex, String? name) async {
+    final value = name?.trim() ?? '';
+    if (_channelSenderNames[channelIndex] == value) return;
+    _channelSenderNames[channelIndex] = value;
+    await _channelSettingsStore.saveSenderName(channelIndex, value);
+    notifyListeners();
+  }
+
+  /// A signed MCMP v3 body verifies by the node's own name, so switching
+  /// signing on takes the channel's sender name away for good rather than
+  /// holding it back: held back, it would return with the next change of
+  /// the setting, and nobody would know under which name they had written.
+  Future<void> _dropChannelSenderNameForSigning(int channelIndex) async {
+    if (!channelSendsSignedMcmp(channelIndex)) return;
+    if (channelSenderName(channelIndex) == null) return;
+    _channelSenderNames[channelIndex] = '';
+    await _channelSettingsStore.saveSenderName(channelIndex, '');
   }
 
   /// Handles a reply or mark-as-read action from a message notification
@@ -3298,7 +3395,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         return utf8
                 .encode(prepareChannelOutboundText(channel.index, part))
                 .length <=
-            maxChannelMessageBytes(selfName);
+            maxChannelTextBytes(channel.index);
       }
       return utf8.encode(prepareContactOutboundText(contact!, part)).length <=
           maxContactMessageBytes();
@@ -4178,6 +4275,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelMcmpEnabled.clear();
     _channelMcmpVersion.clear();
     _channelMcmpUseSign.clear();
+    _channelSenderNames.clear();
     _channelMCOtxtEnabled.clear();
     _channelMCOtxtPlainWhenSmaller.clear();
     _channelSmazEnabled.clear();
@@ -4219,6 +4317,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final mcmpUseSign = await channelSettingsStore.loadMcmpUseSign(
       channelIndex,
     );
+    final senderName = await channelSettingsStore.loadSenderName(
+      channelIndex,
+    );
     final mcotxtEnabled = await channelSettingsStore.loadMCOtxtEnabled(
       channelIndex,
     );
@@ -4252,6 +4353,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelMcmpEnabled[channelIndex] = mcmpEnabled;
     _channelMcmpVersion[channelIndex] = mcmpVersion == 3 ? 3 : 2;
     _channelMcmpUseSign[channelIndex] = mcmpUseSign;
+    if (senderName == null) {
+      _channelSenderNames.remove(channelIndex);
+    } else {
+      _channelSenderNames[channelIndex] = senderName;
+    }
     _channelMCOtxtEnabled[channelIndex] = mcotxtEnabled;
     _channelMCOtxtPlainWhenSmaller[channelIndex] = mcotxtPlainWhenSmaller;
     _channelSmazEnabled[channelIndex] = smazEnabled;
@@ -8163,6 +8269,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(channel.name);
     final shouldDeferForSync =
         !shouldBypassAckAndRetry && _shouldDeferChannelSendForSync;
+    // The name the message goes out under: the channel's own when it has
+    // one and nothing holds it back, else the node's.
+    final senderName = channelSendName(channel.index);
     final hasExplicitMcoImageV3 =
         preparedMcoImageV3Outbound?.kind == ChannelBinaryDataKind.mcoImageV3 ||
         (mcoImageV3 != null && ChannelBinaryDataHelper.canSend);
@@ -8214,7 +8323,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           await _runScopedChannelSend(() async {
             await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
             await _sendFrameAndWaitForCommandAck(
-              buildSendChannelTextMsgFrame(channel.index, text),
+              _channelTextFrame(
+                channel,
+                text,
+                senderName: senderName,
+                region: _outgoingChannelRegion(channel.index),
+              ),
               channelSendQueueId: reactionQueueId,
             );
           }, region: _channelSendScope(channel.index));
@@ -8293,7 +8407,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (pendingMessageId == null) {
         signingPlaceholder = ChannelMessage.outgoing(
           containerText,
-          _selfName ?? 'Me',
+          senderName,
           channel.index,
           originalText: originalText,
           translatedLanguageCode: translatedLanguageCode,
@@ -8311,7 +8425,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       mcmpSignature = await _signMcmpCanonical(
         context: McmpSigningContext.channel,
         binding: McmpAppCodec.channelSigningBinding(channel.psk),
-        senderName: _selfName ?? 'Me',
+        senderName: senderName,
         timestamp: mcmpV3Timestamp!,
         hasSenderNameInBody: false,
         text: containerText,
@@ -8346,11 +8460,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (hasExplicitMcoImageV3
             ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
                 image: mcoImageV3!,
-                senderName: _selfName ?? 'Me',
+                senderName: senderName,
               )
             : ChannelBinaryDataHelper.tryEncodeOutbound(
                 text: containerText,
-                senderName: _selfName ?? 'Me',
+                senderName: senderName,
                 mcmpEnabled: isChannelMcmpEnabled(channel.index),
                 mcotxtEnabled: mcotxtApplies,
                 mcmpVersion: channelMcmpVersion(channel.index),
@@ -8390,7 +8504,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // A plain pin beats one the length guard below refuses to send; a plain
       // message has no such alternative and keeps failing loudly.
       if (isMarkerPayload &&
-          utf8.encode(wrapped).length > maxChannelMessageBytes(_selfName)) {
+          utf8.encode(wrapped).length >
+              maxChannelTextBytes(channel.index)) {
         mcmpV3Sent = false;
         outboundText = text;
       } else {
@@ -8429,7 +8544,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             binaryPayloadBytes: isBinaryCompressedTextTransport
                 ? binaryOutbound?.payload.length
                 : null,
-            senderName: _selfName ?? 'Me',
+            senderName: senderName,
           );
     final packetHash = binaryOutbound == null
         ? null
@@ -8453,7 +8568,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     final baseMessage = ChannelMessage.outgoing(
       messageText,
-      _selfName ?? 'Me',
+      senderName,
       channel.index,
       rawText: isBinaryTransport ? null : outboundText,
       messageId: pendingMessageId,
@@ -8507,7 +8622,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       awaitPersistence: false,
     );
     if (!isBinaryTransport &&
-        utf8.encode(outboundText).length > maxChannelMessageBytes(_selfName)) {
+        utf8.encode(outboundText).length >
+            maxChannelTextBytes(channel.index)) {
       // Belt-and-suspenders: the composer counter should prevent this, but a
       // signed container may exceed the frame/payload budget for long texts.
       appLogger.warn(
@@ -8522,6 +8638,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         channel,
         message.messageId,
         messageText,
+        senderName: senderName,
         binaryOutbound: binaryOutbound,
         preparedOutboundText: isMcoImageBinary ? null : outboundText,
         uncompressedText: uncompressedText,
@@ -8553,16 +8670,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                 ? _computeContentHash(
                     channel.index,
                     sentTimestampSeconds,
-                    '${_selfName ?? 'Me'}: $messageText',
+                    '$senderName: $messageText',
                   )
                 : null,
           );
           _markPendingChannelMessageSentById(message.messageId);
           await sendFrame(
             binaryFrame ??
-                buildSendChannelTextMsgFrame(
-                  channel.index,
+                _channelTextFrame(
+                  channel,
                   outboundText,
+                  senderName: senderName,
+                  region: outgoingRegion,
                   timestampSeconds: sentTimestampSeconds,
                 ),
           );
@@ -8577,6 +8696,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           channel: channel,
           messageId: message.messageId,
           text: messageText,
+          senderName: senderName,
           binaryOutbound: binaryOutbound,
           preparedOutboundText: isMcoImageBinary ? null : outboundText,
           uncompressedText: uncompressedText,
@@ -8630,7 +8750,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   ? _computeContentHash(
                       channel.index,
                       seconds,
-                      '${_selfName ?? 'Me'}: $messageText',
+                      '$senderName: $messageText',
                     )
                   : null,
             );
@@ -8647,10 +8767,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           // stored message.timestamp to the exact value that went on the air,
           // so replies to our own message resolve by exact-timestamp matching.
           await _sendFrameAndWaitForCommandAck(
-            buildSendChannelTextMsgFrame(
-              channel.index,
+            _channelTextFrame(
+              channel,
               outboundText,
+              senderName: senderName,
+              region: outgoingRegion,
               timestampSeconds: sentTimestampSeconds,
+              registerEcho: !isResend,
             ),
             channelSendQueueId: isResend ? null : message.messageId,
           );
@@ -8838,6 +8961,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Channel channel,
     String messageId,
     String text, {
+    required String senderName,
     ChannelBinaryDataOutbound? binaryOutbound,
     String? preparedOutboundText,
     String? uncompressedText,
@@ -8854,6 +8978,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         channel: channel,
         messageId: messageId,
         text: text,
+        senderName: senderName,
         binaryOutbound: binaryOutbound,
         preparedOutboundText: preparedOutboundText,
         uncompressedText: uncompressedText,
@@ -8967,7 +9092,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               ? _computeContentHash(
                   pending.channel.index,
                   sentTimestampSeconds,
-                  '${_selfName ?? 'Me'}: ${pending.text}',
+                  '${pending.senderName}: ${pending.text}',
                 )
               : null,
         );
@@ -8975,9 +9100,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _markPendingChannelMessageSentById(pending.messageId);
           await sendFrame(
             binaryFrame ??
-                buildSendChannelTextMsgFrame(
-                  pending.channel.index,
+                _channelTextFrame(
+                  pending.channel,
                   outboundText,
+                  senderName: pending.senderName,
+                  region: outgoingRegion,
                   timestampSeconds: sentTimestampSeconds,
                 ),
           );
@@ -8991,9 +9118,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           return;
         }
         await _sendFrameAndWaitForCommandAck(
-          buildSendChannelTextMsgFrame(
-            pending.channel.index,
+          _channelTextFrame(
+            pending.channel,
             outboundText,
+            senderName: pending.senderName,
+            region: outgoingRegion,
             timestampSeconds: sentTimestampSeconds,
           ),
           channelSendQueueId: pending.messageId,
@@ -9561,6 +9690,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ? prepareChannelOutboundText(channel.index, rawText)
         : rawText;
     if (text.isEmpty || delaySeconds < 0 || isOfflineMode) return;
+    final senderName = channelSendName(channel.index);
     // The preview follows the "plain when smaller" choice the commit will
     // make; the queued text stays as typed and the commit recomputes it.
     final mcmpV3Applies =
@@ -9592,11 +9722,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final binaryOutbound = mcoImageV3 != null
         ? ChannelBinaryDataHelper.tryEncodeMcoImageV3Outbound(
             image: mcoImageV3,
-            senderName: _selfName ?? 'Me',
+            senderName: senderName,
           )
         : ChannelBinaryDataHelper.tryEncodeOutbound(
             text: containerText,
-            senderName: _selfName ?? 'Me',
+            senderName: senderName,
             mcmpEnabled: isChannelMcmpEnabled(channel.index),
             mcotxtEnabled: mcotxtApplies,
             mcmpVersion: channelMcmpVersion(channel.index),
@@ -9634,7 +9764,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       binaryPayloadBytes: usesBinaryCompressedText
           ? binaryOutbound?.payload.length
           : null,
-      senderName: _selfName ?? 'Me',
+      senderName: senderName,
     );
     final packetHash = binaryOutbound == null
         ? null
@@ -9648,7 +9778,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     final baseMessage = ChannelMessage.outgoing(
       messageText,
-      _selfName ?? 'Me',
+      senderName,
       channel.index,
       rawText: usesBinaryTransport ? null : outboundText,
       wasMcmpCompressed:
@@ -11355,7 +11485,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     if (failedAck == null ||
         (failedAck.commandCode != cmdSendChannelTxtMsg &&
-            failedAck.commandCode != cmdSendChannelData) ||
+            failedAck.commandCode != cmdSendChannelData &&
+            failedAck.commandCode != cmdSendRawPacket) ||
         failedAck.channelSendQueueId == null) {
       return;
     }
@@ -13448,7 +13579,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     int? replyToTimestamp,
   }) {
     if (!isChannelMCOtxtPlainWhenSmaller(channel.index)) return null;
-    final senderName = _selfName ?? 'Me';
+    final senderName = channelSendName(channel.index);
     final hasReplyPair = replyToSenderName != null && replyToTimestamp != null;
     final replyAuthorName = hasReplyPair ? replyToSenderName : null;
     final replyTimestamp = hasReplyPair ? replyToTimestamp : null;
@@ -13471,6 +13602,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           replyAuthorName: replyAuthorName,
           replyTimestamp: replyTimestamp,
         ),
+        senderName: senderName,
       );
     }
     final plain = _channelPlainAlternative(
@@ -13480,10 +13612,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       replyToText: replyToText,
       replyToMessageId: replyToMessageId,
     );
-    if (utf8.encode(plain).length > maxChannelMessageBytes(_selfName)) {
+    if (utf8.encode(plain).length > maxChannelTextBytes(channel.index)) {
       return null;
     }
-    return _groupTextPacketBytes(plain) <= mcotxtBytes ? plain : null;
+    return _groupTextPacketBytes(plain, senderName: senderName) <= mcotxtBytes
+        ? plain
+        : null;
   }
 
   /// The plain-text form of a channel message that would otherwise go out
@@ -13529,8 +13663,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// `BaseChatMesh::sendGroupMessage` builds it: timestamp, type byte and
   /// `"Name: text"`, the prefix counted the way the composer counter counts
   /// it ([channelSenderPrefixBytes]).
-  int _groupTextPacketBytes(String text) =>
-      5 + channelSenderPrefixBytes(_selfName) + utf8.encode(text).length;
+  int _groupTextPacketBytes(String text, {required String senderName}) =>
+      5 + channelSenderPrefixBytes(senderName) + utf8.encode(text).length;
 
   /// Whether a channel reply will travel with a container reply anchor
   /// (quoted author + timestamp), which pins the quoted message exactly and
@@ -14528,13 +14662,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return channel.name;
   }
 
-  bool _channelMessageMentionsSelf(String text) {
-    final name = _selfName?.trim();
-    if (name == null || name.isEmpty) return false;
-    return RegExp(
-      '@\\[\\s*${RegExp.escape(name)}\\s*\\]',
-      caseSensitive: false,
-    ).hasMatch(text);
+  /// Whether [text] mentions this node by a name it bears in the channel:
+  /// the node's own, or the sender name the channel keeps.
+  bool _channelMessageMentionsSelf(int channelIndex, String text) {
+    final names = {?_selfName?.trim(), ?channelSenderName(channelIndex)}
+      ..removeWhere((name) => name.isEmpty);
+    for (final name in names) {
+      final mention = RegExp(
+        '@\\[\\s*${RegExp.escape(name)}\\s*\\]',
+        caseSensitive: false,
+      );
+      if (mention.hasMatch(text)) return true;
+    }
+    return false;
   }
 
   /// Shows a notification off the receive path. The message it names is in
@@ -14585,7 +14725,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // on screen, so it is not raised at all.
     if (BlockedSenders.instance.isSenderBlocked(message, label)) return;
     final isMuted = _isChannelMutedUnderAnyName(label, channelIndex);
-    if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
+    if (isMuted && !_channelMessageMentionsSelf(channelIndex, message.text)) {
+      return;
+    }
     if (_recordInitialSyncChannelMessageNotification()) return;
 
     // Reuse translation result only if completed and non-empty; else use original text
@@ -15060,12 +15202,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final rawText = message.rawText;
     final String? key;
     if (rawText != null) {
-      final selfName = _selfName;
-      if (selfName == null) return;
+      // The name the packet carries is the message's own: the channel's or
+      // the node's (see channelSendName).
       key = HeardChannelPackets.textKey(
         channelIndex: channelIndex,
         timestampSeconds: timestampSeconds,
-        senderName: selfName,
+        senderName: message.senderName,
         rawText: rawText,
       );
     } else {
@@ -15085,6 +15227,60 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return channel.isEmpty ? null : channel.psk;
     }
     return null;
+  }
+
+  /// The frame that sends [text] to [channel] under [senderName]: the node's
+  /// own command, which stamps the node's name, or, under a name of the
+  /// channel's own, a raw GRP_TXT packet built here (see [ChannelRawPacket]),
+  /// scoped with the transport code of [region] (a region's name, '' for
+  /// none) and registered with the echo registry, which `_sendFrameDirect`
+  /// reads off the node's command only. A resend of the same packet passes
+  /// [registerEcho] false, the registry having been fed by the first send.
+  Uint8List _channelTextFrame(
+    Channel channel,
+    String text, {
+    required String senderName,
+    required Region region,
+    int? timestampSeconds,
+    bool registerEcho = true,
+  }) {
+    final timestamp =
+        timestampSeconds ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    if (senderName == (_selfName ?? 'Me')) {
+      return buildSendChannelTextMsgFrame(
+        channel.index,
+        text,
+        timestampSeconds: timestamp,
+      );
+    }
+    final plaintext = ChannelEchoRecovery.groupTextPlaintext(
+      timestampSeconds: timestamp,
+      senderName: senderName,
+      textBytes: Uint8List.fromList(utf8.encode(text)),
+    );
+    final payload = ChannelRawPacket.groupTextPayload(
+      psk: channel.psk,
+      plaintext: plaintext,
+    );
+    final scope = region.trim();
+    final transportCode = scope.isEmpty
+        ? null
+        : _computeRegionTransportCode(scope, payloadTypeGRPTXT, payload);
+    if (registerEcho && _recoverLongPacketEchoes) {
+      _channelEchoRecovery.register(
+        channelIndex: channel.index,
+        psk: channel.psk,
+        plaintext: plaintext,
+      );
+    }
+    return ChannelRawPacket.sendFrame(
+      ChannelRawPacket.floodPacket(
+        payloadType: payloadTypeGRPTXT,
+        payload: payload,
+        pathHashWidth: _pathHashByteWidth,
+        transportCode: transportCode,
+      ),
+    );
   }
 
   /// Every frame written to the radio passes through here; only channel text
@@ -16160,9 +16356,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handleOk() {
     final pendingAck = _pendingGenericAckQueue.takeOk();
+    // A raw packet with a queue id is a channel text under the channel's
+    // own sender name (see _channelTextFrame).
     if (pendingAck == null ||
         (pendingAck.commandCode != cmdSendChannelTxtMsg &&
-            pendingAck.commandCode != cmdSendChannelData) ||
+            pendingAck.commandCode != cmdSendChannelData &&
+            pendingAck.commandCode != cmdSendRawPacket) ||
         pendingAck.channelSendQueueId == null) {
       return;
     }
@@ -16478,6 +16677,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _channelMcmpEnabled.remove(channel.index);
       _channelMcmpVersion.remove(channel.index);
       _channelMcmpUseSign.remove(channel.index);
+      _channelSenderNames.remove(channel.index);
       _channelMCOtxtEnabled.remove(channel.index);
       _channelSmazEnabled.remove(channel.index);
       _channelCyr2LatEnabled.remove(channel.index);
@@ -17063,24 +17263,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String region,
     int payloadType,
     Uint8List payload,
-  ) {
-    final name = region.startsWith('#') ? region : '#$region';
-    final regionKey = crypto.sha256
-        .convert(utf8.encode(name))
-        .bytes
-        .sublist(0, 16);
-    final input = Uint8List(1 + payload.length);
-    input[0] = payloadType;
-    input.setRange(1, input.length, payload);
-    final digest = crypto.Hmac(crypto.sha256, regionKey).convert(input).bytes;
-    var code = digest[0] | (digest[1] << 8);
-    if (code == 0) {
-      code = 1;
-    } else if (code == 0xFFFF) {
-      code = 0xFFFE;
-    }
-    return code;
-  }
+  ) => ChannelRawPacket.regionTransportCode(region, payloadType, payload);
 
   /// Content-based dedup hash for sync queue messages (no raw payload available).
   /// Prefixed with 'c:' to avoid collisions with packet hashes.
@@ -17602,11 +17785,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // Self-echo: an outgoing message coming back via a repeater. The send is
     // delayed by _waitForRadioQuiet (often 10s+) and propagation can add more,
     // so the timestamp gap can easily exceed the cross-peer window.
-    final selfName = _selfName ?? 'Me';
+    // Our message carries the name it went out under, the channel's own or
+    // the node's (see channelSendName), and its echo carries the same.
     final isSelfEcho =
         existing.isOutgoing &&
         !incoming.isOutgoing &&
-        (incoming.senderName == selfName && existing.senderName == selfName);
+        incoming.senderName == existing.senderName;
 
     // This repeat detector intentionally does not use
     // AppSettings.defaultChannelResendTimeoutSeconds: manual resend delay and
@@ -19038,6 +19222,10 @@ class _DeferredChannelMessageSend {
   final Channel channel;
   final String messageId;
   final String text;
+
+  /// The name the message goes out under (see channelSendName), decided
+  /// when the message was made and kept through the deferral.
+  final String senderName;
   final ChannelBinaryDataOutbound? binaryOutbound;
 
   /// Exact text-transport payload prepared (and possibly signed) at compose
@@ -19057,6 +19245,7 @@ class _DeferredChannelMessageSend {
     required this.channel,
     required this.messageId,
     required this.text,
+    required this.senderName,
     required this.binaryOutbound,
     this.preparedOutboundText,
     required this.uncompressedText,

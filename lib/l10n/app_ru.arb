@@ -3334,5 +3334,14 @@
   "channelPath_sendAttemptsLabel": "Попыток отправки",
   "settings_modSettingsHideChannelMute": "Скрыть переключатель уведомлений в канале",
   "appSettings_channelMinHopsDelay": "Пауза перед повтором: {seconds} с",
-  "settings_modSettingsNoRetraInfoResends": "Не распространилось по сети за {count, plural, one{{count} попытку} few{{count} попытки} other{{count} попыток}}."
+  "settings_modSettingsNoRetraInfoResends": "Не распространилось по сети за {count, plural, one{{count} попытку} few{{count} попытки} other{{count} попыток}}.",
+  "channels_senderNameLabel": "Отправитель",
+  "channels_senderNameDefault": "по умолчанию",
+  "channels_senderNameTitle": "Имя отправителя",
+  "channels_senderNameBody": "Вы можете сменить имя для этого канала.",
+  "channels_senderNameBytes": "{count} / {max} байт",
+  "channels_senderNameLockedBySign": "Канал с подписью MCMP отправляет под именем ноды.",
+  "channels_senderNameNeedsFirmware": "Нужна прошивка с кодом версии 13 или новее.",
+  "channels_senderNamePrivateRegion": "Ключ региона хранится на репитере, имя переопределить нельзя.",
+  "channels_senderNameResetBySign": "Имя отправителя, заданное для канала, будет сброшено."
 }

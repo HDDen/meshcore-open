@@ -76,6 +76,8 @@ import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/channel_edit_sheet.dart';
+import '../widgets/channel_sender_name_dialog.dart';
+import '../widgets/channel_sender_name_line.dart';
 import '../widgets/chat_additional_actions_menu.dart';
 import '../widgets/chat_bubble_box.dart';
 import '../widgets/composer_text_builder.dart';
@@ -193,7 +195,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   bool _isLoadingOlder = false;
-  bool _communitiesLoaded = false;
   final ImageIdAllocator _imageIds = ImageIdAllocator();
   int _imageSendSent = 0;
   int _imageSendTotal = 0;
@@ -325,7 +326,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     if (mounted) {
       setState(() {
         _communityIndex.initialize(communities);
-        _communitiesLoaded = true;
       });
     }
   }
@@ -968,53 +968,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _scrollController.jumpToBottom();
   }
 
-  Widget _channelIcon(Channel channel) {
-    // Determine icon based on channel type
-    final ChannelType channelType = Channel.getChannelType(
-      channel,
-      _communityIndex,
-    );
-    final bool isCommunityChannel = Channel.isCommunityChannel(channelType);
-    IconData icon;
-    switch (channelType) {
-      case ChannelType.communityPublic:
-        icon = Icons.groups;
-      case ChannelType.communityHashtag:
-        icon = Icons.tag;
-      case ChannelType.public:
-        icon = Icons.public;
-      case ChannelType.hashtag:
-        icon = Icons.tag;
-      case ChannelType.private:
-        icon = Icons.lock;
-    }
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          child: _communitiesLoaded
-              ? Icon(icon, size: 20)
-              : SizedBox.square(dimension: 20),
+  void _editChannelSenderName(MeshCoreConnector connector) {
+    unawaited(
+      showChannelSenderNameDialog(
+        context,
+        currentName: connector.channelSenderName(widget.channel.index),
+        nodeName: connector.selfName,
+        onSave: (name) => unawaited(
+          connector.setChannelSenderName(widget.channel.index, name),
         ),
-        if (isCommunityChannel)
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: Colors.purple,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).cardColor,
-                  width: 2,
-                ),
-              ),
-              child: const Icon(Icons.people, size: 8, color: Colors.white),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
@@ -1028,53 +991,64 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           title: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => openRegionSelectDialog(widget.channel),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _channelIcon(widget.channel),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.channel.name.isEmpty
-                            ? context.l10n.channels_channelIndex(
+                Text(
+                  widget.channel.name.isEmpty
+                      ? context.l10n.channels_channelIndex(
+                          widget.channel.index,
+                        )
+                      : widget.channel.name,
+                  // Two lines sit under the name, so it gives up a little
+                  // height, as the direct chat's does over its region line.
+                  style: const TextStyle(fontSize: 15),
+                ),
+                Consumer<MeshCoreConnector>(
+                  builder: (context, connector, _) {
+                    final unreadCount = connector
+                        .getUnreadCountForChannelIndex(widget.channel.index);
+                    final radioDefault = connector.defaultRegionScopeLabel;
+                    final regionHeader = region.isNotEmpty
+                        ? context.l10n.channels_regionSetTo(region)
+                        : connector.isChannelExplicitlyUnscoped(
+                                widget.channel.index,
+                              ) &&
+                              connector.supportsExplicitUnscopedFlood
+                        ? context.l10n.settings_regionNoRegion
+                        : radioDefault != null &&
+                              connector.channelUsesRadioDefaultScope(
                                 widget.channel.index,
                               )
-                            : widget.channel.name,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      Consumer<MeshCoreConnector>(
-                        builder: (context, connector, _) {
-                          final unreadCount = connector
-                              .getUnreadCountForChannelIndex(
-                                widget.channel.index,
-                              );
-                          final radioDefault =
-                              connector.defaultRegionScopeLabel;
-                          final regionHeader = region.isNotEmpty
-                              ? context.l10n.channels_regionSetTo(region)
-                              : connector.isChannelExplicitlyUnscoped(
-                                      widget.channel.index,
-                                    ) &&
-                                    connector.supportsExplicitUnscopedFlood
-                              ? context.l10n.settings_regionNoRegion
-                              : radioDefault != null &&
-                                    connector.channelUsesRadioDefaultScope(
-                                      widget.channel.index,
-                                    )
-                              ? '${context.l10n.channels_regionSetTo(radioDefault)} '
-                                    '${context.l10n.channels_regionRadioDefaultSuffix}'
-                              : context.l10n.channels_regionNotSet;
-                          return Text(
-                            '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                        ? context.l10n.channels_regionSetTo(radioDefault)
+                        : context.l10n.channels_regionNotSet;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                        // The sender name of the channel, tappable on its
+                        // own text; the rest of the header keeps the region.
+                        ChannelSenderNameLine(
+                          name: connector.channelSenderNameInEffect(
+                            widget.channel.index,
+                          ),
+                          lock: connector.channelSenderNameLock(
+                            widget.channel.index,
+                          ),
+                          onEdit: () => _editChannelSenderName(connector),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -2861,7 +2835,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildReplyPreview(ChannelMessage message, double textScale) {
     final connector = context.read<MeshCoreConnector>();
-    final isOwnNode = message.replyToSenderName == connector.selfName;
+    final isOwnNode = connector.isChannelSenderNameOurs(
+      widget.channel.index,
+      message.replyToSenderName,
+    );
     // A quote is the one way a muted sender's text still reaches the screen,
     // snapshotted into the reply when it arrived. Emptying the text here is
     // the same funnel the bubble body uses: every parser below reads this, so
@@ -3132,8 +3109,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           onPressed: () {
-            final selfName = context.read<MeshCoreConnector>().selfName ?? 'Me';
-            final fromName = isOutgoing ? selfName : senderName;
+            // The message's own name, as the map keys its pins: our own
+            // message carries the name it went out under.
+            final fromName = senderName;
             final key = buildSharedMarkerKey(
               sourceId: 'channel:${widget.channel.index}',
               label: poi.label,
@@ -3872,7 +3850,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   context.read<AppSettingsService>().settings,
                 )
               : null,
-          binarySenderName: context.read<MeshCoreConnector>().selfName,
+          binarySenderName: context.read<MeshCoreConnector>().channelSendName(
+            widget.channel.index,
+          ),
           initialImage: initialImage,
           initialImageBytes: initialImageBytes,
           initialImageWidth: initialImageWidth,
@@ -4260,7 +4240,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               dataBytes: binaryPayloadBytes,
             )
           : ChannelEchoRecovery.groupTextPlaintextLength(
-              senderPrefixBytes: channelSenderPrefixBytes(connector.selfName),
+              senderPrefixBytes: channelSenderPrefixBytes(
+                connector.channelSendName(widget.channel.index),
+              ),
               textBytes: utf8.encode(encoding.outboundText).length,
             );
       return ChannelEchoRecovery.plaintextBytesOverEchoLimit(
@@ -4828,7 +4810,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   int? _channelBinaryPayloadBytes(MeshCoreConnector connector, String text) {
     if (!ChannelBinaryDataHelper.canSend) return null;
-    final senderName = connector.selfName ?? 'Me';
+    final senderName = connector.channelSendName(widget.channel.index);
     final imagePayloadBytes = ChannelBinaryDataHelper.mcoImagePayloadLength(
       text,
       senderName,
@@ -4943,12 +4925,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   int _maxChannelInputBytes(MeshCoreConnector connector, AppSettings settings) {
-    var limit = maxChannelMessageBytes(connector.selfName);
+    var limit = connector.maxChannelTextBytes(widget.channel.index);
     final outgoingLimit = settings.channelMaxbytesOutgoing;
     if (outgoingLimit > 0) {
       // This user limit counts "<sender>: " plus the message bytes.
       final textLimit =
-          outgoingLimit - channelSenderPrefixBytes(connector.selfName);
+          outgoingLimit -
+          channelSenderPrefixBytes(
+            connector.channelSendName(widget.channel.index),
+          );
       limit = math.min(limit, math.max(0, textLimit));
     }
     if (connector.isChannelMcmpEnabled(widget.channel.index)) {

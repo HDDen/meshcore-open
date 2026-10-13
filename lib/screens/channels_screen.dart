@@ -645,8 +645,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ? context.l10n.settings_regionNoRegion
         : radioDefault != null &&
               connector.channelUsesRadioDefaultScope(channel.index)
-        ? '${context.l10n.channels_regionSetTo(radioDefault)} '
-              '${context.l10n.channels_regionRadioDefaultSuffix}'
+        ? context.l10n.channels_regionSetTo(radioDefault)
         : context.l10n.channels_regionNotSet;
     String subtitle = region;
     switch (channelType) {

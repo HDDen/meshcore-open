@@ -4382,5 +4382,15 @@
   "appSettings_channelMinHopsDelay": "Wait before resending: {seconds} s",
   "@appSettings_channelMinHopsDelay": {"placeholders": {"seconds": {"type": "int"}}},
   "settings_modSettingsNoRetraInfoResends": "Not spread over the mesh in {count, plural, one{{count} attempt} other{{count} attempts}}.",
-  "@settings_modSettingsNoRetraInfoResends": {"placeholders": {"count": {"type": "int"}}}
+  "@settings_modSettingsNoRetraInfoResends": {"placeholders": {"count": {"type": "int"}}},
+  "channels_senderNameLabel": "Sender",
+  "channels_senderNameDefault": "default",
+  "channels_senderNameTitle": "Sender name",
+  "channels_senderNameBody": "You can change the name for this channel.",
+  "channels_senderNameBytes": "{count} / {max} bytes",
+  "@channels_senderNameBytes": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},
+  "channels_senderNameLockedBySign": "A channel with signed MCMP sends under the node's name.",
+  "channels_senderNameNeedsFirmware": "Needs firmware with version code 13 or newer.",
+  "channels_senderNamePrivateRegion": "The region's key is on the repeater, so the name cannot be changed.",
+  "channels_senderNameResetBySign": "The sender name set for this channel will be reset."
 }

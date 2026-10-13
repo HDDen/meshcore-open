@@ -54,7 +54,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "de": [
@@ -112,7 +121,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "es": [
@@ -170,7 +188,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "fr": [
@@ -228,7 +255,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "hu": [
@@ -286,7 +322,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "it": [
@@ -344,7 +389,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "ja": [
@@ -402,7 +456,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "ko": [
@@ -460,7 +523,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "nl": [
@@ -518,7 +590,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "pl": [
@@ -576,7 +657,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "pt": [
@@ -634,7 +724,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "sk": [
@@ -692,7 +791,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "sl": [
@@ -750,7 +858,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "sv": [
@@ -808,7 +925,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "uk": [
@@ -866,7 +992,16 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ],
 
   "zh": [
@@ -924,6 +1059,15 @@
     "channelPath_sendAttemptsLabel",
     "settings_modSettingsHideChannelMute",
     "appSettings_channelMinHopsDelay",
-    "settings_modSettingsNoRetraInfoResends"
+    "settings_modSettingsNoRetraInfoResends",
+    "channels_senderNameLabel",
+    "channels_senderNameDefault",
+    "channels_senderNameTitle",
+    "channels_senderNameBody",
+    "channels_senderNameBytes",
+    "channels_senderNameLockedBySign",
+    "channels_senderNameNeedsFirmware",
+    "channels_senderNamePrivateRegion",
+    "channels_senderNameResetBySign"
   ]
 }

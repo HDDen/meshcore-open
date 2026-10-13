@@ -8290,4 +8290,38 @@ class AppLocalizationsSk extends AppLocalizations {
     );
     return 'Not spread over the mesh in $_temp0.';
   }
+
+  @override
+  String get channels_senderNameLabel => 'Sender';
+
+  @override
+  String get channels_senderNameDefault => 'default';
+
+  @override
+  String get channels_senderNameTitle => 'Sender name';
+
+  @override
+  String get channels_senderNameBody =>
+      'You can change the name for this channel.';
+
+  @override
+  String channels_senderNameBytes(int count, int max) {
+    return '$count / $max bytes';
+  }
+
+  @override
+  String get channels_senderNameLockedBySign =>
+      'A channel with signed MCMP sends under the node\'s name.';
+
+  @override
+  String get channels_senderNameNeedsFirmware =>
+      'Needs firmware with version code 13 or newer.';
+
+  @override
+  String get channels_senderNamePrivateRegion =>
+      'The region\'s key is on the repeater, so the name cannot be changed.';
+
+  @override
+  String get channels_senderNameResetBySign =>
+      'The sender name set for this channel will be reset.';
 }
