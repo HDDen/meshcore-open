@@ -64,7 +64,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "de": [
@@ -110,7 +113,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "es": [
@@ -156,7 +162,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "fr": [
@@ -202,7 +211,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "hu": [
@@ -248,7 +260,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "it": [
@@ -294,7 +309,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "ja": [
@@ -340,7 +358,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "ko": [
@@ -386,7 +407,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "nl": [
@@ -432,7 +456,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "pl": [
@@ -478,7 +505,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "pt": [
@@ -524,7 +554,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "ru": [
@@ -601,7 +634,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "sl": [
@@ -647,7 +683,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "sv": [
@@ -693,7 +732,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "uk": [
@@ -739,7 +781,10 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ],
 
   "zh": [
@@ -785,6 +830,9 @@
     "map_wardriveRequirementLocationAlways",
     "map_wardriveRequirementBattery",
     "map_wardriveRequirementBackgroundActivity",
-    "settings_modSettingsSenderNameScale"
+    "settings_modSettingsSenderNameScale",
+    "channels_dataScopeQuestion",
+    "channels_dataScopeThisNode",
+    "channels_dataScopeAllNodes"
   ]
 }

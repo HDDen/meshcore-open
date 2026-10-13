@@ -13,7 +13,6 @@ import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import '../services/app_settings_service.dart';
-import '../storage/channel_identity_matcher.dart';
 import '../storage/channel_message_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/message_store.dart';
@@ -438,10 +437,9 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
 
       for (final candidates in channelGroups) {
         final channel = _preferredChannel(connector, candidates);
-        final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
+        final matchedIndex = SharedMessageHistoryHelper.matchingChannelIndex(
           secondaryChannels,
-          name: channel.name,
-          pskHex: channel.pskHex,
+          channel,
         );
         if (matchedIndex == null) continue;
         final source = await _loadChannelSource(

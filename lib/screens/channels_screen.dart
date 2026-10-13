@@ -36,6 +36,7 @@ import '../widgets/list_filter_widget.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/channel_widget_color_picker.dart';
 import '../widgets/channel_edit_sheet.dart';
+import '../widgets/channel_data_scope_dialog.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/message_search_sheet.dart';
@@ -3874,59 +3875,81 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     MeshCoreConnector connector,
     Channel channel,
   ) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(dialogContext.l10n.channels_deleteChannel),
-        content: Text(
-          dialogContext.l10n.channels_deleteChannelConfirm(channel.name),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(dialogContext.l10n.common_cancel),
+    unawaited(_deleteChannelAfterConfirm(context, connector, channel));
+  }
+
+  Future<void> _deleteChannelAfterConfirm(
+    BuildContext context,
+    MeshCoreConnector connector,
+    Channel channel,
+  ) async {
+    final l10n = context.l10n;
+    final askScope = context
+        .read<AppSettingsService>()
+        .settings
+        .sharedMessageHistoryMode
+        .includesChannels;
+    final bool allNodes;
+    if (askScope) {
+      // The merged history of every node is what the user sees, so the
+      // deletion says how far it reaches.
+      final scope = await showChannelDataScopeDialog(
+        context,
+        title: l10n.channels_deleteChannel,
+        message: l10n.channels_deleteChannelConfirm(channel.name),
+      );
+      if (scope == null) return;
+      allNodes = scope == ChannelDataScope.allNodes;
+    } else {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(dialogContext.l10n.channels_deleteChannel),
+          content: Text(
+            dialogContext.l10n.channels_deleteChannelConfirm(channel.name),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await connector.deleteChannel(channel.index);
-                await _removeChannelNamesFromGroups([
-                  channelNameForGroup(channel),
-                ]);
-
-                if (!context.mounted) return;
-
-                showDismissibleSnackBar(
-                  context,
-                  content: Text(
-                    context.l10n.channels_channelDeleted(channel.name),
-                  ),
-                );
-              } catch (e, st) {
-                if (!context.mounted) return;
-
-                showDismissibleSnackBar(
-                  context,
-                  content: Text(
-                    context.l10n.channels_channelDeleteFailed(channel.name),
-                  ),
-                );
-
-                // Preserve existing logging (if it was there)
-                debugPrint('Failed to delete channel: $e\n$st');
-              }
-            },
-            child: Text(
-              dialogContext.l10n.common_delete,
-              style: TextStyle(
-                color: Theme.of(dialogContext).colorScheme.error,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(dialogContext.l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(
+                dialogContext.l10n.common_delete,
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.error,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      allNodes = false;
+    }
+    if (!context.mounted) return;
+    try {
+      await connector.deleteChannel(channel.index, allNodes: allNodes);
+      await _removeChannelNamesFromGroups([channelNameForGroup(channel)]);
+
+      if (!context.mounted) return;
+
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_channelDeleted(channel.name)),
+      );
+    } catch (e, st) {
+      if (!context.mounted) return;
+
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.channels_channelDeleteFailed(channel.name)),
+      );
+
+      // Preserve existing logging (if it was there)
+      debugPrint('Failed to delete channel: $e\n$st');
+    }
   }
 
   /// Picks a free channel slot at the moment the user commits, or shows why

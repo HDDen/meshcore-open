@@ -8134,4 +8134,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String neighbors_durationHours(Object hours, Object minutes) {
     return '$hoursч $minutesм';
   }
+
+  @override
+  String get channels_dataScopeQuestion =>
+      'Удалить данные канала только для этой ноды или в объединённой истории всех нод приложения?';
+
+  @override
+  String get channels_dataScopeThisNode => 'Эта нода';
+
+  @override
+  String get channels_dataScopeAllNodes => 'Все ноды';
 }

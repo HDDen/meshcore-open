@@ -3272,5 +3272,8 @@
   "usbChooseSerialPort": "Выберите последовательный порт",
   "neighbors_durationSeconds": "{seconds}с",
   "neighbors_durationMinutes": "{minutes}м {seconds}с",
-  "neighbors_durationHours": "{hours}ч {minutes}м"
+  "neighbors_durationHours": "{hours}ч {minutes}м",
+  "channels_dataScopeQuestion": "Удалить данные канала только для этой ноды или в объединённой истории всех нод приложения?",
+  "channels_dataScopeThisNode": "Эта нода",
+  "channels_dataScopeAllNodes": "Все ноды"
 }

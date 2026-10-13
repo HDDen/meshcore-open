@@ -220,6 +220,10 @@ typedef PathHistoryRow = ({
 
 typedef NodeStateRow = ({String nodeKey, String name, String value});
 
+/// One row of `channel_identities`: a (key, name) pair a channel was seen
+/// under and the group that makes it one channel with the other pairs.
+typedef ChannelIdentityRow = ({int groupId, String pskId, String name});
+
 typedef WardriveSampleRow = ({
   String id,
   int timestampMs,
@@ -463,6 +467,49 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureDiscoveredContactsTable();
     await _ensureWardriveTables();
     await _ensureNodeCollectionTables();
+    await _ensureChannelIdentitiesTable();
+  }
+
+  // The pairs of key and name that are one channel, app-wide, one row per
+  // pair; `group_id` ties the rows of one channel. Tiny and rewritten whole.
+  Future<void> _ensureChannelIdentitiesTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS channel_identities (
+  group_id INTEGER NOT NULL,
+  psk_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  PRIMARY KEY (psk_id, name)
+)
+''');
+  }
+
+  Future<List<ChannelIdentityRow>> readChannelIdentities() async {
+    final rows = await customSelect(
+      'SELECT group_id, psk_id, name FROM channel_identities '
+      'ORDER BY group_id, psk_id, name',
+    ).get();
+    return [
+      for (final row in rows)
+        (
+          groupId: row.read<int>('group_id'),
+          pskId: row.read<String>('psk_id'),
+          name: row.read<String>('name'),
+        ),
+    ];
+  }
+
+  /// Replaces the table with [rows], in one transaction.
+  Future<void> replaceChannelIdentities(List<ChannelIdentityRow> rows) async {
+    await batch((batch) {
+      batch.customStatement('DELETE FROM channel_identities');
+      for (final row in rows) {
+        batch.customStatement(
+          'INSERT INTO channel_identities (group_id, psk_id, name) '
+          'VALUES (?, ?, ?)',
+          [row.groupId, row.pskId, row.name],
+        );
+      }
+    });
   }
 
   Future<void> _ensureLegacyRejectedMessagesTable() async {
@@ -1415,6 +1462,135 @@ ON CONFLICT(sample_id, endpoint_url) DO NOTHING
     final query = select(historyMessages)
       ..where(
         (row) => row.kind.equals(kind) & row.storageKey.equals(storageKey),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.asc(row.timelineAtMs),
+        (row) => OrderingTerm.asc(row.messageId),
+      ]);
+    return (await query.get()).map((row) => row.messageJson).toList();
+  }
+
+  // The same four reads over several storage keys at once: a channel's
+  // history lies under the key of every name it has had. One key takes the
+  // single-key query, whose plan the indexes were built for.
+
+  Future<List<String>> readMessageJsonForKeys(
+    int kind,
+    List<String> storageKeys,
+  ) async {
+    if (storageKeys.isEmpty) return const [];
+    if (storageKeys.length == 1) return readMessageJson(kind, storageKeys.single);
+    final query = select(historyMessages)
+      ..where(
+        (row) => row.kind.equals(kind) & row.storageKey.isIn(storageKeys),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.asc(row.timelineAtMs),
+        (row) => OrderingTerm.asc(row.messageId),
+      ]);
+    return (await query.get()).map((row) => row.messageJson).toList();
+  }
+
+  Future<List<String>> readLatestMessageJsonForKeys(
+    int kind,
+    List<String> storageKeys, {
+    required int limit,
+  }) async {
+    if (limit <= 0 || storageKeys.isEmpty) return const [];
+    if (storageKeys.length == 1) {
+      return readLatestMessageJson(kind, storageKeys.single, limit: limit);
+    }
+    final query = select(historyMessages)
+      ..where(
+        (row) => row.kind.equals(kind) & row.storageKey.isIn(storageKeys),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.desc(row.timelineAtMs),
+        (row) => OrderingTerm.desc(row.messageId),
+      ])
+      ..limit(limit);
+    return (await query.get()).reversed.map((row) => row.messageJson).toList();
+  }
+
+  Future<List<String>> readMessageJsonBeforeForKeys(
+    int kind,
+    List<String> storageKeys, {
+    required MessageHistoryCursor cursor,
+    required int limit,
+  }) async {
+    if (limit <= 0 || storageKeys.isEmpty) return const [];
+    if (storageKeys.length == 1) {
+      return readMessageJsonBefore(
+        kind,
+        storageKeys.single,
+        cursor: cursor,
+        limit: limit,
+      );
+    }
+    final query = select(historyMessages)
+      ..where(
+        (row) =>
+            row.kind.equals(kind) &
+            row.storageKey.isIn(storageKeys) &
+            (row.timelineAtMs.isSmallerThanValue(cursor.timelineAtMs) |
+                (row.timelineAtMs.equals(cursor.timelineAtMs) &
+                    row.messageId.isSmallerThanValue(cursor.messageId))),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.desc(row.timelineAtMs),
+        (row) => OrderingTerm.desc(row.messageId),
+      ])
+      ..limit(limit);
+    return (await query.get()).reversed.map((row) => row.messageJson).toList();
+  }
+
+  Future<List<String>> readMessageJsonAfterForKeys(
+    int kind,
+    List<String> storageKeys, {
+    required MessageHistoryCursor cursor,
+    required int limit,
+  }) async {
+    if (limit <= 0 || storageKeys.isEmpty) return const [];
+    if (storageKeys.length == 1) {
+      return readMessageJsonAfter(
+        kind,
+        storageKeys.single,
+        cursor: cursor,
+        limit: limit,
+      );
+    }
+    final query = select(historyMessages)
+      ..where(
+        (row) =>
+            row.kind.equals(kind) &
+            row.storageKey.isIn(storageKeys) &
+            (row.timelineAtMs.isBiggerThanValue(cursor.timelineAtMs) |
+                (row.timelineAtMs.equals(cursor.timelineAtMs) &
+                    row.messageId.isBiggerThanValue(cursor.messageId))),
+      )
+      ..orderBy([
+        (row) => OrderingTerm.asc(row.timelineAtMs),
+        (row) => OrderingTerm.asc(row.messageId),
+      ])
+      ..limit(limit);
+    return (await query.get()).map((row) => row.messageJson).toList();
+  }
+
+  Future<List<String>> searchMessageJsonForKeys(
+    int kind,
+    List<String> storageKeys,
+    String normalizedQuery,
+  ) async {
+    if (storageKeys.isEmpty) return const [];
+    if (storageKeys.length == 1) {
+      return searchMessageJson(kind, storageKeys.single, normalizedQuery);
+    }
+    final query = select(historyMessages)
+      ..where(
+        (row) =>
+            row.kind.equals(kind) &
+            row.storageKey.isIn(storageKeys) &
+            row.searchText.contains(normalizedQuery),
       )
       ..orderBy([
         (row) => OrderingTerm.asc(row.timelineAtMs),

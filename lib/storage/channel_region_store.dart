@@ -33,6 +33,18 @@ class ChannelRegionStore with ChannelNameKeyedStore {
     if (region == null && allowsLegacyIndexMigration) {
       region = prefs.getString('$keyFor$channelIndex');
     }
+    // The channel's other names here, then the other nodes (see
+    // ChannelSettingsStore): a region is the channel's, not the node's.
+    if (region == null) {
+      for (final inheritedKey in channelInheritedKeys(
+        keyPrefix: keyFor,
+        scope: publicKeyHex,
+        channelIndex: channelIndex,
+      )) {
+        region = prefs.getString(inheritedKey);
+        if (region != null) break;
+      }
+    }
     return region?.trim() ?? '';
   }
 
@@ -61,10 +73,22 @@ class ChannelRegionStore with ChannelNameKeyedStore {
 
   Future<void> clearRegion(int channelIndex) async {
     final prefs = PrefsManager.instance;
-    final key = channelStorageKey(keyFor, channelIndex);
     // A removal of a key that is not there still rewrites the whole file.
-    if (key != null && prefs.containsKey(key)) await prefs.remove(key);
+    for (final key in channelStorageKeys(keyFor, channelIndex)) {
+      if (prefs.containsKey(key)) await prefs.remove(key);
+    }
     final legacyKey = '$keyFor$channelIndex';
     if (prefs.containsKey(legacyKey)) await prefs.remove(legacyKey);
+  }
+
+  /// Removes, in this scope, the region stored under each of [names]: what
+  /// a deletion reaching every node does in the other nodes' scopes.
+  Future<void> clearRegionsForNames(Iterable<String> names) async {
+    if (publicKeyHex.isEmpty) return;
+    final prefs = PrefsManager.instance;
+    for (final name in names) {
+      final key = ChannelNameKeyedStore.nameStorageKey(keyFor, name);
+      if (prefs.containsKey(key)) await prefs.remove(key);
+    }
   }
 }

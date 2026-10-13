@@ -4320,5 +4320,8 @@
   "usbChooseSerialPort": "Choose serial port",
   "neighbors_durationSeconds": "{seconds}s",
   "neighbors_durationMinutes": "{minutes}m {seconds}s",
-  "neighbors_durationHours": "{hours}h {minutes}m"
+  "neighbors_durationHours": "{hours}h {minutes}m",
+  "channels_dataScopeQuestion": "Remove the channel's data on this node only, or in the merged history of every node in the app?",
+  "channels_dataScopeThisNode": "This node",
+  "channels_dataScopeAllNodes": "All nodes"
 }

@@ -8130,4 +8130,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String neighbors_durationHours(Object hours, Object minutes) {
     return '${hours}h ${minutes}m';
   }
+
+  @override
+  String get channels_dataScopeQuestion =>
+      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+
+  @override
+  String get channels_dataScopeThisNode => 'This node';
+
+  @override
+  String get channels_dataScopeAllNodes => 'All nodes';
 }

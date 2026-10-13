@@ -3,6 +3,7 @@ import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/message.dart';
 import 'channel_identity_matcher.dart';
+import 'channel_identity_store.dart';
 import 'channel_message_store.dart';
 import 'channel_store.dart';
 import 'message_store.dart';
@@ -41,11 +42,7 @@ class SharedMessageHistoryHelper {
       final channelStore = ChannelStore()..setPublicKeyHex = scope;
       final channels = await channelStore.loadChannels();
       if (cancelled()) return const [];
-      final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
-        channels,
-        name: channel.name,
-        pskHex: channel.pskHex,
-      );
+      final matchedIndex = matchingChannelIndex(channels, channel);
       if (matchedIndex == null) continue;
 
       final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
@@ -129,11 +126,7 @@ class SharedMessageHistoryHelper {
 
       final channelStore = ChannelStore()..setPublicKeyHex = scope;
       final channels = await channelStore.loadChannels();
-      final matchedIndex = ChannelIdentityMatcher.findMatchingChannelIndex(
-        channels,
-        name: channel.name,
-        pskHex: channel.pskHex,
-      );
+      final matchedIndex = matchingChannelIndex(channels, channel);
       if (matchedIndex == null) continue;
 
       final messageStore = ChannelMessageStore()..setPublicKeyHex = scope;
@@ -324,6 +317,22 @@ class SharedMessageHistoryHelper {
       if (store.mayContainMarker(contactKeyHex)) return true;
     }
     return false;
+  }
+
+  /// The slot of [channel] in another node's [channels]: the matcher's
+  /// answer, else a channel whose key and name are one channel with it
+  /// through [ChannelIdentities], for a node that still has the name or the
+  /// key the channel had before an edit.
+  static int? matchingChannelIndex(List<Channel> channels, Channel channel) {
+    final matched = ChannelIdentityMatcher.findMatchingChannelIndex(
+      channels,
+      name: channel.name,
+      pskHex: channel.pskHex,
+    );
+    if (matched != null) return matched;
+    final identity = ChannelIdentity.of(channel);
+    if (identity == null) return null;
+    return ChannelIdentities.instance.findInGroup(channels, identity)?.index;
   }
 
   static Set<String> knownScopes() {

@@ -30,6 +30,7 @@ import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
+import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
@@ -78,6 +79,7 @@ import '../services/notification_service.dart';
 import 'meshcore_connector_usb.dart';
 import 'meshcore_connector_tcp.dart';
 import '../storage/channel_message_store.dart';
+import '../storage/channel_identity_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
@@ -2385,7 +2387,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   String _sharedChannelIdentityKey(Channel channel) {
-    return '${channel.name.trim().toLowerCase()}|${channel.pskHex.toLowerCase()}';
+    // The identity table's revision is part of it: a channel that gains a
+    // name has more shared history to fetch.
+    return '${channel.name.trim().toLowerCase()}|'
+        '${channel.pskHex.toLowerCase()}|'
+        '${ChannelIdentities.instance.revision}';
   }
 
   Future<void> deleteChannelMessage(
@@ -10540,6 +10546,85 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_completeChannelSync());
   }
 
+  /// The scopes of the other nodes this app keeps history for.
+  Set<String> get _otherNodeScopes {
+    final scopes = SharedMessageHistoryHelper.knownScopes();
+    scopes.remove(SharedMessageHistoryHelper.scopeFor(selfPublicKeyHex));
+    return scopes;
+  }
+
+  /// Links the channels another app renamed or rekeyed while this one was
+  /// away: the node's list before this sync against the list it read,
+  /// compared as sets of key and name (see [ChannelIdentityReconciler]), so
+  /// a channel moved to another slot is nothing. A slot whose channel gained
+  /// names is read again, since its settings and history were loaded under
+  /// its own name alone, and its shared copy is fetched anew.
+  Future<void> _reconcileChannelIdentities() async {
+    // The first sync of a session has no list before it in memory; the one
+    // the last session saved stands in, so an edit made elsewhere while the
+    // app was away is seen as well.
+    final links = ChannelIdentityReconciler.diff(
+      _previousChannelsCache.isNotEmpty ? _previousChannelsCache : _cachedChannels,
+      _channels,
+    );
+    if (links.isEmpty) return;
+    final changed = <ChannelIdentity>{};
+    for (final link in links) {
+      if (await ChannelIdentities.instance.link(link.from, link.to)) {
+        changed.add(link.to);
+      }
+    }
+    if (changed.isEmpty) return;
+    for (final channel in List<Channel>.of(_channels)) {
+      final identity = ChannelIdentity.of(channel);
+      if (identity == null || !changed.contains(identity)) continue;
+      await _loadChannelSettingsForIndex(channel.index);
+      _channelMessages.remove(channel.index);
+      await _loadChannelMessages(channel.index, notify: false);
+      _sharedChannelSecondaryMessages.remove(channel.index);
+      _sharedChannelSecondaryIdentityKeys.remove(channel.index);
+    }
+  }
+
+  /// What a manual deletion does beyond this node's scope. With [allNodes]
+  /// the channel's history, settings and region go under every name of its
+  /// group in every other node's scope, and the group with them. Otherwise
+  /// the group stays while another node still holds a channel of it, since
+  /// that node reads its older names through it.
+  Future<void> _clearChannelIdentityData(
+    ChannelIdentity identity, {
+    required bool allNodes,
+  }) async {
+    final names = ChannelIdentities.instance.namesOf(identity);
+    if (allNodes) {
+      for (final scope in _otherNodeScopes) {
+        await (ChannelMessageStore()..setPublicKeyHex = scope)
+            .clearMessagesForNames(names);
+        await (ChannelSettingsStore()..setPublicKeyHex = scope)
+            .clearSettingsForNames(names);
+        await (ChannelRegionStore()..setPublicKeyHex = scope)
+            .clearRegionsForNames(names);
+      }
+      await ChannelIdentities.instance.forget(identity);
+      return;
+    }
+    for (final scope in _otherNodeScopes) {
+      final channels = await (ChannelStore()..setPublicKeyHex = scope)
+          .loadChannels(allowLegacyMigration: false);
+      if (ChannelIdentities.instance.findInGroup(channels, identity) != null) {
+        return;
+      }
+    }
+    await ChannelIdentities.instance.forget(identity);
+  }
+
+  Future<void> _clearChannelMessagesOnOtherNodes(List<String> names) async {
+    for (final scope in _otherNodeScopes) {
+      await (ChannelMessageStore()..setPublicKeyHex = scope)
+          .clearMessagesForNames(names);
+    }
+  }
+
   Future<void> _completeChannelSync() async {
     _channelSyncTimeout?.cancel();
 
@@ -10551,6 +10636,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     debugPrint(
       '[ChannelSync] Sync complete: received ${_channels.length}/$_totalChannelsToRequest channels',
     );
+
+    await _reconcileChannelIdentities();
 
     // Cache channels for offline use
     _cachedChannels = List<Channel>.from(_channels);
@@ -10650,21 +10737,43 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> setChannel(int index, String name, Uint8List psk) async {
     if (!isConnected) return;
 
+    final previous = _findChannelByIndex(index);
     await sendFrame(buildSetChannelFrame(index, name, psk));
+    // An edit that keeps the key or the name is the same channel renamed or
+    // rekeyed: its history and settings stay with it through the identity
+    // table. The sync that follows reads it under both names.
+    final link = ChannelIdentityReconciler.linkFor(
+      previous,
+      Channel(index: index, name: name, psk: psk),
+    );
+    if (link != null) {
+      await ChannelIdentities.instance.link(link.from, link.to);
+    }
     // Refresh channels after setting
     await getChannels(force: true);
   }
 
-  Future<void> deleteChannel(int index) async {
+  /// Removes the channel from the node and its data from this node's scope,
+  /// under every name the channel has had; with [allNodes], from every other
+  /// node's scope as well (the choice the deletion dialog offers while the
+  /// shared channel history is on). A slot emptied by another app clears
+  /// nothing: the history comes back when the channel is added again.
+  Future<void> deleteChannel(int index, {bool allNodes = false}) async {
     if (!isConnected) return;
 
+    final channel = _findChannelByIndex(index);
+    final identity = channel == null ? null : ChannelIdentity.of(channel);
     // Delete by setting empty name and zero PSK
     await sendFrame(buildSetChannelFrame(index, '', Uint8List(16)));
-    // Explicit deletion clears all persisted data for this channel name.
+    // Explicit deletion clears all persisted data for this channel name,
+    // the names it had before included.
     await _channelMessageStore.clearChannelMessages(index);
     await _channelSettingsStore.clearChannelSettings(index);
     await _channelRegionStore.clearRegion(index);
     await _deleteImagesForChannel?.call(index);
+    if (identity != null) {
+      await _clearChannelIdentityData(identity, allNodes: allNodes);
+    }
     // Clear in-memory messages for this channel
     _channelMessages.remove(index);
     _processedChannelReactions.remove(index);
@@ -14192,6 +14301,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  /// A mute is kept by name, so a channel renamed under the same key keeps
+  /// the mute its former name holds.
+  bool _isChannelMutedUnderAnyName(String label, int channelIndex) {
+    final settings = _appSettingsService!;
+    if (settings.isChannelMuted(label)) return true;
+    final channel = _findChannelByIndex(channelIndex);
+    final identity = channel == null ? null : ChannelIdentity.of(channel);
+    if (identity == null) return false;
+    return ChannelIdentities.instance
+        .namesOf(identity)
+        .any(settings.isChannelMuted);
+  }
+
   Future<void> _maybeNotifyChannelMessage(
     ChannelMessage message, {
     String? channelName,
@@ -14210,7 +14332,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The chat will hide this body; a notification would put it straight back
     // on screen, so it is not raised at all.
     if (BlockedSenders.instance.isSenderBlocked(message, label)) return;
-    final isMuted = _appSettingsService!.isChannelMuted(label);
+    final isMuted = _isChannelMutedUnderAnyName(label, channelIndex);
     if (isMuted && !_channelMessageMentionsSelf(message.text)) return;
     if (_recordInitialSyncChannelMessageNotification()) return;
 
@@ -18397,7 +18519,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void clearMessagesForChannel(int channelIndex) {
+  /// Clears the channel's messages in this node's scope, under every name
+  /// the channel has had, and hides the other nodes' copies for the session;
+  /// with [allNodes], clears those copies as well.
+  void clearMessagesForChannel(int channelIndex, {bool allNodes = false}) {
     final messages = _channelMessages.putIfAbsent(
       channelIndex,
       () => <ChannelMessage>[],
@@ -18406,12 +18531,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _sharedChannelSecondaryMessages.remove(channelIndex);
     _sharedChannelSecondaryIdentityKeys.remove(channelIndex);
     final channel = _findChannelByIndex(channelIndex);
-    if (channel != null) {
+    if (channel != null && !allNodes) {
       _hiddenSharedChannelIdentityKeys[channelIndex] =
           _sharedChannelIdentityKey(channel);
     }
     unawaited(_channelMessageStore.clearChannelMessages(channelIndex));
     unawaited(_deleteImagesForChannel?.call(channelIndex));
+    final identity = channel == null ? null : ChannelIdentity.of(channel);
+    if (allNodes && identity != null) {
+      unawaited(
+        _clearChannelMessagesOnOtherNodes(
+          ChannelIdentities.instance.namesOf(identity),
+        ),
+      );
+    }
     markChannelRead(channelIndex);
     notifyListeners();
   }

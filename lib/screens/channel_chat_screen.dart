@@ -109,6 +109,7 @@ import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/confirm_clear_dialog.dart';
+import '../widgets/channel_data_scope_dialog.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import 'app_settings_screen.dart';
 import 'channel_message_path_screen.dart';
@@ -4775,17 +4776,34 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _confirmClearChat() async {
-    final confirmed = await showConfirmClearDialog(
-      context,
-      title: context.l10n.contact_clearChat,
-      message: context.l10n.channels_clearChatConfirm,
-    );
-    if (confirmed) {
-      if (!mounted) return;
-      context.read<MeshCoreConnector>().clearMessagesForChannel(
-        widget.channel.index,
+    final askScope = context
+        .read<AppSettingsService>()
+        .settings
+        .sharedMessageHistoryMode
+        .includesChannels;
+    final bool allNodes;
+    if (askScope) {
+      final scope = await showChannelDataScopeDialog(
+        context,
+        title: context.l10n.contact_clearChat,
+        message: context.l10n.channels_clearChatConfirm,
       );
+      if (scope == null) return;
+      allNodes = scope == ChannelDataScope.allNodes;
+    } else {
+      final confirmed = await showConfirmClearDialog(
+        context,
+        title: context.l10n.contact_clearChat,
+        message: context.l10n.channels_clearChatConfirm,
+      );
+      if (!confirmed) return;
+      allNodes = false;
     }
+    if (!mounted) return;
+    context.read<MeshCoreConnector>().clearMessagesForChannel(
+      widget.channel.index,
+      allNodes: allNodes,
+    );
   }
 
   String _byteCountPlaceholder(int bytes) => List.filled(bytes, 'x').join();

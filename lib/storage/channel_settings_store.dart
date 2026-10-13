@@ -48,18 +48,33 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
     if (nameKey == null) return null;
     final current = read(nameKey);
     if (current != null) return current;
-    if (!allowsLegacyIndexMigration) return null;
-
-    for (final legacyKey in <String>[
-      '$nameKeyPrefix$channelIndex',
-      ...additionalLegacyKeys,
-    ]) {
-      final legacy = read(legacyKey);
-      if (legacy == null) continue;
-      await write(nameKey, legacy);
-      await PrefsManager.instance.remove(legacyKey);
-      appLogger.info('Migrated channel setting to name-keyed storage $nameKey');
-      return legacy;
+    if (allowsLegacyIndexMigration) {
+      for (final legacyKey in <String>[
+        '$nameKeyPrefix$channelIndex',
+        ...additionalLegacyKeys,
+      ]) {
+        final legacy = read(legacyKey);
+        if (legacy == null) continue;
+        await write(nameKey, legacy);
+        await PrefsManager.instance.remove(legacyKey);
+        appLogger.info(
+          'Migrated channel setting to name-keyed storage $nameKey',
+        );
+        return legacy;
+      }
+    }
+    // The channel's other names in this scope, then the same channel on the
+    // other nodes: a renamed channel keeps its settings and a node that
+    // never set any takes those another node keeps for the channel. Read,
+    // not copied, so a change there still reaches here; a value set here
+    // wins from then on.
+    for (final key in channelInheritedKeys(
+      keyPrefix: nameKeyPrefix,
+      scope: publicKeyHex,
+      channelIndex: channelIndex,
+    )) {
+      final inherited = read(key);
+      if (inherited != null) return inherited;
     }
     return null;
   }
@@ -342,12 +357,40 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
     ];
     final prefs = PrefsManager.instance;
     for (final prefix in prefixes) {
-      final nameKey = channelStorageKey(prefix, channelIndex);
-      if (nameKey != null && prefs.containsKey(nameKey)) {
-        await prefs.remove(nameKey);
+      for (final nameKey in channelStorageKeys(prefix, channelIndex)) {
+        if (prefs.containsKey(nameKey)) await prefs.remove(nameKey);
       }
       final indexKey = '$prefix$channelIndex';
       if (prefs.containsKey(indexKey)) await prefs.remove(indexKey);
     }
   }
+
+  /// Removes, in this scope, every setting stored under each of [names]:
+  /// what a deletion reaching every node does in the other nodes' scopes.
+  Future<void> clearSettingsForNames(Iterable<String> names) async {
+    if (publicKeyHex.isEmpty) return;
+    final prefs = PrefsManager.instance;
+    for (final prefix in _settingPrefixes) {
+      for (final name in names) {
+        final key = ChannelNameKeyedStore.nameStorageKey(prefix, name);
+        if (prefs.containsKey(key)) await prefs.remove(key);
+      }
+    }
+  }
+
+  List<String> get _settingPrefixes => [
+    keyFor,
+    keyForMcmp,
+    keyForMcmpVersion,
+    keyForMcmpUseSign,
+    keyForMCOtxt,
+    keyForMCOtxtPlainWhenSmaller,
+    keyForCyr2Lat,
+    '${keyForCyr2Lat}profile_',
+    keyForSendingDelay,
+    keyForQuickAnswerIds,
+    keyForWidgetColor,
+    keyForWidgetTextColor,
+    keyForUrlImages,
+  ];
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/channel.dart';
 import '../models/channel_marker_style.dart';
+import '../storage/channel_identity_store.dart';
 import '../storage/channel_marker_style_store.dart';
 
 /// Per-channel appearance of shared markers, loaded once per node and looked
@@ -48,6 +49,12 @@ class ChannelMarkerStyles {
     final key = ChannelMarkerStyleStore.normalizeChannelName(channelName);
     final stored = _styles[key];
     if (stored != null) return stored;
+    // Styles are kept by name: a channel renamed under the same key keeps
+    // the style its former name holds.
+    for (final name in ChannelIdentities.instance.namesLinkedTo(channelName)) {
+      final former = _styles[ChannelMarkerStyleStore.normalizeChannelName(name)];
+      if (former != null) return former;
+    }
     return ChannelMarkerStyle.defaultsFor(_order[key] ?? 0);
   }
 

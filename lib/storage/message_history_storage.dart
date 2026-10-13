@@ -433,6 +433,179 @@ class MessageHistoryStorage {
     return messages.isEmpty ? null : '[${messages.join(',')}]';
   }
 
+  // A channel's history lies under the key of every name it has had (see
+  // ChannelIdentities), so the channel store reads over a list of keys. One
+  // key is the plain read; on the web the lists are merged in timeline order.
+
+  bool hasAnyKey(MessageHistoryKind kind, Iterable<String> keys) {
+    _requireInitialized();
+    final known = _keys[kind]!;
+    return keys.any(known.contains);
+  }
+
+  Future<String?> getStringForKeys(
+    MessageHistoryKind kind,
+    List<String> keys,
+  ) async {
+    _requireInitialized();
+    if (keys.isEmpty) return null;
+    if (keys.length == 1) return getString(kind, keys.single);
+    if (kIsWeb) {
+      final messages = _mergedWebMessages(keys);
+      return messages.isEmpty ? null : jsonEncode(messages);
+    }
+    final messages = await _database!.readMessageJsonForKeys(kind.index, keys);
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> getLatestStringForKeys(
+    MessageHistoryKind kind,
+    List<String> keys, {
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (keys.isEmpty) return null;
+    if (keys.length == 1) return getLatestString(kind, keys.single, limit: limit);
+    if (kIsWeb) {
+      final messages = _mergedWebMessages(keys);
+      if (messages.isEmpty) return null;
+      final start = messages.length > limit ? messages.length - limit : 0;
+      return jsonEncode(messages.sublist(start));
+    }
+    final messages = await _database!.readLatestMessageJsonForKeys(
+      kind.index,
+      keys,
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> getStringBeforeForKeys(
+    MessageHistoryKind kind,
+    List<String> keys, {
+    required int timelineAtMs,
+    required String messageId,
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (keys.isEmpty) return null;
+    if (keys.length == 1) {
+      return getStringBefore(
+        kind,
+        keys.single,
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+        limit: limit,
+      );
+    }
+    if (kIsWeb) {
+      final messages = _mergedWebMessages(keys);
+      final anchor = messages.indexWhere(
+        (message) => message['messageId'] == messageId,
+      );
+      if (anchor <= 0) return null;
+      final start = anchor > limit ? anchor - limit : 0;
+      return jsonEncode(messages.sublist(start, anchor));
+    }
+    final messages = await _database!.readMessageJsonBeforeForKeys(
+      kind.index,
+      keys,
+      cursor: MessageHistoryCursor(
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+      ),
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> getStringAfterForKeys(
+    MessageHistoryKind kind,
+    List<String> keys, {
+    required int timelineAtMs,
+    required String messageId,
+    required int limit,
+  }) async {
+    _requireInitialized();
+    if (keys.isEmpty || limit <= 0) return null;
+    if (keys.length == 1) {
+      return getStringAfter(
+        kind,
+        keys.single,
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+        limit: limit,
+      );
+    }
+    if (kIsWeb) {
+      final messages = _mergedWebMessages(keys);
+      final anchor = messages.indexWhere(
+        (message) => message['messageId'] == messageId,
+      );
+      if (anchor < 0 || anchor >= messages.length - 1) return null;
+      final available = messages.length - anchor - 1;
+      final count = available < limit ? available : limit;
+      return jsonEncode(messages.sublist(anchor + 1, anchor + 1 + count));
+    }
+    final messages = await _database!.readMessageJsonAfterForKeys(
+      kind.index,
+      keys,
+      cursor: MessageHistoryCursor(
+        timelineAtMs: timelineAtMs,
+        messageId: messageId,
+      ),
+      limit: limit,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  Future<String?> searchStringForKeys(
+    MessageHistoryKind kind,
+    List<String> keys,
+    String normalizedQuery,
+  ) async {
+    _requireInitialized();
+    if (keys.isEmpty) return null;
+    if (normalizedQuery.isEmpty || kIsWeb) return getStringForKeys(kind, keys);
+    final messages = await _database!.searchMessageJsonForKeys(
+      kind.index,
+      keys,
+      normalizedQuery,
+    );
+    return messages.isEmpty ? null : '[${messages.join(',')}]';
+  }
+
+  /// Removes [messageId] from every key of [keys] it is stored under.
+  Future<void> deleteMessageFromKeys(
+    MessageHistoryKind kind,
+    Iterable<String> keys,
+    String messageId,
+  ) async {
+    for (final key in keys) {
+      if (!_keys[kind]!.contains(key)) continue;
+      await deleteMessage(kind, key, messageId);
+    }
+  }
+
+  /// The web form of a read over several keys: the lists under every key,
+  /// in the order the database would give them.
+  List<Map<String, dynamic>> _mergedWebMessages(List<String> keys) {
+    final messages = <Map<String, dynamic>>[];
+    for (final key in keys) {
+      final value = PrefsManager.instance.getString(key);
+      if (value == null) continue;
+      messages.addAll(_decodeMessageList(value, key));
+    }
+    int timelineOf(Map<String, dynamic> message) =>
+        message['receivedAt'] as int? ?? message['timestamp'] as int? ?? 0;
+    messages.sort((a, b) {
+      final byTime = timelineOf(a).compareTo(timelineOf(b));
+      if (byTime != 0) return byTime;
+      return '${a['messageId']}'.compareTo('${b['messageId']}');
+    });
+    return messages;
+  }
+
   Future<MessageHistorySummaryRow?> directSummary(String key) async {
     _requireInitialized();
     if (kIsWeb) return null;
@@ -1046,6 +1219,18 @@ class MessageHistoryStorage {
   /// and in a process that has not initialised the storage, such as a unit
   /// test.
   bool get hasDatabase => _initialized && _database != null;
+
+  Future<List<ChannelIdentityRow>> readChannelIdentities() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readChannelIdentities();
+  }
+
+  Future<void> replaceChannelIdentities(List<ChannelIdentityRow> rows) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.replaceChannelIdentities(rows);
+  }
 
   Future<List<String>> loadDiscoveredContacts() async {
     _requireInitialized();

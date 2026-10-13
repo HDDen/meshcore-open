@@ -54,6 +54,29 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final jsonString = jsonEncode(jsonList);
 
     await history.setString(MessageHistoryKind.channel, key, jsonString);
+    await _dropFromFormerNames(history, channelIndex, orderedMessages);
+  }
+
+  /// A message saved under the channel's current name leaves the key of a
+  /// former name, where it may have been loaded from, or a read over both
+  /// keys would list it twice.
+  Future<void> _dropFromFormerNames(
+    MessageHistoryStorage history,
+    int channelIndex,
+    Iterable<ChannelMessage> messages,
+  ) async {
+    final keys = channelStorageKeys(keyFor, channelIndex);
+    if (keys.length < 2) return;
+    final former = keys.sublist(1);
+    if (!history.hasAnyKey(MessageHistoryKind.channel, former)) return;
+    for (final message in messages) {
+      if (message.messageId.isEmpty) continue;
+      await history.deleteMessageFromKeys(
+        MessageHistoryKind.channel,
+        former,
+        message.messageId,
+      );
+    }
   }
 
   Future<void> saveChannelMessage(
@@ -71,11 +94,13 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       );
       return;
     }
-    await MessageHistoryStorage.instance.setString(
+    final history = MessageHistoryStorage.instance;
+    await history.setString(
       MessageHistoryKind.channel,
       key,
       jsonEncode([_messageToJson(message)]),
     );
+    await _dropFromFormerNames(history, channelIndex, [message]);
   }
 
   Future<void> replaceChannelMessages(
@@ -87,20 +112,25 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) return;
     final ordered = orderMessages ? _orderedMessages(messages) : messages;
-    await MessageHistoryStorage.instance.replaceString(
+    final history = MessageHistoryStorage.instance;
+    await history.replaceString(
       MessageHistoryKind.channel,
       key,
       jsonEncode(ordered.map(_messageToJson).toList()),
     );
+    // The list replaced the whole history, former names included.
+    for (final formerKey in channelStorageKeys(keyFor, channelIndex).skip(1)) {
+      await history.remove(MessageHistoryKind.channel, formerKey);
+    }
   }
 
   Future<void> deleteChannelMessage(int channelIndex, String messageId) async {
     if (publicKeyHex.isEmpty || messageId.isEmpty) return;
-    final key = channelStorageKey(keyFor, channelIndex);
-    if (key == null) return;
-    await MessageHistoryStorage.instance.deleteMessage(
+    final keys = channelStorageKeys(keyFor, channelIndex);
+    if (keys.isEmpty) return;
+    await MessageHistoryStorage.instance.deleteMessageFromKeys(
       MessageHistoryKind.channel,
-      key,
+      keys,
       messageId,
     );
   }
@@ -122,16 +152,17 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     required int limit,
     bool allowLegacyMigration = true,
   }) async {
-    final key = await _ensureChannelHistoryKey(
+    final keys = await _ensureChannelHistoryKeys(
       channelIndex,
       allowLegacyMigration: allowLegacyMigration,
     );
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getLatestString(
-      MessageHistoryKind.channel,
-      key,
-      limit: limit,
-    );
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getLatestStringForKeys(
+          MessageHistoryKind.channel,
+          keys,
+          limit: limit,
+        );
     return _channelMessagesFromJson(jsonString, channelIndex);
   }
 
@@ -141,18 +172,19 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     required int limit,
     bool allowLegacyMigration = true,
   }) async {
-    final key = await _ensureChannelHistoryKey(
+    final keys = await _ensureChannelHistoryKeys(
       channelIndex,
       allowLegacyMigration: allowLegacyMigration,
     );
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getStringBefore(
-      MessageHistoryKind.channel,
-      key,
-      timelineAtMs: before.receivedAt.millisecondsSinceEpoch,
-      messageId: before.messageId,
-      limit: limit,
-    );
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getStringBeforeForKeys(
+          MessageHistoryKind.channel,
+          keys,
+          timelineAtMs: before.receivedAt.millisecondsSinceEpoch,
+          messageId: before.messageId,
+          limit: limit,
+        );
     return _channelMessagesFromJson(jsonString, channelIndex);
   }
 
@@ -162,18 +194,19 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     required int limit,
     bool allowLegacyMigration = true,
   }) async {
-    final key = await _ensureChannelHistoryKey(
+    final keys = await _ensureChannelHistoryKeys(
       channelIndex,
       allowLegacyMigration: allowLegacyMigration,
     );
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getStringAfter(
-      MessageHistoryKind.channel,
-      key,
-      timelineAtMs: after.receivedAt.millisecondsSinceEpoch,
-      messageId: after.messageId,
-      limit: limit,
-    );
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getStringAfterForKeys(
+          MessageHistoryKind.channel,
+          keys,
+          timelineAtMs: after.receivedAt.millisecondsSinceEpoch,
+          messageId: after.messageId,
+          limit: limit,
+        );
     return _channelMessagesFromJson(jsonString, channelIndex);
   }
 
@@ -206,7 +239,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
           );
         }
       }
-      return _orderedMessages(messages);
+      return _orderedMessages(_withoutRepeatedIds(messages));
     } catch (error) {
       if (error is OutOfMemoryError || error is StackOverflowError) rethrow;
       appLogger.warn(
@@ -216,6 +249,23 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       );
       return const [];
     }
+  }
+
+  /// A read over the keys of several names may hold one message twice while
+  /// a save under the current name has not yet dropped it from a former
+  /// one; the later copy wins, as the current name's row comes later.
+  static List<ChannelMessage> _withoutRepeatedIds(
+    List<ChannelMessage> messages,
+  ) {
+    final seen = <String>{};
+    final result = <ChannelMessage>[];
+    for (final message in messages.reversed) {
+      if (message.messageId.isNotEmpty && !seen.add(message.messageId)) {
+        continue;
+      }
+      result.add(message);
+    }
+    return result.reversed.toList();
   }
 
   Future<String?> loadChannelMessagesJsonForSearch(
@@ -231,15 +281,15 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       return null;
     }
     final history = MessageHistoryStorage.instance;
-    final key = channelStorageKey(keyFor, channelIndex);
-    if (key == null) return null;
+    final keys = channelStorageKeys(keyFor, channelIndex);
+    if (keys.isEmpty) return null;
     final queries = _searchQueries(normalizedQuery, normalizedQueries);
     var jsonString = queries == null
-        ? await history.getString(MessageHistoryKind.channel, key)
-        : await _searchHistoryString(history, key, queries);
+        ? await history.getStringForKeys(MessageHistoryKind.channel, keys)
+        : await _searchHistoryString(history, keys, queries);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyIndexFallback &&
-        !history.getKeys(MessageHistoryKind.channel).contains(key)) {
+        !history.hasAnyKey(MessageHistoryKind.channel, keys)) {
       jsonString =
           await _historyStringForSearch(
             history,
@@ -262,7 +312,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
   ) {
     return normalizedQueries == null
         ? history.getString(MessageHistoryKind.channel, key)
-        : _searchHistoryString(history, key, normalizedQueries);
+        : _searchHistoryString(history, [key], normalizedQueries);
   }
 
   List<String>? _searchQueries(
@@ -281,14 +331,14 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
   Future<String?> _searchHistoryString(
     MessageHistoryStorage history,
-    String key,
+    List<String> keys,
     List<String> normalizedQueries,
   ) async {
     final entries = <String>{};
     for (final query in normalizedQueries) {
-      final jsonString = await history.searchString(
+      final jsonString = await history.searchStringForKeys(
         MessageHistoryKind.channel,
-        key,
+        keys,
         query,
       );
       if (jsonString == null || jsonString.isEmpty) continue;
@@ -316,14 +366,15 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       return null;
     }
     final history = MessageHistoryStorage.instance;
-    final key = channelStorageKey(keyFor, channelIndex);
-    if (key == null) return null;
+    final keys = channelStorageKeys(keyFor, channelIndex);
+    if (keys.isEmpty) return null;
+    final key = keys.first;
     final scopedIndexKey = '$keyFor$channelIndex';
     final oldKey = '$_keyPrefix$channelIndex';
 
-    String? jsonString = await history.getString(
+    String? jsonString = await history.getStringForKeys(
       MessageHistoryKind.channel,
-      key,
+      keys,
     );
     if ((jsonString == null || jsonString.isEmpty) &&
         allowLegacyMigration &&
@@ -350,15 +401,19 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     return jsonString;
   }
 
-  Future<String?> _ensureChannelHistoryKey(
+  /// The keys the channel's history lies under, or null when there is none
+  /// (after the one-time move from the slot-keyed storage, when that is
+  /// still allowed).
+  Future<List<String>?> _ensureChannelHistoryKeys(
     int channelIndex, {
     required bool allowLegacyMigration,
   }) async {
     if (publicKeyHex.isEmpty) return null;
     final history = MessageHistoryStorage.instance;
-    final key = channelStorageKey(keyFor, channelIndex);
-    if (key == null) return null;
-    if (history.getKeys(MessageHistoryKind.channel).contains(key)) return key;
+    final keys = channelStorageKeys(keyFor, channelIndex);
+    if (keys.isEmpty) return null;
+    if (history.hasAnyKey(MessageHistoryKind.channel, keys)) return keys;
+    final key = keys.first;
     if (!allowLegacyMigration || !allowsLegacyIndexMigration) return null;
 
     final scopedIndexKey = '$keyFor$channelIndex';
@@ -374,7 +429,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       key,
       legacyJsonString,
     );
-    return key;
+    return [key];
   }
 
   List<ChannelMessage> _orderedMessages(List<ChannelMessage> messages) {
@@ -384,14 +439,28 @@ class ChannelMessageStore with ChannelNameKeyedStore {
     return ordered;
   }
 
-  /// Clear messages for a specific channel
+  /// Clears the channel's messages in this scope, under every name it has
+  /// had.
   Future<void> clearChannelMessages(int channelIndex) async {
     final history = MessageHistoryStorage.instance;
-    final key = channelStorageKey(keyFor, channelIndex);
-    if (key != null) {
+    for (final key in channelStorageKeys(keyFor, channelIndex)) {
       await history.remove(MessageHistoryKind.channel, key);
     }
     await history.remove(MessageHistoryKind.channel, '$keyFor$channelIndex');
+  }
+
+  /// Clears, in this scope, the messages stored under each of [names]: what
+  /// a deletion reaching every node does in the other nodes' scopes, where
+  /// no slot is registered.
+  Future<void> clearMessagesForNames(Iterable<String> names) async {
+    if (publicKeyHex.isEmpty) return;
+    final history = MessageHistoryStorage.instance;
+    for (final name in names) {
+      final key = ChannelNameKeyedStore.nameStorageKey(keyFor, name);
+      if (history.getKeys(MessageHistoryKind.channel).contains(key)) {
+        await history.remove(MessageHistoryKind.channel, key);
+      }
+    }
   }
 
   /// Clear all channel messages

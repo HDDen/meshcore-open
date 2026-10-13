@@ -1853,6 +1853,69 @@ The neighbours and telemetry screens learn their request's tag from the `RESP_CO
 ### Room servers on the channels screen
 Three mod settings decide how much of the contact list the channels screen borrows. `roomServerShowNotemptyOnChatscreen` adds room servers (`advTypeRoom`) and `roomServerShowNotemptyContactsOnChatscreen` adds ordinary chat contacts (`advTypeChat`) — both only where `Contact.hasMessages` is true, so an advert alone never puts a node there. `roomServerDisableRoomAndContactsSorting` (default **on**; the other two default off) keeps them out of the channel sort order, and while it is on `_visibleRoomServers()` returns nothing at all. `widgets/message_search_sheet.dart` reads the same two visibility flags, so search covers exactly what the screen shows.
 
+### Channel identity: names, keys and aliases
+
+Per-channel data (messages, settings, region, marker styles, mutes) is keyed
+by the channel's **name** in the node's scope (`ChannelNameKeyedStore`,
+`channel_messages_<node>name_<base64url(name)>`), never by the radio slot: a
+slot is reused for other channels, and the same channel sits in different
+slots on different nodes. One channel name on several nodes of one owner is
+one channel, which is what the shared history, the search and the marker
+styles rest on. What the name keying lost was a rename: a channel renamed
+under the same PSK started over, its history, settings and region staying
+under the old name.
+
+`channel_identities` (`storage/channel_identity_store.dart`,
+`ChannelIdentities.instance`, an app-wide auxiliary table of the application
+database, `(group_id, psk_id, name)`, the preference key
+`channel_identities_v1` where there is no database) records every (PSK,
+name) pair a channel went through: a group is one logical channel, its rows
+the aliases, a pair with no row a group of itself; `psk_id` is
+`Channel.storageId`. A link is recorded only when exactly one of the two
+parameters changed: by `setChannel` (the edit sheet and the link and QR
+import's "update the channel of this name" go through it, the slot's old
+channel known), and by the channel sync, which compares the node's list
+before the sync (the last saved list at the first sync of a session) with
+the list it read, as sets of pairs (`helpers/channel_identity_reconciler.dart`):
+a pair that vanished links to the pair that appeared with its key, else, when
+its key vanished altogether, to the one that appeared with its name; both
+changed is a new channel, a slot move is nothing. A slot whose channel gained
+names is read again at the end of the sync.
+
+The reads follow the group. `channelStorageKeys` gives the key of every name
+of the channel, its own first, and the message store reads over them
+(`storage_key IN`, `MessageHistoryStorage.getLatestStringForKeys` and its
+siblings, the lists merged in timeline order on the web), writes under the
+current name and drops a re-saved message from the former names' keys
+(`_dropFromFormerNames`), so a read over several keys never lists one message
+twice (`_withoutRepeatedIds` covers the window between the two). Settings and
+the region are not copied on a rename: `channelInheritedKeys` reads the value
+from the channel's other names in this scope and then from the same names in
+every other node's scope, after the node's own value and the one-time move
+from the slot key, so a node that never set anything for a channel takes what
+another node keeps for it, and a value set here wins from then on. Marker
+styles (`ChannelMarkerStyles.styleFor`) and mutes
+(`_isChannelMutedUnderAnyName`) read the former names the same way. The
+shared history finds another node's copy by the group when the matcher fails
+(`SharedMessageHistoryHelper.matchingChannelIndex`), and
+`_sharedChannelIdentityKey` carries the table's revision, so a channel that
+gains a name fetches its shared copy anew.
+
+A manual deletion (`deleteChannel`) and a clearing
+(`clearMessagesForChannel`) take `allNodes`. With the shared channel history
+on, the dialog (`widgets/channel_data_scope_dialog.dart`) asks whether the
+channel's data goes for this node or in the merged history of every node:
+this node clears its own scope under every name of the group and keeps the
+group while another node's cached channel list holds a channel of it, all
+nodes clears every scope and forgets the group. A slot emptied by another
+app clears nothing, as before. Contact history is keyed by the full public
+key and loses nothing on a rename; linking a contact's new key to an old
+history is its own, manual change
+(`test/storage/channel_identities_test.dart`,
+`test/helpers/channel_identity_reconciler_test.dart`,
+`test/storage/channel_message_store_identity_test.dart`,
+`test/storage/channel_settings_inheritance_test.dart`).
+
 ### Channel QR codes: scanning and sharing (fork-only, removable)
 
 The add-channel sheet has a **Scan a QR Code** option ahead of the community one. It reads the link format the MeshCore mobile app uses for channels, documented in MeshCore's `docs/qr_codes.md`: `meshcore://channel/add?name=<url-encoded>&secret=<32 hex>` with an optional `region_scope`. A hashtag channel is the same link with a `#` name; a hashtag link that carries no secret is accepted too, its key derived from the whole name. An over-long name is shortened on a character boundary to the 31 bytes the node stores, since the secret is what identifies a channel and the name is only a label.

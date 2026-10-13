@@ -65,7 +65,7 @@ Name limits count the `#` and any community prefix, so the name stored on the ra
 | Mute / Unmute | Toggle push notification suppression for this channel |
 | Delete | Remove the channel from the device and delete its messages, settings, region and images (confirmation required) |
 
-Channel history and settings belong to the channel's name, not its slot on the radio. A slot reused for another channel (here or in another app) starts empty, adding a channel again under its name brings its history back, and a channel with the same name on another node of yours shares it. Editing the PSK keeps the history; renaming starts a new one under the new name, the old one staying stored under the old name.
+Channel history and settings belong to the channel's name, not its slot on the radio. A slot reused for another channel (here or in another app) starts empty, adding a channel again under its name brings its history back, and a channel with the same name on another node of yours shares it. Renaming a channel under the same key, or giving it a new key under the same name, keeps its history, settings and region: the app records the names and keys a channel has had, here and when another app changed them on the radio. Changing both at once is a new channel. Deleting a channel while the shared channel history is on asks whether its data goes for this node only or in the merged history of every node.
 
 ## Channel Chat
 

@@ -13636,6 +13636,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours}h {minutes}m'**
   String neighbors_durationHours(Object hours, Object minutes);
+
+  /// No description provided for @channels_dataScopeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the channel\'s data on this node only, or in the merged history of every node in the app?'**
+  String get channels_dataScopeQuestion;
+
+  /// No description provided for @channels_dataScopeThisNode.
+  ///
+  /// In en, this message translates to:
+  /// **'This node'**
+  String get channels_dataScopeThisNode;
+
+  /// No description provided for @channels_dataScopeAllNodes.
+  ///
+  /// In en, this message translates to:
+  /// **'All nodes'**
+  String get channels_dataScopeAllNodes;
 }
 
 class _AppLocalizationsDelegate
