@@ -8185,4 +8185,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get channels_dataScopeAllNodes => 'All nodes';
+
+  @override
+  String get chat_historyLinkBanner =>
+      'A message history exists for a contact with this name under another key.';
+
+  @override
+  String get chat_historyLinkAttach => 'Attach';
+
+  @override
+  String get chat_historyLinkTitle => 'Attach the history?';
+
+  @override
+  String chat_historyLinkBody(String name, String key) {
+    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+  }
+
+  @override
+  String get chat_historyLinked => 'The history has been attached.';
 }

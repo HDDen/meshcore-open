@@ -1232,6 +1232,18 @@ class MessageHistoryStorage {
     await _database!.replaceChannelIdentities(rows);
   }
 
+  Future<List<ContactIdentityRow>> readContactIdentities() async {
+    _requireInitialized();
+    if (kIsWeb) return const [];
+    return _database!.readContactIdentities();
+  }
+
+  Future<void> replaceContactIdentities(List<ContactIdentityRow> rows) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.replaceContactIdentities(rows);
+  }
+
   Future<List<String>> loadDiscoveredContacts() async {
     _requireInitialized();
     if (kIsWeb) return const [];

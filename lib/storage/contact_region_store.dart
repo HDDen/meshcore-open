@@ -44,6 +44,16 @@ class ContactRegionStore {
     }
   }
 
+  /// Gives [to] the region of [from] when it has none of its own: what
+  /// attaching an old key's history gives the new key.
+  Future<void> copyRegion({required String from, required String to}) async {
+    if (publicKeyHex.isEmpty || from == to) return;
+    final regions = await loadRegions();
+    final source = regions[from];
+    if (source == null || source.isEmpty || regions.containsKey(to)) return;
+    await saveRegion(to, source);
+  }
+
   /// Stores [region] for [contactKeyHex], or removes it when empty. Returns
   /// what was stored.
   Future<String> saveRegion(String contactKeyHex, String region) async {

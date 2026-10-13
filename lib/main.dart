@@ -53,6 +53,7 @@ import 'storage/map_tile_cache_database.dart';
 import 'storage/message_store.dart';
 import 'storage/channel_message_store.dart';
 import 'storage/channel_identity_store.dart';
+import 'storage/contact_identity_store.dart';
 import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
@@ -166,6 +167,7 @@ Future<void> _startApplication() async {
   // Which (key, name) pairs are one channel: read once, looked up by every
   // channel store from here on.
   await ChannelIdentities.instance.load();
+  await ContactIdentities.instance.load();
   // Windows and Linux only: the map tile records in their own database, the
   // JSON index moved into it once, behind a notice while that takes.
   _setStartupStage('MCO-STARTUP-109', 'Map tile index');

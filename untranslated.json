@@ -67,7 +67,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "de": [
@@ -116,7 +121,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "es": [
@@ -165,7 +175,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "fr": [
@@ -214,7 +229,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "hu": [
@@ -263,7 +283,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "it": [
@@ -312,7 +337,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "ja": [
@@ -361,7 +391,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "ko": [
@@ -410,7 +445,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "nl": [
@@ -459,7 +499,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "pl": [
@@ -508,7 +553,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "pt": [
@@ -557,7 +607,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "ru": [
@@ -637,7 +692,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "sl": [
@@ -686,7 +746,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "sv": [
@@ -735,7 +800,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "uk": [
@@ -784,7 +854,12 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ],
 
   "zh": [
@@ -833,6 +908,11 @@
     "settings_modSettingsSenderNameScale",
     "channels_dataScopeQuestion",
     "channels_dataScopeThisNode",
-    "channels_dataScopeAllNodes"
+    "channels_dataScopeAllNodes",
+    "chat_historyLinkBanner",
+    "chat_historyLinkAttach",
+    "chat_historyLinkTitle",
+    "chat_historyLinkBody",
+    "chat_historyLinked"
   ]
 }

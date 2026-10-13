@@ -31,6 +31,7 @@ import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_identity_reconciler.dart';
+import '../helpers/contact_history_candidates.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
@@ -80,6 +81,7 @@ import 'meshcore_connector_usb.dart';
 import 'meshcore_connector_tcp.dart';
 import '../storage/channel_message_store.dart';
 import '../storage/channel_identity_store.dart';
+import '../storage/contact_identity_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
@@ -9983,8 +9985,101 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _unreadStore.saveContactUnreadCount(
       Map<String, int>.from(_contactUnreadCount),
     );
-    if (!keepMessages) _messageStore.clearMessages(contact.publicKeyHex);
+    if (!keepMessages) {
+      // The history under every key linked to this one goes with it, as the
+      // chat showed it. The link itself stays while another node still
+      // holds one of the keys.
+      await _messageStore.clearMessages(contact.publicKeyHex);
+      await _forgetContactIdentityUnlessHeldElsewhere(contact.publicKeyHex);
+    }
     notifyListeners();
+  }
+
+  /// The histories a chat with [contact] may take over: chat contacts of the
+  /// same name under another key that have one, on this node's list and,
+  /// with the shared contact history on, on the other nodes' cached lists.
+  /// Only the user decides, through [linkContactHistory]: a name proves
+  /// nothing.
+  Future<List<ContactHistoryCandidate>> contactHistoryCandidates(
+    Contact contact,
+  ) async {
+    final linked = ContactIdentities.instance
+        .keysOf(contact.publicKeyHex)
+        .toSet();
+    final result = ContactHistoryCandidates.sameNameWithHistory(
+      contact,
+      _contacts,
+      excludedKeys: linked,
+    );
+    if (!_sharedContactsEnabled) return result;
+    for (final scope in _otherNodeScopes) {
+      final contacts = await (ContactStore()..setPublicKeyHex = scope)
+          .loadContacts(allowLegacyMigration: false);
+      for (final candidate in ContactHistoryCandidates.sameNameWithHistory(
+        contact,
+        contacts,
+        nodeScope: scope,
+        excludedKeys: linked,
+      )) {
+        if (result.any((c) => c.publicKeyHex == candidate.publicKeyHex)) {
+          continue;
+        }
+        result.add(candidate);
+      }
+    }
+    return result;
+  }
+
+  /// Attaches the history under [otherKeyHex] to [contact]: the two keys
+  /// become one contact in [ContactIdentities], the contact takes the
+  /// settings and the region of the other key where it has none, and its
+  /// chat is read again over both keys.
+  Future<void> linkContactHistory(Contact contact, String otherKeyHex) async {
+    final key = contact.publicKeyHex;
+    if (!await ContactIdentities.instance.link(key, otherKeyHex)) return;
+    await _contactSettingsStore.copySettings(from: otherKeyHex, to: key);
+    await _contactRegionStore.copyRegion(from: otherKeyHex, to: key);
+    for (final cache in <Map<String, Object?>>[
+      _contactMcmpEnabled,
+      _contactMcmpVersion,
+      _contactMcmpUseSign,
+      _contactMCOtxtEnabled,
+      _contactMCOtxtPlainWhenSmaller,
+      _contactSmazEnabled,
+      _contactCyr2LatEnabled,
+      _contactUrlImagesEnabled,
+      _contactCyr2LatProfileId,
+      _contactSendingDelayEnabled,
+      _contactQuickAnswerIds,
+    ]) {
+      cache.remove(key);
+    }
+    await _loadContactRegions(selfPublicKeyHex);
+    _conversations.remove(key);
+    _loadedConversationKeys.remove(key);
+    _conversationLoadFutures.remove(key);
+    _sharedContactSecondaryMessages.remove(key);
+    _contactMessagePreviews.remove(key);
+    await _loadMessagesForContact(key);
+    await _refreshContactMessageSummaries();
+    notifyListeners();
+  }
+
+  /// A deleted contact's group goes with its history, unless another node's
+  /// list still holds one of its keys: that node reads the others through it.
+  Future<void> _forgetContactIdentityUnlessHeldElsewhere(
+    String contactKeyHex,
+  ) async {
+    final keys = ContactIdentities.instance.keysOf(contactKeyHex).toSet();
+    if (keys.length < 2) return;
+    for (final scope in _otherNodeScopes) {
+      final contacts = await (ContactStore()..setPublicKeyHex = scope)
+          .loadContacts(allowLegacyMigration: false);
+      if (contacts.any((c) => keys.contains(c.publicKeyHex.toLowerCase()))) {
+        return;
+      }
+    }
+    await ContactIdentities.instance.forget(contactKeyHex);
   }
 
   Future<void> updateKnownDiscovered() async {

@@ -224,6 +224,10 @@ typedef NodeStateRow = ({String nodeKey, String name, String value});
 /// under and the group that makes it one channel with the other pairs.
 typedef ChannelIdentityRow = ({int groupId, String pskId, String name});
 
+/// One row of `contact_identities`: a public key and the group that makes
+/// it one contact with the other keys the user linked to it.
+typedef ContactIdentityRow = ({int groupId, String publicKeyHex});
+
 typedef WardriveSampleRow = ({
   String id,
   int timestampMs,
@@ -468,6 +472,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureWardriveTables();
     await _ensureNodeCollectionTables();
     await _ensureChannelIdentitiesTable();
+    await _ensureContactIdentitiesTable();
   }
 
   // The pairs of key and name that are one channel, app-wide, one row per
@@ -507,6 +512,45 @@ CREATE TABLE IF NOT EXISTS channel_identities (
           'INSERT INTO channel_identities (group_id, psk_id, name) '
           'VALUES (?, ?, ?)',
           [row.groupId, row.pskId, row.name],
+        );
+      }
+    });
+  }
+
+  // The public keys the user linked as one contact, app-wide, one row per
+  // key; `group_id` ties the rows of one contact. Tiny and rewritten whole.
+  Future<void> _ensureContactIdentitiesTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS contact_identities (
+  group_id INTEGER NOT NULL,
+  public_key_hex TEXT NOT NULL PRIMARY KEY
+)
+''');
+  }
+
+  Future<List<ContactIdentityRow>> readContactIdentities() async {
+    final rows = await customSelect(
+      'SELECT group_id, public_key_hex FROM contact_identities '
+      'ORDER BY group_id, public_key_hex',
+    ).get();
+    return [
+      for (final row in rows)
+        (
+          groupId: row.read<int>('group_id'),
+          publicKeyHex: row.read<String>('public_key_hex'),
+        ),
+    ];
+  }
+
+  /// Replaces the table with [rows], in one transaction.
+  Future<void> replaceContactIdentities(List<ContactIdentityRow> rows) async {
+    await batch((batch) {
+      batch.customStatement('DELETE FROM contact_identities');
+      for (final row in rows) {
+        batch.customStatement(
+          'INSERT INTO contact_identities (group_id, public_key_hex) '
+          'VALUES (?, ?)',
+          [row.groupId, row.publicKeyHex],
         );
       }
     });

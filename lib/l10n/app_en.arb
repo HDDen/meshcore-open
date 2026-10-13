@@ -4323,5 +4323,16 @@
   "neighbors_durationHours": "{hours}h {minutes}m",
   "channels_dataScopeQuestion": "Remove the channel's data on this node only, or in the merged history of every node in the app?",
   "channels_dataScopeThisNode": "This node",
-  "channels_dataScopeAllNodes": "All nodes"
+  "channels_dataScopeAllNodes": "All nodes",
+  "chat_historyLinkBanner": "A message history exists for a contact with this name under another key.",
+  "chat_historyLinkAttach": "Attach",
+  "chat_historyLinkTitle": "Attach the history?",
+  "chat_historyLinkBody": "A history was found for a contact named \"{name}\" with another key ({key}). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.",
+  "@chat_historyLinkBody": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "key": {"type": "String"}
+    }
+  },
+  "chat_historyLinked": "The history has been attached."
 }

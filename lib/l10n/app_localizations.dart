@@ -13654,6 +13654,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All nodes'**
   String get channels_dataScopeAllNodes;
+
+  /// No description provided for @chat_historyLinkBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'A message history exists for a contact with this name under another key.'**
+  String get chat_historyLinkBanner;
+
+  /// No description provided for @chat_historyLinkAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach'**
+  String get chat_historyLinkAttach;
+
+  /// No description provided for @chat_historyLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach the history?'**
+  String get chat_historyLinkTitle;
+
+  /// No description provided for @chat_historyLinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A history was found for a contact named \"{name}\" with another key ({key}). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.'**
+  String chat_historyLinkBody(String name, String key);
+
+  /// No description provided for @chat_historyLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'The history has been attached.'**
+  String get chat_historyLinked;
 }
 
 class _AppLocalizationsDelegate

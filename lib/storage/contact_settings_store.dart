@@ -33,6 +33,40 @@ class ContactSettingsStore {
   String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
   String get keyForUrlImages => '$_urlImagesKeyPrefix$publicKeyHex';
 
+  /// Copies every setting stored for [from] to [to] where [to] has none:
+  /// what attaching an old key's history gives the new key.
+  Future<void> copySettings({required String from, required String to}) async {
+    if (publicKeyHex.isEmpty || from == to) return;
+    final prefs = PrefsManager.instance;
+    for (final prefix in <String>[
+      keyFor,
+      keyForMcmp,
+      keyForMcmpVersion,
+      keyForMcmpUseSign,
+      keyForMCOtxt,
+      keyForMCOtxtPlainWhenSmaller,
+      keyForCyr2Lat,
+      '${keyForCyr2Lat}profile_',
+      keyForSendingDelay,
+      keyForQuickAnswerIds,
+      keyForUrlImages,
+    ]) {
+      final source = prefs.get('$prefix$from');
+      final target = '$prefix$to';
+      if (source == null || prefs.containsKey(target)) continue;
+      switch (source) {
+        case bool value:
+          await prefs.setBool(target, value);
+        case int value:
+          await prefs.setInt(target, value);
+        case String value:
+          await prefs.setString(target, value);
+        case List<Object?> value:
+          await prefs.setStringList(target, value.whereType<String>().toList());
+      }
+    }
+  }
+
   Future<bool> loadSmazEnabled(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn(

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import 'contact_identity_store.dart';
+
 import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
@@ -27,6 +29,37 @@ class MessageStore {
   /// beyond it are dropped on save.
   static const int maxStoredMessages = 1000;
 
+  /// The keys the conversation with [contactKeyHex] lies under in this
+  /// scope: the contact's own first, then those of the keys the user linked
+  /// to it as the same person ([ContactIdentities]).
+  List<String> _storageKeys(String contactKeyHex) => [
+    '$keyFor$contactKeyHex',
+    for (final key in ContactIdentities.instance.keysOf(contactKeyHex).skip(1))
+      '$keyFor$key',
+  ];
+
+  /// A message saved under the contact's own key leaves the keys linked to
+  /// it, where it may have been loaded from, or a read over them would list
+  /// it twice.
+  Future<void> _dropFromLinkedKeys(
+    MessageHistoryStorage history,
+    String contactKeyHex,
+    Iterable<Message> messages,
+  ) async {
+    final linked = _storageKeys(contactKeyHex).sublist(1);
+    if (linked.isEmpty || !history.hasAnyKey(MessageHistoryKind.direct, linked)) {
+      return;
+    }
+    for (final message in messages) {
+      if (message.messageId.isEmpty) continue;
+      await history.deleteMessageFromKeys(
+        MessageHistoryKind.direct,
+        linked,
+        message.messageId,
+      );
+    }
+  }
+
   Future<void> saveMessages(
     String contactKeyHex,
     List<Message> messages,
@@ -43,6 +76,7 @@ class MessageStore {
       key,
       jsonEncode(jsonList),
     );
+    await _dropFromLinkedKeys(history, contactKeyHex, messages);
   }
 
   Future<void> saveMessage(String contactKeyHex, Message message) async {
@@ -50,11 +84,13 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot save message.');
       return;
     }
-    await MessageHistoryStorage.instance.setString(
+    final history = MessageHistoryStorage.instance;
+    await history.setString(
       MessageHistoryKind.direct,
       '$keyFor$contactKeyHex',
       jsonEncode([_messageToJson(message)]),
     );
+    await _dropFromLinkedKeys(history, contactKeyHex, [message]);
   }
 
   Future<void> replaceMessages(
@@ -72,9 +108,9 @@ class MessageStore {
 
   Future<void> deleteMessage(String contactKeyHex, String messageId) async {
     if (publicKeyHex.isEmpty || messageId.isEmpty) return;
-    await MessageHistoryStorage.instance.deleteMessage(
+    await MessageHistoryStorage.instance.deleteMessageFromKeys(
       MessageHistoryKind.direct,
-      '$keyFor$contactKeyHex',
+      _storageKeys(contactKeyHex),
       messageId,
     );
   }
@@ -88,13 +124,14 @@ class MessageStore {
     String contactKeyHex, {
     required int limit,
   }) async {
-    final key = await _ensureScopedHistory(contactKeyHex);
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getLatestString(
-      MessageHistoryKind.direct,
-      key,
-      limit: limit,
-    );
+    final keys = await _ensureScopedHistoryKeys(contactKeyHex);
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getLatestStringForKeys(
+          MessageHistoryKind.direct,
+          keys,
+          limit: limit,
+        );
     return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
@@ -103,15 +140,16 @@ class MessageStore {
     required Message before,
     required int limit,
   }) async {
-    final key = await _ensureScopedHistory(contactKeyHex);
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getStringBefore(
-      MessageHistoryKind.direct,
-      key,
-      timelineAtMs: _timelineAt(before).millisecondsSinceEpoch,
-      messageId: before.messageId,
-      limit: limit,
-    );
+    final keys = await _ensureScopedHistoryKeys(contactKeyHex);
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getStringBeforeForKeys(
+          MessageHistoryKind.direct,
+          keys,
+          timelineAtMs: _timelineAt(before).millisecondsSinceEpoch,
+          messageId: before.messageId,
+          limit: limit,
+        );
     return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
@@ -120,15 +158,16 @@ class MessageStore {
     required Message after,
     required int limit,
   }) async {
-    final key = await _ensureScopedHistory(contactKeyHex);
-    if (key == null) return const [];
-    final jsonString = await MessageHistoryStorage.instance.getStringAfter(
-      MessageHistoryKind.direct,
-      key,
-      timelineAtMs: _timelineAt(after).millisecondsSinceEpoch,
-      messageId: after.messageId,
-      limit: limit,
-    );
+    final keys = await _ensureScopedHistoryKeys(contactKeyHex);
+    if (keys == null) return const [];
+    final jsonString = await MessageHistoryStorage.instance
+        .getStringAfterForKeys(
+          MessageHistoryKind.direct,
+          keys,
+          timelineAtMs: _timelineAt(after).millisecondsSinceEpoch,
+          messageId: after.messageId,
+          limit: limit,
+        );
     return _messagesFromJson(jsonString, contextKey: contactKeyHex);
   }
 
@@ -188,18 +227,18 @@ class MessageStore {
       return null;
     }
     final history = MessageHistoryStorage.instance;
-    final key = '$keyFor$contactKeyHex';
+    final keys = _storageKeys(contactKeyHex);
     final queries = _searchQueries(normalizedQuery, normalizedQueries);
     var jsonString = queries == null
-        ? await history.getString(MessageHistoryKind.direct, key)
-        : await _searchHistoryString(history, key, queries);
+        ? await history.getStringForKeys(MessageHistoryKind.direct, keys)
+        : await _searchHistoryString(history, keys, queries);
     if ((jsonString == null || jsonString.isEmpty) &&
         includeLegacyUnscoped &&
-        !history.getKeys(MessageHistoryKind.direct).contains(key)) {
+        !history.hasAnyKey(MessageHistoryKind.direct, keys)) {
       final legacyKey = '$_keyPrefix$contactKeyHex';
       jsonString = queries == null
           ? await history.getString(MessageHistoryKind.direct, legacyKey)
-          : await _searchHistoryString(history, legacyKey, queries);
+          : await _searchHistoryString(history, [legacyKey], queries);
     }
     return jsonString == null || jsonString.isEmpty ? null : jsonString;
   }
@@ -220,14 +259,14 @@ class MessageStore {
 
   Future<String?> _searchHistoryString(
     MessageHistoryStorage history,
-    String key,
+    List<String> keys,
     List<String> normalizedQueries,
   ) async {
     final entries = <String>{};
     for (final query in normalizedQueries) {
-      final jsonString = await history.searchString(
+      final jsonString = await history.searchStringForKeys(
         MessageHistoryKind.direct,
-        key,
+        keys,
         query,
       );
       if (jsonString == null || jsonString.isEmpty) continue;
@@ -252,9 +291,9 @@ class MessageStore {
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    String? jsonString = await history.getString(
+    String? jsonString = await history.getStringForKeys(
       MessageHistoryKind.direct,
-      key,
+      _storageKeys(contactKeyHex),
     );
     if (jsonString == null || jsonString.isEmpty) {
       // Attempt migration from legacy unscoped key on first load
@@ -278,14 +317,17 @@ class MessageStore {
     return jsonString;
   }
 
-  Future<String?> _ensureScopedHistory(String contactKeyHex) async {
+  /// The keys the conversation lies under, or null when there is none
+  /// (after the one-time move from the unscoped key).
+  Future<List<String>?> _ensureScopedHistoryKeys(String contactKeyHex) async {
     if (publicKeyHex.isEmpty) {
       appLogger.warn('Public key hex is not set. Cannot load messages.');
       return null;
     }
     final history = MessageHistoryStorage.instance;
-    final key = '$keyFor$contactKeyHex';
-    if (history.getKeys(MessageHistoryKind.direct).contains(key)) return key;
+    final keys = _storageKeys(contactKeyHex);
+    if (history.hasAnyKey(MessageHistoryKind.direct, keys)) return keys;
+    final key = keys.first;
 
     final oldKey = '$_keyPrefix$contactKeyHex';
     final legacyJsonString = await history.getString(
@@ -299,10 +341,10 @@ class MessageStore {
         key,
         legacyJsonString,
       );
-      return key;
+      return [key];
     }
     if (history.getKeys(MessageHistoryKind.direct).contains(keyFor)) {
-      return keyFor;
+      return [keyFor];
     }
     return null;
   }
@@ -324,7 +366,7 @@ class MessageStore {
     if (publicKeyHex.isEmpty) return false;
     final history = MessageHistoryStorage.instance;
     for (final key in [
-      '$keyFor$contactKeyHex',
+      ..._storageKeys(contactKeyHex),
       '$_keyPrefix$contactKeyHex',
       keyFor,
     ]) {
@@ -344,11 +386,14 @@ class MessageStore {
     final history = MessageHistoryStorage.instance;
     final key = '$keyFor$contactKeyHex';
     final oldKey = '$_keyPrefix$contactKeyHex';
-    final MessageHistorySummaryRow? databaseSummary = await history
-        .directSummary(key);
-    if (databaseSummary != null) {
-      return _summaryFromDatabase(databaseSummary);
-    }
+    final databaseSummary = _mergeSummaries([
+      for (final row
+          in (await history.directSummaries(
+            _storageKeys(contactKeyHex),
+          )).values)
+        _summaryFromDatabase(row),
+    ]);
+    if (databaseSummary != null) return databaseSummary;
     var jsonString = await history.getString(MessageHistoryKind.direct, key);
     if ((jsonString == null || jsonString.isEmpty) && includeLegacyUnscoped) {
       final legacyJsonString = await history.getString(
@@ -418,9 +463,10 @@ class MessageStore {
       return result;
     }
 
-    final scopedStorageKeys = {
+    final scopedStorageKeys = <String, String>{
       for (final contactKeyHex in contactKeys)
-        '$keyFor$contactKeyHex': contactKeyHex,
+        for (final storageKey in _storageKeys(contactKeyHex))
+          storageKey: contactKeyHex,
     };
     final legacyStorageKeys = includeLegacyUnscoped
         ? {
@@ -435,14 +481,37 @@ class MessageStore {
         ]);
     final result = <String, MessageStoreSummary>{};
     for (final contactKeyHex in contactKeys) {
-      final scoped = databaseSummaries['$keyFor$contactKeyHex'];
+      final scoped = _mergeSummaries([
+        for (final storageKey in _storageKeys(contactKeyHex))
+          if (databaseSummaries[storageKey] case final row?)
+            _summaryFromDatabase(row),
+      ]);
       final legacy = databaseSummaries['$_keyPrefix$contactKeyHex'];
-      final summary = scoped ?? legacy;
-      if (summary != null) {
-        result[contactKeyHex] = _summaryFromDatabase(summary);
-      }
+      final summary =
+          scoped ?? (legacy == null ? null : _summaryFromDatabase(legacy));
+      if (summary != null) result[contactKeyHex] = summary;
     }
     return result;
+  }
+
+  /// One summary over the keys of a contact: the messages counted together,
+  /// the newest of them the preview.
+  static MessageStoreSummary? _mergeSummaries(
+    List<MessageStoreSummary> summaries,
+  ) {
+    if (summaries.isEmpty) return null;
+    var merged = summaries.first;
+    for (final summary in summaries.skip(1)) {
+      final newer = summary.latestMessageAt.isAfter(merged.latestMessageAt);
+      merged = MessageStoreSummary(
+        messageCount: merged.messageCount + summary.messageCount,
+        latestMessageAt: newer ? summary.latestMessageAt : merged.latestMessageAt,
+        latestMessageText: newer
+            ? summary.latestMessageText
+            : merged.latestMessageText,
+      );
+    }
+    return merged;
   }
 
   MessageStoreSummary _summaryFromDatabase(
@@ -467,9 +536,11 @@ class MessageStore {
       appLogger.warn('Public key hex is not set. Cannot clear messages.');
       return;
     }
+    // The keys linked to this one go with it: the chat showed them as one.
     final history = MessageHistoryStorage.instance;
-    final key = '$keyFor$contactKeyHex';
-    await history.remove(MessageHistoryKind.direct, key);
+    for (final key in _storageKeys(contactKeyHex)) {
+      await history.remove(MessageHistoryKind.direct, key);
+    }
   }
 
   Map<String, dynamic> _messageToJson(Message msg) {

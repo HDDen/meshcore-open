@@ -1916,6 +1916,41 @@ history is its own, manual change
 `test/storage/channel_message_store_identity_test.dart`,
 `test/storage/channel_settings_inheritance_test.dart`).
 
+### Contact identity: attaching an old key's history
+
+A contact's history is keyed by its full public key (`messages_<node><key>`),
+so a rename loses nothing, while a node re-flashed with a new identity under
+the same name is a new contact with an empty chat, its history staying under
+the old key. `contact_identities` (`storage/contact_identity_store.dart`,
+`ContactIdentities.instance`, an app-wide auxiliary table `(group_id,
+public_key_hex)`, the preference key `contact_identities_v1` where there is
+no database) records the keys the user linked as one person; a key with no
+row is a group of itself. **Links are made by hand only**: a name proves
+nothing, two people, or one person's phone and base, carry the same one.
+When a chat opens, `MeshCoreConnector.contactHistoryCandidates` looks for
+chat contacts of the same name (trimmed, case-insensitive) under another
+key that have a history (`helpers/contact_history_candidates.dart`), on this
+node's list and, with the shared contact history on, on the other nodes'
+cached lists, and the chat shows `ContactHistoryLinkBanner`
+(`widgets/contact_history_link_banner.dart`) until one is attached or the
+banner is dismissed for the session. Attaching goes through a dialog that
+names the contact and the key and says the user must be sure it is the same
+person, not a namesake; `linkContactHistory` then links the keys, gives the
+contact the settings and the region of the other key where it has none
+(`ContactSettingsStore.copySettings`, `ContactRegionStore.copyRegion`), drops
+the in-memory settings and conversation of the key and reads the chat again.
+`MessageStore` reads a conversation over the keys of the group
+(`_storageKeys`, the contact's own first), writes under the contact's own and
+drops a re-saved message from the linked keys (`_dropFromLinkedKeys`), merges
+the summaries of the keys for the contacts list, and clears every key of the
+group; the shared history, the search and the marker sweep follow, since
+they read through the store. Deleting the contact without keeping its
+history clears the group's keys in this node's scope and forgets the group
+unless another node's list still holds one of its keys
+(`test/storage/contact_identities_test.dart`,
+`test/helpers/contact_history_candidates_test.dart`,
+`test/storage/message_store_identity_test.dart`).
+
 ### Channel QR codes: scanning and sharing (fork-only, removable)
 
 The add-channel sheet has a **Scan a QR Code** option ahead of the community one. It reads the link format the MeshCore mobile app uses for channels, documented in MeshCore's `docs/qr_codes.md`: `meshcore://channel/add?name=<url-encoded>&secret=<32 hex>` with an optional `region_scope`. A hashtag channel is the same link with a `#` name; a hashtag link that carries no secret is accepted too, its key derived from the whole name. An over-long name is shortened on a character boundary to the 31 bytes the node stores, since the secret is what identifies a channel and the name is only a label.

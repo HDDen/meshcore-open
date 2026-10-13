@@ -3275,5 +3275,10 @@
   "neighbors_durationHours": "{hours}ч {minutes}м",
   "channels_dataScopeQuestion": "Удалить данные канала только для этой ноды или в объединённой истории всех нод приложения?",
   "channels_dataScopeThisNode": "Эта нода",
-  "channels_dataScopeAllNodes": "Все ноды"
+  "channels_dataScopeAllNodes": "Все ноды",
+  "chat_historyLinkBanner": "Найдена история сообщений для контакта с таким же именем, но другим ключом.",
+  "chat_historyLinkAttach": "Подтянуть",
+  "chat_historyLinkTitle": "Подтянуть историю?",
+  "chat_historyLinkBody": "Найдена история для контакта с именем «{name}», но другим ключом ({key}). Подтягивайте её в этот диалог, только если уверены, что это тот же человек, а не тёзка. Два ключа станут одним контактом в приложении.",
+  "chat_historyLinked": "История подтянута."
 }

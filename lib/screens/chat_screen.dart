@@ -59,6 +59,7 @@ import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/chat_bubble_box.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/contact_history_link_banner.dart';
 import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
@@ -94,6 +95,7 @@ import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
 import '../l10n/l10n.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/contact_history_candidates.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import 'telemetry_screen.dart';
@@ -159,6 +161,12 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _replyingToAuthor;
   String? _plainReplyComposerPrefix;
 
+  /// Histories of a contact of the same name under another key, offered in
+  /// a banner until one is attached or the banner is dismissed for the
+  /// session.
+  List<ContactHistoryCandidate> _historyCandidates = const [];
+  bool _historyBannerDismissed = false;
+
   String get _composerDraftKey =>
       ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
 
@@ -204,6 +212,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final settings = context.read<AppSettingsService>().settings;
       final keyHex = widget.contact.publicKeyHex;
       final unread = widget.initialUnreadCount;
+      unawaited(_loadHistoryCandidates(connector));
       final messages = connector.getMessages(widget.contact);
       final initialMessageId = widget.initialMessageId;
       Message? anchor;
@@ -1144,6 +1153,13 @@ class _ChatScreenState extends State<ChatScreen> {
             final messages = _messagesForDisplay(connector);
             return Column(
               children: [
+                if (_historyCandidates.isNotEmpty && !_historyBannerDismissed)
+                  ContactHistoryLinkBanner(
+                    candidates: _historyCandidates,
+                    onAttach: _attachHistory,
+                    onDismiss: () =>
+                        setState(() => _historyBannerDismissed = true),
+                  ),
                 Expanded(
                   child: Stack(
                     children: [
@@ -2185,6 +2201,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   int _resolveContactIndex = -1;
+
+  Future<void> _loadHistoryCandidates(MeshCoreConnector connector) async {
+    if (widget.contact.type != advTypeChat) return;
+    final candidates = await connector.contactHistoryCandidates(
+      widget.contact,
+    );
+    if (!mounted) return;
+    setState(() => _historyCandidates = candidates);
+  }
+
+  /// Attaches a namesake's history after the dialog said, in plain words,
+  /// that the name proves nothing.
+  Future<void> _attachHistory(ContactHistoryCandidate candidate) async {
+    final confirmed = await showContactHistoryLinkDialog(
+      context,
+      candidate: candidate,
+    );
+    if (!confirmed || !mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    await connector.linkContactHistory(widget.contact, candidate.publicKeyHex);
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.chat_historyLinked),
+    );
+    await _loadHistoryCandidates(connector);
+  }
 
   Contact _resolveContact(MeshCoreConnector connector) {
     if (_resolveContactIndex >= 0 &&

@@ -8144,4 +8144,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channels_dataScopeAllNodes => 'Все ноды';
+
+  @override
+  String get chat_historyLinkBanner =>
+      'Найдена история сообщений для контакта с таким же именем, но другим ключом.';
+
+  @override
+  String get chat_historyLinkAttach => 'Подтянуть';
+
+  @override
+  String get chat_historyLinkTitle => 'Подтянуть историю?';
+
+  @override
+  String chat_historyLinkBody(String name, String key) {
+    return 'Найдена история для контакта с именем «$name», но другим ключом ($key). Подтягивайте её в этот диалог, только если уверены, что это тот же человек, а не тёзка. Два ключа станут одним контактом в приложении.';
+  }
+
+  @override
+  String get chat_historyLinked => 'История подтянута.';
 }
