@@ -3357,6 +3357,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     try {
       await store.registerOutgoing(
         channelIndex: widget.channel.index,
+        channelId: widget.channel.storageId,
         // The same 16 bits the chunk header carries, so the entry keys the
         // same way an inbound one would.
         senderPrefix: senderPrefix,

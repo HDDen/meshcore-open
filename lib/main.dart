@@ -270,7 +270,10 @@ Future<void> _startApplication() async {
   // Availability/isBusy changes are the only thing that un-parks a decode
   // queue that stopped because the codec was unusable or busy.
   imageCodecService.addListener(receivedImageStore.notifyDecoderChanged);
-  final imageReassembler = ImageStreamReassembler(store: receivedImageStore);
+  final imageReassembler = ImageStreamReassembler(
+    store: receivedImageStore,
+    channelIdForSlot: connector.channelIdForSlot,
+  );
   final imageTransport = ImageChunkTransport(
     reassembler: imageReassembler,
     // The UI sends whole chunk sets through connector.sendImageChunks so it
@@ -508,9 +511,13 @@ class AppSettingsImageCodecStore implements ImageCodecSettingsStore {
 class ImageStreamReassembler extends ImageReassembler {
   final ReceivedImageStore store;
 
+  /// Resolves the radio slot a chunk arrived on to its [Channel.storageId],
+  /// which the store stamps on the entry (the slot alone is not reliable).
+  final String? Function(int channelIndex)? channelIdForSlot;
+
   int? _selfPrefix;
 
-  ImageStreamReassembler({required this.store})
+  ImageStreamReassembler({required this.store, this.channelIdForSlot})
     : super(onFailed: ((failure) => unawaited(store.handleFailure(failure))));
 
   @override
@@ -525,7 +532,13 @@ class ImageStreamReassembler extends ImageReassembler {
     DateTime? now,
   }) {
     final outcome = super.addChunk(blob, channelIndex: channelIndex, now: now);
-    unawaited(store.handleOutcome(outcome, channelIndex: channelIndex));
+    unawaited(
+      store.handleOutcome(
+        outcome,
+        channelIndex: channelIndex,
+        channelId: channelIdForSlot?.call(channelIndex),
+      ),
+    );
     return outcome;
   }
 }

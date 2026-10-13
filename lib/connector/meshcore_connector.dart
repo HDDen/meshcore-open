@@ -14151,6 +14151,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// `BlockedSenders.ruleFor`. Public so every display site asks with the same
   /// label the receive path used; the screens' own `channel.name` is empty for
   /// an unnamed channel where this says `Channel 3`.
+  /// [Channel.storageId] of the channel in radio slot [slot], or null for an
+  /// empty or unknown slot; the image store stamps its entries with it.
+  String? channelIdForSlot(int slot) => _findChannelByIndex(slot)?.storageId;
+
   String channelDisplayName(int channelIndex) =>
       _channelDisplayName(channelIndex);
 
@@ -16078,6 +16082,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       orElse: () => null,
     );
     _channels.removeWhere((entry) => entry.index == channel.index);
+
+    // A slot that holds another channel now, or none, cannot finish an image
+    // the previous one started: its in-progress streams go, so a new image
+    // there is never completed with the old channel's chunks.
+    final previousAtIndex = _previousChannelsCache.cast<Channel?>().firstWhere(
+      (entry) => entry?.index == channel.index,
+      orElse: () => null,
+    );
+    if (previousAtIndex != null &&
+        !previousAtIndex.isEmpty &&
+        !listEquals(previousAtIndex.psk, channel.psk)) {
+      _imageTransport?.reassembler.clearChannel(channel.index);
+    }
 
     if (channel.isEmpty) {
       _registerChannelStorageBinding(channel);

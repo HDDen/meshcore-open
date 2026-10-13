@@ -2070,6 +2070,34 @@ the 288 px that upstream's panel test lays them out in, so the controls
 wrap now, the hop label under them, and a legend label is `Flexible`, as
 upstream's refresh had done, the fork's compact sizes and theming kept.
 
+**Step 5 (2026-10-13, dev up to 86ec8b4e, upstream's channel storage by
+PSK-derived ID).** Upstream re-keyed every per-channel store (messages,
+settings, region, order, images) by `Channel.storageId`, the first 8 bytes
+of SHA-256 over `meshcore-channel:` and the PSK, with a slot-to-ID map
+diffed at every channel sync, channel frames held until the map is
+confirmed, a one-shot preference migration and a deletion that clears
+everything. The fork keeps its name-keyed storage (`ChannelNameKeyedStore`,
+see **Storage / Persistence**): one channel name on several nodes of one
+owner is one channel, which the shared history, the search and the marker
+styles are built on. Taken: the `storageId` helper on `Channel`;
+`ImageReassembler.clearChannel`, called from `_applySyncedChannel` when a
+sync finds another PSK in a slot, so an image begun under the previous
+channel is never finished with the new one's chunks; the image store's
+`channelId`, stamped on outgoing entries (`registerOutgoing`) and inbound
+ones (`ImageStreamReassembler` resolves the slot through
+`MeshCoreConnector.channelIdForSlot`), with `deleteImagesForChannelId`
+beside the fork's deletion by slot, while the chat still lists images by
+slot; the paragraph of `documentation/channels.md`, written for the name
+rule. Left out: the slot map and the frames held for it,
+`channel_storage_migration.dart`, the channel order by ID, upstream's
+`getChannels` completer (the fork restarts a running sync through
+`_pendingChannelSyncRestart`), the two tests of the ID scheme
+(`channel_slot_map_test`, `channel_storage_by_id_test`) and the modified
+`received_at_test` and `message_store_archive_test`, both deleted in step
+3. What the name keying still loses, a rename under the same PSK, is the
+subject of the channel identity table that follows this step as its own
+change.
+
 ## Transports
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.

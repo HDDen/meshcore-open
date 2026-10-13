@@ -221,6 +221,54 @@ void main() {
       expect(h.decoder.calls, 1);
     });
 
+    test('a stream started before its slot had an ID picks one up', () async {
+      final h = _build();
+      final set = buildImageChunks(
+        payload: _payload(kImageChunkFirstCapacity + kImageChunkCapacity + 1),
+        metadata: const ImageStreamMetadata(rate: ImageCodecRatePoint.standard),
+        senderPrefix: kSender,
+        imgId: 5,
+      );
+      expect(set.dataChunkCount, 3);
+
+      final first = await h.store.handleOutcome(
+        h.reassembler.addChunk(set.blobs[0], channelIndex: 3),
+        channelIndex: 3,
+      );
+      expect(first!.channelId, isNull);
+      // A second data chunk of three neither completes nor recovers it.
+      final second = await h.store.handleOutcome(
+        h.reassembler.addChunk(set.blobs[1], channelIndex: 3),
+        channelIndex: 3,
+        channelId: 'chan-id',
+      );
+      expect(second!.state, ReceivedImageState.receiving);
+      expect(second.streamId, first.streamId);
+      expect(second.channelId, 'chan-id');
+    });
+
+    test('a stream completed after its slot got an ID keeps it', () async {
+      final h = _build();
+      final set = buildImageChunks(
+        payload: _payload(kImageChunkFirstCapacity + 1),
+        metadata: const ImageStreamMetadata(rate: ImageCodecRatePoint.standard),
+        senderPrefix: kSender,
+        imgId: 6,
+      );
+      final first = await h.store.handleOutcome(
+        h.reassembler.addChunk(set.blobs[0], channelIndex: 3),
+        channelIndex: 3,
+      );
+      expect(first!.channelId, isNull);
+      final done = await h.store.handleOutcome(
+        h.reassembler.addChunk(set.blobs[1], channelIndex: 3),
+        channelIndex: 3,
+        channelId: 'chan-id',
+      );
+      expect(done!.streamId, first.streamId);
+      expect(done.channelId, 'chan-id');
+    });
+
     test('two-chunk image reports 1 of 2 while incomplete', () async {
       final h = _build();
       final set = buildImageChunks(
@@ -1084,7 +1132,7 @@ void main() {
 
   group('deletion hooks', () {
     test(
-      'deleteImagesForChannel reclaims every image of one conversation',
+      'deleteImagesForChannelId reclaims every image of one conversation',
       () async {
         final h = _build();
         final a = await _completeOne(h, imgId: 130);
@@ -1094,6 +1142,7 @@ void main() {
         // A third image on another channel must survive.
         final other = await h.store.registerOutgoing(
           channelIndex: 9,
+          channelId: 'fedcba9876543210',
           senderPrefix: kSelf,
           imgId: 5,
           previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
@@ -1102,7 +1151,7 @@ void main() {
           chunkCount: 1,
         );
 
-        final removed = await h.store.deleteImagesForChannel(3);
+        final removed = await h.store.deleteImagesForChannelId(_channel3Id);
         expect(removed, containsAll(<String>[a.streamId, b.streamId]));
         expect(h.store.entryFor(a.streamId), isNull);
         expect(h.store.entryFor(b.streamId), isNull);
@@ -1604,7 +1653,10 @@ Future<ReceivedImageEntry> _completeOne(
   final entry = await h.store.handleOutcome(
     h.reassembler.addChunk(set.blobs[0], channelIndex: 3, now: h.clock()),
     channelIndex: 3,
+    channelId: _channel3Id,
     at: h.clock(),
   );
   return entry!;
 }
+
+const _channel3Id = '0123456789abcdef';
