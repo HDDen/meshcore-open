@@ -1719,12 +1719,12 @@ class ReceivedImageStore extends ChangeNotifier {
     return doomed;
   }
 
-  /// Deletes every image that arrived on radio slot [channelIndex]. The
-  /// chat still lists images by slot, and the connector clears a channel's
-  /// images through this when the channel is deleted or its history cleared.
+  /// Deletes the images of radio slot [channelIndex] that carry no channel
+  /// ID, written before the IDs existed and never stamped since: the only
+  /// ones a slot still names. Everything else goes by its ID.
   Future<List<String>> deleteImagesForChannel(int channelIndex) async {
     final doomed = _entries.values
-        .where((e) => e.channelIndex == channelIndex)
+        .where((e) => e.channelId == null && e.channelIndex == channelIndex)
         .map((e) => e.streamId)
         .toList();
     for (final streamId in doomed) {
@@ -1733,10 +1733,41 @@ class ReceivedImageStore extends ChangeNotifier {
     return doomed;
   }
 
+  /// Deletes every image of each of [channelIds]: the IDs a channel's
+  /// identity group has had.
+  Future<List<String>> deleteImagesForChannelIds(
+    Iterable<String> channelIds,
+  ) async {
+    final removed = <String>[];
+    for (final channelId in channelIds.toSet()) {
+      removed.addAll(await deleteImagesForChannelId(channelId));
+    }
+    return removed;
+  }
+
   /// Images of [channelId], newest first.
   List<ReceivedImageEntry> entriesForChannel(String? channelId) {
     if (channelId == null) return const <ReceivedImageEntry>[];
     return entries.where((e) => e.channelId == channelId).toList();
+  }
+
+  /// Images of a channel, newest first: those stamped with one of
+  /// [channelIds], the IDs its identity group has had, and, with
+  /// [unstampedSlot], those written before the IDs existed that arrived on
+  /// that slot. The slot is otherwise not an identity: another app may move
+  /// a channel, and another channel may take the slot.
+  List<ReceivedImageEntry> entriesForChannelIds(
+    Iterable<String> channelIds, {
+    int? unstampedSlot,
+  }) {
+    final ids = channelIds.toSet();
+    return entries
+        .where(
+          (e) => e.channelId == null
+              ? unstampedSlot != null && e.channelIndex == unstampedSlot
+              : ids.contains(e.channelId),
+        )
+        .toList();
   }
 
   /// Gives entries saved before channel IDs existed the ID of the channel

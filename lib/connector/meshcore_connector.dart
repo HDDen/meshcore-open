@@ -435,7 +435,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // firmware offline queue they may be minutes apart).
   ImageChunkTransport? _imageTransport;
   void Function(ImageChunkOutcome outcome)? _onImageChunk;
-  Future<void> Function(int channelIndex)? _deleteImagesForChannel;
+  // The images of a channel are those stamped with the IDs of its identity
+  // group; the slot names only those written before the IDs existed.
+  Future<void> Function(int channelIndex, Set<String> channelIds)?
+  _deleteImagesForChannel;
+  Future<void> Function(Map<int, String> slotIds)? _stampImageChannelIds;
+  void Function(int channelIndex)? _forgetImageSlot;
 
   /// Called with the raw body of an AEIC image chunk seen in the RX log.
   /// See [_countImageChunkRepeat] for why that log, and not the decoded
@@ -3782,7 +3787,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     void Function(ImageChunkOutcome outcome)? onImageChunk,
     void Function(Uint8List blob, int channelIndex)? onImageChunkRepeat,
     void Function(int senderPrefix)? onImageSenderPrefix,
-    Future<void> Function(int channelIndex)? deleteImagesForChannel,
+    Future<void> Function(int channelIndex, Set<String> channelIds)?
+    deleteImagesForChannel,
+    Future<void> Function(Map<int, String> slotIds)? stampImageChannelIds,
+    void Function(int channelIndex)? forgetImageSlot,
   }) {
     _retryService = retryService;
     _pathHistoryService = pathHistoryService;
@@ -3834,6 +3842,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _onImageChunkRepeat = onImageChunkRepeat;
     _onImageSenderPrefix = onImageSenderPrefix;
     _deleteImagesForChannel = deleteImagesForChannel;
+    _stampImageChannelIds = stampImageChannelIds;
+    _forgetImageSlot = forgetImageSlot;
     _bleDebugLogService = bleDebugLogService;
     _appDebugLogService = appDebugLogService;
     _southFrameFragmentReassembler.onWarning = (message) {
@@ -10720,6 +10730,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  /// The IDs the images of [channel] may carry: those of every key its
+  /// identity group has had.
+  Set<String> _imageChannelIdsOf(Channel? channel) {
+    final identity = channel == null ? null : ChannelIdentity.of(channel);
+    if (identity == null) return const {};
+    return {
+      for (final member in ChannelIdentities.instance.membersOf(identity))
+        member.pskId,
+    };
+  }
+
   Future<void> _completeChannelSync() async {
     _channelSyncTimeout?.cancel();
 
@@ -10733,6 +10754,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
 
     await _reconcileChannelIdentities();
+    // Images written before they carried a channel ID take the ID of the
+    // channel their slot holds now, once; the store is app-wide, so the
+    // first node synced claims them.
+    await _stampImageChannelIds?.call({
+      for (final channel in _channels) channel.index: ?channel.storageId,
+    });
 
     // Cache channels for offline use
     _cachedChannels = List<Channel>.from(_channels);
@@ -10865,7 +10892,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     await _channelMessageStore.clearChannelMessages(index);
     await _channelSettingsStore.clearChannelSettings(index);
     await _channelRegionStore.clearRegion(index);
-    await _deleteImagesForChannel?.call(index);
+    await _deleteImagesForChannel?.call(index, _imageChannelIdsOf(channel));
     if (identity != null) {
       await _clearChannelIdentityData(identity, allNodes: allNodes);
     }
@@ -16311,6 +16338,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         !previousAtIndex.isEmpty &&
         !listEquals(previousAtIndex.psk, channel.psk)) {
       _imageTransport?.reassembler.clearChannel(channel.index);
+      _forgetImageSlot?.call(channel.index);
     }
 
     if (channel.isEmpty) {
@@ -18631,7 +18659,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _sharedChannelIdentityKey(channel);
     }
     unawaited(_channelMessageStore.clearChannelMessages(channelIndex));
-    unawaited(_deleteImagesForChannel?.call(channelIndex));
+    unawaited(
+      _deleteImagesForChannel?.call(channelIndex, _imageChannelIdsOf(channel)),
+    );
     final identity = channel == null ? null : ChannelIdentity.of(channel);
     if (allNodes && identity != null) {
       unawaited(

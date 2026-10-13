@@ -66,6 +66,7 @@ import '../services/image_codec_backend.dart' show kImageCodecFeatureAvailable;
 import '../services/image_codec_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/received_image_store.dart';
+import '../storage/channel_identity_store.dart';
 import '../services/translation_service.dart';
 import '../utils/lora_airtime.dart';
 import '../utils/emoji_utils.dart';
@@ -3478,24 +3479,40 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       store?.addListener(_onImageStoreChanged);
       _imageStoreVersion++;
     }
+    // A link in the identity table changes which images are the channel's.
+    final imageVersion = Object.hash(
+      _imageStoreVersion,
+      ChannelIdentities.instance.revision,
+    );
     var order = _transcriptOrder;
     if (order == null ||
-        !order.matches(messages, _imageStoreVersion, widget.channel.index)) {
+        !order.matches(messages, imageVersion, widget.channel.index)) {
+      // The channel's images are those stamped with the IDs of its identity
+      // group; the slot names only those written before the IDs existed.
       final images = store == null
           ? const <ReceivedImageEntry>[]
-          : [
-              for (final entry in store.entries)
-                if (entry.channelIndex == widget.channel.index) entry,
-            ];
+          : store.entriesForChannelIds(
+              _imageChannelIds(),
+              unstampedSlot: widget.channel.index,
+            );
       order = _TranscriptOrder.build(
         messages: messages,
         images: images,
-        imageVersion: _imageStoreVersion,
+        imageVersion: imageVersion,
         channelIndex: widget.channel.index,
       );
       _transcriptOrder = order;
     }
     return order.rows(messages);
+  }
+
+  Set<String> _imageChannelIds() {
+    final identity = ChannelIdentity.of(widget.channel);
+    if (identity == null) return const {};
+    return {
+      for (final member in ChannelIdentities.instance.membersOf(identity))
+        member.pskId,
+    };
   }
 
   void _onImageStoreChanged() => _imageStoreVersion++;

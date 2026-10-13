@@ -1130,6 +1130,79 @@ void main() {
     });
   });
 
+  group('channel identity', () {
+    test('a channel lists its stamped images and the unstamped of its slot', () async {
+      final h = _build();
+      final stamped = await _completeOne(h, imgId: 140);
+      final legacy = await h.store.registerOutgoing(
+        channelIndex: 3,
+        senderPrefix: kSelf,
+        imgId: 6,
+        previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
+        bitstream: Uint8List.fromList(List<int>.filled(16, 3)),
+        rate: AeicRatePoint.ft32,
+        chunkCount: 1,
+      );
+      final elsewhere = await h.store.registerOutgoing(
+        channelIndex: 3,
+        channelId: 'fedcba9876543210',
+        senderPrefix: kSelf,
+        imgId: 7,
+        previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
+        bitstream: Uint8List.fromList(List<int>.filled(16, 3)),
+        rate: AeicRatePoint.ft32,
+        chunkCount: 1,
+      );
+      await h.store.settle();
+
+      final listed = h.store
+          .entriesForChannelIds({_channel3Id}, unstampedSlot: 3)
+          .map((e) => e.streamId)
+          .toSet();
+      expect(listed, {stamped.streamId, legacy.streamId});
+      expect(listed, isNot(contains(elsewhere.streamId)));
+      expect(
+        h.store.entriesForChannelIds({_channel3Id}).map((e) => e.streamId),
+        [stamped.streamId],
+      );
+    });
+
+    test('deletion by slot takes only the unstamped; stamping gives them an ID', () async {
+      final h = _build();
+      final stamped = await _completeOne(h, imgId: 141);
+      final legacy = await h.store.registerOutgoing(
+        channelIndex: 3,
+        senderPrefix: kSelf,
+        imgId: 8,
+        previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
+        bitstream: Uint8List.fromList(List<int>.filled(16, 3)),
+        rate: AeicRatePoint.ft32,
+        chunkCount: 1,
+      );
+      await h.store.settle();
+
+      expect(await h.store.deleteImagesForChannel(3), [legacy.streamId]);
+      expect(h.store.entryFor(stamped.streamId), isNotNull);
+
+      final later = await h.store.registerOutgoing(
+        channelIndex: 3,
+        senderPrefix: kSelf,
+        imgId: 9,
+        previewPng: Uint8List.fromList(List<int>.filled(32, 2)),
+        bitstream: Uint8List.fromList(List<int>.filled(16, 3)),
+        rate: AeicRatePoint.ft32,
+        chunkCount: 1,
+      );
+      await h.store.stampLegacyChannelIds({3: _channel3Id});
+      expect(h.store.entryFor(later.streamId)?.channelId, _channel3Id);
+      expect(
+        await h.store.deleteImagesForChannelIds([_channel3Id]),
+        containsAll(<String>[stamped.streamId, later.streamId]),
+      );
+      expect(h.store.entries, isEmpty);
+    });
+  });
+
   group('deletion hooks', () {
     test(
       'deleteImagesForChannelId reclaims every image of one conversation',

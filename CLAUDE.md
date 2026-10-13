@@ -1688,10 +1688,19 @@ receivers take either layout; only the parity path cares.
 
 An image is not stored inside the message it arrived with — the message holds only a sentinel — so
 clearing a conversation has to reach this store separately, or the bytes stay on disk with nothing
-left pointing at them. The connector holds a `_deleteImagesForChannel` callback, wired in `main()`
-to `ReceivedImageStore.deleteImagesForChannel` and left null when the build has no image codec, and
-calls it from both places a channel's history ends: deleting the channel and clearing its messages.
-The store drops every entry whose `channelIndex` matches, files included. Single-message deletion
+left pointing at them. An entry belongs to a channel by `channelId`, the `Channel.storageId` of the
+slot it arrived on (`ImageStreamReassembler` resolves it through `channelIdForSlot`) or was sent to
+(`registerOutgoing`), not by the slot: another app may move a channel, and another channel may take
+the slot. The chat lists `entriesForChannelIds` for the IDs of the channel's identity group (see
+**Channel identity**), plus the unstamped entries of its slot, those written before the IDs existed;
+a completed channel sync stamps such entries once with the ID of the channel their slot holds now
+(`stampLegacyChannelIds`; the store is app-wide, so the first node synced claims them), and a sync
+that finds another PSK in a slot drops its in-progress streams (`ImageReassembler.clearChannel`,
+`forgetChannelSlot`). The connector holds three callbacks wired in `main()`, null when the build has
+no image codec: `_deleteImagesForChannel(slot, channelIds)`, called from both places a channel's
+history ends, deleting the channel and clearing its messages, which main answers with
+`deleteImagesForChannelIds` and the unstamped-only `deleteImagesForChannel(slot)`;
+`_stampImageChannelIds`; `_forgetImageSlot`. Single-message deletion
 does not currently invoke AEIC cleanup: `deleteImageForSentinel` can parse the stream id back out of
 the message text, but that helper is not wired into the connector's individual-message delete path.
 
@@ -2184,9 +2193,9 @@ channel is never finished with the new one's chunks; the image store's
 `channelId`, stamped on outgoing entries (`registerOutgoing`) and inbound
 ones (`ImageStreamReassembler` resolves the slot through
 `MeshCoreConnector.channelIdForSlot`), with `deleteImagesForChannelId`
-beside the fork's deletion by slot, while the chat still lists images by
-slot; the paragraph of `documentation/channels.md`, written for the name
-rule. Left out: the slot map and the frames held for it,
+beside the fork's deletion by slot (the chat moved to the IDs with the
+channel identity work, see **AEIC image store**); the paragraph of
+`documentation/channels.md`, written for the name rule. Left out: the slot map and the frames held for it,
 `channel_storage_migration.dart`, the channel order by ID, upstream's
 `getChannels` completer (the fork restarts a running sync through
 `_pendingChannelSyncRestart`), the two tests of the ID scheme

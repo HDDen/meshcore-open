@@ -389,10 +389,19 @@ Future<void> _startApplication() async {
             ),
           )
         : null,
+    // A channel's images are those stamped with the IDs of its identity
+    // group; the slot names only those written before the IDs existed.
     deleteImagesForChannel: kImageCodecFeatureAvailable
-        ? (channelIndex) async {
+        ? (channelIndex, channelIds) async {
+            await receivedImageStore.deleteImagesForChannelIds(channelIds);
             await receivedImageStore.deleteImagesForChannel(channelIndex);
           }
+        : null,
+    stampImageChannelIds: kImageCodecFeatureAvailable
+        ? receivedImageStore.stampLegacyChannelIds
+        : null,
+    forgetImageSlot: kImageCodecFeatureAvailable
+        ? receivedImageStore.forgetChannelSlot
         : null,
   );
 
