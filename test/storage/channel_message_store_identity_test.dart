@@ -188,4 +188,24 @@ Future<void> main() async {
         .clearMessagesForNames(['Горы-2026', 'Горы']);
     expect(await _idsUnder(otherKey), isEmpty);
   }, skip: skip);
+
+  test('the resend count survives a save and a load, 0 when absent', () async {
+    store.replaceChannels([_channel(2, 'Горы')]);
+    final resent = _message('r', 1).copyWith(isOutgoing: true, resendCount: 2);
+    await store.saveChannelMessages(2, [resent, _message('s', 2)]);
+
+    final loaded = await store.loadChannelMessages(2);
+    expect(loaded.map((m) => m.resendCount), [2, 0]);
+    expect(
+      ChannelMessageStore.decodeStoredMessage({
+        'senderName': 'Ghost',
+        'text': 'old row',
+        'timestamp': 60000,
+        'isOutgoing': true,
+        'status': ChannelMessageStatus.sent.index,
+        'messageId': 'old',
+      }).resendCount,
+      0,
+    );
+  }, skip: skip);
 }

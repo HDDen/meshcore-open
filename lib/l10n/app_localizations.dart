@@ -13924,6 +13924,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unnamed repeater'**
   String get networkMap_unnamed;
+
+  /// No description provided for @channelPath_sendAttemptsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send attempts'**
+  String get channelPath_sendAttemptsLabel;
+
+  /// No description provided for @settings_modSettingsHideChannelMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the channel mute switch'**
+  String get settings_modSettingsHideChannelMute;
+
+  /// No description provided for @appSettings_channelMinHopsDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait before resending: {seconds} s'**
+  String appSettings_channelMinHopsDelay(int seconds);
 }
 
 class _AppLocalizationsDelegate

@@ -112,35 +112,35 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get messageStatus_failedChannel =>
-      'Your radio couldn\'t send this message.';
+      'Ваше радио не смогло отправить это сообщение.';
 
   @override
   String messageStatus_resending(Object maxResends, Object resends) {
-    return 'Not heard through enough repeaters yet. Resent $resends of $maxResends times.';
+    return 'Пока не услышано через достаточное число ретрансляторов. Повторно отправлено $resends из $maxResends раз.';
   }
 
   @override
   String messageStatus_hopsNotReached(Object hops, Object required) {
-    return 'Sent, but only heard back through $hops of $required repeaters. It may still have gone further than your radio can hear.';
+    return 'Отправлено, но в ответ услышано только через $hops из $required ретрансляторов. Возможно, сообщение дошло дальше, чем может услышать ваше радио.';
   }
 
   @override
   String get messageStatus_sentChannel =>
-      'Sent. Channels don\'t confirm delivery, so this only means your radio sent it.';
+      'Отправлено. Каналы не подтверждают доставку, поэтому это означает лишь то, что сообщение отправлено вашим радио.';
 
   @override
   String get messageStatus_sentDirect =>
-      'Sent. Waiting for the contact to confirm.';
+      'Отправлено. Ожидание подтверждения от контакта.';
 
   @override
   String messageStatus_heardRepeatedCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count times',
-      one: 'once',
+      other: '$count',
+      one: '1',
     );
-    return 'Heard repeated $_temp0. Nearby repeaters passed it on.';
+    return 'Услышано повторений: $_temp0. Ближние ретрансляторы передали сообщение дальше.';
   }
 
   @override
@@ -432,20 +432,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionEmptyExplanation =>
-      'Regions limit flood messages to repeaters in an area. Fetch them from nearby repeaters or add one by name.';
+      'Регионы ограничивают рассылку сообщений только ретрансляторами в заданной области. Получите их с ближних ретрансляторов или добавьте по названию.';
 
   @override
-  String get settings_regionFetchFromRepeaters => 'Fetch from repeaters';
+  String get settings_regionFetchFromRepeaters => 'Получить с ретрансляторов';
 
   @override
-  String get settings_regionDefault => 'Default region';
+  String get settings_regionDefault => 'Регион по умолчанию';
 
   @override
   String get settings_regionDefaultSubtitle =>
-      'Used by channels without their own region';
+      'Используется каналами без собственного региона';
 
   @override
-  String get settings_regionDefaultNone => 'None';
+  String get settings_regionDefaultNone => 'Нет';
 
   @override
   String settings_regionUseRadioDefault(String region) {
@@ -596,7 +596,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_telemetryPerContactHint =>
-      'To allow a contact, open their chat and choose Contact Settings from the menu.';
+      'Чтобы разрешить контакт, откройте его чат и выберите «Настройки контактов» в меню.';
 
   @override
   String get settings_advertLocation => 'Местоположение в анонсе';
@@ -618,7 +618,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_multiAckSubtitle =>
-      'Send extra ACKs for better delivery; uses more airtime';
+      'Отправлять дополнительные ACK для лучшей доставки; расходует больше времени в эфире';
 
   @override
   String get settings_telemetryModeUpdated => 'Режим телеметрии обновлен';
@@ -744,11 +744,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_presets => 'Пресеты';
 
   @override
-  String get settings_presetCustom => 'Custom';
+  String get settings_presetCustom => 'Пользовательский';
 
   @override
   String get settings_radioMatchWarning =>
-      'All nodes you talk to must use the same frequency, bandwidth and SF. The coding rate (CR) can differ.';
+      'Все узлы, с которыми вы общаетесь, должны использовать одинаковые частоту, полосу пропускания и SF. Скорость кодирования (CR) может отличаться.';
 
   @override
   String get settings_frequency => 'Частота (МГц)';
@@ -773,7 +773,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settings_txPowerRangeHelper(int min, int max) {
-    return '$min to $max dBm';
+    return 'от $min до $max dBm';
   }
 
   @override
@@ -785,7 +785,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settings_clientRepeatFrequencyNote(String freq) {
-    return 'Frequency set to $freq MHz for off-grid repeat';
+    return 'Частота $freq МГц для повторения вне сети';
   }
 
   @override
@@ -942,24 +942,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_pathHashModeHelper =>
-      'Size of each node ID recorded in the path of flood packets this radio sends: 1 byte (256 IDs, up to 64 hops), 2 bytes (65K IDs, up to 32 hops), 3 bytes (16M IDs, up to 21 hops). Larger IDs reduce collisions, but repeaters on firmware older than v1.14 drop packets with 2- or 3-byte IDs.';
+      'Размер каждого идентификатора узла, записываемого в маршрут flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой старше v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
 
   @override
   String settings_requiresFirmware(Object version) {
-    return 'Requires firmware $version or newer';
+    return 'Требуется прошивка $version или новее';
   }
 
   @override
   String get appSettings_channelMinHops =>
-      'Resend channel messages until they travel far enough';
+      'Повторно отправлять сообщения канала, пока они не пройдут достаточно далеко';
 
   @override
   String get appSettings_channelMinHopsSubtitle =>
-      'If your message isn\'t heard coming back through enough repeaters, send it again. Uses more airtime.';
+      'Если ваше сообщение не услышано в ответ через достаточное число ретрансляторов, отправьте его снова. Расходует больше времени в эфире.';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
-    return 'Required hops: $count';
+    return 'Требуется хопов: $count';
   }
 
   @override
@@ -967,10 +967,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count times',
-      one: '1 time',
+      other: '$count раз',
+      one: '1 раза',
     );
-    return 'Resend up to $_temp0';
+    return 'Повторять до $_temp0';
   }
 
   @override
@@ -1025,11 +1025,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывать уведомление при получении новых сообщений';
 
   @override
-  String get appSettings_batteryOptimization => 'Background Activity';
+  String get appSettings_batteryOptimization => 'Работа в фоне';
 
   @override
   String get appSettings_batteryOptimizationSubtitle =>
-      'Set MeshCore Open to \"Don\'t optimize\" in battery settings so messages keep arriving in the background';
+      'Задайте для MeshCore Open значение «Не оптимизировать» в настройках батареи, чтобы сообщения продолжали приходить в фоне';
 
   @override
   String get appSettings_channelMessageNotifications =>
@@ -1310,7 +1310,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contacts_storageFull =>
-      'Contact storage on the node is full. New nodes cannot be added until contacts are removed.';
+      'Хранилище контактов на узле заполнено. Новые узлы нельзя добавить, пока контакты не удалены.';
 
   @override
   String get contacts_deleteContact => 'Удалить контакт';
@@ -1321,11 +1321,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get contacts_removeFromContacts => 'Remove from contacts';
+  String get contacts_removeFromContacts => 'Убрать из контактов';
 
   @override
   String contacts_removeFromContactsConfirm(String contactName) {
-    return '$contactName will move to Discovered contacts. Chat history will be deleted.';
+    return '$contactName будет перемещён в «Обнаруженные контакты». История чата будет удалена.';
   }
 
   @override
@@ -8294,4 +8294,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => 'Репитер без имени';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Попыток отправки';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Скрыть переключатель уведомлений в канале';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Пауза перед повтором: $seconds с';
+  }
 }

@@ -387,6 +387,27 @@ Future<void> main() async {
       expect(messages.map((message) => message.repeatCount), [0, 0]);
     });
 
+    test('the same text a few seconds later is a message of its own: a bot '
+        'answering twice', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      for (final seconds in [_timestamp, _timestamp + 5]) {
+        connector.handleFrameForTest(
+          _channelMessageFrame(
+            channelIndex: 0,
+            timestampSeconds: seconds,
+            senderName: 'PingBot',
+            text: 'pong 12 dB',
+          ),
+        );
+        await _settle();
+      }
+      final messages = connector.getLoadedChannelMessages(
+        connector.channels.single,
+      );
+      expect(messages, hasLength(2));
+      expect(messages.map((message) => message.repeatCount), [0, 0]);
+    });
+
     test('the same packet text in two channels stays two messages', () async {
       final other = _psk(2);
       expect(_channelHash(other), isNot(_channelHash(psk)));

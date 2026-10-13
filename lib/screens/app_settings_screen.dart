@@ -764,6 +764,25 @@ class AppSettingsScreen extends StatelessWidget {
                   settingsService.setChannelMinHopsRetries(value.toInt()),
             ),
           ),
+          ListTile(
+            title: Text(
+              context.l10n.appSettings_channelMinHopsDelay(
+                settingsService.settings.channelMinHopsDelaySeconds,
+              ),
+            ),
+            subtitle: Slider(
+              value: settingsService.settings.channelMinHopsDelaySeconds
+                  .clamp(10, 120)
+                  .toDouble(),
+              min: 10,
+              max: 120,
+              divisions: 22,
+              label: settingsService.settings.channelMinHopsDelaySeconds
+                  .toString(),
+              onChanged: (value) =>
+                  settingsService.setChannelMinHopsDelaySeconds(value.round()),
+            ),
+          ),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

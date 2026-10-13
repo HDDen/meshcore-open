@@ -7928,4 +7928,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => '이름 없는 리피터';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Send attempts';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Hide the channel mute switch';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Wait before resending: $seconds s';
+  }
 }

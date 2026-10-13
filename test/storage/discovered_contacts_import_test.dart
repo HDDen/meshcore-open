@@ -9,6 +9,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/review_mode/review_radio.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
@@ -268,6 +269,42 @@ Future<void> main() async {
       expect(
         connector.discoveredContacts.length,
         lessThanOrEqualTo(MeshCoreConnector.maxDiscoveredContacts),
+      );
+    });
+
+    test('with the eviction toggle on the cap is 350', () async {
+      final settings = AppSettingsService();
+      await settings.loadSettings();
+      await settings.setEvictDiscoveredContactsEnabled(true);
+      connector.attachAppSettingsServiceForTest(settings);
+      connector.reviewRadioFactoryForTest = () => ReviewRadio(
+        scheduledMessageInterval: const Duration(hours: 1),
+        replyDelay: const Duration(hours: 1),
+      );
+      await connector.connectReview();
+      addTearDown(connector.disconnect);
+      await _waitFor(() => connector.channels.isNotEmpty);
+
+      const count = MeshCoreConnector.evictingDiscoveredContactsCap + 50;
+      final entries = [
+        for (var i = 0; i < count; i++)
+          _entry(
+            0,
+            key: [i & 0xFF, (i >> 8) & 0xFF, ...List<int>.filled(30, 0x5A)],
+            lastSeen: 1000 + i,
+          ),
+      ];
+      final result = await connector.importDiscoveredContactsJson(
+        jsonEncode(entries),
+      );
+      expect(result.imported, count);
+      expect(
+        connector.discoveredContacts.length,
+        lessThanOrEqualTo(MeshCoreConnector.evictingDiscoveredContactsCap),
+      );
+      expect(
+        connector.discoveredContacts.length,
+        greaterThan(MeshCoreConnector.evictingDiscoveredContactsCap - 50),
       );
     });
   }, skip: skip);

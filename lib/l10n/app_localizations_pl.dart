@@ -8326,4 +8326,16 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => 'Repeater bez nazwy';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Send attempts';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Hide the channel mute switch';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Wait before resending: $seconds s';
+  }
 }

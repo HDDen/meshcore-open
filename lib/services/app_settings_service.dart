@@ -217,6 +217,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setHideChannelMuteButton(bool value) async {
+    await updateSettings(_settings.copyWith(hideChannelMuteButton: value));
+  }
+
   Future<void> setHideRadioStatsButton(bool value) async {
     await updateSettings(_settings.copyWith(hideRadioStatsButton: value));
   }
@@ -544,6 +548,12 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(channelMinHopsRetries: value));
   }
 
+  Future<void> setChannelMinHopsDelaySeconds(int value) async {
+    await updateSettings(
+      _settings.copyWith(channelMinHopsDelaySeconds: value),
+    );
+  }
+
   Future<void> setChannelMinHopsCountRepeaters(bool value) async {
     await updateSettings(
       _settings.copyWith(channelMinHopsCountRepeaters: value),
@@ -768,6 +778,12 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setNetworkMapPromptShown(bool value) async {
     await updateSettings(_settings.copyWith(networkMapPromptShown: value));
+  }
+
+  Future<void> setEvictDiscoveredContactsEnabled(bool value) async {
+    await updateSettings(
+      _settings.copyWith(evictDiscoveredContactsEnabled: value),
+    );
   }
 
   /// See [AppSettings.imageProcessAutomatically]. `main.dart` mirrors this into

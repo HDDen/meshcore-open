@@ -310,7 +310,12 @@ The node owns its contact table and says what it did with each advert. `PUSH_COD
 
 **The contact list is the node's.** Every sync keeps the list on screen while it runs (`preserveExisting`), so a full one, without `since`, is what prunes it: `CONTACTS_START` notes the keys listed before it (`_contactsUnconfirmedBySync`), every CONTACT frame, a sync's or a GET_CONTACT_BY_KEY answer, strikes its key, and at `END_OF_CONTACTS` `_dropContactsMissingFromNode` removes what is left, a contact the node no longer holds or never did. Its conversation stays in the database and its unread count goes, nothing on screen being left to clear it. A sync filtered by lastmod lists only what changed and a sync that ended in the idle timeout proves nothing, so neither drops anything. Discovered entries never become contacts: `isActive` in the discovered list only mirrors membership (`updateKnownDiscovered`). `_loadDiscoveredContactCache` used to merge every entry flagged active, favourite or with messages into the list, and with NEW_ADVERT still routed through `_handleContact`, which recorded each node as an active discovered entry before the auto-add filter, every node a node with auto-add off declined came back as a contact at the next connection: contacts the node did not hold, which the official app did not show, which returned after deletion and failed a batch deletion. `removeContact` therefore takes the node's ERR_CODE_NOT_FOUND (`CommandFailedException.errCode == errCodeNotFound`) as a finished removal, so such an entry can still be deleted.
 
-**Repeaters only the app knows.** The contact list also shows the repeaters the app has heard whose adverts the node did not keep (`MeshCoreConnector.localRepeaters`: discovered entries of type repeater with no counterpart in `_contacts`), after the node's own contacts and with `contacts_notInNodeMemory` as the last line of the card; `_discoveredContacts` is a `KeyIndexedList` too, and the screen keys its snapshot and its derived rows on `discoveredRevision` as well. They stay in the app-wide discovered list, never in `_contacts`, up to `maxDiscoveredContacts` (1000, the stalest evicted). A ping reaches them as they are, a trace needing no contact on the node. A login, a status or region request, a favourite or a share needs the node to hold the contact (the firmware answers ERR_CODE_NOT_FOUND otherwise, and a region request on a route writes the contact through `setContactPath`), so these go through `runWithContactOnNode` (`widgets/node_memory_prompt.dart`), which asks before `importDiscoveredContact` writes it and tells a full table (ERR_CODE_TABLE_FULL) apart from other failures. The map's actions on discovered nodes, opening a chat and joining a room included, ask the same way; they used to import silently. `deleteContact` removes a contact from the node when the node holds it and from the discovered list otherwise, so deleting such a repeater sends the node no removal it cannot perform; its next advert brings it back.
+**Repeaters only the app knows.** The contact list also shows the repeaters the app has heard whose adverts the node did not keep (`MeshCoreConnector.localRepeaters`: discovered entries of type repeater with no counterpart in `_contacts`), after the node's own contacts and with `contacts_notInNodeMemory` as the last line of the card; `_discoveredContacts` is a `KeyIndexedList` too, and the screen keys its snapshot and its derived rows on `discoveredRevision` as well. They stay in the app-wide discovered list, never in `_contacts`, up to
+`maxDiscoveredContacts` (1000, the stalest evicted), or
+`evictingDiscoveredContactsCap` (350) while the *evict discovered contacts*
+toggle of the auto-add dialog is on, an app setting
+(`evictDiscoveredContactsEnabled`, off by default) that trims the list the
+moment it is switched on. A ping reaches them as they are, a trace needing no contact on the node. A login, a status or region request, a favourite or a share needs the node to hold the contact (the firmware answers ERR_CODE_NOT_FOUND otherwise, and a region request on a route writes the contact through `setContactPath`), so these go through `runWithContactOnNode` (`widgets/node_memory_prompt.dart`), which asks before `importDiscoveredContact` writes it and tells a full table (ERR_CODE_TABLE_FULL) apart from other failures. The map's actions on discovered nodes, opening a chat and joining a room included, ask the same way; they used to import silently. `deleteContact` removes a contact from the node when the node holds it and from the discovered list otherwise, so deleting such a repeater sends the node no removal it cannot perform; its next advert brings it back.
 
 ### Contact message summaries and channel-screen visibility
 
@@ -857,7 +862,7 @@ Plain-text replies carry only `@[sender]`, which the receiver resolves to that s
 
 **Outbound** (`_applyReplyMention` → `_formatReply` in `channel_chat_screen.dart`; direct and room chats have their own, see below). Budget is `AppSettings.exactQuoteLimit` (3–100, default 30) counted in **wire bytes**: the fragment is cut from the readable original, but each character is weighed after cyr2lat substitution, using the table `MeshCoreConnector.channelCyr2LatCharMap()` returns for that channel. Trailing `[\s.+,-]` is trimmed (a question mark is deliberately kept) and an ellipsis is appended only when the fragment is shorter than its source. No fragment is spent when the toggle is off, or when `MeshCoreConnector.channelReplyCarriesContainerAnchor()` is true — MCMP v3 and MCOtxt v1 already ship an exact author+timestamp anchor. A reply to the sender's newest message spends one under `AppSettings.exactQuoteLatest` (the second toggle under the first, default on since 2026-10-08): a bare mention resolves to the newest message the *receiver* holds from that author, which is the sender's only while nobody posted in between and nothing was missed, and the owner preferred the bytes to the guess. With it off the helper reads the history to tell the newest message apart, so the four callers hand it the history only then (`fragmentForLatest` on `ExactQuoteHelper.formatReply` / `formatReplyWith`); on, the history is not merged at all (`test/helpers/exact_quote_helper_test.dart`, `exact_quote_history_test.dart`).
 
-**Trimming the quote by hand.** The composer puts the reply's mention and quote line into the text field itself (`_plainReplyComposerPrefix`), so a quote can be shortened there to save payload. `ExactQuoteHelper.composerReply` decides what an edit leaves: a quote line that still quotes the start of the message, whatever was deleted from its end, keeps the reply: the send passes its fragment to `formatReply` as `quoteFragment` instead of cutting a new one, while the byte counter puts the `wirePrefix` `composerReply` returns in front of the draft and reads no history, because `getChannelMessages` and `getMessages` merge shared history anew on every call and the counter runs on every keystroke. For the same reason the screens' `_formatReply` reads history only when a fragment can be due, which a channel with a container anchor never has. Touching the mention or rewriting the line drops the reply, as any edit once did. Both chat screens compared the text with the inserted prefix byte for byte, so trimming a single character sent the edited line as plain text with no reply behind it. The fragment goes out canonical (`_canonicalFragment`): a partly deleted ellipsis and trailing punctuation come off and a whole ellipsis goes back on while the fragment stops short of the message, because receivers strip only a whole one before matching. A manual retry of a direct message cuts the budget's fragment again, the trimmed one not being stored.
+**Trimming the quote by hand.** The composer puts the reply's mention and quote line into the text field itself (`_plainReplyComposerPrefix`), so a quote can be shortened there to save payload. The reply banner stays above the composer in that case too (since 2026-10-13), for its close button and the region chip, so the quote shows twice, in the banner's preview and in the field. `ExactQuoteHelper.composerReply` decides what an edit leaves: a quote line that still quotes the start of the message, whatever was deleted from its end, keeps the reply: the send passes its fragment to `formatReply` as `quoteFragment` instead of cutting a new one, while the byte counter puts the `wirePrefix` `composerReply` returns in front of the draft and reads no history, because `getChannelMessages` and `getMessages` merge shared history anew on every call and the counter runs on every keystroke. For the same reason the screens' `_formatReply` reads history only when a fragment can be due, which a channel with a container anchor never has. Touching the mention or rewriting the line drops the reply, as any edit once did. Both chat screens compared the text with the inserted prefix byte for byte, so trimming a single character sent the edited line as plain text with no reply behind it. The fragment goes out canonical (`_canonicalFragment`): a partly deleted ellipsis and trailing punctuation come off and a whole ellipsis goes back on while the fragment stops short of the message, because receivers strip only a whole one before matching. A manual retry of a direct message cuts the budget's fragment again, the trimmed one not being stored.
 
 **Inbound** (`_addChannelMessage`). Three predicates in the helper own the policy, so the connector and the chat screen cannot drift apart on it. `parsesFragment` refuses outright when `containerReplyTimestamp != null`: an MCMP or MCOtxt body never carries a fragment — it has an author+timestamp anchor and needs none — so a leading `>` line there is the author's own writing and stays in the message as ordinary text. Otherwise the fragment is parsed, except when replies are drawn as mentions *and* `AppSettings.exactQuote` is off. It is then cut off the body and matched backwards through history against messages from that author: prefix match first, then the candidate re-encoded through `extendedCharMap` → `defaultCharMap` → `transliterationCharMap` → the user's own cyr2lat profiles. Encoding the candidate rather than decoding the fragment is deliberate — several Cyrillic letters share one Latin look-alike, so the reverse is ambiguous. `stripsFragment` decides whether the line actually leaves the stored body, and it only does when something will display it back: with no bubble in front of the message and nothing matched, removing it would swallow the only excerpt the sender paid payload for.
 
@@ -1091,9 +1096,11 @@ being applied twice. Our own sends are recorded when the packet timestamp is
 known (`_recordOwnChannelPacket`), so the first echo is a copy too.
 
 What the map does not do. It merges nothing the old rule would not merge:
-the key is the packet itself, where `_isChannelRepeat` takes any same-text
-message of the sender within thirty seconds of packet time and an exact copy
-at any time while the message is loaded. A copy the map misses, a message
+the key is the packet itself, and `_isChannelRepeat` takes a same-text message of the sender under the
+same packet second, an exact copy at any time while the message is loaded;
+its thirty-second window went on 2026-10-13, since another sender's copies
+all carry the packet's own second and the window merged a bot answering a
+ping twice with one text (`channel_packet_copies_test`). A copy the map misses, a message
 trimmed from memory, a packet the node re-encoded, a copy after ten minutes,
 takes the old path and its rules. A reaction that matched nothing is not
 recorded, so a later copy can still find a target that arrived in between.
@@ -2018,7 +2025,10 @@ regenerated with `gen-l10n`; the merge hot spots (`chat_screen.dart`,
 `channel_chat_screen.dart`, `contacts_screen.dart`, `map_screen.dart`, the
 connector) stay the fork's and upstream's functional changes are ported into
 them by hand; the storage stays the fork's SQLite; `pubspec.yaml` changes go
-into the three profiles; this file stays the fork's.
+into the three profiles; this file stays the fork's. A file the fork deleted
+on purpose (the eleven widgets of step 4, the dropped tests) merges silently
+while upstream leaves it alone; when upstream changes it, git reports a
+modify/delete conflict, and the answer is `git rm` again, not a restore.
 
 **Step 1 (2026-10-12, dev up to 9334d556, upstream's 2026-09-27 batch).**
 Taken: notification replies, mark-as-read and mute actions with Android
@@ -2026,10 +2036,23 @@ Auto support (`services/notification_reply.dart`, the connector's
 `handleNotificationReply`, MessagingStyle notifications that still carry the
 fork's MCOimg pictures as the large icon and Apple attachment); the channel
 mute bell in the channel chat, one `Channel.muteKey` for named and unnamed
-channels; resending a channel message until it is heard through N repeaters
+channels (the mod setting `hideChannelMuteButton`, off by default, takes the
+bell out of the app bar since 2026-10-13); resending a channel message until it is heard through N repeaters
 (`channelMinHops*` settings, `_resendUntilMinHops`, the resend reusing the
 first send's packet timestamp so it stays one packet; the status icon of a
-channel bubble reports the progress); the contact QR scanner screen
+channel bubble reports the progress, and `ChannelMessage.resendCount` keeps the
+repeated transmissions: the bubble's meta row shows the attempt count for
+every outgoing message while the setting is on, a spinner in place of the
+replay icon from the radio transmission until the loop ends (the hop
+check is registered as the frame goes to the radio, the delay counted
+from that moment and the loop woken by every echo, and the transcript's
+selector rebuilds on
+`channelResendRevision`, since the loop changes nothing in the message
+list), the sent check mark left out under the setting, the badge saying
+the message went out, and the path screen a *Send attempts* row; the wait before each resend is `channelMinHopsDelaySeconds` (10 to
+120 s, default 30) under the hop count; the no-retransmission warning of
+the mod settings is held back while the resends run and counts from the
+last attempt (all 2026-10-13)); the contact QR scanner screen
 (`screens/contact_qr_scanner_screen.dart`, `utils/contact_qr*.dart`, beside
 the fork's own link parser); day separators in both chats
 (`widgets/chat_day_separator.dart`); "keep chat history" on contact
@@ -2066,10 +2089,11 @@ assumed the preference storage and were dropped;
 (`SystemUiMode.edgeToEdge`, transparent system bars with contrast
 enforcement, light icons over the image viewer and the QR scanner); the copy
 snackbar skipped on Android, where the system shows its own chip; the
-package bumps in all four pubspecs. Left out: the discovered-contact
+package bumps in all four pubspecs. Left out then: the discovered-contact
 eviction toggle (`evictDiscoveredContactsEnabled`, cap 500), since the fork
-keeps its eviction always on at `maxDiscoveredContacts` (1000); its ARB keys
-came along unused. Upstream's re-indent of `channels_screen.dart` made the
+keeps its eviction always on at `maxDiscoveredContacts` (1000); taken on
+2026-10-13 as the same toggle in the auto-add dialog with a cap of 350, off
+by default, its ARB keys having come along in this step. Upstream's re-indent of `channels_screen.dart` made the
 auto-merge turn the search clear button's `setChannelsSearchText('')` into
 `(value)`: a hot screen's `git diff HEAD` is read even when its conflicts
 were taken as ours.
@@ -2287,7 +2311,10 @@ The firmware refusals remembered for a connection, `_directEchoAckUnsupported` a
 
 ## Dependencies
 
-App version: `9.5.1-mcoa.1.11.0+46` — Dart SDK constraint: `^3.9.2`
+App version: `9.5.0-mcoa.1.11.0+46` — Dart SDK constraint: `^3.9.2`. The base
+is upstream's version (9.5.0 since its build 13), the fork's own release
+number follows `-mcoa.`, the build number counts the fork's builds; the base
+was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
 
 `pubspec.yaml` is never edited on its own: it is a copy of the active build profile. `tool/use_translation_profile.dart` overwrites it from `pubspec.full.yaml`, `pubspec.lite.yaml` or `pubspec.lite-aeic.yaml`, and `lib/services/translation_service.dart` and `lib/services/image_codec_backend.dart` from their templates under `tool/translation_profiles/` and `tool/image_codec_profiles/`. The committed default is **lite-aeic**, so `pubspec.yaml` stays byte-identical to `pubspec.lite-aeic.yaml` and each live service file to its active template. The profiles differ only in their own blocks: lite drops `flutter_onnxruntime`, full adds `llamadart`, `flutter_langdetect` and the llamadart `hooks`. A dependency, a version bump or a git ref therefore goes into all three profiles in the same commit, and a change to either service file into its template. `test/tool/build_profiles_test.dart` holds all of that: the live files equal the lite-aeic templates, the three profiles differ only in their own packages and the llamadart `hooks`, and the two templates of each service declare the same public API; it was added after the onnx template missed upstream's `releaseDecoderSession` fix in step 3 of the 2026-10 merge and a profile switch put the stale copy back into the working tree. Upstream merges touch only `pubspec.yaml`: the flserial ref of upstream `82ec1feb` and `base32` for MeshCore One reactions lived there alone until 2026-09-27, and any profile switch dropped both. The `tool/use_translation_*.ps1` scripts copy the same files but leave the iOS deployment target alone, so a switch meant for a Mac build goes through the Dart tool.
 

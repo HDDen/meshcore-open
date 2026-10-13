@@ -3006,6 +3006,10 @@
   "@map_wardriveBackgroundNeeds": {
     "placeholders": {
       "requirement": {
+        "type": "String"
+      }
+    }
+  },
   "messageStatus_failedChannel": "Ваше радио не смогло отправить это сообщение.",
   "messageStatus_resending": "Пока не услышано через достаточное число ретрансляторов. Повторно отправлено {resends} из {maxResends} раз.",
   "messageStatus_hopsNotReached": "Отправлено, но в ответ услышано только через {hops} из {required} ретрансляторов. Возможно, сообщение дошло дальше, чем может услышать ваше радио.",
@@ -3025,14 +3029,14 @@
   "settings_clientRepeatFrequencyNote": "Частота {freq} МГц для повторения вне сети",
   "settings_pathHashModeHelper": "Размер каждого идентификатора узла, записываемого в маршрут flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой старше v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.",
   "settings_requiresFirmware": "Требуется прошивка {version} или новее",
-        "type": "String"
-      }
-    }
-  },
   "map_wardriveBackgroundOff": "Фоновый режим выключен, не хватает: {requirement}.",
   "@map_wardriveBackgroundOff": {
     "placeholders": {
       "requirement": {
+        "type": "String"
+      }
+    }
+  },
   "appSettings_channelMinHops": "Повторно отправлять сообщения канала, пока они не пройдут достаточно далеко",
   "appSettings_channelMinHopsSubtitle": "Если ваше сообщение не услышано в ответ через достаточное число ретрансляторов, отправьте его снова. Расходует больше времени в эфире.",
   "appSettings_channelMinHopsCount": "Требуется хопов: {count}",
@@ -3042,10 +3046,6 @@
   "contacts_storageFull": "Хранилище контактов на узле заполнено. Новые узлы нельзя добавить, пока контакты не удалены.",
   "contacts_removeFromContacts": "Убрать из контактов",
   "contacts_removeFromContactsConfirm": "{contactName} будет перемещён в «Обнаруженные контакты». История чата будет удалена.",
-        "type": "String"
-      }
-    }
-  },
   "map_wardriveRequirementNotifications": "разрешение на уведомления",
   "map_wardriveRequirementLocationServices": "включённая геолокация телефона",
   "map_wardriveRequirementLocationAlways": "доступ к геолокации «Всегда»",
@@ -3330,5 +3330,8 @@
   "networkMap_manage": "Управлять",
   "networkMap_addedToContacts": "Добавлено в контакты",
   "networkMap_addFailed": "Не удалось добавить в контакты",
-  "networkMap_unnamed": "Репитер без имени"
+  "networkMap_unnamed": "Репитер без имени",
+  "channelPath_sendAttemptsLabel": "Попыток отправки",
+  "settings_modSettingsHideChannelMute": "Скрыть переключатель уведомлений в канале",
+  "appSettings_channelMinHopsDelay": "Пауза перед повтором: {seconds} с"
 }

@@ -359,6 +359,16 @@ class ChannelMessagePathScreen extends StatelessWidget {
               message.repeatCount.toString(),
               scheme: scheme,
             ),
+          // Transmissions of our own packet: the first send plus the resends
+          // of the resend-until-N-hops setting.
+          if (message.isOutgoing &&
+              message.status != ChannelMessageStatus.pending)
+            _buildDetailRow(
+              context,
+              l10n.channelPath_sendAttemptsLabel,
+              (message.resendCount + 1).toString(),
+              scheme: scheme,
+            ),
           _buildDetailRow(
             context,
             l10n.channelPath_pathLabelTitle,

@@ -1,27 +1,5 @@
 {
   "bg": [
-    "messageStatus_failedChannel",
-    "messageStatus_resending",
-    "messageStatus_hopsNotReached",
-    "messageStatus_sentChannel",
-    "messageStatus_sentDirect",
-    "messageStatus_heardRepeatedCount",
-    "settings_regionEmptyExplanation",
-    "settings_regionFetchFromRepeaters",
-    "settings_regionDefault",
-    "settings_regionDefaultSubtitle",
-    "settings_regionDefaultNone",
-    "settings_telemetryPerContactHint",
-    "settings_multiAckSubtitle",
-    "settings_presetCustom",
-    "settings_radioMatchWarning",
-    "settings_txPowerRangeHelper",
-    "settings_clientRepeatFrequencyNote",
-    "settings_pathHashModeHelper",
-    "settings_requiresFirmware",
-    "appSettings_channelMinHops",
-    "appSettings_channelMinHopsSubtitle",
-    "appSettings_channelMinHopsCount",
     "channels_shareCopyLink",
     "dataFolder_inUseTitle",
     "dataFolder_inUseBody",
@@ -72,7 +50,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "de": [
@@ -126,7 +107,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "es": [
@@ -180,7 +164,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "fr": [
@@ -234,7 +221,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "hu": [
@@ -288,7 +278,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "it": [
@@ -342,7 +335,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "ja": [
@@ -396,7 +392,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "ko": [
@@ -450,7 +449,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "nl": [
@@ -504,7 +506,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "pl": [
@@ -558,7 +563,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "pt": [
@@ -612,38 +620,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
-  ],
-
-  "ru": [
-    "messageStatus_failedChannel",
-    "messageStatus_resending",
-    "messageStatus_hopsNotReached",
-    "messageStatus_sentChannel",
-    "messageStatus_sentDirect",
-    "messageStatus_heardRepeatedCount",
-    "settings_regionEmptyExplanation",
-    "settings_regionFetchFromRepeaters",
-    "settings_regionDefault",
-    "settings_regionDefaultSubtitle",
-    "settings_regionDefaultNone",
-    "settings_telemetryPerContactHint",
-    "settings_multiAckSubtitle",
-    "settings_presetCustom",
-    "settings_radioMatchWarning",
-    "settings_txPowerRangeHelper",
-    "settings_clientRepeatFrequencyNote",
-    "settings_pathHashModeHelper",
-    "settings_requiresFirmware",
-    "appSettings_channelMinHops",
-    "appSettings_channelMinHopsSubtitle",
-    "appSettings_channelMinHopsCount",
-    "appSettings_channelMinHopsRetries",
-    "appSettings_batteryOptimization",
-    "appSettings_batteryOptimizationSubtitle",
-    "contacts_storageFull",
-    "contacts_removeFromContacts",
-    "contacts_removeFromContactsConfirm"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "sk": [
@@ -697,7 +677,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "sl": [
@@ -751,7 +734,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "sv": [
@@ -805,7 +791,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "uk": [
@@ -859,7 +848,10 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ],
 
   "zh": [
@@ -913,6 +905,9 @@
     "chat_historyLinkAttach",
     "chat_historyLinkTitle",
     "chat_historyLinkBody",
-    "chat_historyLinked"
+    "chat_historyLinked",
+    "channelPath_sendAttemptsLabel",
+    "settings_modSettingsHideChannelMute",
+    "appSettings_channelMinHopsDelay"
   ]
 }

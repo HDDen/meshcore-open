@@ -400,7 +400,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const Divider(height: 1, indent: 16),
         _tappableTile(
           context,
-          icon: Icons.sensors_outlined,
+          icon: Icons.thermostat_outlined,
           title: l10n.settings_selfTelemetryShow,
           subtitle: l10n.repeater_telemetrySubtitle,
           onTap: connector.isConnected && connector.selfPublicKey != null
@@ -651,16 +651,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : l10n.radioStats_settingsSubtitle,
           onTap: connector.isConnected && connector.supportsCompanionRadioStats
               ? () => pushCompanionRadioStatsScreen(context)
-              : null,
-        ),
-        const Divider(height: 1, indent: 16),
-        _tappableTile(
-          context,
-          icon: Icons.thermostat_outlined,
-          title: l10n.contact_telemetry,
-          subtitle: l10n.repeater_telemetrySubtitle,
-          onTap: connector.isConnected
-              ? () => pushSelfTelemetryScreen(context)
               : null,
         ),
         const Divider(height: 1, indent: 16),
@@ -1477,6 +1467,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool autoAddRoomServer = false;
     bool autoAddSensor = false;
     bool overwriteOldest = false;
+    final appSettingsService = context.read<AppSettingsService>();
+    bool evictDiscoveredContactsEnabled =
+        appSettingsService.settings.evictDiscoveredContactsEnabled;
 
     final connector = context.read<MeshCoreConnector>();
     autoAddChat = connector.autoAddUsers ?? false;
@@ -1538,6 +1531,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setDialogState(() => overwriteOldest = value);
                   },
                 ),
+                const SizedBox(height: 8),
+                // The app's own list, not the node's table: a shorter cap
+                // for the discovered contacts (upstream's toggle, cap 350).
+                FeatureToggleRow(
+                  title: l10n.contactsSettings_evictDiscoveredContactsTitle,
+                  subtitle: l10n
+                      .contactsSettings_evictDiscoveredContactsSubtitle(
+                        MeshCoreConnector.evictingDiscoveredContactsCap,
+                      ),
+                  value: evictDiscoveredContactsEnabled,
+                  onChanged: (value) {
+                    setDialogState(
+                      () => evictDiscoveredContactsEnabled = value,
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -1548,6 +1557,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () {
+                // The app's own setting needs no node.
+                appSettingsService.setEvictDiscoveredContactsEnabled(
+                  evictDiscoveredContactsEnabled,
+                );
                 if (!_ensureConnected(screenContext, connector)) return;
                 _sendSettings(
                   connector,

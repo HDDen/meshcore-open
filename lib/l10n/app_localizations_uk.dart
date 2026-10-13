@@ -8313,4 +8313,16 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => 'Ретранслятор без назви';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Send attempts';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Hide the channel mute switch';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Wait before resending: $seconds s';
+  }
 }

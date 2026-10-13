@@ -1084,6 +1084,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           actions: [
             Consumer<AppSettingsService>(
               builder: (context, settings, _) {
+                // Mod setting: the bell can leave the app bar altogether.
+                if (settings.settings.hideChannelMuteButton) {
+                  return const SizedBox.shrink();
+                }
                 final muteKey = widget.channel.muteKey;
                 final muted = settings.isChannelMuted(muteKey);
                 return IconButton(
@@ -1193,6 +1197,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     List<ChannelMessage> messages,
                     int pathHashByteWidth,
                     bool urlImagesEnabled,
+                    int resendRevision,
                   })
                 >(
                   selector: (context, connector) => (
@@ -1201,11 +1206,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     urlImagesEnabled: connector.isChannelUrlImagesEnabled(
                       widget.channel.index,
                     ),
+                    // The attempt badge's spinner follows the resend loop,
+                    // which changes nothing in the message list itself.
+                    resendRevision: connector.channelResendRevision,
                   ),
                   shouldRebuild: (previous, next) =>
                       !identical(previous.messages, next.messages) ||
                       previous.pathHashByteWidth != next.pathHashByteWidth ||
-                      previous.urlImagesEnabled != next.urlImagesEnabled,
+                      previous.urlImagesEnabled != next.urlImagesEnabled ||
+                      previous.resendRevision != next.resendRevision,
                   builder: (context, timeline, child) {
                     final connector = context.read<MeshCoreConnector>();
                     final settingsService = context
@@ -1559,6 +1568,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showMessageRegion = settingsService.settings.showMessageRegion;
     final regionOnHopsLine = settingsService.settings.regionOnHopsLine;
     final isOutgoing = message.isOutgoing;
+    // The attempt badge: every outgoing message while the resend-until-N-hops
+    // setting is on, otherwise only a message that was resent; a spinner
+    // while the resends run, the replay icon once the loop has ended.
+    final resendInProgress =
+        isOutgoing && connector.channelResendProgress(message.messageId) != null;
+    // Not while the message waits out its sending delay: nothing has gone
+    // on the air yet, and the bar under the bubble already says so.
+    final showSendAttempts =
+        isOutgoing &&
+        // Not before the node has taken the frame: the clock alone until then.
+        message.status == ChannelMessageStatus.sent &&
+        connector.pendingChannelSendAt(message.messageId) == null &&
+        (message.resendCount > 0 ||
+            settingsService.settings.channelMinHopsEnabled);
     // A body that arrived while its sender was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link, no quote.
     // Everything below reads `bodyText` instead of the message, so revealing
@@ -2316,6 +2339,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                             afterHopList:
                                                 displayPath.isNotEmpty,
                                           ),
+                                        // The region joins the hop row's own
+                                        // text under the "region next to hop
+                                        // count" setting, in its font and on
+                                        // its baseline; a message with no hop
+                                        // row keeps the line below.
+                                        if (showMessageRegion &&
+                                            regionOnHopsLine)
+                                          TextSpan(
+                                            text:
+                                                ' ${context.l10n.channels_messageRegion(packetRegionLabel)}',
+                                          ),
                                       ],
                                     ),
                                     style: MeshTheme.mono(
@@ -2323,20 +2357,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                       color: metaColor,
                                     ),
                                   ),
-                                  // The region joins the hop row under the
-                                  // "region next to hop count" setting; a
-                                  // message with no hop row keeps the line
-                                  // below.
-                                  if (showMessageRegion && regionOnHopsLine)
-                                    Text(
-                                      context.l10n.channels_messageRegion(
-                                        packetRegionLabel,
-                                      ),
-                                      style: MeshTheme.mono(
-                                        fontSize: 10 * textScale,
-                                        color: metaColor,
-                                      ),
-                                    ),
                                 ],
                               ),
                             ),
@@ -2448,7 +2468,44 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
-                                if (isOutgoing) ...[
+                                if (showSendAttempts) ...[
+                                  const SizedBox(width: 6),
+                                  if (resendInProgress) ...[
+                                    SizedBox(
+                                      width: 9 * textScale,
+                                      height: 9 * textScale,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                        color: metaColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ] else ...[
+                                    Icon(
+                                      Icons.replay,
+                                      size: 11 * textScale,
+                                      color: metaColor,
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ],
+                                  Text(
+                                    '${message.resendCount + 1}',
+                                    style: MeshTheme.mono(
+                                      fontSize: 10 * textScale,
+                                      color: metaColor,
+                                    ),
+                                  ),
+                                ],
+                                // Under the resend setting the sent check
+                                // mark is left out: the attempt badge already
+                                // says the message went out.
+                                if (isOutgoing &&
+                                    !(message.status ==
+                                            ChannelMessageStatus.sent &&
+                                        !showFailureVisual &&
+                                        settingsService
+                                            .settings
+                                            .channelMinHopsEnabled)) ...[
                                   const SizedBox(width: 4),
                                   Icon(
                                     showFailureVisual
@@ -4134,8 +4191,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final scheme = Theme.of(context).colorScheme;
     final maxBytes = _maxChannelComposerBytes(connector, settings);
     final mediaQuery = MediaQuery.of(context);
-    final showsReplyBanner =
-        _replyingToMessage != null && _plainReplyComposerPrefix == null;
+    // Shown for a plain-text reply as well, whose mention and quote line sit
+    // in the field itself: the banner carries the close button and the
+    // region chip, which that line has no room for (Denis, 2026-10-13).
+    final showsReplyBanner = _replyingToMessage != null;
     final replyBannerHeight = showsReplyBanner
         ? (_parsedMessageContent(
                     cacheKey: 'body:${_replyingToMessage!.messageId}',

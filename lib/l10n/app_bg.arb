@@ -3656,6 +3656,12 @@
   "repeater_bridgeNote": "Налично само при фърмуер, компилиран с мост (RS232 или ESP-NOW).",
   "chat_longMessageRetryNote": "Над 158 байта: изпраща се най-много {count} пъти",
   "@chat_longMessageRetryNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "messageStatus_failedChannel": "Вашето радио не успя да изпрати съобщението.",
   "messageStatus_resending": "Още не е чуто през достатъчно повторители. Изпратено повторно {resends} от {maxResends} пъти.",
   "messageStatus_hopsNotReached": "Изпратено, но чуто обратно само през {hops} от {required} повторители. Възможно е съобщението да е стигнало по-нататък, отколкото вашето радио може да чуе.",
@@ -3678,12 +3684,6 @@
   "appSettings_channelMinHops": "Повторно изпращане на съобщенията в канала, докато не достигнат достатъчно далеч",
   "appSettings_channelMinHopsSubtitle": "Ако вашето съобщение не се чуе обратно през достатъчно повторители, изпратете го отново. Използва повече време на излъчване.",
   "appSettings_channelMinHopsCount": "Необходим брой скокове: {count}",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "channels_qrUpdateExisting": "Каналът {name} вече съществува. Да се обновят ли свойствата му?",
   "settings_modSettingsDirectEchoRecovery": "Получавай лични съобщения, без да чакаш пълното преминаване на маршрута",
   "settings_modSettingsDirectEchoRecoveryDscr": "Внимание! Частният ключ на възела ще бъде експортиран в паметта на приложението, за да може пакетът да се дешифрира от самото приложение, а не от възела.",

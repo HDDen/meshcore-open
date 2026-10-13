@@ -4,13 +4,8 @@ import '../theme/mesh_theme.dart';
 
 class UnreadBadge extends StatelessWidget {
   final int count;
-  final Color color;
 
-  const UnreadBadge({
-    super.key,
-    required this.count,
-    this.color = MeshPalette.blue,
-  });
+  const UnreadBadge({super.key, required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +15,15 @@ class UnreadBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
+        color: MeshPalette.alert,
         borderRadius: BorderRadius.circular(MeshRadii.pill),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
       child: Text(
         display,
         style: MeshTheme.mono(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: color,
+          color: Colors.white,
         ),
       ),
     );

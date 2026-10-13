@@ -112,35 +112,35 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get messageStatus_failedChannel =>
-      'Your radio couldn\'t send this message.';
+      'Вашето радио не успя да изпрати съобщението.';
 
   @override
   String messageStatus_resending(Object maxResends, Object resends) {
-    return 'Not heard through enough repeaters yet. Resent $resends of $maxResends times.';
+    return 'Още не е чуто през достатъчно повторители. Изпратено повторно $resends от $maxResends пъти.';
   }
 
   @override
   String messageStatus_hopsNotReached(Object hops, Object required) {
-    return 'Sent, but only heard back through $hops of $required repeaters. It may still have gone further than your radio can hear.';
+    return 'Изпратено, но чуто обратно само през $hops от $required повторители. Възможно е съобщението да е стигнало по-нататък, отколкото вашето радио може да чуе.';
   }
 
   @override
   String get messageStatus_sentChannel =>
-      'Sent. Channels don\'t confirm delivery, so this only means your radio sent it.';
+      'Изпратено. Каналите не потвърждават доставката, затова това означава само че съобщението е изпратено от вашето радио.';
 
   @override
   String get messageStatus_sentDirect =>
-      'Sent. Waiting for the contact to confirm.';
+      'Изпратено. Изчакване на потвърждение от контакта.';
 
   @override
   String messageStatus_heardRepeatedCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count times',
-      one: 'once',
+      other: '$count пъти',
+      one: '1 път',
     );
-    return 'Heard repeated $_temp0. Nearby repeaters passed it on.';
+    return 'Чуто повторно: $_temp0. Близките повторители предадоха съобщението нататък.';
   }
 
   @override
@@ -430,20 +430,20 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_regionEmptyExplanation =>
-      'Regions limit flood messages to repeaters in an area. Fetch them from nearby repeaters or add one by name.';
+      'Регионите ограничават разпространяването на съобщения само от повторители в определена област. Вземете ги от близките повторители или добавете по име.';
 
   @override
-  String get settings_regionFetchFromRepeaters => 'Fetch from repeaters';
+  String get settings_regionFetchFromRepeaters => 'Вземи от повторителите';
 
   @override
-  String get settings_regionDefault => 'Default region';
+  String get settings_regionDefault => 'Регион по подразбиране';
 
   @override
   String get settings_regionDefaultSubtitle =>
-      'Used by channels without their own region';
+      'Използва се от канали без собствен регион';
 
   @override
-  String get settings_regionDefaultNone => 'None';
+  String get settings_regionDefaultNone => 'Няма';
 
   @override
   String settings_regionUseRadioDefault(String region) {
@@ -598,7 +598,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_telemetryPerContactHint =>
-      'To allow a contact, open their chat and choose Contact Settings from the menu.';
+      'За да разрешите даден контакт, отворете чата му и изберете „Настройки за контакти“ от менюто.';
 
   @override
   String get settings_advertLocation => 'Местоположение в advert';
@@ -620,7 +620,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_multiAckSubtitle =>
-      'Send extra ACKs for better delivery; uses more airtime';
+      'Изпраща допълнителни ACK за по-надеждна доставка; използва повече време на излъчване';
 
   @override
   String get settings_telemetryModeUpdated =>
@@ -750,11 +750,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_presets => 'Предварителни настройки';
 
   @override
-  String get settings_presetCustom => 'Custom';
+  String get settings_presetCustom => 'Персонализиран';
 
   @override
   String get settings_radioMatchWarning =>
-      'All nodes you talk to must use the same frequency, bandwidth and SF. The coding rate (CR) can differ.';
+      'Всички възли, с които комуникирате, трябва да използват еднакви честота, честотна лента и SF. Скоростта на кодиране (CR) може да се различава.';
 
   @override
   String get settings_frequency => 'Честота (MHz)';
@@ -779,7 +779,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String settings_txPowerRangeHelper(int min, int max) {
-    return '$min to $max dBm';
+    return 'от $min до $max dBm';
   }
 
   @override
@@ -790,7 +790,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String settings_clientRepeatFrequencyNote(String freq) {
-    return 'Frequency set to $freq MHz for off-grid repeat';
+    return 'Честота $freq MHz за повторение извън мрежата';
   }
 
   @override
@@ -947,24 +947,24 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_pathHashModeHelper =>
-      'Size of each node ID recorded in the path of flood packets this radio sends: 1 byte (256 IDs, up to 64 hops), 2 bytes (65K IDs, up to 32 hops), 3 bytes (16M IDs, up to 21 hops). Larger IDs reduce collisions, but repeaters on firmware older than v1.14 drop packets with 2- or 3-byte IDs.';
+      'Размер на всеки идентификатор на възел, записван в пътя на flood пакетите, изпращани от това радио: 1 байт (256 идентификатора, до 64 скока), 2 байта (65 хил. идентификатора, до 32 скока), 3 байта (16 млн идентификатора, до 21 скок). По-големите идентификатори намаляват количествата съвпадения, но повторителите с прошивка по-стара от v1.14 отхвърлят пакети с 2- или 3-байтови идентификатори.';
 
   @override
   String settings_requiresFirmware(Object version) {
-    return 'Requires firmware $version or newer';
+    return 'Изисква се прошивка $version или по-нова';
   }
 
   @override
   String get appSettings_channelMinHops =>
-      'Resend channel messages until they travel far enough';
+      'Повторно изпращане на съобщенията в канала, докато не достигнат достатъчно далеч';
 
   @override
   String get appSettings_channelMinHopsSubtitle =>
-      'If your message isn\'t heard coming back through enough repeaters, send it again. Uses more airtime.';
+      'Ако вашето съобщение не се чуе обратно през достатъчно повторители, изпратете го отново. Използва повече време на излъчване.';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
-    return 'Required hops: $count';
+    return 'Необходим брой скокове: $count';
   }
 
   @override
@@ -8326,4 +8326,16 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => 'Неназован повторител';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Send attempts';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Hide the channel mute switch';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Wait before resending: $seconds s';
+  }
 }

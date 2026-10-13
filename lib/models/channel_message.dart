@@ -89,6 +89,10 @@ class ChannelMessage {
   final ChannelMessageStatus status;
   final List<Repeat> repeats;
   final int repeatCount;
+
+  /// Repeated transmissions of this packet under the resend-until-N-hops
+  /// setting: 0 for an incoming message and for one sent once.
+  final int resendCount;
   final int? pathLength;
   final int? pathHashWidth;
   final Uint8List pathBytes;
@@ -159,6 +163,7 @@ class ChannelMessage {
     this.status = ChannelMessageStatus.pending,
     this.repeats = const [],
     this.repeatCount = 0,
+    this.resendCount = 0,
     this.pathLength,
     this.pathHashWidth,
     Uint8List? pathBytes,
@@ -220,6 +225,7 @@ class ChannelMessage {
     DateTime? timestamp,
     List<Repeat>? repeats,
     int? repeatCount,
+    int? resendCount,
     int? pathLength,
     int? pathHashWidth,
     Uint8List? pathBytes,
@@ -340,6 +346,7 @@ class ChannelMessage {
       status: status ?? this.status,
       repeats: repeats ?? this.repeats,
       repeatCount: repeatCount ?? this.repeatCount,
+      resendCount: resendCount ?? this.resendCount,
       pathLength: pathLength ?? this.pathLength,
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,

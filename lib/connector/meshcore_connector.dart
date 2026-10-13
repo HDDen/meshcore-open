@@ -236,6 +236,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // lastSeen) is evicted to make room for a newly heard one.
   static const int maxDiscoveredContacts = 1000;
 
+  /// The cap while the "evict discovered contacts" toggle of the auto-add
+  /// dialog is on (upstream's toggle, taken 2026-10-13 with this cap).
+  static const int evictingDiscoveredContactsCap = 350;
+
+  /// The discovered list's cap as the setting has it now.
+  int get _discoveredContactsLimit =>
+      (_appSettingsService?.settings.evictDiscoveredContactsEnabled ?? false)
+      ? evictingDiscoveredContactsCap
+      : maxDiscoveredContacts;
+
   MeshCoreConnectionState _state = MeshCoreConnectionState.disconnected;
   BluetoothDevice? _device;
   BluetoothCharacteristic? _rxCharacteristic;
@@ -678,6 +688,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       SharedMessageHistoryMode.disabled;
   int _lastNoRetransmissionWarningSeconds = 0;
   bool _lastDirectEchoRecovery = false;
+  bool _lastEvictDiscoveredContacts = false;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
   bool _isOfflineMode = false;
@@ -941,7 +952,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
     } else {
       final known = contactIndex >= 0 ? _contacts[contactIndex] : null;
-      if (_discoveredContacts.length >= maxDiscoveredContacts) {
+      if (_discoveredContacts.length >= _discoveredContactsLimit) {
         _evictStalestDiscoveredContact();
       }
       _discoveredContacts.add(
@@ -982,7 +993,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       selfPublicKeyHex: selfPublicKeyHex,
     );
     if (result.imported == 0) return result;
-    while (_discoveredContacts.length > maxDiscoveredContacts) {
+    while (_discoveredContacts.length > _discoveredContactsLimit) {
       _evictStalestDiscoveredContact();
     }
     await _persistDiscoveredContacts();
@@ -3966,6 +3977,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _clearDirectEchoKey('option switched off');
       }
     }
+    final evictDiscovered = settings?.evictDiscoveredContactsEnabled ?? false;
+    if (evictDiscovered != _lastEvictDiscoveredContacts) {
+      _lastEvictDiscoveredContacts = evictDiscovered;
+      _trimDiscoveredContactsToLimit();
+    }
     final mode =
         settings?.sharedMessageHistoryMode ?? SharedMessageHistoryMode.disabled;
     if (mode == _lastSharedMessageHistoryMode) return;
@@ -4122,9 +4138,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     // Trim a previously-saved oversized list down to the freshest entries so a
     // device that grew unbounded before the cap existed recovers on load.
-    if (cached.length > maxDiscoveredContacts) {
+    final discoveredLimit = _discoveredContactsLimit;
+    if (cached.length > discoveredLimit) {
       cached.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
-      cached.removeRange(maxDiscoveredContacts, cached.length);
+      cached.removeRange(discoveredLimit, cached.length);
       unawaited(_discoveryContactStore.saveContacts(cached));
     }
     // Discovered nodes stay discovered: the contact list is the node's, and
@@ -8585,7 +8602,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
           if (!isResend) {
             final sentByRadioAt = DateTime.now();
-            _markChannelMessageSentByRadio(message.messageId, sentByRadioAt);
+            final resendSettings = _appSettingsService?.settings;
+            final resendUntilMinHops =
+                resendSettings?.channelMinHopsEnabled ?? false;
+            _markChannelMessageSentByRadio(
+              message.messageId,
+              sentByRadioAt,
+              // Under the resend setting the warning waits for the resends.
+              deferNoRetransmissionWarning: resendUntilMinHops,
+            );
+            if (resendUntilMinHops) {
+              // The attempt badge spins from the radio transmission on; the
+              // resend loop keeps the entry once the node has taken the frame.
+              _channelHopChecks[message.messageId] = (
+                resends: 0,
+                maxResends: resendSettings?.channelMinHopsRetries ?? 1,
+              );
+              _channelResendRevision++;
+            }
             final seconds = sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
             sentTimestampSeconds = seconds;
             _updateChannelMessagePacketTimestamp(
@@ -8601,6 +8635,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   : null,
             );
           }
+          if (isResend) _incrementChannelResendCount(message.messageId);
           if (binaryFrame != null) {
             await _sendFrameAndWaitForCommandAck(
               binaryFrame,
@@ -8620,9 +8655,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             channelSendQueueId: isResend ? null : message.messageId,
           );
         }, region: region ?? _channelSendScope(channel.index));
+    final settings = _appSettingsService?.settings;
+    final minHopsSettings = settings != null && settings.channelMinHopsEnabled
+        ? settings
+        : null;
     try {
       await transmit();
     } catch (_) {
+      // The hop check registered at the radio transmission, if it got there.
+      _channelHopChecks.remove(message.messageId);
+      _channelResendRevision++;
       // A failed or timed-out SET_FLOOD_SCOPE (or text send) means no OK/ERR
       // will resolve this message, so fail it here instead of leaving it
       // pending forever.
@@ -8631,22 +8673,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       rethrow;
     }
 
-    final settings = _appSettingsService?.settings;
-    if (settings != null && settings.channelMinHopsEnabled) {
+    if (minHopsSettings != null) {
       unawaited(
         _resendUntilMinHops(
           message.messageId,
           () => transmit(isResend: true),
-          minHops: settings.channelMinHops,
-          maxResends: settings.channelMinHopsRetries,
+          minHops: minHopsSettings.channelMinHops,
+          maxResends: minHopsSettings.channelMinHopsRetries,
         ),
       );
     }
   }
 
   /// How long to listen for a channel message to come back through the mesh
-  /// before resending it.
-  static const Duration _channelHopCheckDelay = Duration(seconds: 30);
+  /// before resending it: the "wait before resending" setting under the hop
+  /// count, read anew at every wait so a change reaches a running loop.
+  Duration get _channelHopCheckDelay => Duration(
+    seconds: _appSettingsService?.settings.channelMinHopsDelaySeconds ?? 30,
+  );
 
   /// Resends a channel message until one of its echoes has travelled through
   /// at least [minHops] repeaters, then gives up and marks it failed.
@@ -8657,24 +8701,53 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required int maxResends,
   }) async {
     _channelHopChecks[messageId] = (resends: 0, maxResends: maxResends);
+    _channelResendRevision++;
     notifyListeners();
     var hops = 0;
+    // The no-retransmission warning of the mod settings waits for the
+    // resends and then counts from the last attempt (Denis, 2026-10-13).
+    var lastAttemptAt =
+        _findChannelMessageById(messageId)?.sentByRadioAt ?? DateTime.now();
     try {
       for (var attempt = 0; ; attempt++) {
-        await Future<void>.delayed(_channelHopCheckDelay);
-        final message = _findChannelMessageById(messageId);
-        if (message == null) return;
-        if (message.status == ChannelMessageStatus.failed) return;
-        hops = message.pathLength ?? 0;
-        // Read live so toggling the setting mid-resend takes effect.
-        final countRepeaters =
-            _appSettingsService?.settings.channelMinHopsCountRepeaters ?? false;
-        if (channelResendSatisfied(
-          message,
-          minHops: minHops,
-          countDistinctRepeaters: countRepeaters,
-          selfPublicKey: _selfPublicKey,
-        )) {
+        // Wait out the delay, but look again at every echo that comes in:
+        // the condition may be met long before the delay ends, and the
+        // spinner must stop with it. An echo that does not meet it leaves
+        // the rest of the delay to run.
+        // Counted from the transmission, the first one the radio's.
+        final deadline = lastAttemptAt.add(_channelHopCheckDelay);
+        ChannelMessage? message;
+        var satisfied = false;
+        while (true) {
+          final remaining = deadline.difference(DateTime.now());
+          if (remaining > Duration.zero) {
+            final wakeup = Completer<void>();
+            _channelHopWakeups[messageId] = wakeup;
+            await Future.any<void>([
+              Future<void>.delayed(remaining),
+              wakeup.future,
+            ]);
+            if (identical(_channelHopWakeups[messageId], wakeup)) {
+              _channelHopWakeups.remove(messageId);
+            }
+          }
+          message = _findChannelMessageById(messageId);
+          if (message == null) return;
+          if (message.status == ChannelMessageStatus.failed) return;
+          hops = message.pathLength ?? 0;
+          // Read live so toggling the setting mid-resend takes effect.
+          final countRepeaters =
+              _appSettingsService?.settings.channelMinHopsCountRepeaters ??
+              false;
+          satisfied = channelResendSatisfied(
+            message,
+            minHops: minHops,
+            countDistinctRepeaters: countRepeaters,
+            selfPublicKey: _selfPublicKey,
+          );
+          if (satisfied || !DateTime.now().isBefore(deadline)) break;
+        }
+        if (satisfied) {
           _appDebugLogService?.info(
             hops >= minHops
                 ? 'Channel message reached $hops hops after $attempt resends'
@@ -8694,9 +8767,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           resends: attempt + 1,
           maxResends: maxResends,
         );
+        _channelResendRevision++;
         notifyListeners();
         try {
           await resend();
+          lastAttemptAt = DateTime.now();
         } catch (e) {
           _appDebugLogService?.warn(
             'Channel resend failed: $e',
@@ -8714,11 +8789,27 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _channelHopShortfalls[messageId] = (hops: hops, required: minHops);
     } finally {
       _channelHopChecks.remove(messageId);
+      _channelHopWakeups.remove(messageId);
+      _channelResendRevision++;
+      _scheduleChannelNoRetransmissionWarning(messageId, since: lastAttemptAt);
       notifyListeners();
     }
   }
 
+  /// Moves with every change of the hop checks and shortfalls, for the
+  /// transcript's selector: a notification alone does not rebuild it.
+  int _channelResendRevision = 0;
+  int get channelResendRevision => _channelResendRevision;
+
   final Map<String, ({int resends, int maxResends})> _channelHopChecks = {};
+  final Map<String, Completer<void>> _channelHopWakeups = {};
+
+  /// An echo of [messageId] arrived: the resend loop looks at its condition
+  /// again instead of waiting out the rest of its delay.
+  void _wakeChannelHopCheck(String messageId) {
+    final wakeup = _channelHopWakeups[messageId];
+    if (wakeup != null && !wakeup.isCompleted) wakeup.complete();
+  }
   final Map<String, ({int hops, int required})> _channelHopShortfalls = {};
 
   /// Set when resending gave up before hearing the message through enough
@@ -9834,8 +9925,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _markChannelMessageSentByRadio(
     String messageId,
-    DateTime sentByRadioAt,
-  ) {
+    DateTime sentByRadioAt, {
+    bool deferNoRetransmissionWarning = false,
+  }) {
     for (final entry in _channelMessages.entries) {
       final channelMessages = entry.value;
       final index = channelMessages.indexWhere(
@@ -9852,7 +9944,30 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       channelMessages[index] = updated;
       channelMessages.sort(_compareChannelMessages);
-      _scheduleChannelNoRetransmissionWarning(messageId);
+      if (!deferNoRetransmissionWarning) {
+        _scheduleChannelNoRetransmissionWarning(messageId);
+      }
+      unawaited(_channelMessageStore.saveChannelMessage(entry.key, updated));
+      notifyListeners();
+      return;
+    }
+  }
+
+  /// Counts a repeated transmission of an outgoing message (the
+  /// resend-until-N-hops setting) on the stored message, so the count
+  /// survives the session: the bubble shows it beside the repeats, the path
+  /// screen as "send attempts".
+  void _incrementChannelResendCount(String messageId) {
+    for (final entry in _channelMessages.entries) {
+      final channelMessages = entry.value;
+      final index = channelMessages.indexWhere(
+        (message) => message.messageId == messageId,
+      );
+      if (index < 0) continue;
+      final message = channelMessages[index];
+      if (!message.isOutgoing) return;
+      final updated = message.copyWith(resendCount: message.resendCount + 1);
+      channelMessages[index] = updated;
       unawaited(_channelMessageStore.saveChannelMessage(entry.key, updated));
       notifyListeners();
       return;
@@ -9894,14 +10009,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void _scheduleChannelNoRetransmissionWarning(String messageId) {
+  /// [since] is the last transmission the warning counts from, when the
+  /// resend-until-N-hops loop held it back; a period already over marks the
+  /// message at once.
+  void _scheduleChannelNoRetransmissionWarning(
+    String messageId, {
+    DateTime? since,
+  }) {
     _cancelChannelNoRetransmissionWarning(messageId);
     final seconds =
         _appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
     if (seconds <= 0) return;
+    final elapsed = since == null
+        ? Duration.zero
+        : DateTime.now().difference(since);
+    final remaining = Duration(seconds: seconds) - elapsed;
+    if (remaining <= Duration.zero) {
+      _markChannelMessageNoRetransmission(messageId, seconds);
+      return;
+    }
 
     _channelNoRetransmissionTimers[messageId] = Timer(
-      Duration(seconds: seconds),
+      remaining,
       () {
         _channelNoRetransmissionTimers.remove(messageId);
         _markChannelMessageNoRetransmission(messageId, seconds);
@@ -14908,6 +15037,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           sourceLabel: sourceLabel,
         );
         final merged = _mergeChannelRepeat(messages, index, copy);
+        _wakeChannelHopCheck(existing.messageId);
         if (merged.receivedAt != existing.receivedAt) {
           messages.sort(_compareChannelMessages);
         }
@@ -17287,6 +17417,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (existingIndex >= 0) {
       isNew = false;
       _mergeChannelRepeat(messages, existingIndex, processedMessage);
+      _wakeChannelHopCheck(messages[existingIndex].messageId);
     } else {
       messages.add(processedMessage);
     }
@@ -17480,7 +17611,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // This repeat detector intentionally does not use
     // AppSettings.defaultChannelResendTimeoutSeconds: manual resend delay and
     // radio self-echo deduplication are separate timing concerns.
-    final windowMs = isSelfEcho ? 10 * 60 * 1000 : 30000;
+    //
+    // Another sender's copies all carry the packet's own second, so a
+    // same-text message a second or more apart is another packet: a bot
+    // answering a ping with the same text twice, a client resending by hand.
+    // The thirty-second window that merged those went on 2026-10-13.
+    final windowMs = isSelfEcho ? 10 * 60 * 1000 : 999;
     final existingRepeatAnchor = existing.sentByRadioAt ?? existing.timestamp;
     final diffMs =
         (existingRepeatAnchor.millisecondsSinceEpoch -
@@ -17661,7 +17797,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _processedChannelReactions.clear();
     _processedContactReactions.clear();
     _channelHopChecks.clear();
+    _channelHopWakeups.clear();
     _channelHopShortfalls.clear();
+    _channelResendRevision++;
     _messageStateOwnerKey = null;
     _persistedStateLoadedKey = null;
   }
@@ -18578,7 +18716,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       flags: 0,
     );
 
-    if (_discoveredContacts.length >= maxDiscoveredContacts) {
+    if (_discoveredContacts.length >= _discoveredContactsLimit) {
       _evictStalestDiscoveredContact();
     }
     _discoveredContacts.add(disContact);
@@ -18600,6 +18738,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         );
       }
     }
+  }
+
+  /// Drops the stalest discovered contacts past the cap the setting names
+  /// now, after it shrank; a cap that grew leaves the list as it is.
+  void _trimDiscoveredContactsToLimit() {
+    final limit = _discoveredContactsLimit;
+    if (_discoveredContacts.length <= limit) return;
+    while (_discoveredContacts.length > limit) {
+      _evictStalestDiscoveredContact();
+    }
+    unawaited(_persistDiscoveredContacts());
+    notifyListeners();
   }
 
   void _evictStalestDiscoveredContact() {

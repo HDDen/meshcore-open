@@ -4376,5 +4376,9 @@
   "networkMap_manage": "Manage",
   "networkMap_addedToContacts": "Added to contacts",
   "networkMap_addFailed": "Couldn't add to contacts",
-  "networkMap_unnamed": "Unnamed repeater"
+  "networkMap_unnamed": "Unnamed repeater",
+  "channelPath_sendAttemptsLabel": "Send attempts",
+  "settings_modSettingsHideChannelMute": "Hide the channel mute switch",
+  "appSettings_channelMinHopsDelay": "Wait before resending: {seconds} s",
+  "@appSettings_channelMinHopsDelay": {"placeholders": {"seconds": {"type": "int"}}}
 }

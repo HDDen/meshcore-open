@@ -190,6 +190,9 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+
+  /// Hide the mute bell in the channel chat's app bar (mod settings).
+  final bool hideChannelMuteButton;
   final bool hideRadioStatsButton;
   final bool snrIndicatorAllRepActivity;
   final bool hideMapZoomControls;
@@ -325,6 +328,9 @@ class AppSettings {
   final int channelMinHops;
   final int channelMinHopsRetries;
 
+  /// Seconds to listen for echoes before each resend of [channelMinHops].
+  final int channelMinHopsDelaySeconds;
+
   /// When on, hearing the message repeated by at least [channelMinHops]
   /// different first-hop repeaters also satisfies the channel resend.
   final bool channelMinHopsCountRepeaters;
@@ -353,6 +359,10 @@ class AppSettings {
 
   /// Whether the one-time network map opt-in dialog has been shown.
   final bool networkMapPromptShown;
+
+  /// Keep the discovered list short: 350 entries instead of 1000 (see
+  /// `MeshCoreConnector.evictingDiscoveredContactsCap`).
+  final bool evictDiscoveredContactsEnabled;
 
   /// Whether a received image is decoded as soon as it is reassembled.
   ///
@@ -692,6 +702,7 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = true,
+    this.hideChannelMuteButton = false,
     this.hideRadioStatsButton = false,
     this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
@@ -753,6 +764,7 @@ class AppSettings {
     this.channelMinHopsEnabled = false,
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
+    this.channelMinHopsDelaySeconds = 30,
     this.channelMinHopsCountRepeaters = false,
     this.regionOnHopsLine = false,
     this.themeMode = 'system',
@@ -772,6 +784,7 @@ class AppSettings {
     this.imageMessagesEnabled = false,
     this.networkMapUploadEnabled = false,
     this.networkMapPromptShown = false,
+    this.evictDiscoveredContactsEnabled = false,
     this.imageProcessAutomatically = false,
     this.imageCodecEnabled = false,
     this.imageCodecSelectedModelId,
@@ -846,6 +859,7 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'hide_channel_mute_button': hideChannelMuteButton,
       'hide_radio_stats_button': hideRadioStatsButton,
       'snr_indicator_all_rep_activity': snrIndicatorAllRepActivity,
       'hide_map_zoom_controls': hideMapZoomControls,
@@ -912,6 +926,7 @@ class AppSettings {
       'channel_min_hops_enabled': channelMinHopsEnabled,
       'channel_min_hops': channelMinHops,
       'channel_min_hops_retries': channelMinHopsRetries,
+      'channel_min_hops_delay_seconds': channelMinHopsDelaySeconds,
       'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
       'region_on_hops_line': regionOnHopsLine,
       'theme_mode': themeMode,
@@ -933,6 +948,7 @@ class AppSettings {
       'image_messages_enabled': imageMessagesEnabled,
       'network_map_upload_enabled': networkMapUploadEnabled,
       'network_map_prompt_shown': networkMapPromptShown,
+      'evict_discovered_contacts_enabled': evictDiscoveredContactsEnabled,
       'image_process_automatically': imageProcessAutomatically,
       'image_codec_enabled': imageCodecEnabled,
       'image_codec_selected_model_id': imageCodecSelectedModelId,
@@ -1019,6 +1035,8 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? true,
+      hideChannelMuteButton:
+          json['hide_channel_mute_button'] as bool? ?? false,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
       snrIndicatorAllRepActivity:
           json['snr_indicator_all_rep_activity'] as bool? ?? true,
@@ -1117,6 +1135,8 @@ class AppSettings {
       channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
+      channelMinHopsDelaySeconds:
+          json['channel_min_hops_delay_seconds'] as int? ?? 30,
       channelMinHopsCountRepeaters:
           json['channel_min_hops_count_repeaters'] as bool? ?? false,
       regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
@@ -1170,6 +1190,8 @@ class AppSettings {
       networkMapUploadEnabled:
           json['network_map_upload_enabled'] as bool? ?? false,
       networkMapPromptShown: json['network_map_prompt_shown'] as bool? ?? false,
+      evictDiscoveredContactsEnabled:
+          json['evict_discovered_contacts_enabled'] as bool? ?? false,
       imageProcessAutomatically:
           json['image_process_automatically'] as bool? ?? false,
       imageCodecEnabled: json['image_codec_enabled'] as bool? ?? false,
@@ -1266,6 +1288,7 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? hideChannelMuteButton,
     bool? hideRadioStatsButton,
     bool? snrIndicatorAllRepActivity,
     bool? hideMapZoomControls,
@@ -1327,6 +1350,7 @@ class AppSettings {
     bool? channelMinHopsEnabled,
     int? channelMinHops,
     int? channelMinHopsRetries,
+    int? channelMinHopsDelaySeconds,
     bool? channelMinHopsCountRepeaters,
     bool? regionOnHopsLine,
     String? themeMode,
@@ -1346,6 +1370,7 @@ class AppSettings {
     bool? imageMessagesEnabled,
     bool? networkMapUploadEnabled,
     bool? networkMapPromptShown,
+    bool? evictDiscoveredContactsEnabled,
     bool? imageProcessAutomatically,
     bool? imageCodecEnabled,
     Object? imageCodecSelectedModelId = _unset,
@@ -1394,6 +1419,8 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      hideChannelMuteButton:
+          hideChannelMuteButton ?? this.hideChannelMuteButton,
       hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,
       snrIndicatorAllRepActivity:
           snrIndicatorAllRepActivity ?? this.snrIndicatorAllRepActivity,
@@ -1498,6 +1525,8 @@ class AppSettings {
       channelMinHops: channelMinHops ?? this.channelMinHops,
       channelMinHopsRetries:
           channelMinHopsRetries ?? this.channelMinHopsRetries,
+      channelMinHopsDelaySeconds:
+          channelMinHopsDelaySeconds ?? this.channelMinHopsDelaySeconds,
       channelMinHopsCountRepeaters:
           channelMinHopsCountRepeaters ?? this.channelMinHopsCountRepeaters,
       regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
@@ -1530,6 +1559,8 @@ class AppSettings {
           networkMapUploadEnabled ?? this.networkMapUploadEnabled,
       networkMapPromptShown:
           networkMapPromptShown ?? this.networkMapPromptShown,
+      evictDiscoveredContactsEnabled:
+          evictDiscoveredContactsEnabled ?? this.evictDiscoveredContactsEnabled,
       imageProcessAutomatically:
           imageProcessAutomatically ?? this.imageProcessAutomatically,
       imageCodecEnabled: imageCodecEnabled ?? this.imageCodecEnabled,

@@ -7768,4 +7768,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get networkMap_unnamed => '未命名转发节点';
+
+  @override
+  String get channelPath_sendAttemptsLabel => 'Send attempts';
+
+  @override
+  String get settings_modSettingsHideChannelMute =>
+      'Hide the channel mute switch';
+
+  @override
+  String appSettings_channelMinHopsDelay(int seconds) {
+    return 'Wait before resending: $seconds s';
+  }
 }
