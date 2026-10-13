@@ -7613,7 +7613,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String neighbors_durationHours(Object hours, Object minutes) {
+  String neighbors_durationHours(int hours, int minutes) {
     return '$hours小时$minutes分';
   }
 
@@ -7644,4 +7644,128 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_historyLinked => 'The history has been attached.';
+
+  @override
+  String get scanner_getNodeTitle => '需要新节点吗？';
+
+  @override
+  String get scanner_getNodeBody => '钱包大小，运行 MeshCore，双频 GPS，防水，续航 5 天。';
+
+  @override
+  String get scanner_getNodeAction => '点此获取';
+
+  @override
+  String get scanner_getNodeDisclosure => '推广链接：每次购买都会支持 MeshCore Open。';
+
+  @override
+  String get networkMap_settingsSection => '网络地图';
+
+  @override
+  String get networkMap_uploadTitle => '分享我的电台收到的信息';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      '开启后，当您的电台已连接时，应用会把电台收到的数据包的简要信息发送到 MeshCore Open 网络地图，让大家看到有哪些转发节点以及它们如何相连。发送内容包括每个数据包的类型、路由、跳数、信号强度和大小，以及转发节点自身广播中的名称和大致位置。绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置：位置会取整到约 2 公里，且应用每天都会使用新的随机 ID。';
+
+  @override
+  String get networkMap_whatWeCollect => '我们收集的内容';
+
+  @override
+  String get networkMap_promptTitle => '要帮助建设网络地图吗？';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open 可以把您的电台收到的信息分享到公开的网络地图 map.meshcoreopen.org，让大家看到有哪些转发节点以及它们如何相连。\n\n绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置。位置会取整到约 2 公里。';
+
+  @override
+  String get networkMap_promptSettingsHint => '您可以随时在 设置 → 应用设置 → 网络地图 中更改。';
+
+  @override
+  String get networkMap_promptAccept => '分享';
+
+  @override
+  String get networkMap_promptDecline => '不用了';
+
+  @override
+  String get networkMap_statusOff => '已关闭。不会发送任何内容。';
+
+  @override
+  String get networkMap_statusWaiting => '已开启。正在等待电台连接。';
+
+  @override
+  String get networkMap_statusNothingSent => '已开启。尚未发送任何内容。';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return '上次发送 $time。今天 $count 个数据包。';
+  }
+
+  @override
+  String get networkMap_sourceLocal => '本地';
+
+  @override
+  String get networkMap_sourceOnline => '在线';
+
+  @override
+  String get networkMap_sourceBoth => '两者';
+
+  @override
+  String get networkMap_zoomInHint => '放大以查看在线网络地图';
+
+  @override
+  String get networkMap_loadFailed => '无法加载在线网络地图';
+
+  @override
+  String get networkMap_inYourContacts => '在您的联系人中';
+
+  @override
+  String get networkMap_status => '状态';
+
+  @override
+  String get networkMap_statusActive => '最近一小时内活跃';
+
+  @override
+  String get networkMap_statusRecent => '最近一天内收到过';
+
+  @override
+  String get networkMap_statusStale => '近期未收到';
+
+  @override
+  String get networkMap_confirmed => '已确认';
+
+  @override
+  String get networkMap_singleSource => '单一来源，尚未确认';
+
+  @override
+  String get networkMap_reports => '报告';
+
+  @override
+  String get networkMap_locationEstimated => '大致位置，根据接收到它的节点估算';
+
+  @override
+  String get networkMap_locationAdvertised => '大致位置，来自其自身广播';
+
+  @override
+  String get networkMap_heardByRadio => '您的电台收到过';
+
+  @override
+  String get networkMap_inYourArea => '在您所在区域';
+
+  @override
+  String get networkMap_farAway => '距离太远，无法管理。';
+
+  @override
+  String get networkMap_addToContacts => '添加到联系人';
+
+  @override
+  String get networkMap_manage => '管理';
+
+  @override
+  String get networkMap_addedToContacts => '已添加到联系人';
+
+  @override
+  String get networkMap_addFailed => '无法添加到联系人';
+
+  @override
+  String get networkMap_unnamed => '未命名转发节点';
 }

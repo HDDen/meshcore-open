@@ -13635,7 +13635,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{hours}h {minutes}m'**
-  String neighbors_durationHours(Object hours, Object minutes);
+  String neighbors_durationHours(int hours, int minutes);
 
   /// No description provided for @channels_dataScopeQuestion.
   ///
@@ -13684,6 +13684,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The history has been attached.'**
   String get chat_historyLinked;
+
+  /// No description provided for @scanner_getNodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Need a new node?'**
+  String get scanner_getNodeTitle;
+
+  /// No description provided for @scanner_getNodeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet-sized, runs MeshCore, dual-band GPS, waterproof, 5-day battery.'**
+  String get scanner_getNodeBody;
+
+  /// No description provided for @scanner_getNodeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Get one here'**
+  String get scanner_getNodeAction;
+
+  /// No description provided for @scanner_getNodeDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Affiliate link: each purchase supports MeshCore Open.'**
+  String get scanner_getNodeDisclosure;
+
+  /// No description provided for @networkMap_settingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Network map'**
+  String get networkMap_settingsSection;
+
+  /// No description provided for @networkMap_uploadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what my radio hears'**
+  String get networkMap_uploadTitle;
+
+  /// No description provided for @networkMap_uploadExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'When this is on and your radio is connected, the app sends a short summary of the packets your radio hears to the MeshCore Open network map, so everyone can see which repeaters exist and how they link up. It sends each packet\'s type, route, hops, signal strength and size, plus repeater names and rough locations from their own adverts. It never sends message text, who is talking to whom, channel names, your contacts or your exact position: locations are rounded to about 2 km, and your app gets a new random ID every day.'**
+  String get networkMap_uploadExplanation;
+
+  /// No description provided for @networkMap_whatWeCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'What we collect'**
+  String get networkMap_whatWeCollect;
+
+  /// No description provided for @networkMap_promptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help build the network map?'**
+  String get networkMap_promptTitle;
+
+  /// No description provided for @networkMap_promptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore Open can share what your radio hears with the public network map at map.meshcoreopen.org, so everyone can see which repeaters exist and how they link up.\n\nIt never sends message text, who is talking to whom, channel names, your contacts or your exact position. Locations are rounded to about 2 km.'**
+  String get networkMap_promptBody;
+
+  /// No description provided for @networkMap_promptSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this any time in Settings → App settings → Network map.'**
+  String get networkMap_promptSettingsHint;
+
+  /// No description provided for @networkMap_promptAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get networkMap_promptAccept;
+
+  /// No description provided for @networkMap_promptDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get networkMap_promptDecline;
+
+  /// No description provided for @networkMap_statusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off. Nothing is sent.'**
+  String get networkMap_statusOff;
+
+  /// No description provided for @networkMap_statusWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'On. Waiting for a radio connection.'**
+  String get networkMap_statusWaiting;
+
+  /// No description provided for @networkMap_statusNothingSent.
+  ///
+  /// In en, this message translates to:
+  /// **'On. Nothing sent yet.'**
+  String get networkMap_statusNothingSent;
+
+  /// No description provided for @networkMap_statusLastSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sent {time}. {count} packets today.'**
+  String networkMap_statusLastSent(String time, int count);
+
+  /// No description provided for @networkMap_sourceLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get networkMap_sourceLocal;
+
+  /// No description provided for @networkMap_sourceOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get networkMap_sourceOnline;
+
+  /// No description provided for @networkMap_sourceBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get networkMap_sourceBoth;
+
+  /// No description provided for @networkMap_zoomInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in to see the online network map'**
+  String get networkMap_zoomInHint;
+
+  /// No description provided for @networkMap_loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the online network map'**
+  String get networkMap_loadFailed;
+
+  /// No description provided for @networkMap_inYourContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'In your contacts'**
+  String get networkMap_inYourContacts;
+
+  /// No description provided for @networkMap_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get networkMap_status;
+
+  /// No description provided for @networkMap_statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active in the last hour'**
+  String get networkMap_statusActive;
+
+  /// No description provided for @networkMap_statusRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard in the last day'**
+  String get networkMap_statusRecent;
+
+  /// No description provided for @networkMap_statusStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Not heard lately'**
+  String get networkMap_statusStale;
+
+  /// No description provided for @networkMap_confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get networkMap_confirmed;
+
+  /// No description provided for @networkMap_singleSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Single source, not yet confirmed'**
+  String get networkMap_singleSource;
+
+  /// No description provided for @networkMap_reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get networkMap_reports;
+
+  /// No description provided for @networkMap_locationEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Rough location, estimated from who heard it'**
+  String get networkMap_locationEstimated;
+
+  /// No description provided for @networkMap_locationAdvertised.
+  ///
+  /// In en, this message translates to:
+  /// **'Rough location, from its own advert'**
+  String get networkMap_locationAdvertised;
+
+  /// No description provided for @networkMap_heardByRadio.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard by your radio'**
+  String get networkMap_heardByRadio;
+
+  /// No description provided for @networkMap_inYourArea.
+  ///
+  /// In en, this message translates to:
+  /// **'In your area'**
+  String get networkMap_inYourArea;
+
+  /// No description provided for @networkMap_farAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Far away. Management won\'t reach it.'**
+  String get networkMap_farAway;
+
+  /// No description provided for @networkMap_addToContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to contacts'**
+  String get networkMap_addToContacts;
+
+  /// No description provided for @networkMap_manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get networkMap_manage;
+
+  /// No description provided for @networkMap_addedToContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to contacts'**
+  String get networkMap_addedToContacts;
+
+  /// No description provided for @networkMap_addFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add to contacts'**
+  String get networkMap_addFailed;
+
+  /// No description provided for @networkMap_unnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed repeater'**
+  String get networkMap_unnamed;
 }
 
 class _AppLocalizationsDelegate

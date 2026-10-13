@@ -8112,7 +8112,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String neighbors_durationHours(Object hours, Object minutes) {
+  String neighbors_durationHours(int hours, int minutes) {
     return '${hours}u ${minutes}m';
   }
 
@@ -8143,4 +8143,134 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get chat_historyLinked => 'The history has been attached.';
+
+  @override
+  String get scanner_getNodeTitle => 'Een nieuwe node nodig?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Zo klein als een portemonnee, draait MeshCore, dual-band GPS, waterdicht, 5 dagen accuduur.';
+
+  @override
+  String get scanner_getNodeAction => 'Haal er hier een';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Affiliatelink: elke aankoop steunt MeshCore Open.';
+
+  @override
+  String get networkMap_settingsSection => 'Netwerkkaart';
+
+  @override
+  String get networkMap_uploadTitle => 'Delen wat mijn radio hoort';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'Als dit aan staat en je radio verbonden is, stuurt de app een korte samenvatting van de pakketten die je radio hoort naar de MeshCore Open-netwerkkaart, zodat iedereen kan zien welke repeaters er zijn en hoe ze met elkaar verbonden zijn. Per pakket wordt het type, de route, het aantal hops, de signaalsterkte en de grootte verstuurd, plus repeaternamen en globale locaties uit hun eigen adverts. Er worden nooit berichttekst, wie met wie praat, kanaalnamen, je contacten of je exacte positie verstuurd: locaties worden afgerond op ongeveer 2 km en je app krijgt elke dag een nieuw willekeurig ID.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Wat we verzamelen';
+
+  @override
+  String get networkMap_promptTitle => 'Helpen de netwerkkaart te bouwen?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open kan delen wat je radio hoort met de openbare netwerkkaart op map.meshcoreopen.org, zodat iedereen kan zien welke repeaters er zijn en hoe ze met elkaar verbonden zijn.\n\nEr worden nooit berichttekst, wie met wie praat, kanaalnamen, je contacten of je exacte positie verstuurd. Locaties worden afgerond op ongeveer 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Je kunt dit op elk moment wijzigen via Instellingen → App Instellingen → Netwerkkaart.';
+
+  @override
+  String get networkMap_promptAccept => 'Delen';
+
+  @override
+  String get networkMap_promptDecline => 'Nee, bedankt';
+
+  @override
+  String get networkMap_statusOff => 'Uit. Er wordt niets verstuurd.';
+
+  @override
+  String get networkMap_statusWaiting => 'Aan. Wachten op een radioverbinding.';
+
+  @override
+  String get networkMap_statusNothingSent => 'Aan. Nog niets verstuurd.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Laatst verstuurd $time. $count pakketten vandaag.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Lokaal';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Beide';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Zoom in om de online netwerkkaart te zien';
+
+  @override
+  String get networkMap_loadFailed => 'Kan de online netwerkkaart niet laden';
+
+  @override
+  String get networkMap_inYourContacts => 'In je contacten';
+
+  @override
+  String get networkMap_status => 'Status';
+
+  @override
+  String get networkMap_statusActive => 'Actief in het laatste uur';
+
+  @override
+  String get networkMap_statusRecent => 'Gehoord in de afgelopen dag';
+
+  @override
+  String get networkMap_statusStale => 'Onlangs niet gehoord';
+
+  @override
+  String get networkMap_confirmed => 'Bevestigd';
+
+  @override
+  String get networkMap_singleSource => 'Eén bron, nog niet bevestigd';
+
+  @override
+  String get networkMap_reports => 'Meldingen';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Globale locatie, geschat op basis van wie het hoorde';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Globale locatie, uit zijn eigen advert';
+
+  @override
+  String get networkMap_heardByRadio => 'Gehoord door je radio';
+
+  @override
+  String get networkMap_inYourArea => 'In jouw omgeving';
+
+  @override
+  String get networkMap_farAway => 'Ver weg. Beheer bereikt het niet.';
+
+  @override
+  String get networkMap_addToContacts => 'Toevoegen aan contacten';
+
+  @override
+  String get networkMap_manage => 'Beheren';
+
+  @override
+  String get networkMap_addedToContacts => 'Toegevoegd aan contacten';
+
+  @override
+  String get networkMap_addFailed => 'Kan niet aan contacten toevoegen';
+
+  @override
+  String get networkMap_unnamed => 'Naamloze repeater';
 }

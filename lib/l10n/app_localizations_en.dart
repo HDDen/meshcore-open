@@ -8018,7 +8018,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String neighbors_durationHours(Object hours, Object minutes) {
+  String neighbors_durationHours(int hours, int minutes) {
     return '${hours}h ${minutes}m';
   }
 
@@ -8049,4 +8049,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chat_historyLinked => 'The history has been attached.';
+
+  @override
+  String get scanner_getNodeTitle => 'Need a new node?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Wallet-sized, runs MeshCore, dual-band GPS, waterproof, 5-day battery.';
+
+  @override
+  String get scanner_getNodeAction => 'Get one here';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Affiliate link: each purchase supports MeshCore Open.';
+
+  @override
+  String get networkMap_settingsSection => 'Network map';
+
+  @override
+  String get networkMap_uploadTitle => 'Share what my radio hears';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'When this is on and your radio is connected, the app sends a short summary of the packets your radio hears to the MeshCore Open network map, so everyone can see which repeaters exist and how they link up. It sends each packet\'s type, route, hops, signal strength and size, plus repeater names and rough locations from their own adverts. It never sends message text, who is talking to whom, channel names, your contacts or your exact position: locations are rounded to about 2 km, and your app gets a new random ID every day.';
+
+  @override
+  String get networkMap_whatWeCollect => 'What we collect';
+
+  @override
+  String get networkMap_promptTitle => 'Help build the network map?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open can share what your radio hears with the public network map at map.meshcoreopen.org, so everyone can see which repeaters exist and how they link up.\n\nIt never sends message text, who is talking to whom, channel names, your contacts or your exact position. Locations are rounded to about 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'You can change this any time in Settings → App settings → Network map.';
+
+  @override
+  String get networkMap_promptAccept => 'Share';
+
+  @override
+  String get networkMap_promptDecline => 'No thanks';
+
+  @override
+  String get networkMap_statusOff => 'Off. Nothing is sent.';
+
+  @override
+  String get networkMap_statusWaiting => 'On. Waiting for a radio connection.';
+
+  @override
+  String get networkMap_statusNothingSent => 'On. Nothing sent yet.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Last sent $time. $count packets today.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Local';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Both';
+
+  @override
+  String get networkMap_zoomInHint => 'Zoom in to see the online network map';
+
+  @override
+  String get networkMap_loadFailed => 'Couldn\'t load the online network map';
+
+  @override
+  String get networkMap_inYourContacts => 'In your contacts';
+
+  @override
+  String get networkMap_status => 'Status';
+
+  @override
+  String get networkMap_statusActive => 'Active in the last hour';
+
+  @override
+  String get networkMap_statusRecent => 'Heard in the last day';
+
+  @override
+  String get networkMap_statusStale => 'Not heard lately';
+
+  @override
+  String get networkMap_confirmed => 'Confirmed';
+
+  @override
+  String get networkMap_singleSource => 'Single source, not yet confirmed';
+
+  @override
+  String get networkMap_reports => 'Reports';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Rough location, estimated from who heard it';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Rough location, from its own advert';
+
+  @override
+  String get networkMap_heardByRadio => 'Heard by your radio';
+
+  @override
+  String get networkMap_inYourArea => 'In your area';
+
+  @override
+  String get networkMap_farAway => 'Far away. Management won\'t reach it.';
+
+  @override
+  String get networkMap_addToContacts => 'Add to contacts';
+
+  @override
+  String get networkMap_manage => 'Manage';
+
+  @override
+  String get networkMap_addedToContacts => 'Added to contacts';
+
+  @override
+  String get networkMap_addFailed => 'Couldn\'t add to contacts';
+
+  @override
+  String get networkMap_unnamed => 'Unnamed repeater';
 }

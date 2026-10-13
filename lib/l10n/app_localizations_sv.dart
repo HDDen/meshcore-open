@@ -8092,7 +8092,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String neighbors_durationHours(Object hours, Object minutes) {
+  String neighbors_durationHours(int hours, int minutes) {
     return '$hours h $minutes min';
   }
 
@@ -8123,4 +8123,135 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_historyLinked => 'The history has been attached.';
+
+  @override
+  String get scanner_getNodeTitle => 'Behöver du en ny nod?';
+
+  @override
+  String get scanner_getNodeBody =>
+      'Plånboksstorlek, kör MeshCore, GPS med dubbla band, vattentät, 5 dagars batteritid.';
+
+  @override
+  String get scanner_getNodeAction => 'Skaffa en här';
+
+  @override
+  String get scanner_getNodeDisclosure =>
+      'Affiliatelänk: varje köp stöder MeshCore Open.';
+
+  @override
+  String get networkMap_settingsSection => 'Nätverkskarta';
+
+  @override
+  String get networkMap_uploadTitle => 'Dela vad min radio hör';
+
+  @override
+  String get networkMap_uploadExplanation =>
+      'När detta är på och din radio är ansluten skickar appen en kort sammanfattning av paketen som din radio hör till MeshCore Opens nätverkskarta, så att alla kan se vilka repeaters som finns och hur de hänger ihop. Den skickar varje pakets typ, rutt, antal hopp, signalstyrka och storlek, plus repeaternamn och ungefärliga platser från deras egna annonser. Den skickar aldrig meddelandetext, vem som pratar med vem, kanalnamn, dina kontakter eller din exakta position: platser avrundas till cirka 2 km, och din app får ett nytt slumpmässigt ID varje dag.';
+
+  @override
+  String get networkMap_whatWeCollect => 'Vad vi samlar in';
+
+  @override
+  String get networkMap_promptTitle => 'Hjälpa till att bygga nätverkskartan?';
+
+  @override
+  String get networkMap_promptBody =>
+      'MeshCore Open kan dela vad din radio hör med den offentliga nätverkskartan på map.meshcoreopen.org, så att alla kan se vilka repeaters som finns och hur de hänger ihop.\n\nDen skickar aldrig meddelandetext, vem som pratar med vem, kanalnamn, dina kontakter eller din exakta position. Platser avrundas till cirka 2 km.';
+
+  @override
+  String get networkMap_promptSettingsHint =>
+      'Du kan ändra detta när som helst under Inställningar → Appinställningar → Nätverkskarta.';
+
+  @override
+  String get networkMap_promptAccept => 'Dela';
+
+  @override
+  String get networkMap_promptDecline => 'Nej tack';
+
+  @override
+  String get networkMap_statusOff => 'Av. Inget skickas.';
+
+  @override
+  String get networkMap_statusWaiting => 'På. Väntar på radioanslutning.';
+
+  @override
+  String get networkMap_statusNothingSent => 'På. Inget skickat ännu.';
+
+  @override
+  String networkMap_statusLastSent(String time, int count) {
+    return 'Senast skickat $time. $count paket idag.';
+  }
+
+  @override
+  String get networkMap_sourceLocal => 'Lokal';
+
+  @override
+  String get networkMap_sourceOnline => 'Online';
+
+  @override
+  String get networkMap_sourceBoth => 'Båda';
+
+  @override
+  String get networkMap_zoomInHint =>
+      'Zooma in för att se nätverkskartan online';
+
+  @override
+  String get networkMap_loadFailed =>
+      'Det gick inte att ladda nätverkskartan online';
+
+  @override
+  String get networkMap_inYourContacts => 'I dina kontakter';
+
+  @override
+  String get networkMap_status => 'Status';
+
+  @override
+  String get networkMap_statusActive => 'Aktiv den senaste timmen';
+
+  @override
+  String get networkMap_statusRecent => 'Hörd under det senaste dygnet';
+
+  @override
+  String get networkMap_statusStale => 'Inte hörd på sistone';
+
+  @override
+  String get networkMap_confirmed => 'Bekräftad';
+
+  @override
+  String get networkMap_singleSource => 'Enskild källa, ännu inte bekräftad';
+
+  @override
+  String get networkMap_reports => 'Rapporter';
+
+  @override
+  String get networkMap_locationEstimated =>
+      'Ungefärlig plats, uppskattad utifrån vilka som hörde den';
+
+  @override
+  String get networkMap_locationAdvertised =>
+      'Ungefärlig plats, från dess egen annons';
+
+  @override
+  String get networkMap_heardByRadio => 'Hörd av din radio';
+
+  @override
+  String get networkMap_inYourArea => 'I ditt område';
+
+  @override
+  String get networkMap_farAway => 'Långt bort. Hantering når inte dit.';
+
+  @override
+  String get networkMap_addToContacts => 'Lägg till i kontakter';
+
+  @override
+  String get networkMap_manage => 'Hantera';
+
+  @override
+  String get networkMap_addedToContacts => 'Tillagd i kontakter';
+
+  @override
+  String get networkMap_addFailed => 'Det gick inte att lägga till i kontakter';
+
+  @override
+  String get networkMap_unnamed => 'Namnlös repeater';
 }
