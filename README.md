@@ -536,7 +536,10 @@ ship AEIC. After switching, run `flutter pub get`; for iOS also drop `ios/Pods` 
 
 The selected profile is sticky: it stays active for every subsequent build until you switch
 again. When changing shared dependencies, update every profile manifest so a later switch does
-not overwrite the change.
+not overwrite the change. The same goes for `lib/services/translation_service.dart` and
+`lib/services/image_codec_backend.dart`, whose templates live under `tool/translation_profiles/`
+and `tool/image_codec_profiles/`; `flutter test test/tool/build_profiles_test.dart` checks that the
+tree is in step.
 
 ## Contact and support
 
