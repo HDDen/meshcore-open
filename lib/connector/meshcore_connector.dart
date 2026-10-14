@@ -1019,8 +1019,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Whether the link is being torn down to come straight back
   /// (`_restartActiveTransport`, which the optional module behind
   /// `SettingsSectionsService` asks for after a command that changes the
-  /// node's session): a manual disconnect in the connector's terms, which
-  /// the app shell must not take for the user's.
+  /// node's session, or when a client of its own needs the node's frames
+  /// unframed): a manual disconnect in the connector's terms, which neither
+  /// the app shell nor `DisconnectNavigationMixin` may take for the user's.
   bool get isRestartingTransport => _transportRestartInProgress;
   bool get isLoadingContacts => _isLoadingContacts;
   bool get hasLoadedContacts => _hasLoadedContacts;
@@ -5705,6 +5706,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     };
     if (!canRestart) return;
 
+    _appDebugLogService?.info(
+      'Transport restart requested transport=${transport.name}',
+      tag: 'Connection',
+    );
     _transportRestartInProgress = true;
     try {
       await disconnect(manual: true);
@@ -5732,6 +5737,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
     } finally {
       _transportRestartInProgress = false;
+      // Every notification of the restart was read as part of it. A link
+      // that did not come back is reported once more with the flag cleared,
+      // so the shell and the screens that kept their routes see the plain
+      // disconnect; a restart that ended connected has nothing to add.
+      if (!_disposed && !isConnected) notifyListeners();
     }
   }
 
