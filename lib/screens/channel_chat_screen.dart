@@ -5833,16 +5833,16 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
     ];
   }
 
-  /// "No region": the flood carries no scope at all, the node's default
-  /// included (firmware 12+).
+  /// "No region", the first row of the list and drawn like the others: the
+  /// flood carries no scope at all, the node's default included (firmware
+  /// 12+).
   Widget _buildUnscopedTile(BuildContext context) {
     final connector = context.read<MeshCoreConnector>();
     final selected = connector.isChannelExplicitlyUnscoped(
       widget.channel.index,
     );
     return ListTile(
-      leading: const Icon(Icons.public_off),
-      title: Text(context.l10n.settings_regionNoRegion),
+      title: Text(context.l10n.chat_floodRegionNone),
       tileColor: selected ? Colors.blue.withValues(alpha: 0.2) : null,
       onTap: () {
         // Tapping the selected option clears it back to the default.
@@ -5913,8 +5913,6 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
               ],
             ),
             ..._buildRadioDefaultNote(context),
-            if (context.read<MeshCoreConnector>().supportsExplicitUnscopedFlood)
-              _buildUnscopedTile(context),
             const SizedBox(height: 15),
             Expanded(
               // A tile's colour is ink, painted on the dialog's Material, so
@@ -5924,21 +5922,27 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
               child: ClipRect(
                 child: Material(
                   type: MaterialType.transparency,
-                  child: ListView.builder(
-                    itemCount: regions.length,
-                    itemBuilder: (context, index) => ListTile(
-                      title: Text(regions[index]),
-                      tileColor: selectedIndex == index
-                          ? Colors.blue.withValues(alpha: 0.2)
-                          : null,
-                      onTap: () {
-                        context.read<MeshCoreConnector>().setChannelRegion(
-                          widget.channel.index,
-                          regions[index],
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
+                  child: ListView(
+                    children: [
+                      if (context
+                          .read<MeshCoreConnector>()
+                          .supportsExplicitUnscopedFlood)
+                        _buildUnscopedTile(context),
+                      for (var index = 0; index < regions.length; index++)
+                        ListTile(
+                          title: Text(regions[index]),
+                          tileColor: selectedIndex == index
+                              ? Colors.blue.withValues(alpha: 0.2)
+                              : null,
+                          onTap: () {
+                            context.read<MeshCoreConnector>().setChannelRegion(
+                              widget.channel.index,
+                              regions[index],
+                            );
+                            Navigator.pop(context);
+                          },
+                        ),
+                    ],
                   ),
                 ),
               ),
