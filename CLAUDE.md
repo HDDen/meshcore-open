@@ -2237,10 +2237,12 @@ scoping). Auto-merge damage fixed: the closing `}` of
 duplicate `case respCodeDefaultFloodScope`, the discovery screen's lost
 delete handler, a `showDismissibleSnackBar` call without its import, and,
 found on 2026-10-14, the `Row` around the routing label and its menu in
-the advanced section of the repeater login dialog, whose `Spacer` then sat
-straight in the section's column and kept the section from opening (the
-section's subtitle names the route now, so *Direct* or the hops show
-without opening it).
+the repeater login dialog, whose `Spacer` then sat straight in a column
+and kept upstream's collapsible *Advanced* section from opening. That
+section went the same day: the fork's layout is back, the routing row
+with its menu, the route label and the manage-paths button under a
+divider, in the dialog itself, where the route is what the user looks
+for before logging in.
 
 **Step 4 (2026-10-12, dev up to d30744aa, upstream's UI refresh).** The
 refresh rebuilt most screens around new widgets, and the fork's UI stays.
