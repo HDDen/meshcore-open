@@ -1188,6 +1188,13 @@ the contact's `lastMessageAt`, which the first receipt sets.
 `heardChannelCopiesMerged` and `heardChannelReactionCopiesDropped` count the
 short path for the tests (`test/connector/channel_packet_copies_test.dart`).
 
+The hash width of a merged route belongs to the route (`_mergeChannelRepeat`,
+since 2026-10-14): a message without one yet, our own send or a message
+echoed into the history with a path byte that says no hops, takes the first
+copy's width, and a route taken from a copy brings its own along. The
+message's width used to win, so a two-byte route merged into a message that
+claimed one-byte hashes was drawn as twice the hops.
+
 ### Direct echo recovery (experimental, off by default)
 
 The same RX log shows a direct message *to us* before it arrives: the

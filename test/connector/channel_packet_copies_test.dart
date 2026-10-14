@@ -313,6 +313,50 @@ Future<void> main() async {
       expect(message.pathObservations, hasLength(3));
     });
 
+    test('a relayed copy brings its hash width to a message that had no '
+        'route', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+
+      // The node's frame with a zero path byte: no hops, one-byte hashes.
+      connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ),
+      );
+      await _settle();
+      expect(
+        connector.getLoadedChannelMessages(connector.channels.single).single
+            .pathHashWidth,
+        1,
+      );
+
+      // The relay heard under two-byte hashes.
+      connector.handleFrameForTest(
+        _rxLogTextFrame(
+          psk: psk,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+          hops: [
+            [0x22, 0x33],
+          ],
+          hashWidth: 2,
+        ),
+      );
+      await _settle();
+
+      final message = connector
+          .getLoadedChannelMessages(connector.channels.single)
+          .single;
+      expect(message.repeatCount, 1);
+      expect(message.pathBytes, [0x22, 0x33]);
+      expect(message.pathHashWidth, 2);
+      expect(message.pathLength, 1);
+    });
+
     test('a copy never counts as unread', () async {
       final connector = await _connectorWithChannels([(0, 'Test', psk)]);
 

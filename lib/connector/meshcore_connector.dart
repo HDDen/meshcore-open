@@ -17706,12 +17706,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       existing.pathObservations,
       incoming.pathObservations,
     );
+    // The hash width belongs to the route: a message without one yet (our
+    // own send, a message echoed into the history with no path) takes the
+    // first copy's, and a route taken from a copy brings its own along. The
+    // message's width used to win, and a two-byte route merged into a
+    // message that claimed one byte read as twice the hops.
+    final mergedWidthSource =
+        identical(mergedPathBytes, incoming.pathBytes) &&
+            incoming.pathBytes.isNotEmpty
+        ? incoming.pathHashWidth ?? existing.pathHashWidth
+        : existing.pathHashWidth ?? incoming.pathHashWidth;
     // The path bytes hold one hash per hop, so the observed hop count is the
     // byte count over the hash width the route was learned in.
-    final mergedHashWidth =
-        (existing.pathHashWidth ?? incoming.pathHashWidth ?? 1)
-            .clamp(1, 3)
-            .toInt();
+    final mergedHashWidth = (mergedWidthSource ?? 1).clamp(1, 3).toInt();
     final mergedPathLength = _mergePathLength(
       existing.pathLength,
       incoming.pathLength,
@@ -17730,7 +17737,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       ),
       repeatCount: newRepeatCount,
       pathLength: mergedPathLength,
-      pathHashWidth: existing.pathHashWidth ?? incoming.pathHashWidth,
+      pathHashWidth: mergedWidthSource,
       pathBytes: mergedPathBytes,
       pathVariants: mergedPathVariants,
       pathObservations: mergedPathObservations,
