@@ -2158,10 +2158,6 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
 
     try {
       _logRadioSettingsState('Saving radio settings');
-      // The power goes first: an optional module may restart the node
-      // session a moment after the radio parameters are accepted, and a
-      // frame still queued behind that command is lost in the teardown.
-      await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
       final accepted = await widget.connector.setRadioParams(
         freqHz,
         bwHz,
@@ -2178,19 +2174,11 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
         );
         return;
       }
+      await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
       final selfInfo = widget.connector.receivedFrames
           .firstWhere((f) => f.isNotEmpty && f[0] == respCodeSelfInfo)
           .timeout(const Duration(seconds: 5));
-      try {
-        await widget.connector.refreshDeviceInfo();
-      } catch (e) {
-        // The same restart cuts this refresh short; the reconnect's own
-        // SELF_INFO answers the wait below.
-        _appLog.info(
-          'Device info refresh after the radio save failed: $e',
-          tag: 'RadioSettings',
-        );
-      }
+      await widget.connector.refreshDeviceInfo();
       final applied = await selfInfo.then(
         (_) => _deviceMatches(
           freqHz: freqHz,
