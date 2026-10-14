@@ -757,6 +757,11 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       _scannerNavigationScheduled = false;
       return;
     }
+    // A transport restart tears the link down as a manual disconnect and
+    // brings it straight back: the stack stays where it is, as it does for
+    // a recovering link. A restart that fails leaves the flag cleared and
+    // the link down, which the next notification treats as usual.
+    if (connector.isRestartingTransport) return;
     if (connector.wasManuallyDisconnected) {
       _hadReadyConnection = false;
       _recoveringConnection = false;

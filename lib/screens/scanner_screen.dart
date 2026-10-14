@@ -116,6 +116,26 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
 
   @override
   void didPopNext() {
+    // The link dropped, the shell popped the stack back here, and the radio
+    // came back before the pop ran: the listener saw `connected` under
+    // another route, and a TCP reconnect can beat the post-frame pop. Show
+    // the channels now rather than at the next notification. A user who
+    // backed out of them keeps this screen: the flag resets on a
+    // disconnect only.
+    if (_connector.state == MeshCoreConnectionState.connected &&
+        (_connector.activeTransport == MeshCoreTransportType.bluetooth ||
+            _connector.activeTransport == MeshCoreTransportType.tcp) &&
+        !_changedNavigation) {
+      _changedNavigation = true;
+      _reopenPreferredTransportOnReturn = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const ChannelsScreen()),
+        );
+      });
+      return;
+    }
     if (!_reopenPreferredTransportOnReturn) return;
     _reopenPreferredTransportOnReturn = false;
     _openedPreferredTransport = false;

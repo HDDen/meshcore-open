@@ -1015,6 +1015,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool get hasReadableSession => isConnected || isOfflineMode;
   bool get wasManuallyDisconnected => _manualDisconnect;
   bool get isRecoveringConnection => _isRecoveringConnection;
+
+  /// Whether the link is being torn down to come straight back
+  /// (`_restartActiveTransport`, which the optional module behind
+  /// `SettingsSectionsService` asks for after a command that changes the
+  /// node's session): a manual disconnect in the connector's terms, which
+  /// the app shell must not take for the user's.
+  bool get isRestartingTransport => _transportRestartInProgress;
   bool get isLoadingContacts => _isLoadingContacts;
   bool get hasLoadedContacts => _hasLoadedContacts;
   bool get isLoadingChannels => _isLoadingChannels;
