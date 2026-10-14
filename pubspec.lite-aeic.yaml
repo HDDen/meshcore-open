@@ -75,6 +75,7 @@ dependencies:
   package_info_plus: ^10.2.2
   mobile_scanner: ^7.4.2  # QR/barcode scanning
   qr_flutter: ^4.1.0      # QR code generation
+  zxing2: ^0.2.4          # Reads the QR code in a picked picture where mobile_scanner cannot
   url_launcher: ^6.3.0    # Launch URLs in system browser
   flutter_linkify: ^6.0.0 # Auto-detect and linkify URLs in text
   gpx: ^2.3.0

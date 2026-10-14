@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/qr_gallery_scan.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
@@ -53,6 +52,7 @@ class _ContactQrScannerScreenState extends State<ContactQrScannerScreen> {
               onValidationFailed: (_) => _showInvalidQrError(),
               instructions: context.l10n.contacts_scanQrInstructions,
               themed: true,
+              onPickPicture: _pickFromGallery,
             ),
     );
   }
@@ -96,71 +96,36 @@ class _ContactQrScannerScreenState extends State<ContactQrScannerScreen> {
       _isProcessing = true;
     });
 
-    final XFile? image;
-    try {
-      image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    } catch (e) {
-      if (mounted) {
+    // The shared gallery scan: the camera plugin reads the picture where it
+    // can, zxing2 in pure Dart elsewhere (see helpers/qr_gallery_scan.dart).
+    final scan = await scanQrFromGallery(
+      accepts: (value) => parseContactQr(value) != null,
+    );
+    if (!mounted) return;
+    switch (scan.status) {
+      case QrGalleryScanStatus.found:
         setState(() {
           _isProcessing = false;
         });
+        await _handleScannedData(scan.value!);
+        return;
+      case QrGalleryScanStatus.cancelled:
+        break;
+      case QrGalleryScanStatus.pickerFailed:
         _showGalleryError();
-      }
-      return;
-    }
-    if (!mounted) return;
-    if (image == null) {
-      setState(() {
-        _isProcessing = false;
-      });
-      return;
-    }
-
-    String? rawValue;
-    bool decodedAnyBarcode = false;
-    final controller = MobileScannerController();
-    try {
-      final capture = await controller.analyzeImage(image.path);
-      for (final barcode in capture?.barcodes ?? const []) {
-        final value = barcode.rawValue;
-        if (value == null || value.isEmpty) continue;
-        decodedAnyBarcode = true;
-        if (parseContactQr(value) != null) {
-          rawValue = value;
-          break;
-        }
-      }
-    } on UnsupportedError {
-      rawValue = null;
-    } catch (e) {
-      rawValue = null;
-    } finally {
-      controller.dispose();
-    }
-
-    if (!mounted) return;
-
-    if (rawValue == null) {
-      setState(() {
-        _isProcessing = false;
-      });
-      if (decodedAnyBarcode) {
-        _showInvalidQrError();
-      } else {
+      case QrGalleryScanStatus.noBarcode:
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.contacts_noQrCodeFound),
           backgroundColor: MeshPalette.warn,
           duration: const Duration(seconds: 2),
         );
-      }
-      return;
+      case QrGalleryScanStatus.noMatch:
+        _showInvalidQrError();
     }
-
     setState(() {
       _isProcessing = false;
     });
-    await _handleScannedData(rawValue);
   }
 
   Future<void> _handleScannedData(String data) async {
