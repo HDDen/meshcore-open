@@ -2146,7 +2146,10 @@ deletion (`removeContact(keepMessages:)`); the contacts-full banner; the map's
 node clustering toggle (`mapClusterNodes`); the USB serial close off the UI
 isolate with the teardown serialised against reconnects
 (`_activeDisconnect`, `_disposed`); the self-node telemetry tile; the
-repeater settings "load all" with fields disabled until read; upstream's
+repeater settings "load all" with fields disabled until read (its refresh
+on opening the screen, taken in step 4, went again on 2026-10-14: the
+fields are read by hand, one or all at once, as the fork always had it, so
+that a visit to the screen sends nothing over the air by itself); upstream's
 image send preview with its own reconstruction preview (replacing the fork's
 "as received" one, the parity default kept off); the hash-width fix when a
 repeat's path bytes are merged. Left out: upstream's app-side default region
@@ -2232,7 +2235,12 @@ archive, a non-null `Message.receivedAt`), `default_flood_scope_test`
 scoping). Auto-merge damage fixed: the closing `}` of
 `_handleDisconnection`, a stray `return;` in the unknown-sender branch, a
 duplicate `case respCodeDefaultFloodScope`, the discovery screen's lost
-delete handler, a `showDismissibleSnackBar` call without its import.
+delete handler, a `showDismissibleSnackBar` call without its import, and,
+found on 2026-10-14, the `Row` around the routing label and its menu in
+the advanced section of the repeater login dialog, whose `Spacer` then sat
+straight in the section's column and kept the section from opening (the
+section's subtitle names the route now, so *Direct* or the hops show
+without opening it).
 
 **Step 4 (2026-10-12, dev up to d30744aa, upstream's UI refresh).** The
 refresh rebuilt most screens around new widgets, and the fork's UI stays.

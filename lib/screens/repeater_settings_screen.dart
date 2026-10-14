@@ -217,12 +217,10 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     _commandService = RepeaterCommandService(connector);
     _setupMessageListener();
     _loadSettings();
-    // Fetch current values on open instead of showing disabled fields.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-      if (connector.isConnected) _refreshAll();
-    });
+    // Nothing is read from the repeater on open: every field, or all of them
+    // at once, is requested by hand, as the fork always had it. Upstream's
+    // refresh on open sent the whole command series over the air at every
+    // visit to the screen.
   }
 
   /// Returns true when the radio is connected; otherwise tells the user.
