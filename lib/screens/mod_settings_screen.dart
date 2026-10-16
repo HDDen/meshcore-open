@@ -551,7 +551,7 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setDirectEchoRecovery,
                   ),
                 ),
-                if (PlatformInfo.isAndroid)
+                if (PlatformInfo.isAndroid || PlatformInfo.isIOS)
                   MeshCard(
                     padding: EdgeInsets.zero,
                     child: SwitchListTile(

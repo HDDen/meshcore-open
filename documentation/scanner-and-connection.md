@@ -150,3 +150,12 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 - Only a link that completed its handshake is reconnected; a first connection to a wrong address is not retried. A manual disconnect, or connecting over BLE or USB, cancels it.
 - The socket uses TCP keepalive (probes after 30 seconds of silence, every 10 seconds, 3 tries), so a dead link is noticed in about a minute instead of the system default of hours.
 - USB is not reconnected automatically: losing a USB link usually means the cable was unplugged.
+
+
+### Experimental iOS background TCP receiver
+
+The iOS research branch adds a separate native background receiver. With **Keep TCP-connection alive in background** enabled, the TCP screen accepts a Wi-Fi SSID and saves it with the endpoint and its bookmark. It first tries to read the current SSID; if none is available, a manual connection can ask for it. After a successful foreground connection it saves an `NEAppPushManager` configuration for that SSID and endpoint. Connection diagnostics use the `iOS TCP` log tag.
+
+Background TCP now defaults to enabled, including on Android; a previously saved disabled setting stays disabled. The iOS receiver opens its own connection and can fetch pending messages and show notifications. It does not keep the Flutter interface running or save the fetched messages into the app history. Successful configuration does not prove that the receiver is active or that background delivery works on a particular iPhone.
+
+This feature remains experimental. The merge preserves the earlier research implementation; reliable sharing of the node with the foreground connection, history reconciliation, and disabling an already saved receiver require further work or device verification. Validate the iOS signing/entitlements and the deployment target for the chosen build profile on a Mac before relying on it. The normal BLE peripheral mode for the companion proxy remains in the app's background-mode configuration.
