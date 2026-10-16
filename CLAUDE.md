@@ -1,5 +1,7 @@
 # MeshCore Open - Flutter Client (Advanced mod)
 
+Document private/premium module internals only inside the private module; do not describe them in this public guide.
+
 Open-source Flutter client for MeshCore LoRa mesh networking devices. Connects to MeshCore-compatible radios over **BLE, TCP, or USB serial** and provides direct/channel chat, contact and channel management, on-map node tracking, and repeater administration.
 
 This checkout is the **"Advanced mod"** fork (app title `MeshCore Open (Advanced mod)`). On top of a vanilla MeshCore client it adds: selectable text compression (MCMP arithmetic coder / SMAZ / cyr2lat), app-side Ed25519 verification of MCMP v3 signatures, emoji reactions, tiny image/GIF-over-LoRa (MCO image codec), wardriving/coverage mapping with cloud upload, and region/flood-scope routing. See **Advanced mod features** below.
@@ -2396,7 +2398,7 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
 - UI hint: `192.168.40.10` / port `5000`
 - Disabled on web (`PlatformInfo.isWeb`)
 - API: `MeshCoreConnector.connectTcp(host: ..., port: ...)`
-- The optional private client is isolated behind `package:mco_service/tcp_overlay.dart`: `helpers/companion_tcp_dialer.dart` asks it for a socket, then falls back to ordinary `Socket.connect` only for ordinary endpoints. The public stub returns no controls/socket. Private builds with `MCO_SERV=true` offer `tailscale://peer` endpoints, preserving the mode in existing bookmarks. `lib_serv` owns the Go tsnet plugin, browser login, peer-only dial policy and authenticated local SOCKS5 adapter; no system VPN is created. The adapter retains bytes arriving with the SOCKS reply and forwards the existing companion framing unchanged. TCP connect generation guards cover both late successful and late failed dials. System TCP keepalive on the local bridge is not a guarantee of remote tailnet peer liveness. Network snapshot changes recreate the native node with persistent identity and may drop TCP; iOS local-push setup is disabled for overlay endpoints because its separate NWConnection cannot use this process's userspace node. Native artifacts and ru/en localization generation are owner-run; Android private plugin builds need API 24 or later. Desktop Windows/Linux/macOS hosts now preserve the same MethodChannel contract through a separate Go C ABI; their native builds and validation are pending. Mobile baseline checks and the iOS connection were confirmed by the owner before this extension. See `lib_serv/docs/tailscale-client.md` and the private research notes.
+- Optional TCP transports are selected through `helpers/companion_tcp_dialer.dart`; ordinary endpoints use `Socket.connect`.
 
 ### USB Serial (flserial)
 - Default baud rate: `115200`
