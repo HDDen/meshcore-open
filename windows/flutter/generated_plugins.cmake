@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_onnxruntime
   flutter_secure_storage_windows
   geolocator_windows
+  mcoa_tailscale
   share_plus
   url_launcher_windows
 )

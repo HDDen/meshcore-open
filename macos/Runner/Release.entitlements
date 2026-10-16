@@ -8,6 +8,9 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- The embedded Tailscale client uses an authenticated localhost SOCKS listener. -->
+	<key>com.apple.security.network.server</key>
+	<true/>
 	<key>com.apple.security.device.bluetooth</key>
 	<true/>
 	<key>com.apple.security.device.usb</key>
