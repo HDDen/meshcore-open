@@ -7,6 +7,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/screens/tcp_screen.dart';
+import 'package:meshcore_open/services/app_debug_log_service.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 
@@ -61,6 +62,9 @@ Widget _buildTestApp({
       ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
       ChangeNotifierProvider<AppSettingsService>(
         create: (_) => AppSettingsService(),
+      ),
+      ChangeNotifierProvider<AppDebugLogService>(
+        create: (_) => AppDebugLogService(),
       ),
     ],
     child: MaterialApp(

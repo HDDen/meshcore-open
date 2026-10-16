@@ -7,7 +7,10 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
+import '../services/app_debug_log_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/ios_background_tcp_service.dart';
+import '../services/ios_wifi_ssid_service.dart';
 import '../storage/connection_transport_preference_store.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
@@ -30,8 +33,10 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
       ConnectionTransportPreferenceStore();
   late final TextEditingController _hostController;
   late final TextEditingController _portController;
+  late final TextEditingController _wifiSsidController;
   late final MeshCoreConnector _connector;
   late final AppSettingsService _settingsService;
+  late final AppDebugLogService _appDebugLogService;
   late final VoidCallback _connectionListener;
   bool _navigatedToChannels = false;
   bool _autoconnectEnabled = false;
@@ -54,7 +59,11 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
           ? _settingsService.settings.tcpServerPort.toString()
           : '',
     );
+    _wifiSsidController = TextEditingController(
+      text: _settingsService.settings.tcpServerWifiSsid,
+    );
     _connector = context.read<MeshCoreConnector>();
+    _appDebugLogService = context.read<AppDebugLogService>();
 
     _connectionListener = () {
       if (!mounted) return;
@@ -77,6 +86,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     _connector.removeListener(_connectionListener);
     _hostController.dispose();
     _portController.dispose();
+    _wifiSsidController.dispose();
     if (!_navigatedToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
@@ -94,12 +104,50 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _handleSuccessfulTcpConnection() async {
+  Future<void> _handleSuccessfulTcpConnection({String? wifiSsid}) async {
     if (!mounted) return;
     _navigatedToChannels = true;
     final host = _hostController.text;
     final port = int.tryParse(_portController.text) ?? 0;
-    await _settingsService.recordTcpConnection(host, port);
+    final resolvedWifiSsid = (wifiSsid ?? _wifiSsidController.text).trim();
+    await _settingsService.recordTcpConnection(
+      host,
+      port,
+      wifiSsid: resolvedWifiSsid,
+    );
+    if (PlatformInfo.isIOS &&
+        _settingsService.settings.backgroundTcpEnabled &&
+        resolvedWifiSsid.isNotEmpty) {
+      try {
+        _appDebugLogService.info(
+          'Configuring iOS background TCP endpoint=$host:$port ssid=$resolvedWifiSsid',
+          tag: 'iOS TCP',
+        );
+        final configResult = await const IosBackgroundTcpService().configure(
+          host: host,
+          port: port,
+          wifiSsid: resolvedWifiSsid,
+          enabled: true,
+        );
+        if (configResult == null) {
+          _appDebugLogService.warn(
+            'iOS background TCP receiver was not configured',
+            tag: 'iOS TCP',
+          );
+        } else {
+          _appDebugLogService.info(
+            'iOS background TCP saved enabled=${configResult.enabled} active=${configResult.active} endpoint=${configResult.host}:${configResult.port} ssid=${configResult.wifiSsid}',
+            tag: 'iOS TCP',
+          );
+        }
+      } catch (error) {
+        _appDebugLogService.warn(
+          'Could not configure iOS background TCP receiver: $error',
+          tag: 'iOS TCP',
+        );
+        debugPrint('Could not configure iOS background TCP receiver: $error');
+      }
+    }
     if (!mounted) return;
     // Only navigate while this route is on top; otherwise a reconnect would
     // replace whatever screen the user has pushed above it.
@@ -192,6 +240,23 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                           }
                         },
                       ),
+                      if (PlatformInfo.isIOS &&
+                          settingsService.settings.backgroundTcpEnabled) ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _wifiSsidController,
+                          decoration: const InputDecoration(
+                            labelText: 'Имя WiFi-сети',
+                          ),
+                          enabled: !isConnecting,
+                          keyboardType: TextInputType.text,
+                          onChanged: (value) {
+                            unawaited(
+                              settingsService.setTcpServerWifiSsid(value),
+                            );
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
@@ -508,6 +573,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     final titleStyle = Theme.of(context).textTheme.titleMedium;
     final subtitleStyle = Theme.of(context).textTheme.bodySmall;
     final controller = TextEditingController(text: bookmark.name);
+    final wifiSsidController = TextEditingController(text: bookmark.wifiSsid);
     var isFavorite = bookmark.isFavorite;
     final result = await showDialog<_TcpBookmarkEditResult>(
       context: context,
@@ -552,6 +618,17 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
+                if (PlatformInfo.isIOS &&
+                    settingsService.settings.backgroundTcpEnabled) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: wifiSsidController,
+                    decoration: const InputDecoration(
+                      labelText: 'WiFi SSID',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -590,6 +667,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                         _TcpBookmarkEditResult(
                           name: controller.text,
                           isFavorite: isFavorite,
+                          wifiSsid: wifiSsidController.text,
                         ),
                       ),
                       child: Text(
@@ -607,6 +685,7 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
       ),
     );
     controller.dispose();
+    wifiSsidController.dispose();
     if (result == null || !mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
@@ -618,17 +697,22 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
       bookmark,
       name: result.name ?? '',
       isFavorite: result.isFavorite ?? false,
+      wifiSsid: result.wifiSsid ?? '',
     );
   }
 
   void _applyBookmark(TcpConnectionBookmark bookmark) {
     _hostController.text = bookmark.host;
     _portController.text = bookmark.port.toString();
+    _wifiSsidController.text = bookmark.wifiSsid;
     _hostController.selection = TextSelection.collapsed(
       offset: _hostController.text.length,
     );
     _portController.selection = TextSelection.collapsed(
       offset: _portController.text.length,
+    );
+    _wifiSsidController.selection = TextSelection.collapsed(
+      offset: _wifiSsidController.text.length,
     );
   }
 
@@ -710,17 +794,117 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     }
 
     try {
+      final wifiSsid = await _resolveIosBackgroundTcpSsid(
+        promptIfMissing: showErrors,
+      );
+      if (!mounted) return;
+
       await _connector.connectTcp(host: host, port: parsedPort);
       if (!mounted ||
           !_connector.isTcpTransportConnected ||
           _connector.state != MeshCoreConnectionState.connected) {
         return;
       }
-      await _handleSuccessfulTcpConnection();
+      await _handleSuccessfulTcpConnection(wifiSsid: wifiSsid);
     } catch (error) {
       if (!mounted) return;
       if (showErrors) _showError(_friendlyErrorMessage(error));
     }
+  }
+
+  Future<String?> _resolveIosBackgroundTcpSsid({
+    required bool promptIfMissing,
+  }) async {
+    if (!PlatformInfo.isIOS || !_settingsService.settings.backgroundTcpEnabled) {
+      return _wifiSsidController.text.trim();
+    }
+
+    final currentSsid = await const IosWifiSsidService().currentSsid();
+    if (currentSsid != null) {
+      _wifiSsidController.text = currentSsid;
+      await _settingsService.setTcpServerWifiSsid(currentSsid);
+      return currentSsid;
+    }
+
+    final savedSsid = _wifiSsidController.text.trim();
+    if (savedSsid.isNotEmpty) {
+      return savedSsid;
+    }
+
+    if (!promptIfMissing) return null;
+    final enteredSsid = await _showWifiSsidRequiredDialog();
+    if (enteredSsid == null) return null;
+    _wifiSsidController.text = enteredSsid;
+    await _settingsService.setTcpServerWifiSsid(enteredSsid);
+    return enteredSsid;
+  }
+
+  Future<String?> _showWifiSsidRequiredDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Включено удержание TCP в фоне: введите явно имя WiFi-сети',
+                style: Theme.of(dialogContext).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Имя WiFi-сети',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        dialogContext.l10n.common_cancel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        final value = controller.text.trim();
+                        Navigator.pop(
+                          dialogContext,
+                          value.isEmpty ? null : value,
+                        );
+                      },
+                      child: Text(
+                        dialogContext.l10n.common_save,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    return result?.trim().isEmpty == true ? null : result?.trim();
   }
 
   void _showError(String message) {
@@ -754,11 +938,13 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
 class _TcpBookmarkEditResult {
   final String? name;
   final bool? isFavorite;
+  final String? wifiSsid;
   final bool delete;
 
   const _TcpBookmarkEditResult({
     this.name,
     this.isFavorite,
+    this.wifiSsid,
     this.delete = false,
   });
 }

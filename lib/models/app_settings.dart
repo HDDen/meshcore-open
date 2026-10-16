@@ -82,6 +82,7 @@ class TcpConnectionBookmark {
   final DateTime lastConnectedAt;
   final String name;
   final bool isFavorite;
+  final String wifiSsid;
 
   TcpConnectionBookmark({
     required this.host,
@@ -89,6 +90,7 @@ class TcpConnectionBookmark {
     required this.lastConnectedAt,
     this.name = '',
     this.isFavorite = false,
+    this.wifiSsid = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -98,6 +100,7 @@ class TcpConnectionBookmark {
       'last_connected_at': lastConnectedAt.toIso8601String(),
       'name': name,
       'is_favorite': isFavorite,
+      'wifi_ssid': wifiSsid,
     };
   }
 
@@ -110,6 +113,7 @@ class TcpConnectionBookmark {
           DateTime.fromMillisecondsSinceEpoch(0),
       name: json['name'] as String? ?? '',
       isFavorite: json['is_favorite'] as bool? ?? false,
+      wifiSsid: json['wifi_ssid'] as String? ?? '',
     );
   }
 
@@ -119,6 +123,7 @@ class TcpConnectionBookmark {
     DateTime? lastConnectedAt,
     String? name,
     bool? isFavorite,
+    String? wifiSsid,
   }) {
     return TcpConnectionBookmark(
       host: host ?? this.host,
@@ -126,6 +131,7 @@ class TcpConnectionBookmark {
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       name: name ?? this.name,
       isFavorite: isFavorite ?? this.isFavorite,
+      wifiSsid: wifiSsid ?? this.wifiSsid,
     );
   }
 }
@@ -350,6 +356,7 @@ class AppSettings {
   final bool mapShowDiscoveryContacts;
   final String tcpServerAddress;
   final int tcpServerPort;
+  final String tcpServerWifiSsid;
   final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
   final bool imageMessagesEnabled;
@@ -735,7 +742,7 @@ class AppSettings {
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
     int? noRetransmissionWarningSeconds,
-    this.backgroundTcpEnabled = false,
+    this.backgroundTcpEnabled = true,
     this.roomServerShowNotemptyOnChatscreen = false,
     this.roomServerShowNotemptyContactsOnChatscreen = false,
     this.roomServerDisableRoomAndContactsSorting = true,
@@ -779,6 +786,7 @@ class AppSettings {
     this.mapShowDiscoveryContacts = true,
     this.tcpServerAddress = '',
     this.tcpServerPort = 0,
+    this.tcpServerWifiSsid = '',
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
     this.imageMessagesEnabled = false,
@@ -941,6 +949,7 @@ class AppSettings {
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
       'tcp_server_address': tcpServerAddress,
       'tcp_server_port': tcpServerPort,
+      'tcp_server_wifi_ssid': tcpServerWifiSsid,
       'tcp_connection_bookmarks': tcpConnectionBookmarks
           .map((bookmark) => bookmark.toJson())
           .toList(),
@@ -1090,7 +1099,7 @@ class AppSettings {
         json['shared_message_history_mode'],
       ),
       noRetransmissionWarningSeconds: json['no_retransmission_warning_seconds'],
-      backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? false,
+      backgroundTcpEnabled: json['background_tcp_enabled'] as bool? ?? true,
       roomServerShowNotemptyOnChatscreen:
           json['room_server_show_notempty_on_chatscreen'] as bool? ?? false,
       roomServerShowNotemptyContactsOnChatscreen:
@@ -1173,6 +1182,7 @@ class AppSettings {
           json['map_show_discovery_contacts'] as bool? ?? true,
       tcpServerAddress: json['tcp_server_address'] as String? ?? '',
       tcpServerPort: json['tcp_server_port'] as int? ?? 0,
+      tcpServerWifiSsid: json['tcp_server_wifi_ssid'] as String? ?? '',
       tcpConnectionBookmarks:
           (json['tcp_connection_bookmarks'] as List<dynamic>?)
               ?.map(
@@ -1365,6 +1375,7 @@ class AppSettings {
     bool? mapShowDiscoveryContacts,
     String? tcpServerAddress,
     int? tcpServerPort,
+    String? tcpServerWifiSsid,
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
     bool? imageMessagesEnabled,
@@ -1551,6 +1562,7 @@ class AppSettings {
           mapShowDiscoveryContacts ?? this.mapShowDiscoveryContacts,
       tcpServerAddress: tcpServerAddress ?? this.tcpServerAddress,
       tcpServerPort: tcpServerPort ?? this.tcpServerPort,
+      tcpServerWifiSsid: tcpServerWifiSsid ?? this.tcpServerWifiSsid,
       tcpConnectionBookmarks:
           tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
