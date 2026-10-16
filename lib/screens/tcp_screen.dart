@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mco_service/tcp_overlay.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
@@ -207,6 +208,12 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      ...buildMcoTcpControls(
+                        context,
+                        hostController: _hostController,
+                        enabled: !isButtonDisabled,
+                        onChanged: () => setState(() {}),
+                      ),
                       TextField(
                         controller: _hostController,
                         decoration: InputDecoration(
@@ -241,7 +248,8 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                         },
                       ),
                       if (PlatformInfo.isIOS &&
-                          settingsService.settings.backgroundTcpEnabled) ...[
+                          settingsService.settings.backgroundTcpEnabled &&
+                          !isMcoTcpOverlayEndpoint(_hostController.text)) ...[
                         const SizedBox(height: 12),
                         TextField(
                           controller: _wifiSsidController,
@@ -815,7 +823,9 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   Future<String?> _resolveIosBackgroundTcpSsid({
     required bool promptIfMissing,
   }) async {
-    if (!PlatformInfo.isIOS || !_settingsService.settings.backgroundTcpEnabled) {
+    if (!PlatformInfo.isIOS ||
+        !_settingsService.settings.backgroundTcpEnabled ||
+        isMcoTcpOverlayEndpoint(_hostController.text)) {
       return _wifiSsidController.text.trim();
     }
 

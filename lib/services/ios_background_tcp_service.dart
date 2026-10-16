@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:mco_service/tcp_overlay.dart';
 
 import '../utils/platform_info.dart';
 
@@ -47,7 +48,10 @@ class IosBackgroundTcpService {
     final normalizedHost = host.trim();
     final normalizedSsid = wifiSsid.trim();
     if (normalizedHost.isEmpty || port < 1 || port > 65535) return null;
-    if (enabled && normalizedSsid.isEmpty) return null;
+    // The local-push extension has its own NWConnection, outside the embedded
+    // userspace node. Disable its old session instead of feeding it an overlay URI.
+    final localPushEnabled = enabled && !isMcoTcpOverlayEndpoint(normalizedHost);
+    if (localPushEnabled && normalizedSsid.isEmpty) return null;
 
     final result = await _channel.invokeMapMethod<Object?, Object?>(
       'configure',
@@ -55,7 +59,7 @@ class IosBackgroundTcpService {
         'host': normalizedHost,
         'port': port,
         'wifiSsid': normalizedSsid,
-        'enabled': enabled,
+        'enabled': localPushEnabled,
       },
     );
     if (result == null) return null;

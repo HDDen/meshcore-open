@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../helpers/companion_tcp_dialer.dart';
 import 'app_debug_log_service.dart';
 import 'usb_serial_frame_codec.dart';
 
@@ -52,7 +53,11 @@ class TcpTransportService {
     _frameDecoder.reset();
 
     try {
-      final socket = await Socket.connect(trimmedHost, port, timeout: timeout);
+      final socket = await connectCompanionTcp(
+        host: trimmedHost,
+        port: port,
+        timeout: timeout,
+      );
       if (generation != _connectGeneration ||
           _status != TcpTransportStatus.connecting) {
         try {
@@ -79,8 +84,14 @@ class TcpTransportService {
         tag: 'TCP',
       );
     } catch (error) {
-      await _cleanupFailedConnect();
-      _status = TcpTransportStatus.disconnected;
+      // An asynchronous overlay dial may fail after cancellation and a new
+      // connection. The old attempt must not clean up the newer socket.
+      if (generation == _connectGeneration) {
+        await _cleanupFailedConnect();
+        if (generation == _connectGeneration) {
+          _status = TcpTransportStatus.disconnected;
+        }
+      }
       rethrow;
     }
   }
@@ -222,18 +233,18 @@ class TcpTransportService {
   Future<void> _cleanupFailedConnect() async {
     final subscription = _socketSubscription;
     _socketSubscription = null;
-    await subscription?.cancel();
     final socket = _socket;
     _socket = null;
+    _activeHost = null;
+    _activePort = null;
+    _frameDecoder.reset();
+    await subscription?.cancel();
     try {
       await socket?.close();
     } catch (_) {}
     try {
       socket?.destroy();
     } catch (_) {}
-    _activeHost = null;
-    _activePort = null;
-    _frameDecoder.reset();
   }
 
   void _handleSocketData(Uint8List bytes) {

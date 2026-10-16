@@ -60,7 +60,12 @@ android {
         applicationId = "com.meshcore.mcoadvanced"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // The optional private userspace client uses Android's API 24 network callbacks.
+        minSdk = if (rootProject.findProject(":mcoa_tailscale") != null) {
+            maxOf(flutter.minSdkVersion, 24)
+        } else {
+            flutter.minSdkVersion
+        }
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
