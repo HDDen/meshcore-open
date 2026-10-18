@@ -60,6 +60,7 @@ import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
+import 'utils/module_diagnostic_logger.dart';
 import 'utils/app_route_observer.dart';
 import 'utils/startup_timing.dart';
 import 'widgets/edge_swipe_pop.dart';
@@ -302,10 +303,11 @@ Future<void> _startApplication() async {
     enabled: appSettingsService.settings.appDebugLogEnabled,
   );
 
-  // Let the optional service module record its unexpected errors into the app
-  // log the user can export; a no-op in the stub build.
+  // Let the optional service module write to the exportable app log, preserving
+  // diagnostic levels and tags; a no-op in the stub build.
   settingsSectionsService.attachDiagnosticLogger(
     (message) => appLogger.error(message, tag: 'License'),
+    diagnostics: logModuleDiagnostic,
   );
 
   // Initialize notification service

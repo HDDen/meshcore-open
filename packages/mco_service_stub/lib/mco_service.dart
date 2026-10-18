@@ -23,7 +23,10 @@ class McoBatteryChemistryProfile {
 class SettingsSectionsService extends ChangeNotifier {
   Future<void> initialize() async {}
 
-  void attachDiagnosticLogger(void Function(String message) sink) {}
+  void attachDiagnosticLogger(
+    void Function(String message) sink, {
+    bool Function(String message, String tag, String level)? diagnostics,
+  }) {}
 
   String? licenseManagementTitle(BuildContext context) => null;
 
