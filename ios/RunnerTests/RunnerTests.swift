@@ -5,12 +5,13 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
-  // Freeze the existing native contract before adding scene-aware transitions.
+  // Preserve the native contract while adding scene-aware transitions.
   // These tests do not reproduce GPU corruption or require the injected dylib.
   func testPresentationBaselineKeepsOrderedIndependentSnapshots() throws {
     let center = NotificationCenter()
     let messenger = PresentationTestMessenger()
-    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true))
     defer { withExtendedLifetime(monitor) {} }
 
     center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -18,6 +19,9 @@ class RunnerTests: XCTestCase {
     let activity = try messenger.watch(PresentationTestMessenger.activity)
     XCTAssertEqual(initial["schema"] as? Int, 1)
     XCTAssertNotNil(initial["enabled"] as? Bool)
+    XCTAssertEqual(initial["source"] as? String, "initial")
+    XCTAssertNotNil(initial["nativeAtUtcMs"] as? Int)
+    XCTAssertNotNil(initial["nativeUptimeMs"] as? Int)
     XCTAssertEqual(initial["active"] as? Bool, true)
     XCTAssertEqual(initial["revision"] as? Int, activity["revision"] as? Int)
     let revision = try XCTUnwrap(initial["revision"] as? Int)
@@ -41,7 +45,8 @@ class RunnerTests: XCTestCase {
   func testPresentationBaselineUnwatchKeepsActivitySubscriberAlive() throws {
     let center = NotificationCenter()
     let messenger = PresentationTestMessenger()
-    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true))
     defer { withExtendedLifetime(monitor) {} }
 
     center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -74,6 +79,61 @@ class RunnerTests: XCTestCase {
     center.post(name: UIApplication.willResignActiveNotification, object: nil)
     center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
     XCTAssertTrue(messenger.events.isEmpty)
+  }
+
+  func testSceneInactivityCannotBeOverriddenByApplicationResume() {
+    var activity = IosPresentationActivityState(applicationActive: true)
+    activity.updateScene(identifier: "flutter", active: false)
+    activity.applicationActive = false
+    activity.applicationActive = true
+    XCTAssertFalse(activity.active, "Application resume must not unlock an inactive scene")
+    activity.updateScene(identifier: "flutter", active: true)
+    XCTAssertTrue(activity.active)
+
+    // Reverse activation order: an active scene must still wait for the app.
+    activity.applicationActive = false
+    activity.updateScene(identifier: "flutter", active: true)
+    XCTAssertFalse(activity.active)
+    activity.applicationActive = true
+    XCTAssertTrue(activity.active)
+  }
+
+  func testUnrelatedSceneCannotUnlockPresentation() {
+    var activity = IosPresentationActivityState(applicationActive: true)
+    activity.updateScene(identifier: "flutter", active: false)
+    activity.updateScene(identifier: "another-session", active: true)
+    activity.disconnectScene(identifier: "another-session")
+    XCTAssertFalse(activity.active)
+    XCTAssertEqual(activity.sceneIdentifier, "flutter")
+    activity.updateScene(identifier: "flutter", active: true)
+    XCTAssertTrue(activity.active)
+  }
+
+  func testDisconnectedSceneWaitsForAnActiveReplacement() {
+    var activity = IosPresentationActivityState(applicationActive: true)
+    activity.updateScene(identifier: "old", active: true)
+    activity.disconnectScene(identifier: "old")
+    XCTAssertFalse(activity.active)
+    activity.updateScene(identifier: "replacement", active: false)
+    XCTAssertFalse(activity.active)
+    activity.updateScene(identifier: "replacement", active: true)
+    XCTAssertTrue(activity.active)
+  }
+
+  func testNativeSnapshotKeepsInactiveSceneAfterApplicationActivation() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(
+        applicationActive: false, sceneIdentifier: "flutter", sceneActive: false))
+    defer { withExtendedLifetime(monitor) {} }
+    _ = try messenger.watch(PresentationTestMessenger.presentation)
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    let snapshot = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertEqual(snapshot["applicationActive"] as? Bool, true)
+    XCTAssertEqual(snapshot["sceneActive"] as? Bool, false)
+    XCTAssertEqual(snapshot["active"] as? Bool, false)
+    XCTAssertTrue(messenger.events.isEmpty, "No positive transition is allowed yet")
   }
 
 }

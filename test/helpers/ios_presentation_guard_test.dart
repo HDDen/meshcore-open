@@ -77,6 +77,33 @@ void main() {
     expect(allowed.last, isTrue);
   }, timeout: shortTimeout);
 
+  test('native scene and timing metadata cannot override ordered activity', () async {
+    await bridge.start();
+    await emit({
+      ...snapshot(1, false),
+      'source': 'scene.willDeactivate',
+      'nativeAtUtcMs': DateTime.now().millisecondsSinceEpoch - 600000,
+      'nativeUptimeMs': 1000,
+      'applicationActive': true,
+      'sceneActive': false,
+    });
+    expect(allowed, [true, false]);
+    // Late delivery and contradictory diagnostic metadata must never reopen
+    // the gate; the native aggregate and revision remain authoritative.
+    await emit({
+      ...snapshot(1, true),
+      'source': 'application.didBecomeActive',
+      'sceneActive': true,
+    });
+    expect(allowed, [true, false]);
+    await emit({
+      ...snapshot(2, true),
+      'source': 'scene.didActivate',
+      'nativeAtUtcMs': 'bad optional diagnostic field',
+    });
+    expect(allowed, [true, false, true]);
+  }, timeout: shortTimeout);
+
   test('malformed events cannot reopen presentation after a background event', () async {
     await bridge.start();
     await emit(snapshot(1, false));

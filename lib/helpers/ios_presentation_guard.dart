@@ -86,9 +86,19 @@ class IosPresentationBridge {
     }
     _revision = revision;
     final allowed = raw['enabled'] == false || raw['active'] == true;
-    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision',
-        tag: 'iOSRendering', noNotify: true);
+    // Close the gate before logging. Native timestamps diagnose queued delivery;
+    // they never decide whether rendering is allowed (wall clocks can change).
     onPresentationChanged(allowed);
+    final nativeAt = raw['nativeAtUtcMs'];
+    final timing = nativeAt is int
+        ? ', source=${raw['source']}, nativeAtUtcMs=$nativeAt'
+            ', nativeUptimeMs=${raw['nativeUptimeMs']}'
+            ', deliveryMs=${DateTime.now().millisecondsSinceEpoch - nativeAt}'
+            ', applicationActive=${raw['applicationActive']}'
+            ', sceneActive=${raw['sceneActive']}'
+        : '';
+    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision$timing',
+        tag: 'iOSRendering', noNotify: true);
     return true;
   }
 
