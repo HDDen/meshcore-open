@@ -20,6 +20,9 @@ class TcpTransportService {
   Future<void> _pendingWrite = Future<void>.value();
   int _connectGeneration = 0;
 
+  // Opaque identity changes with the socket, including reconnects to the same
+  // endpoint. Consumers can fence asynchronous work without inspecting IPs.
+  Object? get activeConnectionIdentity => isConnected ? _socket : null;
   TcpTransportStatus get status => _status;
   Stream<Uint8List> get frameStream => _frameController.stream;
   bool get isConnected => _status == TcpTransportStatus.connected;

@@ -767,6 +767,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool get isAutoReconnectScheduled =>
       _shouldAutoReconnect && (_reconnectTimer?.isActive ?? false);
   String? get activeTcpEndpoint => _tcpConnector.activeEndpoint;
+  Object? get activeTcpConnectionIdentity => _tcpConnector.activeConnectionIdentity;
   bool get isTcpTransportConnected =>
       _state == MeshCoreConnectionState.connected &&
       _activeTransport == MeshCoreTransportType.tcp;

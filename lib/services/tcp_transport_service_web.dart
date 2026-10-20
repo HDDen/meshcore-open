@@ -8,6 +8,7 @@ class TcpTransportService {
   Stream<Uint8List> get frameStream => const Stream<Uint8List>.empty();
   bool get isConnected => false;
   String? get activeEndpoint => null;
+  Object? get activeConnectionIdentity => null;
 
   void setDebugLogService(AppDebugLogService? service) {
     _debugLogService = service;

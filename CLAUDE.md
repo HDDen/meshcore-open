@@ -131,7 +131,7 @@ All screens are fully implemented (no remaining placeholders).
 
 | Provider | Role |
 |---|---|
-| `MeshCoreConnector` | Active transport (BLE/TCP/USB), connection state, frame I/O |
+| `MeshCoreConnector` | Active transport (BLE/TCP/USB), connection state, frame I/O; opaque `activeTcpConnectionIdentity` fences work across reconnects, including the same endpoint |
 | `MessageRetryService` | ACK tracking and retry scheduling with backoff |
 | `PathHistoryService` | Per-contact routing history (LRU cache, `maxCachedContacts` = 1000), per node: `setDevicePublicKey` rebinds it at every SELF_INFO |
 | `AppSettingsService` | App preferences (theme, units, locale, notifications) |

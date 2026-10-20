@@ -15,6 +15,7 @@ class MeshCoreTcpConnector {
 
   // --- Getters ---
   String? get activeEndpoint => _service.activeEndpoint;
+  Object? get activeConnectionIdentity => _service.activeConnectionIdentity;
   bool get isConnected => _service.isConnected;
 
   // --- Configuration ---

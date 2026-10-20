@@ -97,6 +97,8 @@ void main() {
       );
 
       expect(service.isConnected, isTrue);
+      final firstIdentity = service.activeConnectionIdentity;
+      expect(firstIdentity, isNotNull);
       expect(
         service.activeEndpoint,
         '${InternetAddress.loopbackIPv4.address}:${server.port}',
@@ -106,6 +108,12 @@ void main() {
 
       expect(service.isConnected, isFalse);
       expect(service.activeEndpoint, isNull);
+      expect(service.activeConnectionIdentity, isNull);
+      // An endpoint is not a connection identity: reconnecting to the same
+      // address/port must fence results from the previous socket.
+      await service.connect(host: InternetAddress.loopbackIPv4.address, port: server.port);
+      expect(service.activeConnectionIdentity, isNotNull);
+      expect(identical(service.activeConnectionIdentity, firstIdentity), isFalse);
     } finally {
       await service.disconnect();
       await server.close();
