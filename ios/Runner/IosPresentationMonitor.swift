@@ -6,13 +6,18 @@ import UIKit
 final class IosPresentationMonitor {
   private let channel: FlutterMethodChannel
   private let activityChannel: FlutterMethodChannel
+  private let notificationCenter: NotificationCenter
   private var watchingActivity = false
   private var observers: [NSObjectProtocol] = []
   private var watching = false
   private var active: Bool
   private var revision = 0
 
-  init(binaryMessenger: FlutterBinaryMessenger) {
+  init(binaryMessenger: FlutterBinaryMessenger,
+       notificationCenter: NotificationCenter = .default) {
+    // An isolated center lets native tests exercise notifications without
+    // sending synthetic lifecycle changes to the running Flutter host.
+    self.notificationCenter = notificationCenter
     channel = FlutterMethodChannel(
       name: "mco_advanced/ios_presentation",
       binaryMessenger: binaryMessenger
@@ -23,7 +28,7 @@ final class IosPresentationMonitor {
       binaryMessenger: binaryMessenger
     )
     active = UIApplication.shared.applicationState == .active
-    let center = NotificationCenter.default
+    let center = notificationCenter
     // Stop before background GPU access is revoked; resume only on didBecomeActive.
     for name in [UIApplication.willResignActiveNotification,
                  UIApplication.didEnterBackgroundNotification,
@@ -93,7 +98,7 @@ final class IosPresentationMonitor {
   }
 
   deinit {
-    for observer in observers { NotificationCenter.default.removeObserver(observer) }
+    for observer in observers { notificationCenter.removeObserver(observer) }
     channel.setMethodCallHandler(nil)
     activityChannel.setMethodCallHandler(nil)
   }

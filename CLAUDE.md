@@ -339,7 +339,7 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
 - `lib/theme/mesh_theme.dart` defines the warm-dark `MeshPalette` (phosphor-green accents) and **is wired** in `main.dart` via `MeshTheme.light()` / `MeshTheme.dark()`
 - Global UI scale (`AppSettings.uiScale`, optionally applied to icons) is layered on top of the system text scaler in the `MaterialApp.builder`
 - Bundled `Inter` and `JetBrains Mono` fonts (see `pubspec.yaml`)
-- iOS frame submission compatibility stays in `lib/helpers/ios_presentation_guard.dart` and `ios/Runner/IosPresentationMonitor.swift`: direct native activity events can gate presentation without changing Dart lifecycle. The independent `mco_advanced/ios_activity` channel exposes ordered physical activity notifications without replacing the presentation subscription. Other platforms use the standard binding; builds can opt out of frame gating with `MCO_IOS_RENDER_GUARD=false`.
+- iOS frame submission compatibility stays in `lib/helpers/ios_presentation_guard.dart` and `ios/Runner/IosPresentationMonitor.swift`: direct native activity events can gate presentation without changing Dart lifecycle. The independent `mco_advanced/ios_activity` channel exposes ordered physical activity notifications without replacing the presentation subscription. Other platforms use the standard binding; builds can opt out of frame gating with `MCO_IOS_RENDER_GUARD=false`. Native baseline tests in `ios/RunnerTests/RunnerTests.swift` use an isolated NotificationCenter to verify ordered channel snapshots, independent subscriptions and cleanup without posting artificial lifecycle events to the Flutter host.
 
 ### Localization
 
