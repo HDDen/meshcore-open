@@ -1,0 +1,160 @@
+import 'dart:async';
+
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
+import '../utils/platform_info.dart';
+import '../utils/app_logger.dart';
+
+/// Gate only frame submission: keep the isolate, timers and transports alive.
+/// Native notifications remain useful when a dylib reports a false app state.
+mixin IosPresentationFrameGate on RendererBinding {
+  bool _iosPresentationAllowed = true;
+
+  @override
+  bool get sendFramesToEngine =>
+      _iosPresentationAllowed && super.sendFramesToEngine;
+
+  void updateIosPresentation(bool allowed) {
+    if (_iosPresentationAllowed == allowed) {
+      return;
+    }
+    _iosPresentationAllowed = allowed;
+    // Respect Flutter's own lifecycle/first-frame deferral. Its resume path
+    // schedules the frame if it has not resumed when the native event arrives.
+    if (allowed) {
+      scheduleFrame();
+    }
+  }
+}
+
+/// One ordered native subscription, with no Dart lifecycle notifications and
+/// no retained dependency on an account, widget or connection.
+class IosPresentationBridge {
+  IosPresentationBridge({
+    required this.onPresentationChanged,
+    MethodChannel channel = platformChannel,
+  }) : _channel = channel;
+
+  static const platformChannel = MethodChannel('mco_advanced/ios_presentation');
+  final void Function(bool allowed) onPresentationChanged;
+  final MethodChannel _channel;
+  int _revision = -1;
+  int _epoch = 0;
+  bool _started = false;
+
+  Future<void> start() async {
+    if (_started) {
+      return;
+    }
+    _started = true;
+    _revision = -1;
+    final epoch = ++_epoch;
+    _channel.setMethodCallHandler((call) async {
+      if (_started && epoch == _epoch && call.method == 'presentation') {
+        _accept(call.arguments);
+      }
+    });
+    try {
+      final snapshot = await _channel.invokeMethod<Object?>('watch')
+          .timeout(const Duration(seconds: 3));
+      if (_started && epoch == _epoch) {
+        // A successful null/malformed reply is also an unavailable bridge.
+        // Keep a newer event if it arrived before the initial snapshot.
+        if (!_accept(snapshot) && _revision < 0) {
+          _unavailable(epoch);
+        }
+      }
+    } on MissingPluginException {
+      _unavailable(epoch);
+    } on PlatformException {
+      _unavailable(epoch);
+    } on TimeoutException {
+      _unavailable(epoch);
+    }
+  }
+
+  bool _accept(Object? raw) {
+    if (raw is! Map || raw['schema'] != 1 || raw['enabled'] is! bool ||
+        raw['active'] is! bool || raw['revision'] is! int) {
+      return false;
+    }
+    final revision = raw['revision'] as int;
+    if (revision < 0 || revision <= _revision) {
+      return false;
+    }
+    _revision = revision;
+    final allowed = raw['enabled'] == false || raw['active'] == true;
+    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision',
+        tag: 'iOSRendering', noNotify: true);
+    onPresentationChanged(allowed);
+    return true;
+  }
+
+  void _unavailable(int epoch) {
+    if (!_started || epoch != _epoch) {
+      return;
+    }
+    // An older Runner must retain ordinary Flutter rendering, not a blank UI.
+    _started = false;
+    _epoch++;
+    _channel.setMethodCallHandler(null);
+    onPresentationChanged(true);
+    appLogger.warn('Presentation guard unavailable; using Flutter lifecycle',
+        tag: 'iOSRendering', noNotify: true);
+  }
+
+  Future<void> dispose() async {
+    final wasStarted = _started;
+    _started = false;
+    _epoch++;
+    _revision = -1;
+    _channel.setMethodCallHandler(null);
+    onPresentationChanged(true);
+    if (!wasStarted) {
+      return;
+    }
+    try {
+      await _channel.invokeMethod<void>('unwatch')
+          .timeout(const Duration(seconds: 3));
+    } on MissingPluginException {
+      // A Runner predating this optional bridge has nothing to release.
+    } on PlatformException {
+      // Local state is already detached even if the engine is shutting down.
+    } on TimeoutException {
+      // Cleanup must not hold an exiting isolate indefinitely.
+    }
+  }
+}
+
+class _IosPresentationWidgetsBinding extends WidgetsFlutterBinding
+    with IosPresentationFrameGate {
+  late final _presentation = IosPresentationBridge(
+    onPresentationChanged: updateIosPresentation,
+  );
+
+  void startPresentationGuard() => unawaited(_presentation.start());
+}
+
+/// Call before other binding initialization. Existing test/integration bindings
+/// are preserved; other platforms keep their ordinary WidgetsFlutterBinding.
+WidgetsBinding ensureMcoaWidgetsBinding() {
+  const enabled = bool.fromEnvironment('MCO_IOS_RENDER_GUARD', defaultValue: true);
+  if (!enabled || !PlatformInfo.isIOS) {
+    return WidgetsFlutterBinding.ensureInitialized();
+  }
+  WidgetsBinding? binding;
+  try {
+    binding = WidgetsBinding.instance;
+  } on FlutterError {
+    // The uninitialized getter throws FlutterError in debug builds.
+  } on TypeError {
+    // In release it instead null-checks the not-yet-initialized instance.
+  }
+  binding ??= _IosPresentationWidgetsBinding();
+  if (binding is _IosPresentationWidgetsBinding) {
+    binding.startPresentationGuard();
+  }
+  return binding;
+}

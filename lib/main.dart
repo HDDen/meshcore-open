@@ -58,6 +58,7 @@ import 'storage/channel_identity_store.dart';
 import 'storage/contact_identity_store.dart';
 import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
+import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/module_diagnostic_logger.dart';
@@ -71,7 +72,8 @@ String _startupStage = 'Flutter initialization';
 
 Future<void> main(List<String> args) async {
   StartupTiming.start(args);
-  WidgetsFlutterBinding.ensureInitialized();
+  // Keep iOS presentation compatibility isolated from app/transport lifecycle.
+  ensureMcoaWidgetsBinding();
 
   try {
     if (PlatformInfo.isIOS) {

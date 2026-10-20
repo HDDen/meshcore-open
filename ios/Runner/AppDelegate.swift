@@ -7,6 +7,7 @@ import UserNotifications
 @objc class AppDelegate: FlutterAppDelegate, NEAppPushDelegate {
   private let backgroundTcpManagerName = "MCO Advanced Background TCP"
   private var backgroundTcpManagers: [NEAppPushManager] = []
+  private var presentationMonitors: [ObjectIdentifier: IosPresentationMonitor] = [:]
 
   override func application(
     _ application: UIApplication,
@@ -60,6 +61,11 @@ import UserNotifications
   }
 
   private func registerNativeChannels(binaryMessenger: FlutterBinaryMessenger) {
+    // Legacy and implicit-engine registration can refer to the same messenger.
+    let messengerId = ObjectIdentifier(binaryMessenger as AnyObject)
+    if presentationMonitors[messengerId] == nil {
+      presentationMonitors[messengerId] = IosPresentationMonitor(binaryMessenger: binaryMessenger)
+    }
     let wifiSsidChannel = FlutterMethodChannel(
       name: "mco_advanced/ios_wifi_ssid",
       binaryMessenger: binaryMessenger

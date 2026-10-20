@@ -20,6 +20,7 @@
 		9A698254711B63C3940A64CB /* libPods-Runner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4268181FCF3E12817B700E9C /* libPods-Runner.a */; };
 		AA0000000000000000000001 /* MeshCoreBackgroundTcpProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* MeshCoreBackgroundTcpProvider.swift */; };
 		AA0000000000000000000002 /* MeshCoreBackgroundTcpExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* MeshCoreBackgroundTcpExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C2A71112C0A100100123456 /* IosPresentationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +93,7 @@
 		AA0000000000000000000006 /* MeshCoreBackgroundTcpExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeshCoreBackgroundTcpExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE8FB5F730510D2A000214A4 /* MeshCoreBackgroundTcpExtensionRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeshCoreBackgroundTcpExtensionRelease.entitlements; sourceTree = "<group>"; };
 		CE8FB5F830510D40000214A4 /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
+		7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IosPresentationMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +172,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7C2A71032C0A100100123456 /* IosBleProxyAdapter.swift */,
 				7C2A71052C0A100100123456 /* IosBleCentralAdapter.swift */,
+				7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -464,6 +467,7 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				7C2A71042C0A100100123456 /* IosBleProxyAdapter.swift in Sources */,
 				7C2A71062C0A100100123456 /* IosBleCentralAdapter.swift in Sources */,
+				7C2A71112C0A100100123456 /* IosPresentationMonitor.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
