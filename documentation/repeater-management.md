@@ -130,6 +130,28 @@ A list of Cayenne LPP sensor channel cards:
 - **Channel 1** (special): Battery voltage (shown as percentage or raw mV) and MCU temperature
 - **Other channels**: Raw sensor values with appropriate labels
 
+When a channel reports both voltage and current in the same response, its card
+also shows **Calculated power (V × I)** in watts, with three decimal places.
+This is an estimate from those readings and preserves their sign; it does not
+identify charging or discharging by itself. The sensor's original **Power** row
+is kept separately. Standard Cayenne LPP power (type 128) carries whole watts,
+so a sub-watt reading can arrive as zero even when voltage and current are
+nonzero. The calculation never combines channels or reuses a previous response.
+
+On a BMP280+AHT20 combination board, the firmware can expose the two sensors as
+separate channels: AHT20 supplies temperature/humidity, while BMP280 supplies
+temperature/pressure/altitude. The app displays fields that the node sends; it
+does not infer missing pressure from temperature or humidity. Both firmware
+driver support and successful sensor detection are needed.
+
+For missing-field reports, enable the app debug log and refresh telemetry.
+Entries tagged `Telemetry` list decoded field names by channel. An incomplete
+parse also reports the reason, channel, numeric LPP type, byte offset within the
+LPP payload and payload length. Valid fields before the problem remain visible;
+unknown types stop decoding because their lengths are unknown. These diagnostics
+help distinguish a missing field in the node's response from an interrupted
+parse.
+
 Shows "No data" until a response arrives from the repeater.
 
 ### Key Interactions

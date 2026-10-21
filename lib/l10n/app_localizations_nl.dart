@@ -4337,6 +4337,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get telemetry_powerLabel => 'Vermogen';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Afstand';
 
   @override

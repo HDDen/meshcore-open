@@ -4052,6 +4052,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get telemetry_powerLabel => '功率';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => '距离';
 
   @override

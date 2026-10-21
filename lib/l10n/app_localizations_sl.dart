@@ -4322,6 +4322,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get telemetry_powerLabel => 'Moč';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Razdalja';
 
   @override

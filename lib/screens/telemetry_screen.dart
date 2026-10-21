@@ -15,6 +15,8 @@ import '../services/repeater_command_service.dart';
 import '../utils/app_logger.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/cayenne_lpp.dart';
+import '../helpers/telemetry_diagnostics.dart';
+import '../helpers/telemetry_power.dart';
 import '../helpers/request_sent_tags.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -185,6 +187,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
   void _handleTelemetryResponse(Uint8List frame) {
     _sentTags.clear();
     final parsedTelemetry = CayenneLpp.parseByChannel(frame);
+    logTelemetryChannels(parsedTelemetry, packetLength: frame.length);
     final batteryMv = _extractTelemetryBatteryMillivolts(parsedTelemetry);
     if (batteryMv != null && !widget.isSelf) {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
@@ -517,6 +520,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     int channel,
     bool isImperialUnits,
   ) {
+    final calculatedPower = calculatedTelemetryPowerWatts(channelData);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -528,6 +532,13 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
             children: [
               for (final entry in channelData.entries)
                 _buildTelemetryField(entry, channel, isImperialUnits),
+              if (calculatedPower != null)
+                _buildInfoRow(
+                  context.l10n.telemetry_calculatedPowerLabel,
+                  context.l10n.telemetry_powerValue(
+                    _telemetryElectricalValueText(calculatedPower),
+                  ),
+                ),
             ],
           ),
         ),

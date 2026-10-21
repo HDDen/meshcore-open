@@ -1,7 +1,7 @@
 import 'dart:typed_data';
-import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../connector/meshcore_protocol.dart';
+import 'telemetry_diagnostics.dart';
 
 class CayenneLpp {
   static const int lppDigitalInput = 0; // 1 byte
@@ -83,16 +83,25 @@ class CayenneLpp {
     return bytes;
   }
 
-  static List<Map<String, dynamic>> parse(Uint8List bytes) {
+  static List<Map<String, dynamic>> parse(
+    Uint8List bytes, {
+    void Function(TelemetryParseIssue issue)? onIssue,
+  }) {
     final buffer = BufferReader(bytes);
     final telemetry = <Map<String, dynamic>>[];
+    var fieldOffset = 0;
+    int? fieldChannel;
+    int? fieldType;
     try {
       while (buffer.remaining >= 2) {
+        fieldOffset = bytes.length - buffer.remaining;
         final channel = buffer.readUInt8();
         final type = buffer.readUInt8();
+        fieldChannel = channel;
+        fieldType = type;
 
         if (channel == 0 && type == 0) {
-          break;
+          return telemetry;
         }
 
         switch (type) {
@@ -296,6 +305,16 @@ class CayenneLpp {
             break;
           case lppPolyline:
             final size = buffer.readUInt8();
+            if (size - 1 > buffer.remaining) {
+              reportTelemetryParseIssue(
+                kind: TelemetryParseIssueKind.truncatedPolyline,
+                offset: fieldOffset,
+                packetLength: bytes.length,
+                channel: channel,
+                type: type,
+                onIssue: onIssue,
+              );
+            }
             telemetry.add({
               'channel': channel,
               'type': type,
@@ -306,29 +325,62 @@ class CayenneLpp {
             });
             break;
           default:
+            reportTelemetryParseIssue(
+              kind: TelemetryParseIssueKind.unknownType,
+              offset: fieldOffset,
+              packetLength: bytes.length,
+              channel: channel,
+              type: type,
+              onIssue: onIssue,
+            );
             return telemetry;
         }
       }
+      // A single zero is padding; a nonzero byte cannot form an LPP header.
+      if (buffer.remaining == 1 && bytes.last != 0) {
+        reportTelemetryParseIssue(
+          kind: TelemetryParseIssueKind.incompleteHeader,
+          offset: bytes.length - 1,
+          packetLength: bytes.length,
+          channel: bytes.last,
+          onIssue: onIssue,
+        );
+      }
       return telemetry;
-    } catch (e) {
-      // Handle parsing errors, possibly due to malformed data
-      appLogger.error('Error parsing Cayenne LPP data: $e');
+    } catch (_) {
+      reportTelemetryParseIssue(
+        kind: TelemetryParseIssueKind.malformedField,
+        offset: fieldOffset,
+        packetLength: bytes.length,
+        channel: fieldChannel,
+        type: fieldType,
+        onIssue: onIssue,
+      );
       // Return any telemetry parsed so far to preserve partial data
       return telemetry;
     }
   }
 
-  static List<Map<String, dynamic>> parseByChannel(Uint8List bytes) {
+  static List<Map<String, dynamic>> parseByChannel(
+    Uint8List bytes, {
+    void Function(TelemetryParseIssue issue)? onIssue,
+  }) {
     final buffer = BufferReader(bytes);
     final Map<int, Map<String, dynamic>> channels = {};
+    var fieldOffset = 0;
+    int? fieldChannel;
+    int? fieldType;
     try {
       while (buffer.remaining >= 2) {
+        fieldOffset = bytes.length - buffer.remaining;
         final channel = buffer.readUInt8();
         final type = buffer.readUInt8();
+        fieldChannel = channel;
+        fieldType = type;
 
         // Optional: stop on padding (00 00)
         if (channel == 0 && type == 0) {
-          break;
+          return _sortedChannelValues(channels);
         }
 
         final channelData = channels.putIfAbsent(
@@ -435,6 +487,16 @@ class CayenneLpp {
             break;
           case lppPolyline:
             final size = buffer.readUInt8();
+            if (size - 1 > buffer.remaining) {
+              reportTelemetryParseIssue(
+                kind: TelemetryParseIssueKind.truncatedPolyline,
+                offset: fieldOffset,
+                packetLength: bytes.length,
+                channel: channel,
+                type: type,
+                onIssue: onIssue,
+              );
+            }
             channelData['values']['polyline'] = {
               'size': size,
               'data': _bytesToHex(_readPolylinePayload(buffer, size)),
@@ -442,14 +504,37 @@ class CayenneLpp {
             break;
           default:
             // Stop parsing to avoid losing alignment on an unknown LPP type.
+            reportTelemetryParseIssue(
+              kind: TelemetryParseIssueKind.unknownType,
+              offset: fieldOffset,
+              packetLength: bytes.length,
+              channel: channel,
+              type: type,
+              onIssue: onIssue,
+            );
             return _sortedChannelValues(channels);
         }
       }
 
+      if (buffer.remaining == 1 && bytes.last != 0) {
+        reportTelemetryParseIssue(
+          kind: TelemetryParseIssueKind.incompleteHeader,
+          offset: bytes.length - 1,
+          packetLength: bytes.length,
+          channel: bytes.last,
+          onIssue: onIssue,
+        );
+      }
       return _sortedChannelValues(channels);
-    } catch (e) {
-      // Handle parsing errors, possibly due to malformed data
-      appLogger.error('Error parsing Cayenne LPP data: $e');
+    } catch (_) {
+      reportTelemetryParseIssue(
+        kind: TelemetryParseIssueKind.malformedField,
+        offset: fieldOffset,
+        packetLength: bytes.length,
+        channel: fieldChannel,
+        type: fieldType,
+        onIssue: onIssue,
+      );
       // Preserve any fields parsed before the malformed value.
       return _sortedChannelValues(channels);
     }

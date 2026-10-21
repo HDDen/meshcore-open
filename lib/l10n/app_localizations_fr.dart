@@ -4373,6 +4373,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get telemetry_powerLabel => 'Puissance';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Distance';
 
   @override

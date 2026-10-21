@@ -777,6 +777,7 @@
   "telemetry_percentageLabel": "Процент",
   "telemetry_concentrationLabel": "Концентрация",
   "telemetry_powerLabel": "Мощность",
+  "telemetry_calculatedPowerLabel": "Расчётная мощность (U × I)",
   "telemetry_distanceLabel": "Расстояние",
   "telemetry_energyLabel": "Энергия",
   "telemetry_directionLabel": "Направление",

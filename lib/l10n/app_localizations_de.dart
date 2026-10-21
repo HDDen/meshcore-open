@@ -4356,6 +4356,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get telemetry_powerLabel => 'Leistung';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Entfernung';
 
   @override

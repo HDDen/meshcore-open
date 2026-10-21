@@ -4337,6 +4337,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get telemetry_powerLabel => 'Výkon';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Vzdialenosť';
 
   @override

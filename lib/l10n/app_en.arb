@@ -2259,6 +2259,7 @@
   "telemetry_percentageLabel": "Percentage",
   "telemetry_concentrationLabel": "Concentration",
   "telemetry_powerLabel": "Power",
+  "telemetry_calculatedPowerLabel": "Calculated power (V × I)",
   "telemetry_distanceLabel": "Distance",
   "telemetry_energyLabel": "Energy",
   "telemetry_directionLabel": "Direction",

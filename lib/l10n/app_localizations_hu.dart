@@ -4351,6 +4351,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get telemetry_powerLabel => 'Teljesítmény';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Távolság';
 
   @override

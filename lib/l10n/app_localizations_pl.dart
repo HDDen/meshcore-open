@@ -4370,6 +4370,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get telemetry_powerLabel => 'Moc';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Odległość';
 
   @override

@@ -278,6 +278,24 @@ See `buildSendCliCommandFrame()` (takes the repeater public key) in [meshcore_pr
 
 Reactions use `r:<four-hex message hash>:<two-hex emoji index>`. Channel replies use `@[senderName] text`; location pins use `m:<lat>,<lon>|<label>|...`. These are application conventions and require compatible clients for special rendering.
 
+## Telemetry payloads
+
+`PUSH_CODE_TELEMETRY_RESPONSE` and telemetry `PUSH_CODE_BINARY_RESPONSE` carry
+Cayenne LPP after their respective response headers. See
+[cayenne_lpp.dart](../lib/helpers/cayenne_lpp.dart) for the supported field types.
+Relevant resolutions are temperature (103): 0.1 °C, humidity (104): 0.5%,
+barometric pressure (115): 0.1 hPa, voltage (116): 0.01 V, current (117): 0.001 A,
+and power (128): 1 W. Displayed decimal places do not increase wire precision.
+The telemetry screen's separate calculated-power row is a display estimate from
+voltage and current of the same channel and response, and changes no wire data.
+
+Unknown LPP types stop decoding without guessing a payload length. Earlier
+fields are retained. Debug entries tagged `Telemetry` report unknown types,
+short fields/headers and truncated polylines, with payload-relative field offset,
+channel, type and total payload length; they do not dump raw payload contents.
+The decoded-channel summary records field names, including whether `pressure`
+was reached. See [Telemetry](repeater-management.md#telemetry) for sensor details.
+
 ## Regions and image data
 
 Transport-routed raw packets include four transport-code bytes before packed path metadata. For transport floods, the app matches the first two code bytes against locally known region candidates using HMAC-SHA256 over `[payloadType][payload]`. Region scope keys are the first 16 bytes of SHA256 of `#<region>`. The radio's default flood scope is also a candidate, matched on the key the radio reports (it may have been set by another client). The name itself is not carried as plain text. Unknown or ambiguous matches remain null; see [regions](regions.md).

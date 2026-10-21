@@ -4131,6 +4131,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get telemetry_powerLabel => '電力';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => '距離';
 
   @override

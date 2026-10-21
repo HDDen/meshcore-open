@@ -7502,6 +7502,12 @@ abstract class AppLocalizations {
   /// **'Power'**
   String get telemetry_powerLabel;
 
+  /// No description provided for @telemetry_calculatedPowerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated power (V × I)'**
+  String get telemetry_calculatedPowerLabel;
+
   /// No description provided for @telemetry_distanceLabel.
   ///
   /// In en, this message translates to:

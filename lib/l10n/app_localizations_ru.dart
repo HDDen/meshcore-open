@@ -4344,6 +4344,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get telemetry_powerLabel => 'Мощность';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Расчётная мощность (U × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Расстояние';
 
   @override

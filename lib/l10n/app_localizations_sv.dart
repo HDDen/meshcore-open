@@ -4324,6 +4324,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get telemetry_powerLabel => 'Effekt';
 
   @override
+  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+
+  @override
   String get telemetry_distanceLabel => 'Avstånd';
 
   @override

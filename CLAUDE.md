@@ -1953,6 +1953,23 @@ radio-quiet wait reads, is left as it was
 
 The neighbours and telemetry screens learn their request's tag from the `RESP_CODE_SENT` the node gives for it, and the repeater's answer (`PUSH_CODE_BINARY_RESPONSE`) repeats that tag. The node answers every command in turn, so a direct message, a room post or another request written meanwhile brings its own SENT, before the request's or after it. Both screens used to keep the tag of the last SENT and dropped the answer whenever another send fell in between; the telemetry screen also armed its timeout on every SENT, a request pending or not, so a message sent while it was open ended in a false timeout. `RequestSentTags` (`helpers/request_sent_tags.dart`, tested in `test/helpers/request_sent_tags_test.dart`) keeps every tag seen while the request waits, which cannot mix answers up, because the companion passes on the answer to its latest binary request only (`pending_req`). The estimates those SENTs carry set the timeout: the first replaces the fallback, a later one can only push the deadline back. The 10-second fallback is armed once the request is out, not before, so waiting for the command lock does not use it up; the telemetry screen had none and without a SENT waited for good. A new request drops the tags while its route is being prepared, so nothing that arrives before it goes out counts, while an answer arriving after a timeout is still taken.
 
+The telemetry screen also shows a separate **Calculated power (V × I)** row
+when voltage and current are finite numbers in the same channel of the current
+response (`helpers/telemetry_power.dart`). It preserves the sign and all
+transmitted values; LPP power (128) remains whole watts, and the original power
+row is kept. No values are borrowed from other channels or earlier responses.
+`helpers/telemetry_diagnostics.dart` supplies structured parser diagnostics and
+debug logs tagged `Telemetry`: unknown types, malformed fields, incomplete
+headers and truncated polylines include a payload-relative offset, channel,
+type and payload length. The screen logs decoded field names by channel.
+Unknown types still stop parsing safely and retain the valid prefix. Pressure
+(115) remains a decoded sensor field; its absence in the reported BMP280+AHT20
+case is not yet attributed to a device-confirmed cause. Baseline and regression
+coverage lives in `test/helpers/cayenne_lpp_telemetry_test.dart`,
+`test/helpers/telemetry_power_test.dart`,
+`test/helpers/telemetry_diagnostics_test.dart` and
+`test/screens/telemetry_screen_test.dart` (2026-10-21).
+
 ### Room servers on the channels screen
 Three mod settings decide how much of the contact list the channels screen borrows. `roomServerShowNotemptyOnChatscreen` adds room servers (`advTypeRoom`) and `roomServerShowNotemptyContactsOnChatscreen` adds ordinary chat contacts (`advTypeChat`) — both only where `Contact.hasMessages` is true, so an advert alone never puts a node there. `roomServerDisableRoomAndContactsSorting` (default **on**; the other two default off) keeps them out of the channel sort order, and while it is on `_visibleRoomServers()` returns nothing at all. `widgets/message_search_sheet.dart` reads the same two visibility flags, so search covers exactly what the screen shows.
 
