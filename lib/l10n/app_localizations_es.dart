@@ -979,6 +979,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Contar también repetidores cercanos distintos';
 
   @override
+  String appSettings_channelMinHopsRepeaterCount(Object count) {
+    return 'Required nearby repeaters: $count';
+  }
+
+  @override
   String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

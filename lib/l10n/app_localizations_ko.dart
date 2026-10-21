@@ -935,6 +935,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_channelMinHopsCountRepeaters => '근처의 다른 리피터도 포함';
 
   @override
+  String appSettings_channelMinHopsRepeaterCount(Object count) {
+    return 'Required nearby repeaters: $count';
+  }
+
+  @override
   String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

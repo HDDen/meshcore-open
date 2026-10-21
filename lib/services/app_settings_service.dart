@@ -560,6 +560,12 @@ class AppSettingsService extends ChangeNotifier {
     );
   }
 
+  Future<void> setChannelMinHopsRepeaterCount(int value) async {
+    await updateSettings(
+      _settings.copyWith(channelMinHopsRepeaterCount: value.clamp(2, 10).toInt()),
+    );
+  }
+
   Future<void> setRegionOnHopsLine(bool value) async {
     await updateSettings(_settings.copyWith(regionOnHopsLine: value));
   }

@@ -8907,14 +8907,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           if (message == null) return;
           if (message.status == ChannelMessageStatus.failed) return;
           hops = message.pathLength ?? 0;
-          // Read live so toggling the setting mid-resend takes effect.
-          final countRepeaters =
-              _appSettingsService?.settings.channelMinHopsCountRepeaters ??
-              false;
+          // Read live so changing the nearby-repeater controls takes effect.
+          final coverageSettings = _appSettingsService?.settings;
           satisfied = channelResendSatisfied(
             message,
             minHops: minHops,
-            countDistinctRepeaters: countRepeaters,
+            countDistinctRepeaters:
+                coverageSettings?.channelMinHopsCountRepeaters ?? false,
+            minRepeaters: coverageSettings?.channelMinHopsRepeaterCount ?? 2,
             selfPublicKey: _selfPublicKey,
           );
           if (satisfied || !DateTime.now().isBefore(deadline)) break;

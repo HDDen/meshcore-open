@@ -1822,6 +1822,12 @@ abstract class AppLocalizations {
   /// **'Also count different nearby repeaters'**
   String get appSettings_channelMinHopsCountRepeaters;
 
+  /// No description provided for @appSettings_channelMinHopsRepeaterCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Required nearby repeaters: {count}'**
+  String appSettings_channelMinHopsRepeaterCount(Object count);
+
   /// No description provided for @appSettings_channelMinHopsCountRepeatersSubtitle.
   ///
   /// In en, this message translates to:

@@ -2137,7 +2137,15 @@ selector rebuilds on
 `channelResendRevision`, since the loop changes nothing in the message
 list), the sent check mark left out under the setting, the badge saying
 the message went out, and the path screen a *Send attempts* row; the wait before each resend is `channelMinHopsDelaySeconds` (10 to
-120 s, default 30) under the hop count; the no-retransmission warning of
+120 s, default 30) under the hop count; `helpers/channel_resend_coverage.dart`
+also accepts enough distinct first-hop repeaters as an alternative to the hop
+target when `channelMinHopsCountRepeaters` is on. Its independent target is
+`channelMinHopsRepeaterCount` (2–10, default 2), shown below the toggle by
+`widgets/channel_resend_repeater_settings.dart`; the toggle subtitle uses this
+target too. Both nearby-repeater controls are read live by the resend loop.
+Older JSON without the new field inherits `channelMinHops`, clamped to 2–10;
+subsequent changes to either target leave the other unchanged (2026-10-21).
+The no-retransmission warning of
 the mod settings is held back while the resends run, counts from the last
 attempt, and its line under a resent message names the resends
 (`settings_modSettingsNoRetraInfoResends`) rather than seconds that would

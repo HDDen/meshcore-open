@@ -919,6 +919,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_channelMinHopsCountRepeaters => '同时统计附近不同的中继器';
 
   @override
+  String appSettings_channelMinHopsRepeaterCount(Object count) {
+    return 'Required nearby repeaters: $count';
+  }
+
+  @override
   String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

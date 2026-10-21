@@ -978,6 +978,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Также учитывать другие ближайшие репитеры';
 
   @override
+  String appSettings_channelMinHopsRepeaterCount(Object count) {
+    return 'Требуется ближайших репитеров: $count';
+  }
+
+  @override
   String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

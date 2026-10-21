@@ -25,6 +25,7 @@ import '../theme/mesh_theme.dart';
 import '../utils/battery_utils.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
+import '../widgets/channel_resend_repeater_settings.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/network_map_settings_section.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -783,20 +784,10 @@ class AppSettingsScreen extends StatelessWidget {
                   settingsService.setChannelMinHopsDelaySeconds(value.round()),
             ),
           ),
-          SwitchListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
-            ),
-            secondary: const Icon(Icons.hub_outlined, size: 20),
-            title: Text(context.l10n.appSettings_channelMinHopsCountRepeaters),
-            subtitle: Text(
-              context.l10n.appSettings_channelMinHopsCountRepeatersSubtitle(
-                settingsService.settings.channelMinHops,
-              ),
-            ),
-            value: settingsService.settings.channelMinHopsCountRepeaters,
-            onChanged: settingsService.setChannelMinHopsCountRepeaters,
+          ChannelResendRepeaterSettings(
+            settings: settingsService.settings,
+            onEnabledChanged: settingsService.setChannelMinHopsCountRepeaters,
+            onCountChanged: settingsService.setChannelMinHopsRepeaterCount,
           ),
         ],
         const Divider(height: 1, indent: 16),

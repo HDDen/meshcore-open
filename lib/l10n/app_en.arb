@@ -376,6 +376,7 @@
   "appSettings_channelMinHopsCount": "Required hops: {count}",
   "appSettings_channelMinHopsRetries": "Resend up to {count, plural, =1{1 time} other{{count} times}}",
   "appSettings_channelMinHopsCountRepeaters": "Also count different nearby repeaters",
+  "appSettings_channelMinHopsRepeaterCount": "Required nearby repeaters: {count}",
   "appSettings_channelMinHopsCountRepeatersSubtitle": "Treat the message as sent when {count, plural, =1{1 nearby repeater} other{{count} different nearby repeaters}} repeat it, even if you can't hear it travel further.",
   "appSettings_regionOnHopsLine": "Region next to hop count",
   "appSettings_regionOnHopsLineSubtitle": "Show a channel message's region on the same line as its hop count instead of below it.",

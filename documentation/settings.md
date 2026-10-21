@@ -129,7 +129,8 @@ Individual channels can be muted from the channel chat bell icon, the channel li
 - **Resend channel messages until they travel far enough** (default off): If your channel message isn't heard coming back through enough repeaters, it's sent again. Uses more airtime. When on, it shows:
   - Required hops (1–8, default 2)
   - Resend up to (1–5 times, default 1)
-  - **Also count different nearby repeaters** (default off): Treats the message as sent once that many *different* first-hop repeaters have repeated it, even if you can't hear it travel further. Useful where only nearby repeaters are audible. See [Channels](channels.md#channel-auto-resend)
+  - **Also count different nearby repeaters** (default off): Also treats the message as sent once enough *different* first-hop repeaters have repeated it, even if you can't hear it travel further. Useful where only nearby repeaters are audible. See [Channels](channels.md#channel-auto-resend)
+  - **Required nearby repeaters** (2–10, step 1, default 2): Visible when the nearby-repeater toggle is on. This target is independent of **Required hops**. Either target can stop resending. Existing saved settings without this field inherit their previous required-hop value, limited to 2–10; later changes to either slider leave the other unchanged.
 
 ### Battery
 - **Battery Chemistry**: NMC / LiFePO4 / LiPo (per device, used to calibrate percentage from voltage)

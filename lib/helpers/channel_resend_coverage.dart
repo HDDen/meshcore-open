@@ -27,12 +27,13 @@ Set<String> distinctFirstHopRepeaters(
 
 /// Whether a channel resend has heard [message] travel far enough:
 /// an echo through at least [minHops] repeaters, or, when
-/// [countDistinctRepeaters] is on, echoes from at least [minHops] different
+/// [countDistinctRepeaters] is on, echoes from at least [minRepeaters] different
 /// first-hop repeaters.
 bool channelResendSatisfied(
   ChannelMessage message, {
   required int minHops,
   required bool countDistinctRepeaters,
+  int minRepeaters = 2,
   Uint8List? selfPublicKey,
 }) {
   if ((message.pathLength ?? 0) >= minHops) return true;
@@ -41,7 +42,7 @@ bool channelResendSatisfied(
         message,
         selfPublicKey: selfPublicKey,
       ).length >=
-      minHops;
+      minRepeaters;
 }
 
 String _hex(Uint8List bytes, int length) {

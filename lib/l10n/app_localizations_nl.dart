@@ -972,6 +972,11 @@ class AppLocalizationsNl extends AppLocalizations {
       'Tel ook verschillende repeaters in de buurt mee';
 
   @override
+  String appSettings_channelMinHopsRepeaterCount(Object count) {
+    return 'Required nearby repeaters: $count';
+  }
+
+  @override
   String appSettings_channelMinHopsCountRepeatersSubtitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

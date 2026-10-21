@@ -3130,6 +3130,7 @@
   "settings_regionRadioDefaultUpdated": "Регион радио по умолчанию обновлён",
   "settings_regionRadioDefaultFailed": "Не удалось обновить регион радио по умолчанию",
   "appSettings_channelMinHopsCountRepeaters": "Также учитывать другие ближайшие репитеры",
+  "appSettings_channelMinHopsRepeaterCount": "Требуется ближайших репитеров: {count}",
   "appSettings_channelMinHopsCountRepeatersSubtitle": "Считать сообщение отправленным, когда его повторят {count, plural, one{{count} ближайший репитер} few{{count} разных ближайших репитера} many{{count} разных ближайших репитеров} other{{count} разных ближайших репитера}}, даже если вы не слышите, как оно идёт дальше.",
   "appSettings_regionOnHopsLine": "Регион рядом с числом хопов",
   "appSettings_regionOnHopsLineSubtitle": "Показывать регион сообщения канала в одной строке с числом хопов, а не под ней.",

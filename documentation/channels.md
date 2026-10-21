@@ -136,9 +136,11 @@ Messages also show a region label when known, independently of message tracing. 
 
 ### Channel Auto-Resend
 
-With **Resend channel messages until they travel far enough** on (App Settings → Messaging), the app waits after each channel send and checks how far the message was heard repeated. If no repeat reached the required hop count, it sends the message again, up to the configured number of times.
+With **Resend channel messages until they travel far enough** on (App Settings → Messaging), the app waits after each channel send and checks how far the message was heard repeated. If neither the required hop count nor the optional nearby-repeater target below is reached, it sends the message again, up to the configured number of times.
 
-Where your radio only hears nearby repeaters, turn on **Also count different nearby repeaters**: the message then also counts as sent once the required number of *different* first-hop repeaters have repeated it, across all attempts. Your own radio's echo and zero-hop echoes don't count.
+Where your radio only hears nearby repeaters, turn on **Also count different nearby repeaters**: the message then also counts as sent once the required number of *different* first-hop repeaters have repeated it, across all attempts. Set this number with **Required nearby repeaters**, which appears below the toggle (2–10, step 1, default 2). It is independent of **Required hops**: a long enough route OR enough different nearby repeaters stops resending. Changing the nearby-repeater target or toggle also affects an ongoing resend wait. Your own radio's echo and zero-hop echoes don't count.
+
+When loading older saved settings without a separate nearby-repeater target, the app inherits the old required-hop value, limited to 2–10. After that, changing one target does not change the other.
 
 ### Context Actions (Long-Press / Right-Click)
 

@@ -337,9 +337,12 @@ class AppSettings {
   /// Seconds to listen for echoes before each resend of [channelMinHops].
   final int channelMinHopsDelaySeconds;
 
-  /// When on, hearing the message repeated by at least [channelMinHops]
+  /// When on, hearing the message repeated by at least [channelMinHopsRepeaterCount]
   /// different first-hop repeaters also satisfies the channel resend.
   final bool channelMinHopsCountRepeaters;
+
+  /// Independent of the route hop target; supported range is 2–10.
+  final int channelMinHopsRepeaterCount;
 
   /// A channel bubble's region on the hop-count row instead of a line of
   /// its own.
@@ -773,6 +776,7 @@ class AppSettings {
     this.channelMinHopsRetries = 1,
     this.channelMinHopsDelaySeconds = 30,
     this.channelMinHopsCountRepeaters = false,
+    this.channelMinHopsRepeaterCount = 2,
     this.regionOnHopsLine = false,
     this.themeMode = 'system',
     this.languageOverride,
@@ -936,6 +940,7 @@ class AppSettings {
       'channel_min_hops_retries': channelMinHopsRetries,
       'channel_min_hops_delay_seconds': channelMinHopsDelaySeconds,
       'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
+      'channel_min_hops_repeater_count': channelMinHopsRepeaterCount,
       'region_on_hops_line': regionOnHopsLine,
       'theme_mode': themeMode,
       'language_override': languageOverride,
@@ -1148,6 +1153,13 @@ class AppSettings {
           json['channel_min_hops_delay_seconds'] as int? ?? 30,
       channelMinHopsCountRepeaters:
           json['channel_min_hops_count_repeaters'] as bool? ?? false,
+      // Preserve the old shared target when importing settings predating the split.
+      channelMinHopsRepeaterCount:
+          (json['channel_min_hops_repeater_count'] as int? ??
+                  json['channel_min_hops'] as int? ??
+                  2)
+              .clamp(2, 10)
+              .toInt(),
       regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
       themeMode: json['theme_mode'] as String? ?? 'system',
       languageOverride: json['language_override'] as String?,
@@ -1362,6 +1374,7 @@ class AppSettings {
     int? channelMinHopsRetries,
     int? channelMinHopsDelaySeconds,
     bool? channelMinHopsCountRepeaters,
+    int? channelMinHopsRepeaterCount,
     bool? regionOnHopsLine,
     String? themeMode,
     Object? languageOverride = _unset,
@@ -1540,6 +1553,8 @@ class AppSettings {
           channelMinHopsDelaySeconds ?? this.channelMinHopsDelaySeconds,
       channelMinHopsCountRepeaters:
           channelMinHopsCountRepeaters ?? this.channelMinHopsCountRepeaters,
+      channelMinHopsRepeaterCount:
+          channelMinHopsRepeaterCount ?? this.channelMinHopsRepeaterCount,
       regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
       themeMode: themeMode ?? this.themeMode,
       languageOverride: languageOverride == _unset
