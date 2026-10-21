@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 import '../utils/platform_info.dart';
 import '../utils/app_logger.dart';
 
-/// Gate only frame submission: keep the isolate, timers and transports alive.
+/// Defer UI frames: keep the isolate, timers and transports alive.
 /// Native notifications remain useful when a dylib reports a false app state.
 mixin IosPresentationFrameGate on RendererBinding {
   bool _iosPresentationAllowed = true;
@@ -15,6 +15,16 @@ mixin IosPresentationFrameGate on RendererBinding {
   @override
   bool get sendFramesToEngine =>
       _iosPresentationAllowed && super.sendFramesToEngine;
+
+  @override
+  void drawFrame() {
+    // sendFramesToEngine alone is checked after layout/paint. Skip the UI
+    // pipeline before it prepares text while the native scene is inactive.
+    // Dirty widgets/render objects remain queued for the normal resume frame.
+    if (_iosPresentationAllowed) {
+      super.drawFrame();
+    }
+  }
 
   void updateIosPresentation(bool allowed) {
     if (_iosPresentationAllowed == allowed) {
@@ -97,7 +107,7 @@ class IosPresentationBridge {
             ', applicationActive=${raw['applicationActive']}'
             ', sceneActive=${raw['sceneActive']}'
         : '';
-    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision$timing',
+    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision, gate=uiPipeline$timing',
         tag: 'iOSRendering', noNotify: true);
     return true;
   }

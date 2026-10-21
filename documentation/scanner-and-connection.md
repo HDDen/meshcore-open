@@ -154,6 +154,12 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 - USB is not reconnected automatically: losing a USB link usually means the cable was unplugged.
 
 
+### iOS interface during background operation
+
+When the iOS compatibility guard is active, native application and window-scene activity pauses UI updates while retaining the screen state and typed text. Timers and transport callbacks continue whenever iOS allows the process to run. Returning to the foreground schedules a frame showing the latest data. The debug log marks this version of the guard with `iOSRendering` and `gate=uiPipeline`.
+
+The latest mitigation for missing characters is awaiting device verification. If characters disappear after a background/lock cycle, preserve the `iOSRendering` entries around that cycle and note whether the issue survives navigation and data updates.
+
 ### Experimental iOS background TCP receiver
 
 The iOS research branch adds a separate native background receiver. With **Keep TCP-connection alive in background** enabled, the TCP screen accepts a Wi-Fi SSID and saves it with the endpoint and its bookmark. It first tries to read the current SSID; if none is available, a manual connection can ask for it. After a successful foreground connection it saves an `NEAppPushManager` configuration for that SSID and endpoint. Connection diagnostics use the `iOS TCP` log tag.

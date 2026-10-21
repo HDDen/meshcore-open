@@ -1,12 +1,82 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/ios_presentation_guard.dart';
+import 'package:meshcore_open/widgets/snr_indicator.dart';
 
 class _GateBinding extends AutomatedTestWidgetsFlutterBinding
     with IosPresentationFrameGate {}
+
+class _RepeaterProbe extends ChangeNotifier implements MeshCoreConnector {
+  @override
+  final ValueNotifier<int> repeaterActivity = ValueNotifier<int>(0);
+
+  @override
+  final List<DirectRepeater> activeRepeaters = [
+    DirectRepeater(pubkeyPrefix: const [0x22], pathHashWidth: 1, snr: 0),
+  ];
+
+  @override
+  int? get currentSf => 7;
+
+  void receive(int packet) {
+    activeRepeaters.single.update(packet / 4);
+    repeaterActivity.value++;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  void dispose() {
+    repeaterActivity.dispose();
+    super.dispose();
+  }
+}
+
+class _PipelineCounts {
+  int builds = 0;
+  int layouts = 0;
+  int paints = 0;
+}
+
+class _PipelineCounter extends SingleChildRenderObjectWidget {
+  const _PipelineCounter({required this.counts, required super.child});
+
+  final _PipelineCounts counts;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _PipelineCounterBox(counts);
+
+  @override
+  void updateRenderObject(BuildContext context, _PipelineCounterBox renderObject) {
+    renderObject.markNeedsLayout();
+    renderObject.markNeedsPaint();
+  }
+}
+
+class _PipelineCounterBox extends RenderProxyBox {
+  _PipelineCounterBox(this.counts);
+
+  final _PipelineCounts counts;
+
+  @override
+  void performLayout() {
+    counts.layouts++;
+    super.performLayout();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    counts.paints++;
+    super.paint(context, offset);
+  }
+}
 
 void main() {
   final binding = _GateBinding();
@@ -164,45 +234,144 @@ void main() {
     }
   }, timeout: shortTimeout);
 
-  testWidgets('production frame gate keeps the editor and Dart callbacks alive', (tester) async {
+  testWidgets('production UI gate defers text painting while background packets and editor state survive', (tester) async {
     await tester.runAsync(bridge.dispose);
     bridge = IosPresentationBridge(
       onPresentationChanged: binding.updateIosPresentation,
     );
     final ticks = ValueNotifier<int>(0);
+    final connector = _RepeaterProbe();
+    final counts = _PipelineCounts();
     final editor = TextEditingController(text: 'Сохранённый ввод');
     final editorKey = GlobalKey();
-    final timer = Timer.periodic(const Duration(seconds: 1), (_) => ticks.value++);
+    final packets = StreamController<int>(sync: true);
+    final received = <int>[];
+    final subscription = packets.stream.listen((packet) {
+      received.add(packet);
+      ticks.value = packet;
+      connector.receive(packet);
+    });
+    var packetCounter = 0;
+    final timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      packets.add(++packetCounter);
+    });
     try {
       binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.runAsync(bridge.start);
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [
-        TextField(key: editorKey, controller: editor),
-        ValueListenableBuilder<int>(
-          valueListenable: ticks,
-          builder: (context, count, child) => Text('Тест связи: $count'),
+      await tester.pumpWidget(MaterialApp(home: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 88,
+          title: SNRActivityIndicator(connector: connector),
         ),
-      ]))));
+        body: ValueListenableBuilder<int>(
+          valueListenable: ticks,
+          builder: (context, count, child) {
+            counts.builds++;
+            return _PipelineCounter(
+              counts: counts,
+              child: Column(children: [
+                TextField(key: editorKey, controller: editor),
+                Text('Тест связи: $count'),
+              ]),
+            );
+          },
+        ),
+      )));
       final state = editorKey.currentState;
       expect(state, isNotNull);
-      await tester.runAsync(() => emit(snapshot(1, false)));
-      await tester.pump(const Duration(seconds: 3));
-      expect(binding.sendFramesToEngine, isFalse);
-      expect(binding.lifecycleState, AppLifecycleState.resumed);
-      expect(ticks.value, 3);
-      expect(find.text('Тест связи: 3'), findsOneWidget);
-      expect(editorKey.currentState, same(state));
-      await tester.runAsync(() => emit(snapshot(2, true)));
-      await tester.pump();
-      expect(binding.sendFramesToEngine, isTrue);
-      expect(editorKey.currentState, same(state));
-      expect(editor.text, 'Сохранённый ввод');
+      expect(counts.layouts, greaterThan(0));
+      expect(counts.paints, greaterThan(0));
+      var revision = 0;
+      var totalSeconds = 0;
+      for (final seconds in [38, 66]) {
+        final oldBuilds = counts.builds;
+        final oldLayouts = counts.layouts;
+        final oldPaints = counts.paints;
+        final oldSeconds = totalSeconds;
+        await tester.runAsync(() => emit(snapshot(++revision, false)));
+        await tester.pump(Duration(seconds: seconds));
+        totalSeconds += seconds;
+
+        expect(binding.sendFramesToEngine, isFalse);
+        expect(binding.lifecycleState, AppLifecycleState.resumed);
+        expect(ticks.value, totalSeconds);
+        expect(received, List<int>.generate(totalSeconds, (i) => i + 1));
+        expect(connector.activeRepeaters.single.snr, totalSeconds / 4);
+        expect(counts.builds, oldBuilds);
+        expect(counts.layouts, oldLayouts);
+        expect(counts.paints, oldPaints);
+        expect(find.text('Тест связи: $oldSeconds'), findsOneWidget);
+        expect(editorKey.currentState, same(state));
+
+        // An older or malformed event must not accidentally flush dirty text.
+        await tester.runAsync(() => emit(snapshot(revision - 1, true)));
+        await tester.runAsync(() => emit({'active': true}));
+        await tester.pump();
+        expect(counts.builds, oldBuilds);
+        expect(counts.layouts, oldLayouts);
+        expect(counts.paints, oldPaints);
+
+        await tester.runAsync(() => emit(snapshot(++revision, true)));
+        expect(binding.hasScheduledFrame, isTrue);
+        await tester.pump();
+        expect(binding.sendFramesToEngine, isTrue);
+        expect(counts.builds, greaterThan(oldBuilds));
+        expect(counts.layouts, greaterThan(oldLayouts));
+        expect(counts.paints, greaterThan(oldPaints));
+        expect(find.text('Тест связи: $totalSeconds'), findsOneWidget);
+        expect(
+          find.text('${(totalSeconds / 4).toStringAsFixed(1)} dB'),
+          findsOneWidget,
+        );
+        expect(editorKey.currentState, same(state));
+        expect(editor.text, 'Сохранённый ввод');
+        expect(tester.takeException(), isNull);
+      }
     } finally {
       timer.cancel();
       binding.updateIosPresentation(true);
+      try {
+        await tester.pumpWidget(const SizedBox.shrink());
+      } finally {
+        editor.dispose();
+        ticks.dispose();
+        connector.dispose();
+        await tester.runAsync(() async {
+          await subscription.cancel().timeout(const Duration(seconds: 3));
+          await packets.close().timeout(const Duration(seconds: 3));
+          await bridge.dispose();
+        });
+      }
+    }
+  }, timeout: const Timeout(Duration(seconds: 30)));
+
+  testWidgets('without the tweak native inactivity keeps ordinary UI updates', (tester) async {
+    await tester.runAsync(bridge.dispose);
+    bridge = IosPresentationBridge(
+      onPresentationChanged: binding.updateIosPresentation,
+    );
+    messenger.setMockMethodCallHandler(channel, (call) async =>
+        call.method == 'watch' ? snapshot(0, false, enabled: false) : null);
+    final value = ValueNotifier<int>(0);
+    try {
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.runAsync(bridge.start);
+      await tester.pumpWidget(MaterialApp(home: Scaffold(
+        body: ValueListenableBuilder<int>(
+          valueListenable: value,
+          builder: (context, count, child) => Text('Обычный UI: $count'),
+        ),
+      )));
+      await tester.runAsync(() => emit(snapshot(1, false, enabled: false)));
+      value.value++;
+      await tester.pump();
+      expect(binding.sendFramesToEngine, isTrue);
+      expect(find.text('Обычный UI: 1'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      binding.updateIosPresentation(true);
       await tester.pumpWidget(const SizedBox.shrink());
-      editor.dispose();
-      ticks.dispose();
+      value.dispose();
       await tester.runAsync(bridge.dispose);
     }
   }, timeout: const Timeout(Duration(seconds: 30)));
