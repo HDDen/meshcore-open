@@ -19,9 +19,9 @@ import '../widgets/get_node_banner.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/scanner_tcp_navigation.dart';
 import '../review_mode/review_mode_entry.dart';
 import 'channels_screen.dart';
-import 'tcp_screen.dart';
 import 'usb_screen.dart';
 
 /// Screen for scanning and connecting to MeshCore devices
@@ -35,6 +35,7 @@ class ScannerScreen extends StatefulWidget {
 class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
   bool _changedNavigation = false;
   bool _isOpeningOfflineHistory = false;
+  Future<void>? _scanStartup;
   String? _connectingDeviceId;
   late final MeshCoreConnector _connector;
   late final VoidCallback _connectionListener;
@@ -151,9 +152,9 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
 
     if (transport == ConnectionTransportPreferenceStore.tcp &&
         !PlatformInfo.isWeb) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const TcpScreen()));
+      unawaited(
+        openTcpFromScanner(context, _connector, scanStartup: _scanStartup),
+      );
       return;
     }
 
@@ -218,9 +219,13 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
               icon: const Icon(Icons.lan),
               tooltip: context.l10n.connectionChoiceTcpLabel,
               onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const TcpScreen()));
+                unawaited(
+                  openTcpFromScanner(
+                    context,
+                    _connector,
+                    scanStartup: _scanStartup,
+                  ),
+                );
               },
             ),
         ],
@@ -337,11 +342,11 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
     if (connector.state == MeshCoreConnectionState.scanning) {
       connector.stopScan();
     } else {
-      unawaited(
-        connector.startScan().catchError((e) {
-          appLogger.warn('startScan error: $e', tag: 'ScannerScreen');
-        }),
-      );
+      final startup = connector.startScan().catchError((e) {
+        appLogger.warn('startScan error: $e', tag: 'ScannerScreen');
+      });
+      _scanStartup = startup;
+      unawaited(startup);
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,7 @@ import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/screens/tcp_screen.dart';
 import 'package:meshcore_open/services/app_debug_log_service.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/connection_transport_preference_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 
 class _FakeMeshCoreConnector extends MeshCoreConnector {
@@ -18,6 +21,9 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   MeshCoreTransportType initialTransport = MeshCoreTransportType.bluetooth;
   String? initialEndpoint;
   int connectTcpCalls = 0;
+  int stopScanCalls = 0;
+  Completer<void>? pendingScanStop;
+  Completer<void>? pendingScanStart;
   String? lastHost;
   int? lastPort;
 
@@ -39,6 +45,25 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   // history, a storage no screen test opens.
   @override
   List<OfflineHistorySource> get offlineHistorySources => const [];
+
+  @override
+  Future<void> startScan({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    initialState = MeshCoreConnectionState.scanning;
+    notifyListeners();
+    await pendingScanStart?.future;
+  }
+
+  @override
+  Future<void> stopScan() async {
+    stopScanCalls += 1;
+    await pendingScanStop?.future;
+    if (initialState == MeshCoreConnectionState.scanning) {
+      initialState = MeshCoreConnectionState.disconnected;
+      notifyListeners();
+    }
+  }
 
   @override
   Future<void> connectTcp({
@@ -79,6 +104,7 @@ Widget _buildTestApp({
 void main() {
   setUp(() async {
     PrefsManager.reset();
+    ConnectionTransportPreferenceStore.resetCache();
     SharedPreferences.setMockInitialValues({});
     await PrefsManager.initialize();
   });
@@ -164,7 +190,116 @@ void main() {
     await tester.pump(const Duration(milliseconds: 60));
   });
 
-  testWidgets('TcpScreen disables connect button while connector is scanning', (
+  for (final preferred in [false, true]) {
+    testWidgets('Scanner waits for BLE stop before TCP: preferred=$preferred', (
+      tester,
+    ) async {
+      final connector = _FakeMeshCoreConnector();
+      if (preferred) {
+        await ConnectionTransportPreferenceStore().save(
+          ConnectionTransportPreferenceStore.tcp,
+        );
+        connector.initialState = MeshCoreConnectionState.scanning;
+        connector.pendingScanStop = Completer<void>();
+      }
+      await tester.pumpWidget(
+        _buildTestApp(connector: connector, child: const ScannerScreen()),
+      );
+      if (!preferred) {
+        await tester.pumpAndSettle();
+        connector.initialState = MeshCoreConnectionState.scanning;
+        connector.pendingScanStop = Completer<void>();
+        connector.notifyListeners();
+        await tester.pump(const Duration(milliseconds: 60));
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(ScannerScreen)),
+        );
+        // Repeated taps must still produce just one TCP route.
+        await tester.tap(find.byTooltip(l10n.connectionChoiceTcpLabel));
+        await tester.tap(find.byTooltip(l10n.connectionChoiceTcpLabel));
+      }
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(connector.stopScanCalls, greaterThan(0));
+      expect(find.byType(TcpScreen), findsNothing);
+      expect(connector.initialState, MeshCoreConnectionState.scanning);
+
+      connector.pendingScanStop!.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(TcpScreen), findsOneWidget);
+      expect(
+        tester.widget<ButtonStyleButton>(
+          find.byKey(const Key('tcp_connect_button')),
+        ).onPressed,
+        isNotNull,
+      );
+      expect(connector.connectTcpCalls, 0);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Bluetooth'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ScannerScreen), findsOneWidget);
+      expect(find.byType(TcpScreen), findsNothing);
+      expect(
+        tester.state<NavigatorState>(find.byType(Navigator)).canPop(),
+        isFalse,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 60));
+    });
+  }
+
+  testWidgets('TCP transition stops a scan that is still starting', (tester) async {
+    final connector = _FakeMeshCoreConnector();
+    await tester.pumpWidget(
+      _buildTestApp(connector: connector, child: const ScannerScreen()),
+    );
+    await tester.pumpAndSettle();
+    connector.pendingScanStart = Completer<void>();
+    connector.pendingScanStop = Completer<void>();
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pump(const Duration(milliseconds: 60));
+    final stopCalls = connector.stopScanCalls;
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ScannerScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.connectionChoiceTcpLabel));
+    await tester.pump();
+    expect(connector.stopScanCalls, stopCalls);
+    expect(find.byType(TcpScreen), findsNothing);
+
+    connector.pendingScanStart!.complete();
+    await tester.pump();
+    expect(connector.stopScanCalls, stopCalls + 1);
+    expect(find.byType(TcpScreen), findsNothing);
+    connector.pendingScanStop!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(TcpScreen), findsOneWidget);
+    expect(connector.initialState, MeshCoreConnectionState.disconnected);
+    expect(connector.connectTcpCalls, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 60));
+  });
+
+  testWidgets('late BLE stop cannot navigate from a removed scanner', (tester) async {
+    final connector = _FakeMeshCoreConnector();
+    await tester.pumpWidget(
+      _buildTestApp(connector: connector, child: const ScannerScreen()),
+    );
+    await tester.pumpAndSettle();
+    connector.initialState = MeshCoreConnectionState.scanning;
+    connector.pendingScanStop = Completer<void>();
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ScannerScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.connectionChoiceTcpLabel));
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox.shrink());
+    connector.pendingScanStop!.complete();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.byType(TcpScreen), findsNothing);
+    expect(connector.connectTcpCalls, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TCP scan baseline unlocks connect only after scan completion', (
     tester,
   ) async {
     final connector = _FakeMeshCoreConnector()
@@ -184,6 +319,20 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(connector.connectTcpCalls, 0);
+
+    // Completing a scan must unlock TCP without starting a connection itself.
+    connector.initialState = MeshCoreConnectionState.disconnected;
+    connector.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 60));
+    final readyButton = tester.widget<ButtonStyleButton>(
+      find.byKey(const Key('tcp_connect_button')),
+    );
+    expect(readyButton.onPressed, isNotNull);
+    expect(connector.connectTcpCalls, 0);
+    expect(find.byType(TcpScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 60));
   });
 
   testWidgets('TCP connect baseline preserves LAN availability and connector guards', (

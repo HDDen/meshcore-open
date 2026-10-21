@@ -32,7 +32,7 @@ The TCP cleanup applies to Android, iOS, Windows, Linux and macOS; the shared BL
 
 **App Bar Actions**: Icon buttons in the top-right corner of the app bar:
 - **USB** icon button - Opens USB connection screen (Android, Windows, Linux, macOS, Chrome web only)
-- **TCP/IP** icon button - Opens TCP connection screen (all non-web platforms)
+- **TCP/IP** icon button - Stops BLE discovery before opening the TCP connection screen (all non-web platforms). Opening the saved TCP transport follows the same rule; the app waits for any BLE scan startup to finish before stopping it.
 
 **Bottom actions**:
 - **Offline** - Opens saved history without connecting to a radio

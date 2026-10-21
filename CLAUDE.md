@@ -2365,6 +2365,8 @@ and ru, the ru strings reworded to the fork's terms («радио» for the radi
 
 `MeshCoreConnector` unifies all three transports under one `ChangeNotifier`. There is **no shared base class** — selection is via the `MeshCoreTransportType { bluetooth, usb, tcp }` enum, and BLE/TCP/USB share the same connection-state enum, send/receive API, and frame protocol.
 
+Opening TCP from the scanner uses `helpers/scanner_tcp_navigation.dart` for both the toolbar action and the saved transport. It joins any scanner-owned BLE startup before awaiting `stopScan()`, so delayed adapter setup cannot restart discovery after the switch. Navigation checks that the scanner is still mounted and current after the waits, preventing late or duplicate pushes. The TCP button keeps its existing shared-state guards.
+
 ### Connection State
 ```dart
 enum MeshCoreConnectionState {
