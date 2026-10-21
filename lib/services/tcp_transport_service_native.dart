@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../helpers/companion_tcp_dialer.dart';
+import '../helpers/tcp_socket_cleanup.dart';
 import 'app_debug_log_service.dart';
 import 'usb_serial_frame_codec.dart';
 
@@ -19,6 +20,7 @@ class TcpTransportService {
   int? _activePort;
   Future<void> _pendingWrite = Future<void>.value();
   int _connectGeneration = 0;
+  Future<void>? _activeDisconnect;
 
   // Opaque identity changes with the socket, including reconnects to the same
   // endpoint. Consumers can fence asynchronous work without inspecting IPs.
@@ -39,6 +41,10 @@ class TcpTransportService {
     required int port,
     Duration timeout = const Duration(seconds: 10),
   }) async {
+    final disconnecting = _activeDisconnect;
+    if (disconnecting != null) {
+      await disconnecting;
+    }
     if (_status == TcpTransportStatus.connected ||
         _status == TcpTransportStatus.connecting) {
       throw StateError('TCP transport is already active');
@@ -63,12 +69,7 @@ class TcpTransportService {
       );
       if (generation != _connectGeneration ||
           _status != TcpTransportStatus.connecting) {
-        try {
-          await socket.close();
-        } catch (_) {}
-        try {
-          socket.destroy();
-        } catch (_) {}
+        await closeTcpSocket(socket: socket, onFailure: _logCleanupFailure);
         return;
       }
       socket.setOption(SocketOption.tcpNoDelay, true);
@@ -77,9 +78,21 @@ class TcpTransportService {
       _activeHost = trimmedHost;
       _activePort = port;
       _socketSubscription = socket.listen(
-        _handleSocketData,
-        onError: _handleSocketError,
-        onDone: _handleSocketDone,
+        (bytes) {
+          if (generation == _connectGeneration) {
+            _handleSocketData(bytes);
+          }
+        },
+        onError: (Object error, StackTrace stack) {
+          if (generation == _connectGeneration) {
+            _handleSocketError(error, stack);
+          }
+        },
+        onDone: () {
+          if (generation == _connectGeneration) {
+            _handleSocketDone();
+          }
+        },
       );
       _status = TcpTransportStatus.connected;
       _debugLogService?.info(
@@ -105,11 +118,13 @@ class TcpTransportService {
     }
 
     final packet = wrapUsbSerialTxFrame(data);
+    final socket = _socket!;
+    final generation = _connectGeneration;
     _logFrameSummary('TCP TX frame', data);
 
     final writeTask = _pendingWrite.then((_) async {
-      final socket = _socket;
-      if (!isConnected || socket == null) {
+      if (!isConnected || generation != _connectGeneration ||
+          !identical(socket, _socket)) {
         throw StateError('TCP transport is not connected');
       }
       socket.add(packet);
@@ -120,9 +135,15 @@ class TcpTransportService {
     await writeTask;
   }
 
-  Future<void> disconnect() async {
-    _connectGeneration += 1;
-    if (_status == TcpTransportStatus.disconnected) return;
+  Future<void> disconnect() {
+    final pending = _activeDisconnect;
+    if (pending != null) {
+      return pending;
+    }
+    final generation = ++_connectGeneration;
+    if (_status == TcpTransportStatus.disconnected) {
+      return Future<void>.value();
+    }
 
     final endpoint = activeEndpoint;
     _status = TcpTransportStatus.disconnecting;
@@ -132,22 +153,27 @@ class TcpTransportService {
 
     final subscription = _socketSubscription;
     _socketSubscription = null;
-    await subscription?.cancel();
-
     final socket = _socket;
     _socket = null;
-    try {
-      await socket?.close();
-    } catch (_) {}
-    try {
-      socket?.destroy();
-    } catch (_) {}
+    // New writes must not queue behind an old socket's stalled flush.
+    _pendingWrite = Future<void>.value();
+    final teardown = closeTcpSocket(
+      socket: socket, subscription: subscription, onFailure: _logCleanupFailure,
+    ).whenComplete(() {
+      if (generation == _connectGeneration) {
+        _status = TcpTransportStatus.disconnected;
+      }
+      _activeDisconnect = null;
+      _debugLogService?.info(
+        'TCP transport closed endpoint=${endpoint ?? 'unknown'}', tag: 'TCP',
+      );
+    });
+    _activeDisconnect = teardown;
+    return teardown;
+  }
 
-    _status = TcpTransportStatus.disconnected;
-    _debugLogService?.info(
-      'TCP transport closed endpoint=${endpoint ?? 'unknown'}',
-      tag: 'TCP',
-    );
+  void _logCleanupFailure(String stage, Object error, StackTrace stack) {
+    _debugLogService?.warn('Disconnect cleanup stage=$stage failed: $error', tag: 'TCP');
   }
 
   void dispose() {
@@ -241,13 +267,8 @@ class TcpTransportService {
     _activeHost = null;
     _activePort = null;
     _frameDecoder.reset();
-    await subscription?.cancel();
-    try {
-      await socket?.close();
-    } catch (_) {}
-    try {
-      socket?.destroy();
-    } catch (_) {}
+    await closeTcpSocket(socket: socket, subscription: subscription,
+        onFailure: _logCleanupFailure);
   }
 
   void _handleSocketData(Uint8List bytes) {

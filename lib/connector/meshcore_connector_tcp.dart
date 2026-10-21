@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import '../helpers/connection_cleanup.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/tcp_transport_service.dart';
 
@@ -27,8 +28,7 @@ class MeshCoreTcpConnector {
   // --- Connection lifecycle ---
   Future<void> connect({required String host, required int port}) async {
     _debugLog?.info('TcpConnector.connect endpoint=$host:$port', tag: 'TCP');
-    await _frameSubscription?.cancel();
-    _frameSubscription = null;
+    await cancelFrameSubscription();
     await _service.connect(host: host, port: port);
     _debugLog?.info(
       'TcpConnector.connect done, endpoint=${_service.activeEndpoint}',
@@ -50,16 +50,21 @@ class MeshCoreTcpConnector {
   }
 
   Future<void> cancelFrameSubscription() async {
-    await _frameSubscription?.cancel();
+    final subscription = _frameSubscription;
     _frameSubscription = null;
+    await ConnectionCleanup(onFailure: _logCleanupFailure).run(
+      'TCP frame subscription', () => subscription?.cancel(),
+    );
   }
 
   Future<void> disconnect() async {
-    if (!_service.isConnected && _frameSubscription == null) return;
     _debugLog?.info('TcpConnector.disconnect', tag: 'TCP');
-    await _frameSubscription?.cancel();
-    _frameSubscription = null;
-    await _service.disconnect();
+    // Start native socket shutdown before waiting for subscriptions to drain.
+    await Future.wait<void>([_service.disconnect(), cancelFrameSubscription()]);
+  }
+
+  void _logCleanupFailure(String stage, Object error, StackTrace stack) {
+    _debugLog?.warn('Disconnect cleanup stage=$stage failed: $error', tag: 'TCP');
   }
 
   Future<void> write(Uint8List data) => _service.write(data);

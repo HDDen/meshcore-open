@@ -34,6 +34,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
+import '../helpers/connection_cleanup.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
@@ -274,6 +275,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// waits out the kernel's closing_wait off the UI isolate, so the teardown
   /// can outlive the tap that starts the next connection.
   Future<void>? _activeDisconnect;
+  Duration _disconnectStepTimeout = ConnectionCleanup.defaultTimeout;
 
   /// Set by [dispose]. A teardown started before disposal can still be running
   /// (the USB native close waits out the kernel's closing_wait off the UI
@@ -5574,6 +5576,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   @visibleForTesting
+  // Exercise teardown without initialize(), which starts platform plugins.
+  void attachDisconnectServicesForTest({
+    TranslationService? translationService,
+    ImageCodecService? imageCodecService,
+    AppDebugLogService? debugLog,
+    Duration timeout = ConnectionCleanup.defaultTimeout,
+    bool iosNativeBleCentral = false,
+  }) {
+    _translationService = translationService;
+    _imageCodecService = imageCodecService;
+    _appDebugLogService = debugLog;
+    _disconnectStepTimeout = timeout;
+    _usingIosNativeBleCentral = iosNativeBleCentral;
+  }
+
+  @visibleForTesting
   static bool shouldIgnoreLateTcpConnectError({
     required bool manualDisconnect,
     required MeshCoreConnectionState state,
@@ -6791,34 +6809,42 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _southFrameFragmentReassembler.clear();
     _southQueuedFragmentAckTracker.clear();
 
-    await _usbFrameSubscription?.cancel();
+    final cleanup = ConnectionCleanup(
+      timeout: _disconnectStepTimeout,
+      onFailure: (stage, error, stack) => _appDebugLogService?.warn(
+        'Disconnect cleanup stage=$stage failed: $error', tag: 'Connection',
+      ),
+    );
+    // Detach first. A late cancellation may only finish its captured old
+    // subscription; it must not clear a subscription installed by a reconnect.
+    final usbSubscription = _usbFrameSubscription;
     _usbFrameSubscription = null;
+    await cleanup.run('USB frames', () => usbSubscription?.cancel());
+    // Native USB close owns FFI callback lifetime; retain its existing join.
     await _usbManager.disconnect();
     await _tcpConnector.disconnect();
     final wasReviewMode = transportAtDisconnect == MeshCoreTransportType.review;
     _reviewConnectGeneration++;
-    await _reviewFrameSubscription?.cancel();
+    final reviewSubscription = _reviewFrameSubscription;
     _reviewFrameSubscription = null;
+    await cleanup.run('Review frames', () => reviewSubscription?.cancel());
     _reviewRadio?.dispose();
     _reviewRadio = null;
 
-    await _notifySubscription?.cancel();
+    final notifySubscription = _notifySubscription;
     _notifySubscription = null;
+    await cleanup.run('BLE notifications', () => notifySubscription?.cancel());
 
-    await _connectionSubscription?.cancel();
+    final connectionSubscription = _connectionSubscription;
     _connectionSubscription = null;
-    await _iosBleCentralSubscription?.cancel();
+    await cleanup.run('BLE connection events', () => connectionSubscription?.cancel());
+    final iosSubscription = _iosBleCentralSubscription;
     _iosBleCentralSubscription = null;
-    if (_usingIosNativeBleCentral) {
-      try {
-        await _iosBleCentralMethod.invokeMethod<void>('disconnect');
-      } catch (error) {
-        _appDebugLogService?.warn(
-          'iOS native BLE central disconnect failed: $error',
-          tag: 'BLE iOS',
-        );
-      }
-      _usingIosNativeBleCentral = false;
+    _usingIosNativeBleCentral = false;
+    await cleanup.run('iOS BLE event stream', () => iosSubscription?.cancel());
+    if (wasUsingIosNativeBleCentral) {
+      await cleanup.run('iOS BLE disconnect',
+          () => _iosBleCentralMethod.invokeMethod<void>('disconnect'));
     }
     _selfInfoRetryTimer?.cancel();
     _selfInfoRetryTimer = null;
@@ -6827,7 +6853,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelSyncTimeout?.cancel();
     _channelSyncTimeout = null;
     _channelSyncRetries = 0;
-    await _translationService?.releaseModel();
+    final translationService = _translationService;
+    await cleanup.run('Translation model', () => translationService?.releaseModel());
     // The decode graph is ~833 MB resident; drop it with the connection. The
     // connector never disposes services it does not own (main.dart does).
     //
@@ -6835,20 +6862,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // lock, so disconnecting mid-decode would otherwise block this teardown
     // for the ~1 s the inference takes and then tear the session out from
     // under a job whose result nobody is waiting for any more.
-    _imageCodecService?.cancelCodecJob();
-    await _imageCodecService?.releaseModel();
+    final imageCodecService = _imageCodecService;
+    // Both model services enqueue release before any later load on their own
+    // serial queue, then dispose a captured session, not a future replacement.
+    await cleanup.run('Image codec model', () {
+      imageCodecService?.cancelCodecJob();
+      return imageCodecService?.releaseModel();
+    });
     // Partial images belong to this session's sender prefixes; a reconnect
     // starts over. Dropping them also stops `evictExpired` from firing "image
     // incomplete" failures into the store minutes after the radio went away.
     _imageTransport?.reassembler.clear();
 
     if (!skipBleDeviceDisconnect && !wasUsingIosNativeBleCentral) {
-      try {
-        // Skip queued BLE operations so disconnect doesn't get stuck behind them.
-        await _device?.disconnect(queue: false);
-      } catch (e) {
-        _appDebugLogService?.warn('Disconnect error: $e', tag: 'BLE Connect');
-      }
+      final device = _device;
+      _device = null;
+      // Skip queued BLE operations and bound the platform reply, keeping the
+      // call bound to the old device even if its Future completes much later.
+      await cleanup.run('BLE device disconnect', () => device?.disconnect(queue: false));
     } else if (wasUsingIosNativeBleCentral) {
       _appDebugLogService?.info(
         'Skipping FlutterBluePlus disconnect for iOS native BLE central',

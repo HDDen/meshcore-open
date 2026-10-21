@@ -188,6 +188,67 @@ void main() {
       throwsStateError,
     );
   });
+
+  test('disconnect closes an idle read adapter and permits a clean reconnect', () async {
+    final overrides = _IdleReadOverrides();
+    final frames = StreamIterator<Uint8List>(fixture.service.frameStream);
+    await IOOverrides.runWithIOOverrides(() async {
+      try {
+        final oldPeer = await fixture.connect();
+        oldPeer.add(<int>[0x3e, 1, 0, 0x76]);
+        await oldPeer.flush();
+        expect(await _nextFrame(frames), <int>[0x76]);
+        // The adapter is now suspended in moveNext(), not at a yield.
+        await Future<void>.delayed(Duration.zero);
+        final disconnecting = fixture.service.disconnect();
+        final joined = fixture.service.disconnect();
+        expect(identical(disconnecting, joined), isTrue);
+        await disconnecting.timeout(_ioTimeout);
+        expect(fixture.service.status, TcpTransportStatus.disconnected);
+
+        final currentPeer = await fixture.connect();
+        currentPeer.add(<int>[0x3e, 1, 0, 0x77]);
+        await currentPeer.flush();
+        expect(await _nextFrame(frames), <int>[0x77]);
+        expect(fixture.service.status, TcpTransportStatus.connected);
+      } finally {
+        // Even the pre-fix implementation must not hang this test's cleanup.
+        final finishing = fixture.service.disconnect();
+        for (final socket in overrides.sockets) { socket.destroy(); }
+        await finishing.timeout(_ioTimeout);
+        await frames.cancel();
+      }
+    }, overrides);
+  });
+
+  test('a stalled old flush cannot block or write into the replacement socket', () async {
+    final overrides = _GatedFlushOverrides();
+    await IOOverrides.runWithIOOverrides(() async {
+      await fixture.connect();
+      final oldWrite = fixture.service.write(Uint8List.fromList([0x10]));
+      final oldQueued = fixture.service.write(Uint8List.fromList([0x11]));
+      final rejected = expectLater(oldQueued, throwsStateError);
+      try {
+        await overrides.flushing.future.timeout(_ioTimeout);
+        await fixture.service.disconnect().timeout(_ioTimeout);
+        final currentPeer = await fixture.connect();
+        final bytes = _readBytes(currentPeer, 8);
+        // This write must not wait for the old flush to finish.
+        await fixture.service.write(Uint8List.fromList([0x12])).timeout(_ioTimeout);
+        overrides.release.complete();
+        await oldWrite.timeout(_ioTimeout);
+        await rejected.timeout(_ioTimeout);
+        await fixture.service.write(Uint8List.fromList([0x13]));
+        expect(await bytes, [0x3c, 1, 0, 0x12, 0x3c, 1, 0, 0x13]);
+      } finally {
+        if (!overrides.release.isCompleted) {
+          overrides.release.complete();
+        }
+        await oldWrite.timeout(_ioTimeout);
+        await rejected.timeout(_ioTimeout);
+      }
+    }, overrides);
+  });
 }
 
 Future<List<int>> _readBytes(Socket peer, int count) => peer
@@ -276,5 +337,76 @@ final class _GatedFirstConnectOverrides extends IOOverrides {
       sourcePort: sourcePort,
       timeout: timeout,
     );
+  }
+}
+
+// Model an adapter waiting for a silent peer, without importing premium code.
+// An async* subscription cannot finish cancellation until its await completes.
+final class _IdleReadOverrides extends IOOverrides {
+  final sockets = <Socket>[];
+  @override
+  Future<Socket> socketConnect(host, int port, {sourceAddress,
+      int sourcePort = 0, Duration? timeout}) async {
+    final socket = await super.socketConnect(host, port, sourceAddress: sourceAddress,
+        sourcePort: sourcePort, timeout: timeout);
+    sockets.add(socket);
+    return _IdleReadSocket(socket);
+  }
+}
+
+class _IdleReadSocket extends StreamView<Uint8List> implements Socket {
+  _IdleReadSocket(this.socket) : super(_read(socket));
+  final Socket socket;
+  static Stream<Uint8List> _read(Socket socket) async* {
+    final chunks = StreamIterator<Uint8List>(socket);
+    try {
+      while (await chunks.moveNext()) { yield chunks.current; }
+    } finally {
+      await chunks.cancel();
+    }
+  }
+  @override
+  bool setOption(SocketOption option, bool enabled) => socket.setOption(option, enabled);
+  @override
+  void setRawOption(RawSocketOption option) => socket.setRawOption(option);
+  @override
+  void add(List<int> data) => socket.add(data);
+  @override
+  Future<void> flush() => socket.flush();
+  @override
+  Future<void> close() async { await socket.close(); }
+  @override
+  void destroy() => socket.destroy();
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+final class _GatedFlushOverrides extends IOOverrides {
+  final flushing = Completer<void>();
+  final release = Completer<void>();
+  bool _first = true;
+  @override
+  Future<Socket> socketConnect(host, int port, {sourceAddress,
+      int sourcePort = 0, Duration? timeout}) async {
+    final socket = await super.socketConnect(host, port, sourceAddress: sourceAddress,
+        sourcePort: sourcePort, timeout: timeout);
+    if (!_first) {
+      return socket;
+    }
+    _first = false;
+    return _GatedFlushSocket(socket, flushing, release.future);
+  }
+}
+
+class _GatedFlushSocket extends _IdleReadSocket {
+  _GatedFlushSocket(super.socket, this.flushing, this.release);
+  final Completer<void> flushing;
+  final Future<void> release;
+  @override
+  Future<void> flush() async {
+    if (!flushing.isCompleted) {
+      flushing.complete();
+    }
+    await release;
   }
 }

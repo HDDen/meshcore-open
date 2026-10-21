@@ -26,6 +26,8 @@ The BLE Scanner is the app's home screen, displayed immediately on launch.
 | Connected | "Connected to \<device name\>" | Green |
 | Disconnecting | "Disconnecting..." | Orange |
 
+The TCP cleanup applies to Android, iOS, Windows, Linux and macOS; the shared BLE cleanup applies wherever the BLE backend is supported. For BLE/TCP, a stalled subscription cancellation, BLE platform reply or model release is limited to three seconds per cleanup step; several stalled steps can add up. The app records the failed stage in the debug log and continues disconnecting. TCP socket shutdown also has a three-second limit and force-closes the old socket on exit. A manual disconnect does not enable automatic reconnect. Native USB close and offline review-storage cleanup keep their existing completion rules.
+
 **Device List**: When no devices are found, shows a large Bluetooth icon with a prompt. The prompt text is dynamic: "Searching for devices..." while actively scanning, or "Tap Scan to search" when idle. When devices are found, shows a scrollable list of `DeviceTile` widgets.
 
 **App Bar Actions**: Icon buttons in the top-right corner of the app bar:
