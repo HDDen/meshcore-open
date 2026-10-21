@@ -186,6 +186,53 @@ void main() {
     expect(connector.connectTcpCalls, 0);
   });
 
+  testWidgets('TCP connect baseline preserves LAN availability and connector guards', (
+    tester,
+  ) async {
+    final connector = _FakeMeshCoreConnector();
+    await tester.pumpWidget(
+      _buildTestApp(
+        connector: connector,
+        child: const TcpScreen(),
+        locale: const Locale('en'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    ButtonStyleButton connectButton() => tester.widget<ButtonStyleButton>(
+      find.byKey(const Key('tcp_connect_button')),
+    );
+
+    // Adding an optional transport prerequisite must leave ordinary TCP usable.
+    for (final host in ['192.168.1.50', 'desktop.local']) {
+      await tester.enterText(find.byType(TextField).first, host);
+      await tester.pump();
+      expect(connectButton().onPressed, isNotNull, reason: host);
+    }
+
+    // A transport becoming ready must not bypass any existing connector guard.
+    for (final state in [
+      MeshCoreConnectionState.scanning,
+      MeshCoreConnectionState.connecting,
+      MeshCoreConnectionState.connected,
+      MeshCoreConnectionState.disconnecting,
+    ]) {
+      connector.initialState = state;
+      connector.notifyListeners();
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(connectButton().onPressed, isNull, reason: state.name);
+    }
+    connector.initialState = MeshCoreConnectionState.disconnected;
+    connector.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(connectButton().onPressed, isNotNull);
+    expect(connector.connectTcpCalls, 0);
+
+    // Unmount first so the connector's debounced callbacks can drain.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 60));
+  });
+
   testWidgets('TcpScreen narrow width long status text does not overflow', (
     tester,
   ) async {

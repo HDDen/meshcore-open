@@ -15,3 +15,9 @@ List<Widget> buildMcoTcpControls(
   required bool enabled,
   VoidCallback? onChanged,
 }) => const <Widget>[];
+
+/// Public TCP has no optional transport prerequisite.
+Widget buildMcoTcpConnectGuard({
+  required TextEditingController hostController,
+  required Widget Function(bool ready) builder,
+}) => builder(true);

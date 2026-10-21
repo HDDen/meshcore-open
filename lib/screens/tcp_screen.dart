@@ -286,27 +286,31 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
                               },
                       ),
                       const SizedBox(height: 16),
-                      FilledButton.icon(
-                        key: const Key('tcp_connect_button'),
-                        onPressed: isButtonDisabled
-                            ? null
-                            : () {
-                                HapticFeedback.lightImpact();
-                                _connectTcp();
-                              },
-                        icon: isConnecting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.lan),
-                        label: Text(
-                          isConnecting
-                              ? context.l10n.scanner_connecting
-                              : context.l10n.common_connect,
+                      // Guard only Connect; transport setup must stay usable.
+                      buildMcoTcpConnectGuard(
+                        hostController: _hostController,
+                        builder: (ready) => FilledButton.icon(
+                          key: const Key('tcp_connect_button'),
+                          onPressed: isButtonDisabled || !ready
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  _connectTcp();
+                                },
+                          icon: isConnecting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.lan),
+                          label: Text(
+                            isConnecting
+                                ? context.l10n.scanner_connecting
+                                : context.l10n.common_connect,
+                          ),
                         ),
                       ),
                       if (settingsService
