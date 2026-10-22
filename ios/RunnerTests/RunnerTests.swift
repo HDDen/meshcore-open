@@ -5,6 +5,59 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  // Только публичный native API: этот engine не запускает Dart entrypoint.
+  // Продолжение работающего Dart и отсутствие glyph corruption здесь не проверяются.
+  func testGpuAvailabilityBaselineFlagDoesNotStartDartOrReplaceMessenger() {
+    let engine = FlutterEngine(name: "mco_gpu_baseline", project: nil,
+      allowHeadlessExecution: true)
+    let other = FlutterEngine(name: "mco_gpu_baseline_other", project: nil,
+      allowHeadlessExecution: true)
+    let messenger = engine.binaryMessenger
+    let otherGpuDisabled = other.isGpuDisabled
+    XCTAssertNil(engine.isolateId)
+
+    engine.isGpuDisabled = true
+    XCTAssertTrue(engine.isGpuDisabled)
+    XCTAssertNil(engine.isolateId)
+    XCTAssertTrue((engine.binaryMessenger as AnyObject) === (messenger as AnyObject))
+    XCTAssertEqual(other.isGpuDisabled, otherGpuDisabled)
+
+    engine.isGpuDisabled = false
+    XCTAssertFalse(engine.isGpuDisabled)
+    XCTAssertNil(engine.isolateId)
+    XCTAssertTrue((engine.binaryMessenger as AnyObject) === (messenger as AnyObject))
+    XCTAssertEqual(other.isGpuDisabled, otherGpuDisabled)
+  }
+
+  // Native activity должна накапливаться и до подписки/обработки событий Dart.
+  func testPresentationBaselineKeepsPhysicalStateWithoutSubscribers() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true))
+    defer { withExtendedLifetime(monitor) {} }
+
+    center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    center.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    XCTAssertTrue(messenger.events.isEmpty)
+
+    for channel in [PresentationTestMessenger.presentation, PresentationTestMessenger.activity] {
+      let snapshot = try messenger.watch(channel)
+      XCTAssertEqual(snapshot["active"] as? Bool, false)
+      XCTAssertEqual(snapshot["revision"] as? Int, 1)
+      XCTAssertEqual(snapshot["source"] as? String, "application.willResignActive")
+    }
+    XCTAssertTrue(messenger.events.isEmpty)
+
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    for channel in [PresentationTestMessenger.presentation, PresentationTestMessenger.activity] {
+      let snapshots = messenger.snapshots(channel)
+      XCTAssertEqual(snapshots.compactMap { $0["active"] as? Bool }, [true])
+      XCTAssertEqual(snapshots.compactMap { $0["revision"] as? Int }, [2])
+    }
+  }
+
   // Preserve the native contract while adding scene-aware transitions.
   // These tests do not reproduce GPU corruption or require the injected dylib.
   func testPresentationBaselineKeepsOrderedIndependentSnapshots() throws {
@@ -136,6 +189,256 @@ class RunnerTests: XCTestCase {
     XCTAssertTrue(messenger.events.isEmpty, "No positive transition is allowed yet")
   }
 
+  func testNativeGpuGuardUsesPublicEngineWithoutStartingDart() {
+    let engine = FlutterEngine(name: "mco_gpu_guard", project: nil, allowHeadlessExecution: true)
+    engine.isGpuDisabled = false
+    let messenger = engine.binaryMessenger
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { engine },
+      scheduleRecheck: queue.schedule)
+    gpuGuard.update(enabled: true, active: false)
+    XCTAssertTrue(engine.isGpuDisabled)
+    XCTAssertNil(engine.isolateId)
+    gpuGuard.update(enabled: true, active: true)
+    queue.drain()
+    XCTAssertFalse(engine.isGpuDisabled)
+    XCTAssertNil(engine.isolateId)
+    XCTAssertTrue((engine.binaryMessenger as AnyObject) === (messenger as AnyObject))
+  }
+
+  func testNativeGpuGuardPrecedesDartDeliveryAndRechecksFlutterForegroundWrite() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true),
+      gpuGuard: gpuGuard, compatibilityEnabled: { true })
+    defer { withExtendedLifetime(monitor) {} }
+    let initial = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertEqual(initial["nativeGpuGuard"] as? Bool, true)
+    XCTAssertEqual(initial["gpuDisabled"] as? Bool, false)
+
+    // Не вызываем Dart handler: запрет должен быть установлен ещё на native.
+    center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    XCTAssertTrue(target.isGpuDisabled)
+    let inactive = try XCTUnwrap(messenger.snapshots(PresentationTestMessenger.presentation).last)
+    XCTAssertEqual(inactive["active"] as? Bool, false)
+    XCTAssertEqual(inactive["gpuDisabled"] as? Bool, true)
+    queue.drain()
+
+    // Первый порядок: Flutter снимает запрет до нашего обработчика.
+    target.isGpuDisabled = false
+    center.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    XCTAssertTrue(target.isGpuDisabled)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.presentation).count, 1)
+    // Второй порядок: Flutter снимает запрет после нашего обработчика.
+    target.isGpuDisabled = false
+    queue.drain()
+    XCTAssertTrue(target.isGpuDisabled)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.presentation).count, 1)
+
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.presentation).last?["gpuDisabled"]
+      as? Bool, false)
+  }
+
+  func testNativeGpuGuardWaitsForKnownInactiveSceneOnApplicationResume() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(
+        applicationActive: false, sceneIdentifier: "flutter", sceneActive: false),
+      gpuGuard: gpuGuard, compatibilityEnabled: { true })
+    defer { withExtendedLifetime(monitor) {} }
+    _ = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertTrue(target.isGpuDisabled)
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    queue.drain()
+    XCTAssertTrue(target.isGpuDisabled)
+    XCTAssertTrue(messenger.events.isEmpty)
+  }
+
+  func testNativeGpuGuardDoesNotArmForActivitySubscriberOrMissingCompatibility() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    var compatibility = true
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true),
+      gpuGuard: gpuGuard, compatibilityEnabled: { compatibility })
+    defer { withExtendedLifetime(monitor) {} }
+    // Нет watch presentation, как при MCO_IOS_RENDER_GUARD=false.
+    _ = try messenger.watch(PresentationTestMessenger.activity)
+    center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+    XCTAssertTrue(queue.pending.isEmpty)
+
+    compatibility = false
+    let snapshot = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertEqual(snapshot["nativeGpuGuard"] as? Bool, false)
+    center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+    XCTAssertTrue(target.writes.isEmpty)
+    XCTAssertTrue(queue.pending.isEmpty)
+  }
+
+  func testNativeGpuGuardUnwatchDefersReleaseUntilActiveAndKeepsActivitySubscriber() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true),
+      gpuGuard: gpuGuard, compatibilityEnabled: { true })
+    defer { withExtendedLifetime(monitor) {} }
+    _ = try messenger.watch(PresentationTestMessenger.presentation)
+    _ = try messenger.watch(PresentationTestMessenger.activity)
+    center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    _ = try messenger.call(PresentationTestMessenger.presentation, method: "unwatch")
+    queue.drain()
+    XCTAssertTrue(target.isGpuDisabled, "Не включаем GPU в фоне при отписке")
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.presentation).count, 1)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.activity)
+      .compactMap { $0["active"] as? Bool }, [false, true])
+  }
+
+  func testNativeGpuGuardIgnoresStaleRechecksAndRepeatedWrites() {
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    gpuGuard.update(enabled: true, active: false)
+    gpuGuard.update(enabled: true, active: false)
+    XCTAssertEqual(target.writes, [true])
+    gpuGuard.update(enabled: true, active: true)
+    queue.drain()
+    XCTAssertEqual(target.writes, [true, false])
+    XCTAssertFalse(target.isGpuDisabled)
+  }
+
+  func testNativeGpuGuardDoesNotReleaseRestrictionItDidNotAcquire() {
+    let target = GpuTestTarget(disabled: true)
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    gpuGuard.update(enabled: true, active: true)
+    gpuGuard.update(enabled: true, active: false)
+    gpuGuard.update(enabled: true, active: true)
+    queue.drain()
+    gpuGuard.close()
+    XCTAssertTrue(target.isGpuDisabled)
+    XCTAssertTrue(target.writes.isEmpty)
+  }
+
+  func testNativeGpuGuardResolvesEngineAfterRegistrationAndReportsMissingTarget() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    var ready = false
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { ready ? target : nil },
+      scheduleRecheck: queue.schedule)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: false),
+      gpuGuard: gpuGuard, compatibilityEnabled: { true })
+    defer { withExtendedLifetime(monitor) {} }
+    let unavailable = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertEqual(unavailable["nativeGpuGuard"] as? Bool, false)
+    XCTAssertTrue(unavailable["gpuDisabled"] is NSNull)
+    ready = true
+    queue.drain()
+    XCTAssertTrue(target.isGpuDisabled)
+    let available = try messenger.watch(PresentationTestMessenger.presentation)
+    XCTAssertEqual(available["nativeGpuGuard"] as? Bool, true)
+    XCTAssertEqual(available["gpuDisabled"] as? Bool, true)
+    center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+  }
+
+  func testNativeGpuGuardKeepsEngineIdentityAndCancelsQueuedWorkAfterClose() {
+    let first = GpuTestTarget()
+    let second = GpuTestTarget()
+    let unrelated = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    var current = first
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { current },
+      scheduleRecheck: queue.schedule)
+    gpuGuard.update(enabled: true, active: false)
+    current = second
+    gpuGuard.update(enabled: true, active: false)
+    XCTAssertTrue(first.isGpuDisabled)
+    XCTAssertFalse(second.isGpuDisabled, "Guard остаётся привязан к первому живому engine")
+    XCTAssertTrue(second.writes.isEmpty)
+    gpuGuard.close()
+    first.isGpuDisabled = false
+    queue.drain()
+    XCTAssertFalse(first.isGpuDisabled)
+    XCTAssertTrue(unrelated.writes.isEmpty)
+    gpuGuard.update(enabled: false, active: true)
+    XCTAssertFalse(second.isGpuDisabled)
+  }
+
+  func testNativeGpuGuardAndMonitorReleaseWithoutQueuedRetainCycle() throws {
+    let center = NotificationCenter()
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    var gpuGuard: IosPresentationGpuGuard? = IosPresentationGpuGuard(targetProvider: { target },
+      scheduleRecheck: queue.schedule)
+    weak var releasedGuard = gpuGuard
+    var monitor: IosPresentationMonitor? = IosPresentationMonitor(
+      binaryMessenger: messenger, notificationCenter: center,
+      initialActivity: IosPresentationActivityState(applicationActive: true),
+      gpuGuard: gpuGuard, compatibilityEnabled: { true })
+    weak var releasedMonitor = monitor
+    _ = try messenger.watch(PresentationTestMessenger.presentation)
+    center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    XCTAssertTrue(target.isGpuDisabled)
+    monitor = nil
+    gpuGuard = nil
+    XCTAssertNil(releasedMonitor)
+    XCTAssertNil(releasedGuard)
+    XCTAssertTrue(messenger.handlers.isEmpty)
+    target.isGpuDisabled = false
+    queue.drain()
+    XCTAssertFalse(target.isGpuDisabled)
+  }
+}
+
+private final class GpuTestTarget: IosPresentationGpuTarget {
+  private(set) var writes: [Bool] = []
+  var isGpuDisabled: Bool {
+    didSet { writes.append(isGpuDisabled) }
+  }
+
+  init(disabled: Bool = false) { isGpuDisabled = disabled }
+}
+
+private final class GpuRecheckQueue {
+  private(set) var pending: [() -> Void] = []
+
+  func schedule(_ work: @escaping () -> Void) { pending.append(work) }
+
+  func drain() {
+    let work = pending
+    pending.removeAll()
+    for callback in work { callback() }
+  }
 }
 
 /// Exercise actual FlutterMethodChannel encoding without a live Dart isolate.

@@ -37,6 +37,8 @@ final class IosPresentationMonitor {
   private let channel: FlutterMethodChannel
   private let activityChannel: FlutterMethodChannel
   private let notificationCenter: NotificationCenter
+  private let gpuGuard: IosPresentationGpuGuard?
+  private let compatibilityEnabled: () -> Bool
   private var watchingActivity = false
   private var observers: [NSObjectProtocol] = []
   private var watching = false
@@ -48,10 +50,16 @@ final class IosPresentationMonitor {
 
   init(binaryMessenger: FlutterBinaryMessenger,
        notificationCenter: NotificationCenter = .default,
-       initialActivity: IosPresentationActivityState? = nil) {
+       initialActivity: IosPresentationActivityState? = nil,
+       gpuGuard: IosPresentationGpuGuard? = nil,
+       compatibilityEnabled: @escaping () -> Bool = {
+         NSClassFromString("FloatingButtonWindow") != nil
+       }) {
     // An isolated center lets native tests exercise notifications without
     // sending synthetic lifecycle changes to the running Flutter host.
     self.notificationCenter = notificationCenter
+    self.gpuGuard = gpuGuard
+    self.compatibilityEnabled = compatibilityEnabled
     channel = FlutterMethodChannel(
       name: "mco_advanced/ios_presentation",
       binaryMessenger: binaryMessenger
@@ -115,9 +123,11 @@ final class IosPresentationMonitor {
       switch call.method {
       case "watch":
         self.watching = true
+        self.updateGpuGuard()
         result(self.snapshot())
       case "unwatch":
         self.watching = false
+        self.updateGpuGuard()
         result(nil)
       default:
         result(FlutterMethodNotImplemented)
@@ -150,6 +160,9 @@ final class IosPresentationMonitor {
         guard let self = self else { return }
         let wasActive = self.activity.active
         change(self, notification)
+        // Обновляем и при прежнем active: willEnterForeground может снять
+        // собственный GPU-запрет Flutter до полной активации сцены.
+        self.updateGpuGuard()
         self.publishIfChanged(wasActive: wasActive, source: source,
                               utcMs: utcMs, uptimeMs: uptimeMs)
       }
@@ -172,8 +185,14 @@ final class IosPresentationMonitor {
     // v3's applicationState hook also runs with its toggle off. Detect the
     // loaded class, not the preference, without invoking third-party methods.
     var snapshot = activitySnapshot()
-    snapshot["enabled"] = NSClassFromString("FloatingButtonWindow") != nil
+    snapshot["enabled"] = compatibilityEnabled()
+    snapshot["nativeGpuGuard"] = watching && compatibilityEnabled() && (gpuGuard?.available ?? false)
+    snapshot["gpuDisabled"] = gpuGuard?.gpuDisabled.map { $0 as Any } ?? NSNull()
     return snapshot
+  }
+
+  private func updateGpuGuard() {
+    gpuGuard?.update(enabled: watching && compatibilityEnabled(), active: activity.active)
   }
 
   private func publishIfChanged(wasActive: Bool, source: String, utcMs: Int64, uptimeMs: Int64) {
@@ -192,6 +211,7 @@ final class IosPresentationMonitor {
 
   deinit {
     for observer in observers { notificationCenter.removeObserver(observer) }
+    gpuGuard?.close()
     channel.setMethodCallHandler(nil)
     activityChannel.setMethodCallHandler(nil)
   }

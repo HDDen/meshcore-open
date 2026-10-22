@@ -115,7 +115,10 @@ class IosPresentationBridge {
             ', applicationActive=${raw['applicationActive']}'
             ', sceneActive=${raw['sceneActive']}'
         : '';
-    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision, gate=uiPipeline$timing',
+    final gpu = raw['nativeGpuGuard'] is bool
+        ? ', nativeGpuGuard=${raw['nativeGpuGuard']}, gpuDisabled=${raw['gpuDisabled']}'
+        : '';
+    appLogger.info('Presentation allowed=$allowed, compatibility=${raw['enabled']}, revision=$revision, gate=uiPipeline$gpu$timing',
         tag: 'iOSRendering', noNotify: true);
     return true;
   }

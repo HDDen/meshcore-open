@@ -109,6 +109,26 @@ void main() {
     messenger.setMockMethodCallHandler(channel, null);
   });
 
+  test('native GPU diagnostics preserve presentation decisions and revisions', () async {
+    await bridge.start();
+    await emit({
+      ...snapshot(1, false),
+      'nativeGpuGuard': true,
+      'gpuDisabled': true,
+    });
+    await emit({
+      ...snapshot(2, true),
+      'nativeGpuGuard': false,
+      'gpuDisabled': null,
+    });
+    await emit({
+      ...snapshot(1, false),
+      'nativeGpuGuard': true,
+      'gpuDisabled': true,
+    });
+    expect(allowed, [true, false, true]);
+  });
+
   test('native background event wins over a delayed active watch snapshot', () async {
     final entered = Completer<void>();
     final initial = Completer<Object?>();

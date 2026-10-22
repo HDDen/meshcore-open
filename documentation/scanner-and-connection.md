@@ -154,11 +154,11 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 - USB is not reconnected automatically: losing a USB link usually means the cable was unplugged.
 
 
-### iOS interface during background operation
+### Интерфейс iOS во время фоновой работы
 
-When the iOS compatibility guard is active, native application and window-scene activity pauses UI updates while retaining the screen state and typed text. Timers and transport callbacks continue whenever iOS allows the process to run. Returning to the foreground schedules a frame showing the latest data. The debug log marks this version of the guard with `iOSRendering` and `gate=uiPipeline`.
+При активной защите совместимости iOS native-состояние приложения и оконной сцены приостанавливает обновление интерфейса, сохраняя экран и введённый текст. Дополнительно запрещаются GPU-вызовы соответствующего Flutter engine; обработка Dart, таймеров и транспорта продолжается, пока iOS разрешает процессу работать. После полной активации снимается собственный GPU-запрет и запрашивается кадр с актуальными данными. Без ImmortalizerJailed либо при сборке с `MCO_IOS_RENDER_GUARD=false` дополнительный native-запрет не включается.
 
-The latest mitigation for missing characters is awaiting device verification. If characters disappear after a background/lock cycle, preserve the `iOSRendering` entries around that cycle and note whether the issue survives navigation and data updates.
+В журнале `iOSRendering` сохраняется `gate=uiPipeline`; новые поля `nativeGpuGuard` и `gpuDisabled` показывают доступность дополнительной защиты и состояние GPU в момент записи. При полном возврате обычное значение — `gpuDisabled=false`; если engine ещё недоступен, возможны `nativeGpuGuard=false, gpuDisabled=null`. Отдельный повтор проверки в очереди main thread учитывает собственный foreground-обработчик Flutter; он не гарантирует остановку уже выполняющейся GPU-команды или восстановление повреждённых символов. Для применения требуется пересобрать iOS-приложение, результат обхода ожидает проверки на устройстве. При повторении дефекта сохраните эти строки вокруг перехода в фон/возврата и отметьте, сохраняется ли проблема после навигации и обновления данных.
 
 ### Experimental iOS background TCP receiver
 

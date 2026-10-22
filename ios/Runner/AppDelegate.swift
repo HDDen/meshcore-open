@@ -18,7 +18,7 @@ import UserNotifications
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     GeneratedPluginRegistrant.register(with: self)
     if let registrar = self.registrar(forPlugin: "McoAdvancedNativeChannels") {
-      registerNativeChannels(binaryMessenger: registrar.messenger())
+      registerNativeChannels(registrar: registrar)
     } else {
       NSLog("MCO background TCP: native channel registrar is unavailable")
     }
@@ -36,7 +36,7 @@ import UserNotifications
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     // Scene-based Flutter launches need these channels on the implicit engine too.
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "McoAdvancedNativeChannels") {
-      registerNativeChannels(binaryMessenger: registrar.messenger())
+      registerNativeChannels(registrar: registrar)
     }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MeshAppBadge") {
       let channel = FlutterMethodChannel(
@@ -60,11 +60,22 @@ import UserNotifications
     }
   }
 
-  private func registerNativeChannels(binaryMessenger: FlutterBinaryMessenger) {
+  private func registerNativeChannels(registrar: FlutterPluginRegistrar) {
+    let binaryMessenger = registrar.messenger()
     // Legacy and implicit-engine registration can refer to the same messenger.
     let messengerId = ObjectIdentifier(binaryMessenger as AnyObject)
     if presentationMonitors[messengerId] == nil {
-      presentationMonitors[messengerId] = IosPresentationMonitor(binaryMessenger: binaryMessenger)
+      let gpuGuard = IosPresentationGpuGuard(targetProvider: { [weak registrar] in
+        // Registrar может ещё не иметь viewController при implicit launch.
+        // Проверяем снова при watch/native-переходах, без глобального поиска окон.
+        guard let controller = registrar?.viewController as? FlutterViewController,
+              ObjectIdentifier(controller.engine.binaryMessenger as AnyObject) == messengerId else {
+          return nil
+        }
+        return controller.engine
+      })
+      presentationMonitors[messengerId] = IosPresentationMonitor(
+        binaryMessenger: binaryMessenger, gpuGuard: gpuGuard)
     }
     let wifiSsidChannel = FlutterMethodChannel(
       name: "mco_advanced/ios_wifi_ssid",
