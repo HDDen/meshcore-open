@@ -2070,6 +2070,38 @@ connect, manual cancellation и прежние сбросы счётчика. US
 См. `documentation/power-saving.md`; проверка устройства отложена владельцем
 до добавления всех параметров. Экономия энергии пока не измерена.
 
+Общий `helpers/background_work_tracker.dart` учитывает независимые удержания
+незавершённых операций: `run` освобождает их в `finally`, снимки неизменяемы,
+`close` запрещает новую работу без сброса активной. Через `helpers/frame_background_work.dart`
+он подключён к низкоуровневому writer коннектора и командам с ожидающим completer.
+`transportWrite` живёт до завершения исходного I/O Future даже после внешнего timeout,
+`commandReply` — до завершения логической команды, включая запись и ожидание ACK.
+Tombstone и ответы без ожидания не создают `commandReply`; прежние 5/5 с сохранены.
+Снимок доступен как `backgroundWorkSnapshot`, без notify/timers; это частичный
+наблюдательный учёт при любом профиле. Dispose закрывает реестр, сохраняя активные
+leases; поздние вызовы после close выполняются прежним кодом без новых удержаний.
+Служба/CPU lock ещё не подключены; пустота и закрытый snapshot не разрешают сон.
+Set причин `BackgroundService` и 14 энергопараметров сохраняются.
+Контракт и границы учёта: `documentation/background-activity.md`.
+Через `helpers/message_processing_background_work.dart` подключён `messageSync`
+на время общего пути `_processPotentialQueuedMessage`: обработка полученного
+кадра, ожидаемая ею история и продолжение SYNC_NEXT. Contact/channel сообщения,
+channel data и локальные источники учитываются, когда проходят этим путём.
+Принятый `test/connector/queued_message_processing_baseline_test.dart` сохранён,
+счётчики проверяет отдельный `queued_message_work_tracking_test.dart`.
+`helpers/queued_message_request_background_work.dart` добавляет отдельный
+`queuedMessageRequest` до отправки SYNC_NEXT и до ответа/прежнего таймаута,
+остановки очереди или сброса sync/transport-состояния. Обычный полученный кадр
+передаёт удержание обработке; незавершённый writer учитывается независимо.
+Новых таймеров нет, сроки очереди и wire/ACK сохранены. Закрытие tracker не
+сбрасывает pending wait; поздние запросы после close проходят прежним кодом
+без регистрации. Deferred replay/direct echo, другие RX и не ожидаемые
+обработчиком записи/уведомления/сборки изображений ещё требуют подключения;
+реестр остаётся частичным, CPU lock и параметры профилей не менялись.
+Принятый `test/connector/queued_message_request_baseline_test.dart` сохранён:
+сроки, ранний пустой ответ, ошибки/поздняя запись и сброс проверяются настоящим
+алгоритмом; отдельные регрессии счётчиков — `queued_message_request_work_tracking_test.dart`.
+
 `AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
 radio-stats frame showed the node's airtime growing
 (`radioStatsAirActivityPulse`), which the stats poll (`_pollingInterval`,

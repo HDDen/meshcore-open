@@ -23,6 +23,10 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
+import '../helpers/background_work_tracker.dart';
+import '../helpers/frame_background_work.dart';
+import '../helpers/message_processing_background_work.dart';
+import '../helpers/queued_message_request_background_work.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/reaction_helper.dart';
@@ -293,6 +297,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       LinuxBlePairingService();
   StreamSubscription<Uint8List>? _usbFrameSubscription;
   final MeshCoreTcpConnector _tcpConnector = MeshCoreTcpConnector();
+  final BackgroundWorkTracker _backgroundWork = BackgroundWorkTracker();
+  late final FrameBackgroundWork _frameBackgroundWork = FrameBackgroundWork(_backgroundWork);
+  late final MessageProcessingBackgroundWork _messageProcessingBackgroundWork =
+      MessageProcessingBackgroundWork(_backgroundWork);
+  late final QueuedMessageRequestBackgroundWork _queuedMessageRequestWork =
+      QueuedMessageRequestBackgroundWork(_backgroundWork);
+  Future<void> Function(Uint8List)? _frameWriterForTest;
   MeshCoreTransportType _activeTransport = MeshCoreTransportType.bluetooth;
   ReviewRadio? _reviewRadio;
   StreamSubscription<Uint8List>? _reviewFrameSubscription;
@@ -766,6 +777,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   // Getters
+  /// Частичный наблюдательный учёт: пустота пока не разрешает сон CPU.
+  BackgroundWorkSnapshot get backgroundWorkSnapshot => _backgroundWork.snapshot;
+
   MeshCoreConnectionState get state => _state;
   BluetoothDevice? get device => _device;
   String? get deviceId => _deviceId;
@@ -5584,6 +5598,35 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void handleFrameForTest(List<int> data) => _handleFrame(data);
 
+  /// Подменяет только физическую запись; sendFrame и очередь ответов настоящие.
+  @visibleForTesting
+  void setFrameWriterForTest(Future<void> Function(Uint8List)? writer) {
+    _frameWriterForTest = writer;
+  }
+
+  /// Включает tombstone: этот счётчик не определяет активность CPU.
+  @visibleForTesting
+  int get pendingCommandReplyCountForTest => _pendingGenericAckQueue.length;
+
+  /// Настоящий сброс sync-флагов и таймеров без запуска native teardown.
+  @visibleForTesting
+  void resetSyncProgressForTest() => _resetSyncProgressState();
+
+  /// Продолжение после принятого фрагмента; разбор FR01 тестируется отдельно.
+  @visibleForTesting
+  void handleQueuedFragmentForTest() => _handleQueuedMessageReceived();
+
+  /// Настоящее продолжение очереди; подменяется лишь обработка/сохранение кадра.
+  @visibleForTesting
+  Future<void> processQueuedMessageForTest({
+    String? localSourceLabel,
+    required Future<void> Function() process,
+  }) => _processPotentialQueuedMessage(
+    localSourceLabel: localSourceLabel,
+    frameType: 'synthetic message',
+    process: process,
+  );
+
   /// Синтетическая история без подключения ноды и загрузки БД.
   @visibleForTesting
   void setChannelMessagesForTest(int channelIndex, List<ChannelMessage> messages) {
@@ -6771,6 +6814,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _deferQueuedContactMessagesUntilContacts = false;
     _isProcessingDeferredQueuedContactMessages = false;
     _queuedMessageSyncInFlight = false;
+    _queuedMessageRequestWork.finishCurrent();
     _deferredQueuedContactMessageFrames.clear();
     _pendingQueueSync = false;
     _resetSyncFlowState();
@@ -7027,6 +7071,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _selfInfoRetryTimer = null;
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
+    _queuedMessageRequestWork.finishCurrent();
     _channelSyncTimeout?.cancel();
     _channelSyncTimeout = null;
     _channelSyncRetries = 0;
@@ -7194,35 +7239,49 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       waitForReply: waitForGenericAck,
     );
 
-    try {
-      await _writeFrameToActiveTransport(data).timeout(_commandAckTimeout);
-    } catch (_) {
-      if (pendingAck != null) {
-        _pendingGenericAckQueue.remove(pendingAck);
-      }
-      rethrow;
-    }
-    _registerChannelEchoExpectation(data);
+    await _frameBackgroundWork.command(
+      awaitsReply: pendingAck?.completer != null,
+      operation: () async {
+        try {
+          await _writeFrameToActiveTransport(data).timeout(_commandAckTimeout);
+        } catch (_) {
+          if (pendingAck != null) {
+            _pendingGenericAckQueue.remove(pendingAck);
+          }
+          rethrow;
+        }
+        _registerChannelEchoExpectation(data);
 
-    if (pendingAck?.completer != null) {
-      try {
-        await pendingAck!.completer!.future.timeout(const Duration(seconds: 5));
-      } on TimeoutException {
-        // Keep a tombstone: the firmware still answers this command later,
-        // and that reply must not be credited to the next pending command.
-        _pendingGenericAckQueue.markTimedOut(pendingAck!);
-        throw TimeoutException(
-          'Timed out waiting for firmware acknowledgement',
-        );
-      }
-    }
+        if (pendingAck?.completer != null) {
+          try {
+            await pendingAck!.completer!.future.timeout(const Duration(seconds: 5));
+          } on TimeoutException {
+            // Keep a tombstone: the firmware still answers this command later,
+            // and that reply must not be credited to the next pending command.
+            _pendingGenericAckQueue.markTimedOut(pendingAck!);
+            throw TimeoutException(
+              'Timed out waiting for firmware acknowledgement',
+            );
+          }
+        }
+      },
+    );
   }
 
-  Future<void> _writeFrameToActiveTransport(Uint8List data) async {
+  // Удержание ниже внешнего timeout: исходный I/O может завершиться позже него.
+  Future<void> _writeFrameToActiveTransport(Uint8List data) =>
+      _frameBackgroundWork.write(() => _writeFrameToActiveTransportCore(data));
+
+  Future<void> _writeFrameToActiveTransportCore(Uint8List data) async {
     if (!isConnected) {
       throw Exception("Not connected to a MeshCore device");
     }
     _bleDebugLogService?.logFrame(data, outgoing: true);
+    final testWriter = _frameWriterForTest;
+    if (testWriter != null) {
+      await testWriter(data);
+      return;
+    }
     if (_activeTransport == MeshCoreTransportType.usb) {
       await _usbManager.write(data);
       // Brief pause so the device firmware can process each frame before the
@@ -10948,16 +11007,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _isInitialBacklogDrain = false;
       _discardInitialSyncNotificationSummary();
       _queuedMessageSyncInFlight = false;
+      _queuedMessageRequestWork.finishCurrent();
       return;
     }
     if (_queuedMessageSyncInFlight) return;
     _queuedMessageSyncInFlight = true;
+    final requestWork = _queuedMessageRequestWork.begin();
 
     // Cancel any existing timeout
     _queueSyncTimeout?.cancel();
 
     // Set up timeout for this request
     _queueSyncTimeout = Timer(Duration(milliseconds: _queueSyncTimeoutMs), () {
+      _queuedMessageRequestWork.finish(requestWork);
       _handleQueueSyncTimeout();
     });
 
@@ -10982,6 +11044,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
       _queueSyncTimeout?.cancel();
+      _queuedMessageRequestWork.finishCurrent();
       notifyListeners();
       _continueAfterQueuedMessageSync();
       _maybeFlushInitialSyncNotificationSummary();
@@ -10989,6 +11052,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleQueueSyncTimeout() {
+    _queuedMessageRequestWork.finishCurrent();
     debugPrint('[QueueSync] Timeout waiting for message; stopping sync');
     _queueSyncTimeout = null;
     _appDebugLogService?.warn(
@@ -12183,6 +12247,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleNoMoreMessages() {
+    _queuedMessageRequestWork.finishCurrent();
     debugPrint('[QueueSync] No more messages, sync complete');
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
@@ -12318,6 +12383,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handleQueuedMessageReceived() {
     if (!_isSyncingQueuedMessages) return;
+    _queuedMessageRequestWork.finishCurrent();
     debugPrint('[QueueSync] Queued frame fragment received, requesting next');
     _queueSyncTimeout?.cancel(); // Cancel timeout - message arrived
     _queueSyncTimeout = null;
@@ -12327,6 +12393,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _processPotentialQueuedMessage({
+    required String? localSourceLabel,
+    required String frameType,
+    required Future<void> Function() process,
+  }) => _messageProcessingBackgroundWork.run(
+    () => _processPotentialQueuedMessageCore(
+      localSourceLabel: localSourceLabel,
+      frameType: frameType,
+      process: process,
+    ),
+  );
+
+  Future<void> _processPotentialQueuedMessageCore({
     required String? localSourceLabel,
     required String frameType,
     required Future<void> Function() process,
@@ -12346,6 +12424,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // cannot start another destructive queue request.
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
+    _queuedMessageRequestWork.finishCurrent();
     _appDebugLogService?.info(
       'Queued $frameType frame received; processing before next request',
       tag: 'QueueSync',
@@ -12364,6 +12443,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _isSyncingQueuedMessages = false;
       _isInitialBacklogDrain = false;
       _southQueuedFragmentAckTracker.clearAwaitingSyncResponse();
+      _queuedMessageRequestWork.finishCurrent();
       notifyListeners();
       _continueAfterQueuedMessageSync();
       _maybeFlushInitialSyncNotificationSummary();
@@ -12372,6 +12452,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     if (!_isSyncingQueuedMessages || !isConnected) {
       _queuedMessageSyncInFlight = false;
+      _queuedMessageRequestWork.finishCurrent();
       return;
     }
     _queuedMessageSyncInFlight = false;
@@ -18541,6 +18622,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearDirectEchoKey('dispose');
     _channelKeyHashCache.clear();
     _disposed = true;
+    _backgroundWork.close();
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
     _connectionSubscription?.cancel();

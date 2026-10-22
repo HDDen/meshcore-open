@@ -22,9 +22,22 @@ const Duration _connectionHeartbeatTimeout = Duration(seconds: 20);
 
 class BackgroundService {
   BackgroundService({AppDebugLogService? debugLogService})
-    : _debugLogService = debugLogService;
+    : _debugLogService = debugLogService,
+      _androidForTest = null;
+
+  // Изолируем Android-ветку в тестах без реальной службы и подмены ОС процесса.
+  @visibleForTesting
+  BackgroundService.forTest({required bool isAndroid})
+    : _debugLogService = null,
+      _androidForTest = isAndroid;
 
   final AppDebugLogService? _debugLogService;
+  final bool? _androidForTest;
+  bool get _isAndroid => _androidForTest ?? PlatformInfo.isAndroid;
+
+  @visibleForTesting
+  static TaskHandler taskHandlerForTest({DateTime Function()? now}) =>
+      _MeshCoreTaskHandler(now: now);
   bool _initialized = false;
   // Multiple app features can keep the foreground service alive independently.
   // Stop it only after the last active feature releases its reason.
@@ -58,7 +71,7 @@ class BackgroundService {
   }
 
   Future<void> initialize() async {
-    if (!PlatformInfo.isAndroid || _initialized) return;
+    if (!_isAndroid || _initialized) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'meshcore_background',
@@ -107,7 +120,7 @@ class BackgroundService {
     required String reason,
     bool force = false,
   }) async {
-    if (!PlatformInfo.isAndroid) return true;
+    if (!_isAndroid) return true;
 
     try {
       final ignored =
@@ -167,7 +180,7 @@ class BackgroundService {
   }
 
   Future<void> logRuntimeState(String reason) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
     try {
       final running = await FlutterForegroundTask.isRunningService;
       final batteryExempt =
@@ -185,7 +198,7 @@ class BackgroundService {
   }
 
   Future<void> start({String reason = 'connection'}) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
     _keepAliveReasons.add(reason);
     try {
       if (!_initialized) {
@@ -232,7 +245,7 @@ class BackgroundService {
   }
 
   Future<void> setConnectionLost(bool connectionLost) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
     _connectionLost = connectionLost;
     if (!connectionLost) {
       _connectionLostPosted = false;
@@ -255,7 +268,7 @@ class BackgroundService {
   }
 
   Future<void> setTcpWifiLock(bool enabled) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
     try {
       await _tcpWifiLockChannel.invokeMethod<void>('setEnabled', {
         'enabled': enabled,
@@ -277,7 +290,7 @@ class BackgroundService {
       _keepAliveReasons.contains(_tcpConnectionKeepAliveReason);
 
   Future<void> _syncConnectionMonitor({AppLocalizations? l10n}) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
 
     final monitorConnection = _monitorsConnection;
     if (!monitorConnection) {
@@ -368,7 +381,7 @@ class BackgroundService {
   }
 
   Future<void> stop({String reason = 'connection'}) async {
-    if (!PlatformInfo.isAndroid) return;
+    if (!_isAndroid) return;
     _keepAliveReasons.remove(reason);
     if ((reason == _connectionKeepAliveReason ||
             reason == _tcpConnectionKeepAliveReason) &&
@@ -431,6 +444,9 @@ void startCallback() {
 }
 
 class _MeshCoreTaskHandler extends TaskHandler {
+  _MeshCoreTaskHandler({DateTime Function()? now}) : _now = now ?? DateTime.now;
+
+  final DateTime Function() _now;
   bool _monitorConnection = false;
   DateTime? _startedAt;
   DateTime? _lastHeartbeatAt;
@@ -442,7 +458,7 @@ class _MeshCoreTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    _startedAt = DateTime.now();
+    _startedAt = _now();
     _monitorConnection =
         await FlutterForegroundTask.getData<bool>(
           key: _connectionMonitorDataKey,
@@ -465,7 +481,7 @@ class _MeshCoreTaskHandler extends TaskHandler {
   @override
   void onRepeatEvent(DateTime timestamp) {
     if (!_monitorConnection) return;
-    final now = DateTime.now();
+    final now = _now();
     final heartbeatAnchor = _lastHeartbeatAt ?? _startedAt;
     final heartbeatExpired =
         heartbeatAnchor != null &&
@@ -494,7 +510,7 @@ class _MeshCoreTaskHandler extends TaskHandler {
     final timestampMs = data['timestampMs'];
     _lastHeartbeatAt = timestampMs is int
         ? DateTime.fromMillisecondsSinceEpoch(timestampMs)
-        : DateTime.now();
+        : _now();
 
     final state = data['state'] as String? ?? 'connected';
     unawaited(_showState(state));
