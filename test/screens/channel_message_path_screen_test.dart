@@ -41,6 +41,8 @@ ChannelMessage _message({
   bool isOutgoing = true,
   Uint8List? path,
   int? pathHashWidth,
+  int repeatCount = 0,
+  int resendCount = 0,
 }) => ChannelMessage(
   senderName: 'Me',
   text: 'hi',
@@ -48,6 +50,8 @@ ChannelMessage _message({
   receivedAt: DateTime(2026, 10, 9, 12),
   isOutgoing: isOutgoing,
   status: ChannelMessageStatus.sent,
+  repeatCount: repeatCount,
+  resendCount: resendCount,
   pathLength: path == null ? 1 : path.length ~/ (pathHashWidth ?? 1),
   pathBytes: path ?? Uint8List.fromList([0x20]),
   pathHashWidth: pathHashWidth,
@@ -63,6 +67,8 @@ Future<void> _pump(
   List<DirectEchoObservation> incompletePaths = const [],
   Uint8List? messagePath,
   int? messagePathHashWidth,
+  int repeatCount = 0,
+  int resendCount = 0,
 }) async {
   final connector = _Connector();
   final settings = AppSettingsService();
@@ -84,6 +90,8 @@ Future<void> _pump(
             isOutgoing: isOutgoing,
             path: messagePath,
             pathHashWidth: messagePathHashWidth,
+            repeatCount: repeatCount,
+            resendCount: resendCount,
           ),
           channelMessage: channelMessage,
           showDeliveryPath: showDeliveryPath,
@@ -135,6 +143,26 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pathProvider, null);
     tempDir.deleteSync(recursive: true);
+  });
+
+  testWidgets('channel path keeps one heard repeat separate from four transmission attempts', (tester) async {
+    await _pump(tester,
+      channelMessage: true,
+      messagePath: Uint8List.fromList([0x81, 0x30]),
+      messagePathHashWidth: 2,
+      repeatCount: 1,
+      resendCount: 3,
+    );
+    final l10n = _l10n(tester);
+    Finder valueInRow(String label, String value) => find.descendant(
+      of: find.ancestor(of: find.text(label.toUpperCase()),
+          matching: find.byType(Row)).first,
+      matching: find.text(value),
+    );
+    expect(valueInRow(l10n.channelPath_repeatsLabel, '1'), findsOneWidget);
+    expect(valueInRow(l10n.channelPath_sendAttemptsLabel, '4'), findsOneWidget);
+    expect(valueInRow(l10n.channelPath_pathLabelTitle, l10n.chat_hopsCount(1)), findsOneWidget);
+    expect(find.text('8130'), findsOneWidget);
   });
 
   testWidgets('a confirmed route is listed hop by hop after the details, '

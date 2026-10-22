@@ -96,6 +96,7 @@ import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_chip.dart';
 import '../widgets/formatted_message_text.dart';
 import '../widgets/mention_suggestions_panel.dart';
+import '../widgets/channel_resend_shortfall_indicator.dart';
 import '../widgets/message_status_icon.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/popup_menu_row.dart';
@@ -2442,6 +2443,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
+                                if (isOutgoing && !showFailureVisual)
+                                  ChannelResendShortfallIndicator(
+                                    shortfall: connector.channelHopShortfall(
+                                      message.messageId,
+                                    ),
+                                    size: 12 * textScale,
+                                  ),
                                 if (showSendAttempts) ...[
                                   const SizedBox(width: 6),
                                   if (resendInProgress) ...[
@@ -2565,7 +2573,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             // send counted: the seconds would count from the
                             // last attempt only.
                             child: Text(
-                              message.resendCount > 0
+                              message.resendCount > 0 ||
+                                  connector.channelHopShortfall(
+                                    message.messageId,
+                                  ) != null
                                   ? context.l10n
                                         .settings_modSettingsNoRetraInfoResends(
                                           message.resendCount + 1,

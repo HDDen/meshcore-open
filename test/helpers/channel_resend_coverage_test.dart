@@ -30,6 +30,40 @@ ChannelMessage _echoed(
 
 void main() {
   group('channelResendSatisfied', () {
+    for (final width in [1, 2, 3]) {
+      test('four sends through the same repeater still miss 2 hops or 3 nearby repeaters (width=$width)', () {
+        final hop = [0x81, 0x30, 0x05].sublist(0, width);
+        var message = _echoed([hop], width: width).copyWith(repeatCount: 1);
+        for (var resends = 0; resends <= 3; resends++) {
+          message = message.copyWith(
+            resendCount: resends,
+            pathVariants: [...message.pathVariants, Uint8List.fromList(hop)],
+          );
+          expect(message.pathLength, 1);
+          expect(message.pathVariants, hasLength(1));
+          expect(distinctFirstHopRepeaters(message), hasLength(1));
+          expect(channelResendSatisfied(message, minHops: 2,
+              countDistinctRepeaters: true, minRepeaters: 3), isFalse);
+        }
+        final next = List<int>.of(hop);
+        next[width - 1] ^= 1;
+        message = message.copyWith(pathVariants: [
+          ...message.pathVariants, Uint8List.fromList(next),
+        ]);
+        expect(distinctFirstHopRepeaters(message), hasLength(2));
+        expect(channelResendSatisfied(message, minHops: 2,
+            countDistinctRepeaters: true, minRepeaters: 3), isFalse);
+        final third = List<int>.of(hop);
+        third[width - 1] ^= 2;
+        message = message.copyWith(pathVariants: [
+          ...message.pathVariants, Uint8List.fromList(third),
+        ]);
+        expect(distinctFirstHopRepeaters(message), hasLength(3));
+        expect(channelResendSatisfied(message, minHops: 2,
+            countDistinctRepeaters: true, minRepeaters: 3), isTrue);
+      });
+    }
+
     test('two distinct first-hop repeaters satisfy N=2 only when on', () {
       final message = _echoed([
         [0xAA],

@@ -2333,6 +2333,21 @@ target when `channelMinHopsCountRepeaters` is on. Its independent target is
 target too. Both nearby-repeater controls are read live by the resend loop.
 Older JSON without the new field inherits `channelMinHops`, clamped to 2–10;
 subsequent changes to either target leave the other unchanged (2026-10-21).
+Согласование покрытия и предупреждения (2026-10-22):
+`helpers/channel_resend_warning.dart` сохраняет обычный no-echo guard и допускает
+warning при `repeatCount > 0`, если завершённая серия имеет `_channelHopShortfalls`.
+`_mergeChannelRepeat` сохраняет поле предупреждения и ожидающий warning-таймер
+при позднем недостаточном эхо; достаточный маршрут или distinct first-hop target
+снимает shortfall, увеличивает `channelResendRevision` и отменяет warning.
+Повторы одного префикса не становятся разными nearby-репитерами; resend loop
+после завершения не запускается заново. `widgets/channel_resend_shortfall_indicator.dart`
+добавляет warning в tracing-строку, пока общее предупреждение ещё не выделило
+сообщение. Mod-опция и таймаут 5–15 с от последней отправки сохраняются;
+packet timestamp, счётчики и статус передачи в радио не меняют смысла.
+Цели/shortfall остаются только в сессии; сохранённое сообщение содержит прежнее
+поле warning, но не восстановление цели старой серии после новой сессии.
+Экран пути по-прежнему использует snapshot при открытии. Подробности —
+`documentation/channels.md#channel-auto-resend`.
 The no-retransmission warning of
 the mod settings is held back while the resends run, counts from the last
 attempt, and its line under a resent message names the resends

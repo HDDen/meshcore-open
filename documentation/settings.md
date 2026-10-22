@@ -132,6 +132,8 @@ Individual channels can be muted from the channel chat bell icon, the channel li
   - **Also count different nearby repeaters** (default off): Also treats the message as sent once enough *different* first-hop repeaters have repeated it, even if you can't hear it travel further. Useful where only nearby repeaters are audible. See [Channels](channels.md#channel-auto-resend)
   - **Required nearby repeaters** (2–10, step 1, default 2): Visible when the nearby-repeater toggle is on. This target is independent of **Required hops**. Either target can stop resending. Existing saved settings without this field inherit their previous required-hop value, limited to 2–10; later changes to either slider leave the other unchanged.
 
+  Если после всех канальных попыток не выполнен ни один порог, одно эхо не снимает предупреждение о недостаточном покрытии. В трассировке появляется предупреждающий значок; текст о числе попыток зависит от mod-опции предупреждения о ретрансляциях и её таймаута 5–15 с от последней отправки. Позднее эхо снимает признак недостаточного покрытия только при выполнении одного из порогов. Счётчик разных репитеров не увеличивается от повторного эхо того же префикса. Подробнее — [канальные повторы](channels.md#channel-auto-resend).
+
 ### Энергосбережение
 
 Отдельный переключатель «Приостанавливать скрытые GIF» останавливает показ кадров GIF-ссылок вне видимой области, под другим экраном или при неактивном приложении. Возврат сохраняет выбор ручной паузы. Переключатель включён в готовых энергопрофилях, выключен по умолчанию в своих настройках; подробности — в [руководстве по энергосбережению](power-saving.md#показ-gif).

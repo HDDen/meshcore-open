@@ -53,6 +53,7 @@ import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
 import '../helpers/versioned_map.dart';
 import '../helpers/channel_resend_coverage.dart';
+import '../helpers/channel_resend_warning.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/mesh_compressor.dart';
@@ -5583,6 +5584,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void handleFrameForTest(List<int> data) => _handleFrame(data);
 
+  /// Синтетическая история без подключения ноды и загрузки БД.
+  @visibleForTesting
+  void setChannelMessagesForTest(int channelIndex, List<ChannelMessage> messages) {
+    _channelMessages[channelIndex] = List<ChannelMessage>.of(messages);
+  }
+
+  @visibleForTesting
+  void scheduleChannelNoRetransmissionWarningForTest(
+    String messageId, {
+    DateTime? since,
+  }) => _scheduleChannelNoRetransmissionWarning(messageId, since: since);
+
+  @visibleForTesting
+  void setChannelResendClockForTest(DateTime Function() now) {
+    _channelResendNow = now;
+  }
+
+  /// Настоящий loop и счётчик попыток; заменяется только передача через радио.
+  @visibleForTesting
+  Future<void> runChannelHopCheckForTest(
+    String messageId, {
+    required Future<void> Function() resend,
+    required int minHops,
+    required int maxResends,
+  }) => _resendUntilMinHops(messageId, () async {
+    _incrementChannelResendCount(messageId);
+    await resend();
+  }, minHops: minHops, maxResends: maxResends);
+
+  @visibleForTesting
+  ChannelMessage mergeChannelEchoForTest(int channelIndex, ChannelMessage echo) {
+    final messages = _channelMessages[channelIndex]!;
+    final index = messages.indexWhere((message) => message.messageId == echo.messageId);
+    final merged = _mergeChannelRepeat(messages, index, echo);
+    _wakeChannelHopCheck(merged.messageId);
+    notifyListeners();
+    return merged;
+  }
+
   /// Переход без платформенного транспорта; connected сохраняет обычные side effects.
   @visibleForTesting
   void setConnectionStateForTest(MeshCoreConnectionState state) => _setState(state);
@@ -9059,8 +9099,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     seconds: _appSettingsService?.settings.channelMinHopsDelaySeconds ?? 30,
   );
 
-  /// Resends a channel message until one of its echoes has travelled through
-  /// at least [minHops] repeaters, then gives up and marks it failed.
+  DateTime Function() _channelResendNow = DateTime.now;
+
+  /// Повторяет до достижения хопов либо nearby-порога; исчерпание — warning,
+  /// поскольку отсутствие достаточного эхо не доказывает потерю сообщения.
   Future<void> _resendUntilMinHops(
     String messageId,
     Future<void> Function() resend, {
@@ -9074,7 +9116,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The no-retransmission warning of the mod settings waits for the
     // resends and then counts from the last attempt (Denis, 2026-10-13).
     var lastAttemptAt =
-        _findChannelMessageById(messageId)?.sentByRadioAt ?? DateTime.now();
+        _findChannelMessageById(messageId)?.sentByRadioAt ?? _channelResendNow();
     try {
       for (var attempt = 0; ; attempt++) {
         // Wait out the delay, but look again at every echo that comes in:
@@ -9086,7 +9128,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ChannelMessage? message;
         var satisfied = false;
         while (true) {
-          final remaining = deadline.difference(DateTime.now());
+          final remaining = deadline.difference(_channelResendNow());
           if (remaining > Duration.zero) {
             final wakeup = Completer<void>();
             _channelHopWakeups[messageId] = wakeup;
@@ -9112,9 +9154,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             minRepeaters: coverageSettings?.channelMinHopsRepeaterCount ?? 2,
             selfPublicKey: _selfPublicKey,
           );
-          if (satisfied || !DateTime.now().isBefore(deadline)) break;
+          if (satisfied || !_channelResendNow().isBefore(deadline)) break;
         }
         if (satisfied) {
+          _channelHopShortfalls.remove(messageId);
           _appDebugLogService?.info(
             hops >= minHops
                 ? 'Channel message reached $hops hops after $attempt resends'
@@ -9138,7 +9181,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         notifyListeners();
         try {
           await resend();
-          lastAttemptAt = DateTime.now();
+          lastAttemptAt = _channelResendNow();
         } catch (e) {
           _appDebugLogService?.warn(
             'Channel resend failed: $e',
@@ -9183,6 +9226,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// repeaters. Kept for this session only.
   ({int hops, int required})? channelHopShortfall(String messageId) =>
       _channelHopShortfalls[messageId];
+
+  bool _retainChannelShortfallAfterEcho(ChannelMessage message) {
+    final previous = _channelHopShortfalls[message.messageId];
+    if (previous == null) return false;
+    final settings = _appSettingsService?.settings;
+    final next = channelResendShortfallAfterEcho(
+      message,
+      previous,
+      countDistinctRepeaters: settings?.channelMinHopsCountRepeaters ?? false,
+      minRepeaters: settings?.channelMinHopsRepeaterCount ?? 2,
+      selfPublicKey: _selfPublicKey,
+    );
+    if (next != previous) {
+      if (next == null) {
+        _channelHopShortfalls.remove(message.messageId);
+      } else {
+        _channelHopShortfalls[message.messageId] = next;
+      }
+      _channelResendRevision++;
+    }
+    return next != null;
+  }
 
   /// Resend progress for a channel message still waiting to travel far
   /// enough, or null when it is not being watched.
@@ -10396,7 +10461,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (seconds <= 0) return;
     final elapsed = since == null
         ? Duration.zero
-        : DateTime.now().difference(since);
+        : _channelResendNow().difference(since);
     final remaining = Duration(seconds: seconds) - elapsed;
     if (remaining <= Duration.zero) {
       _markChannelMessageNoRetransmission(messageId, seconds);
@@ -10437,10 +10502,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (index < 0) continue;
 
       final message = channelMessages[index];
-      if (!message.isOutgoing ||
-          message.sentByRadioAt == null ||
-          message.repeatCount > 0 ||
-          message.status == ChannelMessageStatus.failed) {
+      if (!channelNeedsRetransmissionWarning(
+        message,
+        hasCoverageShortfall: _channelHopShortfalls.containsKey(messageId),
+      )) {
         return;
       }
 
@@ -17968,8 +18033,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         newRepeatCount == 1 && existing.status == ChannelMessageStatus.pending;
     final promotedFromClient =
         incoming.sourceLabel != null && !existing.isOutgoing;
-    _cancelChannelNoRetransmissionWarning(existing.messageId);
-    final merged = existing.copyWith(
+    var merged = existing.copyWith(
       receivedAt: ChannelMessageTimelineHelper.earliestReceivedAt(
         existing,
         incoming,
@@ -17993,8 +18057,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       status: promotedFromPending || promotedFromClient
           ? ChannelMessageStatus.sent
           : existing.status,
-      noRetransmissionWarningSeconds: null,
     );
+    // Любое эхо снимает обычный warning, но shortfall — только при покрытии.
+    if (!_retainChannelShortfallAfterEcho(merged)) {
+      _cancelChannelNoRetransmissionWarning(existing.messageId);
+      merged = merged.copyWith(noRetransmissionWarningSeconds: null);
+    }
     messages[existingIndex] = merged;
     if (promotedFromPending) {
       _retriableChannelMessageSends.remove(existing.messageId);
