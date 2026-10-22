@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
+import '../helpers/status_animation_playback.dart';
 import '../l10n/l10n.dart';
+import '../models/power_saving_settings.dart';
+import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
 
 class MessageStatusIcon extends StatefulWidget {
@@ -48,6 +52,7 @@ class MessageStatusIcon extends StatefulWidget {
 class _MessageStatusIconState extends State<MessageStatusIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late final StatusAnimationPlayback _playback;
 
   @override
   void initState() {
@@ -56,29 +61,33 @@ class _MessageStatusIconState extends State<MessageStatusIcon>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    if (widget.isPending) _controller.repeat();
-  }
-
-  @override
-  void didUpdateWidget(MessageStatusIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isPending && !_controller.isAnimating) {
-      _controller.repeat();
-    } else if (!widget.isPending && _controller.isAnimating) {
-      _controller
-        ..stop()
-        ..reset();
-    }
+    _playback = StatusAnimationPlayback(
+      controller: _controller,
+      onChanged: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _playback.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final options = context.watch<AppSettingsService?>()?.settings.powerSaving.effective
+        ?? const PowerSavingOptions();
+    _playback.updateContext(
+      context,
+      options: options,
+      requested: widget.isPending,
+      displayed: !widget.isFailed,
+    );
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final double size = widget.size;
@@ -96,6 +105,7 @@ class _MessageStatusIconState extends State<MessageStatusIcon>
       label = l10n.messageStatus_pending;
       icon = _SendingDots(
         controller: _controller,
+        staticPresentation: _playback.staticPresentation,
         color: baseColor,
         size: size,
       );
@@ -164,11 +174,11 @@ class _MessageStatusIconState extends State<MessageStatusIcon>
       icon = Icon(Icons.done, size: size, color: baseColor);
     }
 
-    return Tooltip(
+    return _playback.wrap(Tooltip(
       message: label,
       triggerMode: TooltipTriggerMode.tap,
       child: icon,
-    );
+    ));
   }
 }
 
@@ -177,11 +187,13 @@ class _SendingDots extends StatelessWidget {
   final AnimationController controller;
   final Color color;
   final double size;
+  final bool staticPresentation;
 
   const _SendingDots({
     required this.controller,
     required this.color,
     required this.size,
+    required this.staticPresentation,
   });
 
   @override
@@ -198,7 +210,8 @@ class _SendingDots extends StatelessWidget {
             children: List.generate(3, (i) {
               final double phase = (controller.value - i * 0.18) % 1.0;
               final double t = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
-              final double opacity = 0.25 + 0.75 * t.clamp(0.0, 1.0);
+              final double opacity = staticPresentation
+                  ? 1.0 : 0.25 + 0.75 * t.clamp(0.0, 1.0);
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: dot * 0.28),
                 child: Container(

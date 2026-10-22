@@ -8,6 +8,9 @@ class PowerSavingOptions {
     this.pauseHiddenGifs = false,
     this.deferBleLogDescriptions = false,
     this.reduceBlePluginLogs = false,
+    this.pauseHiddenStatusAnimations = false,
+    this.disableContinuousStatusAnimations = false,
+    this.cacheChannelKeyHashes = false,
     this.uiNotificationIntervalMilliseconds = minUiNotificationInterval,
     this.batteryIntervalSeconds = minBatteryInterval,
     this.gpsIntervalSeconds = minGpsInterval,
@@ -40,6 +43,9 @@ class PowerSavingOptions {
   final bool pauseHiddenGifs;
   final bool deferBleLogDescriptions;
   final bool reduceBlePluginLogs;
+  final bool pauseHiddenStatusAnimations;
+  final bool disableContinuousStatusAnimations;
+  final bool cacheChannelKeyHashes;
   final int uiNotificationIntervalMilliseconds;
   final int batteryIntervalSeconds;
   final int gpsIntervalSeconds;
@@ -64,6 +70,9 @@ class PowerSavingOptions {
     bool? pauseHiddenGifs,
     bool? deferBleLogDescriptions,
     bool? reduceBlePluginLogs,
+    bool? pauseHiddenStatusAnimations,
+    bool? disableContinuousStatusAnimations,
+    bool? cacheChannelKeyHashes,
     int? uiNotificationIntervalMilliseconds,
     int? batteryIntervalSeconds,
     int? gpsIntervalSeconds,
@@ -78,6 +87,11 @@ class PowerSavingOptions {
         pauseHiddenGifs: pauseHiddenGifs ?? this.pauseHiddenGifs,
         deferBleLogDescriptions: deferBleLogDescriptions ?? this.deferBleLogDescriptions,
         reduceBlePluginLogs: reduceBlePluginLogs ?? this.reduceBlePluginLogs,
+        pauseHiddenStatusAnimations:
+            pauseHiddenStatusAnimations ?? this.pauseHiddenStatusAnimations,
+        disableContinuousStatusAnimations:
+            disableContinuousStatusAnimations ?? this.disableContinuousStatusAnimations,
+        cacheChannelKeyHashes: cacheChannelKeyHashes ?? this.cacheChannelKeyHashes,
         uiNotificationIntervalMilliseconds: _uiInterval(
           uiNotificationIntervalMilliseconds ?? this.uiNotificationIntervalMilliseconds,
         ),
@@ -104,6 +118,11 @@ class PowerSavingOptions {
       pauseHiddenGifs: json is Map && json['pause_hidden_gifs'] == true,
       deferBleLogDescriptions: json is Map && json['defer_ble_log_descriptions'] == true,
       reduceBlePluginLogs: json is Map && json['reduce_ble_plugin_logs'] == true,
+      pauseHiddenStatusAnimations:
+          json is Map && json['pause_hidden_status_animations'] == true,
+      disableContinuousStatusAnimations:
+          json is Map && json['disable_continuous_status_animations'] == true,
+      cacheChannelKeyHashes: json is Map && json['cache_channel_key_hashes'] == true,
       uiNotificationIntervalMilliseconds: _uiInterval(json is Map
           ? json['ui_notification_interval_milliseconds'] : null),
       batteryIntervalSeconds: _deviceInterval(
@@ -124,6 +143,9 @@ class PowerSavingOptions {
     'pause_hidden_gifs': pauseHiddenGifs,
     'defer_ble_log_descriptions': deferBleLogDescriptions,
     'reduce_ble_plugin_logs': reduceBlePluginLogs,
+    'pause_hidden_status_animations': pauseHiddenStatusAnimations,
+    'disable_continuous_status_animations': disableContinuousStatusAnimations,
+    'cache_channel_key_hashes': cacheChannelKeyHashes,
     'ui_notification_interval_milliseconds': uiNotificationIntervalMilliseconds,
     'battery_interval_seconds': batteryIntervalSeconds,
     'gps_interval_seconds': gpsIntervalSeconds,
@@ -143,6 +165,8 @@ class PowerSavingSettings {
   PowerSavingOptions get effective => switch (profile) {
     PowerSavingProfile.disabled => const PowerSavingOptions(),
     PowerSavingProfile.balanced => const PowerSavingOptions(
+      cacheChannelKeyHashes: true,
+      pauseHiddenStatusAnimations: true,
       reduceBlePluginLogs: true,
       deferBleLogDescriptions: true,
       uiNotificationIntervalMilliseconds: 100,
@@ -154,6 +178,9 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 120,
     ),
     PowerSavingProfile.economical => const PowerSavingOptions(
+      cacheChannelKeyHashes: true,
+      pauseHiddenStatusAnimations: true,
+      disableContinuousStatusAnimations: true,
       reduceBlePluginLogs: true,
       deferBleLogDescriptions: true,
       uiNotificationIntervalMilliseconds: 250,
@@ -165,6 +192,9 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 300,
     ),
     PowerSavingProfile.maximum => const PowerSavingOptions(
+      cacheChannelKeyHashes: true,
+      pauseHiddenStatusAnimations: true,
+      disableContinuousStatusAnimations: true,
       reduceBlePluginLogs: true,
       deferBleLogDescriptions: true,
       uiNotificationIntervalMilliseconds: 500,

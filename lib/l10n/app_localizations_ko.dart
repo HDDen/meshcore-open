@@ -7998,6 +7998,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get powerSaving_title => 'Power saving';
 
   @override
+  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+
+  @override
+  String get powerSaving_cacheChannelKeyHashesDescription =>
+      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+
+  @override
+  String get powerSaving_pauseHiddenStatusAnimations =>
+      'Pause hidden status animations';
+
+  @override
+  String get powerSaving_pauseHiddenStatusAnimationsDescription =>
+      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+
+  @override
+  String get powerSaving_disableContinuousStatusAnimations =>
+      'Static status indicators';
+
+  @override
+  String get powerSaving_disableContinuousStatusAnimationsDescription =>
+      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+
+  @override
   String get powerSaving_reduceBlePluginLogs =>
       'Reduce Bluetooth diagnostic logs';
 

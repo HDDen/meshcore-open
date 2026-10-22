@@ -234,6 +234,30 @@ class AppSettingsService extends ChangeNotifier {
     ));
   }
 
+  Future<void> setPauseHiddenStatusAnimations(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(pauseHiddenStatusAnimations: value),
+      ),
+    ));
+  }
+
+  Future<void> setDisableContinuousStatusAnimations(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(disableContinuousStatusAnimations: value),
+      ),
+    ));
+  }
+
+  Future<void> setCacheChannelKeyHashes(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(cacheChannelKeyHashes: value),
+      ),
+    ));
+  }
+
   Future<void> setMapShowRepeaters(bool value) async {
     await updateSettings(_settings.copyWith(mapShowRepeaters: value));
   }

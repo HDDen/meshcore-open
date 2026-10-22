@@ -203,6 +203,79 @@ void main() {
     _expectDeliveryChoices(reloaded.settings);
   });
 
+  test('channel hash cache persists independently and preserves all other choices', () async {
+    final service = await _loadSettings();
+    await service.setPauseHiddenStatusAnimations(true);
+    await service.setDisableContinuousStatusAnimations(true);
+    await service.setReduceBlePluginLogs(true);
+    await service.setDeferBleLogDescriptions(true);
+    await service.setPauseHiddenGifs(true);
+    await service.setPauseIdleImageCleanup(true);
+    await service.setPauseHiddenRadioIndicator(true);
+    await service.setUiNotificationIntervalMilliseconds(750);
+    await service.setBatteryPollingIntervalSeconds(300);
+    await service.setGpsPollingIntervalSeconds(240);
+    await service.setHiddenRadioStatsIntervalSeconds(17);
+    final other = service.settings.powerSaving.custom.toJson();
+    await service.setCacheChannelKeyHashes(true);
+    expect(service.settings.powerSaving.profile, PowerSavingProfile.disabled);
+    expect(service.settings.powerSaving.effective.cacheChannelKeyHashes, isFalse);
+    await service.setPowerSavingProfile(PowerSavingProfile.custom);
+    var reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), {
+      ...other, 'cache_channel_key_hashes': true,
+    });
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.maximum);
+    await reloaded.setCacheChannelKeyHashes(false);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.cacheChannelKeyHashes, isTrue);
+    expect(reloaded.settings.powerSaving.custom.toJson(), other);
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.custom);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), other);
+    _expectDeliveryChoices(reloaded.settings);
+  });
+
+  test('status animation choices persist independently and preserve other options', () async {
+    final service = await _loadSettings();
+    await service.setPauseHiddenStatusAnimations(true);
+    await service.setDisableContinuousStatusAnimations(true);
+    expect(service.settings.powerSaving.profile, PowerSavingProfile.disabled);
+    expect(service.settings.powerSaving.effective.pauseHiddenStatusAnimations, isFalse);
+    expect(service.settings.powerSaving.effective.disableContinuousStatusAnimations, isFalse);
+    await service.setPowerSavingProfile(PowerSavingProfile.custom);
+    var reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.pauseHiddenStatusAnimations, isTrue);
+    expect(reloaded.settings.powerSaving.effective.disableContinuousStatusAnimations, isTrue);
+    await reloaded.setPauseHiddenStatusAnimations(false);
+    await reloaded.setReduceBlePluginLogs(true);
+    await reloaded.setDeferBleLogDescriptions(true);
+    await reloaded.setPauseHiddenGifs(true);
+    await reloaded.setPauseIdleImageCleanup(true);
+    await reloaded.setPauseHiddenRadioIndicator(true);
+    await reloaded.setUiNotificationIntervalMilliseconds(750);
+    await reloaded.setBatteryPollingIntervalSeconds(300);
+    await reloaded.setGpsPollingIntervalSeconds(240);
+    await reloaded.setHiddenRadioStatsIntervalSeconds(17);
+    final saved = reloaded.settings.powerSaving.custom.toJson();
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.maximum);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.custom.toJson(), saved);
+    expect(reloaded.settings.powerSaving.effective.pauseHiddenStatusAnimations, isTrue);
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.custom);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), saved);
+    await reloaded.setDisableContinuousStatusAnimations(false);
+    await reloaded.setPauseHiddenStatusAnimations(true);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), {
+      ...saved,
+      'pause_hidden_status_animations': true,
+      'disable_continuous_status_animations': false,
+    });
+    _expectDeliveryChoices(reloaded.settings);
+  });
+
   test('plugin log flag persists independently without enabling the profile', () async {
     final service = await _loadSettings();
     await service.setReduceBlePluginLogs(true);

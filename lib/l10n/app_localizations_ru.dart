@@ -8365,6 +8365,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerSaving_title => 'Энергосбережение';
 
   @override
+  String get powerSaving_cacheChannelKeyHashes =>
+      'Кэшировать параметры каналов';
+
+  @override
+  String get powerSaving_cacheChannelKeyHashesDescription =>
+      'Повторно использует вычисленный хеш неизменного ключа канала при обработке входящих пакетов. Проверка и расшифровка сообщений сохраняются.';
+
+  @override
+  String get powerSaving_pauseHiddenStatusAnimations =>
+      'Приостанавливать скрытые статусные анимации';
+
+  @override
+  String get powerSaving_pauseHiddenStatusAnimationsDescription =>
+      'Останавливает точки отправки и пульсацию индикаторов вне видимой области, под другим экраном и при неактивном приложении. На экране анимация сохраняется.';
+
+  @override
+  String get powerSaving_disableContinuousStatusAnimations =>
+      'Статичные индикаторы статуса';
+
+  @override
+  String get powerSaving_disableContinuousStatusAnimationsDescription =>
+      'Заменяет анимацию точек отправки и плавную пульсацию статичными индикаторами, в том числе на экране. Статусы, счётчики повторов и обработка отправки сохраняются.';
+
+  @override
   String get powerSaving_reduceBlePluginLogs => 'Меньше служебных BLE-логов';
 
   @override

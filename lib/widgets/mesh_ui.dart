@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../helpers/status_animation_playback.dart';
 import '../l10n/l10n.dart';
+import '../models/power_saving_settings.dart';
+import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
 
 /// MeshCore shared design kit.
@@ -408,6 +412,7 @@ class _PulseDotState extends State<PulseDot>
   // Created eagerly: a lazy `late final` initializer would run on first
   // access — which can be dispose(), where ticker creation throws.
   late final AnimationController _controller;
+  late final StatusAnimationPlayback _playback;
 
   @override
   void initState() {
@@ -416,30 +421,31 @@ class _PulseDotState extends State<PulseDot>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
-    if (widget.animate) _controller.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(PulseDot old) {
-    super.didUpdateWidget(old);
-    if (widget.animate && !_controller.isAnimating) {
-      _controller.repeat(reverse: true);
-    } else if (!widget.animate && _controller.isAnimating) {
-      _controller.stop();
-      _controller.value = 0;
-    }
+    _playback = StatusAnimationPlayback(
+      controller: _controller,
+      reverse: true,
+      onChanged: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _playback.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: widget.animate
+    final options = context.watch<AppSettingsService?>()?.settings.powerSaving.effective
+        ?? const PowerSavingOptions();
+    _playback.updateContext(context, options: options, requested: widget.animate);
+    return _playback.wrap(FadeTransition(
+      opacity: widget.animate && !_playback.staticPresentation
           ? Tween(begin: 0.35, end: 1.0).animate(
               CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
             )
@@ -458,7 +464,7 @@ class _PulseDotState extends State<PulseDot>
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

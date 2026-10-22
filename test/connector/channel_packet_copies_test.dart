@@ -8,7 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
+import 'package:meshcore_open/helpers/channel_key_hash_cache.dart';
 import 'package:meshcore_open/helpers/reaction_helper.dart';
+import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -167,6 +169,122 @@ Future<void> main() async {
   tearDown(PrefsManager.reset);
 
   group('one packet, one message', () {
+    for (final cached in [false, true]) {
+      test('colliding channel hashes still require the correct channel key (cache=$cached)', () async {
+        // 257 различных синтетических PSK гарантируют коллизию одного байта.
+        final seen = <int, Uint8List>{};
+        (Uint8List, Uint8List)? collision;
+        for (var i = 0; i < 257; i++) {
+          final key = Uint8List(16)
+            ..[0] = i & 255
+            ..[1] = i >> 8
+            ..[15] = 0x5a;
+          final hash = _channelHash(key);
+          final previous = seen[hash];
+          if (previous != null) {
+            collision = (previous, key);
+            break;
+          }
+          seen[hash] = key;
+        }
+        expect(collision, isNotNull);
+        final (firstKey, secondKey) = collision!;
+        expect(_channelHash(firstKey), _channelHash(secondKey));
+        final connector = await _connectorWithChannels([
+          (0, 'First', firstKey), (1, 'Second', secondKey),
+        ]);
+        if (cached) {
+          final settings = AppSettingsService();
+          await settings.loadSettings();
+          await settings.setPowerSavingProfile(PowerSavingProfile.balanced);
+          connector.attachAppSettingsServiceForTest(settings);
+          addTearDown(settings.dispose);
+        }
+        addTearDown(connector.dispose);
+        Uint8List? frame;
+        // У фикстуры первый ключ должен однозначно провалить двухбайтовый MAC.
+        for (var attempt = 0; attempt < 16; attempt++) {
+          final candidate = _rxLogTextFrame(
+            psk: secondKey, timestampSeconds: _timestamp + attempt,
+            senderName: 'Alice', text: 'hash collision',
+          );
+          final firstKey32 = Uint8List(32)..setRange(0, firstKey.length, firstKey);
+          final wrongMac = crypto.Hmac(crypto.sha256, firstKey32)
+              .convert(candidate.sublist(8)).bytes;
+          if (wrongMac[0] != candidate[6] || wrongMac[1] != candidate[7]) {
+            frame = candidate;
+            break;
+          }
+        }
+        expect(frame, isNotNull);
+        connector.handleFrameForTest(frame!);
+        await _settle();
+        final first = connector.channels.firstWhere((channel) => channel.index == 0);
+        final second = connector.channels.firstWhere((channel) => channel.index == 1);
+        expect(connector.getLoadedChannelMessages(first), isEmpty);
+        final messages = connector.getLoadedChannelMessages(second);
+        expect(messages, hasLength(1));
+        expect(messages.single.text, 'hash collision');
+        expect(messages.single.senderName, 'Alice');
+      });
+    }
+
+    test('RX and proxy share the opt-in hash cache; Off and disconnect discard it', () async {
+      final settings = AppSettingsService();
+      await settings.loadSettings();
+      addTearDown(settings.dispose);
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      addTearDown(connector.dispose);
+      var calculations = 0;
+      final cache = ChannelKeyHashCache(compute: (key) {
+        calculations++;
+        return _channelHash(key);
+      });
+      connector.attachAppSettingsServiceForTest(settings);
+      connector.attachChannelKeyHashCacheForTest(cache);
+      await settings.setCacheChannelKeyHashes(true);
+
+      Future<void> receive(int sequence) async {
+        final frame = _rxLogTextFrame(
+          psk: psk, timestampSeconds: _timestamp + sequence,
+          senderName: 'Alice', text: 'cache $sequence',
+        );
+        expect(connector.mcoX4(frame), isFalse);
+        connector.handleFrameForTest(frame);
+        await _settle();
+      }
+
+      await receive(1); // Исходный профиль: оба пути считают SHA заново.
+      expect(calculations, 2);
+      await settings.setPowerSavingProfile(PowerSavingProfile.custom);
+      await receive(2);
+      expect(calculations, 3);
+      await settings.setPauseHiddenGifs(true);
+      await receive(3); // Посторонние изменения не вымывают кэш.
+      expect(calculations, 3);
+      await settings.setCacheChannelKeyHashes(false);
+      await receive(4);
+      expect(calculations, 5);
+      await settings.setCacheChannelKeyHashes(true);
+      await receive(5);
+      expect(calculations, 6);
+      await settings.setPowerSavingProfile(PowerSavingProfile.disabled);
+      await receive(6);
+      expect(calculations, 8);
+      await settings.setPowerSavingProfile(PowerSavingProfile.balanced);
+      await receive(7);
+      expect(calculations, 9);
+      final channel = connector.channels.single;
+      expect(connector.getLoadedChannelMessages(channel), hasLength(7));
+      final retainedKey = channel.psk;
+      expect(cache.hash(retainedKey), _channelHash(retainedKey));
+      expect(calculations, 9);
+      await connector.disconnect(manual: true).timeout(const Duration(seconds: 3));
+      // Та же identity после teardown: очистку нельзя объяснить заменой ключа.
+      expect(cache.hash(retainedKey), _channelHash(retainedKey));
+      expect(calculations, 10);
+    });
+
     test('the RX-log copy and the node\'s frame of one reception make one '
         'message with one repeat', () async {
       final connector = await _connectorWithChannels([(0, 'Test', psk)]);

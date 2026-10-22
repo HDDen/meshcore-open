@@ -18,6 +18,27 @@ class _RecordingSettings extends AppSettingsService {
   int uiSaves = 0;
   int descriptionSaves = 0;
   int pluginLogSaves = 0;
+  int hiddenAnimationSaves = 0;
+  int staticAnimationSaves = 0;
+  int channelHashSaves = 0;
+
+  @override
+  Future<void> setCacheChannelKeyHashes(bool value) {
+    channelHashSaves++;
+    return super.setCacheChannelKeyHashes(value);
+  }
+
+  @override
+  Future<void> setPauseHiddenStatusAnimations(bool value) {
+    hiddenAnimationSaves++;
+    return super.setPauseHiddenStatusAnimations(value);
+  }
+
+  @override
+  Future<void> setDisableContinuousStatusAnimations(bool value) {
+    staticAnimationSaves++;
+    return super.setDisableContinuousStatusAnimations(value);
+  }
 
   @override
   Future<void> setReduceBlePluginLogs(bool value) {
@@ -499,6 +520,56 @@ void main() {
       expect(settings.uiSaves, 1);
       expect(settings.gifSaves, 2);
       expect(settings.imageSaves, 2);
+
+      for (final entry in [
+        ('hidden-status-animations', 'pause_hidden_status_animations',
+            locale == 'ru' ? 'Приостанавливать скрытые статусные анимации'
+                : 'Pause hidden status animations'),
+        ('static-status-animations', 'disable_continuous_status_animations',
+            locale == 'ru' ? 'Статичные индикаторы статуса' : 'Static status indicators'),
+        ('channel-key-hashes', 'cache_channel_key_hashes',
+            locale == 'ru' ? 'Кэшировать параметры каналов' : 'Cache channel parameters'),
+      ]) {
+        await _select(tester, off);
+        await _showToggle(tester, entry.$1);
+        var toggle = tester.widget<Switch>(_toggle(entry.$1));
+        expect(toggle.value, isFalse);
+        expect(toggle.onChanged, isNull);
+        expect(find.text(entry.$3), findsOneWidget);
+        for (final preset in [
+          balanced,
+          locale == 'ru' ? 'Экономный' : 'Economical',
+          locale == 'ru' ? 'Максимальная экономия' : 'Maximum saving',
+        ]) {
+          await _select(tester, preset);
+          await _showToggle(tester, entry.$1);
+          toggle = tester.widget<Switch>(_toggle(entry.$1));
+          expect(toggle.value, preset != balanced || entry.$1 != 'static-status-animations');
+          expect(toggle.onChanged, isNull);
+        }
+        await _select(tester, custom);
+        await _showToggle(tester, entry.$1);
+        final savedOptions = settings.settings.powerSaving.custom.toJson();
+        expect(tester.widget<Switch>(_toggle(entry.$1)).value, isFalse);
+        expect(tester.widget<Switch>(_toggle(entry.$1)).onChanged, isNotNull);
+        await tester.tap(_toggle(entry.$1));
+        await _settle(tester);
+        expect(settings.settings.powerSaving.custom.toJson(), {
+          ...savedOptions, entry.$2: true,
+        });
+        await _select(tester, off);
+        await _select(tester, custom);
+        await _showToggle(tester, entry.$1);
+        expect(tester.widget<Switch>(_toggle(entry.$1)).value, isTrue);
+        await tester.tap(_toggle(entry.$1));
+        await _settle(tester);
+        expect(settings.settings.powerSaving.custom.toJson(), savedOptions);
+      }
+      expect(settings.hiddenAnimationSaves, 2);
+      expect(settings.staticAnimationSaves, 2);
+      expect(settings.channelHashSaves, 2);
+      expect(settings.pluginLogSaves, 2);
+      expect(settings.descriptionSaves, 2);
     });
   }
 }

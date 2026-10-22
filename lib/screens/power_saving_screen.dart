@@ -172,6 +172,45 @@ class PowerSavingScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          MeshCard(
+            padding: EdgeInsets.zero,
+            child: SwitchListTile(
+              key: const ValueKey('power-saving-hidden-status-animations'),
+              title: Text(l10n.powerSaving_pauseHiddenStatusAnimations),
+              subtitle: Text(l10n.powerSaving_pauseHiddenStatusAnimationsDescription),
+              value: effective.pauseHiddenStatusAnimations,
+              onChanged: custom
+                  ? (value) => unawaited(service.setPauseHiddenStatusAnimations(value))
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MeshCard(
+            padding: EdgeInsets.zero,
+            child: SwitchListTile(
+              key: const ValueKey('power-saving-static-status-animations'),
+              title: Text(l10n.powerSaving_disableContinuousStatusAnimations),
+              subtitle: Text(l10n.powerSaving_disableContinuousStatusAnimationsDescription),
+              value: effective.disableContinuousStatusAnimations,
+              onChanged: custom
+                  ? (value) => unawaited(service.setDisableContinuousStatusAnimations(value))
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MeshCard(
+            padding: EdgeInsets.zero,
+            child: SwitchListTile(
+              key: const ValueKey('power-saving-channel-key-hashes'),
+              title: Text(l10n.powerSaving_cacheChannelKeyHashes),
+              subtitle: Text(l10n.powerSaving_cacheChannelKeyHashesDescription),
+              value: effective.cacheChannelKeyHashes,
+              onChanged: custom
+                  ? (value) => unawaited(service.setCacheChannelKeyHashes(value))
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(custom
               ? l10n.powerSaving_customDescription
               : l10n.powerSaving_presetDescription),

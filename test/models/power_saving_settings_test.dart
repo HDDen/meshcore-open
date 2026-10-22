@@ -13,6 +13,9 @@ void main() {
       pauseHiddenGifs: true,
       deferBleLogDescriptions: true,
       reduceBlePluginLogs: true,
+      pauseHiddenStatusAnimations: true,
+      disableContinuousStatusAnimations: true,
+      cacheChannelKeyHashes: true,
       uiNotificationIntervalMilliseconds: 750,
       batteryIntervalSeconds: 300,
       gpsIntervalSeconds: 180,
@@ -25,10 +28,83 @@ void main() {
       'pause_hidden_gifs': false,
       'defer_ble_log_descriptions': false,
       'reduce_ble_plugin_logs': false,
+      'pause_hidden_status_animations': false,
+      'disable_continuous_status_animations': false,
+      'cache_channel_key_hashes': false,
       'ui_notification_interval_milliseconds': 50,
       'battery_interval_seconds': 120,
       'gps_interval_seconds': 60,
     });
+  });
+
+  test('channel key hash cache preserves JSON, old settings and independent choices', () {
+    for (final raw in [null, false, 0, 1, 'true', true]) {
+      final options = PowerSavingOptions.fromJson({'cache_channel_key_hashes': raw});
+      expect(options.cacheChannelKeyHashes, raw == true);
+      expect(PowerSavingOptions.fromJson(options.toJson()).cacheChannelKeyHashes,
+          raw == true);
+    }
+    expect(PowerSavingOptions.fromJson({}).cacheChannelKeyHashes, isFalse);
+    const original = PowerSavingOptions(
+      pauseHiddenStatusAnimations: true,
+      uiNotificationIntervalMilliseconds: 750,
+    );
+    final changed = original.copyWith(cacheChannelKeyHashes: true);
+    expect(changed.toJson(), {...original.toJson(), 'cache_channel_key_hashes': true});
+    expect(changed.copyWith(cacheChannelKeyHashes: false).toJson(), original.toJson());
+    for (final profile in PowerSavingProfile.values) {
+      final settings = PowerSavingSettings(profile: profile);
+      expect(settings.effective.cacheChannelKeyHashes,
+          profile != PowerSavingProfile.disabled && profile != PowerSavingProfile.custom);
+    }
+    final unknown = PowerSavingSettings.fromJson({
+      'profile': 'future', 'custom': changed.toJson(),
+    });
+    expect(unknown.effective.cacheChannelKeyHashes, isFalse);
+    expect(unknown.custom.cacheChannelKeyHashes, isTrue);
+  });
+
+  test('status animation flags keep separate boolean values and preset defaults', () {
+    for (final raw in [null, false, 0, 1, 'true', true]) {
+      final options = PowerSavingOptions.fromJson({
+        'pause_hidden_status_animations': raw,
+        'disable_continuous_status_animations': raw,
+      });
+      expect(options.pauseHiddenStatusAnimations, raw == true);
+      expect(options.disableContinuousStatusAnimations, raw == true);
+      final copied = options.copyWith(reduceBlePluginLogs: true);
+      final restored = PowerSavingOptions.fromJson(copied.toJson());
+      expect(restored.pauseHiddenStatusAnimations, raw == true);
+      expect(restored.disableContinuousStatusAnimations, raw == true);
+    }
+    const expected = {
+      PowerSavingProfile.disabled: (false, false),
+      PowerSavingProfile.balanced: (true, false),
+      PowerSavingProfile.economical: (true, true),
+      PowerSavingProfile.maximum: (true, true),
+      PowerSavingProfile.custom: (false, false),
+    };
+    for (final entry in expected.entries) {
+      final options = PowerSavingSettings(profile: entry.key).effective;
+      expect((options.pauseHiddenStatusAnimations,
+          options.disableContinuousStatusAnimations), entry.value);
+    }
+    final independent = const PowerSavingOptions()
+        .copyWith(pauseHiddenStatusAnimations: true)
+        .copyWith(disableContinuousStatusAnimations: true)
+        .copyWith(pauseHiddenStatusAnimations: false);
+    expect(independent.pauseHiddenStatusAnimations, isFalse);
+    expect(independent.disableContinuousStatusAnimations, isTrue);
+    final old = PowerSavingOptions.fromJson({});
+    expect(old.pauseHiddenStatusAnimations, isFalse);
+    expect(old.disableContinuousStatusAnimations, isFalse);
+    final unknown = PowerSavingSettings.fromJson({
+      'profile': 'future',
+      'custom': independent.toJson(),
+    });
+    expect(unknown.effective.pauseHiddenStatusAnimations, isFalse);
+    expect(unknown.effective.disableContinuousStatusAnimations, isFalse);
+    expect(unknown.custom.disableContinuousStatusAnimations, isTrue);
   });
 
   test('plugin log flag preserves defaults, JSON and independent custom values', () {

@@ -14021,6 +14021,42 @@ abstract class AppLocalizations {
   /// **'Power saving'**
   String get powerSaving_title;
 
+  /// No description provided for @powerSaving_cacheChannelKeyHashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache channel parameters'**
+  String get powerSaving_cacheChannelKeyHashes;
+
+  /// No description provided for @powerSaving_cacheChannelKeyHashesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.'**
+  String get powerSaving_cacheChannelKeyHashesDescription;
+
+  /// No description provided for @powerSaving_pauseHiddenStatusAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause hidden status animations'**
+  String get powerSaving_pauseHiddenStatusAnimations;
+
+  /// No description provided for @powerSaving_pauseHiddenStatusAnimationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.'**
+  String get powerSaving_pauseHiddenStatusAnimationsDescription;
+
+  /// No description provided for @powerSaving_disableContinuousStatusAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Static status indicators'**
+  String get powerSaving_disableContinuousStatusAnimations;
+
+  /// No description provided for @powerSaving_disableContinuousStatusAnimationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.'**
+  String get powerSaving_disableContinuousStatusAnimationsDescription;
+
   /// No description provided for @powerSaving_reduceBlePluginLogs.
   ///
   /// In en, this message translates to:

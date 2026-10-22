@@ -31,6 +31,7 @@ import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_raw_packet.dart';
+import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
@@ -5624,6 +5625,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _syncPowerSavingSettings();
   }
 
+  @visibleForTesting
+  void attachChannelKeyHashCacheForTest(ChannelKeyHashCache cache) {
+    _channelKeyHashCache.clear();
+    _channelKeyHashCache = cache;
+    _syncPowerSavingSettings();
+  }
+
   /// Hands the connector the path histories without [initialize].
   @visibleForTesting
   void attachPathHistoryServiceForTest(PathHistoryService service) {
@@ -6621,6 +6629,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactCacheLoadGeneration++;
     _contactCacheLoadFuture = null;
     _clearDirectEchoKey('new session');
+    _channelKeyHashCache.clear();
     _directFloodRepeats.clear();
     _heardChannelPackets.clear();
     _directEchoAckUnsupported = false;
@@ -6977,6 +6986,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _conversationLoadGeneration++;
     _conversationLoadFutures.clear();
     _clearDirectEchoKey('disconnect');
+    _channelKeyHashCache.clear();
     _directFloodRepeats.clear();
     _heardChannelPackets.clear();
     _setSelfPublicKey(null);
@@ -7278,6 +7288,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _syncPowerSavingSettings() {
+    _channelKeyHashCache.setEnabled(
+      _appSettingsService?.settings.powerSaving.effective.cacheChannelKeyHashes ?? false,
+    );
     _uiNotifications.setInterval(Duration(
       milliseconds: _appSettingsService?.settings.powerSaving.effective
           .uiNotificationIntervalMilliseconds ?? UiNotificationBatcher.minimum.inMilliseconds,
@@ -11822,6 +11835,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (previousSelfPublicKeyHex != selfPublicKeyHex) {
       _clearSharedMessageHistoryState();
       _clearDirectEchoKey('node changed');
+      _channelKeyHashCache.clear();
       _directFloodRepeats.clear();
       _heardChannelPackets.clear();
       _contactRegions.clear();
@@ -15253,6 +15267,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// the do-not-filter setting lists never use it: their packets take the
   /// whole path every time, as they always did.
   final HeardChannelPackets _heardChannelPackets = HeardChannelPackets();
+  ChannelKeyHashCache _channelKeyHashCache = ChannelKeyHashCache();
 
   /// Copies folded into their message by the short path.
   @visibleForTesting
@@ -17367,8 +17382,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   int _computeChannelHash(Uint8List psk) {
-    final digest = crypto.sha256.convert(psk).bytes;
-    return digest[0];
+    return _channelKeyHashCache.hash(psk);
   }
 
   _PacketRegionResolution _resolvePacketRegion(_RawPacket packet) =>
@@ -18382,6 +18396,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _radioStatsSendPolling.dispose();
     BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _clearDirectEchoKey('dispose');
+    _channelKeyHashCache.clear();
     _disposed = true;
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
