@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
+import '../models/power_saving_settings.dart';
 import '../models/image_codec_support.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
@@ -141,6 +142,96 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setClearPathOnMaxRetry(bool value) async {
     await updateSettings(_settings.copyWith(clearPathOnMaxRetry: value));
+  }
+
+  Future<void> setPowerSavingProfile(PowerSavingProfile profile) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(profile: profile),
+    ));
+  }
+
+  Future<void> setUiNotificationIntervalMilliseconds(int milliseconds) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          uiNotificationIntervalMilliseconds: milliseconds,
+        ),
+      ),
+    ));
+  }
+
+  Future<void> setHiddenRadioStatsIntervalSeconds(int seconds) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          hiddenRadioStatsIntervalSeconds: seconds,
+        ),
+      ),
+    ));
+  }
+
+  Future<void> setPauseHiddenRadioIndicator(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          pauseHiddenRadioIndicator: value,
+        ),
+      ),
+    ));
+  }
+
+  Future<void> setBatteryPollingIntervalSeconds(int seconds) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          batteryIntervalSeconds: seconds,
+        ),
+      ),
+    ));
+  }
+
+  Future<void> setPauseIdleImageCleanup(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          pauseIdleImageCleanup: value,
+        ),
+      ),
+    ));
+  }
+
+  Future<void> setPauseHiddenGifs(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(pauseHiddenGifs: value),
+      ),
+    ));
+  }
+
+  Future<void> setDeferBleLogDescriptions(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(deferBleLogDescriptions: value),
+      ),
+    ));
+  }
+
+  Future<void> setReduceBlePluginLogs(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(reduceBlePluginLogs: value),
+      ),
+    ));
+  }
+
+  Future<void> setGpsPollingIntervalSeconds(int seconds) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          gpsIntervalSeconds: seconds,
+        ),
+      ),
+    ));
   }
 
   Future<void> setMapShowRepeaters(bool value) async {

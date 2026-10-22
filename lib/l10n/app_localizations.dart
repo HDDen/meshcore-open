@@ -14014,6 +14014,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The sender name set for this channel will be reset.'**
   String get channels_senderNameResetBySign;
+
+  /// No description provided for @powerSaving_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Power saving'**
+  String get powerSaving_title;
+
+  /// No description provided for @powerSaving_reduceBlePluginLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce Bluetooth diagnostic logs'**
+  String get powerSaving_reduceBlePluginLogs;
+
+  /// No description provided for @powerSaving_reduceBlePluginLogsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.'**
+  String get powerSaving_reduceBlePluginLogsDescription;
+
+  /// No description provided for @powerSaving_deferBleLogDescriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Defer frame log descriptions'**
+  String get powerSaving_deferBleLogDescriptions;
+
+  /// No description provided for @powerSaving_deferBleLogDescriptionsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.'**
+  String get powerSaving_deferBleLogDescriptionsDescription;
+
+  /// No description provided for @powerSaving_uiNotificationInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface update interval'**
+  String get powerSaving_uiNotificationInterval;
+
+  /// No description provided for @powerSaving_uiNotificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.'**
+  String get powerSaving_uiNotificationDescription;
+
+  /// No description provided for @powerSaving_milliseconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{milliseconds} ms'**
+  String powerSaving_milliseconds(int milliseconds);
+
+  /// No description provided for @powerSaving_profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get powerSaving_profile;
+
+  /// No description provided for @powerSaving_disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get powerSaving_disabled;
+
+  /// No description provided for @powerSaving_balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get powerSaving_balanced;
+
+  /// No description provided for @powerSaving_economical.
+  ///
+  /// In en, this message translates to:
+  /// **'Economical'**
+  String get powerSaving_economical;
+
+  /// No description provided for @powerSaving_maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum saving'**
+  String get powerSaving_maximum;
+
+  /// No description provided for @powerSaving_custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom settings'**
+  String get powerSaving_custom;
+
+  /// No description provided for @powerSaving_hiddenRadioStatsInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio statistics interval on a hidden screen'**
+  String get powerSaving_hiddenRadioStatsInterval;
+
+  /// No description provided for @powerSaving_seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String powerSaving_seconds(int seconds);
+
+  /// No description provided for @powerSaving_radioStatsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.'**
+  String get powerSaving_radioStatsDescription;
+
+  /// No description provided for @powerSaving_customDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum values keep the original behavior. Your custom values are saved separately from presets.'**
+  String get powerSaving_customDescription;
+
+  /// No description provided for @powerSaving_presetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset values are fixed. Select Custom settings to adjust them individually.'**
+  String get powerSaving_presetDescription;
+
+  /// No description provided for @powerSaving_pauseHiddenRadioIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause polling for a hidden radio indicator'**
+  String get powerSaving_pauseHiddenRadioIndicator;
+
+  /// No description provided for @powerSaving_pauseHiddenRadioIndicatorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.'**
+  String get powerSaving_pauseHiddenRadioIndicatorDescription;
+
+  /// No description provided for @powerSaving_batteryInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio battery polling interval'**
+  String get powerSaving_batteryInterval;
+
+  /// No description provided for @powerSaving_batteryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies while the app is open and in the background. The connection silence threshold is {minutes} minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.'**
+  String powerSaving_batteryDescription(int minutes);
+
+  /// No description provided for @powerSaving_gpsInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio GPS update interval'**
+  String get powerSaving_gpsInterval;
+
+  /// No description provided for @powerSaving_gpsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.'**
+  String get powerSaving_gpsDescription;
+
+  /// No description provided for @powerSaving_pauseIdleImageCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause idle image cleanup'**
+  String get powerSaving_pauseIdleImageCleanup;
+
+  /// No description provided for @powerSaving_pauseIdleImageCleanupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.'**
+  String get powerSaving_pauseIdleImageCleanupDescription;
+
+  /// No description provided for @powerSaving_pauseHiddenGifs.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause hidden GIFs'**
+  String get powerSaving_pauseHiddenGifs;
+
+  /// No description provided for @powerSaving_pauseHiddenGifsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.'**
+  String get powerSaving_pauseHiddenGifsDescription;
 }
 
 class _AppLocalizationsDelegate

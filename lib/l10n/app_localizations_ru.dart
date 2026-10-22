@@ -8360,4 +8360,112 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get channels_senderNameResetBySign =>
       'Имя отправителя, заданное для канала, будет сброшено.';
+
+  @override
+  String get powerSaving_title => 'Энергосбережение';
+
+  @override
+  String get powerSaving_reduceBlePluginLogs => 'Меньше служебных BLE-логов';
+
+  @override
+  String get powerSaving_reduceBlePluginLogsDescription =>
+      'Сокращает служебный вывод Bluetooth на Android, iOS и macOS. Предупреждения, ошибки и журнал кадров приложения сохраняются. На Windows, Linux и в браузере не действует.';
+
+  @override
+  String get powerSaving_deferBleLogDescriptions =>
+      'Откладывать описание кадров журнала';
+
+  @override
+  String get powerSaving_deferBleLogDescriptionsDescription =>
+      'Формирует текстовое описание, когда оно нужно для показа или копирования. Данные кадра и время записи сохраняются сразу; состав журнала и защита приватных данных не меняются.';
+
+  @override
+  String get powerSaving_uiNotificationInterval =>
+      'Интервал обновления интерфейса';
+
+  @override
+  String get powerSaving_uiNotificationDescription =>
+      'Объединяет обычные обновления при потоке событий. Больший интервал делает отображение менее оперативным. Обработка пакетов и подтверждений не задерживается; изменения состояния подключения сохраняют прежнее окно 50 мс.';
+
+  @override
+  String powerSaving_milliseconds(int milliseconds) {
+    return '$milliseconds мс';
+  }
+
+  @override
+  String get powerSaving_profile => 'Профиль';
+
+  @override
+  String get powerSaving_disabled => 'Выключено';
+
+  @override
+  String get powerSaving_balanced => 'Сбалансированный';
+
+  @override
+  String get powerSaving_economical => 'Экономный';
+
+  @override
+  String get powerSaving_maximum => 'Максимальная экономия';
+
+  @override
+  String get powerSaving_custom => 'Свои настройки';
+
+  @override
+  String get powerSaving_hiddenRadioStatsInterval =>
+      'Интервал радиостатистики на скрытом экране';
+
+  @override
+  String powerSaving_seconds(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get powerSaving_radioStatsDescription =>
+      'Действует, когда экран радиостатистики перекрыт другим экраном или приложение неактивно. На видимом экране обновление остаётся раз в секунду. Другие функции могут запрашивать более частое обновление.';
+
+  @override
+  String get powerSaving_customDescription =>
+      'Минимальные значения сохраняют исходное поведение. Свои настройки хранятся отдельно от готовых профилей.';
+
+  @override
+  String get powerSaving_presetDescription =>
+      'Значения готового профиля фиксированы. Чтобы менять параметры отдельно, выберите «Свои настройки».';
+
+  @override
+  String get powerSaving_pauseHiddenRadioIndicator =>
+      'Приостанавливать опрос скрытого радиоиндикатора';
+
+  @override
+  String get powerSaving_pauseHiddenRadioIndicatorDescription =>
+      'Отключает опрос для индикатора, когда он скрыт, перекрыт другим экраном или приложение неактивно. Отправка сообщений и другие потребители сохраняют необходимые обновления.';
+
+  @override
+  String get powerSaving_batteryInterval => 'Интервал опроса батареи ноды';
+
+  @override
+  String powerSaving_batteryDescription(int minutes) {
+    return 'Действует при открытом приложении и в фоне. Порог тишины для контроля связи: $minutes мин; увеличение интервала замедляет обнаружение молчащего соединения. Ручное обновление остаётся доступным.';
+  }
+
+  @override
+  String get powerSaving_gpsInterval => 'Интервал обновления GPS ноды';
+
+  @override
+  String get powerSaving_gpsDescription =>
+      'Действует при открытом приложении и в фоне, только если GPS включён на ноде. Больший интервал снижает актуальность отображаемых координат ноды. GPS телефона и wardrive настраиваются отдельно.';
+
+  @override
+  String get powerSaving_pauseIdleImageCleanup =>
+      'Приостанавливать очистку изображений в простое';
+
+  @override
+  String get powerSaving_pauseIdleImageCleanupDescription =>
+      'Очистка выполняется только пока есть незавершённые изображения или временно сохранённые данные для защиты от дубликатов. Срок ожидания недостающих пакетов не меняется.';
+
+  @override
+  String get powerSaving_pauseHiddenGifs => 'Приостанавливать скрытые GIF';
+
+  @override
+  String get powerSaving_pauseHiddenGifsDescription =>
+      'Останавливает показ кадров GIF вне видимой области, под другим экраном и при неактивном приложении. При возвращении показ возобновляется, если GIF не был поставлен на паузу вручную.';
 }

@@ -59,11 +59,15 @@ void main() {
     await service.sendMessageWithRetry(contact: contact, text: 'a');
     await pumpEventQueue();
     expect(byText('a').status, MessageStatus.failed);
+    expect(service.pendingMessageCount.value, 0);
 
     failSends = false;
     await service.sendMessageWithRetry(contact: contact, text: 'b');
     await pumpEventQueue();
     expect(sentTexts, ['b']);
+    expect(service.pendingMessageCount.value, 1);
+    service.untrack(byText('b').messageId);
+    expect(service.pendingMessageCount.value, 0);
   });
 
   test('unknown self key fails instead of waiting forever', () async {

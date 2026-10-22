@@ -1,11 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utils/platform_info.dart';
 import '../utils/app_logger.dart';
+
+final _iosAppPresentationActive = ValueNotifier<bool>(true);
+
+/// Share the existing native activity signal without another channel watcher.
+/// True on an unavailable bridge leaves Flutter lifecycle in control.
+ValueListenable<bool> get iosAppPresentationActive => _iosAppPresentationActive;
 
 /// Defer UI frames: keep the isolate, timers and transports alive.
 /// Native notifications remain useful when a dylib reports a false app state.
@@ -99,6 +106,7 @@ class IosPresentationBridge {
     // Close the gate before logging. Native timestamps diagnose queued delivery;
     // they never decide whether rendering is allowed (wall clocks can change).
     onPresentationChanged(allowed);
+    _iosAppPresentationActive.value = raw['active'] as bool;
     final nativeAt = raw['nativeAtUtcMs'];
     final timing = nativeAt is int
         ? ', source=${raw['source']}, nativeAtUtcMs=$nativeAt'
@@ -121,6 +129,7 @@ class IosPresentationBridge {
     _epoch++;
     _channel.setMethodCallHandler(null);
     onPresentationChanged(true);
+    _iosAppPresentationActive.value = true;
     appLogger.warn('Presentation guard unavailable; using Flutter lifecycle',
         tag: 'iOSRendering', noNotify: true);
   }
@@ -132,6 +141,7 @@ class IosPresentationBridge {
     _revision = -1;
     _channel.setMethodCallHandler(null);
     onPresentationChanged(true);
+    _iosAppPresentationActive.value = true;
     if (!wasStarted) {
       return;
     }

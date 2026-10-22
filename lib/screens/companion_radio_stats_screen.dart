@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/helpers/radio_stats_screen_polling.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
 import 'package:meshcore_open/screens/telemetry_screen.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -20,6 +22,7 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
   final List<double> _noiseHistory = [];
   static const int _maxSamples = 120;
   MeshCoreConnector? _connector;
+  RadioStatsScreenPolling? _polling;
   DateTime? _lastChartSampleAt;
 
   @override
@@ -27,9 +30,14 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
     super.initState();
     final c = context.read<MeshCoreConnector>();
     _connector = c;
-    c.acquireRadioStatsPolling();
-    c.setPollingInterval(1);
+    _polling = RadioStatsScreenPolling(c, context.read<AppSettingsService>());
     c.radioStatsNotifier.addListener(_onStatsUpdate);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _polling?.updateRoute(context);
   }
 
   void _onStatsUpdate() {
@@ -48,8 +56,7 @@ class _CompanionRadioStatsScreenState extends State<CompanionRadioStatsScreen> {
   @override
   void dispose() {
     _connector?.radioStatsNotifier.removeListener(_onStatsUpdate);
-    _connector?.setPollingInterval(30);
-    _connector?.releaseRadioStatsPolling();
+    _polling?.dispose();
     super.dispose();
   }
 

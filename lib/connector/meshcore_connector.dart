@@ -35,6 +35,9 @@ import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../helpers/connection_cleanup.dart';
+import '../helpers/device_polling_intervals.dart';
+import '../helpers/radio_stats_send_polling.dart';
+import '../helpers/ui_notification_batcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
@@ -349,7 +352,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<List<int>>? _notifySubscription;
   StreamSubscription<dynamic>? _iosBleCentralSubscription;
   StreamSubscription<NotificationReply>? _notificationReplySubscription;
-  Timer? _notifyListenersTimer;
   Timer? _selfInfoRetryTimer;
   Timer? _reconnectTimer;
   Timer? _batteryPollTimer;
@@ -358,10 +360,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   DateTime? _lastRxWatchdogTickAt;
   int _rxWatchdogReconnects = 0;
   Timer? _gpsLocationPollTimer;
-  static const _gpsLocationPollInterval = Duration(minutes: 1);
+  Duration get _gpsLocationPollInterval => _devicePollingIntervals.gps;
   final List<Completer<void>> _selfInfoRefreshWaiters = [];
   Timer? _radioStatsPollTimer;
   int _radioStatsPollRefCount = 0;
+  final _radioStatsPollingOwners = ValueNotifier<int>(0);
+  ValueListenable<int> get radioStatsPollingOwners => _radioStatsPollingOwners;
+  late final RadioStatsSendPolling _radioStatsSendPolling = RadioStatsSendPolling(
+    isConnected: () => isConnected && supportsCompanionRadioStats,
+    hasPendingWork: () => hasPendingRadioStatsWork,
+    acquire: acquireRadioStatsPolling,
+    release: releaseRadioStatsPolling,
+  );
+  bool get hasPendingRadioStatsWork =>
+      _radioStatsSendPolling.hasActiveOperations ||
+      (_retryService?.hasPendingMessages ?? false) ||
+      _pendingContactSends.isNotEmpty ||
+      _pendingChannelSends.isNotEmpty ||
+      _pendingChannelSentQueue.isNotEmpty ||
+      _channelHopChecks.isNotEmpty;
   final ValueNotifier<CompanionRadioStats?> radioStatsNotifier =
       ValueNotifier<CompanionRadioStats?>(null);
 
@@ -372,9 +389,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// connector for a signal-strength number.
   final ValueNotifier<int> repeaterActivity = ValueNotifier<int>(0);
   int _reconnectAttempts = 0;
-  bool _notifyListenersDirty = false;
   int _uiRevision = 0;
-  static const Duration _notifyListenersDebounce = Duration(milliseconds: 50);
+  late final _uiNotifications = UiNotificationBatcher(onNotify: _flushBatchedNotify);
+  Object? _lastNotifyConnectionState;
 
   final StreamController<Uint8List> _receivedFramesController =
       StreamController<Uint8List>.broadcast();
@@ -593,14 +610,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Set<int> _unconfirmedChannelSlots = {};
   static const int _maxChannelSyncRetries = 3;
   static const int _channelSyncTimeoutMs = 2000; // 2 second timeout per channel
-  static const Duration _batteryPollInterval = Duration(seconds: 120);
-  static const Duration _rxWatchdogCheckInterval = Duration(seconds: 60);
+  DevicePollingIntervals _devicePollingIntervals = const DevicePollingIntervals();
+  Duration get _batteryPollInterval => _devicePollingIntervals.battery;
+  static const Duration _rxWatchdogCheckInterval =
+      DevicePollingIntervals.watchdogCheck;
   // Battery polling is expected to produce request-response traffic every
   // poll interval, which makes prolonged RX silence anomalous on a quiet mesh.
   // Threshold = two missed battery cycles plus one check window, and must
   // keep tracking the polling cadence if it ever changes.
-  static final Duration _rxWatchdogSilence =
-      _batteryPollInterval * 2 + _rxWatchdogCheckInterval;
+  Duration get _rxWatchdogSilence => _devicePollingIntervals.watchdogSilence;
   static const int _rxWatchdogMaxConsecutive = 3;
 
   // Services
@@ -733,6 +751,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _storageTotalKb = -1;
 
   MeshCoreConnector() {
+    _lastNotifyConnectionState = _notificationConnectionState;
     if (PlatformInfo.isIOS) {
       _lastAppLifecycleState = WidgetsBinding.instance.lifecycleState;
       _lastAppLifecycleStateAt = DateTime.now();
@@ -3912,10 +3931,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(Map<int, String> slotIds)? stampImageChannelIds,
     void Function(int channelIndex)? forgetImageSlot,
   }) {
+    _retryService?.pendingMessageCount.removeListener(_syncRadioStatsSendPolling);
     _retryService = retryService;
+    retryService.pendingMessageCount.addListener(_syncRadioStatsSendPolling);
     _pathHistoryService = pathHistoryService;
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
+    _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _appSettingsService = appSettingsService;
+    _syncPowerSavingSettings();
     _lastSharedMessageHistoryMode =
         appSettingsService?.settings.sharedMessageHistoryMode ??
         SharedMessageHistoryMode.disabled;
@@ -4066,6 +4089,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleAppSettingsChanged() {
+    _syncPowerSavingSettings();
     final settings = _appSettingsService?.settings;
     _syncBackgroundTcpService();
     final noRetransmissionWarningSeconds =
@@ -5554,11 +5578,50 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void handleFrameForTest(List<int> data) => _handleFrame(data);
 
+  /// Переход без платформенного транспорта; connected сохраняет обычные side effects.
+  @visibleForTesting
+  void setConnectionStateForTest(MeshCoreConnectionState state) => _setState(state);
+
+  /// Доступ к действующему таймеру без подключения платформенного транспорта.
+  @visibleForTesting
+  void startBatteryPollingForTest() => _startBatteryPolling();
+
+  @visibleForTesting
+  Duration get rxWatchdogSilenceForTest => _rxWatchdogSilence;
+
+  @visibleForTesting
+  DateTime get rxSilenceAnchorForTest => _rxSilenceAnchor;
+
+  /// Изолирует запрет APP_START от хранения контактов и их сетевой загрузки.
+  @visibleForTesting
+  void setContactSyncInProgressForTest(bool value) {
+    _isLoadingContacts = value;
+  }
+
+  /// Один настоящий шаг watchdog с заданной предысторией, без ожидания минут.
+  @visibleForTesting
+  DateTime tickRxWatchdogForTest({
+    required DateTime lastReceivedAt,
+    required DateTime previousTickAt,
+    DateTime? silenceAnchor,
+    MeshCoreTransportType transport = MeshCoreTransportType.bluetooth,
+  }) {
+    _lastRxTime = lastReceivedAt;
+    _lastRxWatchdogTickAt = previousTickAt;
+    _rxSilenceAnchor = silenceAnchor ?? lastReceivedAt;
+    _activeTransport = transport;
+    _handleRxWatchdogTick();
+    return _rxSilenceAnchor;
+  }
+
   /// Hands the connector its settings without [initialize], which also
   /// starts the notification plugin a test host does not have.
   @visibleForTesting
   void attachAppSettingsServiceForTest(AppSettingsService service) {
+    _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _appSettingsService = service;
+    service.addListener(_syncPowerSavingSettings);
+    _syncPowerSavingSettings();
   }
 
   /// Hands the connector the path histories without [initialize].
@@ -5571,8 +5634,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// same callbacks.
   @visibleForTesting
   void attachRetryServiceForTest(MessageRetryService service) {
+    _retryService?.pendingMessageCount.removeListener(_syncRadioStatsSendPolling);
     _retryService = service;
+    service.pendingMessageCount.addListener(_syncRadioStatsSendPolling);
     service.initialize(_retryServiceConfig());
+    _syncRadioStatsSendPolling();
   }
 
   @visibleForTesting
@@ -7189,7 +7255,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(disconnect(manual: false));
   }
 
-  /// Start polling the radio's GPS-backed self-info every minute.
+  /// Опрос GPS ноды с выбранным периодом; по умолчанию раз в минуту.
   /// No-op if already running. Triggered when the radio reports `gps=1`.
   void _startGpsLocationPolling() {
     if (_gpsLocationPollTimer != null) return;
@@ -7210,6 +7276,46 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _gpsLocationPollTimer?.cancel();
     _gpsLocationPollTimer = null;
   }
+
+  void _syncPowerSavingSettings() {
+    _uiNotifications.setInterval(Duration(
+      milliseconds: _appSettingsService?.settings.powerSaving.effective
+          .uiNotificationIntervalMilliseconds ?? UiNotificationBatcher.minimum.inMilliseconds,
+    ));
+    _radioStatsSendPolling.setEnabled(
+      _appSettingsService?.settings.powerSaving.effective
+          .pauseHiddenRadioIndicator ?? false,
+    );
+    final next = DevicePollingIntervals.fromOptions(
+      _appSettingsService?.settings.powerSaving.effective,
+    );
+    final batteryChanged = next.battery != _devicePollingIntervals.battery;
+    final gpsChanged = next.gps != _devicePollingIntervals.gps;
+    if (!batteryChanged && !gpsChanged) return;
+    _devicePollingIntervals = next;
+    if (batteryChanged) {
+      // Новый период начинает новое окно ожидания ответов, в том числе
+      // при возврате с редкого опроса к короткому: старая тишина не авария.
+      if (isConnected) {
+        _rxSilenceAnchor = DateTime.now();
+      }
+      if (_batteryPollTimer?.isActive ?? false) {
+        if (isConnected) {
+          _startBatteryPolling();
+        } else {
+          _stopBatteryPolling();
+        }
+      }
+    }
+    if (gpsChanged && (_gpsLocationPollTimer?.isActive ?? false)) {
+      _stopGpsLocationPolling();
+      if (isConnected) {
+        _startGpsLocationPolling();
+      }
+    }
+  }
+
+  void _syncRadioStatsSendPolling() => _radioStatsSendPolling.sync();
 
   void setPollingInterval(int i) {
     _pollingInterval = i.clamp(1, 60);
@@ -7243,6 +7349,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_radioStatsPollRefCount == 1 && isConnected) {
       _startRadioStatsPolling();
     }
+    _radioStatsPollingOwners.value = _radioStatsPollRefCount;
   }
 
   void releaseRadioStatsPolling() {
@@ -7250,6 +7357,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_radioStatsPollRefCount == 0) {
       _stopRadioStatsPolling();
     }
+    _radioStatsPollingOwners.value = _radioStatsPollRefCount;
   }
 
   Future<void> requestRadioStats() async {
@@ -7667,7 +7775,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? replyToSenderName,
     String? replyToText,
     int? replyToTimestamp,
-  }) async {
+  }) => _radioStatsSendPolling.run(() async {
     // A marker is normalised before anything else: what is stored, what goes
     // on the wire and what a later `del:` command names have to be one string.
     // Skipped when committing a queued or retried message — that text came out
@@ -7902,7 +8010,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       await sendFrame(buildSendTextMsgFrame(contact.publicKey, outboundText));
     }
-  }
+  });
 
   /// [pathHashWidth] defaults to the width implied by [customPath], falling
   /// back to the radio's current mode (e.g. for zero-hop paths).
@@ -8287,7 +8395,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The region to send under instead of the channel's own: a reply to a
     // message heard under a region goes back there.
     String? region,
-  }) async {
+  }) => _radioStatsSendPolling.run(() async {
     // See sendMessage: normalised up front, and only for a first send.
     var text =
         pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
@@ -8855,7 +8963,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ),
       );
     }
-  }
+  });
 
   /// How long to listen for a channel message to come back through the mesh
   /// before resending it: the "wait before resending" setting under the hop
@@ -16417,6 +16525,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     final queueId = pendingAck.channelSendQueueId!;
     _pendingChannelSentQueue.remove(queueId);
+    _syncRadioStatsSendPolling();
     if (_isReactionSendQueueId(queueId)) {
       return;
     }
@@ -18133,35 +18242,29 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  // Служебные listeners читают не только state: доступность соединения/статистики,
+  // ручной разрыв, restart, offline и готовность сохраняют прежнее окно 50 мс.
+  Object get _notificationConnectionState => (
+    _state, isConnected, supportsCompanionRadioStats,
+    _activeTransport, _manualDisconnect, _isRecoveringConnection,
+    _transportRestartInProgress, _isOfflineMode, _isOfflineSharedMode,
+    _offlineHistoryScope, _deviceId, selfPublicKeyHex,
+    hasCompletedSelfInfoHandshake, isSessionReady,
+  );
+
   void markNotifyDirty() {
     if (_disposed) return;
-    if (_notifyListenersDirty && _notifyListenersTimer != null) {
-      return;
-    }
-
-    _notifyListenersDirty = true;
-    _notifyListenersTimer ??= Timer(
-      _notifyListenersDebounce,
-      _flushBatchedNotify,
-    );
+    _syncRadioStatsSendPolling();
+    final connection = _notificationConnectionState;
+    final priority = connection != _lastNotifyConnectionState;
+    _lastNotifyConnectionState = connection;
+    _uiNotifications.mark(priority: priority);
   }
 
   void _flushBatchedNotify() {
-    _notifyListenersTimer = null;
-    if (!_notifyListenersDirty) {
-      return;
-    }
-
-    _notifyListenersDirty = false;
+    if (_disposed) return;
     _uiRevision++;
     super.notifyListeners();
-
-    if (_notifyListenersDirty && _notifyListenersTimer == null) {
-      _notifyListenersTimer = Timer(
-        _notifyListenersDebounce,
-        _flushBatchedNotify,
-      );
-    }
   }
 
   @override
@@ -18274,6 +18377,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       WidgetsBinding.instance.removeObserver(this);
     }
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
+    _appSettingsService?.removeListener(_syncPowerSavingSettings);
+    _retryService?.pendingMessageCount.removeListener(_syncRadioStatsSendPolling);
+    _radioStatsSendPolling.dispose();
     BlockedSenders.instance.removeListener(_handleBlockedSendersChanged);
     _clearDirectEchoKey('dispose');
     _disposed = true;
@@ -18285,7 +18391,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _iosBleCentralSubscription?.cancel();
     _notificationReplySubscription?.cancel();
     _notificationService.releaseReplyPort();
-    _notifyListenersTimer?.cancel();
+    _uiNotifications.dispose();
     _reconnectTimer?.cancel();
     _batteryPollTimer?.cancel();
     _rxWatchdogTimer?.cancel();
@@ -18299,6 +18405,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     _cancelAllChannelNoRetransmissionTimers();
     radioStatsNotifier.dispose();
+    _radioStatsPollingOwners.dispose();
     repeaterActivity.dispose();
     _receivedFramesController.close();
     _mcmpSigningFailedController.close();

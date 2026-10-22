@@ -55,6 +55,37 @@ void main() {
     },
   );
 
+  testWidgets('on-demand app reassembler reports timeout to the received store',
+      (tester) async {
+    final store = ReceivedImageStore(clock: tester.binding.clock.now);
+    final r = ImageStreamReassembler(store: store, clock: tester.binding.clock.now);
+    try {
+      r.startMaintenance(pauseWhileIdle: true);
+      final set = buildImageChunks(
+        payload: Uint8List.fromList(List<int>.generate(400, (i) => i & 0xff)),
+        metadata: const ImageStreamMetadata(rate: ImageCodecRatePoint.standard),
+        senderPrefix: 0x1234,
+        imgId: 4,
+      );
+      r.addChunk(set.blobs.first, channelIndex: 5);
+      await store.settle();
+      expect(store.entries.single.state, ReceivedImageState.receiving);
+      await tester.pump(const Duration(seconds: 60));
+      await store.settle();
+      final entry = store.entries.single;
+      expect(entry.channelIndex, 5);
+      expect(entry.senderPrefix, 0x1234);
+      expect(entry.state, ReceivedImageState.failedIncomplete);
+      expect(entry.receivedChunks, 1);
+      expect(entry.totalChunks, 3);
+      expect(r.pendingCount, 0);
+    } finally {
+      r.stopMaintenance();
+      store.dispose();
+      await tester.pump();
+    }
+  });
+
   group('AppSettings image codec block', () {
     test(
       'round-trips through toJson/fromJson on the ImageCodecPreferences keys',

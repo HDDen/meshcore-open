@@ -1,0 +1,208 @@
+enum PowerSavingProfile { disabled, balanced, economical, maximum, custom }
+
+class PowerSavingOptions {
+  const PowerSavingOptions({
+    this.hiddenRadioStatsIntervalSeconds = 1,
+    this.pauseHiddenRadioIndicator = false,
+    this.pauseIdleImageCleanup = false,
+    this.pauseHiddenGifs = false,
+    this.deferBleLogDescriptions = false,
+    this.reduceBlePluginLogs = false,
+    this.uiNotificationIntervalMilliseconds = minUiNotificationInterval,
+    this.batteryIntervalSeconds = minBatteryInterval,
+    this.gpsIntervalSeconds = minGpsInterval,
+  }) : assert(uiNotificationIntervalMilliseconds >= minUiNotificationInterval),
+      assert(uiNotificationIntervalMilliseconds <= maxUiNotificationInterval),
+      assert(uiNotificationIntervalMilliseconds % uiNotificationIntervalStep == 0),
+      assert(hiddenRadioStatsIntervalSeconds >= 1),
+      assert(hiddenRadioStatsIntervalSeconds <= 60),
+      assert(batteryIntervalSeconds >= minBatteryInterval),
+      assert(batteryIntervalSeconds <= maxBatteryInterval),
+      assert(batteryIntervalSeconds % deviceIntervalStep == 0),
+      assert(gpsIntervalSeconds >= minGpsInterval),
+      assert(gpsIntervalSeconds <= maxGpsInterval),
+      assert(gpsIntervalSeconds % deviceIntervalStep == 0);
+
+  static const minRadioStatsInterval = 1;
+  static const maxRadioStatsInterval = 60;
+  static const minBatteryInterval = 120;
+  static const maxBatteryInterval = 600;
+  static const minGpsInterval = 60;
+  static const maxGpsInterval = 600;
+  static const deviceIntervalStep = 60;
+  static const minUiNotificationInterval = 50;
+  static const maxUiNotificationInterval = 1000;
+  static const uiNotificationIntervalStep = 50;
+
+  final int hiddenRadioStatsIntervalSeconds;
+  final bool pauseHiddenRadioIndicator;
+  final bool pauseIdleImageCleanup;
+  final bool pauseHiddenGifs;
+  final bool deferBleLogDescriptions;
+  final bool reduceBlePluginLogs;
+  final int uiNotificationIntervalMilliseconds;
+  final int batteryIntervalSeconds;
+  final int gpsIntervalSeconds;
+
+  static int _deviceInterval(Object? value, int minimum, int maximum) {
+    if (value is! int) return minimum;
+    final bounded = value.clamp(minimum, maximum).toInt();
+    return minimum + ((bounded - minimum) ~/ deviceIntervalStep) *
+        deviceIntervalStep;
+  }
+
+  static int _uiInterval(Object? value) {
+    if (value is! int) return minUiNotificationInterval;
+    return value.clamp(minUiNotificationInterval, maxUiNotificationInterval) ~/
+        uiNotificationIntervalStep * uiNotificationIntervalStep;
+  }
+
+  PowerSavingOptions copyWith({
+    int? hiddenRadioStatsIntervalSeconds,
+    bool? pauseHiddenRadioIndicator,
+    bool? pauseIdleImageCleanup,
+    bool? pauseHiddenGifs,
+    bool? deferBleLogDescriptions,
+    bool? reduceBlePluginLogs,
+    int? uiNotificationIntervalMilliseconds,
+    int? batteryIntervalSeconds,
+    int? gpsIntervalSeconds,
+  }) =>
+      PowerSavingOptions(
+        hiddenRadioStatsIntervalSeconds: (hiddenRadioStatsIntervalSeconds ??
+            this.hiddenRadioStatsIntervalSeconds)
+            .clamp(minRadioStatsInterval, maxRadioStatsInterval).toInt(),
+        pauseHiddenRadioIndicator:
+            pauseHiddenRadioIndicator ?? this.pauseHiddenRadioIndicator,
+        pauseIdleImageCleanup: pauseIdleImageCleanup ?? this.pauseIdleImageCleanup,
+        pauseHiddenGifs: pauseHiddenGifs ?? this.pauseHiddenGifs,
+        deferBleLogDescriptions: deferBleLogDescriptions ?? this.deferBleLogDescriptions,
+        reduceBlePluginLogs: reduceBlePluginLogs ?? this.reduceBlePluginLogs,
+        uiNotificationIntervalMilliseconds: _uiInterval(
+          uiNotificationIntervalMilliseconds ?? this.uiNotificationIntervalMilliseconds,
+        ),
+        batteryIntervalSeconds: _deviceInterval(
+          batteryIntervalSeconds ?? this.batteryIntervalSeconds,
+          minBatteryInterval, maxBatteryInterval,
+        ),
+        gpsIntervalSeconds: _deviceInterval(
+          gpsIntervalSeconds ?? this.gpsIntervalSeconds,
+          minGpsInterval, maxGpsInterval,
+        ),
+      );
+
+  factory PowerSavingOptions.fromJson(Object? json) {
+    final value = json is Map
+        ? json['hidden_radio_stats_interval_seconds'] : null;
+    return PowerSavingOptions(
+      hiddenRadioStatsIntervalSeconds: value is int
+          ? value.clamp(minRadioStatsInterval, maxRadioStatsInterval).toInt()
+          : minRadioStatsInterval,
+      pauseHiddenRadioIndicator: json is Map &&
+          json['pause_hidden_radio_indicator'] == true,
+      pauseIdleImageCleanup: json is Map && json['pause_idle_image_cleanup'] == true,
+      pauseHiddenGifs: json is Map && json['pause_hidden_gifs'] == true,
+      deferBleLogDescriptions: json is Map && json['defer_ble_log_descriptions'] == true,
+      reduceBlePluginLogs: json is Map && json['reduce_ble_plugin_logs'] == true,
+      uiNotificationIntervalMilliseconds: _uiInterval(json is Map
+          ? json['ui_notification_interval_milliseconds'] : null),
+      batteryIntervalSeconds: _deviceInterval(
+        json is Map ? json['battery_interval_seconds'] : null,
+        minBatteryInterval, maxBatteryInterval,
+      ),
+      gpsIntervalSeconds: _deviceInterval(
+        json is Map ? json['gps_interval_seconds'] : null,
+        minGpsInterval, maxGpsInterval,
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'hidden_radio_stats_interval_seconds': hiddenRadioStatsIntervalSeconds,
+    'pause_hidden_radio_indicator': pauseHiddenRadioIndicator,
+    'pause_idle_image_cleanup': pauseIdleImageCleanup,
+    'pause_hidden_gifs': pauseHiddenGifs,
+    'defer_ble_log_descriptions': deferBleLogDescriptions,
+    'reduce_ble_plugin_logs': reduceBlePluginLogs,
+    'ui_notification_interval_milliseconds': uiNotificationIntervalMilliseconds,
+    'battery_interval_seconds': batteryIntervalSeconds,
+    'gps_interval_seconds': gpsIntervalSeconds,
+  };
+}
+
+/// Presets select effective values without overwriting the saved custom ones.
+class PowerSavingSettings {
+  const PowerSavingSettings({
+    this.profile = PowerSavingProfile.disabled,
+    this.custom = const PowerSavingOptions(),
+  });
+
+  final PowerSavingProfile profile;
+  final PowerSavingOptions custom;
+
+  PowerSavingOptions get effective => switch (profile) {
+    PowerSavingProfile.disabled => const PowerSavingOptions(),
+    PowerSavingProfile.balanced => const PowerSavingOptions(
+      reduceBlePluginLogs: true,
+      deferBleLogDescriptions: true,
+      uiNotificationIntervalMilliseconds: 100,
+      hiddenRadioStatsIntervalSeconds: 15,
+      pauseHiddenRadioIndicator: true,
+      pauseIdleImageCleanup: true,
+      pauseHiddenGifs: true,
+      batteryIntervalSeconds: 180,
+      gpsIntervalSeconds: 120,
+    ),
+    PowerSavingProfile.economical => const PowerSavingOptions(
+      reduceBlePluginLogs: true,
+      deferBleLogDescriptions: true,
+      uiNotificationIntervalMilliseconds: 250,
+      hiddenRadioStatsIntervalSeconds: 30,
+      pauseHiddenRadioIndicator: true,
+      pauseIdleImageCleanup: true,
+      pauseHiddenGifs: true,
+      batteryIntervalSeconds: 300,
+      gpsIntervalSeconds: 300,
+    ),
+    PowerSavingProfile.maximum => const PowerSavingOptions(
+      reduceBlePluginLogs: true,
+      deferBleLogDescriptions: true,
+      uiNotificationIntervalMilliseconds: 500,
+      hiddenRadioStatsIntervalSeconds: 60,
+      pauseHiddenRadioIndicator: true,
+      pauseIdleImageCleanup: true,
+      pauseHiddenGifs: true,
+      batteryIntervalSeconds: 600,
+      gpsIntervalSeconds: 600,
+    ),
+    PowerSavingProfile.custom => custom,
+  };
+
+  PowerSavingSettings copyWith({
+    PowerSavingProfile? profile,
+    PowerSavingOptions? custom,
+  }) => PowerSavingSettings(
+    profile: profile ?? this.profile,
+    custom: custom ?? this.custom,
+  );
+
+  factory PowerSavingSettings.fromJson(Object? json) {
+    if (json is! Map) return const PowerSavingSettings();
+    var profile = PowerSavingProfile.disabled;
+    for (final candidate in PowerSavingProfile.values) {
+      if (candidate.name == json['profile']) {
+        profile = candidate;
+        break;
+      }
+    }
+    return PowerSavingSettings(
+      profile: profile,
+      custom: PowerSavingOptions.fromJson(json['custom']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'profile': profile.name,
+    'custom': custom.toJson(),
+  };
+}

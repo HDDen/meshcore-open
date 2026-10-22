@@ -1224,6 +1224,15 @@ withholds the payload of `RESP_CODE_PRIVATE_KEY` (14), since that log is
 exportable; the app log only ever records that the export succeeded, was
 refused or timed out.
 
+Энергопараметр `deferBleLogDescriptions` меняет только момент форматирования
+новых записей этого журнала. Маскирование ответа с ключом и копирование данных
+остаются немедленными. Отложенная запись получает readonly view собственной копии;
+static-фабрика `_recordEntry` передаёт callback только безопасный snapshot,
+направление и уже очищенную note, без исходного ответа и ссылки на service.
+`helpers/deferred_log_description.dart` кэширует первое описание и освобождает
+callback после успеха. Обычный конструктор `BleDebugLogEntry(description: ...)`
+сохранён, публичное чтение `description` работает в обоих режимах.
+
 **The crypto repeats the firmware's.** `helpers/direct_echo_crypto.dart` is
 pure Dart so it can be checked outside the Flutter test runner: the shared
 secret is `ed25519_key_exchange` — the clamped scalar against the peer's
@@ -1913,6 +1922,101 @@ message and a channel message get no section
 
 ### Air activity dot
 
+Энергосбережение выбирается в настройках приложения через `PowerSavingSettingsTile`
+и `PowerSavingScreen`. `models/power_saving_settings.dart` хранит профиль и отдельные
+пользовательские параметры в JSON `power_saving`. «Выключено» — фиксированный
+исходный профиль для сравнения, выбранный по умолчанию. Каждый новый параметр
+обязан сохранять в нём поведение до работ по энергосбережению; свои значения
+и готовые энергопрофили не меняют его. Исходные свои настройки также сохраняют
+прежнее поведение. Слайдер скрытого экрана радиостатистики:
+1–60 с, запросы готовых профилей 15/30/60 с. `helpers/radio_stats_screen_polling.dart`
+координирует интервалы экранов по маршруту, Flutter lifecycle и существующему
+нативному сигналу iOS из `ios_presentation_guard.dart`. Видимый экран использует
+1 с; незавершённая отправка сохраняет этот интервал, пока экран смонтирован.
+Другие владельцы учитываются через read-only `radioStatsPollingOwners`.
+Отдельный флаг `pauseHiddenRadioIndicator` управляет приостановкой опроса
+невидимого индикатора: настройки скрытия, маршрут, TickerMode, активность приложения,
+подключение и поддержка статистики учитываются в `helpers/radio_stats_indicator_polling.dart`.
+В готовых энергопрофилях флаг включён, в исходных своих настройках выключен.
+При его включении `helpers/radio_stats_send_polling.dart` удерживает опрос в коннекторе
+независимо от виджетов: подготовка/подпись, отложенные отправки, повторы, очередь
+канального ответа и hop-проверки. Входы `sendMessage`/`sendChannelMessage` обёрнуты
+счётчиком операций с освобождением в finally; `markNotifyDirty` обновляет удержание
+до отложенного UI notify. Read-only `MessageRetryService.pendingMessageCount`
+сообщает о добавлении/очистке повторов, включая истечение окна позднего ACK;
+очистка канального ответа также синхронизирует удержание. Без экрана статистики
+сохраняется обычный интервал 30 с. При отключённом флаге дополнительного владельца нет.
+Смена профиля не затирает свои значения; слайдер сохраняется после отпускания.
+Отдельные слайдеры `batteryIntervalSeconds` (120–600 с) и `gpsIntervalSeconds`
+(60–600 с) имеют шаг 60 с и действуют на экране и в фоне. Минимумы и исходные
+значения равны прежним периодам 120/60 с. Готовые профили задают 180/120,
+300/300 и 600/600 с; это стартовые значения, не результаты измерений.
+`helpers/device_polling_intervals.dart` связывает порог watchdog с периодом
+батареи: два периода плюс прежние 60 с проверки. `_syncPowerSavingSettings`
+перезапускает только соответствующий активный таймер, не запускает выключенный
+GPS и начинает новое окно тишины при изменении периода батареи. Чужие настройки
+не сдвигают расписание. Ручные/начальные запросы, запрет APP_START при загрузке
+контактов, защита watchdog после сна и предел восстановлений сохранены.
+Четыре числовых параметра используют `widgets/power_saving_interval_card.dart`
+с локальным состоянием перетаскивания и единственным сохранением после отпускания.
+JSON новых периодов нормализуется к допустимым минутным шагам; старые настройки
+получают минимумы. Форматы пакетов, сроки ACK/повторов и фоновые транспорты не меняются.
+Нативная активность имеет Flutter fallback и не меняет защиту вывода кадров.
+Флаг `pauseIdleImageCleanup` отключает пустой таймер очистки изображений;
+в готовых энергопрофилях включён, в Off и исходных своих настройках выключен.
+`helpers/image_reassembly_maintenance.dart` содержит `MaintainedImageReassembler`
+и привязку `ImageReassemblyMaintenance` к настройкам/жизни app state в main.dart.
+Сборщик приложения наследует этот helper, а формат и алгоритм сборки остаются
+в `services/image_chunk_transport.dart`. Таймер нужен при pendingCount > 0 ИЛИ
+completedCount > 0; во время работы сохраняет период 5 с. TTL остаётся 60 с
+от первого чанка для сборки и от завершения для кэша поздних дубликатов.
+Вложенные вызовы addChunk/evictExpired и callbacks ошибок сверяются после всей
+операции; новый поток из callback не теряет обслуживание. Очистка канала/сессии
+обновляет таймер; посторонняя настройка не сбрасывает его фазу. При уничтожении
+app state снимается listener и останавливается таймер, поздние чанки его не запускают.
+Управление не зависит от lifecycle/видимости UI; исполнение при suspension определяет ОС.
+Отдельный `pauseHiddenGifs` управляет показом GIF-ссылок через `helpers/gif_playback.dart`;
+ручная пауза сохраняется независимо от видимости. Подробности — в разделе GIF cache ниже.
+Слайдер `uiNotificationIntervalMilliseconds` задаёт окно общих уведомлений
+50–1000 мс с шагом 50 мс; Off/исходные свои — 50, готовые профили — 100/250/500 мс.
+`helpers/ui_notification_batcher.dart` объединяет события от первого mark,
+не переносит deadline при непрерывном потоке и не держит таймер в простое.
+Снимок состояния подключения в коннекторе включает state/transport, публичные
+`isConnected`/`supportsCompanionRadioStats`, ручной разрыв,
+восстановление, restart, offline, идентичность ноды и готовность сессии: изменения
+сохраняют срок до 50 мс или уже более ранний обычный deadline. Оба одноразовых
+таймера снимаются при flush/dispose, reentrant mark начинает следующее окно.
+Уменьшение интервала выдаёт накопленное асинхронно без нового ожидания;
+увеличение относится к следующему окну, посторонние настройки не сдвигают его.
+`uiRevision` увеличивается при фактическом общем notify. Поток кадров,
+radio/repeater notifiers и синхронизация владельца отправки не ждут UI-окна.
+Общий слайдер умеет подписи секунд и миллисекунд; сохраняет значение после отпускания.
+Восьмой параметр `deferBleLogDescriptions` / JSON `defer_ble_log_descriptions`
+выключен в Off/исходных своих/старом JSON и включён в трёх готовых энергопрофилях.
+`helpers/ble_log_power_settings.dart` применяет выбранное значение к общему
+BleDebugLogService при создании app state и изменении настроек; dispose снимает
+только свою подписку. Накопленные записи не перестраиваются и не теряются.
+Уведомления, timestamp, оба лимита 500 и формат текста сохраняются; нового таймера нет.
+Девятый параметр `reduceBlePluginLogs` / JSON `reduce_ble_plugin_logs` —
+отдельный false по умолчанию в Off/своих/старом JSON, true в готовых энергопрофилях.
+`helpers/ble_plugin_log_power_settings.dart` живёт в app state и на Android/iOS/macOS
+запрашивает `FlutterBluePlus.setLogLevel(warning)` при true, `debug` при false.
+Исходный Off с уже установленным debug не вызывает API. Windows native setter —
+заглушка, Linux setter инициализирует BlueZ; там и в web привязка не вызывает API.
+На iOS поиск использует плагин, подключение/обмен — собственный native BLE central;
+новый флаг не управляет логами последнего и не обещает уменьшить каждый iOS RX.
+Helper сериализует применения, объединяет промежуточные изменения до последнего,
+не повторяет одинаковый режим на посторонних настройках. После исключения кэш
+применения сбрасывается: Dart getter плагина меняется ещё до await и не доказывает
+успех. Публичный Future<void> также скрывает платформенный bool false; успешных
+нативных применений привязка не объявляет. Ошибка передаётся AppDebugLogService
+как warning без содержимого исключения; новая попытка — после изменения режима,
+автоматического retry-таймера нет. Dispose снимает listener и запрещает новые вызовы,
+но не отменяет начатый нативный запрос. Предупреждения/ошибки плагина и наш журнал
+кадров сохраняются; транспорт и очереди не меняются. ARB дополняются только ru/en.
+См. `documentation/power-saving.md`; проверка устройства отложена владельцем
+до добавления всех параметров. Экономия энергии пока не измерена.
+
 `AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
 radio-stats frame showed the node's airtime growing
 (`radioStatsAirActivityPulse`), which the stats poll (`_pollingInterval`,
@@ -2104,6 +2208,20 @@ To remove the whole feature, delete `helpers/channel_qr_link.dart`, `widgets/cha
 An image link in an ordinary text message can be shown as a picture (`helpers/message_url_image_helper.dart`, from upstream): direct `.png` / `.jpg` / `.webp` links, `pyx.li`, `ibb.co` share pages and IPFS paths or CIDs, share pages being resolved over HTTP and every image checked before it is drawn. It is off by default and switched per contact (the contact settings dialog in `chat_screen.dart`) and per channel (`widgets/channel_edit_sheet.dart`), stored by `contact_settings_store` / `channel_settings_store` (`loadUrlImagesEnabled` / `saveUrlImagesEnabled`, the channel flag keyed by name like the other channel settings). With the flag off a bubble with such a link shows the `urlImage_possible` hint instead. Both bubbles read `bodyText`, so a blocked sender's message never fetches anything, and notifications attach the picture only where the flag is on, waiting at most five seconds for it. This is apart from the images sent over the mesh (MCOimg, AEIC), which never touch the network.
 
 ### GIF cache
+
+Флаг энергосбережения `pauseHiddenGifs` (JSON `pause_hidden_gifs`) управляет
+приостановкой `GifMessage`: исходные custom/Off выключены, готовые профили включены.
+`helpers/gif_playback.dart` содержит `GifPlaybackVisibility` и `GifImageSubscription`.
+При включённом флаге учитываются маршрут, TickerMode, геометрическая видимость
+из уже используемого visibility_detector, Flutter lifecycle и существующий
+`iosAppPresentationActive`. Подписка на кадры снимается в фоне/вне видимости;
+новый скрытый GIF ждёт видимости перед resolve. Последний кадр и ручная пауза сохраняются.
+Handle completer удерживается только на паузе и освобождается при возобновлении,
+смене URL или dispose: вытеснение из image cache не ломает возврат. Ручная пауза
+независима от автоматической; старые callbacks проверяются по ревизии потока и mounted.
+При выключенном флаге нет visibility detector и подписок на lifecycle/native activity.
+Подготовленные widget-регрессии находятся в `test/widgets/gif_message_power_baseline_test.dart`,
+исходные восемь сценариев Off сохранены. См. `documentation/power-saving.md`.
 
 A GIF in a message travels as its Giphy id (`g:<id>`, `helpers/gif_helper.dart`), and `GifMessage` draws it from `https://media.giphy.com/media/<id>/giphy.gif` wherever a GIF message appears: bubbles, reply quotes and the composer preview. `services/gif_disk_cache.dart` keeps the bytes on disk, so a GIF seen once shows again after a restart and without a network: `gif_cache/` under the application cache directory, one file per URL named by the SHA-256 of that URL, 200 MB at most, and a file not shown for 365 days is deleted. The file system is the whole index. A file's size is what counts against the limit and its modification time is the moment it was last shown, since every hit moves it forward, so past the limit the files shown longest ago go first. A trim follows every write, and one runs before the first read of a session, so the lifetime holds even when nothing new is downloaded. Nothing is kept in the database or in preferences, so no record can drift from the files, and the operations run one after another, so a trim never deletes a file being read or written.
 

@@ -1,19 +1,32 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/deferred_log_description.dart';
 
 class BleDebugLogEntry {
   final DateTime timestamp;
   final bool outgoing;
-  final String description;
+  final DeferredLogDescription _description;
   final Uint8List payload;
 
   BleDebugLogEntry({
     required this.timestamp,
     required this.outgoing,
-    required this.description,
+    required String description,
     required this.payload,
-  });
+  }) : _description = DeferredLogDescription.eager(description);
+
+  BleDebugLogEntry._recorded({
+    required this.timestamp,
+    required this.outgoing,
+    required DeferredLogDescription description,
+    required this.payload,
+  }) : _description = description;
+
+  String get description => _description.value;
+
+  @visibleForTesting
+  bool get descriptionResolvedForTest => _description.isResolved;
 
   String get hexPreview {
     const maxBytes = 64;
@@ -46,6 +59,9 @@ class BleDebugLogService extends ChangeNotifier {
   final List<BleDebugLogEntry> _entries = [];
   final List<BleRawLogRxEntry> _rawLogRxEntries = [];
   bool _notifyScheduled = false;
+  bool _deferDescriptions = false;
+
+  void setDeferDescriptions(bool value) => _deferDescriptions = value;
 
   List<BleDebugLogEntry> get entries => List.unmodifiable(_entries);
   List<BleRawLogRxEntry> get rawLogRxEntries =>
@@ -60,13 +76,13 @@ class BleDebugLogService extends ChangeNotifier {
       frame = Uint8List.fromList([code]);
       note = 'payload withheld';
     }
-    final description = _describeFrame(code, frame, outgoing, note);
+    final copy = Uint8List.fromList(frame);
     _entries.add(
-      BleDebugLogEntry(
-        timestamp: DateTime.now(),
+      _recordEntry(
+        snapshot: _deferDescriptions ? copy.asUnmodifiableView() : copy,
         outgoing: outgoing,
-        description: description,
-        payload: Uint8List.fromList(frame),
+        note: note,
+        deferred: _deferDescriptions,
       ),
     );
 
@@ -113,7 +129,30 @@ class BleDebugLogService extends ChangeNotifier {
     });
   }
 
-  String _describeFrame(
+  // Отдельная static-область: callback удерживает лишь безопасный snapshot,
+  // не исходный аргумент logFrame и не service со всем буфером записей.
+  static BleDebugLogEntry _recordEntry({
+    required Uint8List snapshot,
+    required bool outgoing,
+    required String? note,
+    required bool deferred,
+  }) {
+    final description = deferred
+        ? DeferredLogDescription.lazy(
+            () => _describeFrame(snapshot[0], snapshot, outgoing, note),
+          )
+        : DeferredLogDescription.eager(
+            _describeFrame(snapshot[0], snapshot, outgoing, note),
+          );
+    return BleDebugLogEntry._recorded(
+      timestamp: DateTime.now(),
+      outgoing: outgoing,
+      payload: snapshot,
+      description: description,
+    );
+  }
+
+  static String _describeFrame(
     int code,
     Uint8List frame,
     bool outgoing,
@@ -126,7 +165,7 @@ class BleDebugLogService extends ChangeNotifier {
     return '$prefix $label$extra$noteText';
   }
 
-  String _codeLabel(int code, {required bool outgoing}) {
+  static String _codeLabel(int code, {required bool outgoing}) {
     if (outgoing) {
       return _commandLabel(code) ?? 'CODE_$code';
     }
@@ -138,7 +177,7 @@ class BleDebugLogService extends ChangeNotifier {
     return 'CODE_$code';
   }
 
-  String? _commandLabel(int code) {
+  static String? _commandLabel(int code) {
     switch (code) {
       case cmdAppStart:
         return 'CMD_APP_START';
@@ -199,7 +238,7 @@ class BleDebugLogService extends ChangeNotifier {
     }
   }
 
-  String? _responseLabel(int code) {
+  static String? _responseLabel(int code) {
     switch (code) {
       case respCodeOk:
         return 'RESP_CODE_OK';
@@ -248,7 +287,7 @@ class BleDebugLogService extends ChangeNotifier {
     }
   }
 
-  String? _pushLabel(int code) {
+  static String? _pushLabel(int code) {
     switch (code) {
       case pushCodeAdvert:
         return 'PUSH_CODE_ADVERT';
@@ -271,7 +310,7 @@ class BleDebugLogService extends ChangeNotifier {
     }
   }
 
-  String _frameDetail(int code, Uint8List frame, bool outgoing) {
+  static String _frameDetail(int code, Uint8List frame, bool outgoing) {
     // MCMP v3 signing frames. Some response codes collide numerically with
     // command codes (RESP_CODE_SIGN_START == CMD_REBOOT, RESP_CODE_SIGNATURE
     // == CMD_GET_BATT_AND_STORAGE), so these are guarded by direction.

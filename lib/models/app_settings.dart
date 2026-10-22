@@ -1,5 +1,6 @@
 import 'image_codec_support.dart';
 import 'translation_support.dart';
+import 'power_saving_settings.dart';
 import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
@@ -200,6 +201,7 @@ class AppSettings {
   /// Hide the mute bell in the channel chat's app bar (mod settings).
   final bool hideChannelMuteButton;
   final bool hideRadioStatsButton;
+  final PowerSavingSettings powerSaving;
   final bool snrIndicatorAllRepActivity;
   final bool hideMapZoomControls;
   final bool alwaysRequestMapLocation;
@@ -714,6 +716,7 @@ class AppSettings {
     this.hideChannelIndexIndicator = true,
     this.hideChannelMuteButton = false,
     this.hideRadioStatsButton = false,
+    this.powerSaving = const PowerSavingSettings(),
     this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
     this.alwaysRequestMapLocation = true,
@@ -873,6 +876,7 @@ class AppSettings {
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'hide_channel_mute_button': hideChannelMuteButton,
       'hide_radio_stats_button': hideRadioStatsButton,
+      'power_saving': powerSaving.toJson(),
       'snr_indicator_all_rep_activity': snrIndicatorAllRepActivity,
       'hide_map_zoom_controls': hideMapZoomControls,
       'always_request_map_location': alwaysRequestMapLocation,
@@ -1052,6 +1056,7 @@ class AppSettings {
       hideChannelMuteButton:
           json['hide_channel_mute_button'] as bool? ?? false,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
+      powerSaving: PowerSavingSettings.fromJson(json['power_saving']),
       snrIndicatorAllRepActivity:
           json['snr_indicator_all_rep_activity'] as bool? ?? true,
       hideMapZoomControls: json['hide_map_zoom_controls'] as bool? ?? false,
@@ -1312,6 +1317,7 @@ class AppSettings {
     bool? hideChannelIndexIndicator,
     bool? hideChannelMuteButton,
     bool? hideRadioStatsButton,
+    PowerSavingSettings? powerSaving,
     bool? snrIndicatorAllRepActivity,
     bool? hideMapZoomControls,
     bool? alwaysRequestMapLocation,
@@ -1446,6 +1452,7 @@ class AppSettings {
       hideChannelMuteButton:
           hideChannelMuteButton ?? this.hideChannelMuteButton,
       hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,
+      powerSaving: powerSaving ?? this.powerSaving,
       snrIndicatorAllRepActivity:
           snrIndicatorAllRepActivity ?? this.snrIndicatorAllRepActivity,
       hideMapZoomControls: hideMapZoomControls ?? this.hideMapZoomControls,

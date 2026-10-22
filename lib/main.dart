@@ -58,6 +58,9 @@ import 'storage/channel_identity_store.dart';
 import 'storage/contact_identity_store.dart';
 import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
+import 'helpers/image_reassembly_maintenance.dart';
+import 'helpers/ble_log_power_settings.dart';
+import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
@@ -538,7 +541,7 @@ class AppSettingsImageCodecStore implements ImageCodecSettingsStore {
 ///  * `ImageChunkOutcome` carries no channel index, so the connector's
 ///    `onImageChunk` callback cannot call `handleOutcome`, which requires one.
 ///    Intercepting `addChunk` — the only place the index is in scope — can.
-class ImageStreamReassembler extends ImageReassembler {
+class ImageStreamReassembler extends MaintainedImageReassembler {
   final ReceivedImageStore store;
 
   /// Resolves the radio slot a chunk arrived on to its [Channel.storageId],
@@ -547,7 +550,7 @@ class ImageStreamReassembler extends ImageReassembler {
 
   int? _selfPrefix;
 
-  ImageStreamReassembler({required this.store, this.channelIdForSlot})
+  ImageStreamReassembler({required this.store, this.channelIdForSlot, super.clock})
     : super(onFailed: ((failure) => unawaited(store.handleFailure(failure))));
 
   @override
@@ -646,15 +649,10 @@ class MeshCoreApp extends StatefulWidget {
   State<MeshCoreApp> createState() => _MeshCoreAppState();
 }
 
-/// How often abandoned image streams are swept.
-///
-/// `ImageReassembler.evictExpired` otherwise only runs from `addChunk`, so a
-/// sender that stops mid-image would leave its bubble stuck on "2 of 3
-/// packets" until some unrelated image arrived.
-const Duration _kImageSweepInterval = Duration(seconds: 5);
-
 class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
-  Timer? _imageSweepTimer;
+  late final ImageReassemblyMaintenance _imageMaintenance;
+  late final BleLogPowerSettings _bleLogPowerSettings;
+  late final BlePluginLogPowerSettings _blePluginLogPowerSettings;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -675,9 +673,20 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     } else {
       widget.connector.pausePendingOutgoingMessages();
     }
-    _imageSweepTimer = Timer.periodic(
-      _kImageSweepInterval,
-      (_) => widget.imageReassembler.evictExpired(),
+    _imageMaintenance = ImageReassemblyMaintenance(
+      reassembler: widget.imageReassembler,
+      settings: widget.appSettingsService,
+    );
+    _bleLogPowerSettings = BleLogPowerSettings(
+      log: widget.bleDebugLogService,
+      settings: widget.appSettingsService,
+    );
+    _blePluginLogPowerSettings = BlePluginLogPowerSettings(
+      settings: widget.appSettingsService,
+      onError: (error, _) => widget.appDebugLogService.warn(
+        'Could not change Bluetooth plugin log level (${error.runtimeType})',
+        tag: 'PowerSaving',
+      ),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(
@@ -750,7 +759,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     widget.connector.removeListener(_handleConnectionStateChanged);
-    _imageSweepTimer?.cancel();
+    _imageMaintenance.dispose();
+    _bleLogPowerSettings.dispose();
+    _blePluginLogPowerSettings.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

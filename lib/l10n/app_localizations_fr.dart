@@ -8403,4 +8403,111 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get channels_senderNameResetBySign =>
       'The sender name set for this channel will be reset.';
+
+  @override
+  String get powerSaving_title => 'Power saving';
+
+  @override
+  String get powerSaving_reduceBlePluginLogs =>
+      'Reduce Bluetooth diagnostic logs';
+
+  @override
+  String get powerSaving_reduceBlePluginLogsDescription =>
+      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+
+  @override
+  String get powerSaving_deferBleLogDescriptions =>
+      'Defer frame log descriptions';
+
+  @override
+  String get powerSaving_deferBleLogDescriptionsDescription =>
+      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+
+  @override
+  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+
+  @override
+  String get powerSaving_uiNotificationDescription =>
+      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+
+  @override
+  String powerSaving_milliseconds(int milliseconds) {
+    return '$milliseconds ms';
+  }
+
+  @override
+  String get powerSaving_profile => 'Profile';
+
+  @override
+  String get powerSaving_disabled => 'Off';
+
+  @override
+  String get powerSaving_balanced => 'Balanced';
+
+  @override
+  String get powerSaving_economical => 'Economical';
+
+  @override
+  String get powerSaving_maximum => 'Maximum saving';
+
+  @override
+  String get powerSaving_custom => 'Custom settings';
+
+  @override
+  String get powerSaving_hiddenRadioStatsInterval =>
+      'Radio statistics interval on a hidden screen';
+
+  @override
+  String powerSaving_seconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get powerSaving_radioStatsDescription =>
+      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+
+  @override
+  String get powerSaving_customDescription =>
+      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+
+  @override
+  String get powerSaving_presetDescription =>
+      'Preset values are fixed. Select Custom settings to adjust them individually.';
+
+  @override
+  String get powerSaving_pauseHiddenRadioIndicator =>
+      'Pause polling for a hidden radio indicator';
+
+  @override
+  String get powerSaving_pauseHiddenRadioIndicatorDescription =>
+      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+
+  @override
+  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+
+  @override
+  String powerSaving_batteryDescription(int minutes) {
+    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+  }
+
+  @override
+  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+
+  @override
+  String get powerSaving_gpsDescription =>
+      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+
+  @override
+  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+
+  @override
+  String get powerSaving_pauseIdleImageCleanupDescription =>
+      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+
+  @override
+  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+
+  @override
+  String get powerSaving_pauseHiddenGifsDescription =>
+      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
 }

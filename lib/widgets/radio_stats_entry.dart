@@ -10,6 +10,7 @@ import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/mesh_theme.dart';
+import '../helpers/radio_stats_indicator_polling.dart';
 import 'mesh_ui.dart';
 
 void pushCompanionRadioStatsScreen(BuildContext context) {
@@ -31,19 +32,27 @@ class RadioStatsIconButton extends StatefulWidget {
 }
 
 class _RadioStatsIconButtonState extends State<RadioStatsIconButton> {
-  MeshCoreConnector? _connector;
+  RadioStatsIndicatorPolling? _polling;
 
   @override
   void initState() {
     super.initState();
     final c = context.read<MeshCoreConnector>();
-    _connector = c;
-    c.acquireRadioStatsPolling();
+    _polling = RadioStatsIndicatorPolling(
+      c,
+      context.read<AppSettingsService>(),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _polling?.updateRoute(context);
   }
 
   @override
   void dispose() {
-    _connector?.releaseRadioStatsPolling();
+    _polling?.dispose();
     super.dispose();
   }
 

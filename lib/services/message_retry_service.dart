@@ -346,6 +346,7 @@ class MessageRetryService extends ChangeNotifier {
 
     _pendingMessages[resolvedMessageId] = message;
     _pendingContacts[resolvedMessageId] = contact;
+    _publishPendingMessageCount();
     if (preparedOutboundText != null) {
       _preparedOutboundTexts[resolvedMessageId] = preparedOutboundText;
     }
@@ -821,6 +822,16 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   bool get hasPendingMessages => _pendingMessages.isNotEmpty;
+  // Очистка после окна позднего ACK тоже должна освободить владельца опроса.
+  final _pendingMessageCount = ValueNotifier<int>(0);
+  bool _pendingMessageCountDisposed = false;
+  ValueListenable<int> get pendingMessageCount => _pendingMessageCount;
+
+  void _publishPendingMessageCount() {
+    if (!_pendingMessageCountDisposed) {
+      _pendingMessageCount.value = _pendingMessages.length;
+    }
+  }
 
   /// Whether [messageId] is still being worked on: attempts ahead, or an
   /// acknowledgement awaited.
@@ -1005,6 +1016,7 @@ class MessageRetryService extends ChangeNotifier {
     if (_activeMessages.remove(messageId) && contactKey != null) {
       _pumpQueues(contactKey);
     }
+    _publishPendingMessageCount();
   }
 
   void _handleTimeout(String messageId) {
@@ -1355,6 +1367,8 @@ class MessageRetryService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _pendingMessageCountDisposed = true;
+    _pendingMessageCount.dispose();
     for (var timer in _timeoutTimers.values) {
       timer.cancel();
     }
