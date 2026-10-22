@@ -9,6 +9,7 @@ import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/path_selection.dart';
 import '../helpers/direct_message_progress_helper.dart';
+import '../helpers/direct_progress_rx_parser.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcotxt_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
@@ -189,6 +190,8 @@ class MessageRetryService extends ChangeNotifier {
   final Set<String> _resolvedMessages = {};
   final Map<String, _ExpectedAttempt> _expectedAttempts = {};
   final Map<String, DirectMessageProgressTracker> _progressTrackers = {};
+  DirectProgressRxParser<DirectMessageEcho> _rxProgressParser =
+      DirectProgressRxParser(DirectMessageEcho.tryParse);
   final Map<String, List<Uint8List>> _retiredProgressPayloads = {};
   bool _sendingPaused = false;
   int _sendingGeneration = 0;
@@ -202,7 +205,23 @@ class MessageRetryService extends ChangeNotifier {
   MessageRetryService({this.sentWatchdogGrace = const Duration(seconds: 5)});
 
   void initialize(RetryServiceConfig config) {
+    _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _config = config;
+    config.appSettingsService?.addListener(_syncRxProgressPowerSettings);
+    _syncRxProgressPowerSettings();
+  }
+
+  void _syncRxProgressPowerSettings() {
+    _rxProgressParser.setEnabled(
+      _config?.appSettingsService?.settings.powerSaving.effective
+          .skipIdleDirectProgressParsing ?? false,
+    );
+  }
+
+  @visibleForTesting
+  void attachRxProgressParserForTest(DirectProgressRxParser<DirectMessageEcho> parser) {
+    _rxProgressParser = parser;
+    _syncRxProgressPowerSettings();
   }
 
   void setMaxRetries(int value) {
@@ -892,7 +911,9 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void handleRxLogFrame(Uint8List frame) {
-    final echo = DirectMessageEcho.tryParse(frame);
+    final echo = _rxProgressParser.parse(
+      frame, hasTrackers: _progressTrackers.isNotEmpty,
+    );
     if (echo == null || _progressTrackers.isEmpty) return;
 
     final boundMatches = <(DirectMessageProgressTracker, int)>[];
@@ -1367,6 +1388,7 @@ class MessageRetryService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _pendingMessageCountDisposed = true;
     _pendingMessageCount.dispose();
     for (var timer in _timeoutTimers.values) {

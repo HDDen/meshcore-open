@@ -108,6 +108,17 @@ class PowerSavingScreen extends StatelessWidget {
             onSaved: custom ? service.setGpsPollingIntervalSeconds : null,
           ),
           const SizedBox(height: 12),
+          PowerSavingIntervalCard(
+            key: const ValueKey('power-saving-reconnect'),
+            title: l10n.powerSaving_backgroundReconnectInterval,
+            description: l10n.powerSaving_backgroundReconnectDescription,
+            value: effective.backgroundReconnectIntervalSeconds,
+            minimum: PowerSavingOptions.minBackgroundReconnectInterval,
+            maximum: PowerSavingOptions.maxBackgroundReconnectInterval,
+            step: PowerSavingOptions.backgroundReconnectIntervalStep,
+            onSaved: custom ? service.setBackgroundReconnectIntervalSeconds : null,
+          ),
+          const SizedBox(height: 12),
           MeshCard(
             padding: EdgeInsets.zero,
             child: SwitchListTile(
@@ -207,6 +218,19 @@ class PowerSavingScreen extends StatelessWidget {
               value: effective.cacheChannelKeyHashes,
               onChanged: custom
                   ? (value) => unawaited(service.setCacheChannelKeyHashes(value))
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MeshCard(
+            padding: EdgeInsets.zero,
+            child: SwitchListTile(
+              key: const ValueKey('power-saving-idle-direct-progress'),
+              title: Text(l10n.powerSaving_skipIdleDirectProgressParsing),
+              subtitle: Text(l10n.powerSaving_skipIdleDirectProgressParsingDescription),
+              value: effective.skipIdleDirectProgressParsing,
+              onChanged: custom
+                  ? (value) => unawaited(service.setSkipIdleDirectProgressParsing(value))
                   : null,
             ),
           ),

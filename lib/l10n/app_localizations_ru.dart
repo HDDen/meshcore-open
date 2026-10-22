@@ -8365,6 +8365,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerSaving_title => 'Энергосбережение';
 
   @override
+  String get powerSaving_skipIdleDirectProgressParsing =>
+      'Разбирать прогресс только при отправке';
+
+  @override
+  String get powerSaving_skipIdleDirectProgressParsingDescription =>
+      'Не разбирает радиокадры для прогресса личной доставки, пока нет отслеживаемых отправок. Приём сообщений и подтверждения доставки сохраняются.';
+
+  @override
   String get powerSaving_cacheChannelKeyHashes =>
       'Кэшировать параметры каналов';
 
@@ -8492,4 +8500,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
       'Останавливает показ кадров GIF вне видимой области, под другим экраном и при неактивном приложении. При возвращении показ возобновляется, если GIF не был поставлен на паузу вручную.';
+
+  @override
+  String get powerSaving_backgroundReconnectInterval =>
+      'Пауза переподключений в фоне';
+
+  @override
+  String get powerSaving_backgroundReconnectDescription =>
+      'Только BLE и TCP, после первых шести пауз 1/2/4/8/16/30 секунд. Действует при неактивном приложении; возврат в приложение восстанавливает обычное расписание. Большая пауза может задержать восстановление связи. Время подключения добавляется к паузе.';
 }

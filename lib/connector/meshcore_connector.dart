@@ -38,6 +38,8 @@ import '../helpers/contact_history_candidates.dart';
 import '../helpers/connection_cleanup.dart';
 import '../helpers/device_polling_intervals.dart';
 import '../helpers/radio_stats_send_polling.dart';
+import '../helpers/reconnect_backoff.dart';
+import '../helpers/reconnect_power_settings.dart';
 import '../helpers/ui_notification_batcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
@@ -354,7 +356,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<dynamic>? _iosBleCentralSubscription;
   StreamSubscription<NotificationReply>? _notificationReplySubscription;
   Timer? _selfInfoRetryTimer;
-  Timer? _reconnectTimer;
+  ReconnectWait? _reconnectTimer;
+  ReconnectPowerSettings? _reconnectPowerSettings;
+  Duration Function()? _reconnectClock;
   Timer? _batteryPollTimer;
   Timer? _rxWatchdogTimer;
   DateTime _rxSilenceAnchor = DateTime.fromMillisecondsSinceEpoch(0);
@@ -5583,6 +5587,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void setConnectionStateForTest(MeshCoreConnectionState state) => _setState(state);
 
+  /// Контекст уже известного транспорта без BLE/socket/handshake в тестах.
+  @visibleForTesting
+  void setReconnectContextForTest({
+    required MeshCoreTransportType? transport,
+    String? deviceId,
+    String? tcpHost,
+    int? tcpPort,
+    bool manualDisconnect = false,
+    bool offlineMode = false,
+    MeshCoreConnectionState state = MeshCoreConnectionState.disconnected,
+  }) {
+    _reconnectTransport = transport;
+    _activeTransport = transport ?? MeshCoreTransportType.bluetooth;
+    _lastDevice = null;
+    _lastDeviceId = deviceId;
+    _lastTcpHost = tcpHost;
+    _lastTcpPort = tcpPort;
+    _manualDisconnect = manualDisconnect;
+    _isOfflineMode = offlineMode;
+    _state = state;
+  }
+
+  @visibleForTesting
+  int nextReconnectDelayMsForTest() => _nextReconnectDelayMs();
+
+  @visibleForTesting
+  int get reconnectAttemptsForTest => _reconnectAttempts;
+
+  @visibleForTesting
+  void setReconnectClockForTest(Duration Function() now) {
+    _reconnectClock = now;
+  }
+
+  @visibleForTesting
+  bool get reconnectTimerActiveForTest => _reconnectTimer?.isActive ?? false;
+
+  @visibleForTesting
+  void scheduleReconnectForTest() => _scheduleReconnect();
+
   /// Доступ к действующему таймеру без подключения платформенного транспорта.
   @visibleForTesting
   void startBatteryPollingForTest() => _startBatteryPolling();
@@ -6731,10 +6774,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   int _nextReconnectDelayMs() {
-    final attempt = _reconnectAttempts < 6 ? _reconnectAttempts : 6;
+    final delayMs = _reconnectDelayMs(_reconnectAttempts);
     _reconnectAttempts += 1;
-    final delayMs = 1000 * (1 << attempt);
-    return delayMs > 30000 ? 30000 : delayMs;
+    return delayMs;
+  }
+
+  int _reconnectDelayMs(int attemptIndex) => reconnectDelayMs(
+    attemptIndex,
+    background: _reconnectPowerSettings?.background ?? false,
+    backgroundIntervalSeconds: _reconnectPowerSettings?.intervalSeconds ?? 30,
+  );
+
+  void _refreshReconnectDelay() {
+    final pending = _reconnectTimer;
+    if (pending == null) return;
+    pending.updateDelay(Duration(
+      milliseconds: _reconnectDelayMs(pending.attemptIndex),
+    ));
   }
 
   void _scheduleReconnect() {
@@ -6742,46 +6798,52 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_reconnectTimer?.isActive == true) return;
 
     final reconnectTransport = _reconnectTransport;
+    final attemptIndex = _reconnectAttempts;
     final delayMs = _nextReconnectDelayMs();
-    _reconnectTimer = Timer(Duration(milliseconds: delayMs), () async {
-      if (!_shouldAutoReconnect || reconnectTransport != _reconnectTransport) {
-        return;
-      }
-      if (_state == MeshCoreConnectionState.connecting ||
-          _state == MeshCoreConnectionState.connected) {
-        return;
-      }
-
-      try {
-        switch (reconnectTransport) {
-          case MeshCoreTransportType.bluetooth:
-            final device =
-                _lastDevice ??
-                (_lastDeviceId == null
-                    ? null
-                    : BluetoothDevice.fromId(_lastDeviceId!));
-            if (device == null) return;
-            await connect(
-              device,
-              displayName: _lastDeviceDisplayName,
-              requestBatteryOptimizationExemption: false,
-            );
-            break;
-          case MeshCoreTransportType.tcp:
-            final host = _lastTcpHost;
-            final port = _lastTcpPort;
-            if (host == null || port == null) return;
-            await connectTcp(host: host, port: port, automaticReconnect: true);
-            break;
-          case MeshCoreTransportType.usb:
-          case MeshCoreTransportType.review:
-          case null:
-            return;
+    _reconnectTimer = ReconnectWait(
+      attemptIndex: attemptIndex,
+      delay: Duration(milliseconds: delayMs),
+      now: _reconnectClock,
+      onElapsed: () async {
+        if (!_shouldAutoReconnect || reconnectTransport != _reconnectTransport) {
+          return;
         }
-      } catch (_) {
-        _scheduleReconnect();
-      }
-    });
+        if (_state == MeshCoreConnectionState.connecting ||
+            _state == MeshCoreConnectionState.connected) {
+          return;
+        }
+
+        try {
+          switch (reconnectTransport) {
+            case MeshCoreTransportType.bluetooth:
+              final device =
+                  _lastDevice ??
+                  (_lastDeviceId == null
+                      ? null
+                      : BluetoothDevice.fromId(_lastDeviceId!));
+              if (device == null) return;
+              await connect(
+                device,
+                displayName: _lastDeviceDisplayName,
+                requestBatteryOptimizationExemption: false,
+              );
+              break;
+            case MeshCoreTransportType.tcp:
+              final host = _lastTcpHost;
+              final port = _lastTcpPort;
+              if (host == null || port == null) return;
+              await connectTcp(host: host, port: port, automaticReconnect: true);
+              break;
+            case MeshCoreTransportType.usb:
+            case MeshCoreTransportType.review:
+            case null:
+              return;
+          }
+        } catch (_) {
+          _scheduleReconnect();
+        }
+      },
+    );
   }
 
   Future<void> disconnect({
@@ -7288,6 +7350,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _syncPowerSavingSettings() {
+    final reconnectSeconds = _appSettingsService?.settings.powerSaving.effective
+        .backgroundReconnectIntervalSeconds ?? 30;
+    if (reconnectSeconds > 30) {
+      final policy = _reconnectPowerSettings ??= ReconnectPowerSettings(
+        onChanged: _refreshReconnectDelay,
+      );
+      policy.setInterval(reconnectSeconds);
+    } else if (_reconnectPowerSettings != null) {
+      _reconnectPowerSettings?.dispose();
+      _reconnectPowerSettings = null;
+      _refreshReconnectDelay();
+    }
     _channelKeyHashCache.setEnabled(
       _appSettingsService?.settings.powerSaving.effective.cacheChannelKeyHashes ?? false,
     );
@@ -18391,6 +18465,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       WidgetsBinding.instance.removeObserver(this);
     }
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
+    _reconnectPowerSettings?.dispose();
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _retryService?.pendingMessageCount.removeListener(_syncRadioStatsSendPolling);
     _radioStatsSendPolling.dispose();

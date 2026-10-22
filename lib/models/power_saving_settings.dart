@@ -11,9 +11,11 @@ class PowerSavingOptions {
     this.pauseHiddenStatusAnimations = false,
     this.disableContinuousStatusAnimations = false,
     this.cacheChannelKeyHashes = false,
+    this.skipIdleDirectProgressParsing = false,
     this.uiNotificationIntervalMilliseconds = minUiNotificationInterval,
     this.batteryIntervalSeconds = minBatteryInterval,
     this.gpsIntervalSeconds = minGpsInterval,
+    this.backgroundReconnectIntervalSeconds = minBackgroundReconnectInterval,
   }) : assert(uiNotificationIntervalMilliseconds >= minUiNotificationInterval),
       assert(uiNotificationIntervalMilliseconds <= maxUiNotificationInterval),
       assert(uiNotificationIntervalMilliseconds % uiNotificationIntervalStep == 0),
@@ -24,7 +26,10 @@ class PowerSavingOptions {
       assert(batteryIntervalSeconds % deviceIntervalStep == 0),
       assert(gpsIntervalSeconds >= minGpsInterval),
       assert(gpsIntervalSeconds <= maxGpsInterval),
-      assert(gpsIntervalSeconds % deviceIntervalStep == 0);
+      assert(gpsIntervalSeconds % deviceIntervalStep == 0),
+      assert(backgroundReconnectIntervalSeconds >= minBackgroundReconnectInterval),
+      assert(backgroundReconnectIntervalSeconds <= maxBackgroundReconnectInterval),
+      assert(backgroundReconnectIntervalSeconds % backgroundReconnectIntervalStep == 0);
 
   static const minRadioStatsInterval = 1;
   static const maxRadioStatsInterval = 60;
@@ -36,6 +41,9 @@ class PowerSavingOptions {
   static const minUiNotificationInterval = 50;
   static const maxUiNotificationInterval = 1000;
   static const uiNotificationIntervalStep = 50;
+  static const minBackgroundReconnectInterval = 30;
+  static const maxBackgroundReconnectInterval = 600;
+  static const backgroundReconnectIntervalStep = 30;
 
   final int hiddenRadioStatsIntervalSeconds;
   final bool pauseHiddenRadioIndicator;
@@ -46,9 +54,17 @@ class PowerSavingOptions {
   final bool pauseHiddenStatusAnimations;
   final bool disableContinuousStatusAnimations;
   final bool cacheChannelKeyHashes;
+  final bool skipIdleDirectProgressParsing;
   final int uiNotificationIntervalMilliseconds;
   final int batteryIntervalSeconds;
   final int gpsIntervalSeconds;
+  final int backgroundReconnectIntervalSeconds;
+
+  static int _reconnectInterval(Object? value) {
+    if (value is! int) return minBackgroundReconnectInterval;
+    return value.clamp(minBackgroundReconnectInterval, maxBackgroundReconnectInterval) ~/
+        backgroundReconnectIntervalStep * backgroundReconnectIntervalStep;
+  }
 
   static int _deviceInterval(Object? value, int minimum, int maximum) {
     if (value is! int) return minimum;
@@ -73,11 +89,16 @@ class PowerSavingOptions {
     bool? pauseHiddenStatusAnimations,
     bool? disableContinuousStatusAnimations,
     bool? cacheChannelKeyHashes,
+    bool? skipIdleDirectProgressParsing,
     int? uiNotificationIntervalMilliseconds,
     int? batteryIntervalSeconds,
     int? gpsIntervalSeconds,
+    int? backgroundReconnectIntervalSeconds,
   }) =>
       PowerSavingOptions(
+        backgroundReconnectIntervalSeconds: _reconnectInterval(
+          backgroundReconnectIntervalSeconds ?? this.backgroundReconnectIntervalSeconds,
+        ),
         hiddenRadioStatsIntervalSeconds: (hiddenRadioStatsIntervalSeconds ??
             this.hiddenRadioStatsIntervalSeconds)
             .clamp(minRadioStatsInterval, maxRadioStatsInterval).toInt(),
@@ -92,6 +113,8 @@ class PowerSavingOptions {
         disableContinuousStatusAnimations:
             disableContinuousStatusAnimations ?? this.disableContinuousStatusAnimations,
         cacheChannelKeyHashes: cacheChannelKeyHashes ?? this.cacheChannelKeyHashes,
+        skipIdleDirectProgressParsing:
+            skipIdleDirectProgressParsing ?? this.skipIdleDirectProgressParsing,
         uiNotificationIntervalMilliseconds: _uiInterval(
           uiNotificationIntervalMilliseconds ?? this.uiNotificationIntervalMilliseconds,
         ),
@@ -109,6 +132,8 @@ class PowerSavingOptions {
     final value = json is Map
         ? json['hidden_radio_stats_interval_seconds'] : null;
     return PowerSavingOptions(
+      backgroundReconnectIntervalSeconds: _reconnectInterval(json is Map
+          ? json['background_reconnect_interval_seconds'] : null),
       hiddenRadioStatsIntervalSeconds: value is int
           ? value.clamp(minRadioStatsInterval, maxRadioStatsInterval).toInt()
           : minRadioStatsInterval,
@@ -123,6 +148,8 @@ class PowerSavingOptions {
       disableContinuousStatusAnimations:
           json is Map && json['disable_continuous_status_animations'] == true,
       cacheChannelKeyHashes: json is Map && json['cache_channel_key_hashes'] == true,
+      skipIdleDirectProgressParsing:
+          json is Map && json['skip_idle_direct_progress_parsing'] == true,
       uiNotificationIntervalMilliseconds: _uiInterval(json is Map
           ? json['ui_notification_interval_milliseconds'] : null),
       batteryIntervalSeconds: _deviceInterval(
@@ -137,6 +164,7 @@ class PowerSavingOptions {
   }
 
   Map<String, dynamic> toJson() => {
+    'background_reconnect_interval_seconds': backgroundReconnectIntervalSeconds,
     'hidden_radio_stats_interval_seconds': hiddenRadioStatsIntervalSeconds,
     'pause_hidden_radio_indicator': pauseHiddenRadioIndicator,
     'pause_idle_image_cleanup': pauseIdleImageCleanup,
@@ -146,6 +174,7 @@ class PowerSavingOptions {
     'pause_hidden_status_animations': pauseHiddenStatusAnimations,
     'disable_continuous_status_animations': disableContinuousStatusAnimations,
     'cache_channel_key_hashes': cacheChannelKeyHashes,
+    'skip_idle_direct_progress_parsing': skipIdleDirectProgressParsing,
     'ui_notification_interval_milliseconds': uiNotificationIntervalMilliseconds,
     'battery_interval_seconds': batteryIntervalSeconds,
     'gps_interval_seconds': gpsIntervalSeconds,
@@ -165,6 +194,8 @@ class PowerSavingSettings {
   PowerSavingOptions get effective => switch (profile) {
     PowerSavingProfile.disabled => const PowerSavingOptions(),
     PowerSavingProfile.balanced => const PowerSavingOptions(
+      backgroundReconnectIntervalSeconds: 60,
+      skipIdleDirectProgressParsing: true,
       cacheChannelKeyHashes: true,
       pauseHiddenStatusAnimations: true,
       reduceBlePluginLogs: true,
@@ -178,6 +209,8 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 120,
     ),
     PowerSavingProfile.economical => const PowerSavingOptions(
+      backgroundReconnectIntervalSeconds: 180,
+      skipIdleDirectProgressParsing: true,
       cacheChannelKeyHashes: true,
       pauseHiddenStatusAnimations: true,
       disableContinuousStatusAnimations: true,
@@ -192,6 +225,8 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 300,
     ),
     PowerSavingProfile.maximum => const PowerSavingOptions(
+      backgroundReconnectIntervalSeconds: 600,
+      skipIdleDirectProgressParsing: true,
       cacheChannelKeyHashes: true,
       pauseHiddenStatusAnimations: true,
       disableContinuousStatusAnimations: true,

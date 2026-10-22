@@ -14021,6 +14021,18 @@ abstract class AppLocalizations {
   /// **'Power saving'**
   String get powerSaving_title;
 
+  /// No description provided for @powerSaving_skipIdleDirectProgressParsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Parse progress only while sending'**
+  String get powerSaving_skipIdleDirectProgressParsing;
+
+  /// No description provided for @powerSaving_skipIdleDirectProgressParsingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.'**
+  String get powerSaving_skipIdleDirectProgressParsingDescription;
+
   /// No description provided for @powerSaving_cacheChannelKeyHashes.
   ///
   /// In en, this message translates to:
@@ -14224,6 +14236,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.'**
   String get powerSaving_pauseHiddenGifsDescription;
+
+  /// No description provided for @powerSaving_backgroundReconnectInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Background reconnection pause'**
+  String get powerSaving_backgroundReconnectInterval;
+
+  /// No description provided for @powerSaving_backgroundReconnectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.'**
+  String get powerSaving_backgroundReconnectDescription;
 }
 
 class _AppLocalizationsDelegate

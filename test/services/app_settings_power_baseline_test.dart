@@ -102,31 +102,40 @@ void main() {
     _expectDeliveryChoices(savedAgain.settings);
   });
 
-  test('power profile changes preserve saved custom and delivery choices',
+  test('every power profile and reload preserve all custom and delivery choices',
       () async {
-    final service = await _loadSettings();
+    var service = await _loadSettings();
     expect(service.settings.powerSaving.profile, PowerSavingProfile.disabled);
+    await service.setPowerSavingProfile(PowerSavingProfile.custom);
     await service.setHiddenRadioStatsIntervalSeconds(19);
     await service.setPauseHiddenRadioIndicator(true);
     await service.setPauseIdleImageCleanup(true);
     await service.setPauseHiddenGifs(true);
     await service.setBatteryPollingIntervalSeconds(240);
     await service.setGpsPollingIntervalSeconds(180);
-    for (final profile in [
-      PowerSavingProfile.balanced,
-      PowerSavingProfile.maximum,
-      PowerSavingProfile.disabled,
-    ]) {
+    await service.setBackgroundReconnectIntervalSeconds(90);
+    await service.setUiNotificationIntervalMilliseconds(750);
+    await service.setDeferBleLogDescriptions(false);
+    await service.setReduceBlePluginLogs(true);
+    await service.setPauseHiddenStatusAnimations(true);
+    await service.setDisableContinuousStatusAnimations(false);
+    await service.setCacheChannelKeyHashes(false);
+    await service.setSkipIdleDirectProgressParsing(true);
+    final savedCustom = service.settings.powerSaving.custom.toJson();
+    for (final profile in PowerSavingProfile.values) {
       await service.setPowerSavingProfile(profile);
-      expect(service.settings.powerSaving.custom
-          .hiddenRadioStatsIntervalSeconds, 19);
-      expect(service.settings.powerSaving.custom.pauseHiddenRadioIndicator,
-          isTrue);
-      expect(service.settings.powerSaving.custom.pauseIdleImageCleanup, isTrue);
-      expect(service.settings.powerSaving.custom.pauseHiddenGifs, isTrue);
-      expect(service.settings.powerSaving.custom.batteryIntervalSeconds, 240);
-      expect(service.settings.powerSaving.custom.gpsIntervalSeconds, 180);
+      expect(service.settings.powerSaving.custom.toJson(), savedCustom);
+      service = await _loadSettings();
+      expect(service.settings.powerSaving.profile, profile);
+      expect(service.settings.powerSaving.custom.toJson(), savedCustom);
+      expect(service.settings.powerSaving.effective.toJson(),
+          profile == PowerSavingProfile.custom ? savedCustom
+              : PowerSavingSettings(profile: profile).effective.toJson());
       _expectDeliveryChoices(service.settings);
+      // Возврат в свои настройки после каждого чужого профиля и перезагрузки.
+      await service.setPowerSavingProfile(PowerSavingProfile.custom);
+      service = await _loadSettings();
+      expect(service.settings.powerSaving.effective.toJson(), savedCustom);
     }
     await service.setPowerSavingProfile(PowerSavingProfile.custom);
     await service.setHideRadioStatsButton(true);
@@ -140,6 +149,8 @@ void main() {
     expect(reloaded.settings.powerSaving.effective.pauseHiddenGifs, isTrue);
     expect(reloaded.settings.powerSaving.effective.batteryIntervalSeconds, 240);
     expect(reloaded.settings.powerSaving.effective.gpsIntervalSeconds, 180);
+    expect(reloaded.settings.powerSaving.effective.backgroundReconnectIntervalSeconds, 90);
+    expect(reloaded.settings.powerSaving.effective.toJson(), savedCustom);
     expect(reloaded.settings.hideRadioStatsButton, isTrue);
     _expectDeliveryChoices(reloaded.settings);
   });
@@ -200,6 +211,40 @@ void main() {
     expect(reloaded.settings.powerSaving.effective.gpsIntervalSeconds, 240);
     expect(reloaded.settings.powerSaving.effective.hiddenRadioStatsIntervalSeconds,
         7);
+    _expectDeliveryChoices(reloaded.settings);
+  });
+
+  test('idle progress parsing persists independently and preserves all other choices', () async {
+    final service = await _loadSettings();
+    await service.setPauseHiddenStatusAnimations(true);
+    await service.setDisableContinuousStatusAnimations(true);
+    await service.setReduceBlePluginLogs(true);
+    await service.setDeferBleLogDescriptions(true);
+    await service.setPauseHiddenGifs(true);
+    await service.setPauseIdleImageCleanup(true);
+    await service.setPauseHiddenRadioIndicator(true);
+    await service.setCacheChannelKeyHashes(true);
+    await service.setUiNotificationIntervalMilliseconds(750);
+    await service.setBatteryPollingIntervalSeconds(300);
+    await service.setGpsPollingIntervalSeconds(240);
+    await service.setHiddenRadioStatsIntervalSeconds(17);
+    final other = service.settings.powerSaving.custom.toJson();
+    await service.setSkipIdleDirectProgressParsing(true);
+    expect(service.settings.powerSaving.profile, PowerSavingProfile.disabled);
+    expect(service.settings.powerSaving.effective.skipIdleDirectProgressParsing, isFalse);
+    await service.setPowerSavingProfile(PowerSavingProfile.custom);
+    var reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), {
+      ...other, 'skip_idle_direct_progress_parsing': true,
+    });
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.maximum);
+    await reloaded.setSkipIdleDirectProgressParsing(false);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.skipIdleDirectProgressParsing, isTrue);
+    expect(reloaded.settings.powerSaving.custom.toJson(), other);
+    await reloaded.setPowerSavingProfile(PowerSavingProfile.custom);
+    reloaded = await _loadSettings();
+    expect(reloaded.settings.powerSaving.effective.toJson(), other);
     _expectDeliveryChoices(reloaded.settings);
   });
 

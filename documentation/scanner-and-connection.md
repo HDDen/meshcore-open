@@ -86,7 +86,7 @@ Offline history is read-only with respect to the radio. Chats, message search, t
 
 - A recoverable BLE loss keeps the current screen open and shows a red reconnecting snackbar. Pending messages remain queued while the connector retries indefinitely; after a successful handshake they resume naturally and a green reconnected snackbar is shown.
 - Manual disconnect returns to the selected connection screen.
-- USB and TCP do not use BLE auto-reconnect and return to their connection flow when the transport is lost.
+- При потере USB-соединения приложение возвращается к экрану подключения. BLE и ранее установленный TCP поддерживают автоматическое восстановление; особенности TCP описаны в разделе [Automatic Reconnect](#automatic-reconnect).
 - On Android, the foreground-service notification reflects connected/reconnecting state. The service retains the main Flutter engine; it does not contain a second BLE connector.
 
 ---
@@ -148,7 +148,7 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 
 ### Automatic Reconnect
 
-- If an established TCP link drops without you disconnecting (for example Wi-Fi power saving while the app is in the background), the app reconnects to the same host and port automatically, using the same exponential backoff as BLE. The background service keeps running while it retries.
+- При обрыве ранее установленного TCP без ручного отключения приложение автоматически восстанавливает тот же host и port, используя общий с BLE backoff. Первые шесть пауз — 1/2/4/8/16/30 секунд; затем исходный предел — 30 секунд. Параметр энергосбережения **«Пауза переподключений в фоне»** позволяет увеличить поздние паузы только при неактивном приложении; возврат в приложение пересчитывает ожидание по обычному расписанию. Фоновая служба сохраняет прежние правила работы во время повторов. Подробности — [переподключения в фоне](power-saving.md#переподключения-в-фоне).
 - Only a link that completed its handshake is reconnected; a first connection to a wrong address is not retried. A manual disconnect, or connecting over BLE or USB, cancels it.
 - The socket uses TCP keepalive (probes after 30 seconds of silence, every 10 seconds, 3 tries), so a dead link is noticed in about a minute instead of the system default of hours.
 - USB is not reconnected automatically: losing a USB link usually means the cable was unplugged.

@@ -16,12 +16,14 @@ void main() {
       pauseHiddenStatusAnimations: true,
       disableContinuousStatusAnimations: true,
       cacheChannelKeyHashes: true,
+      skipIdleDirectProgressParsing: true,
       uiNotificationIntervalMilliseconds: 750,
       batteryIntervalSeconds: 300,
       gpsIntervalSeconds: 180,
     ));
     expect(settings.profile, PowerSavingProfile.disabled);
     expect(settings.effective.toJson(), {
+      'background_reconnect_interval_seconds': 30,
       'hidden_radio_stats_interval_seconds': 1,
       'pause_hidden_radio_indicator': false,
       'pause_idle_image_cleanup': false,
@@ -31,10 +33,84 @@ void main() {
       'pause_hidden_status_animations': false,
       'disable_continuous_status_animations': false,
       'cache_channel_key_hashes': false,
+      'skip_idle_direct_progress_parsing': false,
       'ui_notification_interval_milliseconds': 50,
       'battery_interval_seconds': 120,
       'gps_interval_seconds': 60,
     });
+  });
+
+  test('background reconnect defaults, normalization, presets and JSON are independent', () {
+    for (final raw in [null, false, '180', 180.0, <String, Object>{}]) {
+      expect(PowerSavingOptions.fromJson({
+        'background_reconnect_interval_seconds': raw,
+      }).backgroundReconnectIntervalSeconds, 30);
+    }
+    for (final entry in {
+      -1: 30, 0: 30, 29: 30, 30: 30, 59: 30, 60: 60,
+      179: 150, 180: 180, 599: 570, 600: 600, 9999: 600,
+    }.entries) {
+      final options = PowerSavingOptions.fromJson({
+        'background_reconnect_interval_seconds': entry.key,
+      });
+      expect(options.backgroundReconnectIntervalSeconds, entry.value);
+      expect(const PowerSavingOptions().copyWith(
+        backgroundReconnectIntervalSeconds: entry.key,
+      ).toJson(), options.toJson());
+    }
+    const original = PowerSavingOptions(
+      gpsIntervalSeconds: 180, skipIdleDirectProgressParsing: true,
+    );
+    final changed = original.copyWith(backgroundReconnectIntervalSeconds: 90);
+    expect(changed.toJson(), {
+      ...original.toJson(), 'background_reconnect_interval_seconds': 90,
+    });
+    expect(changed.copyWith(backgroundReconnectIntervalSeconds: 30).toJson(), original.toJson());
+    for (final entry in {
+      PowerSavingProfile.disabled: 30,
+      PowerSavingProfile.balanced: 60,
+      PowerSavingProfile.economical: 180,
+      PowerSavingProfile.maximum: 600,
+      PowerSavingProfile.custom: 90,
+    }.entries) {
+      final restored = PowerSavingSettings.fromJson(jsonDecode(jsonEncode(
+        PowerSavingSettings(profile: entry.key, custom: changed).toJson(),
+      )));
+      expect(restored.effective.backgroundReconnectIntervalSeconds, entry.value);
+      expect(restored.custom.toJson(), changed.toJson());
+    }
+    final unknown = PowerSavingSettings.fromJson({
+      'profile': 'future', 'custom': changed.toJson(),
+    });
+    expect(unknown.effective.backgroundReconnectIntervalSeconds, 30);
+    expect(unknown.custom.backgroundReconnectIntervalSeconds, 90);
+    expect(PowerSavingOptions.fromJson({}).backgroundReconnectIntervalSeconds, 30);
+  });
+
+  test('idle direct progress flag preserves old settings, profiles and other choices', () {
+    for (final raw in [null, false, 0, 1, 'true', true]) {
+      final options = PowerSavingOptions.fromJson({'skip_idle_direct_progress_parsing': raw});
+      expect(options.skipIdleDirectProgressParsing, raw == true);
+      expect(PowerSavingOptions.fromJson(options.toJson()).skipIdleDirectProgressParsing,
+          raw == true);
+    }
+    expect(PowerSavingOptions.fromJson({}).skipIdleDirectProgressParsing, isFalse);
+    const original = PowerSavingOptions(cacheChannelKeyHashes: true,
+        uiNotificationIntervalMilliseconds: 750);
+    final changed = original.copyWith(skipIdleDirectProgressParsing: true);
+    expect(changed.toJson(), {
+      ...original.toJson(), 'skip_idle_direct_progress_parsing': true,
+    });
+    expect(changed.copyWith(skipIdleDirectProgressParsing: false).toJson(), original.toJson());
+    for (final profile in PowerSavingProfile.values) {
+      expect(PowerSavingSettings(profile: profile).effective.skipIdleDirectProgressParsing,
+          profile != PowerSavingProfile.disabled && profile != PowerSavingProfile.custom);
+    }
+    final unknown = PowerSavingSettings.fromJson({
+      'profile': 'future', 'custom': changed.toJson(),
+    });
+    expect(unknown.effective.skipIdleDirectProgressParsing, isFalse);
+    expect(unknown.custom.skipIdleDirectProgressParsing, isTrue);
   });
 
   test('channel key hash cache preserves JSON, old settings and independent choices', () {

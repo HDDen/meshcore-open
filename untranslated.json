@@ -67,6 +67,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -100,7 +102,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "de": [
@@ -171,6 +175,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -204,7 +210,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "es": [
@@ -275,6 +283,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -308,7 +318,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "fr": [
@@ -379,6 +391,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -412,7 +426,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "hu": [
@@ -483,6 +499,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -516,7 +534,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "it": [
@@ -587,6 +607,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -620,7 +642,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "ja": [
@@ -691,6 +715,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -724,7 +750,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "ko": [
@@ -795,6 +823,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -828,7 +858,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "nl": [
@@ -899,6 +931,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -932,7 +966,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "pl": [
@@ -1003,6 +1039,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1036,7 +1074,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "pt": [
@@ -1107,6 +1147,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1140,7 +1182,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "sk": [
@@ -1211,6 +1255,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1244,7 +1290,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "sl": [
@@ -1315,6 +1363,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1348,7 +1398,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "sv": [
@@ -1419,6 +1471,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1452,7 +1506,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "uk": [
@@ -1523,6 +1579,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1556,7 +1614,9 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ],
 
   "zh": [
@@ -1627,6 +1687,8 @@
     "channels_senderNamePrivateRegion",
     "channels_senderNameResetBySign",
     "powerSaving_title",
+    "powerSaving_skipIdleDirectProgressParsing",
+    "powerSaving_skipIdleDirectProgressParsingDescription",
     "powerSaving_cacheChannelKeyHashes",
     "powerSaving_cacheChannelKeyHashesDescription",
     "powerSaving_pauseHiddenStatusAnimations",
@@ -1660,6 +1722,8 @@
     "powerSaving_pauseIdleImageCleanup",
     "powerSaving_pauseIdleImageCleanupDescription",
     "powerSaving_pauseHiddenGifs",
-    "powerSaving_pauseHiddenGifsDescription"
+    "powerSaving_pauseHiddenGifsDescription",
+    "powerSaving_backgroundReconnectInterval",
+    "powerSaving_backgroundReconnectDescription"
   ]
 }

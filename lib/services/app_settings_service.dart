@@ -150,6 +150,16 @@ class AppSettingsService extends ChangeNotifier {
     ));
   }
 
+  Future<void> setBackgroundReconnectIntervalSeconds(int seconds) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(
+          backgroundReconnectIntervalSeconds: seconds,
+        ),
+      ),
+    ));
+  }
+
   Future<void> setUiNotificationIntervalMilliseconds(int milliseconds) async {
     await updateSettings(_settings.copyWith(
       powerSaving: _settings.powerSaving.copyWith(
@@ -254,6 +264,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(
       powerSaving: _settings.powerSaving.copyWith(
         custom: _settings.powerSaving.custom.copyWith(cacheChannelKeyHashes: value),
+      ),
+    ));
+  }
+
+  Future<void> setSkipIdleDirectProgressParsing(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(skipIdleDirectProgressParsing: value),
       ),
     ));
   }

@@ -21,6 +21,20 @@ class _RecordingSettings extends AppSettingsService {
   int hiddenAnimationSaves = 0;
   int staticAnimationSaves = 0;
   int channelHashSaves = 0;
+  int idleProgressSaves = 0;
+  int reconnectSaves = 0;
+
+  @override
+  Future<void> setBackgroundReconnectIntervalSeconds(int seconds) {
+    reconnectSaves++;
+    return super.setBackgroundReconnectIntervalSeconds(seconds);
+  }
+
+  @override
+  Future<void> setSkipIdleDirectProgressParsing(bool value) {
+    idleProgressSaves++;
+    return super.setSkipIdleDirectProgressParsing(value);
+  }
 
   @override
   Future<void> setCacheChannelKeyHashes(bool value) {
@@ -162,6 +176,72 @@ void main() {
   tearDown(PrefsManager.reset);
 
   for (final locale in ['en', 'ru']) {
+    testWidgets('background reconnect slider preserves custom across profiles ($locale)', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final settings = _RecordingSettings();
+      try {
+        await tester.pumpWidget(ChangeNotifierProvider<AppSettingsService>.value(
+          value: settings,
+          child: MaterialApp(
+            locale: Locale(locale),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PowerSavingScreen(),
+          ),
+        ));
+        await _showSlider(tester, 'reconnect');
+        final title = locale == 'ru'
+            ? 'Пауза переподключений в фоне' : 'Background reconnection pause';
+        expect(find.text(title), findsOneWidget);
+        var slider = tester.widget<Slider>(_slider('reconnect'));
+        expect(slider.value, 30);
+        expect(slider.min, 30);
+        expect(slider.max, 600);
+        expect(slider.divisions, 19);
+        expect(slider.onChanged, isNull);
+        final custom = locale == 'ru' ? 'Свои настройки' : 'Custom settings';
+        await _select(tester, custom);
+        await _dragSlider(tester, 'reconnect', () {
+          expect(settings.reconnectSaves, 0);
+        });
+        final saved = settings.settings.powerSaving.custom.backgroundReconnectIntervalSeconds;
+        expect(saved, greaterThan(30));
+        expect(saved % 30, 0);
+        expect(settings.reconnectSaves, 1);
+        for (final profile in PowerSavingProfile.values.where(
+            (value) => value != PowerSavingProfile.custom)) {
+          await _select(tester, powerSavingProfileLabel(
+            AppLocalizations.of(tester.element(find.byType(PowerSavingScreen))), profile,
+          ));
+          await _showSlider(tester, 'reconnect');
+          slider = tester.widget<Slider>(_slider('reconnect'));
+          expect(slider.value, PowerSavingSettings(profile: profile).effective
+              .backgroundReconnectIntervalSeconds.toDouble());
+          expect(slider.onChanged, isNull);
+          await _select(tester, custom);
+          await _showSlider(tester, 'reconnect');
+          expect(tester.widget<Slider>(_slider('reconnect')).value, saved.toDouble());
+        }
+        expect(settings.reconnectSaves, 1);
+        final rect = tester.getRect(_slider('reconnect'));
+        final drag = await tester.startGesture(Offset(rect.left + 24, rect.center.dy));
+        await drag.moveBy(const Offset(100, 0));
+        await tester.pump();
+        await settings.setPowerSavingProfile(PowerSavingProfile.disabled);
+        await tester.pump();
+        await drag.up();
+        await _settle(tester);
+        expect(settings.reconnectSaves, 1);
+        expect(settings.settings.powerSaving.custom.backgroundReconnectIntervalSeconds, saved);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        settings.dispose();
+      }
+    });
+
     testWidgets('profile selector and custom slider preserve separate values ($locale)',
         (tester) async {
       tester.view.physicalSize = const Size(800, 1000);
@@ -529,6 +609,9 @@ void main() {
             locale == 'ru' ? 'Статичные индикаторы статуса' : 'Static status indicators'),
         ('channel-key-hashes', 'cache_channel_key_hashes',
             locale == 'ru' ? 'Кэшировать параметры каналов' : 'Cache channel parameters'),
+        ('idle-direct-progress', 'skip_idle_direct_progress_parsing',
+            locale == 'ru' ? 'Разбирать прогресс только при отправке'
+                : 'Parse progress only while sending'),
       ]) {
         await _select(tester, off);
         await _showToggle(tester, entry.$1);
@@ -568,6 +651,7 @@ void main() {
       expect(settings.hiddenAnimationSaves, 2);
       expect(settings.staticAnimationSaves, 2);
       expect(settings.channelHashSaves, 2);
+      expect(settings.idleProgressSaves, 2);
       expect(settings.pluginLogSaves, 2);
       expect(settings.descriptionSaves, 2);
     });

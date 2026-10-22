@@ -8337,6 +8337,14 @@ class AppLocalizationsSk extends AppLocalizations {
   String get powerSaving_title => 'Power saving';
 
   @override
+  String get powerSaving_skipIdleDirectProgressParsing =>
+      'Parse progress only while sending';
+
+  @override
+  String get powerSaving_skipIdleDirectProgressParsingDescription =>
+      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+
+  @override
   String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
 
   @override
@@ -8462,4 +8470,12 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
       'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+
+  @override
+  String get powerSaving_backgroundReconnectInterval =>
+      'Background reconnection pause';
+
+  @override
+  String get powerSaving_backgroundReconnectDescription =>
+      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
 }

@@ -2039,6 +2039,34 @@ disconnect, смене ноды и dispose; посторонние настро�
 Коллизии однобайтового хеша по-прежнему требуют проверки MAC; AES, wire, de-dup,
 запись истории и ACK не меняются. `tool/benchmark_channel_key_hash.dart` сравнивает
 рабочий helper с прежней формулой на том же синтетическом корпусе; это не замер энергии.
+Тринадцатый параметр `skipIdleDirectProgressParsing` /
+`skip_idle_direct_progress_parsing` — false в Off/исходных своих/старом JSON,
+true в трёх энергопрофилях. Чистый Dart `helpers/direct_progress_rx_parser.dart`
+проверяет наличие direct-трекеров до вызова прежнего DirectMessageEcho.tryParse.
+MessageRetryService хранит выбранный флаг через listener настроек; на каждом RX
+передаёт актуальное `_progressTrackers.isNotEmpty`, не читая весь профиль заново.
+initialize заменяет подписку, dispose её снимает, отсутствующий settings provider
+сохраняет Off. Pending до SENT и flood могут не иметь direct-трекера;
+hasPendingMessages для этого условия не используется. При активном трекере парсер,
+привязка payload, сопоставление маршрута/ширины/неоднозначности и ACK не меняются.
+Остальные RX-потребители, сообщения, история, повторы и транспорт сохраняются.
+`tool/benchmark_rx_progress.dart` использует рабочий helper со сверяемым снимком
+парсера на прежнем корпусе; он не измеряет matcher, весь сервис или энергию.
+Четырнадцатый параметр `backgroundReconnectIntervalSeconds` /
+`background_reconnect_interval_seconds` — слайдер 30–600 с, шаг 30;
+Off/исходные свои/старый JSON — 30, профили — 60/180/600 с.
+Чистый Dart `helpers/reconnect_backoff.dart` сохраняет первые шесть пауз
+1/2/4/8/16/30 с, начиная с индекса 6 увеличивает паузу только в фоне.
+`helpers/reconnect_power_settings.dart` наблюдает Flutter lifecycle и существующий
+native activity iOS; скрытый маршрут сам по себе не включает фон. Observer
+создаётся только при выбранной паузе >30 с, освобождается при Off/минимуме/dispose.
+`ReconnectWait` пересчитывает оставшееся ожидание от монотонного начала паузы
+при смене активности/профиля, не расходуя новую попытку. Возврат к foreground
+сокращает длинную паузу; просроченное ожидание завершается асинхронно.
+Общий scheduler BLE/TCP сохраняет coalescing, transport guard, запрет параллельного
+connect, manual cancellation и прежние сбросы счётчика. USB/review не добавлены.
+`tool/simulate_reconnect_backoff.dart` сравнивает рабочую функцию со старым
+снимком на прежних сценариях; число стартов не является измерением батареи.
 См. `documentation/power-saving.md`; проверка устройства отложена владельцем
 до добавления всех параметров. Экономия энергии пока не измерена.
 
