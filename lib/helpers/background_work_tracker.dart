@@ -17,6 +17,9 @@ enum BackgroundWorkKind {
   backgroundFeature,
   queuedMessageRequest,
   transportTeardown,
+  frameDispatch,
+  radioReceive,
+  messageReplay,
 }
 
 /// Неизменяемый снимок учёта, без кадров, адресов и содержимого сообщений.

@@ -1382,3 +1382,122 @@ flutter analyze
 ```
 
 Владелец подтвердил прохождение `bleConnectWorkTests`.
+
+## Baseline внешних packet/replay границ
+
+Следующий пакет проверяет исходное поведение до добавления внешних удержаний:
+
+- `send_frame_boundary_baseline_test.dart` — шесть сценариев: задержка перед
+  writer, обработка без writer, синхронная/асинхронная ошибка, ожидание
+  специфического ответа и потеря соединения перед отложенной отправкой.
+- `packet_replay_lifecycle_baseline_test.dart` — одиннадцать сценариев:
+  пустые очереди, выбор разрешимых отправителей, FIFO и исключения, защита
+  deferred replay от повторного входа, передача управления синхронизации,
+  асинхронный channel RX и direct echo, повреждённые/чужие кадры.
+
+Это состав подготовленных тестов, а не результат запуска. Циклы replay и
+RX parser/decrypt настоящие; задерживаются существующие Futures загрузки
+истории и перевода. Stores не привязаны к ноде, записи пропускаются штатным
+guard пустого scope. Сохранение в реальную БД эти новые сценарии не проверяют.
+Все кадры и ключ direct echo синтетические. ACK этого direct echo не
+отправляется: его RX проверяется при disconnected; соседние принятые тесты
+сохраняются. Внешний сервис заменён Fake без вызова его конструктора.
+
+В коннектор добавлены только `visibleForTesting` адаптеры. Рабочие sendFrame,
+LOG_RX и replay пока не обёрнуты. Обычный receive использует messageSync,
+но replay с `alreadyAdvancedQueueSync: true` вызывает process напрямую;
+его полнота не следует из наличия общего wrapper.
+
+Baseline также фиксирует прежние ограничения обработки ошибок: unknown
+replay выбирает кадры из буфера до обработки; при ошибке загрузки оставшаяся
+выбранная часть не возвращается. Deferred replay при ошибке сбрасывает флаги,
+оставляет ещё не извлечённые кадры и не запускает pending sync. Здесь эти
+правила не исправляются и не объявляются гарантией доставки.
+
+Пакет владельца:
+
+```powershell
+$packetReplayBaselineTests = @(
+  'test/connector/send_frame_boundary_baseline_test.dart'
+  'test/connector/packet_replay_lifecycle_baseline_test.dart'
+  'test/connector/frame_command_baseline_test.dart'
+  'test/connector/frame_work_tracking_test.dart'
+  'test/connector/queued_message_processing_baseline_test.dart'
+  'test/connector/queued_message_work_tracking_test.dart'
+  'test/connector/channel_packet_copies_test.dart'
+  'test/connector/own_message_echo_test.dart'
+  'test/connector/south_frame_fragment_protocol_test.dart'
+  'test/helpers/south_queued_fragment_ack_tracker_test.dart'
+)
+flutter test @packetReplayBaselineTests --reporter expanded
+flutter analyze
+```
+
+Соседний `own_message_echo_test.dart` требует native sqlite3 и может быть
+skipped при её отсутствии; это не подтверждает проверку persistence.
+Владелец подтвердил прохождение `packetReplayBaselineTests` после исправления
+импорта Endian и Fake. Отдельный чистый итог analyze и число выполненных/skip
+сценариев в сообщении не указаны.
+
+## Учёт внешних packet/replay границ
+
+`PacketBackgroundWork` добавляет три вида удержаний:
+
+| Вид | Граница |
+|---|---|
+| `frameDispatch` | `sendFrame` до вызова внешнего перехватчика и до конца возвращённого им Future; включая обработку без физического writer |
+| `radioReceive` | полный async `LOG_RX`, включая awaited direct echo, verification, историю и перевод/уведомление, которые ожидает исходный обработчик |
+| `messageReplay` | полный unknown-sender или deferred contact replay, включая последовательные сообщения и исходную передачу управления очереди |
+
+Без перехватчика `sendFrame` идёт прежним путём: writer и ожидаемый reply уже
+учитываются независимо. При перехватчике их удержания сосуществуют с
+`frameDispatch`. Write timeout завершает внешний Future, но фактический writer
+может остаться активным до собственного завершения. Не ожидаемые исходным
+кодом операции не становятся частью внешнего Future автоматически.
+
+Helper вызывает callback сразу и сохраняет синхронный throw перехватчика.
+Каждый вызов имеет отдельное удержание; immutable snapshot, reset, dispose и
+timeout вызывающего кода не освобождают чужую незавершённую работу. После
+закрытия реестра поздний вызов сохраняет прежнее выполнение без регистрации
+нового удержания. Существующие открытые удержания завершаются независимо.
+
+Replay не меняет очереди и обработку ошибок, описанные в baseline. Кадры,
+пассивно ожидающие контакта, FR01 TTL и пустые очереди не создают постоянный
+busy. Пустой вызов replay/RX может кратко учитываться до завершения Future,
+после чего сразу освобождается. Новых таймеров и timeout нет.
+
+Подготовлены 37 отдельных регрессионных сценариев: 13 helper, восемь внешней
+отправки и 16 RX/replay. Это состав тестов, не результаты запуска. Принятые
+baseline сохранены. Ограничения синтетических fixture прежние: новые тесты
+не подтверждают native доставку, реальную DB, коммерческий backend и фон ОС.
+
+Пакет владельца:
+
+```powershell
+$packetReplayWorkTests = @(
+  'test/helpers/background_work_tracker_test.dart'
+  'test/helpers/packet_background_work_test.dart'
+  'test/connector/send_frame_boundary_baseline_test.dart'
+  'test/connector/send_frame_boundary_work_tracking_test.dart'
+  'test/connector/packet_replay_lifecycle_baseline_test.dart'
+  'test/connector/packet_replay_work_tracking_test.dart'
+  'test/connector/frame_command_baseline_test.dart'
+  'test/connector/frame_work_tracking_test.dart'
+  'test/connector/queued_message_processing_baseline_test.dart'
+  'test/connector/queued_message_work_tracking_test.dart'
+  'test/connector/contact_channel_sync_work_tracking_test.dart'
+  'test/connector/handshake_work_tracking_test.dart'
+  'test/connector/channel_packet_copies_test.dart'
+  'test/connector/own_message_echo_test.dart'
+  'test/connector/south_frame_fragment_protocol_test.dart'
+  'test/helpers/south_queued_fragment_ack_tracker_test.dart'
+)
+flutter test @packetReplayWorkTests --reporter expanded
+flutter analyze
+```
+
+Владелец подтвердил прохождение регрессий R1. Native CPU lock, heartbeat,
+транспорты и четырнадцать параметров прежние; аппаратной оценки экономии нет.
+После пересмотра плана storage/disk owners (R2) и допуск режимов (R3) отложены
+до аппаратных A/B. Продолжение реестра и native CPU/wake блока зависит от
+измеренной пользы и проверки надёжности; сам snapshot сон пока не разрешает.

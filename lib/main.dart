@@ -60,6 +60,7 @@ import 'storage/mco_image_gallery_store.dart';
 import 'helpers/mesh_compressor.dart';
 import 'helpers/image_reassembly_maintenance.dart';
 import 'helpers/ble_log_power_settings.dart';
+import 'helpers/ios_background_execution_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
@@ -654,6 +655,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final ImageReassemblyMaintenance _imageMaintenance;
   late final BleLogPowerSettings _bleLogPowerSettings;
   late final BlePluginLogPowerSettings _blePluginLogPowerSettings;
+  late final IosBackgroundExecutionBinding _iosBackgroundExecution;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -681,6 +683,18 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _bleLogPowerSettings = BleLogPowerSettings(
       log: widget.bleDebugLogService,
       settings: widget.appSettingsService,
+    );
+    _iosBackgroundExecution = IosBackgroundExecutionBinding(
+      connector: widget.connector,
+      settings: widget.appSettingsService,
+      sections: widget.settingsSectionsService,
+      onState: (state) => widget.appDebugLogService.info(
+        state, tag: 'iOSExecution', noNotify: true,
+      ),
+      onError: (error) => widget.appDebugLogService.warn(
+        'iOS background execution bridge unavailable (${error.runtimeType})',
+        tag: 'iOSExecution',
+      ),
     );
     _blePluginLogPowerSettings = BlePluginLogPowerSettings(
       settings: widget.appSettingsService,
@@ -763,6 +777,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();
+    _iosBackgroundExecution.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

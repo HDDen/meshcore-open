@@ -42,6 +42,7 @@ final class IosPresentationMonitor {
   private var watchingActivity = false
   private var observers: [NSObjectProtocol] = []
   private var watching = false
+  private var compatibilityPendingResume = false
   private var activity: IosPresentationActivityState
   private var revision = 0
   private var source = "initial"
@@ -99,6 +100,8 @@ final class IosPresentationMonitor {
       guard let scene = notification.object as? UIWindowScene else { return }
       monitor.activity.disconnectScene(identifier: scene.session.persistentIdentifier)
     }
+    observe(.mcoIosExecutionCompatibilityChanged, source: "execution.compatibility",
+            forcePublish: true) { _, _ in }
     activityChannel.setMethodCallHandler { [weak self] call, result in
       guard let self = self else {
         result(FlutterError(code: "unavailable", message: "Activity monitor unavailable", details: nil))
@@ -149,7 +152,7 @@ final class IosPresentationMonitor {
     )
   }
 
-  private func observe(_ name: Notification.Name, source: String,
+  private func observe(_ name: Notification.Name, source: String, forcePublish: Bool = false,
                        change: @escaping (IosPresentationMonitor, Notification) -> Void) {
     // Timestamp at native receipt, not when Dart eventually drains its queue.
     observers.append(notificationCenter.addObserver(forName: name, object: nil, queue: nil) {
@@ -164,7 +167,7 @@ final class IosPresentationMonitor {
         // собственный GPU-запрет Flutter до полной активации сцены.
         self.updateGpuGuard()
         self.publishIfChanged(wasActive: wasActive, source: source,
-                              utcMs: utcMs, uptimeMs: uptimeMs)
+                              utcMs: utcMs, uptimeMs: uptimeMs, force: forcePublish)
       }
       if Thread.isMainThread {
         apply()
@@ -185,18 +188,33 @@ final class IosPresentationMonitor {
     // v3's applicationState hook also runs with its toggle off. Detect the
     // loaded class, not the preference, without invoking third-party methods.
     var snapshot = activitySnapshot()
-    snapshot["enabled"] = compatibilityEnabled()
-    snapshot["nativeGpuGuard"] = watching && compatibilityEnabled() && (gpuGuard?.available ?? false)
+    let compatibility = effectiveCompatibility()
+    snapshot["enabled"] = compatibility
+    snapshot["nativeGpuGuard"] = watching && compatibility && (gpuGuard?.available ?? false)
     snapshot["gpuDisabled"] = gpuGuard?.gpuDisabled.map { $0 as Any } ?? NSNull()
     return snapshot
   }
 
   private func updateGpuGuard() {
-    gpuGuard?.update(enabled: watching && compatibilityEnabled(), active: activity.active)
+    let compatibility = effectiveCompatibility()
+    gpuGuard?.update(enabled: watching && compatibility, active: activity.active)
   }
 
-  private func publishIfChanged(wasActive: Bool, source: String, utcMs: Int64, uptimeMs: Int64) {
-    guard wasActive != activity.active else { return }
+  private func effectiveCompatibility() -> Bool {
+    let requested = compatibilityEnabled()
+    if watching && requested {
+      compatibilityPendingResume = true
+    } else if activity.active {
+      compatibilityPendingResume = false
+    }
+    // Stopping a hold while inactive must not reopen Dart layout/paint before
+    // the native scene has actually resumed. Keep both UI and GPU protected.
+    return requested || compatibilityPendingResume
+  }
+
+  private func publishIfChanged(wasActive: Bool, source: String, utcMs: Int64, uptimeMs: Int64,
+                                force: Bool = false) {
+    guard force || wasActive != activity.active else { return }
     self.source = source
     nativeAtUtcMs = utcMs
     nativeUptimeMs = uptimeMs

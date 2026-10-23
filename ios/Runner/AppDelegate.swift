@@ -8,6 +8,7 @@ import UserNotifications
   private let backgroundTcpManagerName = "MCO Advanced Background TCP"
   private var backgroundTcpManagers: [NEAppPushManager] = []
   private var presentationMonitors: [ObjectIdentifier: IosPresentationMonitor] = [:]
+  private lazy var backgroundExecution = IosBackgroundExecutionController()
 
   override func application(
     _ application: UIApplication,
@@ -64,6 +65,9 @@ import UserNotifications
     let binaryMessenger = registrar.messenger()
     // Legacy and implicit-engine registration can refer to the same messenger.
     let messengerId = ObjectIdentifier(binaryMessenger as AnyObject)
+    backgroundExecution.register(binaryMessenger: binaryMessenger, viewController: { [weak registrar] in
+      registrar?.viewController
+    })
     if presentationMonitors[messengerId] == nil {
       let gpuGuard = IosPresentationGpuGuard(targetProvider: { [weak registrar] in
         // Registrar может ещё не иметь viewController при implicit launch.
@@ -75,7 +79,11 @@ import UserNotifications
         return controller.engine
       })
       presentationMonitors[messengerId] = IosPresentationMonitor(
-        binaryMessenger: binaryMessenger, gpuGuard: gpuGuard)
+        binaryMessenger: binaryMessenger, gpuGuard: gpuGuard,
+        compatibilityEnabled: { [weak self] in
+          NSClassFromString("FloatingButtonWindow") != nil ||
+            self?.backgroundExecution.compatibilityRequired == true
+        })
     }
     let wifiSsidChannel = FlutterMethodChannel(
       name: "mco_advanced/ios_wifi_ssid",
@@ -120,6 +128,22 @@ import UserNotifications
         }
         self.backgroundTcpManagers = loaded
         NSLog("MCO background TCP: loaded \(loaded.count) manager(s)")
+      }
+    }
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    // Keep Flutter/plugin forwarding. Only the embedded background hold needs
+    // presentation compensation for its applicationState hook.
+    super.userNotificationCenter(center, willPresent: notification) { [weak self] options in
+      if self?.backgroundExecution.armed == true && self?.backgroundExecution.background == true {
+        completionHandler(options.union([.banner, .sound, .badge]))
+      } else {
+        completionHandler(options)
       }
     }
   }

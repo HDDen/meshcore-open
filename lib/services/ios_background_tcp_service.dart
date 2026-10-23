@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:mco_service/tcp_overlay.dart';
 
@@ -32,7 +33,13 @@ class IosBackgroundTcpConfigurationResult {
 }
 
 class IosBackgroundTcpService {
-  const IosBackgroundTcpService();
+  const IosBackgroundTcpService() : _isIosForTest = null;
+
+  @visibleForTesting
+  const IosBackgroundTcpService.forTest({required bool isIos})
+    : _isIosForTest = isIos;
+
+  final bool? _isIosForTest;
 
   static const MethodChannel _channel = MethodChannel(
     'mco_advanced/ios_background_tcp',
@@ -44,7 +51,7 @@ class IosBackgroundTcpService {
     required String wifiSsid,
     required bool enabled,
   }) async {
-    if (!PlatformInfo.isIOS) return null;
+    if (!(_isIosForTest ?? PlatformInfo.isIOS)) return null;
     final normalizedHost = host.trim();
     final normalizedSsid = wifiSsid.trim();
     if (normalizedHost.isEmpty || port < 1 || port > 65535) return null;

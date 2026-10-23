@@ -25,6 +25,7 @@ import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/frame_background_work.dart';
+import '../helpers/packet_background_work.dart';
 import '../helpers/image_transfer_background_work.dart';
 import '../helpers/message_processing_background_work.dart';
 import '../helpers/outgoing_queue_background_work.dart';
@@ -306,6 +307,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final MeshCoreTcpConnector _tcpConnector;
   final BackgroundWorkTracker _backgroundWork = BackgroundWorkTracker();
   late final FrameBackgroundWork _frameBackgroundWork = FrameBackgroundWork(_backgroundWork);
+  late final PacketBackgroundWork _packetBackgroundWork =
+      PacketBackgroundWork(_backgroundWork);
   late final MessageProcessingBackgroundWork _messageProcessingBackgroundWork =
       MessageProcessingBackgroundWork(_backgroundWork);
   late final QueuedMessageRequestBackgroundWork _queuedMessageRequestWork =
@@ -5652,6 +5655,68 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _frameWriterForTest = writer;
   }
 
+  /// Только внешний перехватчик; initialize и коммерческие службы не запускаются.
+  @visibleForTesting
+  void setFrameInterceptorForTest(SettingsSectionsService? service) {
+    _settingsSectionsService = service;
+  }
+
+  /// Синтетическое состояние без привязки stores к ноде и чтения настоящей БД.
+  @visibleForTesting
+  void setPacketReplayFixtureForTest({
+    required Uint8List selfKey,
+    List<Contact> contacts = const [],
+    List<Channel> channels = const [],
+  }) {
+    _setSelfPublicKey(Uint8List.fromList(selfKey));
+    _contacts
+      ..clear()
+      ..addAll(contacts);
+    _channels
+      ..clear()
+      ..addAll(channels);
+  }
+
+  /// Только синтетический RAM-ключ теста, без запроса/чтения ключа ноды.
+  @visibleForTesting
+  void setDirectEchoKeyForTest(Uint8List key) =>
+      _directEchoKeys.setPrivateKey(Uint8List.fromList(key));
+
+  /// Подменяет существующий Future загрузки, сохраняя настоящий receive path.
+  @visibleForTesting
+  void setConversationLoadForTest(String contactKeyHex, Future<void> load) {
+    _loadedConversationKeys.remove(contactKeyHex);
+    _conversationLoadFutures[contactKeyHex] = load;
+  }
+
+  @visibleForTesting
+  void holdUnknownSenderMessageForTest(Uint8List frame) =>
+      _holdUnknownSenderMessage(frame);
+
+  @visibleForTesting
+  Future<void> replayUnknownSenderMessagesForTest({bool onlyResolvable = false}) =>
+      _replayUnknownSenderMessages(onlyResolvable: onlyResolvable);
+
+  /// Фикстура уже принятого backlog; очередь ноды повторно не потребляется.
+  @visibleForTesting
+  void deferContactMessagesForTest(List<Uint8List> frames) {
+    _deferQueuedContactMessagesUntilContacts = true;
+    _deferredQueuedContactMessageFrames.addAll(frames.map(Uint8List.fromList));
+  }
+
+  @visibleForTesting
+  Future<void> replayDeferredContactMessagesForTest() =>
+      _processDeferredQueuedContactMessages();
+
+  @visibleForTesting
+  ({int unknown, int deferred, bool replaying, bool deferring})
+  get packetReplayStateForTest => (
+    unknown: _unknownSenderMessageFrames.length,
+    deferred: _deferredQueuedContactMessageFrames.length,
+    replaying: _isProcessingDeferredQueuedContactMessages,
+    deferring: _deferQueuedContactMessagesUntilContacts,
+  );
+
   /// Включает tombstone: этот счётчик не определяет активность CPU.
   @visibleForTesting
   int get pendingCommandReplyCountForTest => _pendingGenericAckQueue.length;
@@ -7301,7 +7366,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       waitForGenericAck: waitForGenericAck,
     );
     if (service == null) return sendDirect();
-    return service.mcoX1(data, sendDirect);
+    return _packetBackgroundWork.dispatch(() => service.mcoX1(data, sendDirect));
   }
 
   Future<void> _sendFrameDirect(
@@ -7966,6 +8031,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// [onlyResolvable], frames whose sender is still unknown stay held (a
   /// single CONTACT frame arrived); otherwise unresolved frames are dropped.
   Future<void> _replayUnknownSenderMessages({
+    bool onlyResolvable = false,
+  }) => _packetBackgroundWork.replay(
+    () => _replayUnknownSenderMessagesCore(onlyResolvable: onlyResolvable),
+  );
+
+  Future<void> _replayUnknownSenderMessagesCore({
     bool onlyResolvable = false,
   }) async {
     if (_unknownSenderMessageFrames.isEmpty) return;
@@ -12452,7 +12523,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_processDeferredQueuedContactMessages());
   }
 
-  Future<void> _processDeferredQueuedContactMessages() async {
+  Future<void> _processDeferredQueuedContactMessages() =>
+      _packetBackgroundWork.replay(_processDeferredQueuedContactMessagesCore);
+
+  Future<void> _processDeferredQueuedContactMessagesCore() async {
     if (!_deferQueuedContactMessagesUntilContacts ||
         _isProcessingDeferredQueuedContactMessages) {
       return;
@@ -16363,6 +16437,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleLogRxData(Uint8List frame) async {
+    await _packetBackgroundWork.receive(() => _handleLogRxDataCore(frame));
+  }
+
+  Future<void> _handleLogRxDataCore(Uint8List frame) async {
     if (frame.length < 4) return;
     try {
       final reader = BufferReader(frame);

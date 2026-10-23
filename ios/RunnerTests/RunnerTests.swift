@@ -418,6 +418,190 @@ class RunnerTests: XCTestCase {
     queue.drain()
     XCTAssertFalse(target.isGpuDisabled)
   }
+  private func executionFixture(background: Bool = false) -> (
+    controller: IosBackgroundExecutionController, backend: ExecutionTestBackend,
+    preferences: UserDefaults, center: NotificationCenter
+  ) {
+    let name = "mco.execution.tests.\(UUID().uuidString)"
+    let preferences = UserDefaults(suiteName: name)!
+    let backend = ExecutionTestBackend()
+    let center = NotificationCenter()
+    let controller = IosBackgroundExecutionController(backend: backend, preferences: preferences,
+      notificationCenter: center, initialBackground: background, legacyDetected: { false })
+    addTeardownBlock {
+      controller.close()
+      preferences.removePersistentDomain(forName: name)
+    }
+    return (controller, backend, preferences, center)
+  }
+
+  func testExecutionAudioOnlyInPhysicalBackgroundNotInactiveOrForeground() {
+    let f = executionFixture()
+    f.controller.configure(eligible: true)
+    XCTAssertTrue(f.controller.armed)
+    XCTAssertFalse(f.backend.audioRunning)
+    f.center.post(name: UIApplication.willResignActiveNotification, object: nil)
+    XCTAssertFalse(f.backend.audioRunning)
+    f.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    f.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    XCTAssertTrue(f.backend.audioRunning)
+    XCTAssertEqual(f.backend.audioStarts, 1)
+    f.center.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertEqual(f.backend.audioStops, 1)
+    f.center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    XCTAssertTrue(f.controller.armed)
+    XCTAssertFalse(f.backend.audioRunning)
+  }
+
+  func testExecutionNoEligibilityNeverArmsEvenInBackground() {
+    let f = executionFixture(background: true)
+    f.controller.configure(eligible: false)
+    f.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    XCTAssertTrue(f.backend.armRequests.isEmpty)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertFalse(f.controller.compatibilityRequired)
+  }
+
+  func testExecutionManualOffSurvivesSettingsAndControllerRestartUntilManualOn() {
+    let f = executionFixture(background: true)
+    f.controller.configure(eligible: true)
+    XCTAssertTrue(f.backend.audioRunning)
+    f.controller.setManualAllowed(false)
+    f.controller.configure(eligible: false)
+    f.controller.configure(eligible: true)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertFalse(f.controller.manualAllowed)
+    f.controller.close()
+    let nextBackend = ExecutionTestBackend()
+    let next = IosBackgroundExecutionController(backend: nextBackend, preferences: f.preferences,
+      notificationCenter: f.center, initialBackground: true, legacyDetected: { false })
+    defer { next.close() }
+    next.configure(eligible: true)
+    XCTAssertFalse(next.manualAllowed)
+    XCTAssertFalse(nextBackend.audioRunning)
+    next.setManualAllowed(true)
+    XCTAssertTrue(nextBackend.audioRunning)
+    next.configure(eligible: false)
+    XCTAssertFalse(nextBackend.audioRunning)
+    XCTAssertTrue(next.manualAllowed)
+  }
+
+  func testExecutionRefusesASecondBackendOverLegacyInjection() {
+    let f = executionFixture(background: true)
+    let backend = ExecutionTestBackend()
+    let controller = IosBackgroundExecutionController(backend: backend, preferences: f.preferences,
+      notificationCenter: f.center, initialBackground: true, legacyDetected: { true })
+    defer { controller.close() }
+    controller.configure(eligible: true)
+    XCTAssertTrue(backend.armRequests.isEmpty)
+    XCTAssertFalse(backend.audioRunning)
+    XCTAssertFalse(controller.compatibilityRequired)
+  }
+
+  func testExecutionUnavailableBackendDoesNotClaimArmedOrRunning() {
+    let f = executionFixture(background: true)
+    f.backend.canArm = false
+    f.controller.configure(eligible: true)
+    XCTAssertFalse(f.controller.armed)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertFalse(f.controller.compatibilityRequired)
+  }
+
+  func testExecutionCompatibilityPublishesBeforeActivationAndKeepsPhysicalState() throws {
+    let f = executionFixture(background: true)
+    let messenger = PresentationTestMessenger()
+    let target = GpuTestTarget()
+    let queue = GpuRecheckQueue()
+    let gpuGuard = IosPresentationGpuGuard(targetProvider: { target }, scheduleRecheck: queue.schedule)
+    let monitor = IosPresentationMonitor(binaryMessenger: messenger, notificationCenter: f.center,
+      initialActivity: IosPresentationActivityState(applicationActive: false),
+      gpuGuard: gpuGuard, compatibilityEnabled: { f.controller.compatibilityRequired })
+    defer { withExtendedLifetime(monitor) {} }
+    _ = try messenger.watch(PresentationTestMessenger.presentation)
+    f.backend.onArm = { armed in if armed { XCTAssertTrue(target.isGpuDisabled) } }
+    f.controller.configure(eligible: true)
+    let enabled = try XCTUnwrap(messenger.snapshots(PresentationTestMessenger.presentation).last)
+    XCTAssertEqual(enabled["enabled"] as? Bool, true)
+    XCTAssertEqual(enabled["active"] as? Bool, false)
+    f.controller.configure(eligible: false)
+    let disabled = try XCTUnwrap(messenger.snapshots(PresentationTestMessenger.presentation).last)
+    XCTAssertEqual(disabled["enabled"] as? Bool, true) // Drain compatibility until physical resume.
+    XCTAssertEqual(disabled["active"] as? Bool, false)
+    XCTAssertGreaterThan(try XCTUnwrap(disabled["revision"] as? Int), try XCTUnwrap(enabled["revision"] as? Int))
+    XCTAssertTrue(target.isGpuDisabled) // No GPU release in an inactive scene.
+    f.center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    XCTAssertFalse(target.isGpuDisabled)
+    XCTAssertEqual(messenger.snapshots(PresentationTestMessenger.presentation).last?["enabled"] as? Bool, false)
+  }
+
+  func testExecutionChannelUsesOnlyEligibilityAndCloseRevokesWithoutClearingPreference() throws {
+    let f = executionFixture(background: true)
+    let messenger = PresentationTestMessenger()
+    f.controller.register(binaryMessenger: messenger, viewController: { nil })
+    _ = try messenger.call("mco_advanced/ios_execution", method: "configure", arguments: ["eligible": true])
+    XCTAssertTrue(f.backend.audioRunning)
+    let status = try XCTUnwrap(try messenger.call("mco_advanced/ios_execution", method: "status") as? [String: Any])
+    XCTAssertEqual(status["audioRunning"] as? Bool, true)
+    f.controller.setManualAllowed(false)
+    f.controller.close()
+    f.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertEqual(f.preferences.object(forKey: IosBackgroundExecutionController.manualAllowedKey) as? Bool, false)
+    XCTAssertNil(messenger.handlers["mco_advanced/ios_execution"])
+  }
+
+  func testImmortalizerDiffClassifierWithoutInstallingPrivateHooks() {
+    for marker in ["foreground = NotSet", "foreground = No", "foreground = BSSettingFlagNo",
+                   "foreground = NO", "hostContextIdentifierForSnapshotting = 0",
+                   "scenePresenterRenderIdentifierForSnapshotting = 0",
+                   "targetOfEventDeferringEnvironments = (empty)", "FBSceneSnapshotAction:"] {
+      XCTAssertTrue(ImmortalizerExecutionBackend.suppressesDiff("diff { \(marker) }"))
+    }
+    for marker in ["foreground = YES", "foreground = BSSettingFlagYes", "other setting", ""] {
+      XCTAssertFalse(ImmortalizerExecutionBackend.suppressesDiff(marker))
+    }
+    for marker in ["foreground = NotSet", "FBSceneSnapshotAction:", "hostContextIdentifierForSnapshotting = 0"] {
+      XCTAssertFalse(ImmortalizerExecutionBackend.defersDiff(marker, background: false, transitioning: false))
+      XCTAssertTrue(ImmortalizerExecutionBackend.defersDiff(marker, background: true, transitioning: false))
+      XCTAssertTrue(ImmortalizerExecutionBackend.defersDiff(marker, background: false, transitioning: true))
+    }
+    for marker in ["foreground = No", "foreground = NO;", "foreground = BSSettingFlagNo }"] {
+      XCTAssertTrue(ImmortalizerExecutionBackend.defersDiff(marker, background: false, transitioning: false))
+    }
+  }
+}
+
+private final class ExecutionTestBackend: IosBackgroundExecutionBackend {
+  var canArm = true
+  var onArm: ((Bool) -> Void)?
+  private var armed = false
+  private var background = false
+  private(set) var armRequests: [Bool] = []
+  private(set) var audioRunning = false
+  private(set) var audioStarts = 0
+  private(set) var audioStops = 0
+
+  func setArmed(_ armed: Bool) -> Bool {
+    armRequests.append(armed)
+    self.armed = armed && canArm
+    onArm?(self.armed)
+    updateAudio()
+    return self.armed
+  }
+
+  func setBackground(_ background: Bool) {
+    self.background = background
+    updateAudio()
+  }
+
+  private func updateAudio() {
+    let running = armed && background
+    if running != audioRunning {
+      if running { audioStarts += 1 } else { audioStops += 1 }
+      audioRunning = running
+    }
+  }
 }
 
 private final class GpuTestTarget: IosPresentationGpuTarget {
@@ -478,11 +662,11 @@ private final class PresentationTestMessenger: NSObject, FlutterBinaryMessenger 
     }
   }
 
-  func call(_ channel: String, method: String) throws -> Any? {
+  func call(_ channel: String, method: String, arguments: Any? = nil) throws -> Any? {
     let handler = try XCTUnwrap(handlers[channel])
     var reply: Data?
     var completed = false
-    handler(codec.encodeMethodCall(FlutterMethodCall(methodName: method, arguments: nil))) {
+    handler(codec.encodeMethodCall(FlutterMethodCall(methodName: method, arguments: arguments))) {
       reply = $0
       completed = true
     }

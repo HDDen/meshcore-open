@@ -22,6 +22,11 @@
 		AA0000000000000000000002 /* MeshCoreBackgroundTcpExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* MeshCoreBackgroundTcpExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7C2A71112C0A100100123456 /* IosPresentationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */; };
 		7C2A71132C0A100100123456 /* IosPresentationGpuGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71122C0A100100123456 /* IosPresentationGpuGuard.swift */; };
+		7C2A71212C0A100100123456 /* IosBackgroundExecution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71202C0A100100123456 /* IosBackgroundExecution.swift */; };
+		7C2A71232C0A100100123456 /* IosBackgroundExecutionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71222C0A100100123456 /* IosBackgroundExecutionButton.swift */; };
+		7C2A71252C0A100100123456 /* MCOImmortalizerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = 7C2A71242C0A100100123456 /* MCOImmortalizerBackend.m */; };
+		7C2A71282C0A100100123456 /* Immortalizer-LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 7C2A71272C0A100100123456 /* Immortalizer-LICENSE */; };
+		7C2A712A2C0A100100123456 /* Immortalizer-NOTICE in Resources */ = {isa = PBXBuildFile; fileRef = 7C2A71292C0A100100123456 /* Immortalizer-NOTICE */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,6 +101,12 @@
 		CE8FB5F830510D40000214A4 /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
 		7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IosPresentationMonitor.swift; sourceTree = "<group>"; };
 		7C2A71122C0A100100123456 /* IosPresentationGpuGuard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IosPresentationGpuGuard.swift; sourceTree = "<group>"; };
+		7C2A71202C0A100100123456 /* IosBackgroundExecution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosBackgroundExecution.swift; sourceTree = "<group>"; };
+		7C2A71222C0A100100123456 /* IosBackgroundExecutionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosBackgroundExecutionButton.swift; sourceTree = "<group>"; };
+		7C2A71242C0A100100123456 /* MCOImmortalizerBackend.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ImmortalizerBackend/MCOImmortalizerBackend.m"; sourceTree = "<group>"; };
+		7C2A71262C0A100100123456 /* MCOImmortalizerBackend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ImmortalizerBackend/MCOImmortalizerBackend.h"; sourceTree = "<group>"; };
+		7C2A71272C0A100100123456 /* Immortalizer-LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Immortalizer-LICENSE"; path = "ImmortalizerBackend/LICENSE"; sourceTree = "<group>"; };
+		7C2A71292C0A100100123456 /* Immortalizer-NOTICE */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Immortalizer-NOTICE"; path = "ImmortalizerBackend/NOTICE.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +187,12 @@
 				7C2A71052C0A100100123456 /* IosBleCentralAdapter.swift */,
 				7C2A71102C0A100100123456 /* IosPresentationMonitor.swift */,
 				7C2A71122C0A100100123456 /* IosPresentationGpuGuard.swift */,
+				7C2A71202C0A100100123456 /* IosBackgroundExecution.swift */,
+				7C2A71222C0A100100123456 /* IosBackgroundExecutionButton.swift */,
+				7C2A71242C0A100100123456 /* MCOImmortalizerBackend.m */,
+				7C2A71262C0A100100123456 /* MCOImmortalizerBackend.h */,
+				7C2A71272C0A100100123456 /* Immortalizer-LICENSE */,
+				7C2A71292C0A100100123456 /* Immortalizer-NOTICE */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -352,6 +369,8 @@
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				7C2A71282C0A100100123456 /* Immortalizer-LICENSE in Resources */,
+				7C2A712A2C0A100100123456 /* Immortalizer-NOTICE in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -472,6 +491,9 @@
 				7C2A71062C0A100100123456 /* IosBleCentralAdapter.swift in Sources */,
 				7C2A71112C0A100100123456 /* IosPresentationMonitor.swift in Sources */,
 				7C2A71132C0A100100123456 /* IosPresentationGpuGuard.swift in Sources */,
+				7C2A71212C0A100100123456 /* IosBackgroundExecution.swift in Sources */,
+				7C2A71232C0A100100123456 /* IosBackgroundExecutionButton.swift in Sources */,
+				7C2A71252C0A100100123456 /* MCOImmortalizerBackend.m in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

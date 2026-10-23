@@ -167,6 +167,32 @@ void main() {
     expect(allowed.last, isTrue);
   }, timeout: shortTimeout);
 
+  test('compatibility changes keep the actual inactive state independent', () async {
+    await bridge.start();
+    await emit(snapshot(1, false));
+    expect(iosAppPresentationActive.value, isFalse);
+
+    // Выключение режима совместимости не означает физический foreground.
+    await emit(snapshot(2, false, enabled: false));
+    expect(allowed, <bool>[true, false, true]);
+    expect(iosAppPresentationActive.value, isFalse);
+
+    await emit(snapshot(3, false));
+    expect(allowed.last, isFalse);
+    expect(iosAppPresentationActive.value, isFalse);
+    await emit(snapshot(4, true));
+    expect(allowed.last, isTrue);
+    expect(iosAppPresentationActive.value, isTrue);
+  }, timeout: shortTimeout);
+
+  test('a late compatibility-off event cannot reopen the newer background gate', () async {
+    await bridge.start();
+    await emit(snapshot(2, false));
+    await emit(snapshot(1, false, enabled: false));
+    expect(allowed, <bool>[true, false]);
+    expect(iosAppPresentationActive.value, isFalse);
+  }, timeout: shortTimeout);
+
   test('native scene and timing metadata cannot override ordered activity', () async {
     await bridge.start();
     await emit({

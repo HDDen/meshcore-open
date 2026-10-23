@@ -38,6 +38,11 @@ class SettingsSectionsService extends ChangeNotifier {
 
   bool get applyMService => false;
 
+  // Public builds never supply a proxy TCP reason to the iOS execution policy.
+  bool get companionProxyEnabled => false;
+
+  bool get companionProxyRunning => false;
+
   bool get allowsRestrictedMapBulkDownload => false;
 
   Future<bool> authorizeRestrictedMapBulkDownload() async => false;

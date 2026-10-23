@@ -341,6 +341,10 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
 - Bundled `Inter` and `JetBrains Mono` fonts (see `pubspec.yaml`)
 - Совместимость рендеринга iOS реализована в `lib/helpers/ios_presentation_guard.dart`, `ios/Runner/IosPresentationMonitor.swift` и отдельном `ios/Runner/IosPresentationGpuGuard.swift`. Native application/scene-события откладывают `drawFrame` до widget build/layout/paint; при возврате обычный кадр отображает актуальные данные с сохранённым состоянием виджетов. При активной совместимости и подписке presentation native helper дополнительно устанавливает публичный `FlutterEngine.isGpuDisabled` до уведомления Dart, не переключая его lifecycle и не останавливая таймеры/транспорты. Engine получается через registrar и проверяется по messenger; до появления viewController получение повторяется при watch/событиях и одном отложенном вызове. Запрет проверяется даже при неизменном active: Flutter может включить GPU на `willEnterForeground`; один повтор в очереди main thread учитывает порядок обработчиков, устаревший повтор после resume/отписки отменяется. Снимается только собственный запрет при полной активности; известная неактивная сцена блокирует преждевременное разрешение. Независимый `mco_advanced/ios_activity` сохраняет отдельную подписку. `MCO_IOS_RENDER_GUARD=false` отключает оба слоя; без совместимости native helper не меняет GPU. В `iOSRendering` сохраняется `gate=uiPipeline`, добавлены `nativeGpuGuard` и `gpuDisabled`; false/null для недоступного engine означает отсутствие native-слоя. `sendFramesToEngine` сохраняет first-frame deferral Flutter. Это не синхронный GPU drain, не непрерывная блокировка между конкурирующими обработчиками и не восстановление уже повреждённых ресурсов; результат требует проверки на iPhone. Native baseline/регрессии в `ios/RunnerTests/RunnerTests.swift` используют изолированный NotificationCenter; проверки engine API не запускают отдельный Dart isolate.
 
+- Условное удержание фонового TCP на iOS подключено отдельным `lib/helpers/ios_background_execution_binding.dart` из `MeshCoreApp`. Native `IosBackgroundExecutionController` сохраняет ручной выбор независимо от сетевого разрешения и различает готовность к уходу в фон и физический background. При открытом приложении нет silent audio и периодического таймера; один player работает только в фоне, освобождается при возврате. Native backend изолирован в `ios/Runner/ImmortalizerBackend` за протоколом `IosBackgroundExecutionBackend`; LICENSE/NOTICE сохранены. `IosBackgroundExecutionButton` не захватывает key window и не создаёт вторую сцену. Изменение compatibility публикуется с новой revision даже без смены physical active, перед активацией backend; сохранена прежняя защита GPU/UI. Обнаружение внешнего `FloatingButtonWindow` блокирует второй backend, но оставляет прежнюю совместимость рендеринга. Регрессии условий в `test/helpers/ios_background_execution_binding_test.dart`, native policy/classifier — в `ios/RunnerTests/RunnerTests.swift`. Private API, audio session и сохранение транспорта в реальном фоне ещё требуют iPhone; это не подтверждение экономии.
+
+- При отключении встроенного удержания в неактивной сцене `IosPresentationMonitor` сохраняет compatibility до полной физической активации, удерживая закрытыми и Dart layout/paint, и собственный GPU-запрет. Свежая activity-only подписка без presentation этот запрет не приобретает; native-регрессия проверяет и выключение, и последующее освобождение.
+
 ### Localization
 
 18 locales supported via Flutter's standard ARB pipeline (`lib/l10n/`): en, de, es, fr, it, pt, ru, uk, bg, hu, ja, ko, nl, pl, sk, sl, sv, zh. Language override comes from `AppSettingsService.settings.languageOverride`. Use the `context.l10n` extension (`lib/l10n/l10n.dart`) for translated strings; contact-type names live in `contact_localization.dart`.
@@ -2303,6 +2307,18 @@ missing SELF_INFO окон outer hold заканчивается, logical handsh
 Новая фикстура, как baseline, ограничена Windows.
 Обёртка общая для вызовов connect; проверка платформенных ветвей и native I/O
 за пределами ожидаемых Futures остаётся отдельной задачей. CPU-политика прежняя.
+
+Baseline внешних packet/replay границ принят владельцем. Отдельный
+`PacketBackgroundWork` учитывает sendFrame через внешний перехватчик как
+frameDispatch, полный async LOG_RX как radioReceive и оба replay-цикла как
+messageReplay. Без перехватчика сохраняется прежний учёт writer/ACK.
+Исходные алгоритмы, синхронная ошибка interceptor и порядок очередей сохранены;
+replay с alreadyAdvancedQueueSync по-прежнему обходит обычный messageSync wrapper.
+Новые удержания живут до завершения своих Futures независимо от reset/dispose
+и timeout вызывающего кода. Пассивные буферы/TTL их не удерживают.
+Владелец подтвердил регрессии R1; дальнейшее расширение учёта отложено до
+аппаратных A/B. CPU-политика прежняя. Команды и ограничения —
+`documentation/background-activity.md`.
 
 `AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
 radio-stats frame showed the node's airtime growing
