@@ -572,6 +572,133 @@ class RunnerTests: XCTestCase {
   }
 }
 
+final class ExecutionButtonTests: XCTestCase {
+  private func fixture() -> (IosBackgroundExecutionButton, ButtonDockClock) {
+    let clock = ButtonDockClock()
+    let button = IosBackgroundExecutionButton(schedule: clock.schedule,
+      animate: { _, changes, completion in changes(); completion() })
+    button.install(in: UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844)))
+    addTeardownBlock { button.close() }
+    return (button, clock)
+  }
+
+  func testOriginalButtonAndHandleGeometryAndFiveSecondDock() throws {
+    let (view, clock) = fixture()
+    let button = try XCTUnwrap(view.button)
+    let handle = try XCTUnwrap(view.handle)
+    XCTAssertEqual(button.bounds.size, CGSize(width: 50, height: 50))
+    XCTAssertEqual(button.center, CGPoint(x: 365, y: 225))
+    XCTAssertEqual(button.layer.cornerRadius, 25)
+    XCTAssertEqual(button.tintColor, UIColor.systemBlue)
+    XCTAssertEqual(button.backgroundColor, UIColor(red: 0.125, green: 0.125, blue: 0.125, alpha: 1))
+    XCTAssertEqual(handle.bounds.size, CGSize(width: 15, height: 50))
+    XCTAssertEqual(handle.subviews.first?.frame, CGRect(x: 6.5, y: 10, width: 3, height: 30))
+    XCTAssertTrue(clock.delays.isEmpty) // No timer before display.
+    view.show()
+    view.show()
+    XCTAssertEqual(clock.delays, [5]) // State notifications do not postpone docking.
+    clock.fire()
+    XCTAssertTrue(view.docked)
+    XCTAssertTrue(button.isHidden)
+    XCTAssertEqual(button.transform, CGAffineTransform(scaleX: 0.5, y: 0.5))
+    XCTAssertEqual(button.alpha, 0)
+    XCTAssertFalse(handle.isHidden)
+    XCTAssertEqual(handle.alpha, 1)
+    XCTAssertEqual(handle.frame, CGRect(x: 375, y: 200, width: 15, height: 50))
+    XCTAssertNil(clock.pending) // One-shot; nothing periodic remains.
+    view.undock()
+    XCTAssertFalse(view.docked)
+    XCTAssertFalse(button.isHidden)
+    XCTAssertTrue(handle.isHidden)
+    XCTAssertEqual(button.alpha, 1)
+    XCTAssertEqual(button.transform, .identity)
+    XCTAssertEqual(button.center, CGPoint(x: 362.5, y: 225))
+    XCTAssertEqual(clock.delays, [5, 5])
+  }
+
+  func testBothEdgesAndVerticalLimitsMatchOriginal() throws {
+    let (view, clock) = fixture()
+    let button = try XCTUnwrap(view.button)
+    button.center = CGPoint(x: 100, y: -50)
+    view.snapToEdge()
+    XCTAssertEqual(button.center, CGPoint(x: 25, y: 25))
+    view.show()
+    clock.fire()
+    XCTAssertEqual(view.handle?.frame, CGRect(x: 0, y: 0, width: 15, height: 50))
+    view.undock()
+    XCTAssertEqual(button.center, CGPoint(x: 27.5, y: 25))
+    button.center = CGPoint(x: 380, y: 1000)
+    view.snapToEdge()
+    XCTAssertEqual(button.center, CGPoint(x: 365, y: 819))
+  }
+
+  func testHideCancelsIdleWorkAndPreservesDockAndPositionAcrossBackground() throws {
+    let (view, clock) = fixture()
+    view.show()
+    let stale = try XCTUnwrap(clock.pending)
+    view.hide()
+    XCTAssertNil(clock.pending)
+    stale()
+    XCTAssertFalse(view.docked)
+    view.show()
+    clock.fire()
+    let position = view.handle?.frame
+    view.hide()
+    view.show()
+    XCTAssertTrue(view.docked)
+    XCTAssertEqual(view.handle?.frame, position)
+    XCTAssertNil(clock.pending)
+    XCTAssertFalse(try XCTUnwrap(view.handle).isHidden)
+    view.close()
+    XCTAssertNil(view.window)
+  }
+
+  func testManualOffUsesOriginalRedAndDoesNotChangeExecutionOnDock() throws {
+    let (view, clock) = fixture()
+    var toggles = 0
+    view.onToggle = { toggles += 1 }
+    view.update(host: nil, visible: false, selected: false)
+    view.install(in: UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844)))
+    XCTAssertEqual(view.button?.tintColor, UIColor.systemRed)
+    view.show()
+    clock.fire()
+    view.undock()
+    XCTAssertEqual(toggles, 0)
+  }
+
+  func testLateDockCompletionCannotRevealHandleAfterHide() throws {
+    var completions: [() -> Void] = []
+    let clock = ButtonDockClock()
+    let view = IosBackgroundExecutionButton(schedule: clock.schedule,
+      animate: { _, changes, completion in changes(); completions.append(completion) })
+    defer { view.close() }
+    view.install(in: UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844)))
+    view.show()
+    clock.fire()
+    view.hide()
+    let count = completions.count
+    for completion in completions { completion() }
+    XCTAssertEqual(completions.count, count) // No second animation/timer after hiding.
+    XCTAssertTrue(try XCTUnwrap(view.window).isHidden)
+    XCTAssertNil(clock.pending)
+  }
+}
+
+private final class ButtonDockClock {
+  var pending: (() -> Void)?
+  var delays: [TimeInterval] = []
+  func schedule(_ delay: TimeInterval, _ work: @escaping () -> Void) -> (() -> Void) {
+    delays.append(delay)
+    pending = work
+    return { [weak self] in self?.pending = nil }
+  }
+  func fire() {
+    let work = pending
+    pending = nil
+    work?()
+  }
+}
+
 private final class ExecutionTestBackend: IosBackgroundExecutionBackend {
   var canArm = true
   var onArm: ((Bool) -> Void)?

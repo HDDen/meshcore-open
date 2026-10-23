@@ -10,6 +10,11 @@ physical-background gates; no constructor, global delegate hook or shared
 upstream preference; bounded replay of main-thread scene updates; synthetic WAV
 and reusable player, event-driven interruption recovery, release on foreground.
 Floating-window implementation and policy are separate from this backend.
+The visuals/gestures of FloatingButtonWindow.m and CustomToastView.m are also
+ported under this license in ../IosBackgroundExecutionButton.swift: original
+button/handle sizes, colors, docking delay, animations, haptic and toast.
+MCOa keeps the host scene/key window and cancels UI work while hidden; it does
+not restore the original audio restart timer or the legacy preference.
 
 This port uses private iOS APIs and is provided without warranty. Distribution
 conditions for the combined application are the distributor's responsibility;

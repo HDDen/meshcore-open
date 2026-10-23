@@ -192,7 +192,7 @@ final class IosBackgroundExecutionController {
     backend.setBackground(false)
     let wasArmed = armed
     armed = false
-    button.hide()
+    button.close()
     if wasArmed { center.post(name: .mcoIosExecutionCompatibilityChanged, object: nil) }
   }
 
