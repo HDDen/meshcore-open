@@ -336,6 +336,7 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
 ### Theming
 - Material 3 design (`useMaterial3: true`)
 - Light/dark selected via `AppSettings.themeMode` (`system` / `light` / `dark`)
+- Системные панели следуют разрешённой теме через `AppSystemUi` в `lib/helpers/app_system_ui_style.dart`, подключённый в `MaterialApp.builder`: navigation bar/разделитель используют `colorScheme.surface`, значки — контрастную яркость, в тёмной теме системная контрастная подложка отключена, в светлой сохранена для тёмных участков карты. Корневой фон Flutter окрашен той же поверхностью под прозрачными панелями edge-to-edge; insets не расходуются, локальные стили полноэкранных страниц сохраняют приоритет. Исходные инварианты темы — `test/helpers/app_system_ui_style_baseline_test.dart`, регрессии цвета/фона/insets/возврата с тёмного экрана — `test/widgets/app_system_ui_test.dart`. Нативный результат требует проверки на Android; подробнее: `documentation/android-system-bars.md`.
 - `lib/theme/mesh_theme.dart` defines the warm-dark `MeshPalette` (phosphor-green accents) and **is wired** in `main.dart` via `MeshTheme.light()` / `MeshTheme.dark()`
 - Global UI scale (`AppSettings.uiScale`, optionally applied to icons) is layered on top of the system text scaler in the `MaterialApp.builder`
 - Bundled `Inter` and `JetBrains Mono` fonts (see `pubspec.yaml`)

@@ -57,6 +57,7 @@ import 'storage/channel_message_store.dart';
 import 'storage/channel_identity_store.dart';
 import 'storage/contact_identity_store.dart';
 import 'storage/mco_image_gallery_store.dart';
+import 'helpers/app_system_ui_style.dart';
 import 'helpers/mesh_compressor.dart';
 import 'helpers/image_reassembly_maintenance.dart';
 import 'helpers/ble_log_power_settings.dart';
@@ -1097,10 +1098,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
                 child: content,
               );
 
-              return AnnotatedRegion<SystemUiOverlayStyle>(
-                value: _systemUiOverlayStyle(context),
-                child: content,
-              );
+              return AppSystemUi(child: content);
             },
             home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)
                 ? const ChromeRequiredScreen()
@@ -1120,27 +1118,6 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       default:
         return ThemeMode.system;
     }
-  }
-
-  SystemUiOverlayStyle _systemUiOverlayStyle(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final iconBrightness = isDark ? Brightness.light : Brightness.dark;
-
-    // The app draws edge-to-edge, so both system bars stay transparent and
-    // their icon brightness follows the resolved Flutter theme. Contrast
-    // enforcement keeps a scrim behind three-button navigation in case a
-    // route paints a dark surface under light-theme icons; dark full-screen
-    // routes also set light icons themselves.
-    return SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: iconBrightness,
-      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: iconBrightness,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarContrastEnforced: true,
-    );
   }
 
   Future<void> _handleNotificationTap(String payload) {

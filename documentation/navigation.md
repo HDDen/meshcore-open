@@ -30,6 +30,8 @@ Tapping a tab replaces the current screen with a subtle fade + slight horizontal
 
 ## Theme and Locale
 
+Системная панель навигации Android также следует теме приложения. Поведение edge-to-edge, контрастной подложки и проверки описаны в [руководстве по системным панелям](android-system-bars.md).
+
 - **Theme mode** is user-configurable in App Settings (System / Light / Dark) — not locked to system
 - **Language** can be overridden to one of 18 supported languages, or follow the system locale
 - On web, if a non-Chromium browser is detected, the app shows a `ChromeRequiredScreen` instead of the Scanner (the web client needs Chrome for Web Serial USB)
