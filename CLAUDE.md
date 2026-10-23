@@ -2280,7 +2280,7 @@ ConnectionCleanup получил optional runAction: отдельный actual h
 общая сумма теперь учитывает новый kind, setup/write assertions сохранены.
 Пустой snapshot сон не разрешает; underlying native I/O вне Futures manager
 и неохваченные владельцы ещё требуют отдельной проверки.
-Следующий baseline — `ble_connect_lifecycle_baseline_test.dart`: 20 сценариев
+Принят baseline `ble_connect_lifecycle_baseline_test.dart`: 20 сценариев
 Windows-ветви плагина, другие платформы явно skipped. Device/GATT/bond ответ
 синтетические; настоящие connect/disconnect/handshake сохранены. Проверяются
 scan/open/discovery/CCCD, Windows-пауза 750 мс и CCCD retries 1/2 с, ошибки,
@@ -2289,11 +2289,20 @@ BLE connect-Future по прежнему коду может завершить�
 незавершённый handshake; это baseline, не новый критерий готовности сессии.
 Native iOS/Linux pairing/Web/Android MTU, cold sync и аппаратный BLE требуют
 своего охвата. BleConnectBaselineTests принят владельцем после исправления
-фикстуры; outer hold полного BLE connect пока не добавлен. Коннектор
-не менялся на этапе этого baseline.
+фикстуры; коннектор не менялся на этапе baseline.
 Потоки фикстуры имеют управляемые Stream/Subscription: cancel завершается
 в зоне widget-теста. Это устраняет ожидание root-Zone Future._nullFuture
 от broadcast.cancel внутри FakeAsync; проверки и таймауты сценариев сохранены.
+Теперь весь connect(BluetoothDevice) обёрнут в прежний SyncBackgroundWork
+как transportSetup до завершения исходного Future, с ожиданиями scan/open/
+discovery/notify/retry/initial handshake и ожидаемого error cleanup. Тело
+алгоритма сохранено. Общий logical SELF_INFO, writer и teardown независимы:
+caller timeout/manual cancel/dispose не завершают actual connect; после двух
+missing SELF_INFO окон outer hold заканчивается, logical handshake остаётся.
+Пакет bleConnectWorkTests с 21 отдельной регрессией принят владельцем.
+Новая фикстура, как baseline, ограничена Windows.
+Обёртка общая для вызовов connect; проверка платформенных ветвей и native I/O
+за пределами ожидаемых Futures остаётся отдельной задачей. CPU-политика прежняя.
 
 `AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
 radio-stats frame showed the node's airtime growing

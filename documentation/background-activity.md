@@ -1313,8 +1313,8 @@ guards/ручная отмена/caller timeout, поздний SELF_INFO и з�
 Исходное отличие BLE: после двух окон без SELF_INFO connect-Future может
 завершиться без ошибки, сохранив connected и незавершённый handshake.
 Новый baseline фиксирует это поведение; готовность сессии по нему не
-объявляется. Общий handshake уже учитывается отдельно, самостоятельный hold
-полного BLE connect пока не добавлен. CPU-политика и 14 настроек прежние.
+объявляется. На этапе baseline общий handshake уже учитывался отдельно,
+самостоятельного hold полного BLE connect ещё не было. CPU-политика и 14 настроек прежние.
 
 Предварительный пакет владельца (Windows):
 
@@ -1331,3 +1331,54 @@ $bleConnectBaselineTests = @(
 flutter test @bleConnectBaselineTests --reporter expanded
 flutter analyze
 ```
+
+## Учёт полного BLE connect
+
+После подтверждения baseline весь `connect(BluetoothDevice)` обёрнут в
+существующий `SyncBackgroundWork` как `transportSetup`. Исходное тело
+алгоритма сохранено. Удержание охватывает ожидаемые scan/старый teardown,
+открытие устройства, discovery, notify/retry, initial handshake, time sync
+и error cleanup до завершения первоначального Future.
+
+Логическое ожидание SELF_INFO, actual request/wait, transportWrite и
+transportTeardown независимы. Manual cancel/reset/dispose/caller timeout
+не освобождают незавершённый connect. Write timeout может завершить connect
+раньше фактического writer; cleanup timeout — раньше фактического close,
+который продолжит учитываться через teardown. После двух missing SELF_INFO
+окон прежний connect может закончиться без ошибки: outer hold снимается,
+logical handshake сохраняется до своего прежнего завершения/reset.
+
+Подготовлен 21 регрессионный сценарий (16 testWidgets и циклы на четыре
+boundary и три guards): scan/open/discovery/CCCD/settle delay, time writer,
+independent SELF_INFO, missing SELF_INFO, caller timeout, duplicate/cancel,
+retry delays, inline stale close, error cleanup/write timeout, dispose/closed.
+Это состав новых тестов, не результат запуска. Принятый baseline не изменён.
+Fake Stream/Subscription сохранены; native close gate добавлен только в новую
+фикстуру. Она ограничена Windows и явно skipped на других платформах.
+
+Обёртка охватывает общий entrypoint, включая ожидаемые платформенные участки;
+Windows-фикстура не подтверждает native iOS/Linux pairing/recovery/Android
+MTU/Web, cold initial sync или I/O за пределами ожидаемых Futures.
+Unawaited default-region refresh также не становится частью connect-Future.
+CPU/Wi-Fi/service/heartbeat и четырнадцать параметров прежние; snapshot пока
+не разрешает отпускать CPU lock.
+
+Пакет владельца (Windows):
+
+```powershell
+$bleConnectWorkTests = @(
+  'test/connector/ble_connect_lifecycle_baseline_test.dart'
+  'test/connector/ble_connect_work_tracking_test.dart'
+  'test/connector/handshake_lifecycle_baseline_test.dart'
+  'test/connector/handshake_work_tracking_test.dart'
+  'test/helpers/sync_background_work_test.dart'
+  'test/connector/disconnect_work_tracking_test.dart'
+  'test/connector/reconnect_power_baseline_test.dart'
+  'test/services/linux_ble_error_classifier_test.dart'
+  'test/services/ble_plugin_log_power_baseline_test.dart'
+)
+flutter test @bleConnectWorkTests --reporter expanded
+flutter analyze
+```
+
+Владелец подтвердил прохождение `bleConnectWorkTests`.

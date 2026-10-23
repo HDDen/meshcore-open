@@ -6051,7 +6051,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? displayName,
     Future<String?> Function()? linuxPairingPinProvider,
     bool requestBatteryOptimizationExemption = true,
-  }) async {
+  }) => _selfInfoWork.run(() async {
     if (_isOfflineMode) {
       _appDebugLogService?.warn(
         'BLE connect ignored while offline history is open',
@@ -6557,7 +6557,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       rethrow;
     }
-  }
+  });
 
   Future<bool> _recoverLinuxConnectFailure(
     BluetoothDevice device, {
